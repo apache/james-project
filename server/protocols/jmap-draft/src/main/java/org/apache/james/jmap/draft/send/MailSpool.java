@@ -19,8 +19,12 @@
 
 package org.apache.james.jmap.draft.send;
 
+import java.io.IOException;
+
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
@@ -28,10 +32,14 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class MailSpool implements Startable {
+public class MailSpool implements Startable, Disposable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailSpool.class);
 
     private final MailQueueFactory<?> queueFactory;
     private MailQueue queue;
@@ -43,6 +51,15 @@ public class MailSpool implements Startable {
 
     public void start() {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
+    }
+
+    @PreDestroy
+    public void dispose() {
+        try {
+            queue.close();
+        } catch (IOException e) {
+            LOGGER.debug("error closing queue", e);
+        }
     }
 
     public void send(Mail mail, MailMetadata metadata) throws MailQueueException {

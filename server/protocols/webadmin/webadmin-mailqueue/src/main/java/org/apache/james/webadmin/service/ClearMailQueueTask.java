@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.service;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
@@ -31,9 +32,12 @@ import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class ClearMailQueueTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+
         private final String mailQueueName;
         private final long initialCount;
         private final long remainingCount;
@@ -62,30 +66,44 @@ public class ClearMailQueueTask implements Task {
         public Instant timestamp() {
             return timestamp;
         }
+
     }
 
     public static class UnknownSerializedQueue extends RuntimeException {
+
         public UnknownSerializedQueue(String queueName) {
             super("Unable to retrieve '" + queueName + "' queue");
         }
     }
 
+    @FunctionalInterface
+    public interface MailQueueFactory {
+        ManageableMailQueue create(String mailQueueName);
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ClearMailQueueTask.class);
     public static final TaskType TYPE = TaskType.of("clear-mail-queue");
 
-    private final ManageableMailQueue queue;
-    private final long initialCount;
+    private final String queueName;
+    private final ClearMailQueueTask.MailQueueFactory factory;
+    private Optional<Long> initialCount;
+    private Optional<ManageableMailQueue> queue;
 
-    public ClearMailQueueTask(ManageableMailQueue queue) {
-        this.queue = queue;
-        initialCount = getRemainingSize();
+    public ClearMailQueueTask(String queueName, ClearMailQueueTask.MailQueueFactory factory) {
+        this.queueName = queueName;
+        this.factory = factory;
+        this.initialCount = Optional.empty();
+        this.queue = Optional.empty();
     }
 
     @Override
     public Result run() {
-        try {
+        try (ManageableMailQueue queue = factory.create(queueName)) {
+            this.initialCount = Optional.of(getRemainingSize(queue));
+            this.queue = Optional.of(queue);
             queue.clear();
-        } catch (MailQueue.MailQueueException e) {
+            this.queue = Optional.empty();
+        } catch (MailQueue.MailQueueException | IOException e) {
             LOGGER.error("Clear MailQueue got an exception", e);
             return Result.PARTIAL;
         }
@@ -100,16 +118,21 @@ public class ClearMailQueueTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(queue.getName(), initialCount, getRemainingSize(), Clock.systemUTC().instant()));
+        return queue.map(q -> new AdditionalInformation(queueName, initialCount.get(), getRemainingSize(q), Clock.systemUTC().instant()));
     }
 
-    ManageableMailQueue getQueue() {
-        return queue;
+    String getQueueName() {
+        return queueName;
     }
 
-    private long getRemainingSize() {
+    @VisibleForTesting
+    Optional<Long> initialCount() {
+        return initialCount;
+    }
+
+    private long getRemainingSize(ManageableMailQueue mailQueue) {
         try {
-            return queue.getSize();
+            return mailQueue.getSize();
         } catch (MailQueue.MailQueueException e) {
             throw new RuntimeException(e);
         }

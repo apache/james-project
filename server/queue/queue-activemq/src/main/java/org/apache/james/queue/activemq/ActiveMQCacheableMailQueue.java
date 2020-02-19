@@ -44,7 +44,7 @@ import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
-import org.apache.james.queue.jms.JMSMailQueue;
+import org.apache.james.queue.jms.JMSCacheableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageInputStream;
@@ -89,17 +89,17 @@ import org.slf4j.LoggerFactory;
  * </p>
  * To have a good throughput you should use a caching connection factory. </p>
  */
-public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQMailQueue.class);
+public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements ActiveMQSupport {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQCacheableMailQueue.class);
 
     private final boolean useBlob;
 
     /**
-     * Construct a {@link ActiveMQMailQueue} which only use {@link BlobMessage}
+     * Construct a {@link ActiveMQCacheableMailQueue} which only use {@link BlobMessage}
      * 
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, MetricFactory metricFactory,
-                             GaugeRegistry gaugeRegistry) {
+    public ActiveMQCacheableMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, MetricFactory metricFactory,
+                                      GaugeRegistry gaugeRegistry) {
         this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, metricFactory, gaugeRegistry);
     }
 
@@ -110,8 +110,8 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * @param queuename
      * @param useBlob
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, MetricFactory metricFactory,
-                             GaugeRegistry gaugeRegistry) {
+    public ActiveMQCacheableMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, MetricFactory metricFactory,
+                                      GaugeRegistry gaugeRegistry) {
         super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory, gaugeRegistry);
         this.useBlob = useBlob;
     }
@@ -268,7 +268,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
 
     /**
      * Try to use ActiveMQ StatisticsPlugin to get size and if that fails
-     * fallback to {@link JMSMailQueue#getSize()}
+     * fallback to {@link JMSCacheableMailQueue#getSize()}
      */
     @Override
     public long getSize() throws MailQueueException {

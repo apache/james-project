@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
@@ -257,6 +258,11 @@ public class RemoteDelivery extends GenericMailet {
     public synchronized void destroy() {
         if (startThreads == ThreadState.START_THREADS) {
             deliveryRunnable.dispose();
+        }
+        try {
+            queue.close();
+        } catch (IOException e) {
+            LOGGER.debug("error closing queue", e);
         }
     }
 

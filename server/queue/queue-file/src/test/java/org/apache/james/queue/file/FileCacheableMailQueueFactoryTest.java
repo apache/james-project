@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Disabled;
     " - JAMES-2954 Incomplete browse implementation" +
     " - JAMES-2544 Mixing concurrent operation might lead to a deadlock and missing fields" +
     " - JAMES-2979 dequeue is not thread safe")
-public class FileMailQueueFactoryTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
+public class FileCacheableMailQueueFactoryTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
     private FileMailQueueFactory mailQueueFactory;
     private MockFileSystem fileSystem;
 

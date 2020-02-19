@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
@@ -34,7 +35,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * {@link MailQueueFactory} implementation which returns {@link FileMailQueue} instances
+ * {@link MailQueueFactory} implementation which returns {@link FileCacheableMailQueue} instances
  *
  * @deprecated FileMailQueue implementation is unmaintained, incomplete and not thread safe
  * We recommend using embedded ActiveMQMailQueue implementation instead
@@ -42,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
 @Deprecated
 public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
-    private final Map<String, ManageableMailQueue> queues = new HashMap<>();
+    private final Map<String, ManageableMailQueue> queues = new ConcurrentHashMap<>();
     private MailQueueItemDecoratorFactory mailQueueActionItemDecoratorFactory;
     private FileSystem fs;
     private boolean sync = true;
@@ -59,7 +60,7 @@ public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueu
     }
 
     /**
-     * If <code>true</code> the later created {@link FileMailQueue} will call <code>fsync</code> after each message {@link FileMailQueue#enQueue(org.apache.mailet.Mail)} call. This
+     * If <code>true</code> the later created {@link FileCacheableMailQueue} will call <code>fsync</code> after each message {@link FileCacheableMailQueue#enQueue(org.apache.mailet.Mail)} call. This
      * is needed to be fully RFC conform but gives a performance penalty. If you are brave enough you man set it to <code>false</code>
      * <p/>
      * The default is <code>true</code>
@@ -77,19 +78,13 @@ public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueu
 
     @Override
     public ManageableMailQueue createQueue(String name) {
-        return getQueue(name).orElseGet(() -> createAndRegisterQueue(name));
-    }
-
-    private ManageableMailQueue createAndRegisterQueue(String name) {
-        synchronized (queues) {
+        return queues.computeIfAbsent(name, mailQueueName -> {
             try {
-                FileMailQueue queue = new FileMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), name, sync);
-                queues.put(name, queue);
-                return queue;
+                return new FileCacheableMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), mailQueueName, sync);
             } catch (IOException e) {
-                throw new RuntimeException("Unable to access queue " + name, e);
+                throw new RuntimeException("Unable to access queue " + mailQueueName, e);
             }
-        }
+        });
     }
 
 }

@@ -80,6 +80,10 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
         public MailQueue createQueue(String name) {
             return new MailQueue() {
                 @Override
+                public void close() throws IOException {
+                }
+
+                @Override
                 public String getName() {
                     return name;
                 }

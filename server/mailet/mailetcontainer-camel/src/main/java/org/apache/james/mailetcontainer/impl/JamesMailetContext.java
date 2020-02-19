@@ -19,6 +19,7 @@
 
 package org.apache.james.mailetcontainer.impl;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.mail.Address;
 import javax.mail.Message;
@@ -50,6 +52,7 @@ import org.apache.james.dnsservice.library.MXHostAddressIterator;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -66,7 +69,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
-public class JamesMailetContext implements MailetContext, Configurable {
+public class JamesMailetContext implements MailetContext, Configurable, Disposable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JamesMailetContext.class);
 
     /**
@@ -87,6 +90,16 @@ public class JamesMailetContext implements MailetContext, Configurable {
         this.localusers = localusers;
         this.domains = domains;
         this.mailQueueFactory = mailQueueFactory;
+    }
+
+    @PreDestroy
+    @Override
+    public void dispose() {
+        try {
+            rootMailQueue.close();
+        } catch (IOException e) {
+            LOGGER.debug("error closing queue", e);
+        }
     }
 
     @Override

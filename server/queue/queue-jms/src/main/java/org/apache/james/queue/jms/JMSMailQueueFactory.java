@@ -48,8 +48,8 @@ public class JMSMailQueueFactory extends AbstractMailQueueFactory<ManageableMail
     }
 
     @Override
-    protected ManageableMailQueue createMailQueue(String name) {
-        return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory, gaugeRegistry);
+    protected ManageableMailQueue createCacheableMailQueue(String name) {
+        return new JMSCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory, gaugeRegistry);
     }
-    
+
 }

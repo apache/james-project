@@ -17,73 +17,43 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.memory;
-
-import static org.apache.james.queue.api.Mails.defaultMail;
-import static org.assertj.core.api.Assertions.assertThat;
+package org.apache.james.queue.file;
 
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.rules.TemporaryFolder;
 
-public class MemoryMailQueueTest implements DelayedManageableMailQueueContract {
+@Disabled("FileMailQueue is an outdated unmaintained component suffering incomplete features and is not thread safe" +
+    "This includes: " +
+    " - JAMES-2298 Unsupported remove management feature" +
+    " - JAMES-2954 Incomplete browse implementation" +
+    " - JAMES-2544 Mixing concurrent operation might lead to a deadlock and missing fields" +
+    " - JAMES-2979 dequeue is not thread safe")
+public class FileCacheableMailQueueTest implements DelayedManageableMailQueueContract {
+    private static final boolean SYNC = true;
 
-    private MemoryMailQueueFactory.MemoryMailQueue mailQueue;
+    private TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private FileCacheableMailQueue mailQueue;
 
     @BeforeEach
-    public void setUp() {
-        mailQueue = new MemoryMailQueueFactory.MemoryMailQueue("test", new RawMailQueueItemDecoratorFactory());
+    public void setUp() throws Exception {
+        temporaryFolder.create();
+        mailQueue = new FileCacheableMailQueue(new RawMailQueueItemDecoratorFactory(), temporaryFolder.newFolder(), "test", SYNC);
+    }
+
+    @AfterEach
+    void teardown() {
+        temporaryFolder.delete();
     }
 
     @Override
     public MailQueue getMailQueue() {
         return mailQueue;
-    }
-
-    @Test
-    public void getLastMailShouldReturnNullWhenNoMail() throws Exception {
-        assertThat(mailQueue.getLastMail())
-            .isNull();
-    }
-
-    @Test
-    public void getLastMailShouldReturnSingleMail() throws Exception {
-        mailQueue.enQueue(defaultMail()
-            .name("name")
-            .build());
-
-        assertThat(mailQueue.getLastMail().getName())
-            .isEqualTo("name");
-    }
-
-    @Test
-    public void getLastMailShouldReturnLastEnqueuedMail() throws Exception {
-        mailQueue.enQueue(defaultMail()
-            .name("name1")
-            .build());
-        mailQueue.enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        assertThat(mailQueue.getLastMail().getName())
-            .isEqualTo("name2");
-    }
-
-    @Test
-    public void getLastMailShouldNotAlterMailQueueState() throws Exception {
-        mailQueue.enQueue(defaultMail()
-            .name("name1")
-            .build());
-        mailQueue.enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        mailQueue.getLastMail();
-        assertThat(mailQueue.getLastMail().getName())
-            .isEqualTo("name2");
     }
 
     @Override

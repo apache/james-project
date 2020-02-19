@@ -71,15 +71,15 @@ import reactor.core.publisher.Mono;
 /**
  * {@link ManageableMailQueue} implementation which use the fs to store {@link Mail}'s
  * <p/>
- * On create of the {@link FileMailQueue} the {@link #init()} will get called. This takes care of
+ * On create of the {@link FileCacheableMailQueue} the {@link #init()} will get called. This takes care of
  * loading the needed meta-data into memory for fast access.
  *
  * @deprecated FileMailQueue implementation is unmaintained, incomplete and not thread safe
  * We recommend using embedded ActiveMQMailQueue implementation instead
  */
 @Deprecated
-public class FileMailQueue implements ManageableMailQueue {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileMailQueue.class);
+public class FileCacheableMailQueue implements ManageableMailQueue {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileCacheableMailQueue.class);
 
     private final Map<String, FileItem> keyMappings = Collections.synchronizedMap(new LinkedHashMap<>());
     private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<>();
@@ -98,7 +98,7 @@ public class FileMailQueue implements ManageableMailQueue {
     private final String queueName;
     private final Flux<MailQueueItem> flux;
 
-    public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
+    public FileCacheableMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.sync = sync;
         this.queueName = queuename;
@@ -108,6 +108,11 @@ public class FileMailQueue implements ManageableMailQueue {
         this.flux = Mono.defer(this::deQueueOneItem)
             .repeat()
             .limitRate(1);
+    }
+
+    @Override
+    public void close() {
+        //There's no resource to free
     }
 
     @Override

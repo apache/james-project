@@ -199,7 +199,7 @@ public class SMTPServerTest {
     protected Configuration configuration;
     protected MockProtocolHandlerLoader chain;
     protected MemoryMailQueueFactory queueFactory;
-    protected MemoryMailQueueFactory.MemoryMailQueue queue;
+    protected MemoryMailQueueFactory.MemoryCacheableMailQueue queue;
     protected MemoryRecipientRewriteTable rewriteTable;
     private AliasReverseResolver aliasReverseResolver;
     protected CanSendFrom canSendFrom;

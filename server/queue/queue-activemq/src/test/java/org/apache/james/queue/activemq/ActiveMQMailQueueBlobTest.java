@@ -59,7 +59,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     static final String BASE_DIR = "file://target/james-test";
     static final boolean USE_BLOB = true;
 
-    ActiveMQMailQueue mailQueue;
+    ActiveMQCacheableMailQueue mailQueue;
     MyFileSystem fileSystem;
 
     @BeforeEach
@@ -78,7 +78,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
-        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, USE_BLOB, metricFactory, gaugeRegistry);
+        mailQueue = new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, USE_BLOB, metricFactory, gaugeRegistry);
     }
 
     @AfterEach

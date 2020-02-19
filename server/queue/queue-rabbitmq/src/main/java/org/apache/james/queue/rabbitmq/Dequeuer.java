@@ -21,6 +21,7 @@ package org.apache.james.queue.rabbitmq;
 
 import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -40,13 +41,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.ConsumeOptions;
+import reactor.rabbitmq.Receiver;
 
-class Dequeuer {
+class Dequeuer implements Closeable {
     private static final boolean REQUEUE = true;
     private static final int EXECUTION_RATE = 5;
-    private final Flux<AcknowledgableDelivery> flux;
 
     private static class RabbitMQMailQueueItem implements MailQueue.MailQueueItem {
+
         private final Consumer<Boolean> ack;
         private final EnqueueId enqueueId;
         private final Mail mail;
@@ -70,12 +72,15 @@ class Dequeuer {
         public void done(boolean success) {
             ack.accept(success);
         }
+
     }
 
     private final Function<MailReferenceDTO, MailWithEnqueueId> mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
     private final MailQueueView mailQueueView;
+    private final Receiver receiver;
+    private final Flux<AcknowledgableDelivery> flux;
 
     Dequeuer(MailQueueName name, ReceiverProvider receiverProvider, Function<MailReferenceDTO, MailWithEnqueueId> mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
@@ -84,9 +89,15 @@ class Dequeuer {
         this.mailReferenceSerializer = serializer;
         this.mailQueueView = mailQueueView;
         this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
-        this.flux = receiverProvider.createReceiver()
+        this.receiver = receiverProvider.createReceiver();
+        this.flux = this.receiver
             .consumeManualAck(name.toWorkQueueName().asString(), new ConsumeOptions().qos(EXECUTION_RATE))
             .filter(getResponse -> getResponse.getBody() != null);
+    }
+
+    @Override
+    public void close() {
+        receiver.close();
     }
 
     Flux<? extends MailQueue.MailQueueItem> deQueue() {

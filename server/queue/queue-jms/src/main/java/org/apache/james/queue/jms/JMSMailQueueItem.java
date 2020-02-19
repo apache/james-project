@@ -48,13 +48,13 @@ public class JMSMailQueueItem implements MailQueueItem {
             if (success) {
                 session.commit();
             } else {
-                JMSMailQueue.rollback(session);
+                JMSCacheableMailQueue.rollback(session);
             }
         } catch (JMSException ex) {
             throw new MailQueueException("Unable to commit dequeue operation for mail " + mail.getName(), ex);
         } finally {
-            JMSMailQueue.closeConsumer(consumer);
-            JMSMailQueue.closeSession(session);
+            JMSCacheableMailQueue.closeConsumer(consumer);
+            JMSCacheableMailQueue.closeSession(session);
         }
     }
 

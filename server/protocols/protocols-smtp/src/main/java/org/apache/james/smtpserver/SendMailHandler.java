@@ -19,6 +19,8 @@
 
 package org.apache.james.smtpserver;
 
+import java.io.IOException;
+
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
@@ -50,6 +52,15 @@ public class SendMailHandler implements JamesMessageHook {
     @Override
     public void init(Configuration config) {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
+    }
+
+    @Override
+    public void destroy() {
+        try {
+            queue.close();
+        } catch (IOException e) {
+            LOGGER.debug("error close queue", e);
+        }
     }
 
     /**

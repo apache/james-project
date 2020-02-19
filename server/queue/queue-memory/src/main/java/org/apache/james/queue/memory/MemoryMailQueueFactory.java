@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.memory;
 
+import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
@@ -60,7 +61,7 @@ import reactor.core.scheduler.Schedulers;
 
 public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
-    private final ConcurrentHashMap<String, MemoryMailQueueFactory.MemoryMailQueue> mailQueues;
+    private final ConcurrentHashMap<String, MemoryCacheableMailQueue> mailQueues;
     private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
 
     @Inject
@@ -80,19 +81,17 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
     }
 
     @Override
-    public MemoryMailQueueFactory.MemoryMailQueue createQueue(String name) {
-        MemoryMailQueueFactory.MemoryMailQueue newMailQueue = new MemoryMailQueue(name, mailQueueItemDecoratorFactory);
-        return Optional.ofNullable(mailQueues.putIfAbsent(name, newMailQueue))
-            .orElse(newMailQueue);
+    public MemoryCacheableMailQueue createQueue(String name) {
+        return mailQueues.computeIfAbsent(name, mailQueueName -> new MemoryCacheableMailQueue(mailQueueName, mailQueueItemDecoratorFactory));
     }
 
-    public static class MemoryMailQueue implements ManageableMailQueue {
+    public static class MemoryCacheableMailQueue implements ManageableMailQueue {
         private final DelayQueue<MemoryMailQueueItem> mailItems;
         private final LinkedBlockingDeque<MemoryMailQueueItem> inProcessingMailItems;
         private final String name;
         private final Flux<MailQueueItem> flux;
 
-        public MemoryMailQueue(String name, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
+        public MemoryCacheableMailQueue(String name, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
             this.mailItems = new DelayQueue<>();
             this.inProcessingMailItems = new LinkedBlockingDeque<>();
             this.name = name;
@@ -102,6 +101,11 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
                 .flatMap(item ->
                     Mono.fromRunnable(() -> inProcessingMailItems.add(item)).thenReturn(item))
                 .map(mailQueueItemDecoratorFactory::decorate);
+        }
+
+        @Override
+        public void close() {
+            //There's no resource to free
         }
 
         @Override
@@ -244,7 +248,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
                 return false;
             }
 
-            MemoryMailQueue that = (MemoryMailQueue) o;
+            MemoryCacheableMailQueue that = (MemoryCacheableMailQueue) o;
 
             return Objects.equal(this.name, that.name);
         }
@@ -257,10 +261,10 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
 
     public static class MemoryMailQueueItem implements MailQueue.MailQueueItem, Delayed {
         private final Mail mail;
-        private final MemoryMailQueue queue;
+        private final MemoryCacheableMailQueue queue;
         private final ZonedDateTime delivery;
 
-        public MemoryMailQueueItem(Mail mail, MemoryMailQueue queue, ZonedDateTime delivery) {
+        public MemoryMailQueueItem(Mail mail, MemoryCacheableMailQueue queue, ZonedDateTime delivery) {
             this.mail = mail;
             this.queue = queue;
             this.delivery = delivery;

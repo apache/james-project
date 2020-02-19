@@ -30,7 +30,7 @@ import org.apache.james.queue.jms.JMSMailQueueFactory;
 
 /**
  * {@link MailQueueFactory} implementations which return
- * {@link ActiveMQMailQueue} instances
+ * {@link ActiveMQCacheableMailQueue} instances
  */
 public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
 
@@ -51,7 +51,7 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
     }
 
     @Override
-    protected ManageableMailQueue createMailQueue(String name) {
-        return new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory, gaugeRegistry);
+    protected ManageableMailQueue createCacheableMailQueue(String name) {
+        return new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory, gaugeRegistry);
     }
 }

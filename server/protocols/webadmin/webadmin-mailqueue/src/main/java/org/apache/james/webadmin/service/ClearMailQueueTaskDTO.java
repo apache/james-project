@@ -39,19 +39,22 @@ public class ClearMailQueueTaskDTO implements TaskDTO {
     }
 
     public static ClearMailQueueTaskDTO toDTO(ClearMailQueueTask domainObject, String typeName) {
-        return new ClearMailQueueTaskDTO(typeName, domainObject.getQueue().getName());
+        return new ClearMailQueueTaskDTO(typeName, domainObject.getQueueName());
     }
 
     private final String type;
-    private final String queue;
+    private final String queueName;
 
-    public ClearMailQueueTaskDTO(@JsonProperty("type") String type, @JsonProperty("queue") String queue) {
+    public ClearMailQueueTaskDTO(@JsonProperty("type") String type, @JsonProperty("queue") String queueName) {
         this.type = type;
-        this.queue = queue;
+        this.queueName = queueName;
     }
 
     public ClearMailQueueTask fromDTO(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
-        return new ClearMailQueueTask(mailQueueFactory.getQueue(queue).orElseThrow(() -> new ClearMailQueueTask.UnknownSerializedQueue(queue)));
+        return new ClearMailQueueTask(queueName,
+            name -> mailQueueFactory
+                .getQueue(name)
+                .orElseThrow(() -> new ClearMailQueueTask.UnknownSerializedQueue(queueName)));
     }
 
     @Override
@@ -60,6 +63,6 @@ public class ClearMailQueueTaskDTO implements TaskDTO {
     }
 
     public String getQueue() {
-        return queue;
+        return queueName;
     }
 }

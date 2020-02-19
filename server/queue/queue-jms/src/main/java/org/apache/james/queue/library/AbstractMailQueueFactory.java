@@ -102,7 +102,7 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
     }
 
     private T createAndRegisterQueue(String name) {
-        T queue = createMailQueue(name);
+        T queue = createCacheableMailQueue(name);
         if (useJMX) {
             registerMBean(name, queue);
         }
@@ -111,12 +111,10 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
     }
 
     /**
-     * Create a {@link MailQueue} for the given name
-     * 
-     * @param name
-     * @return queue
+     * Create a {@link MailQueue} for the given name that happens to do nothing on close()
+     * to be able to cache the instance
      */
-    protected abstract T createMailQueue(String name);
+    protected abstract T createCacheableMailQueue(String name);
 
     protected synchronized void registerMBean(String queuename, MailQueue queue) {
 

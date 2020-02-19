@@ -99,7 +99,7 @@ import reactor.core.publisher.Mono;
  * {@link Mail} objects.
  * </p>
  */
-public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPrioritySupport, Disposable {
+public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, MailPrioritySupport, Disposable {
 
     private final Flux<MailQueueItem> flux;
 
@@ -153,7 +153,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         }
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JMSMailQueue.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JMSCacheableMailQueue.class);
 
     public static final String FORCE_DELIVERY = "FORCE_DELIVERY";
 
@@ -172,9 +172,9 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     private final Joiner joiner;
     private final Splitter splitter;
 
-    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory,
-                        String queueName, MetricFactory metricFactory,
-                        GaugeRegistry gaugeRegistry) {
+    public JMSCacheableMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory,
+                                 String queueName, MetricFactory metricFactory,
+                                 GaugeRegistry gaugeRegistry) {
         try {
             connection = connectionFactory.createConnection();
             connection.start();
@@ -202,6 +202,14 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             throw new RuntimeException(e);
         }
         flux = Mono.defer(this::deQueueOneItem).repeat();
+    }
+
+    /**
+     * To allow connection reuse (the queue is cacheable), we don't close the queue
+     * on close(), use {@link JMSCacheableMailQueue#dispose} to release resources
+     */
+    @Override
+    public void close() {
     }
 
     @Override

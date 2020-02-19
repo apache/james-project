@@ -17,47 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.file;
+package org.apache.james.queue.memory;
 
-import org.apache.james.queue.api.DelayedManageableMailQueueContract;
-import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueFactoryContract;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.ManageableMailQueueFactoryContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.rules.TemporaryFolder;
 
-@Disabled("FileMailQueue is an outdated unmaintained component suffering incomplete features and is not thread safe" +
-    "This includes: " +
-    " - JAMES-2298 Unsupported remove management feature" +
-    " - JAMES-2954 Incomplete browse implementation" +
-    " - JAMES-2544 Mixing concurrent operation might lead to a deadlock and missing fields" +
-    " - JAMES-2979 dequeue is not thread safe")
-public class FileMailQueueTest implements DelayedManageableMailQueueContract {
-    private static final boolean SYNC = true;
+class MemoryCacheableMailQueueFactoryTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private FileMailQueue mailQueue;
+    MemoryMailQueueFactory memoryMailQueueFactory;
 
     @BeforeEach
-    public void setUp() throws Exception {
-        temporaryFolder.create();
-        mailQueue = new FileMailQueue(new RawMailQueueItemDecoratorFactory(), temporaryFolder.newFolder(), "test", SYNC);
-    }
-
-    @AfterEach
-    void teardown() {
-        temporaryFolder.delete();
+    void setup() {
+        memoryMailQueueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
     }
 
     @Override
-    public MailQueue getMailQueue() {
-        return mailQueue;
-    }
-
-    @Override
-    public ManageableMailQueue getManageableMailQueue() {
-        return mailQueue;
+    public MailQueueFactory<ManageableMailQueue> getMailQueueFactory() {
+        return memoryMailQueueFactory;
     }
 }

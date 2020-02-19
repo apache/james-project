@@ -19,6 +19,7 @@
 
 package org.apache.james.fetchmail;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -67,6 +68,7 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
     private MailQueueFactory<?> queueFactory;
 
     private DomainList domainList;
+    private MailQueue queue;
 
     @Inject
     public void setMailQueueFactory(MailQueueFactory<?> queueFactory) {
@@ -105,7 +107,7 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
       The scheduler service that is used to trigger fetch tasks.
      */
             ScheduledExecutorService scheduler = new JMXEnabledScheduledThreadPoolExecutor(numThreads, jmxPath, "scheduler");
-            MailQueue queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
+            queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 
             List<HierarchicalConfiguration<ImmutableNode>> fetchConfs = conf.configurationsAt("fetch");
             for (HierarchicalConfiguration<ImmutableNode> fetchConf : fetchConfs) {
@@ -132,9 +134,10 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
     }
 
     @PreDestroy
-    public void dispose() {
+    public void dispose() throws IOException {
         if (enabled) {
             LOGGER.info("FetchMail dispose...");
+            queue.close();
             for (ScheduledFuture<?> scheduler1 : schedulers) {
                 scheduler1.cancel(false);
             }

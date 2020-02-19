@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
@@ -95,47 +97,65 @@ public class DeleteMailsFromMailQueueTask implements Task {
         }
     }
 
+    @FunctionalInterface
+    public interface MailQueueFactory {
+        ManageableMailQueue create(String mailQueueName);
+    }
+
     public static final TaskType TYPE = TaskType.of("delete-mails-from-mail-queue");
 
-    private final ManageableMailQueue queue;
     private final Optional<MailAddress> maybeSender;
     private final Optional<String> maybeName;
     private final Optional<MailAddress> maybeRecipient;
+    private final MailQueueFactory factory;
+    private final String queueName;
+    private Optional<Long> initialCount;
+    private Optional<ManageableMailQueue> queue;
 
-    private final long initialCount;
-
-    public DeleteMailsFromMailQueueTask(ManageableMailQueue queue, Optional<MailAddress> maybeSender,
+    public DeleteMailsFromMailQueueTask(String queueName, MailQueueFactory factory,
+                                        Optional<MailAddress> maybeSender,
                                         Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
+        this.factory = factory;
+        this.queueName = queueName;
         Preconditions.checkArgument(
             Booleans.countTrue(maybeSender.isPresent(), maybeName.isPresent(), maybeRecipient.isPresent()) == 1,
             "You should provide one and only one of the query parameters 'sender', 'name' or 'recipient'.");
 
-        this.queue = queue;
         this.maybeSender = maybeSender;
         this.maybeName = maybeName;
         this.maybeRecipient = maybeRecipient;
-        this.initialCount = getRemainingSize();
+        this.initialCount = Optional.empty();
+        this.queue = Optional.empty();
+
     }
 
     @Override
     public Result run() {
-        maybeSender.ifPresent(Throwing.consumer(
-            (MailAddress sender) -> queue.remove(ManageableMailQueue.Type.Sender, sender.asString())));
-        maybeName.ifPresent(Throwing.consumer(
-            (String name) -> queue.remove(ManageableMailQueue.Type.Name, name)));
-        maybeRecipient.ifPresent(Throwing.consumer(
-            (MailAddress recipient) -> queue.remove(ManageableMailQueue.Type.Recipient, recipient.asString())));
+        try (ManageableMailQueue queue = factory.create(queueName)) {
+            this.initialCount = Optional.of(getRemainingSize(queue));
+            this.queue = Optional.of(queue);
+            maybeSender.ifPresent(Throwing.consumer(
+                (MailAddress sender) -> queue.remove(ManageableMailQueue.Type.Sender, sender.asString())));
+            maybeName.ifPresent(Throwing.consumer(
+                (String name) -> queue.remove(ManageableMailQueue.Type.Name, name)));
+            maybeRecipient.ifPresent(Throwing.consumer(
+                (MailAddress recipient) -> queue.remove(ManageableMailQueue.Type.Recipient, recipient.asString())));
 
-        return Result.COMPLETED;
+            this.queue = Optional.empty();
+
+            return Result.COMPLETED;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public String getQueueName() {
+        return queueName;
     }
 
     @Override
     public TaskType type() {
         return TYPE;
-    }
-
-    ManageableMailQueue getQueue() {
-        return queue;
     }
 
     Optional<String> getMaybeName() {
@@ -152,13 +172,13 @@ public class DeleteMailsFromMailQueueTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(queue.getName(),
-            initialCount,
-            getRemainingSize(), maybeSender,
+        return this.queue.map(queue -> new AdditionalInformation(queueName,
+            initialCount.get(),
+            getRemainingSize(queue), maybeSender,
             maybeName, maybeRecipient, Clock.systemUTC().instant()));
     }
 
-    public long getRemainingSize() {
+    public long getRemainingSize(ManageableMailQueue queue) {
         try {
             return queue.getSize();
         } catch (MailQueue.MailQueueException e) {

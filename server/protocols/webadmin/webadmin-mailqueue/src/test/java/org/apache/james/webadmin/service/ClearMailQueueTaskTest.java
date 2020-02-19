@@ -17,6 +17,7 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -46,23 +47,24 @@ class ClearMailQueueTaskTest {
         when(mockedQueue.getName()).thenReturn(QUEUE_NAME);
         when(mailQueueFactory.getQueue(anyString())).thenAnswer(arg -> Optional.of(mockedQueue));
 
-        ManageableMailQueue queue = mailQueueFactory.getQueue(QUEUE_NAME).get();
-        ClearMailQueueTask task = new ClearMailQueueTask(queue);
+        ClearMailQueueTask.MailQueueFactory factory = queueName -> mailQueueFactory.getQueue(queueName).orElseThrow(RuntimeException::new);
+        ClearMailQueueTask task = new ClearMailQueueTask(QUEUE_NAME, factory);
 
         JsonSerializationVerifier.dtoModule(ClearMailQueueTaskDTO.module(mailQueueFactory))
             .bean(task)
             .json(SERIALIZED)
+            .equalityTester((a, b) -> assertThat(a.getQueueName()).isEqualTo(b.getQueueName()))
             .verify();
     }
 
     @Test
-    void taskShouldThrowWhenDeserializeAnUnknownQueue() {
+    void taskShouldThrowWhenRunOnAnUnknownQueue() {
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         when(mailQueueFactory.getQueue(anyString())).thenReturn(Optional.empty());
         JsonTaskSerializer testee = JsonTaskSerializer.of(ClearMailQueueTaskDTO.module(mailQueueFactory));
 
         String serializedJson = "{\"type\": \"clear-mail-queue\", \"queue\": \"anyQueue\"}";
-        assertThatThrownBy(() -> testee.deserialize(serializedJson))
+        assertThatThrownBy(() -> testee.deserialize(serializedJson).run())
             .isInstanceOf(ClearMailQueueTask.UnknownSerializedQueue.class);
     }
 

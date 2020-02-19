@@ -21,6 +21,7 @@ package org.apache.james.mailetcontainer.impl;
 
 import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
 
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -59,7 +60,6 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
     private static final Logger LOGGER = LoggerFactory.getLogger(JamesMailSpooler.class);
 
     public static final String SPOOL_PROCESSING = "spoolProcessing";
-    private MailQueue queue;
 
     /**
      * The number of threads used to move mail through the spool.
@@ -79,6 +79,8 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
     private reactor.core.Disposable disposable;
     private Scheduler spooler;
     private int parallelismLevel;
+    private MailQueue queue;
+
 
     @Inject
     public JamesMailSpooler(MetricFactory metricFactory, MailProcessor mailProcessor, MailQueueFactory<?> queueFactory) {
@@ -173,6 +175,11 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         LOGGER.info("start dispose() ...");
         disposable.dispose();
         spooler.dispose();
+        try {
+            queue.close();
+        } catch (IOException e) {
+            LOGGER.debug("error closing queue", e);
+        }
         LOGGER.info("thread shutdown completed.");
     }
 
