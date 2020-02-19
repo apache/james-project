@@ -34,6 +34,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraIdAndPath;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.slf4j.Logger;
@@ -94,7 +95,7 @@ public class SolveMailboxInconsistenciesService {
             LOGGER.info("Inconsistency fixed for orphan mailbox {} - {}",
                 mailbox.getMailboxId().serialize(),
                 mailbox.generateAssociatedPath().asString());
-            context.incrementFixedInconsistencies();
+            context.addFixedInconsistency(mailbox.getMailboxId());
         }
     }
 
@@ -124,7 +125,7 @@ public class SolveMailboxInconsistenciesService {
                     LOGGER.info("Inconsistency fixed for orphan mailboxPath {} - {}",
                         pathRegistration.getCassandraId().serialize(),
                         pathRegistration.getMailboxPath().asString());
-                    context.incrementFixedInconsistencies();
+                    context.addFixedInconsistency(pathRegistration.getCassandraId());
                 })
                 .map(any -> Result.COMPLETED)
                 .switchIfEmpty(Mono.just(Result.COMPLETED))
@@ -177,13 +178,13 @@ public class SolveMailboxInconsistenciesService {
         static class Builder {
             private Optional<Long> processedMailboxEntries;
             private Optional<Long> processedMailboxPathEntries;
-            private Optional<Long> fixedInconsistencies;
+            private ImmutableList.Builder<MailboxId>  fixedInconsistencies;
             private ImmutableList.Builder<ConflictingEntry> conflictingEntries;
             private Optional<Long> errors;
 
             Builder() {
                 processedMailboxPathEntries = Optional.empty();
-                fixedInconsistencies = Optional.empty();
+                fixedInconsistencies = ImmutableList.builder();
                 conflictingEntries = ImmutableList.builder();
                 errors = Optional.empty();
                 processedMailboxEntries = Optional.empty();
@@ -199,8 +200,8 @@ public class SolveMailboxInconsistenciesService {
                 return this;
             }
 
-            public Builder fixedInconsistencies(long count) {
-                fixedInconsistencies = Optional.of(count);
+            public Builder addFixedInconsistencies(MailboxId mailboxId) {
+                fixedInconsistencies.add(mailboxId);
                 return this;
             }
 
@@ -218,7 +219,7 @@ public class SolveMailboxInconsistenciesService {
                 return new Context(
                     processedMailboxEntries.orElse(0L),
                     processedMailboxPathEntries.orElse(0L),
-                    fixedInconsistencies.orElse(0L),
+                    fixedInconsistencies.build(),
                     conflictingEntries.build(),
                     errors.orElse(0L));
             }
@@ -231,11 +232,13 @@ public class SolveMailboxInconsistenciesService {
         static class Snapshot {
             private final long processedMailboxEntries;
             private final long processedMailboxPathEntries;
-            private final long fixedInconsistencies;
+            private final ImmutableList<MailboxId> fixedInconsistencies;
             private final ImmutableList<ConflictingEntry> conflictingEntries;
             private final long errors;
 
-            private Snapshot(long processedMailboxEntries, long processedMailboxPathEntries, long fixedInconsistencies, ImmutableList<ConflictingEntry> conflictingEntries, long errors) {
+            private Snapshot(long processedMailboxEntries, long processedMailboxPathEntries,
+                             ImmutableList<MailboxId> fixedInconsistencies,
+                             ImmutableList<ConflictingEntry> conflictingEntries, long errors) {
                 this.processedMailboxEntries = processedMailboxEntries;
                 this.processedMailboxPathEntries = processedMailboxPathEntries;
                 this.fixedInconsistencies = fixedInconsistencies;
@@ -251,7 +254,7 @@ public class SolveMailboxInconsistenciesService {
                 return processedMailboxPathEntries;
             }
 
-            long getFixedInconsistencies() {
+            ImmutableList<MailboxId> getFixedInconsistencies() {
                 return fixedInconsistencies;
             }
 
@@ -296,26 +299,26 @@ public class SolveMailboxInconsistenciesService {
 
         private final AtomicLong processedMailboxEntries;
         private final AtomicLong processedMailboxPathEntries;
-        private final AtomicLong fixedInconsistencies;
+        private final ConcurrentLinkedDeque<MailboxId> fixedInconsistencies;
         private final ConcurrentLinkedDeque<ConflictingEntry> conflictingEntries;
         private final AtomicLong errors;
 
         Context() {
-            this(new AtomicLong(), new AtomicLong(), new AtomicLong(), ImmutableList.of(), new AtomicLong());
+            this(new AtomicLong(), new AtomicLong(), ImmutableList.of(), ImmutableList.of(), new AtomicLong());
         }
 
-        Context(long processedMailboxEntries, long processedMailboxPathEntries, long fixedInconsistencies, Collection<ConflictingEntry> conflictingEntries, long errors) {
+        Context(long processedMailboxEntries, long processedMailboxPathEntries, Collection<MailboxId> fixedInconsistencies, Collection<ConflictingEntry> conflictingEntries, long errors) {
             this(new AtomicLong(processedMailboxEntries),
                 new AtomicLong(processedMailboxPathEntries),
-                new AtomicLong(fixedInconsistencies),
+                fixedInconsistencies,
                 conflictingEntries,
                 new AtomicLong(errors));
         }
 
-        private Context(AtomicLong processedMailboxEntries, AtomicLong processedMailboxPathEntries, AtomicLong fixedInconsistencies, Collection<ConflictingEntry> conflictingEntries, AtomicLong errors) {
+        private Context(AtomicLong processedMailboxEntries, AtomicLong processedMailboxPathEntries, Collection<MailboxId> fixedInconsistencies, Collection<ConflictingEntry> conflictingEntries, AtomicLong errors) {
             this.processedMailboxEntries = processedMailboxEntries;
             this.processedMailboxPathEntries = processedMailboxPathEntries;
-            this.fixedInconsistencies = fixedInconsistencies;
+            this.fixedInconsistencies = new ConcurrentLinkedDeque<>(fixedInconsistencies);
             this.conflictingEntries = new ConcurrentLinkedDeque<>(conflictingEntries);
             this.errors = errors;
         }
@@ -328,8 +331,8 @@ public class SolveMailboxInconsistenciesService {
             processedMailboxPathEntries.incrementAndGet();
         }
 
-        void incrementFixedInconsistencies() {
-            fixedInconsistencies.incrementAndGet();
+        void addFixedInconsistency(MailboxId mailboxId) {
+            fixedInconsistencies.add(mailboxId);
         }
 
         void addConflictingEntries(ConflictingEntry conflictingEntry) {
@@ -344,7 +347,7 @@ public class SolveMailboxInconsistenciesService {
             return new Snapshot(
                 processedMailboxEntries.get(),
                 processedMailboxPathEntries.get(),
-                fixedInconsistencies.get(),
+                ImmutableList.copyOf(fixedInconsistencies),
                 ImmutableList.copyOf(conflictingEntries),
                 errors.get());
         }

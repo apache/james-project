@@ -23,6 +23,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -30,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class SolveMailboxInconsistenciesTask implements Task {
@@ -41,11 +43,11 @@ public class SolveMailboxInconsistenciesTask implements Task {
         private final Instant instant;
         private final long processedMailboxEntries;
         private final long processedMailboxPathEntries;
-        private final long fixedInconsistencies;
+        private final ImmutableList<String> fixedInconsistencies;
         private final ImmutableList<ConflictingEntry> conflictingEntries;
         private final long errors;
 
-        Details(Instant instant, long processedMailboxEntries, long processedMailboxPathEntries, long fixedInconsistencies,
+        Details(Instant instant, long processedMailboxEntries, long processedMailboxPathEntries, ImmutableList<String> fixedInconsistencies,
                 ImmutableList<ConflictingEntry> conflictingEntries, long errors) {
             this.instant = instant;
             this.processedMailboxEntries = processedMailboxEntries;
@@ -71,7 +73,7 @@ public class SolveMailboxInconsistenciesTask implements Task {
         }
 
         @JsonProperty("fixedInconsistencies")
-        long getFixedInconsistencies() {
+        ImmutableList<String> getFixedInconsistencies() {
             return fixedInconsistencies;
         }
 
@@ -110,7 +112,9 @@ public class SolveMailboxInconsistenciesTask implements Task {
         return Optional.of(new Details(Clock.systemUTC().instant(),
             snapshot.getProcessedMailboxEntries(),
             snapshot.getProcessedMailboxPathEntries(),
-            snapshot.getFixedInconsistencies(),
+            snapshot.getFixedInconsistencies().stream()
+                .map(MailboxId::serialize)
+                .collect(Guavate.toImmutableList()),
             snapshot.getConflictingEntries(),
             snapshot.getErrors()));
     }
