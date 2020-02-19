@@ -24,7 +24,6 @@ import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxManager> {
@@ -33,52 +32,6 @@ class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxM
         " element of the Vault")
     @Nested
     class HookTests {
-    }
-
-    @Nested
-    class BasicFeaturesTests extends MailboxManagerTest<StoreMailboxManager>.BasicFeaturesTests {
-        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
-        @Test
-        protected void renameMailboxShouldChangeTheMailboxPathOfAMailbox() {
-        }
-
-        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
-        @Test
-        protected void renameMailboxByIdShouldChangeTheMailboxPathOfAMailbox() {
-        }
-
-        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
-        @Test
-        protected void user1ShouldBeAbleToDeleteSubmailboxByid() {
-        }
-
-        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
-        @Test
-        protected void user1ShouldBeAbleToDeleteInboxById() {
-        }
-
-        @Disabled("JAMES-2993 mailboxId support for Maildir is partial")
-        @Test
-        protected void getMailboxByIdShouldReturnMailboxWhenBelongingToUser() {
-        }
-    }
-
-    @Nested
-    class MailboxNameLimitTests extends MailboxManagerTest<StoreMailboxManager>.MailboxNameLimitTests {
-        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
-        @Test
-        protected void renamingMailboxByIdShouldNotThrowWhenNameWithoutEmptyHierarchicalLevel() {
-        }
-
-        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
-        @Test
-        protected void renamingMailboxByIdShouldNotFailWhenLimitNameLength() {
-        }
-
-        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
-        @Test
-        protected void renamingMailboxByIdShouldNotThrowWhenNameWithASingleToBeNormalizedTrailingDelimiter() {
-        }
     }
 
     @RegisterExtension

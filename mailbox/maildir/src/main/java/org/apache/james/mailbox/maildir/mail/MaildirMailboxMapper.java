@@ -71,7 +71,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
 
     @Override
     public void delete(Mailbox mailbox) throws MailboxException {
-        
         String folderName = maildirStore.getFolderName(mailbox);
         File folder = new File(folderName);
         if (folder.isDirectory()) {
@@ -257,11 +256,8 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
 
     @Override
     public List<Mailbox> list() throws MailboxException {
-        
        File maildirRoot = maildirStore.getMaildirRoot();
        List<Mailbox> mailboxList = new ArrayList<>();
-        
-
 
        if (maildirStore.getMaildirLocation().endsWith("/" + MaildirStore.PATH_DOMAIN + "/" + MaildirStore.PATH_USER)) {
            File[] domains = maildirRoot.listFiles();
@@ -275,7 +271,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         File[] users = maildirRoot.listFiles();
         visitUsersForMailboxList(null, users, mailboxList);
         return mailboxList;
-        
     }
 
     @Override
@@ -284,12 +279,9 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
 
     private void visitUsersForMailboxList(File domain, File[] users, List<Mailbox> mailboxList) throws MailboxException {
-        
         String userName = null;
         
         for (File user: users) {
-            
-            
             if (domain == null) {
                 userName = user.getName();
             } else {
@@ -298,24 +290,24 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             
             // Special case for INBOX: Let's use the user's folder.
             MailboxPath inboxMailboxPath = MailboxPath.forUser(Username.of(userName), MailboxConstants.INBOX);
-            mailboxList.add(maildirStore.loadMailbox(session, inboxMailboxPath));
+
+            try {
+                mailboxList.add(maildirStore.loadMailbox(session, inboxMailboxPath));
+            } catch (MailboxException e) {
+                //do nothing, we should still be able to list the mailboxes even if INBOX does not exist
+            }
+
             
             // List all INBOX sub folders.
-            
             File[] mailboxes = user.listFiles(pathname -> pathname.getName().startsWith("."));
             
             for (File mailbox: mailboxes) {
-               
-                
                 MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, 
                         Username.of(userName),
                         mailbox.getName().substring(1));
                 mailboxList.add(maildirStore.loadMailbox(session, mailboxPath));
-
             }
-
         }
-        
     }
 
     @Override
