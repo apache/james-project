@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 import javax.mail.Message;
 import javax.mail.internet.InternetAddress;
@@ -208,7 +207,7 @@ class LocalFileBlobExportMechanismTest {
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
             .explanation("The content of a deleted message vault had been shared with you.")
-            .filePrefix(Optional.of(filePrefix))
+            .filePrefix(filePrefix)
             .fileExtension(FileExtension.ZIP)
             .export();
 

@@ -93,8 +93,9 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
     private final DNSService dnsService;
     private final Configuration configuration;
 
+    @VisibleForTesting
     @Inject
-    LocalFileBlobExportMechanism(MailetContext mailetContext, BlobStore blobStore, FileSystem fileSystem, DNSService dnsService, Configuration configuration) {
+    public LocalFileBlobExportMechanism(MailetContext mailetContext, BlobStore blobStore, FileSystem fileSystem, DNSService dnsService, Configuration configuration) {
         this.mailetContext = mailetContext;
         this.blobStore = blobStore;
         this.fileSystem = fileSystem;
