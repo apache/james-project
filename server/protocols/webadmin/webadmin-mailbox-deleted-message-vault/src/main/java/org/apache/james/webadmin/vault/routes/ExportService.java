@@ -22,7 +22,6 @@ package org.apache.james.webadmin.vault.routes;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -78,7 +77,7 @@ class ExportService {
         blobExport.blobId(blobId)
             .with(exportToAddress)
             .explanation(exportMessage(username))
-            .filePrefix(Optional.of(String.format("deleted-message-of-%s_", username.asString())))
+            .filePrefix(String.format("deleted-message-of-%s_", username.asString()))
             .fileExtension(FileExtension.ZIP)
             .export();
     }

@@ -49,6 +49,10 @@ public interface BlobExportMechanism {
         default FileExtensionStage noFileCustomPrefix() {
             return filePrefix(Optional.empty());
         }
+
+        default FileExtensionStage filePrefix(String prefix) {
+            return filePrefix(Optional.of(prefix));
+        }
     }
 
     @FunctionalInterface
