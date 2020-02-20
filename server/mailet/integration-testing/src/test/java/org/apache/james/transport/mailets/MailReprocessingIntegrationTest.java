@@ -123,7 +123,7 @@ public class MailReprocessingIntegrationTest {
         given()
             .spec(specification)
             .param("action", "reprocess")
-            .param("queue", MailQueueFactory.SPOOL)
+            .param("queue", MailQueueFactory.SPOOL.asString())
             .param("processor", TRANSPORT_PROCESSOR)
         .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails");
 
@@ -151,7 +151,7 @@ public class MailReprocessingIntegrationTest {
         given()
             .spec(specification)
             .param("action", "reprocess")
-            .param("queue", MailQueueFactory.SPOOL)
+            .param("queue", MailQueueFactory.SPOOL.asString())
             .param("processor", TRANSPORT_PROCESSOR)
         .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails");
 
@@ -162,7 +162,7 @@ public class MailReprocessingIntegrationTest {
         String taskId = given()
             .spec(specification)
             .param("action", "reprocess")
-            .param("queue", MailQueueFactory.SPOOL)
+            .param("queue", MailQueueFactory.SPOOL.asString())
         .patch("/mailRepositories/" + REPOSITORY_A.getPath().urlEncoded() + "/mails")
             .jsonPath()
             .get("taskId");
@@ -195,7 +195,7 @@ public class MailReprocessingIntegrationTest {
         given()
             .spec(specification)
             .param("action", "reprocess")
-            .param("queue", MailQueueFactory.SPOOL)
+            .param("queue", MailQueueFactory.SPOOL.asString())
             .param("processor", "unknown")
             .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails");
 

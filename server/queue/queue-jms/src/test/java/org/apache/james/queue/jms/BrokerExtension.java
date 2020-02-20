@@ -25,6 +25,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.plugin.StatisticsBrokerPlugin;
 import org.apache.commons.text.RandomStringGenerator;
+import org.apache.james.queue.api.MailQueueName;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -38,10 +39,10 @@ public class BrokerExtension  implements ParameterResolver, BeforeAllCallback, A
 
     public static final String STATISTICS = "Statistics";
 
-    public static String generateRandomQueueName(BrokerService broker) {
+    public static MailQueueName generateRandomQueueName(BrokerService broker) {
         String queueName = new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(10);
         BrokerExtension.enablePrioritySupport(broker, queueName);
-        return queueName;
+        return MailQueueName.of(queueName);
     }
 
     private static void enablePrioritySupport(BrokerService aBroker, String queueName) {

@@ -30,7 +30,7 @@ public interface MailQueueFactory<T extends MailQueue> {
     /**
      * {@link MailQueue} which is used for spooling the messages
      */
-    String SPOOL = "spool";
+    MailQueueName SPOOL = MailQueueName.of("spool");
 
     /**
      * Return the {@link MailQueue} for the name.
@@ -38,9 +38,9 @@ public interface MailQueueFactory<T extends MailQueue> {
      * @param name
      * @return queue
      */
-    Optional<T> getQueue(String name);
+    Optional<T> getQueue(MailQueueName name);
 
-    T createQueue(String name);
+    T createQueue(MailQueueName name);
 
-    Set<String> listCreatedMailQueues();
+    Set<MailQueueName> listCreatedMailQueues();
 }

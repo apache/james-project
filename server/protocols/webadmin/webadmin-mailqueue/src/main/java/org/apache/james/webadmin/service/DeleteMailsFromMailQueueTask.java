@@ -20,17 +20,18 @@
 package org.apache.james.webadmin.service;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
+import org.apache.james.util.OptionalUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -39,7 +40,7 @@ import com.google.common.primitives.Booleans;
 public class DeleteMailsFromMailQueueTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final String mailQueueName;
+        private final MailQueueName mailQueueName;
         private final long remainingCount;
         private final long initialCount;
 
@@ -48,7 +49,7 @@ public class DeleteMailsFromMailQueueTask implements Task {
         private final Optional<String> recipient;
         private final Instant timestamp;
 
-        public AdditionalInformation(String mailQueueName, long initialCount, long remainingCount,
+        public AdditionalInformation(MailQueueName mailQueueName, long initialCount, long remainingCount,
                                      Optional<MailAddress> maybeSender, Optional<String> maybeName,
                                      Optional<MailAddress> maybeRecipient, Instant timestamp) {
             this.mailQueueName = mailQueueName;
@@ -62,7 +63,7 @@ public class DeleteMailsFromMailQueueTask implements Task {
         }
 
         public String getMailQueueName() {
-            return mailQueueName;
+            return mailQueueName.asString();
         }
 
         public long getRemainingCount() {
@@ -99,7 +100,7 @@ public class DeleteMailsFromMailQueueTask implements Task {
 
     @FunctionalInterface
     public interface MailQueueFactory {
-        ManageableMailQueue create(String mailQueueName);
+        ManageableMailQueue create(MailQueueName mailQueueName) throws MailQueue.MailQueueException;
     }
 
     public static final TaskType TYPE = TaskType.of("delete-mails-from-mail-queue");
@@ -108,11 +109,12 @@ public class DeleteMailsFromMailQueueTask implements Task {
     private final Optional<String> maybeName;
     private final Optional<MailAddress> maybeRecipient;
     private final MailQueueFactory factory;
-    private final String queueName;
+    private final MailQueueName queueName;
     private Optional<Long> initialCount;
     private Optional<ManageableMailQueue> queue;
+    private Optional<TaskExecutionDetails.AdditionalInformation> lastAdditionalInformation;
 
-    public DeleteMailsFromMailQueueTask(String queueName, MailQueueFactory factory,
+    public DeleteMailsFromMailQueueTask(MailQueueName queueName, MailQueueFactory factory,
                                         Optional<MailAddress> maybeSender,
                                         Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
         this.factory = factory;
@@ -126,6 +128,7 @@ public class DeleteMailsFromMailQueueTask implements Task {
         this.maybeRecipient = maybeRecipient;
         this.initialCount = Optional.empty();
         this.queue = Optional.empty();
+        this.lastAdditionalInformation = Optional.empty();
 
     }
 
@@ -141,15 +144,18 @@ public class DeleteMailsFromMailQueueTask implements Task {
             maybeRecipient.ifPresent(Throwing.consumer(
                 (MailAddress recipient) -> queue.remove(ManageableMailQueue.Type.Recipient, recipient.asString())));
 
-            this.queue = Optional.empty();
+            this.lastAdditionalInformation = details();
 
             return Result.COMPLETED;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        } catch (IOException | MailQueue.MailQueueException e) {
+            LOGGER.error("Delete mails from MailQueue got an exception", e);
+            return Result.PARTIAL;
+        } finally {
+            this.queue = Optional.empty();
         }
     }
 
-    public String getQueueName() {
+    public MailQueueName getQueueName() {
         return queueName;
     }
 
@@ -172,10 +178,14 @@ public class DeleteMailsFromMailQueueTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return this.queue.map(queue -> new AdditionalInformation(queueName,
-            initialCount.get(),
-            getRemainingSize(queue), maybeSender,
-            maybeName, maybeRecipient, Clock.systemUTC().instant()));
+        return OptionalUtils.orSuppliers(
+            () -> this.lastAdditionalInformation,
+            () -> this.queue.map(queue ->
+                new AdditionalInformation(
+                    queueName,
+                    initialCount.get(),
+                    getRemainingSize(queue), maybeSender,
+                    maybeName, maybeRecipient, Clock.systemUTC().instant())));
     }
 
     public long getRemainingSize(ManageableMailQueue queue) {

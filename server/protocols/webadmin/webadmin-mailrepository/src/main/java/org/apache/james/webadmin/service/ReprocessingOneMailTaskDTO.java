@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 
@@ -46,7 +47,7 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
             return new ReprocessingOneMailTaskDTO(
                 typeName,
                 domainObject.getRepositoryPath().urlEncoded(),
-                domainObject.getTargetQueue(),
+                domainObject.getTargetQueue().asString(),
                 domainObject.getMailKey().asString(),
                 domainObject.getTargetProcessor()
             );
@@ -77,7 +78,7 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
         return new ReprocessingOneMailTask(
             reprocessingService,
             getMailRepositoryPath(),
-            targetQueue,
+            MailQueueName.of(targetQueue),
             new MailKey(mailKey),
             targetProcessor,
             clock

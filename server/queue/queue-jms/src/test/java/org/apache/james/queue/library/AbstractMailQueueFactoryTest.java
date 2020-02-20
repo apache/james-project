@@ -29,14 +29,15 @@ import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.junit.Before;
 import org.junit.Test;
 
 public class AbstractMailQueueFactoryTest {
-    private static final String QUEUE_1 = "queue1";
-    private static final String QUEUE_2 = "queue2";
-    private static final String QUEUE_3 = "queue3";
+    private static final MailQueueName QUEUE_1 = MailQueueName.of("queue1");
+    private static final MailQueueName QUEUE_2 = MailQueueName.of("queue2");
+    private static final MailQueueName QUEUE_3 = MailQueueName.of("queue3");
 
     private AbstractMailQueueFactory<?> abstractMailQueueFactory;
     private MBeanServer mBeanServer;
@@ -46,7 +47,7 @@ public class AbstractMailQueueFactoryTest {
         mBeanServer = mock(MBeanServer.class);
         abstractMailQueueFactory = new AbstractMailQueueFactory<ManageableMailQueue>() {
             @Override
-            protected ManageableMailQueue createCacheableMailQueue(String name) {
+            protected ManageableMailQueue createCacheableMailQueue(MailQueueName name) {
                 return mock(ManageableMailQueue.class);
             }
         };
@@ -56,7 +57,7 @@ public class AbstractMailQueueFactoryTest {
     @Test
     public void destroyShouldRegisterManageableQueues() throws Exception {
         abstractMailQueueFactory.createQueue(QUEUE_1);
-        verify(mBeanServer).registerMBean(any(MailQueueManagement.class), eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
+        verify(mBeanServer).registerMBean(any(MailQueueManagement.class), eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1.asString())));
     }
 
     @Test
@@ -65,16 +66,16 @@ public class AbstractMailQueueFactoryTest {
         abstractMailQueueFactory.createQueue(QUEUE_2);
         abstractMailQueueFactory.createQueue(QUEUE_3);
         abstractMailQueueFactory.destroy();
-        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
-        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_2)));
-        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_3)));
+        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1.asString())));
+        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_2.asString())));
+        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_3.asString())));
     }
 
     @Test
     public void unregisterMBeanShouldWork() throws Exception {
         abstractMailQueueFactory.createQueue(QUEUE_1);
-        abstractMailQueueFactory.unregisterMBean(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1);
-        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
+        abstractMailQueueFactory.unregisterMBean(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1.asString());
+        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1.asString())));
     }
 
     @Test
@@ -85,11 +86,11 @@ public class AbstractMailQueueFactoryTest {
         doThrow(InstanceNotFoundException.class)
             .doNothing()
             .when(mBeanServer)
-            .unregisterMBean(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1));
+            .unregisterMBean(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1.asString()));
         abstractMailQueueFactory.destroy();
-        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
-        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_2)));
-        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_3)));
+        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1.asString())));
+        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_2.asString())));
+        verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_3.asString())));
     }
 
 }

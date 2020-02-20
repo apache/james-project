@@ -31,6 +31,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.After;
@@ -40,7 +41,7 @@ import org.junit.Test;
 import reactor.core.publisher.Flux;
 
 public class RemoteDeliveryRunningTest {
-    private static final String QUEUE_NAME = "queueName";
+    private static final MailQueueName QUEUE_NAME = MailQueueName.of("queueName");
 
     private RemoteDelivery remoteDelivery;
     private MailQueue mailQueue;
@@ -66,7 +67,7 @@ public class RemoteDeliveryRunningTest {
             return Flux.never();
         });
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.OUTGOING, QUEUE_NAME)
+            .setProperty(RemoteDeliveryConfiguration.OUTGOING, QUEUE_NAME.asString())
             .setProperty(RemoteDeliveryConfiguration.HELO_NAME, "Hello_name")
             .build());
 

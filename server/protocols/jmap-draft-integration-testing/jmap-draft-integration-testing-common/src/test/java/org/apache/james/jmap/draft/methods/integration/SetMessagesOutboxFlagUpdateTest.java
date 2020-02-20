@@ -49,6 +49,7 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.mailet.Mail;
 import org.junit.After;
@@ -72,19 +73,19 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
 
     protected MailQueueFactory<MailQueue> noopMailQueueFactory = new MailQueueFactory<MailQueue>() {
         @Override
-        public Optional<MailQueue> getQueue(String name) {
+        public Optional<MailQueue> getQueue(MailQueueName name) {
             return Optional.of(createQueue(name));
         }
 
         @Override
-        public MailQueue createQueue(String name) {
+        public MailQueue createQueue(MailQueueName name) {
             return new MailQueue() {
                 @Override
                 public void close() throws IOException {
                 }
 
                 @Override
-                public String getName() {
+                public MailQueueName getName() {
                     return name;
                 }
 
@@ -105,7 +106,7 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
         }
 
         @Override
-        public Set<String> listCreatedMailQueues() {
+        public Set<MailQueueName> listCreatedMailQueues() {
             throw new NotImplementedException("Minimalistic implementation. Please do not list queues");
         }
     };

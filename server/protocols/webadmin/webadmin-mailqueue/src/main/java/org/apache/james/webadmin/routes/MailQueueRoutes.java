@@ -21,6 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.ZonedDateTime;
@@ -37,6 +38,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
@@ -135,7 +137,10 @@ public class MailQueueRoutes implements Routes {
     })
     public void defineListQueues(Service service) {
         service.get(BASE_URL,
-            (request, response) -> mailQueueFactory.listCreatedMailQueues(),
+            (request, response) -> mailQueueFactory.listCreatedMailQueues()
+                .stream()
+                .map(MailQueueName::asString)
+                .collect(Guavate.toImmutableList()),
             jsonTransformer);
     }
 
@@ -160,7 +165,7 @@ public class MailQueueRoutes implements Routes {
     }
 
     private MailQueueDTO getMailQueue(Request request) {
-        String mailQueueName = request.params(MAIL_QUEUE_NAME);
+        MailQueueName mailQueueName = MailQueueName.of(request.params(MAIL_QUEUE_NAME));
         return mailQueueFactory.getQueue(mailQueueName).map(this::toDTO)
             .orElseThrow(
                 () -> ErrorResponder.builder()
@@ -219,7 +224,7 @@ public class MailQueueRoutes implements Routes {
     }
 
     private List<MailQueueItemDTO> listMails(Request request) {
-        String mailQueueName = request.params(MAIL_QUEUE_NAME);
+        MailQueueName mailQueueName = MailQueueName.of(request.params(MAIL_QUEUE_NAME));
         return mailQueueFactory.getQueue(mailQueueName)
                 .map(queue -> listMails(queue, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), ParametersExtractor.extractLimit(request)))
                 .orElseThrow(
@@ -303,7 +308,8 @@ public class MailQueueRoutes implements Routes {
     }
 
     private Task deleteMails(Request request) {
-        String mailQueueName = request.params(MAIL_QUEUE_NAME);
+        MailQueueName mailQueueName = MailQueueName.of(request.params(MAIL_QUEUE_NAME));
+        checkQueueExists(mailQueueName);
         return deleteMailsTask(mailQueueName,
                     sender(request.queryParams(SENDER_QUERY_PARAM)),
                     name(request.queryParams(NAME_QUERY_PARAM)),
@@ -385,7 +391,7 @@ public class MailQueueRoutes implements Routes {
     }
 
     private ManageableMailQueue assertMailQueueExists(Request request) {
-        String mailQueueName = request.params(MAIL_QUEUE_NAME);
+        MailQueueName mailQueueName = MailQueueName.of(request.params(MAIL_QUEUE_NAME));
         return mailQueueFactory.getQueue(mailQueueName)
             .orElseThrow(() -> ErrorResponder.builder()
                 .message("%s can not be found", mailQueueName)
@@ -415,13 +421,13 @@ public class MailQueueRoutes implements Routes {
         }
     }
 
-    private Task deleteMailsTask(String queueName, Optional<MailAddress> maybeSender, Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
+    private Task deleteMailsTask(MailQueueName queueName, Optional<MailAddress> maybeSender, Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
         int paramCount = Booleans.countTrue(maybeSender.isPresent(), maybeName.isPresent(), maybeRecipient.isPresent());
         switch (paramCount) {
             case 0:
-                return new ClearMailQueueTask(queueName, this::getQueueOrThrow);
+                return new ClearMailQueueTask(queueName, this::getQueue);
             case 1:
-                return new DeleteMailsFromMailQueueTask(queueName, this::getQueueOrThrow, maybeSender, maybeName, maybeRecipient);
+                return new DeleteMailsFromMailQueueTask(queueName, this::getQueue, maybeSender, maybeName, maybeRecipient);
             default:
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -432,14 +438,23 @@ public class MailQueueRoutes implements Routes {
         }
     }
 
-    private ManageableMailQueue getQueueOrThrow(String queueName) {
-        return mailQueueFactory.getQueue(queueName)
-            .orElseThrow(
-                () -> ErrorResponder.builder()
-                    .message("%s can not be found", queueName)
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorResponder.ErrorType.NOT_FOUND)
-                    .haltError());
+    private ManageableMailQueue getQueue(MailQueueName queueName) throws MailQueueException {
+        return mailQueueFactory.getQueue(queueName).orElseThrow(() -> new MailQueueException("unable to find queue " + queueName.asString()));
+    }
+
+    private ManageableMailQueue checkQueueExists(MailQueueName queueName) {
+        Optional<? extends ManageableMailQueue> queue = mailQueueFactory.getQueue(queueName);
+        try {
+            return queue
+                .orElseThrow(
+                    () -> ErrorResponder.builder()
+                        .message("%s can not be found", queueName)
+                        .statusCode(HttpStatus.NOT_FOUND_404)
+                        .type(ErrorResponder.ErrorType.NOT_FOUND)
+                        .haltError());
+        } finally {
+            queue.ifPresent(Throwing.consumer(Closeable::close));
+        }
     }
 
     private void assertDelayedParamIsTrue(Request request) {

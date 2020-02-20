@@ -65,6 +65,7 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
@@ -157,7 +158,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
     public static final String FORCE_DELIVERY = "FORCE_DELIVERY";
 
-    protected final String queueName;
+    protected final MailQueueName queueName;
     protected final Connection connection;
     protected final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     protected final Metric enqueuedMailsMetric;
@@ -173,7 +174,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     private final Splitter splitter;
 
     public JMSCacheableMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory,
-                                 String queueName, MetricFactory metricFactory,
+                                 MailQueueName queueName, MetricFactory metricFactory,
                                  GaugeRegistry gaugeRegistry) {
         try {
             connection = connectionFactory.createConnection();
@@ -184,11 +185,11 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.queueName = queueName;
         this.metricFactory = metricFactory;
-        this.enqueuedMailsMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + queueName);
-        this.dequeuedMailsMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + queueName);
+        this.enqueuedMailsMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + queueName.asString());
+        this.dequeuedMailsMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + queueName.asString());
 
         this.gaugeRegistry = gaugeRegistry;
-        this.gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + queueName, queueSizeGauge());
+        this.gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + queueName.asString(), queueSizeGauge());
 
         this.joiner = Joiner.on(JAMES_MAIL_SEPARATOR).skipNulls();
         this.splitter = Splitter.on(JAMES_MAIL_SEPARATOR)
@@ -196,7 +197,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
                 .trimResults();
         try {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            queue = session.createQueue(queueName);
+            queue = session.createQueue(queueName.asString());
             producer = session.createProducer(queue);
         } catch (JMSException e) {
             throw new RuntimeException(e);
@@ -213,7 +214,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     }
 
     @Override
-    public String getName() {
+    public MailQueueName getName() {
         return queueName;
     }
 
@@ -239,7 +240,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         MessageConsumer consumer = null;
         try {
             session = connection.createSession(true, Session.SESSION_TRANSACTED);
-            Queue queue = session.createQueue(queueName);
+            Queue queue = session.createQueue(queueName.asString());
             consumer = session.createConsumer(queue, getMessageSelector());
 
             Message message = consumer.receive(10000);
@@ -264,7 +265,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
     @Override
     public void enQueue(Mail mail, Duration delay) throws MailQueueException {
-        TimeMetric timeMetric = metricFactory.timer(ENQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
+        TimeMetric timeMetric = metricFactory.timer(ENQUEUED_TIMER_METRIC_NAME_PREFIX + queueName.asString());
 
         long nextDeliveryTimestamp = computeNextDeliveryTimestamp(delay);
 
@@ -465,7 +466,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
     @Override
     public String toString() {
-        return "MailQueue:" + queueName;
+        return "MailQueue:" + queueName.asString();
     }
 
     /**
@@ -495,7 +496,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
             return Iterators.size(new EnumerationIterator(enumeration));
         } catch (Exception e) {
             LOGGER.error("Unable to get size of queue {}", queueName, e);
-            throw new MailQueueException("Unable to get size of queue " + queueName, e);
+            throw new MailQueueException("Unable to get size of queue " + queueName.asString(), e);
         }
     }
 
@@ -504,7 +505,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         boolean first = true;
         long count = 0;
         try (Session session = connection.createSession(true, Session.SESSION_TRANSACTED)) {
-            Queue queue = session.createQueue(queueName);
+            Queue queue = session.createQueue(queueName.asString());
             try (MessageConsumer consumer = session.createConsumer(queue)) {
                 try (MessageProducer producer = session.createProducer(queue)) {
 
@@ -531,7 +532,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
             }
         } catch (Exception e) {
             LOGGER.error("Unable to flush mail", e);
-            throw new MailQueueException("Unable to get size of queue " + queueName, e);
+            throw new MailQueueException("Unable to get size of queue " + queueName.asString(), e);
         }
     }
 
@@ -560,7 +561,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
         try {
             try (Session session = connection.createSession(true, Session.SESSION_TRANSACTED)) {
-                Queue queue = session.createQueue(queueName);
+                Queue queue = session.createQueue(queueName.asString());
                 try (MessageConsumer consumer = session.createConsumer(queue, selector)) {
                     Message message = null;
                     while (first || message != null) {
@@ -675,7 +676,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
             closeBrowser(browser);
 
             LOGGER.error("Unable to browse queue {}", queueName, e);
-            throw new MailQueueException("Unable to browse queue " + queueName, e);
+            throw new MailQueueException("Unable to browse queue " + queueName.asString(), e);
         }
     }
 

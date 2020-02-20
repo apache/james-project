@@ -19,27 +19,47 @@
 
 package org.apache.james.queue.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Objects;
 
-import javax.mail.MessagingException;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
-import org.junit.jupiter.api.Test;
+public final class MailQueueName {
 
-public interface ManageableMailQueueFactoryContract {
-
-    MailQueueName NAME_1 = MailQueueName.of("name1");
-
-    MailQueueFactory<ManageableMailQueue> getMailQueueFactory();
-
-    @Test
-    default void createMailQueueShouldNotConflictIfAlreadyExists() throws MessagingException {
-        MailQueueFactory<ManageableMailQueue> mailQueueFactory = getMailQueueFactory();
-        MailQueue firstCreation = mailQueueFactory.createQueue(NAME_1);
-
-        firstCreation.enQueue(Mails.defaultMail().name("name").build());
-
-        ManageableMailQueue secondCreation = mailQueueFactory.createQueue(NAME_1);
-        assertThat(secondCreation.getSize()).isEqualTo(1);
+    public static MailQueueName of(String value) {
+        Preconditions.checkNotNull(value);
+        Preconditions.checkArgument(!value.isEmpty());
+        return new MailQueueName(value);
     }
 
+    private final String value;
+
+    private MailQueueName(String value) {
+        this.value = value;
+    }
+
+    public String asString() {
+        return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof MailQueueName) {
+            MailQueueName that = (MailQueueName) o;
+            return Objects.equals(value, that.value);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
+    }
 }

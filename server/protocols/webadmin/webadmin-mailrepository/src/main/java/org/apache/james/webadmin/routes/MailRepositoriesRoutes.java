@@ -42,6 +42,7 @@ import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.util.streams.Limit;
@@ -453,7 +454,7 @@ public class MailRepositoriesRoutes implements Routes {
     private Task reprocessAll(Request request) throws UnsupportedEncodingException, MailRepositoryStore.MailRepositoryStoreException {
         MailRepositoryPath path = decodedRepositoryPath(request);
         Optional<String> targetProcessor = parseTargetProcessor(request);
-        String targetQueue = parseTargetQueue(request);
+        MailQueueName targetQueue = parseTargetQueue(request);
 
         Long repositorySize = repositoryStoreService.size(path).orElse(0L);
         return new ReprocessingAllMailsTask(reprocessingService, repositorySize, path, targetQueue, targetProcessor);
@@ -505,7 +506,7 @@ public class MailRepositoriesRoutes implements Routes {
         MailKey key = new MailKey(request.params("key"));
 
         Optional<String> targetProcessor = parseTargetProcessor(request);
-        String targetQueue = parseTargetQueue(request);
+        MailQueueName targetQueue = parseTargetQueue(request);
 
         return new ReprocessingOneMailTask(reprocessingService, path, targetQueue, key, targetProcessor, Clock.systemUTC());
     }
@@ -525,8 +526,10 @@ public class MailRepositoriesRoutes implements Routes {
         return Optional.ofNullable(request.queryParams("processor"));
     }
 
-    private String parseTargetQueue(Request request) {
-        return Optional.ofNullable(request.queryParams("queue")).orElse(MailQueueFactory.SPOOL);
+    private MailQueueName parseTargetQueue(Request request) {
+        return Optional.ofNullable(request.queryParams("queue"))
+            .map(MailQueueName::of)
+            .orElse(MailQueueFactory.SPOOL);
     }
 
     private MailRepositoryPath decodedRepositoryPath(Request request) throws UnsupportedEncodingException {

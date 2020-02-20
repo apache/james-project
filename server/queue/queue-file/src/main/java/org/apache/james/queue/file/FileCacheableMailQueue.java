@@ -51,6 +51,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageSource;
@@ -95,14 +96,14 @@ public class FileCacheableMailQueue implements ManageableMailQueue {
     private static final AttributeName NEXT_DELIVERY = AttributeName.of("FileQueueNextDelivery");
     private static final int SPLITCOUNT = 10;
     private static final SecureRandom RANDOM = new SecureRandom();
-    private final String queueName;
+    private final MailQueueName queueName;
     private final Flux<MailQueueItem> flux;
 
-    public FileCacheableMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
+    public FileCacheableMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, MailQueueName queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.sync = sync;
         this.queueName = queuename;
-        this.queueDir = new File(parentDir, queueName);
+        this.queueDir = new File(parentDir, queueName.asString());
         this.queueDirName = queueDir.getAbsolutePath();
         init();
         this.flux = Mono.defer(this::deQueueOneItem)
@@ -116,7 +117,7 @@ public class FileCacheableMailQueue implements ManageableMailQueue {
     }
 
     @Override
-    public String getName() {
+    public MailQueueName getName() {
         return queueName;
     }
 

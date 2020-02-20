@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -37,7 +38,7 @@ class ReprocessingAllMailsTaskTest {
     private static final ReprocessingService REPROCESSING_SERVICE = mock(ReprocessingService.class);
     private static final long REPOSITORY_SIZE = 5L;
     private static final MailRepositoryPath REPOSITORY_PATH = MailRepositoryPath.from("a");
-    private static final String TARGET_QUEUE = "queue";
+    private static final MailQueueName TARGET_QUEUE = MailQueueName.of("queue");
     private static final Optional<String> SOME_TARGET_PROCESSOR = Optional.of("targetProcessor");
     private static final long REMAINING_COUNT = 3L;
     private static final String SERIALIZED_TASK_WITH_TARGET_PROCESSOR = "{\"type\":\"reprocessing-all\",\"repositorySize\":5,\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\"}";

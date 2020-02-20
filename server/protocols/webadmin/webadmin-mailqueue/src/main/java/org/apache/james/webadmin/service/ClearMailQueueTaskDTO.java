@@ -20,6 +20,7 @@ package org.apache.james.webadmin.service;
 
 import org.apache.james.json.DTOModule;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -39,7 +40,7 @@ public class ClearMailQueueTaskDTO implements TaskDTO {
     }
 
     public static ClearMailQueueTaskDTO toDTO(ClearMailQueueTask domainObject, String typeName) {
-        return new ClearMailQueueTaskDTO(typeName, domainObject.getQueueName());
+        return new ClearMailQueueTaskDTO(typeName, domainObject.getQueueName().asString());
     }
 
     private final String type;
@@ -51,7 +52,7 @@ public class ClearMailQueueTaskDTO implements TaskDTO {
     }
 
     public ClearMailQueueTask fromDTO(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
-        return new ClearMailQueueTask(queueName,
+        return new ClearMailQueueTask(MailQueueName.of(queueName),
             name -> mailQueueFactory
                 .getQueue(name)
                 .orElseThrow(() -> new ClearMailQueueTask.UnknownSerializedQueue(queueName)));

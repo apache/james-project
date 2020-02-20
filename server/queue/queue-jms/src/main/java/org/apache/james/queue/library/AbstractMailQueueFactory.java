@@ -35,6 +35,7 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueManagementMBean;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,7 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
 
     public static final String MBEAN_NAME_QUEUE_PREFIX = "org.apache.james:type=component,name=queue,queue=";
 
-    protected final Map<String, T> queues = new HashMap<>();
+    protected final Map<MailQueueName, T> queues = new HashMap<>();
     private boolean useJMX = true;
     private MBeanServer mbeanServer;
     private final List<String> mbeans = new ArrayList<>();
@@ -71,7 +72,7 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
     }
 
     @Override
-    public Set<String> listCreatedMailQueues() {
+    public Set<MailQueueName> listCreatedMailQueues() {
         return queues.values()
             .stream()
             .map(MailQueue::getName)
@@ -95,16 +96,16 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
     }
 
     @Override
-    public final synchronized Optional<T> getQueue(String name) {
+    public final synchronized Optional<T> getQueue(MailQueueName name) {
         return Optional.ofNullable(queues.get(name));
     }
 
     @Override
-    public synchronized T createQueue(String name) {
+    public synchronized T createQueue(MailQueueName name) {
         return getQueue(name).orElseGet(() -> createAndRegisterQueue(name));
     }
 
-    private T createAndRegisterQueue(String name) {
+    private T createAndRegisterQueue(MailQueueName name) {
         T queue = createCacheableMailQueue(name);
         if (useJMX) {
             registerMBean(name, queue);
@@ -117,11 +118,11 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
      * Create a {@link MailQueue} for the given name that happens to do nothing on close()
      * to be able to cache the instance
      */
-    protected abstract T createCacheableMailQueue(String name);
+    protected abstract T createCacheableMailQueue(MailQueueName name);
 
-    protected synchronized void registerMBean(String queuename, MailQueue queue) {
+    protected synchronized void registerMBean(MailQueueName queuename, MailQueue queue) {
 
-        String mbeanName = MBEAN_NAME_QUEUE_PREFIX + queuename;
+        String mbeanName = MBEAN_NAME_QUEUE_PREFIX + queuename.asString();
         try {
             MailQueueManagementMBean mbean = null;
             if (queue instanceof ManageableMailQueue) {

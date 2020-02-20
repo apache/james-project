@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
@@ -36,7 +37,7 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
             .convertToDTO(ReprocessingOneMailTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new ReprocessingOneMailTask.AdditionalInformation(
                 MailRepositoryPath.from(dto.repositoryPath),
-                dto.targetQueue,
+                MailQueueName.of(dto.targetQueue),
                 new MailKey(dto.mailKey),
                 dto.targetProcessor,
                 dto.timestamp

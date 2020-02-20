@@ -71,7 +71,7 @@ public interface MailQueue extends Closeable {
      */
     int NO_DELAY = -1;
 
-    String getName();
+    MailQueueName getName();
 
     /**
      * Enqueue the Mail to the queue. The given delay and unit are used to

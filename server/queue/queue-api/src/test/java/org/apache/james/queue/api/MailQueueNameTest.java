@@ -19,27 +19,26 @@
 
 package org.apache.james.queue.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import javax.mail.MessagingException;
-
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public interface ManageableMailQueueFactoryContract {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    MailQueueName NAME_1 = MailQueueName.of("name1");
-
-    MailQueueFactory<ManageableMailQueue> getMailQueueFactory();
+class MailQueueNameTest {
 
     @Test
-    default void createMailQueueShouldNotConflictIfAlreadyExists() throws MessagingException {
-        MailQueueFactory<ManageableMailQueue> mailQueueFactory = getMailQueueFactory();
-        MailQueue firstCreation = mailQueueFactory.createQueue(NAME_1);
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailQueueName.class).verify();
+    }
 
-        firstCreation.enQueue(Mails.defaultMail().name("name").build());
+    @Test
+    void shouldNotAllowNullName() {
+        Assertions.assertThatThrownBy(() -> MailQueueName.of(null)).isInstanceOf(NullPointerException.class);
+    }
 
-        ManageableMailQueue secondCreation = mailQueueFactory.createQueue(NAME_1);
-        assertThat(secondCreation.getSize()).isEqualTo(1);
+    @Test
+    void shouldNotAllowEmptyName() {
+        Assertions.assertThatThrownBy(() -> MailQueueName.of("")).isInstanceOf(IllegalArgumentException.class);
     }
 
 }

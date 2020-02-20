@@ -21,6 +21,7 @@ package org.apache.james.webadmin.service;
 import java.time.Instant;
 
 import org.apache.james.json.DTOModule;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
@@ -32,7 +33,7 @@ public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInf
         DTOModule.forDomainObject(ClearMailQueueTask.AdditionalInformation.class)
             .convertToDTO(ClearMailQueueTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new ClearMailQueueTask.AdditionalInformation(
-                dto.mailQueueName,
+                MailQueueName.of(dto.mailQueueName),
                 dto.initialCount,
                 dto.remainingCount,
                 dto.timestamp

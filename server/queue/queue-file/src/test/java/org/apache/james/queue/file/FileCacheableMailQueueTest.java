@@ -21,6 +21,7 @@ package org.apache.james.queue.file;
 
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -43,7 +44,7 @@ public class FileCacheableMailQueueTest implements DelayedManageableMailQueueCon
     @BeforeEach
     public void setUp() throws Exception {
         temporaryFolder.create();
-        mailQueue = new FileCacheableMailQueue(new RawMailQueueItemDecoratorFactory(), temporaryFolder.newFolder(), "test", SYNC);
+        mailQueue = new FileCacheableMailQueue(new RawMailQueueItemDecoratorFactory(), temporaryFolder.newFolder(), MailQueueName.of("test"), SYNC);
     }
 
     @AfterEach

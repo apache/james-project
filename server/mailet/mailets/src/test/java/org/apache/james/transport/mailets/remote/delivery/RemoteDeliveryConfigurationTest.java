@@ -140,7 +140,7 @@ public class RemoteDeliveryConfigurationTest {
             .setProperty(RemoteDeliveryConfiguration.OUTGOING, value)
             .build();
 
-        assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getOutGoingQueueName())
+        assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getOutGoingQueueName().asString())
             .isEqualTo(value);
     }
 

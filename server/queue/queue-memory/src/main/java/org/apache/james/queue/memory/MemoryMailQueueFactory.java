@@ -42,6 +42,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
@@ -59,7 +60,7 @@ import reactor.core.scheduler.Schedulers;
 
 public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
-    private final ConcurrentHashMap<String, MemoryCacheableMailQueue> mailQueues;
+    private final ConcurrentHashMap<MailQueueName, MemoryCacheableMailQueue> mailQueues;
     private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
 
     @Inject
@@ -69,7 +70,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
     }
 
     @Override
-    public Set<String> listCreatedMailQueues() {
+    public Set<MailQueueName> listCreatedMailQueues() {
         return mailQueues.values()
             .stream()
             .map(MemoryCacheableMailQueue::getName)
@@ -77,22 +78,22 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
     }
 
     @Override
-    public Optional<ManageableMailQueue> getQueue(String name) {
+    public Optional<ManageableMailQueue> getQueue(MailQueueName name) {
         return Optional.ofNullable(mailQueues.get(name));
     }
 
     @Override
-    public MemoryCacheableMailQueue createQueue(String name) {
+    public MemoryCacheableMailQueue createQueue(MailQueueName name) {
         return mailQueues.computeIfAbsent(name, mailQueueName -> new MemoryCacheableMailQueue(mailQueueName, mailQueueItemDecoratorFactory));
     }
 
     public static class MemoryCacheableMailQueue implements ManageableMailQueue {
         private final DelayQueue<MemoryMailQueueItem> mailItems;
         private final LinkedBlockingDeque<MemoryMailQueueItem> inProcessingMailItems;
-        private final String name;
+        private final MailQueueName name;
         private final Flux<MailQueueItem> flux;
 
-        public MemoryCacheableMailQueue(String name, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
+        public MemoryCacheableMailQueue(MailQueueName name, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
             this.mailItems = new DelayQueue<>();
             this.inProcessingMailItems = new LinkedBlockingDeque<>();
             this.name = name;
@@ -110,7 +111,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
         }
 
         @Override
-        public String getName() {
+        public MailQueueName getName() {
             return name;
         }
 

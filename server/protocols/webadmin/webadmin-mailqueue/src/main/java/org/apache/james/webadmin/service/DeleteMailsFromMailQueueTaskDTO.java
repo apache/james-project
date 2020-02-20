@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.apache.james.core.MailAddress;
 import org.apache.james.json.DTOModule;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -27,7 +28,7 @@ public class DeleteMailsFromMailQueueTaskDTO implements TaskDTO {
     public static DeleteMailsFromMailQueueTaskDTO toDTO(DeleteMailsFromMailQueueTask domainObject, String typeName) {
         return new DeleteMailsFromMailQueueTaskDTO(
             typeName,
-            domainObject.getQueueName(),
+            domainObject.getQueueName().asString(),
             domainObject.getMaybeSender().map(MailAddress::asString),
             domainObject.getMaybeName(),
             domainObject.getMaybeRecipient().map(MailAddress::asString)
@@ -54,7 +55,7 @@ public class DeleteMailsFromMailQueueTaskDTO implements TaskDTO {
 
     public DeleteMailsFromMailQueueTask fromDTO(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
         return new DeleteMailsFromMailQueueTask(
-            queueName, name -> mailQueueFactory.getQueue(name).orElseThrow(() -> new DeleteMailsFromMailQueueTask.UnknownSerializedQueue(queueName)),
+            MailQueueName.of(queueName), name -> mailQueueFactory.getQueue(name).orElseThrow(() -> new DeleteMailsFromMailQueueTask.UnknownSerializedQueue(queueName)),
             sender.map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow()),
             name,
             recipient.map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())

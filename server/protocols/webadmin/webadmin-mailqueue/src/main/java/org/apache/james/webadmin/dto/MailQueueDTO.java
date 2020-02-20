@@ -33,7 +33,7 @@ public class MailQueueDTO {
 
     public static MailQueueDTO from(ManageableMailQueue mailQueue) throws MailQueueException {
         return builder()
-            .name(mailQueue.getName())
+            .name(mailQueue.getName().asString())
             .size(mailQueue.getSize())
             .build();
     }

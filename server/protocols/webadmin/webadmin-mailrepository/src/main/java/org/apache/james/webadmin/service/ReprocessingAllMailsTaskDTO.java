@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 
@@ -45,7 +46,7 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                 typeName,
                 domainObject.getRepositorySize(),
                 domainObject.getRepositoryPath().urlEncoded(),
-                domainObject.getTargetQueue(),
+                domainObject.getTargetQueue().asString(),
                 domainObject.getTargetProcessor()
             );
         } catch (Exception e) {
@@ -77,7 +78,7 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                 reprocessingService,
                 repositorySize,
                 MailRepositoryPath.fromEncoded(repositoryPath),
-                targetQueue,
+                MailQueueName.of(targetQueue),
                 targetProcessor
             );
         } catch (Exception e) {

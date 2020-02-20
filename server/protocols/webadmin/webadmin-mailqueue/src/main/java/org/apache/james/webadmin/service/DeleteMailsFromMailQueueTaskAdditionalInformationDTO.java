@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.json.DTOModule;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
@@ -36,7 +37,7 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
 
     private static DeleteMailsFromMailQueueTask.AdditionalInformation fromDTO(DeleteMailsFromMailQueueTaskAdditionalInformationDTO dto) {
         return new DeleteMailsFromMailQueueTask.AdditionalInformation(
-            dto.getQueue(),
+            MailQueueName.of(dto.getQueue()),
             dto.getInitialCount(),
             dto.getRemainingCount(),
             dto.sender.map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow()),

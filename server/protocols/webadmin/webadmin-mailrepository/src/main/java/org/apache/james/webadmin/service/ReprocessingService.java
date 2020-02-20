@@ -34,6 +34,7 @@ import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
@@ -91,7 +92,7 @@ public class ReprocessingService {
         this.mailRepositoryStoreService = mailRepositoryStoreService;
     }
 
-    public void reprocessAll(MailRepositoryPath path, Optional<String> targetProcessor, String targetQueue, Consumer<MailKey> keyListener) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public void reprocessAll(MailRepositoryPath path, Optional<String> targetProcessor, MailQueueName targetQueue, Consumer<MailKey> keyListener) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         try (Reprocessor reprocessor = new Reprocessor(getMailQueue(targetQueue), targetProcessor)) {
             mailRepositoryStoreService
                 .getRepositories(path)
@@ -104,7 +105,7 @@ public class ReprocessingService {
         }
     }
 
-    public void reprocess(MailRepositoryPath path, MailKey key, Optional<String> targetProcessor, String targetQueue) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public void reprocess(MailRepositoryPath path, MailKey key, Optional<String> targetProcessor, MailQueueName targetQueue) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         try (Reprocessor reprocessor = new Reprocessor(getMailQueue(targetQueue), targetProcessor)) {
             Pair<MailRepository, Mail> mailPair = mailRepositoryStoreService
                 .getRepositories(path)
@@ -118,8 +119,8 @@ public class ReprocessingService {
         }
     }
 
-    private MailQueue getMailQueue(String targetQueue) {
+    private MailQueue getMailQueue(MailQueueName targetQueue) {
         return mailQueueFactory.getQueue(targetQueue)
-            .orElseThrow(() -> new RuntimeException("Can not find queue " + targetQueue));
+            .orElseThrow(() -> new RuntimeException("Can not find queue " + targetQueue.asString()));
     }
 }

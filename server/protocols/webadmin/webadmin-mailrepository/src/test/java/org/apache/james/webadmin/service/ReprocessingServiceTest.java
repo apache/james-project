@@ -37,6 +37,7 @@ import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.mailrepository.memory.TestingMailRepositoryLoader;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
@@ -57,7 +58,7 @@ public class ReprocessingServiceTest {
     private static final MailKey KEY_1 = new MailKey(NAME_1);
     private static final MailKey KEY_2 = new MailKey(NAME_2);
     private static final MailKey KEY_3 = new MailKey(NAME_3);
-    private static final String SPOOL = "spool";
+    private static final MailQueueName SPOOL = MailQueueName.of("spool");
     private static final Consumer<MailKey> NOOP_CONSUMER = key -> { };
     private static final Optional<String> NO_TARGET_PROCESSOR = Optional.empty();
 

@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +36,7 @@ public class MemoryCacheableMailQueueTest implements DelayedManageableMailQueueC
 
     @BeforeEach
     public void setUp() {
-        mailQueue = new MemoryMailQueueFactory.MemoryCacheableMailQueue("test", new RawMailQueueItemDecoratorFactory());
+        mailQueue = new MemoryMailQueueFactory.MemoryCacheableMailQueue(MailQueueName.of("test"), new RawMailQueueItemDecoratorFactory());
     }
 
     @Override

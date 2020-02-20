@@ -113,7 +113,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
 
         private void registerGaugeFor(RabbitMQMailQueue rabbitMQMailQueue) {
             if (configuration.isSizeMetricsEnabled()) {
-                this.gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + rabbitMQMailQueue.getName(), rabbitMQMailQueue::getSize);
+                this.gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + rabbitMQMailQueue.getName().asString(), rabbitMQMailQueue::getSize);
             }
         }
     }
@@ -133,21 +133,22 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     }
 
     @Override
-    public Optional<RabbitMQMailQueue> getQueue(String name) {
-        return getQueueFromRabbitServer(MailQueueName.fromString(name));
+    public Optional<RabbitMQMailQueue> getQueue(org.apache.james.queue.api.MailQueueName name) {
+        return getQueueFromRabbitServer(MailQueueName.fromString(name.asString()));
     }
 
     @Override
-    public RabbitMQMailQueue createQueue(String name) {
-        MailQueueName mailQueueName = MailQueueName.fromString(name);
+    public RabbitMQMailQueue createQueue(org.apache.james.queue.api.MailQueueName name) {
+        MailQueueName mailQueueName = MailQueueName.fromString(name.asString());
         return getQueueFromRabbitServer(mailQueueName)
             .orElseGet(() -> createQueueIntoRabbitServer(mailQueueName));
     }
 
     @Override
-    public Set<String> listCreatedMailQueues() {
+    public Set<org.apache.james.queue.api.MailQueueName> listCreatedMailQueues() {
         return mqManagementApi.listCreatedMailQueueNames()
             .map(MailQueueName::asString)
+            .map(org.apache.james.queue.api.MailQueueName::of)
             .collect(ImmutableSet.toImmutableSet());
     }
 

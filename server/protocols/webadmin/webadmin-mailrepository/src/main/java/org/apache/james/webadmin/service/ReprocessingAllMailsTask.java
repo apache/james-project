@@ -29,6 +29,7 @@ import javax.mail.MessagingException;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -45,9 +46,9 @@ public class ReprocessingAllMailsTask implements Task {
         private final long remainingCount;
         private final Instant timestamp;
 
-        public AdditionalInformation(MailRepositoryPath repositoryPath, String targetQueue, Optional<String> targetProcessor, long initialCount, long remainingCount, Instant timestamp) {
+        public AdditionalInformation(MailRepositoryPath repositoryPath, MailQueueName targetQueue, Optional<String> targetProcessor, long initialCount, long remainingCount, Instant timestamp) {
             this.repositoryPath = repositoryPath;
-            this.targetQueue = targetQueue;
+            this.targetQueue = targetQueue.asString();
             this.targetProcessor = targetProcessor;
             this.initialCount = initialCount;
             this.remainingCount = remainingCount;
@@ -96,13 +97,13 @@ public class ReprocessingAllMailsTask implements Task {
 
     private final ReprocessingService reprocessingService;
     private final MailRepositoryPath repositoryPath;
-    private final String targetQueue;
+    private final MailQueueName targetQueue;
     private final Optional<String> targetProcessor;
     private final long repositorySize;
     private final AtomicLong processedCount;
 
     public ReprocessingAllMailsTask(ReprocessingService reprocessingService, long repositorySize,
-                                    MailRepositoryPath repositoryPath, String targetQueue, Optional<String> targetProcessor) {
+                                    MailRepositoryPath repositoryPath, MailQueueName targetQueue, Optional<String> targetProcessor) {
         this.reprocessingService = reprocessingService;
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
@@ -138,7 +139,7 @@ public class ReprocessingAllMailsTask implements Task {
         return targetProcessor;
     }
 
-    String getTargetQueue() {
+    MailQueueName getTargetQueue() {
         return targetQueue;
     }
 

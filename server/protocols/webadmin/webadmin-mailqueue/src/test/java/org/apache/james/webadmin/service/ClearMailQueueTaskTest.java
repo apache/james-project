@@ -19,7 +19,7 @@ package org.apache.james.webadmin.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +28,7 @@ import java.util.Optional;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.Test;
 class ClearMailQueueTaskTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     private static final String SERIALIZED = "{\"type\": \"clear-mail-queue\", \"queue\": \"anyQueue\"}";
-    private static final String QUEUE_NAME = "anyQueue";
+    private static final MailQueueName QUEUE_NAME = MailQueueName.of("anyQueue");
     private static final long INITIAL_COUNT = 0L;
     private static final long REMAINING_COUNT = 10L;
     private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\": \"clear-mail-queue\", \"mailQueueName\":\"anyQueue\",\"initialCount\":0,\"remainingCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
@@ -45,7 +46,7 @@ class ClearMailQueueTaskTest {
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         ManageableMailQueue mockedQueue = mock(ManageableMailQueue.class);
         when(mockedQueue.getName()).thenReturn(QUEUE_NAME);
-        when(mailQueueFactory.getQueue(anyString())).thenAnswer(arg -> Optional.of(mockedQueue));
+        when(mailQueueFactory.getQueue(any(MailQueueName.class))).thenAnswer(arg -> Optional.of(mockedQueue));
 
         ClearMailQueueTask.MailQueueFactory factory = queueName -> mailQueueFactory.getQueue(queueName).orElseThrow(RuntimeException::new);
         ClearMailQueueTask task = new ClearMailQueueTask(QUEUE_NAME, factory);
@@ -60,7 +61,7 @@ class ClearMailQueueTaskTest {
     @Test
     void taskShouldThrowWhenRunOnAnUnknownQueue() {
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = mock(MailQueueFactory.class);
-        when(mailQueueFactory.getQueue(anyString())).thenReturn(Optional.empty());
+        when(mailQueueFactory.getQueue(any(MailQueueName.class))).thenReturn(Optional.empty());
         JsonTaskSerializer testee = JsonTaskSerializer.of(ClearMailQueueTaskDTO.module(mailQueueFactory));
 
         String serializedJson = "{\"type\": \"clear-mail-queue\", \"queue\": \"anyQueue\"}";

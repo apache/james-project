@@ -60,6 +60,7 @@ import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.mailrepository.memory.TestingMailRepositoryLoader;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
@@ -99,7 +100,7 @@ public class MailRepositoriesRoutesTest {
     private static final MailRepositoryPath PATH_MY_REPO = MailRepositoryPath.from("myRepo");
     private static final String PATH_ESCAPED_MY_REPO = "myRepo";
     private static final String MY_REPO_MAILS = "myRepo/mails";
-    private static final String CUSTOM_QUEUE = "customQueue";
+    private static final MailQueueName CUSTOM_QUEUE = MailQueueName.of("customQueue");
     private static final String NAME_1 = "name1";
     private static final String NAME_2 = "name2";
     private WebAdminServer webAdminServer;
@@ -1119,7 +1120,7 @@ public class MailRepositoriesRoutesTest {
             .body("additionalInformation.initialCount", is(2))
             .body("additionalInformation.remainingCount", is(0))
             .body("additionalInformation.targetProcessor", isEmptyOrNullString())
-            .body("additionalInformation.targetQueue", is(MailQueueFactory.SPOOL))
+            .body("additionalInformation.targetQueue", is(MailQueueFactory.SPOOL.asString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -1140,7 +1141,7 @@ public class MailRepositoriesRoutesTest {
         String transport = "transport";
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
             .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
@@ -1158,7 +1159,7 @@ public class MailRepositoriesRoutesTest {
             .body("additionalInformation.initialCount", is(2))
             .body("additionalInformation.remainingCount", is(0))
             .body("additionalInformation.targetProcessor", is(transport))
-            .body("additionalInformation.targetQueue", is(CUSTOM_QUEUE))
+            .body("additionalInformation.targetQueue", is(CUSTOM_QUEUE.asString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -1180,7 +1181,7 @@ public class MailRepositoriesRoutesTest {
         String transport = "transport";
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
             .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
@@ -1209,7 +1210,7 @@ public class MailRepositoriesRoutesTest {
         String transport = "transport";
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
             .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
@@ -1240,7 +1241,7 @@ public class MailRepositoriesRoutesTest {
         String transport = "transport";
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
             .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
@@ -1387,7 +1388,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
@@ -1485,7 +1486,7 @@ public class MailRepositoriesRoutesTest {
             .body("additionalInformation.repositoryPath", is(PATH_MY_REPO.asString()))
             .body("additionalInformation.mailKey", is(NAME_1))
             .body("additionalInformation.targetProcessor", isEmptyOrNullString())
-            .body("additionalInformation.targetQueue", is(MailQueueFactory.SPOOL))
+            .body("additionalInformation.targetQueue", is(MailQueueFactory.SPOOL.asString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -1506,7 +1507,7 @@ public class MailRepositoriesRoutesTest {
         String transport = "transport";
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
             .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
@@ -1523,7 +1524,7 @@ public class MailRepositoriesRoutesTest {
             .body("additionalInformation.repositoryPath", is(PATH_MY_REPO.asString()))
             .body("additionalInformation.mailKey", is(NAME_1))
             .body("additionalInformation.targetProcessor", is(transport))
-            .body("additionalInformation.targetQueue", is(CUSTOM_QUEUE))
+            .body("additionalInformation.targetQueue", is(CUSTOM_QUEUE.asString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -1545,7 +1546,7 @@ public class MailRepositoriesRoutesTest {
         String transport = "transport";
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
             .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
@@ -1574,7 +1575,7 @@ public class MailRepositoriesRoutesTest {
         String transport = "transport";
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .param("processor", transport)
             .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
@@ -1692,7 +1693,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
@@ -1720,7 +1721,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .patch(PATH_ESCAPED_MY_REPO + "/mails/" + "unknown")
             .jsonPath()
             .get("taskId");
@@ -1746,7 +1747,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .patch(PATH_ESCAPED_MY_REPO + "/mails/" + "unknown")
             .jsonPath()
             .get("taskId");
@@ -1771,7 +1772,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .param("queue", CUSTOM_QUEUE)
+            .param("queue", CUSTOM_QUEUE.asString())
             .patch(PATH_ESCAPED_MY_REPO + "/mails/" + "unknown")
             .jsonPath()
             .get("taskId");

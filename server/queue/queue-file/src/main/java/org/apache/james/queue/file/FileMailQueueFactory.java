@@ -30,6 +30,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 
 import com.github.steveash.guavate.Guavate;
@@ -43,7 +44,7 @@ import com.github.steveash.guavate.Guavate;
 @Deprecated
 public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
-    private final Map<String, ManageableMailQueue> queues = new ConcurrentHashMap<>();
+    private final Map<MailQueueName, ManageableMailQueue> queues = new ConcurrentHashMap<>();
     private MailQueueItemDecoratorFactory mailQueueActionItemDecoratorFactory;
     private FileSystem fs;
     private boolean sync = true;
@@ -55,7 +56,7 @@ public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueu
     }
 
     @Override
-    public Set<String> listCreatedMailQueues() {
+    public Set<MailQueueName> listCreatedMailQueues() {
         return queues.values()
             .stream()
             .map(MailQueue::getName)
@@ -75,17 +76,17 @@ public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueu
     }
 
     @Override
-    public Optional<ManageableMailQueue> getQueue(String name) {
+    public Optional<ManageableMailQueue> getQueue(MailQueueName name) {
         return Optional.ofNullable(queues.get(name));
     }
 
     @Override
-    public ManageableMailQueue createQueue(String name) {
+    public ManageableMailQueue createQueue(MailQueueName name) {
         return queues.computeIfAbsent(name, mailQueueName -> {
             try {
                 return new FileCacheableMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), mailQueueName, sync);
             } catch (IOException e) {
-                throw new RuntimeException("Unable to access queue " + mailQueueName, e);
+                throw new RuntimeException("Unable to access queue " + mailQueueName.asString(), e);
             }
         });
     }

@@ -44,6 +44,7 @@ import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.jms.JMSCacheableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
@@ -98,7 +99,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
      * Construct a {@link ActiveMQCacheableMailQueue} which only use {@link BlobMessage}
      * 
      */
-    public ActiveMQCacheableMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, MetricFactory metricFactory,
+    public ActiveMQCacheableMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MailQueueName queuename, MetricFactory metricFactory,
                                       GaugeRegistry gaugeRegistry) {
         this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, metricFactory, gaugeRegistry);
     }
@@ -110,7 +111,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
      * @param queuename
      * @param useBlob
      */
-    public ActiveMQCacheableMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, MetricFactory metricFactory,
+    public ActiveMQCacheableMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MailQueueName queuename, boolean useBlob, MetricFactory metricFactory,
                                       GaugeRegistry gaugeRegistry) {
         super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory, gaugeRegistry);
         this.useBlob = useBlob;
@@ -124,7 +125,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
             try {
                 // store URL and queueName for later usage
                 builder.addAttribute(new Attribute(JAMES_BLOB_URL, AttributeValue.of(blobMessage.getURL())));
-                builder.addAttribute(new Attribute(JAMES_QUEUE_NAME, AttributeValue.of(queueName)));
+                builder.addAttribute(new Attribute(JAMES_QUEUE_NAME, AttributeValue.of(queueName.asString())));
             } catch (MalformedURLException e) {
                 // Ignore on error
                 LOGGER.debug("Unable to get url from blobmessage for mail");
@@ -280,7 +281,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
             replyTo = session.createTemporaryQueue();
             consumer = session.createConsumer(replyTo);
 
-            Queue myQueue = session.createQueue(queueName);
+            Queue myQueue = session.createQueue(queueName.asString());
             producer = session.createProducer(null);
 
             String queueName = "ActiveMQ.Statistics.Destination." + myQueue.getQueueName();

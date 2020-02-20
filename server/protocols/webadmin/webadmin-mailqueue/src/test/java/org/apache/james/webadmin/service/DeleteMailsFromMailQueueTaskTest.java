@@ -19,6 +19,7 @@ package org.apache.james.webadmin.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,6 +32,7 @@ import javax.mail.internet.AddressException;
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
@@ -42,14 +44,14 @@ class DeleteMailsFromMailQueueTaskTest {
 
     private MailQueueFactory<ManageableMailQueue> mailQueueFactory;
     private ManageableMailQueue mockedQueue;
-    private final static String queueName = "anyQueue";
+    private final static MailQueueName queueName = MailQueueName.of("anyQueue");
 
     @BeforeEach
     void setUp() {
         mailQueueFactory = mock(MailQueueFactory.class);
         mockedQueue = mock(ManageableMailQueue.class);
         when(mockedQueue.getName()).thenReturn(queueName);
-        when(mailQueueFactory.getQueue(anyString())).thenAnswer(arg -> Optional.of(mockedQueue));
+        when(mailQueueFactory.getQueue(any(MailQueueName.class))).thenAnswer(arg -> Optional.of(mockedQueue));
     }
 
     @Test
@@ -75,7 +77,7 @@ class DeleteMailsFromMailQueueTaskTest {
     @Test
     void taskShouldThrowWhenRunOnAnUnknownQueue() {
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = mock(MailQueueFactory.class);
-        when(mailQueueFactory.getQueue(anyString())).thenReturn(Optional.empty());
+        when(mailQueueFactory.getQueue(any(MailQueueName.class))).thenReturn(Optional.empty());
         JsonTaskSerializer testee = JsonTaskSerializer.of(DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory));
 
         String serializedJson = "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"sender\": \"a@b.c\"}";
