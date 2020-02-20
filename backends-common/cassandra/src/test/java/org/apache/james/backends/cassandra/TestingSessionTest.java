@@ -19,9 +19,11 @@
 
 package org.apache.james.backends.cassandra;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.backends.cassandra.TestingSession.Barrier;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
@@ -29,6 +31,9 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class TestingSessionTest {
     @RegisterExtension
@@ -157,5 +162,71 @@ class TestingSessionTest {
 
         assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
             .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void statementShouldNotBeAppliedBeforeBarrierIsReleased(CassandraCluster cassandra) throws Exception {
+        SchemaVersion originalSchemaVersion = new SchemaVersion(32);
+        dao.updateVersion(originalSchemaVersion).block();
+        Barrier barrier = new Barrier();
+        cassandra.getConf()
+            .awaitOn(barrier)
+            .whenBoundStatementStartsWith("INSERT INTO schemaVersion")
+            .times(1)
+            .setExecutionHook();
+
+        dao.updateVersion(new SchemaVersion(36)).subscribeOn(Schedulers.elastic()).subscribe();
+
+        Thread.sleep(100);
+
+        assertThat(dao.getCurrentSchemaVersion().block())
+            .contains(originalSchemaVersion);
+    }
+
+    @Test
+    void statementShouldBeAppliedWhenBarrierIsReleased(CassandraCluster cassandra) throws Exception {
+        SchemaVersion originalSchemaVersion = new SchemaVersion(32);
+        SchemaVersion newVersion = new SchemaVersion(36);
+
+        dao.updateVersion(originalSchemaVersion).block();
+        Barrier barrier = new Barrier();
+        cassandra.getConf()
+            .awaitOn(barrier)
+            .whenBoundStatementStartsWith("INSERT INTO schemaVersion")
+            .times(1)
+            .setExecutionHook();
+
+        Mono<Void> operation = dao.updateVersion(newVersion).cache();
+
+        operation.subscribeOn(Schedulers.elastic()).subscribe();
+        barrier.releaseCaller();
+        operation.block();
+
+        assertThat(dao.getCurrentSchemaVersion().block())
+            .contains(newVersion);
+    }
+
+    @Test
+    void testShouldBeAbleToAwaitCaller(CassandraCluster cassandra) throws Exception {
+        SchemaVersion originalSchemaVersion = new SchemaVersion(32);
+        SchemaVersion newVersion = new SchemaVersion(36);
+
+        dao.updateVersion(originalSchemaVersion).block();
+        Barrier barrier = new Barrier();
+        cassandra.getConf()
+            .awaitOn(barrier)
+            .whenBoundStatementStartsWith("INSERT INTO schemaVersion")
+            .times(1)
+            .setExecutionHook();
+
+        Mono<Void> operation = dao.updateVersion(newVersion).cache();
+
+        operation.subscribeOn(Schedulers.elastic()).subscribe();
+        barrier.awaitCaller();
+        barrier.releaseCaller();
+        operation.block();
+
+        assertThat(dao.getCurrentSchemaVersion().block())
+            .contains(newVersion);
     }
 }

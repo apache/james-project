@@ -20,8 +20,8 @@
 package org.apache.james.backends.cassandra;
 
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 import com.datastax.driver.core.BoundStatement;
@@ -36,22 +36,45 @@ import com.datastax.driver.core.Statement;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public class TestingSession implements Session {
-    enum Behavior {
-        THROW((session, statement) -> {
+    @FunctionalInterface
+    interface Behavior {
+        Behavior THROW = (session, statement) -> {
             RuntimeException injected_failure = new RuntimeException("Injected failure");
             injected_failure.printStackTrace();
             throw injected_failure;
-        }),
-        EXECUTE_NORMALLY(Session::executeAsync);
+        };
 
-        private final BiFunction<Session, Statement, ResultSetFuture> behaviour;
+        Behavior EXECUTE_NORMALLY = Session::executeAsync;
 
-        Behavior(BiFunction<Session, Statement, ResultSetFuture> behaviour) {
-            this.behaviour = behaviour;
+        static Behavior awaitOn(Barrier barrier) {
+            return (session, statement) -> {
+                barrier.call();
+                return session.executeAsync(statement);
+            };
         }
 
-        ResultSetFuture execute(Session session, Statement statement) {
-            return behaviour.apply(session, statement);
+        ResultSetFuture execute(Session session, Statement statement);
+    }
+
+    public static class Barrier {
+        private final CountDownLatch callerLatch = new CountDownLatch(1);
+        private final CountDownLatch awaitCallerLatch = new CountDownLatch(1);
+
+        void awaitCaller() throws InterruptedException {
+            awaitCallerLatch.await();
+        }
+
+        void releaseCaller() {
+            callerLatch.countDown();
+        }
+
+        void call() {
+            awaitCallerLatch.countDown();
+            try {
+                callerLatch.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -137,6 +160,10 @@ public class TestingSession implements Session {
 
     public RequiresCondition fail() {
         return condition -> applyCount -> () -> executionHook = new ExecutionHook(condition, Behavior.THROW, applyCount);
+    }
+
+    public RequiresCondition awaitOn(Barrier barrier) {
+        return condition -> applyCount -> () -> executionHook = new ExecutionHook(condition, Behavior.awaitOn(barrier), applyCount);
     }
 
     public void resetExecutionHook() {
