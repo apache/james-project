@@ -33,8 +33,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
     @Override
     protected CassandraMailboxManager provideMailboxManager() {
         return CassandraMailboxManagerProvider.provideMailboxManager(
-            cassandra.getCassandraCluster().getConf(),
-            cassandra.getCassandraCluster().getTypesProvider(),
+            cassandra.getCassandraCluster(),
             new PreDeletionHooks(preDeletionHooks(), new RecordingMetricFactory()));
     }
 

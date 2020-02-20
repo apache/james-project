@@ -54,8 +54,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
     void findShouldReturnCorrectElementsWhenChunking() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
-            cassandraCluster.getCassandraCluster().getConf(),
-            cassandraCluster.getCassandraCluster().getTypesProvider(),
+            cassandraCluster.getCassandraCluster(),
             messageIdFactory,
             CassandraConfiguration.builder()
                 .messageReadChunkSize(3)

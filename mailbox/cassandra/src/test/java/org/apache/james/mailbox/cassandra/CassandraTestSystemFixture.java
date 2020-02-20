@@ -59,10 +59,7 @@ class CassandraTestSystemFixture {
     static CassandraMailboxSessionMapperFactory createMapperFactory(CassandraCluster cassandra) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
-        return TestCassandraMailboxSessionMapperFactory.forTests(
-            cassandra.getConf(),
-            cassandra.getTypesProvider(),
-            messageIdFactory);
+        return TestCassandraMailboxSessionMapperFactory.forTests(cassandra, messageIdFactory);
     }
 
     static CassandraMailboxManager createMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory) {

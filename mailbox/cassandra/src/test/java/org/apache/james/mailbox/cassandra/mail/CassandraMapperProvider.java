@@ -82,8 +82,7 @@ public class CassandraMapperProvider implements MapperProvider {
     }
 
     private CassandraMailboxSessionMapperFactory createMapperFactory() {
-        return TestCassandraMailboxSessionMapperFactory.forTests(cassandra.getConf(),
-            cassandra.getTypesProvider(),
+        return TestCassandraMailboxSessionMapperFactory.forTests(cassandra,
             new CassandraMessageId.Factory());
     }
 

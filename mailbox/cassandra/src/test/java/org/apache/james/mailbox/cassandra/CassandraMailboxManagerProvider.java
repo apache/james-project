@@ -19,14 +19,12 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
 import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
@@ -56,36 +54,20 @@ import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
 import com.datastax.driver.core.Session;
-import com.google.inject.Module;
 
 public class CassandraMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
-    static CassandraMailboxManager provideMailboxManager(Session session, CassandraTypesProvider cassandraTypesProvider,
-                                                         PreDeletionHooks preDeletionHooks, Module... overriedGuiceModules) {
-        CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-
-        CassandraMailboxSessionMapperFactory mapperFactory = GuiceUtils.testInjector(session,
-                cassandraTypesProvider,
-                messageIdFactory,
-                CassandraConfiguration.DEFAULT_CONFIGURATION,
-                overriedGuiceModules)
-            .getInstance(CassandraMailboxSessionMapperFactory.class);
-
-        return provideMailboxManager(session, preDeletionHooks, mapperFactory, messageIdFactory);
-    }
-
-    public static CassandraMailboxManager provideMailboxManager(Session session, CassandraTypesProvider cassandraTypesProvider,
+    public static CassandraMailboxManager provideMailboxManager(CassandraCluster cassandra,
                                                                 PreDeletionHooks preDeletionHooks) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
-            session,
-            cassandraTypesProvider,
+            cassandra,
             messageIdFactory);
 
-        return provideMailboxManager(session, preDeletionHooks, mapperFactory, messageIdFactory);
+        return provideMailboxManager(cassandra.getConf(), preDeletionHooks, mapperFactory, messageIdFactory);
     }
 
     private static CassandraMailboxManager provideMailboxManager(Session session,

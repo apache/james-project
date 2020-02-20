@@ -71,8 +71,7 @@ class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttach
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
         mailboxSessionMapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
-            cassandraCluster.getCassandraCluster().getConf(),
-            cassandraCluster.getCassandraCluster().getTypesProvider(),
+            cassandraCluster.getCassandraCluster(),
             messageIdFactory);
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;

@@ -47,8 +47,7 @@ class CassandraMailboxManagerStressTest implements MailboxManagerStressContract<
     @BeforeEach
     void setUp() {
         this.mailboxManager = CassandraMailboxManagerProvider.provideMailboxManager(
-            cassandra.getCassandraCluster().getConf(),
-            cassandra.getCassandraCluster().getTypesProvider(),
+            cassandra.getCassandraCluster(),
             PreDeletionHooks.NO_PRE_DELETION_HOOK);
     }
 }

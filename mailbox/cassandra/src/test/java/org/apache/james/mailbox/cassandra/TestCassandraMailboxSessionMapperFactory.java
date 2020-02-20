@@ -19,24 +19,22 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 
-import com.datastax.driver.core.Session;
-
 public class TestCassandraMailboxSessionMapperFactory {
 
-    public static CassandraMailboxSessionMapperFactory forTests(Session session, CassandraTypesProvider typesProvider,
+    public static CassandraMailboxSessionMapperFactory forTests(CassandraCluster cassandra,
                                                                 CassandraMessageId.Factory factory) {
-        return forTests(session, typesProvider, factory, CassandraConfiguration.DEFAULT_CONFIGURATION);
+        return forTests(cassandra, factory, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
-    public static CassandraMailboxSessionMapperFactory forTests(Session session, CassandraTypesProvider typesProvider,
+    public static CassandraMailboxSessionMapperFactory forTests(CassandraCluster cassandra,
                                                                 CassandraMessageId.Factory factory, CassandraConfiguration cassandraConfiguration) {
 
-        return GuiceUtils.testInjector(session, typesProvider, factory, cassandraConfiguration)
+        return GuiceUtils.testInjector(cassandra.getConf(), cassandra.getTypesProvider(), factory, cassandraConfiguration)
             .getInstance(CassandraMailboxSessionMapperFactory.class);
     }
 

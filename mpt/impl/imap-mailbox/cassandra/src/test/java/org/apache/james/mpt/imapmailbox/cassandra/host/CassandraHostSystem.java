@@ -88,9 +88,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         com.datastax.driver.core.Session session = cassandra.getConf();
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
-            cassandra.getConf(),
-            cassandra.getTypesProvider(),
-            messageIdFactory);
+            cassandra, messageIdFactory);
 
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()));
