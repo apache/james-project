@@ -113,7 +113,6 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             JPAMailbox persistedMailbox = jpaMailbox(mailbox);
 
             getEntityManager().persist(persistedMailbox);
-            mailbox.setMailboxId(persistedMailbox.getMailboxId());
             return persistedMailbox.getMailboxId();
         } catch (PersistenceException e) {
             throw new MailboxException("Save of mailbox " + mailbox.getName() + " failed", e);

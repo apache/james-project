@@ -45,6 +45,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.ExactName;
 import org.apache.james.mailbox.model.search.MailboxQuery;
@@ -112,7 +113,6 @@ class CassandraMailboxMapperTest {
 
         private MailboxPath inboxPath;
         private MailboxPath inboxPathRenamed;
-        private Mailbox inboxRenamed;
         private MailboxQuery.UserBound allMailboxesSearchQuery;
         private MailboxQuery.UserBound inboxSearchQuery;
         private MailboxQuery.UserBound inboxRenamedSearchQuery;
@@ -121,7 +121,6 @@ class CassandraMailboxMapperTest {
         void setUp() {
             inboxPath = MailboxPath.forUser(USER, INBOX);
             inboxPathRenamed = MailboxPath.forUser(USER, INBOX_RENAMED);
-            inboxRenamed = new Mailbox(inboxPathRenamed, UID_VALIDITY);
             allMailboxesSearchQuery = MailboxQuery.builder()
                 .userAndNamespaceFrom(inboxPath)
                 .expression(Wildcard.INSTANCE)
@@ -161,7 +160,7 @@ class CassandraMailboxMapperTest {
         void renameThenFailToRetrieveMailboxShouldBeConsistentWhenFindByInbox() throws Exception {
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
-            inboxRenamed.setMailboxId(inboxId);
+            Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             when(mailboxDAO.retrieveMailbox(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
@@ -188,7 +187,7 @@ class CassandraMailboxMapperTest {
         void renameThenFailToRetrieveMailboxShouldBeConsistentWhenFindAll() throws Exception {
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
-            inboxRenamed.setMailboxId(inboxId);
+            Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             when(mailboxDAO.retrieveMailbox(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
@@ -209,7 +208,7 @@ class CassandraMailboxMapperTest {
         void renameThenFailToRetrieveMailboxShouldBeConsistentWhenFindByRenamedInbox() throws Exception {
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
-            inboxRenamed.setMailboxId(inboxId);
+            Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             when(mailboxDAO.retrieveMailbox(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
@@ -229,7 +228,7 @@ class CassandraMailboxMapperTest {
         void renameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindByInbox() throws Exception {
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
-            inboxRenamed.setMailboxId(inboxId);
+            Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             when(mailboxPathV2DAO.delete(inboxPath))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
@@ -256,7 +255,7 @@ class CassandraMailboxMapperTest {
         void renameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindAll() throws Exception {
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
-            inboxRenamed.setMailboxId(inboxId);
+            Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             when(mailboxPathV2DAO.delete(inboxPath))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
@@ -277,7 +276,7 @@ class CassandraMailboxMapperTest {
         void renameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindByRenamedInbox() throws Exception {
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
-            inboxRenamed.setMailboxId(inboxId);
+            Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             when(mailboxPathV2DAO.delete(inboxPath))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
@@ -426,7 +425,7 @@ class CassandraMailboxMapperTest {
         void renameAfterRenameFailOnRetrieveMailboxShouldRenameTheMailbox() throws Exception {
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
-            inboxRenamed.setMailboxId(inboxId);
+            Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             when(mailboxDAO.retrieveMailbox(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
@@ -460,7 +459,7 @@ class CassandraMailboxMapperTest {
         void renameAfterRenameFailOnDeletePathShouldRenameTheMailbox() throws Exception {
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
-            inboxRenamed.setMailboxId(inboxId);
+            Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             when(mailboxPathV2DAO.delete(inboxPath))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
@@ -496,6 +495,10 @@ class CassandraMailboxMapperTest {
             } catch (Throwable th) {
                 // ignore
             }
+        }
+
+        private Mailbox createInboxRenamedMailbox(MailboxId mailboxId) {
+            return new Mailbox(inboxPathRenamed, UID_VALIDITY, mailboxId);
         }
     }
 

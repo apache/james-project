@@ -36,7 +36,6 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
@@ -185,10 +184,7 @@ public abstract class MessageWithAttachmentMapperTest {
     }
 
     private Mailbox createMailbox(MailboxPath mailboxPath) {
-        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
-        MailboxId id = mapperProvider.generateId();
-        mailbox.setMailboxId(id);
-        return mailbox;
+        return new Mailbox(mailboxPath, UID_VALIDITY, mapperProvider.generateId());
     }
     
     private void saveMessages() throws MailboxException {

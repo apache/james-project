@@ -33,9 +33,11 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,8 +46,9 @@ import org.junit.jupiter.api.Test;
 class QuotaCheckerTest {
 
     static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
+    static final MailboxId MAILBOX_ID = TestId.of(42);
     static final MailboxPath MAILBOX_PATH = MailboxPath.inbox(Username.of("benwa"));
-    static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
+    static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10, MAILBOX_ID);
 
     QuotaRootResolver mockedQuotaRootResolver;
     QuotaManager mockedQuotaManager;

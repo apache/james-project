@@ -33,6 +33,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,6 @@ class CassandraMailboxDAOTest {
     private static final Username USER = Username.of("user");
     private static final MailboxPath NEW_MAILBOX_PATH = MailboxPath.forUser(USER, "xyz");
     private static CassandraId CASSANDRA_ID_1 = CassandraId.timeBased();
-    private static CassandraId CASSANDRA_ID_2 = CassandraId.timeBased();
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
@@ -56,7 +56,6 @@ class CassandraMailboxDAOTest {
 
     private CassandraMailboxDAO testee;
     private Mailbox mailbox1;
-    private Mailbox mailbox2;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -65,9 +64,6 @@ class CassandraMailboxDAOTest {
         mailbox1 = new Mailbox(MailboxPath.forUser(USER, "abcd"),
             UID_VALIDITY_1,
             CASSANDRA_ID_1);
-        mailbox2 = new Mailbox(MailboxPath.forUser(USER, "defg"),
-            UID_VALIDITY_2,
-            CASSANDRA_ID_2);
     }
 
     @Test
@@ -90,9 +86,8 @@ class CassandraMailboxDAOTest {
     void saveShouldOverride() {
         testee.save(mailbox1).block();
 
-        mailbox2.setMailboxId(CASSANDRA_ID_1);
+        Mailbox mailbox2 = createMailbox(CASSANDRA_ID_1);
         testee.save(mailbox2).block();
-
 
         Optional<Mailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1)
             .blockOptional();
@@ -122,6 +117,8 @@ class CassandraMailboxDAOTest {
 
     @Test
     void retrieveAllMailboxesShouldReturnMultiMailboxes() {
+        Mailbox mailbox2 = createMailbox(CassandraId.timeBased());
+
         testee.save(mailbox1).block();
         testee.save(mailbox2).block();
 
@@ -164,5 +161,9 @@ class CassandraMailboxDAOTest {
         Optional<Mailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1).blockOptional();
         assertThat(readMailbox.isPresent()).isTrue();
         assertThat(readMailbox.get()).isEqualToComparingFieldByField(mailbox1);
+    }
+
+    private Mailbox createMailbox(MailboxId mailboxId) {
+        return new Mailbox(MailboxPath.forUser(USER, "defg"), UID_VALIDITY_2, mailboxId);
     }
 }

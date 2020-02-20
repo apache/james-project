@@ -46,12 +46,12 @@ import com.google.common.collect.Lists;
 class DefaultUserQuotaRootResolverTest {
 
     static final Username BENWA = Username.of("benwa");
-    static final MailboxPath MAILBOX_PATH = MailboxPath.inbox(BENWA);
-    static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
-    static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser(BENWA, "test");
-    static final Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_2, 10);
-    static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
     static final MailboxId MAILBOX_ID = TestId.of(42);
+    static final MailboxPath MAILBOX_PATH = MailboxPath.inbox(BENWA);
+    static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10, MAILBOX_ID);
+    static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser(BENWA, "test");
+    static final Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_2, 10, MAILBOX_ID);
+    static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
     static final MailboxSession MAILBOX_SESSION = null;
 
     DefaultUserQuotaRootResolver testee;

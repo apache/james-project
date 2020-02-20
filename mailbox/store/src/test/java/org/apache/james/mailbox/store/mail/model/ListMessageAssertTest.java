@@ -97,10 +97,7 @@ class ListMessageAssertTest {
     }
 
     private Mailbox createMailbox(MailboxPath mailboxPath) {
-        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
-        mailbox.setMailboxId(MAILBOX_ID);
-
-        return mailbox;
+        return new Mailbox(mailboxPath, UID_VALIDITY, MAILBOX_ID);
     }
 
     private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {

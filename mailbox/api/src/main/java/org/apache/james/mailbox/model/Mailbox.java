@@ -29,7 +29,7 @@ import com.google.common.base.Objects;
  * Models long term mailbox data.
  */
 public class Mailbox {
-    private MailboxId id = null;
+    private final MailboxId id;
     private String namespace;
     private Username user;
     private String name;
@@ -42,10 +42,6 @@ public class Mailbox {
         this.user = path.getUser();
         this.name = path.getName();
         this.uidValidity = uidValidity;
-    }
-
-    public Mailbox(MailboxPath path, long uidValidity) {
-        this(path, uidValidity, null);
     }
 
     public Mailbox(Mailbox mailbox) {
@@ -123,11 +119,6 @@ public class Mailbox {
 
     public MailboxPath generateAssociatedPath() {
         return new MailboxPath(getNamespace(), getUser(), getName());
-    }
-
-
-    public void setMailboxId(MailboxId id) {
-        this.id = id;
     }
 
     /**

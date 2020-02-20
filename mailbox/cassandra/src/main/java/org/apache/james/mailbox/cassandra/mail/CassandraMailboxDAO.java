@@ -135,22 +135,17 @@ public class CassandraMailboxDAO {
     public Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         return executor.executeSingleRow(readStatement.bind()
             .setUUID(ID, mailboxId.asUuid()))
-            .map(this::mailboxFromRow)
-            .map(mailbox -> addMailboxId(mailboxId, mailbox));
+            .map(row -> mailboxFromRow(row, mailboxId));
     }
 
-    private Mailbox addMailboxId(CassandraId cassandraId, Mailbox mailbox) {
-        mailbox.setMailboxId(cassandraId);
-        return mailbox;
-    }
-
-    private Mailbox mailboxFromRow(Row row) {
+    private Mailbox mailboxFromRow(Row row, CassandraId cassandraId) {
         return new Mailbox(
             new MailboxPath(
                 row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
                 Username.of(row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.USER)),
                 row.getString(NAME)),
-            row.getLong(UIDVALIDITY));
+            row.getLong(UIDVALIDITY),
+            cassandraId);
     }
 
     public Flux<Mailbox> retrieveAllMailboxes() {
@@ -160,9 +155,7 @@ public class CassandraMailboxDAO {
     }
 
     private Mailbox toMailboxWithId(Row row) {
-        Mailbox mailbox = mailboxFromRow(row);
-        mailbox.setMailboxId(CassandraId.of(row.getUUID(ID)));
-        return mailbox;
+        return mailboxFromRow(row, CassandraId.of(row.getUUID(ID)));
     }
 
 }

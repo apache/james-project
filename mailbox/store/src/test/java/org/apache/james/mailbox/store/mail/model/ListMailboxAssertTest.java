@@ -26,7 +26,9 @@ import java.util.List;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.TestId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,16 +40,18 @@ class ListMailboxAssertTest {
     static final Username USER = Username.of("user");
     static final String NAMESPACE = "namespace";
     static final long UID_VALIDITY = 42;
-    static final Mailbox mailbox1 = new Mailbox(new MailboxPath(NAMESPACE, USER, NAME), UID_VALIDITY);
-    static final Mailbox mailbox2 = new Mailbox(new MailboxPath(OTHER_NAMESPACE, USER, NAME), UID_VALIDITY);
+    static final MailboxId MAILBOX_ID_1 = TestId.of(1);
+    static final MailboxId MAILBOX_ID_2 = TestId.of(2);
+    static final Mailbox MAILBOX_1 = new Mailbox(new MailboxPath(NAMESPACE, USER, NAME), UID_VALIDITY, MAILBOX_ID_1);
+    static final Mailbox MAILBOX_2 = new Mailbox(new MailboxPath(OTHER_NAMESPACE, USER, NAME), UID_VALIDITY, MAILBOX_ID_2);
 
     ListMailboxAssert listMaiboxAssert;
-    List<Mailbox> actualMailbox;
+    List<Mailbox> actualMailboxes;
 
     @BeforeEach
     void setUp() {
-        actualMailbox = ImmutableList.of(mailbox1, mailbox2);
-        listMaiboxAssert = ListMailboxAssert.assertMailboxes(actualMailbox);
+        actualMailboxes = ImmutableList.of(MAILBOX_1, MAILBOX_2);
+        listMaiboxAssert = ListMailboxAssert.assertMailboxes(actualMailboxes);
     }
 
     @Test
@@ -57,7 +61,7 @@ class ListMailboxAssertTest {
 
     @Test
     void assertListMailboxShouldWork() {
-        assertMailboxes(actualMailbox).containOnly(new Mailbox(new MailboxPath(NAMESPACE, USER, NAME), UID_VALIDITY),
-            new Mailbox(new MailboxPath(OTHER_NAMESPACE, USER, NAME), UID_VALIDITY));
+        assertMailboxes(actualMailboxes).containOnly(new Mailbox(new MailboxPath(NAMESPACE, USER, NAME), UID_VALIDITY, MAILBOX_ID_1),
+            new Mailbox(new MailboxPath(OTHER_NAMESPACE, USER, NAME), UID_VALIDITY, MAILBOX_ID_2));
     }
 }

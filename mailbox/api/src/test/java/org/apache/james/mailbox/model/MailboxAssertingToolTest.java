@@ -38,20 +38,16 @@ class MailboxAssertingToolTest {
     class MailboxAssertTest {
         @Test
         void isEqualToShouldNotFailWithEqualMailbox() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
 
             MailboxAssertingTool.assertThat(mailbox1).isEqualTo(mailbox2);
         }
 
         @Test
         void isEqualToShouldFailWithNotEqualNamespace() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(new MailboxPath("other_namespace", USER, "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(new MailboxPath("other_namespace", USER, "name"), UID_VALIDITY, MAILBOX_ID);
 
             assertThatThrownBy(() -> MailboxAssertingTool.assertThat(mailbox1).isEqualTo(mailbox2))
                 .isInstanceOf(AssertionError.class);
@@ -59,10 +55,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithNotEqualUser() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(new MailboxPath("namespace", Username.of("other_user"), "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(new MailboxPath("namespace", Username.of("other_user"), "name"), UID_VALIDITY, MAILBOX_ID);
 
             assertThatThrownBy(() -> MailboxAssertingTool.assertThat(mailbox1).isEqualTo(mailbox2))
                 .isInstanceOf(AssertionError.class);
@@ -70,10 +64,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithNotEqualName() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(new MailboxPath("namespace", USER, "other_name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(new MailboxPath("namespace", USER, "other_name"), UID_VALIDITY, MAILBOX_ID);
 
             assertThatThrownBy(() -> MailboxAssertingTool.assertThat(mailbox1).isEqualTo(mailbox2))
                 .isInstanceOf(AssertionError.class);
@@ -81,10 +73,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithNotEqualId() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(TestId.of(MAILBOX_ID.id + 1));
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, TestId.of(MAILBOX_ID.id + 1));
 
             assertThatThrownBy(() -> MailboxAssertingTool.assertThat(mailbox1).isEqualTo(mailbox2))
                 .isInstanceOf(AssertionError.class);
@@ -92,10 +82,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithNotEqualUidValidity() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY + 1);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY + 1, MAILBOX_ID);
 
             assertThatThrownBy(() -> MailboxAssertingTool.assertThat(mailbox1).isEqualTo(mailbox2))
                 .isInstanceOf(AssertionError.class);
@@ -108,10 +96,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldNotFailWithEqualMailbox() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
 
             SoftAssertions.assertSoftly(softly -> {
                 MailboxAssertingTool.softly(softly)
@@ -122,10 +108,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithNotEqualNamespace() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(new MailboxPath("other_namespace", USER, "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(new MailboxPath("other_namespace", USER, "name"), UID_VALIDITY, MAILBOX_ID);
 
             assertThatThrownBy(() -> {
                     SoftAssertions.assertSoftly(softly -> {
@@ -140,10 +124,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithNotEqualName() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "other_name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "other_name"), UID_VALIDITY, MAILBOX_ID);
 
             assertThatThrownBy(() -> {
                     SoftAssertions.assertSoftly(softly -> {
@@ -158,10 +140,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithNotEqualId() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(TestId.of(MAILBOX_ID.id + 1));
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, TestId.of(MAILBOX_ID.id + 1));
 
             assertThatThrownBy(() -> {
                     SoftAssertions.assertSoftly(softly -> {
@@ -176,10 +156,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithNotEqualUidValidity() {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY + 1);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY + 1, MAILBOX_ID);
 
             assertThatThrownBy(() -> {
                     SoftAssertions.assertSoftly(softly -> {
@@ -194,10 +172,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithNotSameSizeEntries() throws Exception {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
 
             mailbox1.setACL(new MailboxACL(
                 new MailboxACL.Entry(USER.asString(), MailboxACL.Right.Write)));
@@ -218,10 +194,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldFailWithSameSizeButDifferentEntries() throws Exception {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
 
             mailbox1.setACL(new MailboxACL(
                 new MailboxACL.Entry(USER.asString(), MailboxACL.Right.Write)));
@@ -241,10 +215,8 @@ class MailboxAssertingToolTest {
 
         @Test
         void isEqualToShouldPassWithSameSizeEntriesButDifferentOrder() throws Exception {
-            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
-            mailbox1.setMailboxId(MAILBOX_ID);
-            mailbox2.setMailboxId(MAILBOX_ID);
+            Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
 
             mailbox1.setACL(new MailboxACL(
                 new MailboxACL.Entry(USER1.asString(), MailboxACL.Right.Read),

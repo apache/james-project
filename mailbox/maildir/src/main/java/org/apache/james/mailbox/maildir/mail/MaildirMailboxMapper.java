@@ -180,7 +180,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         try {
             folder.setUidValidity(mailbox.getUidValidity());
             folder.setMailboxId(maildirId);
-            mailbox.setMailboxId(maildirId);
         } catch (IOException ioe) {
             throw new MailboxException("Failed to save Mailbox " + mailbox, ioe);
 
