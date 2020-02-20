@@ -53,11 +53,6 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public MailboxId create(Mailbox mailbox) throws MailboxException {
-        return wrapped.execute(() -> wrapped.create(mailbox));
-    }
-
-    @Override
     public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
         return wrapped.execute(() -> wrapped.create(mailboxPath, uidValidity));
     }

@@ -167,18 +167,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public MailboxId create(Mailbox mailbox) throws MailboxException {
-        Preconditions.checkArgument(mailbox.getMailboxId() == null, "A mailbox we want to create should not have a mailboxId set already");
-
-        CassandraId cassandraId = CassandraId.timeBased();
-        mailbox.setMailboxId(cassandraId);
-        if (!tryCreate(mailbox, cassandraId).block()) {
-            throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
-        }
-        return cassandraId;
-    }
-
-    @Override
     public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
         CassandraId cassandraId = CassandraId.timeBased();
         Mailbox mailbox = new Mailbox(mailboxPath, uidValidity, cassandraId);

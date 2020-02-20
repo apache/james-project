@@ -40,11 +40,6 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 public interface MailboxMapper extends Mapper {
 
     /**
-     * Create the given {@link Mailbox} to the underlying storage
-     */
-    MailboxId create(Mailbox mailbox) throws MailboxException;
-
-    /**
      * Create a {@link Mailbox} with the given {@link MailboxPath} and uid to the underlying storage
      */
     Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException;

@@ -93,18 +93,6 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public MailboxId create(Mailbox mailbox) throws MailboxException {
-        Preconditions.checkArgument(mailbox.getMailboxId() == null, "A mailbox we want to create should not have a mailboxId set already");
-
-        InMemoryId id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
-        mailbox.setMailboxId(id);
-
-        saveMailbox(mailbox);
-
-        return mailbox.getMailboxId();
-    }
-
-    @Override
     public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
         InMemoryId id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
         Mailbox mailbox = new Mailbox(mailboxPath, uidValidity, id);
