@@ -38,6 +38,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.assertj.core.api.SoftAssertions;
@@ -49,7 +50,6 @@ class MailboxPathV2MigrationTest {
 
     private static final MailboxPath MAILBOX_PATH_1 = MailboxPath.forUser(Username.of("bob"), "Important");
     private static final int UID_VALIDITY_1 = 452;
-    private static final Mailbox MAILBOX_1 = new Mailbox(MAILBOX_PATH_1, UID_VALIDITY_1);
     private static final CassandraId MAILBOX_ID_1 = CassandraId.timeBased();
 
     public static final CassandraModule MODULES = CassandraModule.aggregateModules(
@@ -83,13 +83,12 @@ class MailboxPathV2MigrationTest {
             daoV2,
             userMailboxRightsDAO,
             new CassandraACLMapper(cassandra.getConf(), userMailboxRightsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION));
-
-        MAILBOX_1.setMailboxId(null);
     }
 
     @Test
     void newValuesShouldBeSavedInMostRecentDAO() throws Exception {
-        CassandraId mailboxId = (CassandraId) mailboxMapper.create(MAILBOX_1);
+        Mailbox mailbox = createMailbox();
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional())
             .contains(new CassandraIdAndPath(mailboxId, MAILBOX_PATH_1));
@@ -97,7 +96,7 @@ class MailboxPathV2MigrationTest {
 
     @Test
     void newValuesShouldNotBeSavedInOldDAO() throws Exception {
-        mailboxMapper.create(MAILBOX_1);
+        createMailbox();
 
         assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional())
             .isEmpty();
@@ -105,10 +104,10 @@ class MailboxPathV2MigrationTest {
 
     @Test
     void readingOldValuesShouldMigrateThem() throws Exception {
-        MAILBOX_1.setMailboxId(MAILBOX_ID_1);
+        Mailbox mailbox = new Mailbox(MAILBOX_PATH_1, UID_VALIDITY_1, MAILBOX_ID_1);
 
         daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).block();
-        mailboxDAO.save(MAILBOX_1).block();
+        mailboxDAO.save(mailbox).block();
 
         mailboxMapper.findMailboxByPath(MAILBOX_PATH_1);
 
@@ -130,5 +129,9 @@ class MailboxPathV2MigrationTest {
         softly.assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional())
             .contains(new CassandraIdAndPath(MAILBOX_ID_1, MAILBOX_PATH_1));
         softly.assertAll();
+    }
+
+    private Mailbox createMailbox() throws MailboxException {
+        return mailboxMapper.create(MAILBOX_PATH_1, UID_VALIDITY_1);
     }
 }

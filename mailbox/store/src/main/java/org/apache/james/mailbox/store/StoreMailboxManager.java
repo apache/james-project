@@ -259,10 +259,6 @@ public class StoreMailboxManager implements MailboxManager {
             getStoreRightManager(), preDeletionHooks);
     }
 
-    private Mailbox doCreateMailbox(MailboxPath mailboxPath) {
-        return new Mailbox(mailboxPath, randomUidValidity());
-    }
-
     @Override
     public MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session)
             throws MailboxException {
@@ -382,20 +378,22 @@ public class StoreMailboxManager implements MailboxManager {
         List<MailboxId> mailboxIds = new ArrayList<>();
         locker.executeWithLock(mailboxPath, (LockAwareExecution<Void>) () -> {
             if (!mailboxExists(mailboxPath, mailboxSession)) {
-                Mailbox mailbox = doCreateMailbox(mailboxPath);
                 MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
                 try {
-                    mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.create(mailbox))));
-                    // notify listeners
-                    eventBus.dispatch(EventFactory.mailboxAdded()
-                        .randomEventId()
-                        .mailboxSession(mailboxSession)
-                        .mailbox(mailbox)
-                        .build(),
-                        new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-                        .block();
+                    mapper.execute(Mapper.toTransaction(() -> {
+                        Mailbox mailbox = mapper.create(mailboxPath, randomUidValidity());
+                        mailboxIds.add(mailbox.getMailboxId());
+                        // notify listeners
+                        eventBus.dispatch(EventFactory.mailboxAdded()
+                                .randomEventId()
+                                .mailboxSession(mailboxSession)
+                                .mailbox(mailbox)
+                                .build(),
+                                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                            .block();
+                    }));
                 } catch (MailboxExistsException e) {
-                    LOGGER.info("{} mailbox was created concurrently", mailbox.generateAssociatedPath());
+                    LOGGER.info("{} mailbox was created concurrently", mailboxPath.asString());
                 }
             }
             return null;

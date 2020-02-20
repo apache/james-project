@@ -134,10 +134,7 @@ public abstract class MessageMoveTest {
     }
 
     private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
-        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
-        mailboxMapper.create(mailbox);
-        
-        return mailbox;
+        return mailboxMapper.create(mailboxPath, UID_VALIDITY);
     }
 
     private MailboxMessage retrieveMessageFromStorage(Mailbox mailbox, MailboxMessage message) throws MailboxException {

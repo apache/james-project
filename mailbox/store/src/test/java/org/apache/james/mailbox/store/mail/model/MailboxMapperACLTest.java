@@ -54,8 +54,7 @@ public abstract class MailboxMapperACLTest {
     void setUp() throws Exception {
         mailboxMapper = createMailboxMapper();
         MailboxPath benwaInboxPath = MailboxPath.forUser(Username.of("benwa"), "INBOX");
-        benwaInboxMailbox = createMailbox(benwaInboxPath);
-        mailboxMapper.create(benwaInboxMailbox);
+        benwaInboxMailbox = mailboxMapper.create(benwaInboxPath, UID_VALIDITY);
     }
 
     @Test
@@ -229,11 +228,6 @@ public abstract class MailboxMapperACLTest {
                 .getEntries())
             .hasSize(1)
             .containsEntry(key, rights);
-    }
-
-    private Mailbox createMailbox(MailboxPath mailboxPath) {
-        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
-        return mailbox;
     }
 
     @Test

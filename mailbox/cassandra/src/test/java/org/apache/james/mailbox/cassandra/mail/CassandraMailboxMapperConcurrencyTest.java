@@ -64,7 +64,7 @@ class CassandraMailboxMapperConcurrencyTest {
     @Test
     void createShouldBeThreadSafe() throws Exception {
         ConcurrentTestRunner.builder()
-            .operation((a, b) -> testee.create(new Mailbox(MAILBOX_PATH, UID_VALIDITY)))
+            .operation((a, b) -> testee.create(MAILBOX_PATH, UID_VALIDITY))
             .threadCount(THREAD_COUNT)
             .operationCount(OPERATION_COUNT)
             .runAcceptingErrorsWithin(Duration.ofMinutes(1));
@@ -74,8 +74,7 @@ class CassandraMailboxMapperConcurrencyTest {
 
     @Test
     void renameWithUpdateShouldBeThreadSafe() throws Exception {
-        Mailbox mailbox = new Mailbox(MAILBOX_PATH, UID_VALIDITY);
-        testee.create(mailbox);
+        Mailbox mailbox = testee.create(MAILBOX_PATH, UID_VALIDITY);
 
         mailbox.setName("newName");
 
