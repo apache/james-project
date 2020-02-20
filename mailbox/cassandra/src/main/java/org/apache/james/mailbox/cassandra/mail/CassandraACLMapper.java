@@ -58,14 +58,8 @@ public class CassandraACLMapper {
     private static final Logger LOG = LoggerFactory.getLogger(CassandraACLMapper.class);
     private static final String OLD_VERSION = "oldVersion";
 
-    @FunctionalInterface
-    public interface CodeInjector {
-        void inject();
-    }
-
     private final CassandraAsyncExecutor executor;
     private final int maxAclRetry;
-    private final CodeInjector codeInjector;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
     private final PreparedStatement conditionalInsertStatement;
     private final PreparedStatement conditionalUpdateStatement;
@@ -73,13 +67,8 @@ public class CassandraACLMapper {
 
     @Inject
     public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration) {
-        this(session, userMailboxRightsDAO, cassandraConfiguration, () -> { });
-    }
-
-    public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration, CodeInjector codeInjector) {
         this.executor = new CassandraAsyncExecutor(session);
         this.maxAclRetry = cassandraConfiguration.getAclMaxRetry();
-        this.codeInjector = codeInjector;
         this.conditionalInsertStatement = prepareConditionalInsert(session);
         this.conditionalUpdateStatement = prepareConditionalUpdate(session);
         this.readStatement = prepareReadStatement(session);
@@ -139,9 +128,8 @@ public class CassandraACLMapper {
             .orElseThrow(() -> new MailboxException("Unable to update ACL"));
     }
 
-    private Mono<ACLDiff> updateAcl(CassandraId cassandraId, Function<ACLWithVersion, ACLWithVersion> aclTransformation, MailboxACL replacement) throws MailboxException {
-        return Mono.fromRunnable(() -> codeInjector.inject())
-            .then(Mono.defer(() -> getAclWithVersion(cassandraId)))
+    private Mono<ACLDiff> updateAcl(CassandraId cassandraId, Function<ACLWithVersion, ACLWithVersion> aclTransformation, MailboxACL replacement) {
+        return getAclWithVersion(cassandraId)
             .flatMap(aclWithVersion ->
                     updateStoredACL(cassandraId, aclTransformation.apply(aclWithVersion))
                             .map(newACL -> ACLDiff.computeDiff(aclWithVersion.mailboxACL, newACL)))

@@ -33,6 +33,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.TestingSession.Barrier;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -160,12 +161,22 @@ class CassandraACLMapperTest {
 
     @Test
     void twoConcurrentUpdatesWhenNoACLStoredShouldReturnACLWithTwoEntries(CassandraCluster cassandra) throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(2);
+        Barrier barrier = new Barrier(2);
+        cassandra.getConf()
+            .awaitOn(barrier)
+            .whenBoundStatementStartsWith("SELECT acl,version FROM acl WHERE id=:id;")
+            .times(2)
+            .setExecutionHook();
+
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
         MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);
-        Future<Boolean> future1 = performACLUpdateInExecutor(cassandra, executor, keyBob, rights, countDownLatch::countDown);
-        Future<Boolean> future2 = performACLUpdateInExecutor(cassandra, executor, keyAlice, rights, countDownLatch::countDown);
+        Future<Boolean> future1 = performACLUpdateInExecutor(cassandra, executor, keyBob, rights);
+        Future<Boolean> future2 = performACLUpdateInExecutor(cassandra, executor, keyAlice, rights);
+
+        barrier.awaitCaller();
+        barrier.releaseCaller();
+
         awaitAll(future1, future2);
 
         assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block())
@@ -179,10 +190,21 @@ class CassandraACLMapperTest {
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
         cassandraACLMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(keyBenwa).rights(rights).asAddition());
 
+        Barrier barrier = new Barrier(2);
+        cassandra.getConf()
+            .awaitOn(barrier)
+            .whenBoundStatementStartsWith("SELECT acl,version FROM acl WHERE id=:id;")
+            .times(2)
+            .setExecutionHook();
+
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);
-        Future<Boolean> future1 = performACLUpdateInExecutor(cassandra, executor, keyBob, rights, countDownLatch::countDown);
-        Future<Boolean> future2 = performACLUpdateInExecutor(cassandra, executor, keyAlice, rights, countDownLatch::countDown);
+        Future<Boolean> future1 = performACLUpdateInExecutor(cassandra, executor, keyBob, rights);
+        Future<Boolean> future2 = performACLUpdateInExecutor(cassandra, executor, keyAlice, rights);
+
+        barrier.awaitCaller();
+        barrier.releaseCaller();
+
         awaitAll(future1, future2);
 
         assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block())
@@ -196,13 +218,12 @@ class CassandraACLMapperTest {
         }
     }
 
-    private Future<Boolean> performACLUpdateInExecutor(CassandraCluster cassandra, ExecutorService executor, MailboxACL.EntryKey key, MailboxACL.Rfc4314Rights rights, CassandraACLMapper.CodeInjector runnable) {
+    private Future<Boolean> performACLUpdateInExecutor(CassandraCluster cassandra, ExecutorService executor, MailboxACL.EntryKey key, MailboxACL.Rfc4314Rights rights) {
         return executor.submit(() -> {
             CassandraACLMapper aclMapper = new CassandraACLMapper(
                 cassandra.getConf(),
                 new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-                CassandraConfiguration.DEFAULT_CONFIGURATION,
-                runnable);
+                CassandraConfiguration.DEFAULT_CONFIGURATION);
             try {
                 aclMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(key).rights(rights).asAddition());
             } catch (MailboxException exception) {

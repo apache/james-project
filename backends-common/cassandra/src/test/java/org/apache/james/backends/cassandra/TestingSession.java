@@ -58,13 +58,21 @@ public class TestingSession implements Session {
 
     public static class Barrier {
         private final CountDownLatch callerLatch = new CountDownLatch(1);
-        private final CountDownLatch awaitCallerLatch = new CountDownLatch(1);
+        private final CountDownLatch awaitCallerLatch;
 
-        void awaitCaller() throws InterruptedException {
+        public Barrier() {
+            this(1);
+        }
+
+        public Barrier(int callerCount) {
+            awaitCallerLatch = new CountDownLatch(callerCount);
+        }
+
+        public void awaitCaller() throws InterruptedException {
             awaitCallerLatch.await();
         }
 
-        void releaseCaller() {
+        public void releaseCaller() {
             callerLatch.countDown();
         }
 
