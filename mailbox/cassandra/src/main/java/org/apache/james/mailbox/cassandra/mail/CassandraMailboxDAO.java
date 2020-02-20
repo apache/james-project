@@ -43,6 +43,7 @@ import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -116,7 +117,7 @@ public class CassandraMailboxDAO {
         return executor.executeVoid(insertStatement.bind()
             .setUUID(ID, cassandraId.asUuid())
             .setString(NAME, mailbox.getName())
-            .setLong(UIDVALIDITY, mailbox.getUidValidity())
+            .setLong(UIDVALIDITY, mailbox.getUidValidity().asLong())
             .setUDTValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailbox.getNamespace(), mailbox.getUser())));
     }
 
@@ -144,7 +145,7 @@ public class CassandraMailboxDAO {
                 row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
                 Username.of(row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.USER)),
                 row.getString(NAME)),
-            row.getLong(UIDVALIDITY),
+            UidValidity.of(row.getLong(UIDVALIDITY)),
             cassandraId);
     }
 

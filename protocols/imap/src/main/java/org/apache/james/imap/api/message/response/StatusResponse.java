@@ -36,6 +36,7 @@ import org.apache.james.imap.api.message.MessageFlags;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.UidValidity;
 
 import com.github.steveash.guavate.Guavate;
 
@@ -150,17 +151,17 @@ public interface StatusResponse extends ImapResponseMessage {
 
         
         /** RFC4315 <code>APPENDUID</code> response code */
-        public static ResponseCode appendUid(long uidValidity, UidRange[] uids) {
+        public static ResponseCode appendUid(UidValidity uidValidity, UidRange[] uids) {
             String uidParam = formatRanges(uids);
-            return new ResponseCode("APPENDUID", Arrays.asList(uidParam), uidValidity, false);
+            return new ResponseCode("APPENDUID", Arrays.asList(uidParam), uidValidity.asLong(), false);
         }
 
         /** RFC4315 <code>COPYUID</code> response code */
-        public static ResponseCode copyUid(long uidValidity, IdRange[] sourceRanges, IdRange[] targetRanges) {
+        public static ResponseCode copyUid(UidValidity uidValidity, IdRange[] sourceRanges, IdRange[] targetRanges) {
             String source = formatRanges(sourceRanges);
             String target = formatRanges(targetRanges);
 
-            return new ResponseCode("COPYUID", Arrays.asList(new String[] { source, target }), uidValidity, false);
+            return new ResponseCode("COPYUID", Arrays.asList(new String[] { source, target }), uidValidity.asLong(), false);
         }
 
         /** RFC4551 <code>Conditional STORE</code> response code */
@@ -287,8 +288,8 @@ public interface StatusResponse extends ImapResponseMessage {
          *            positive non-zero integer
          * @return <code>ResponseCode</code>, not null
          */
-        public static ResponseCode uidValidity(long uid) {
-            return new ResponseCode("UIDVALIDITY", uid);
+        public static ResponseCode uidValidity(UidValidity uid) {
+            return new ResponseCode("UIDVALIDITY", uid.asLong());
         }
 
         /**

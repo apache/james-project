@@ -29,6 +29,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +40,7 @@ class ListMailboxAssertTest {
     static final String NAME = "name";
     static final Username USER = Username.of("user");
     static final String NAMESPACE = "namespace";
-    static final long UID_VALIDITY = 42;
+    static final UidValidity UID_VALIDITY = UidValidity.of(42);
     static final MailboxId MAILBOX_ID_1 = TestId.of(1);
     static final MailboxId MAILBOX_ID_2 = TestId.of(2);
     static final Mailbox MAILBOX_1 = new Mailbox(new MailboxPath(NAMESPACE, USER, NAME), UID_VALIDITY, MAILBOX_ID_1);

@@ -31,6 +31,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.transaction.Mapper;
@@ -53,7 +54,7 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
+    public Mailbox create(MailboxPath mailboxPath, UidValidity uidValidity) throws MailboxException {
         return wrapped.execute(() -> wrapped.create(mailboxPath, uidValidity));
     }
 

@@ -44,6 +44,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +56,7 @@ class CassandraIndexTableHandlerTest {
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final MessageUid MESSAGE_UID = MessageUid.of(18L);
     private static final CassandraMessageId CASSANDRA_MESSAGE_ID = new CassandraMessageId.Factory().generate();
-    private static final int UID_VALIDITY = 15;
+    private static final UidValidity UID_VALIDITY = UidValidity.of(15);
     private static final ModSeq MODSEQ = ModSeq.of(17);
 
     @RegisterExtension

@@ -29,6 +29,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
@@ -42,7 +43,7 @@ public interface MailboxMapper extends Mapper {
     /**
      * Create a {@link Mailbox} with the given {@link MailboxPath} and uid to the underlying storage
      */
-    Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException;
+    Mailbox create(MailboxPath mailboxPath, UidValidity uidValidity) throws MailboxException;
 
     /**
      * Rename the given {@link Mailbox} to the underlying storage

@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 
@@ -93,7 +94,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
+    public Mailbox create(MailboxPath mailboxPath, UidValidity uidValidity) throws MailboxException {
         InMemoryId id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
         Mailbox mailbox = new Mailbox(mailboxPath, uidValidity, id);
 

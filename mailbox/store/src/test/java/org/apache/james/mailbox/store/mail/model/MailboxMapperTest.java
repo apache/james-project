@@ -33,6 +33,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.ExactName;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedWildcard;
@@ -48,7 +49,7 @@ import org.junit.jupiter.api.Test;
 public abstract class MailboxMapperTest {
 
     private static final char DELIMITER = '.';
-    private static final long UID_VALIDITY = 42;
+    private static final UidValidity UID_VALIDITY = UidValidity.of(42);
     private static final Username BENWA = Username.of("benwa");
     private static final MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
     private static final MailboxPath benwaWorkPath = MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work");

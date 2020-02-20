@@ -34,6 +34,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailboxMapperConcurrencyTest {
 
-    private static final int UID_VALIDITY = 52;
+    private static final UidValidity UID_VALIDITY = UidValidity.of(52);
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(Username.of("user"), "name");
     private static final int THREAD_COUNT = 10;
     private static final int OPERATION_COUNT = 10;

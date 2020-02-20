@@ -33,6 +33,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 
 @Entity(name = "Mailbox")
 @Table(name = "JAMES_MAILBOX")
@@ -105,11 +106,11 @@ public class JPAMailbox {
     public JPAMailbox() {
     }
     
-    public JPAMailbox(MailboxPath path, long uidValidity) {
+    public JPAMailbox(MailboxPath path, UidValidity uidValidity) {
         this.name = path.getName();
         this.user = path.getUser().asString();
         this.namespace = path.getNamespace();
-        this.uidValidity = uidValidity;
+        this.uidValidity = uidValidity.asLong();
     }
 
     public JPAMailbox(Mailbox mailbox) {
@@ -130,7 +131,7 @@ public class JPAMailbox {
 
     public Mailbox toMailbox() {
         MailboxPath path = new MailboxPath(namespace, Username.of(user), name);
-        return new Mailbox(path, uidValidity, new JPAId(mailboxId));
+        return new Mailbox(path, UidValidity.of(uidValidity), new JPAId(mailboxId));
     }
 
     public void setMailboxId(long mailboxId) {

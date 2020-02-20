@@ -30,6 +30,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.UidValidity;
 
 import com.google.common.collect.ImmutableList;
 
@@ -38,7 +39,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class MailboxMetaData implements MessageManager.MetaData {
 
-    public static MailboxMetaData sensibleInformationFree(MailboxACL resolvedAcl, long uidValidity, boolean writeable, boolean modSeqPermanent) throws MailboxException {
+    public static MailboxMetaData sensibleInformationFree(MailboxACL resolvedAcl, UidValidity uidValidity, boolean writeable, boolean modSeqPermanent) throws MailboxException {
         ImmutableList<MessageUid> recents = ImmutableList.of();
         MessageUid uidNext = MessageUid.MIN_VALUE;
         ModSeq highestModSeq = ModSeq.first();
@@ -62,7 +63,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
     private final long recentCount;
     private final List<MessageUid> recent;
     private final Flags permanentFlags;
-    private final long uidValidity;
+    private final UidValidity uidValidity;
     private final MessageUid nextUid;
     private final long messageCount;
     private final long unseenCount;
@@ -72,7 +73,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
     private final boolean modSeqPermanent;
     private final MailboxACL acl;
 
-    public MailboxMetaData(List<MessageUid> recent, Flags permanentFlags, long uidValidity, MessageUid uidNext, ModSeq highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
+    public MailboxMetaData(List<MessageUid> recent, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
         this.recent = Optional.ofNullable(recent).orElseGet(ArrayList::new);
         this.highestModSeq = highestModSeq;
         this.recentCount = this.recent.size();
@@ -104,7 +105,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
     }
 
     @Override
-    public long getUidValidity() {
+    public UidValidity getUidValidity() {
         return uidValidity;
     }
 

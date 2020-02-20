@@ -35,13 +35,14 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailboxDAOTest {
-    private static final int UID_VALIDITY_1 = 145;
-    private static final int UID_VALIDITY_2 = 147;
+    private static final UidValidity UID_VALIDITY_1 = UidValidity.of(145);
+    private static final UidValidity UID_VALIDITY_2 = UidValidity.of(147);
     private static final Username USER = Username.of("user");
     private static final MailboxPath NEW_MAILBOX_PATH = MailboxPath.forUser(USER, "xyz");
     private static CassandraId CASSANDRA_ID_1 = CassandraId.timeBased();

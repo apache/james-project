@@ -50,6 +50,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -116,7 +117,7 @@ public class MailboxEventAnalyserTest {
     private static final char PATH_DELIMITER = '.';
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", USER, "name");
     private static final TestId MAILBOX_ID = TestId.of(36);
-    private static final int UID_VALIDITY = 1024;
+    private static final UidValidity UID_VALIDITY = UidValidity.of(1024);
     private static final Mailbox DEFAULT_MAILBOX = new Mailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID);
     private static final MailboxListener.Added ADDED = EventFactory.added()
         .randomEventId()

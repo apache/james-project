@@ -35,6 +35,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ class CassandraUidProviderTest {
     void setUp(CassandraCluster cassandra) {
         uidProvider = new CassandraUidProvider(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
         MailboxPath path = new MailboxPath("gsoc", Username.of("ieugen"), "Trash");
-        mailbox = new Mailbox(path, 1234, CASSANDRA_ID);
+        mailbox = new Mailbox(path, UidValidity.of(1234), CASSANDRA_ID);
     }
 
     @Test

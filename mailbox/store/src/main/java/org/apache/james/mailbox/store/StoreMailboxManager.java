@@ -70,6 +70,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -217,8 +218,8 @@ public class StoreMailboxManager implements MailboxManager {
     /**
      * Generate and return the next uid validity
      */
-    protected int randomUidValidity() {
-        return Math.abs(RANDOM.nextInt());
+    protected UidValidity randomUidValidity() {
+        return UidValidity.of(Math.abs(RANDOM.nextInt()));
     }
 
     @Override

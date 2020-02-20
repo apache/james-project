@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor;
 
 import java.io.Closeable;
+import java.util.Optional;
 
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -28,6 +29,7 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.message.request.ExamineRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
@@ -47,7 +49,8 @@ public class ExamineProcessor extends AbstractSelectionProcessor<ExamineRequest>
             .addContext("knownModseq", request.getKnownModSeq())
             .addContext("knownUids", UidRange.toString(request.getKnownUidSet()))
             .addContext("knownIdRange", IdRange.toString(request.getKnownSequenceSet()))
-            .addContext("lastKnownUidValidity", request.getLastKnownUidValidity())
+            .addContext("lastKnownUidValidity", Optional.ofNullable(request.getLastKnownUidValidity())
+                .map(UidValidity::asLong))
             .addContext("uidSet", UidRange.toString(request.getUidSet()))
             .build();
     }

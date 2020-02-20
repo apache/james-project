@@ -195,7 +195,7 @@ class ZipperTest {
                     hasName(MAILBOX_1.getName() + "/")
                         .containsExtraFields(
                             new MailboxIdExtraField(MAILBOX_1.getMailboxId()),
-                            new UidValidityExtraField(MAILBOX_1.getUidValidity())));
+                            new UidValidityExtraField(MAILBOX_1.getUidValidity().asLong())));
         }
     }
 

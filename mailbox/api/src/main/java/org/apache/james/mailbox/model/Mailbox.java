@@ -33,10 +33,10 @@ public class Mailbox {
     private String namespace;
     private Username user;
     private String name;
-    private final long uidValidity;
+    private final UidValidity uidValidity;
     private MailboxACL acl = MailboxACL.EMPTY;
 
-    public Mailbox(MailboxPath path, long uidValidity, MailboxId mailboxId) {
+    public Mailbox(MailboxPath path, UidValidity uidValidity, MailboxId mailboxId) {
         this.id = mailboxId;
         this.namespace = path.getNamespace();
         this.user = path.getUser();
@@ -113,7 +113,7 @@ public class Mailbox {
      * Gets the current UID VALIDITY for this mailbox.
      * @return uid validity
      */
-    public long getUidValidity() {
+    public UidValidity getUidValidity() {
         return uidValidity;
     }
 

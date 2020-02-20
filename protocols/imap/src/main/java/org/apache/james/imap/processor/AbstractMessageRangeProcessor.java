@@ -40,6 +40,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +105,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
             .toArray(new IdRange[0]);
 
         // get folder UIDVALIDITY
-        Long uidValidity = mailbox.getMailboxEntity().getUidValidity();
+        UidValidity uidValidity = mailbox.getMailboxEntity().getUidValidity();
 
         return StatusResponse.ResponseCode.copyUid(uidValidity, request.getIdSet(), resultUids);
     }

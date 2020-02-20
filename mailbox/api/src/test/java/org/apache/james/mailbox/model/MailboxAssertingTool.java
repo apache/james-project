@@ -51,7 +51,7 @@ public class MailboxAssertingTool {
             if (!Objects.equals(actual.getACL(), expected.getACL())) {
                 failWithMessage(aclFailMessage(expected, actual));
             }
-            if (actual.getUidValidity() != expected.getUidValidity()) {
+            if (!Objects.equals(actual.getUidValidity(), expected.getUidValidity())) {
                 failWithMessage(uidValidityFailMessage(expected, actual));
             }
             return this;

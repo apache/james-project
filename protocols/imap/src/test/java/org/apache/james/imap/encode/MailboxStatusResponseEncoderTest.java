@@ -25,6 +25,7 @@ import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.UidValidity;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,7 +51,7 @@ public class MailboxStatusResponseEncoderTest  {
         final Long messages = 2L;
         final Long recent = 3L;
         final MessageUid uidNext = MessageUid.of(5);
-        final Long uidValidity = 7L;
+        final UidValidity uidValidity = UidValidity.of(7L);
         final Long unseen = 11L;
         final String mailbox = "A mailbox named desire";
 

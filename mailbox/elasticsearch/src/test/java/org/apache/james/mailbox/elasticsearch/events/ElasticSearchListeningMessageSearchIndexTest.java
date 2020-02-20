@@ -62,6 +62,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.FakeAuthenticator;
@@ -177,7 +178,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
             messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory());
         session = sessionProvider.createSystemSession(USERNAME);
 
-        mailbox = mapperFactory.getMailboxMapper(session).create(MailboxPath.forUser(USERNAME, DefaultMailboxes.INBOX), MAILBOX_ID.id);
+        mailbox = mapperFactory.getMailboxMapper(session).create(MailboxPath.forUser(USERNAME, DefaultMailboxes.INBOX), UidValidity.of(MAILBOX_ID.id));
     }
 
     @Test

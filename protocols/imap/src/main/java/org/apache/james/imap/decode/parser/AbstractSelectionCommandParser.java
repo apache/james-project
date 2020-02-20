@@ -33,6 +33,7 @@ import org.apache.james.imap.decode.ImapRequestLineReader.StringMatcherCharacter
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.UidValidity;
 
 public abstract class AbstractSelectionCommandParser extends AbstractImapCommandParser {
     private static final String CONDSTORE = ImapConstants.SUPPORTS_CONDSTORE.asString();
@@ -46,7 +47,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         final String mailboxName = request.mailbox();
         boolean condstore = false;
-        Long lastKnownUidValidity = null;
+        UidValidity lastKnownUidValidity = null;
         Long knownModSeq = null;
         UidRange[] uidSet = null;
         UidRange[] knownUidSet = null;
@@ -79,7 +80,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
                 
                 // Consume enclosing paren
                 request.consumeChar('(');
-                lastKnownUidValidity = request.number();
+                lastKnownUidValidity = UidValidity.of(request.number());
                 
                 // Consume the SP
                 request.consumeChar(' ');
@@ -206,5 +207,5 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
     /**
      * Create a new {@link AbstractMailboxSelectionRequest} for the given arguments
      */
-    protected abstract AbstractMailboxSelectionRequest createRequest(String mailboxName, boolean condstore, Long lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, Tag tag);
+    protected abstract AbstractMailboxSelectionRequest createRequest(String mailboxName, boolean condstore, UidValidity lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, Tag tag);
 }

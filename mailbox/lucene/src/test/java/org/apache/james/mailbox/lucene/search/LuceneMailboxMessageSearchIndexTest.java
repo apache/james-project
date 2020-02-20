@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,9 +62,9 @@ class LuceneMailboxMessageSearchIndexTest {
     static final TestId TEST_ID_3 = TestId.of(2);
 
     static final Username BOB = Username.of("bob");
-    Mailbox mailbox = new Mailbox(MailboxPath.forUser(BOB, "box"), 18, TEST_ID_1);
-    Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(BOB, "box"), 19, TEST_ID_2);
-    Mailbox mailbox3 = new Mailbox(MailboxPath.forUser(BOB, "box"), 12, TEST_ID_3);
+    Mailbox mailbox = new Mailbox(MailboxPath.forUser(BOB, "box"), UidValidity.of(18), TEST_ID_1);
+    Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(BOB, "box"), UidValidity.of(19), TEST_ID_2);
+    Mailbox mailbox3 = new Mailbox(MailboxPath.forUser(BOB, "box"), UidValidity.of(12), TEST_ID_3);
     LuceneMessageSearchIndex index;
     MailboxSession session;
 

@@ -38,6 +38,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +50,7 @@ class ListMessageAssertTest {
     static final String BODY_CONTENT2 = "Subject: Test2 \n\nBody2\n.\n";
     static final String BODY_CONTENT1 = "Subject: Test1 \n\nBody1\n.\n";
     static final int BODY_START = 16;
-    static final int UID_VALIDITY = 42;
+    static final UidValidity UID_VALIDITY = UidValidity.of(42);
     static final MailboxId MAILBOX_ID = TestId.of(1);
     static final MessageUid MESSAGE_UID = MessageUid.of(2);
     static final MessageId MESSAGE_ID = new DefaultMessageId();

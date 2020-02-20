@@ -50,6 +50,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,7 +98,7 @@ public class CopyProcessorTest {
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
         Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getUidValidity()).thenReturn(58L);
+        when(mailbox.getUidValidity()).thenReturn(UidValidity.of(58L));
         when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
@@ -130,7 +131,7 @@ public class CopyProcessorTest {
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
         Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getUidValidity()).thenReturn(58L);
+        when(mailbox.getUidValidity()).thenReturn(UidValidity.of(58L));
         when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);

@@ -30,6 +30,7 @@ import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableMap;
 
 public abstract class MailboxMapperACLTest {
-    private static final long UID_VALIDITY = 42;
+    private static final UidValidity UID_VALIDITY = UidValidity.of(42);
     private static final boolean POSITIVE = true;
     private static final boolean NEGATIVE = !POSITIVE;
     private static final Username USER = Username.of("user");

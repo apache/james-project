@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -47,7 +48,7 @@ import org.junit.jupiter.api.Test;
 public class MailboxManagementTest {
 
     public static final Username USER = Username.of("user");
-    public static final int UID_VALIDITY = 10;
+    public static final UidValidity UID_VALIDITY = UidValidity.of(10);
     public static final int LIMIT = 1;
 
     private MailboxManagerManagement mailboxManagerManagement;

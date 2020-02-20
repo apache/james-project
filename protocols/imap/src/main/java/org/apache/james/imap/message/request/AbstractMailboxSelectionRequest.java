@@ -24,6 +24,7 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
+import org.apache.james.mailbox.model.UidValidity;
 
 /**
  * {@link ImapRequest} which selects a Mailbox. 
@@ -35,13 +36,13 @@ public abstract class AbstractMailboxSelectionRequest extends AbstractImapReques
 
     private final String mailboxName;
     private final boolean condstore;
-    private final Long lastKnownUidValidity;
+    private final UidValidity lastKnownUidValidity;
     private final Long knownModSeq;
     private final UidRange[] uidSet;
     private final UidRange[] knownUidSet;
     private final IdRange[] knownSequenceSet;
 
-    public AbstractMailboxSelectionRequest(ImapCommand command, String mailboxName, boolean condstore, Long lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, Tag tag) {
+    public AbstractMailboxSelectionRequest(ImapCommand command, String mailboxName, boolean condstore, UidValidity lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, Tag tag) {
         super(tag, command);
         this.mailboxName = mailboxName;
         this.condstore = condstore;
@@ -79,7 +80,7 @@ public abstract class AbstractMailboxSelectionRequest extends AbstractImapReques
      * 
      * @return lastKnownUidValidity
      */
-    public final Long getLastKnownUidValidity() {
+    public final UidValidity getLastKnownUidValidity() {
         return lastKnownUidValidity;
     }
     

@@ -73,6 +73,7 @@ import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -534,7 +535,7 @@ public class StoreMessageManager implements MessageManager {
         }
         List<MessageUid> recent;
         Flags permanentFlags = getPermanentFlags(mailboxSession);
-        long uidValidity = getMailboxEntity().getUidValidity();
+        UidValidity uidValidity = getMailboxEntity().getUidValidity();
         MessageUid uidNext = mapperFactory.getMessageMapper(mailboxSession).getLastUid(mailbox)
                 .map(MessageUid::next)
                 .orElse(MessageUid.MIN_VALUE);

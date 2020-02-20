@@ -53,11 +53,13 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MaildirFolder {
     private static final Logger LOGGER = LoggerFactory.getLogger(MaildirFolder.class);
+    private static final UidValidity DEFAULT_UID_VALIDITY = UidValidity.of(-1);
 
     public static final String VALIDITY_FILE = "james-uidvalidity";
     public static final String UIDLIST_FILE = "james-uidlist";
@@ -77,7 +79,7 @@ public class MaildirFolder {
 
     private Optional<MessageUid> lastUid;
     private int messageCount = 0;
-    private long uidValidity = -1;
+    private UidValidity uidValidity = DEFAULT_UID_VALIDITY;
     private MailboxACL acl;
     private boolean messageNameStrictParse = false;
 
@@ -249,8 +251,8 @@ public class MaildirFolder {
      * Returns the uidValidity of this mailbox
      * @return The uidValidity
      */
-    public long getUidValidity() throws IOException {
-        if (uidValidity == -1) {
+    public UidValidity getUidValidity() throws IOException {
+        if (uidValidity.equals(DEFAULT_UID_VALIDITY)) {
             uidValidity = readUidValidity();
         }
         return uidValidity;
@@ -259,7 +261,7 @@ public class MaildirFolder {
     /**
      * Sets the uidValidity for this mailbox and writes it to the file system
      */
-    public void setUidValidity(long uidValidity) throws IOException {
+    public void setUidValidity(UidValidity uidValidity) throws IOException {
         saveUidValidity(uidValidity);
         this.uidValidity = uidValidity;
     }
@@ -271,7 +273,7 @@ public class MaildirFolder {
      * @return The uidValidity
      * @throws IOException if there are problems with the validity file
      */
-    private long readUidValidity() throws IOException {
+    private UidValidity readUidValidity() throws IOException {
         File validityFile = new File(rootFolder, VALIDITY_FILE);
         if (!validityFile.exists()) {
             return resetUidValidity();
@@ -280,20 +282,20 @@ public class MaildirFolder {
              InputStreamReader isr = new InputStreamReader(fis)) {
             char[] uidValidity = new char[20];
             int len = isr.read(uidValidity);
-            return Long.parseLong(String.valueOf(uidValidity, 0, len).trim());
+            return UidValidity.of(Long.parseLong(String.valueOf(uidValidity, 0, len).trim()));
         }
     }
 
     /**
      * Save the given uidValidity to the file system
      */
-    private void saveUidValidity(long uidValidity) throws IOException {
+    private void saveUidValidity(UidValidity uidValidity) throws IOException {
         File validityFile = new File(rootFolder, VALIDITY_FILE);
         if (!validityFile.createNewFile()) {
             throw new IOException("Could not create file " + validityFile);
         }
         try (FileOutputStream fos = new FileOutputStream(validityFile)) {
-            fos.write(String.valueOf(uidValidity).getBytes());
+            fos.write(String.valueOf(uidValidity.asLong()).getBytes());
         }
     }
 
@@ -339,9 +341,9 @@ public class MaildirFolder {
      * Sets and returns a new uidValidity for this folder.
      * @return the new uidValidity
      */
-    private long resetUidValidity() throws IOException {
+    private UidValidity resetUidValidity() throws IOException {
         // using the timestamp as uidValidity
-        long timestamp = System.currentTimeMillis();
+        UidValidity timestamp = UidValidity.of(System.currentTimeMillis());
         setUidValidity(timestamp);
         return timestamp;
     }

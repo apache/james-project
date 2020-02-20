@@ -42,6 +42,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -64,7 +65,7 @@ public abstract class MessageIdMapperTest {
 
     private static final char DELIMITER = '.';
     private static final int BODY_START = 16;
-    protected static final long UID_VALIDITY = 42;
+    protected static final UidValidity UID_VALIDITY = UidValidity.of(42);
 
     private MessageMapper messageMapper;
     private MailboxMapper mailboxMapper;

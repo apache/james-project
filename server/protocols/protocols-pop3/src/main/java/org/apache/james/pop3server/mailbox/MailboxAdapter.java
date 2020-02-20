@@ -154,7 +154,8 @@ public class MailboxAdapter implements Mailbox {
         try {
             mailboxManager.startProcessingRequest(session);
             long validity = manager.getMailboxEntity()
-                    .getUidValidity();
+                    .getUidValidity()
+                    .asLong();
             return Long.toString(validity);
         } catch (MailboxException e) {
             throw new IOException("Unable to retrieve indentifier for mailbox", e);

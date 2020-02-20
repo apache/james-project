@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
@@ -60,7 +61,7 @@ import org.junit.jupiter.api.Test;
 class SpamAssassinListenerTest {
     static final Username USER = Username.of("user");
     static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
-    static final int UID_VALIDITY = 43;
+    static final UidValidity UID_VALIDITY = UidValidity.of(43);
     static final TestMessageId MESSAGE_ID = TestMessageId.of(45);
 
     SpamAssassin spamAssassin;

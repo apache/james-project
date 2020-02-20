@@ -42,6 +42,7 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
@@ -158,7 +159,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
 
     @Override
-    public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
+    public Mailbox create(MailboxPath mailboxPath, UidValidity uidValidity) throws MailboxException {
         MaildirId maildirId = MaildirId.random();
         Mailbox mailbox = new Mailbox(mailboxPath, uidValidity, maildirId);
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);

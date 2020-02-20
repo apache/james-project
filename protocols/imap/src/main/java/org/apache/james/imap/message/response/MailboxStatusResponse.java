@@ -22,6 +22,7 @@ package org.apache.james.imap.message.response;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.UidValidity;
 
 /**
  * Represents a <code>STATUS</code> response. See <code>RFC3501 7.2.4</code>.
@@ -30,12 +31,12 @@ public class MailboxStatusResponse implements ImapResponseMessage {
     private final Long messages;
     private final Long recent;
     private final MessageUid uidNext;
-    private final Long uidValidity;
+    private final UidValidity uidValidity;
     private final Long unseen;
     private final String mailbox;
     private final ModSeq highestModSeq;
 
-    public MailboxStatusResponse(Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, Long uidValidity, Long unseen, String mailbox) {
+    public MailboxStatusResponse(Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, UidValidity uidValidity, Long unseen, String mailbox) {
         super();
         this.messages = messages;
         this.recent = recent;
@@ -79,7 +80,7 @@ public class MailboxStatusResponse implements ImapResponseMessage {
      * 
      * @return the mailbox uidValidity (if requested) or null (if not)
      */
-    public final Long getUidValidity() {
+    public final UidValidity getUidValidity() {
         return uidValidity;
     }
 

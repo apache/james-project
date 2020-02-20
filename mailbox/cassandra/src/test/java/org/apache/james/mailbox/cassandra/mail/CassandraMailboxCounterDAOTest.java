@@ -29,12 +29,13 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailboxCounterDAOTest {
-    private static final int UID_VALIDITY = 15;
+    private static final UidValidity UID_VALIDITY = UidValidity.of(15);
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
 
     @RegisterExtension

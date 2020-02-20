@@ -46,6 +46,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -133,7 +134,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             }
 
             // get folder UIDVALIDITY
-            Long uidValidity = mailboxManager.getMailbox(mailboxPath, mailboxSession)
+            UidValidity uidValidity = mailboxManager.getMailbox(mailboxPath, mailboxSession)
                 .getMailboxEntity()
                 .getUidValidity();
 

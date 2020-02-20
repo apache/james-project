@@ -40,6 +40,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -54,7 +55,7 @@ public abstract class MessageWithAttachmentMapperTest {
 
     private static final int LIMIT = 10;
     private static final int BODY_START = 16;
-    private static final int UID_VALIDITY = 42;
+    private static final UidValidity UID_VALIDITY = UidValidity.of(42);
 
     private MapperProvider mapperProvider;
     private MessageMapper messageMapper;

@@ -92,7 +92,7 @@ public class Zipper implements ArchiveService {
 
         archiveEntry.addExtraField(EntryTypeExtraField.TYPE_MAILBOX);
         archiveEntry.addExtraField(new MailboxIdExtraField(mailbox.getMailboxId().serialize()));
-        archiveEntry.addExtraField(new UidValidityExtraField(mailbox.getUidValidity()));
+        archiveEntry.addExtraField(new UidValidityExtraField(mailbox.getUidValidity().asLong()));
 
         archiveOutputStream.putArchiveEntry(archiveEntry);
         archiveOutputStream.closeArchiveEntry();

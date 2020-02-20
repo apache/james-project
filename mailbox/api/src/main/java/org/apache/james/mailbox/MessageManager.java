@@ -48,6 +48,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 
@@ -377,7 +378,7 @@ public interface MessageManager {
          * 
          * @return UIDVALIDITY
          */
-        long getUidValidity();
+        UidValidity getUidValidity();
 
         /**
          * Gets the next UID predicted. The returned UID is not guaranteed to be

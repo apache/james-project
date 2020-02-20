@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,9 +49,9 @@ class DefaultUserQuotaRootResolverTest {
     static final Username BENWA = Username.of("benwa");
     static final MailboxId MAILBOX_ID = TestId.of(42);
     static final MailboxPath MAILBOX_PATH = MailboxPath.inbox(BENWA);
-    static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10, MAILBOX_ID);
+    static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, UidValidity.of(10), MAILBOX_ID);
     static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser(BENWA, "test");
-    static final Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_2, 10, MAILBOX_ID);
+    static final Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_2, UidValidity.of(10), MAILBOX_ID);
     static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
     static final MailboxSession MAILBOX_SESSION = null;
 

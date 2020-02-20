@@ -24,11 +24,12 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.MessageManagerTestSystem;
 
 public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
 
-    private static final int UID_VALIDITY = 1024;
+    private static final UidValidity UID_VALIDITY = UidValidity.of(1024);
 
     private final MailboxManager mailboxManager;
 

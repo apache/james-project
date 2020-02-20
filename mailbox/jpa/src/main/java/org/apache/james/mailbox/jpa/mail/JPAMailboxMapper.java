@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -84,7 +85,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
     
     @Override
-    public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
+    public Mailbox create(MailboxPath mailboxPath, UidValidity uidValidity) throws MailboxException {
         try {
             if (isPathAlreadyUsedByAnotherMailbox(mailboxPath)) {
                 throw new MailboxExistsException(mailboxPath.getName());

@@ -51,6 +51,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,7 @@ import org.junit.jupiter.api.Test;
 class StoreRightManagerTest {
 
     static final MailboxId MAILBOX_ID = TestId.of(42);
-    static final long UID_VALIDITY = 3421L;
+    static final UidValidity UID_VALIDITY = UidValidity.of(3421L);
 
     StoreRightManager storeRightManager;
     MailboxSession aliceSession;
