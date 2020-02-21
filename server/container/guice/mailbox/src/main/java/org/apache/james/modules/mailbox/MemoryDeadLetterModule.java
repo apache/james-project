@@ -19,16 +19,23 @@
 
 package org.apache.james.modules.mailbox;
 
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.mailbox.events.EventDeadLetters;
+import org.apache.james.mailbox.events.EventDeadLettersHealthCheck;
 import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
 public class MemoryDeadLetterModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(MemoryEventDeadLetters.class).in(Scopes.SINGLETON);
         bind(EventDeadLetters.class).to(MemoryEventDeadLetters.class);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class)
+            .addBinding()
+            .to(EventDeadLettersHealthCheck.class);
     }
 }
