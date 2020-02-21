@@ -23,7 +23,8 @@ advanced users.
  - [Solving cassandra inconsistencies](#Solving_cassandra_inconsistencies) 
  - [Setting Cassandra user permissions](#Setting_Cassandra_user_permissions)
  - [Cassandra table level configuration](#Cassandra_table_level_configuration) 
- 
+ - [Mail Queue](#Mail_Queue)
+
 ## Overall architecture
 
 Guice distributed James server intends to provide a horizontally scalable email server.
@@ -447,3 +448,41 @@ A review of your usage can be conducted using
 Table level options can be changed using **ALTER TABLE** for example with the 
 [cqlsh](https://cassandra.apache.org/doc/latest/tools/cqlsh.html) utility. A full compaction might be 
 needed in order for the changes to be taken into account.
+
+## Mail Queue
+
+An email queue is a mandatory component of SMTP servers. It is a system that creates a queue of emails that are waiting to be processed for delivery. Email queuing is a form of Message Queuing – an asynchronous service-to-service communication. A message queue is meant to decouple a producing process from a consuming one. An email queue decouples email reception from email processing. It allows them to communicate without being connected. As such, the queued emails wait for processing until the recipient is available to receive them. As James is an Email Server, it also supports mail queue as well.
+
+### Why Mail Queue is necessary
+
+You might often need to check mail queue to make sure all emails are delivered properly. At first, you need to know why email queues get clogged. Here are the two core reasons for that:
+
+- Exceeded volume of emails
+
+Some mailbox providers enforce email rate limits on IP addresses. The limits are based on the sender reputation. If you exceeded this rate and queued too many emails, the delivery speed will decrease.
+
+- Spam-related issues
+
+Another common reason is that your email has been busted by spam filters. The filters will let the emails gradually pass to analyze how the rest of the recipients react to the message. If there is slow progress, it’s okay. Your email campaign is being observed and assessed. If it’s stuck, there could be different reasons including the blockage of your IP address. 
+
+### Why combining Cassandra, RabbitMQ and Object storage for MailQueue
+
+ - RabbitMQ ensures the messaging function, and avoids polling.
+ - Cassandra enables administrative operations such as browsing, deleting using a time series which might require fine performance tuning (see [Operating Casandra documentation](http://cassandra.apache.org/doc/latest/operating/index.html)).
+ - Object Storage stores potentially large binary payload.
+
+### Fine tune configuration for RabbitMQ
+
+In order to adapt mail queue settings to the actual traffic load, an administrator needs to perform fine configuration tunning as explained in [rabbitmq.properties](https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-rabbitmq.xml).
+
+### Managing email queues
+
+Managing an email queue is an easy task if you follow this procedure:
+
+- First, [List mail queues](manage-webadmin.html#Listing_mail_queues) and [get a mail queue details](manage-webadmin.html#Getting_a_mail_queue_details).
+- And then [List the mails of a mail queue](manage-webadmin.html#Listing_the_mails_of_a_mail_queue).
+- If all mails in the mail queue are needed to be delivered you will [flush mails from a mail queue](manage-webadmin.html#Flushing_mails_from_a_mail_queue).
+
+In case, you need to clear an email queue because there are only spam or trash emails in the email queue you have this procedure to follow:
+
+- All mails from the given mail queue will be deleted with [Clearing a mail queue](manage-webadmin.html#Clearing_a_mail_queue).
