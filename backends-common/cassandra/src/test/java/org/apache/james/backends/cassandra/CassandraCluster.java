@@ -30,14 +30,13 @@ import org.apache.james.backends.cassandra.init.configuration.ClusterConfigurati
 import org.apache.james.util.Host;
 
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
 
 public final class CassandraCluster implements AutoCloseable {
     public static final String KEYSPACE = "testing";
 
     private static Optional<Exception> startStackTrace = Optional.empty();
     private final CassandraModule module;
-    private Session session;
+    private TestingSession session;
     private CassandraTypesProvider typesProvider;
     private Cluster cluster;
 
@@ -65,14 +64,15 @@ public final class CassandraCluster implements AutoCloseable {
                 .build();
             cluster = ClusterFactory.create(clusterConfiguration);
             KeyspaceFactory.createKeyspace(clusterConfiguration, cluster);
-            session = new SessionWithInitializedTablesFactory(clusterConfiguration, cluster, module).get();
+            session = new TestingSession(
+                new SessionWithInitializedTablesFactory(clusterConfiguration, cluster, module).get());
             typesProvider = new CassandraTypesProvider(module, session);
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }
     }
 
-    public Session getConf() {
+    public TestingSession getConf() {
         return session;
     }
 
@@ -82,6 +82,7 @@ public final class CassandraCluster implements AutoCloseable {
 
     @Override
     public void close() {
+        session.resetExecutionHook();
         if (!cluster.isClosed()) {
             clearTables();
             closeCluster();
