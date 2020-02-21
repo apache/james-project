@@ -167,7 +167,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
         @Override
         public long flush() throws MailQueueException {
             int count = 0;
-            for (MailQueueItem item: mailItems) {
+            for (MemoryMailQueueItem item: mailItems) {
                 if (mailItems.remove(item)) {
                     enQueue(item.getMail());
                     count += 1;

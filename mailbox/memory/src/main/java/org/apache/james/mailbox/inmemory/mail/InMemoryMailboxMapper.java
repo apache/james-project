@@ -74,7 +74,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
 
     @Override
     public synchronized Mailbox findMailboxById(MailboxId id) throws MailboxException {
-        InMemoryId mailboxId = (InMemoryId)id;
+        InMemoryId mailboxId = (InMemoryId) id;
         for (Mailbox mailbox: mailboxesByPath.values()) {
             if (mailbox.getMailboxId().equals(mailboxId)) {
                 return new Mailbox(mailbox);

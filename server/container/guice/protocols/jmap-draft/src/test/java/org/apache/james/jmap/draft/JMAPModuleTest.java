@@ -60,9 +60,9 @@ class JMAPModuleTest {
         void checkShouldReturnGoodWhenAllChecksSatisfy() {
             when(mockMailboxManager.hasCapability(any()))
                 .thenReturn(true);
-            when(mockMessageCapabilities.contains(any()))
+            when(mockMessageCapabilities.contains(any(MailboxManager.MessageCapabilities.class)))
                 .thenReturn(true);
-            when(mockSearchCapabilities.contains(any()))
+            when(mockSearchCapabilities.contains(any(MailboxManager.SearchCapabilities.class)))
                 .thenReturn(true);
 
             assertThat(testee.check().isGood())
@@ -73,9 +73,9 @@ class JMAPModuleTest {
         void checkShouldReturnBadWhenMailboxManagerDoesntHaveCapabilities() {
             when(mockMailboxManager.hasCapability(any()))
                 .thenReturn(false);
-            when(mockMessageCapabilities.contains(any()))
+            when(mockMessageCapabilities.contains(any(MailboxManager.MessageCapabilities.class)))
                 .thenReturn(true);
-            when(mockSearchCapabilities.contains(any()))
+            when(mockSearchCapabilities.contains(any(MailboxManager.SearchCapabilities.class)))
                 .thenReturn(true);
 
             assertThat(testee.check().isBad())
@@ -86,9 +86,9 @@ class JMAPModuleTest {
         void checkShouldReturnBadWhenMailboxManagerDoesntHaveMessagesCapabilities() {
             when(mockMailboxManager.hasCapability(any()))
                 .thenReturn(true);
-            when(mockMessageCapabilities.contains(any()))
+            when(mockMessageCapabilities.contains(any(MailboxManager.MessageCapabilities.class)))
                 .thenReturn(false);
-            when(mockSearchCapabilities.contains(any()))
+            when(mockSearchCapabilities.contains(any(MailboxManager.SearchCapabilities.class)))
                 .thenReturn(true);
 
             assertThat(testee.check().isBad())
@@ -99,9 +99,9 @@ class JMAPModuleTest {
         void checkShouldReturnBadWhenMailboxManagerDoesntHaveSearchCapabilities() {
             when(mockMailboxManager.hasCapability(any()))
                 .thenReturn(true);
-            when(mockMessageCapabilities.contains(any()))
+            when(mockMessageCapabilities.contains(any(MailboxManager.MessageCapabilities.class)))
                 .thenReturn(true);
-            when(mockSearchCapabilities.contains(any()))
+            when(mockSearchCapabilities.contains(any(MailboxManager.SearchCapabilities.class)))
                 .thenReturn(false);
 
             assertThat(testee.check().isBad())
