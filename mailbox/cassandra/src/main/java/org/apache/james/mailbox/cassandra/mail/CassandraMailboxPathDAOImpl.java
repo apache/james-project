@@ -90,7 +90,8 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
         return session.prepare(QueryBuilder.delete()
             .from(TABLE_NAME)
             .where(eq(NAMESPACE_AND_USER, bindMarker(NAMESPACE_AND_USER)))
-            .and(eq(MAILBOX_NAME, bindMarker(MAILBOX_NAME))));
+            .and(eq(MAILBOX_NAME, bindMarker(MAILBOX_NAME)))
+            .ifExists());
     }
 
     private PreparedStatement prepareInsert(Session session) {

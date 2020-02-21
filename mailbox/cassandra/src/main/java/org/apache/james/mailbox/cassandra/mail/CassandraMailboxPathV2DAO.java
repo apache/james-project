@@ -75,7 +75,8 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
             .from(TABLE_NAME)
             .where(eq(NAMESPACE, bindMarker(NAMESPACE)))
             .and(eq(USER, bindMarker(USER)))
-            .and(eq(MAILBOX_NAME, bindMarker(MAILBOX_NAME))));
+            .and(eq(MAILBOX_NAME, bindMarker(MAILBOX_NAME)))
+            .ifExists());
     }
 
     private PreparedStatement prepareInsert(Session session) {
