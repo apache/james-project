@@ -45,7 +45,7 @@ public class JwtFilter implements AuthenticationFilter {
 
     @Override
     public void handle(Request request, Response response) throws Exception {
-        if (request.requestMethod() != OPTIONS) {
+        if (!request.requestMethod().equals(OPTIONS)) {
             Optional<String> bearer = Optional.ofNullable(request.headers(AUTHORIZATION_HEADER_NAME))
                 .filter(value -> value.startsWith(AUTHORIZATION_HEADER_PREFIX))
                 .map(value -> value.substring(AUTHORIZATION_HEADER_PREFIX.length()));

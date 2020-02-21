@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.authentication;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.jwt.JwtTokenVerifier;
@@ -67,8 +68,22 @@ public class JwtFilterTest {
     }
 
     @Test
+    public void handleShouldDoNothingOnOptions() throws Exception {
+        Request request = mock(Request.class);
+        //Ensure we don't take OPTIONS string from the constant pool
+        when(request.requestMethod()).thenReturn(new String("OPTIONS"));
+        Response response = mock(Response.class);
+
+        jwtFilter.handle(request, response);
+
+        verifyZeroInteractions(response);
+    }
+
+
+    @Test
     public void handleShouldRejectRequestWithHeaders() throws Exception {
         Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
         when(request.headers()).thenReturn(ImmutableSet.of());
 
         expectedException.expect(HaltException.class);
@@ -80,6 +95,7 @@ public class JwtFilterTest {
     @Test
     public void handleShouldRejectRequestWithBearersHeaders() throws Exception {
         Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Invalid value");
 
         expectedException.expect(HaltException.class);
@@ -91,6 +107,7 @@ public class JwtFilterTest {
     @Test
     public void handleShouldRejectRequestWithInvalidBearerHeaders() throws Exception {
         Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Bearer value");
         when(jwtTokenVerifier.verify("value")).thenReturn(false);
 
@@ -103,6 +120,7 @@ public class JwtFilterTest {
     @Test
     public void handleShouldRejectRequestWithoutAdminClaim() throws Exception {
         Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Bearer value");
         when(jwtTokenVerifier.verify("value")).thenReturn(true);
         when(jwtTokenVerifier.hasAttribute("admin", true, "value")).thenReturn(false);
@@ -116,6 +134,7 @@ public class JwtFilterTest {
     @Test
     public void handleShouldAcceptValidJwt() throws Exception {
         Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Bearer value");
         when(jwtTokenVerifier.verify("value")).thenReturn(true);
         when(jwtTokenVerifier.hasAttribute("admin", true, "value")).thenReturn(true);
