@@ -102,4 +102,44 @@ class CassandraEventDeadLettersDAOTest {
                 .collectList().block())
             .containsOnly(INSERTION_ID_1, INSERTION_ID_2, INSERTION_ID_3);
     }
+
+    @Test
+    void shouldReturnTrueWhenEventStored() {
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_1).block();
+        assertThat(cassandraEventDeadLettersDAO.containEvents().block()).isTrue();
+    }
+
+    @Test
+    void shouldReturnTrueWhenNoEventStored() {
+        assertThat(cassandraEventDeadLettersDAO.containEvents().block()).isFalse();
+    }
+
+    @Test
+    void shouldReturnTrueWhenEventsStoredAndRemovedSome() {
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_3).block();
+
+        assertThat(cassandraEventDeadLettersDAO.containEvents().block()).isTrue();
+
+        cassandraEventDeadLettersDAO.removeEvent(GROUP_B, INSERTION_ID_3).block();
+
+        assertThat(cassandraEventDeadLettersDAO.containEvents().block()).isTrue();
+    }
+
+    @Test
+    void shouldReturnFalseWhenRemovedAllEventsStored() {
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_3).block();
+
+        assertThat(cassandraEventDeadLettersDAO.containEvents().block()).isTrue();
+
+        cassandraEventDeadLettersDAO.removeEvent(GROUP_B, INSERTION_ID_3).block();
+        cassandraEventDeadLettersDAO.removeEvent(GROUP_B, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.removeEvent(GROUP_B, INSERTION_ID_1).block();
+
+        assertThat(cassandraEventDeadLettersDAO.containEvents().block()).isFalse();
+    }
+
 }

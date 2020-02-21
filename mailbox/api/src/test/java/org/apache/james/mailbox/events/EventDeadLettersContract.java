@@ -438,4 +438,52 @@ interface EventDeadLettersContract {
             assertThat(eventDeadLetters.groupsWithFailedEvents().toStream()).isEmpty();
         }
     }
+
+    interface ContainEventsContract extends EventDeadLettersContract {
+        @Test
+        default void containEventsShouldReturnFalseOnNothingStored() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+
+            assertThat(eventDeadLetters.containEvents().block()).isFalse();
+        }
+
+        @Test
+        default void containEventsShouldReturnTrueOnStoredEvents() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+            eventDeadLetters.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
+
+            assertThat(eventDeadLetters.containEvents().block()).isTrue();
+        }
+
+        @Test
+        default void containEventsShouldReturnFalseWhenRemoveAllStoredEvents() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+            eventDeadLetters.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
+            eventDeadLetters.store(GROUP_A, EVENT_2, INSERTION_ID_2).block();
+
+            assertThat(eventDeadLetters.containEvents().block()).isTrue();
+
+            eventDeadLetters.remove(GROUP_A, INSERTION_ID_1).block();
+            eventDeadLetters.remove(GROUP_A, INSERTION_ID_2).block();
+
+            assertThat(eventDeadLetters.containEvents().block()).isFalse();
+        }
+
+        @Test
+        default void containEventsShouldReturnTrueWhenRemoveSomeStoredEvents() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+            eventDeadLetters.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
+            eventDeadLetters.store(GROUP_A, EVENT_2, INSERTION_ID_2).block();
+
+            assertThat(eventDeadLetters.containEvents().block()).isTrue();
+
+            eventDeadLetters.remove(GROUP_A, INSERTION_ID_1).block();
+
+            assertThat(eventDeadLetters.containEvents().block()).isTrue();
+        }
+    }
+
+    interface AllContracts extends StoreContract, RemoveContract, FailedEventContract, FailedEventsContract, GroupsWithFailedEventsContract, ContainEventsContract {
+
+    }
 }

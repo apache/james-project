@@ -83,4 +83,9 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
             return Flux.fromIterable(ImmutableList.copyOf(deadLetters.rowKeySet()));
         }
     }
+
+    @Override
+    public Mono<Boolean> containEvents() {
+        return Mono.just(deadLetters.size() > 0);
+    }
 }

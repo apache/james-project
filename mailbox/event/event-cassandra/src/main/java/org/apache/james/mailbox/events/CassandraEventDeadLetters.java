@@ -31,6 +31,7 @@ public class CassandraEventDeadLetters implements EventDeadLetters {
     private final CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO;
     private final CassandraEventDeadLettersGroupDAO cassandraEventDeadLettersGroupDAO;
 
+
     @Inject
     CassandraEventDeadLetters(CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO,
                               CassandraEventDeadLettersGroupDAO cassandraEventDeadLettersGroupDAO) {
@@ -75,5 +76,10 @@ public class CassandraEventDeadLetters implements EventDeadLetters {
     @Override
     public Flux<Group> groupsWithFailedEvents() {
         return cassandraEventDeadLettersGroupDAO.retrieveAllGroups();
+    }
+
+    @Override
+    public Mono<Boolean> containEvents() {
+        return cassandraEventDeadLettersDAO.containEvents();
     }
 }

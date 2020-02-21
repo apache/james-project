@@ -22,19 +22,13 @@ package org.apache.james.mailbox.events;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.event.json.EventSerializer;
-import org.apache.james.mailbox.events.EventDeadLettersContract.FailedEventContract;
-import org.apache.james.mailbox.events.EventDeadLettersContract.FailedEventsContract;
-import org.apache.james.mailbox.events.EventDeadLettersContract.GroupsWithFailedEventsContract;
-import org.apache.james.mailbox.events.EventDeadLettersContract.RemoveContract;
-import org.apache.james.mailbox.events.EventDeadLettersContract.StoreContract;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraEventDeadLettersTest implements StoreContract, RemoveContract, FailedEventContract, FailedEventsContract,
-    GroupsWithFailedEventsContract {
+class CassandraEventDeadLettersTest implements EventDeadLettersContract.AllContracts {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersModule.MODULE);

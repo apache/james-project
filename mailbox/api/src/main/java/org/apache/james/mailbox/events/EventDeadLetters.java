@@ -95,4 +95,6 @@ public interface EventDeadLetters {
     Flux<InsertionId> failedIds(Group registeredGroup);
 
     Flux<Group> groupsWithFailedEvents();
+
+    Mono<Boolean> containEvents();
 }

@@ -19,16 +19,9 @@
 
 package org.apache.james.mailbox.events;
 
-import static org.apache.james.mailbox.events.EventDeadLettersContract.FailedEventContract;
-import static org.apache.james.mailbox.events.EventDeadLettersContract.FailedEventsContract;
-import static org.apache.james.mailbox.events.EventDeadLettersContract.GroupsWithFailedEventsContract;
-import static org.apache.james.mailbox.events.EventDeadLettersContract.RemoveContract;
-import static org.apache.james.mailbox.events.EventDeadLettersContract.StoreContract;
-
 import org.junit.jupiter.api.BeforeEach;
 
-class MemoryEventDeadLettersTest implements StoreContract, RemoveContract, FailedEventContract, FailedEventsContract,
-    GroupsWithFailedEventsContract {
+class MemoryEventDeadLettersTest implements EventDeadLettersContract.AllContracts {
 
     private MemoryEventDeadLetters eventDeadLetters;
 

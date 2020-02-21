@@ -47,6 +47,7 @@ public class CassandraEventDeadLettersDAO {
     private final PreparedStatement deleteStatement;
     private final PreparedStatement selectEventStatement;
     private final PreparedStatement selectEventIdsWithGroupStatement;
+    private final PreparedStatement containEventsStatement;
 
     @Inject
     CassandraEventDeadLettersDAO(Session session, EventSerializer eventSerializer) {
@@ -56,6 +57,7 @@ public class CassandraEventDeadLettersDAO {
         this.deleteStatement = prepareDeleteStatement(session);
         this.selectEventStatement = prepareSelectEventStatement(session);
         this.selectEventIdsWithGroupStatement = prepareSelectInsertionIdsWithGroupStatement(session);
+        this.containEventsStatement = prepareContainEventStatement(session);
     }
 
     private PreparedStatement prepareInsertStatement(Session session) {
@@ -85,6 +87,12 @@ public class CassandraEventDeadLettersDAO {
             .where(eq(GROUP, bindMarker(GROUP))));
     }
 
+    private PreparedStatement prepareContainEventStatement(Session session) {
+        return session.prepare(select(EVENT)
+            .from(TABLE_NAME)
+            .limit(1));
+    }
+
     Mono<Void> store(Group group, Event failedEvent, EventDeadLetters.InsertionId insertionId) {
         return executor.executeVoid(insertStatement.bind()
                 .setString(GROUP, group.asString())
@@ -109,6 +117,10 @@ public class CassandraEventDeadLettersDAO {
         return executor.executeRows(selectEventIdsWithGroupStatement.bind()
                 .setString(GROUP, group.asString()))
             .map(row -> EventDeadLetters.InsertionId.of(row.getUUID(INSERTION_ID)));
+    }
+
+    Mono<Boolean> containEvents() {
+        return executor.executeReturnExists(containEventsStatement.bind().setFetchSize(1));
     }
 
     private Event deserializeEvent(String serializedEvent) {
