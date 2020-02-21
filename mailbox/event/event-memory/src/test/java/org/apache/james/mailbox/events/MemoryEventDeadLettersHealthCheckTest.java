@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.events;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -39,12 +40,12 @@ public class MemoryEventDeadLettersHealthCheckTest implements EventDeadLettersHe
 
     @Override
     public void createErrorWhenDoingHealthCheck() {
-
+        throw new NotImplementedException("We can not instrument implementation this test case.");
     }
 
     @Override
     public void resolveErrorWhenDoingHealthCheck() {
-        // Unable to trigger the EventDeadLetter error with memory version
+        throw new NotImplementedException("We can not instrument implementation this test case.");
     }
 
     @Override

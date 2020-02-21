@@ -50,10 +50,10 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
- - [Event Dead Letter](#Event_Dead_Letter)
  - [Deleted Messages Vault](#Deleted_Messages_Vault)
  - [Task management](#Task_management)
  - [Cassandra extra operations](#Cassandra_extra_operations)
+ - [Event Dead Letter](#Event_Dead_Letter)
 
 ## HealthCheck
 
@@ -97,6 +97,7 @@ Supported health checks include:
 
  - **Cassandra backend**: Cassandra storage. Included in Cassandra Guice based products.
  - **ElasticSearch Backend**: ElasticSearch storage. Included in Cassandra Guice based products.
+ - **EventDeadLettersHealthCheck**: Included in all Guice products.
  - **Guice application lifecycle**: included in all Guice products.
  - **JPA Backend**: JPA storage. Included in JPA Guice based products.
  - **MessageFastViewProjection**: included in memory and Cassandra based Guice products. 
@@ -2856,6 +2857,7 @@ and the like.
 Upon exceptions, a bounded number of retries are performed (with exponential backoff delays). If after those retries the listener is still
 failing, then the event will be stored in the "Event Dead Letter". This API allows diagnosing issues, as well as performing event replay (not implemented yet).
 
+ - [Event Dead Letter](#Event_Dead_Letter)
  - [Listing mailbox listener groups](#Listing_mailbox_listener_groups)
  - [Listing failed events](#Listing_failed_events)
  - [Getting event details](#Getting_event_details)

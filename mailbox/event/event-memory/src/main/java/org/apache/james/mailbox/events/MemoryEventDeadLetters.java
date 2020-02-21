@@ -86,6 +86,6 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
 
     @Override
     public Mono<Boolean> containEvents() {
-        return Mono.just(deadLetters.size() > 0);
+        return Mono.just(!deadLetters.isEmpty());
     }
 }

@@ -42,8 +42,6 @@ interface EventDeadLettersHealthCheckContract {
     Event.EventId EVENT_ID_2 = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b5");
     MailboxListener.MailboxAdded EVENT_1 = new MailboxListener.MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_1);
     MailboxListener.MailboxAdded EVENT_2 = new MailboxListener.MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_2);
-    EventDeadLetters.InsertionId INSERTION_ID_1 = EventDeadLetters.InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b7");
-    EventDeadLetters.InsertionId INSERTION_ID_2 = EventDeadLetters.InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b8");
 
     Group GROUP_A = new EventBusTestFixture.GroupA();
     Group GROUP_B = new EventBusTestFixture.GroupB();
@@ -65,7 +63,7 @@ interface EventDeadLettersHealthCheckContract {
 
     @Test
     default void checkShouldReturnDegradedWhenEventDeadLetterContainEvent() {
-        eventDeadLetters().store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
+        eventDeadLetters().store(GROUP_A, EVENT_1).block();
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())
@@ -74,8 +72,8 @@ interface EventDeadLettersHealthCheckContract {
 
     @Test
     default void checkShouldReturnDegradedWhenEventDeadLetterContainEvents() {
-        eventDeadLetters().store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
-        eventDeadLetters().store(GROUP_B, EVENT_2, INSERTION_ID_2).block();
+        eventDeadLetters().store(GROUP_A, EVENT_1).block();
+        eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())
@@ -84,15 +82,15 @@ interface EventDeadLettersHealthCheckContract {
 
     @Test
     default void checkShouldReturnHealthyWhenRemovedAllEventDeadLetters() {
-        eventDeadLetters().store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
-        eventDeadLetters().store(GROUP_B, EVENT_2, INSERTION_ID_2).block();
+        EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
+        EventDeadLetters.InsertionId insertionId2 = eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())
             .isEqualTo(Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events"));
 
-        eventDeadLetters().remove(GROUP_A, INSERTION_ID_1).block();
-        eventDeadLetters().remove(GROUP_B, INSERTION_ID_2).block();
+        eventDeadLetters().remove(GROUP_A, insertionId1).block();
+        eventDeadLetters().remove(GROUP_B, insertionId2).block();
 
         assertThat(testee().check().isHealthy()).isTrue();
         assertThat(testee().check())
@@ -101,14 +99,14 @@ interface EventDeadLettersHealthCheckContract {
 
     @Test
     default void checkShouldReturnDegradedWhenRemovedSomeEventDeadLetters() {
-        eventDeadLetters().store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
-        eventDeadLetters().store(GROUP_B, EVENT_2, INSERTION_ID_2).block();
+        EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
+        eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())
             .isEqualTo(Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events"));
 
-        eventDeadLetters().remove(GROUP_A, INSERTION_ID_1).block();
+        eventDeadLetters().remove(GROUP_A, insertionId1).block();
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())

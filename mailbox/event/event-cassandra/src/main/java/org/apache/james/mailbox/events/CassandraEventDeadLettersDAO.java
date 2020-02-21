@@ -120,7 +120,7 @@ public class CassandraEventDeadLettersDAO {
     }
 
     Mono<Boolean> containEvents() {
-        return executor.executeReturnExists(containEventsStatement.bind().setFetchSize(1));
+        return executor.executeReturnExists(containEventsStatement.bind());
     }
 
     private Event deserializeEvent(String serializedEvent) {

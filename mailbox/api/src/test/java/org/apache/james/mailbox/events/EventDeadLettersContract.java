@@ -450,7 +450,7 @@ interface EventDeadLettersContract {
         @Test
         default void containEventsShouldReturnTrueOnStoredEvents() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
-            eventDeadLetters.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
+            eventDeadLetters.store(GROUP_A, EVENT_1).block();
 
             assertThat(eventDeadLetters.containEvents().block()).isTrue();
         }
@@ -458,13 +458,13 @@ interface EventDeadLettersContract {
         @Test
         default void containEventsShouldReturnFalseWhenRemoveAllStoredEvents() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
-            eventDeadLetters.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
-            eventDeadLetters.store(GROUP_A, EVENT_2, INSERTION_ID_2).block();
+            EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
+            EventDeadLetters.InsertionId insertionId2 = eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
             assertThat(eventDeadLetters.containEvents().block()).isTrue();
 
-            eventDeadLetters.remove(GROUP_A, INSERTION_ID_1).block();
-            eventDeadLetters.remove(GROUP_A, INSERTION_ID_2).block();
+            eventDeadLetters.remove(GROUP_A, insertionId1).block();
+            eventDeadLetters.remove(GROUP_A, insertionId2).block();
 
             assertThat(eventDeadLetters.containEvents().block()).isFalse();
         }
@@ -472,12 +472,12 @@ interface EventDeadLettersContract {
         @Test
         default void containEventsShouldReturnTrueWhenRemoveSomeStoredEvents() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
-            eventDeadLetters.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
-            eventDeadLetters.store(GROUP_A, EVENT_2, INSERTION_ID_2).block();
+            EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
+            eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
             assertThat(eventDeadLetters.containEvents().block()).isTrue();
 
-            eventDeadLetters.remove(GROUP_A, INSERTION_ID_1).block();
+            eventDeadLetters.remove(GROUP_A, insertionId1).block();
 
             assertThat(eventDeadLetters.containEvents().block()).isTrue();
         }

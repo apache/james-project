@@ -89,6 +89,7 @@ Here are the available checks alongside the insight they offer:
 
  - **Cassandra backend**: Cassandra storage. Ensure queries can be executed on the connection James uses.
  - **ElasticSearch Backend**: ElasticSearch storage. Triggers an ElasticSearch health request on indices James uses.
+ - **EventDeadLettersHealthCheck**: EventDeadLetters checking.
  - **RabbitMQ backend**: RabbitMQ messaging. Verifies an open connection and an open channel are well available.
  - **Guice application lifecycle**: Ensures James Guice successfully started, and is up. Logs should contain 
  explanations if James did not start well.
@@ -195,9 +196,8 @@ If after those retries the listener is still failing to perform its operation, t
 [Event Dead Letter](manage-webadmin.html#Event_Dead_Letter). 
 This API allows diagnosing issues, as well as redelivering the events. 
 
-To check that you have undelivered events in your system, you can first
-[list mailbox listener groups](manage-webadmin.html#Listing_mailbox_listener_groups).
-You will get a list of groups back, allowing you to check if those contain registered events in each by
+To check that you have undelivered events in your system, you can first run the associated with [event dead letter health check](manage-webadmin.html#Event_Dead_Letter)
+.You can explore Event DeadLetter content through WebAdmin. For this, [list mailbox listener groups](manage-webadmin.html#Listing_mailbox_listener_groups) you will get a list of groups back, allowing you to check if those contain registered events in each by
 [listing their failed events](manage-webadmin.html#Listing_failed_events).
 
 If you get failed events IDs back, you can as well [check their details](manage-webadmin.html#Getting_event_details).
