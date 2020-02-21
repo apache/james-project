@@ -76,12 +76,17 @@ public class CassandraClusterExtension implements BeforeAllCallback, BeforeEachC
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == CassandraCluster.class);
+        return parameterContext.getParameter().getType() == CassandraCluster.class
+            || parameterContext.getParameter().getType() == DockerCassandra.class;
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return cassandraCluster;
+        if (parameterContext.getParameter().getType() == CassandraCluster.class) {
+            return cassandraCluster;
+        }
+
+        return DockerCassandraSingleton.singleton;
     }
 
     public CassandraCluster getCassandraCluster() {
