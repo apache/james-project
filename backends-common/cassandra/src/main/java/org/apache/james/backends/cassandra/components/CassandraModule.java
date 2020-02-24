@@ -185,6 +185,8 @@ public interface CassandraModule {
             .build();
     }
 
+    CassandraModule NO_MODULE = builder().build();
+
     List<CassandraTable> moduleTables();
 
     List<CassandraType> moduleTypes();

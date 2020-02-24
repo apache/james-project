@@ -19,12 +19,23 @@
 
 package org.apache.james.backends.cassandra.init;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 
 public class KeyspaceFactory {
+
+    private static final String SYSTEM_SCHEMA = "system_schema";
+    private static final String KEYSPACES = "keyspaces";
+    private static final String KEYSPACE_NAME = "keyspace_name";
+
     public static void createKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
         if (clusterConfiguration.shouldCreateKeyspace()) {
             doCreateKeyspace(clusterConfiguration, cluster);
@@ -33,10 +44,33 @@ public class KeyspaceFactory {
 
     private static void doCreateKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
         try (Session session = cluster.connect()) {
-            session.execute("CREATE KEYSPACE IF NOT EXISTS " + clusterConfiguration.getKeyspace()
-                + " WITH replication = {'class':'SimpleStrategy', 'replication_factor':" + clusterConfiguration.getReplicationFactor() + "}"
-                + " AND durable_writes = " + clusterConfiguration.isDurableWrites()
-                + ";");
+            if (!keyspaceExist(cluster, clusterConfiguration.getKeyspace())) {
+                session.execute(SchemaBuilder.createKeyspace(clusterConfiguration.getKeyspace())
+                    .with()
+                    .replication(ImmutableMap.<String, Object>builder()
+                        .put("class", "SimpleStrategy")
+                        .put("replication_factor", clusterConfiguration.getReplicationFactor())
+                        .build())
+                    .durableWrites(clusterConfiguration.isDurableWrites()));
+            }
+        }
+    }
+
+    @VisibleForTesting
+    public static boolean keyspaceExist(Cluster cluster, String keyspaceName) {
+        try (Session session = cluster.connect(SYSTEM_SCHEMA)) {
+            long numberOfKeyspaces = session.execute(select()
+                    .countAll()
+                    .from(KEYSPACES)
+                    .where(eq(KEYSPACE_NAME, keyspaceName)))
+                .one()
+                .getLong("count");
+
+            if (numberOfKeyspaces > 1 || numberOfKeyspaces < 0) {
+                throw new IllegalStateException(String.format("unexpected keyspace('%s') count being %d", keyspaceName, numberOfKeyspaces));
+            }
+
+            return numberOfKeyspaces == 1;
         }
     }
 }

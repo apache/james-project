@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
@@ -44,8 +45,9 @@ public class ResilientClusterProvider implements Provider<Cluster> {
 
     private final Cluster cluster;
 
+    @VisibleForTesting
     @Inject
-    private ResilientClusterProvider(ClusterConfiguration configuration) {
+    ResilientClusterProvider(ClusterConfiguration configuration) {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         cluster = Mono.fromCallable(getClusterRetryCallable(configuration))
