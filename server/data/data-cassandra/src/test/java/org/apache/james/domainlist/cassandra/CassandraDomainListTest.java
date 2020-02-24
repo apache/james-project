@@ -43,8 +43,7 @@ public class CassandraDomainListTest extends AbstractDomainListTest {
 
     @After
     public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
+        cassandra.close();
     }
 
     @Override

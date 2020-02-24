@@ -43,8 +43,7 @@ public class CassandraAccessTokenRepositoryTest extends AccessTokenRepositoryTes
     
     @After
     public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
+        cassandra.close();
     }
 
     @Override

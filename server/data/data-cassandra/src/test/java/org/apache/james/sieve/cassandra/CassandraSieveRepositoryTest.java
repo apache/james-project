@@ -43,8 +43,7 @@ public class CassandraSieveRepositoryTest extends AbstractSieveRepositoryTest {
     
     @After
     public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
+        cassandra.close();
     }
 
     @Override
