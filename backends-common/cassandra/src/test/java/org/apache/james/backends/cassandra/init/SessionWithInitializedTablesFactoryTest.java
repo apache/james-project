@@ -20,13 +20,13 @@
 package org.apache.james.backends.cassandra.init;
 
 import static com.datastax.driver.core.DataType.text;
-import static org.apache.james.backends.cassandra.CassandraCluster.KEYSPACE;
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.MAX_VERSION;
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.MIN_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.function.Supplier;
 
+import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
@@ -120,15 +120,9 @@ class SessionWithInitializedTablesFactoryTest {
     }
 
     private static Supplier<Session> createSession(DockerCassandraExtension.DockerCassandra cassandraServer) {
-        ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
-            .host(cassandraServer.getHost())
-            .keyspace(KEYSPACE)
-            .createKeyspace()
-            .replicationFactor(1)
-            .disableDurableWrites()
+        ClusterConfiguration clusterConfiguration = DockerCassandra.configurationBuilder(cassandraServer.getHost())
             .build();
         Cluster cluster = ClusterFactory.create(clusterConfiguration);
-        KeyspaceFactory.createKeyspace(clusterConfiguration, cluster);
         return () -> new SessionWithInitializedTablesFactory(
                 clusterConfiguration,
                 cluster,

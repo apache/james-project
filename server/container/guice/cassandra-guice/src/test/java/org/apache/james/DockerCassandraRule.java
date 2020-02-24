@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.server.CassandraTruncateTableTask;
 import org.apache.james.util.Host;
@@ -46,11 +47,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
     @Override
     public Module getModule() {
         return Modules.combine((binder) -> binder.bind(ClusterConfiguration.class)
-            .toInstance(ClusterConfiguration.builder()
-                .host(cassandraContainer.getHost())
-                .keyspace("testing")
-                .createKeyspace()
-                .replicationFactor(1)
+            .toInstance(DockerCassandra.configurationBuilder(cassandraContainer.getHost())
                 .maxRetry(20)
                 .minDelay(5000)
                 .build()),

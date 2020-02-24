@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
+import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
@@ -88,9 +89,10 @@ class CassandraNodeConfTest {
         @RegisterExtension
         JamesServerExtension testExtension = extensionBuilder()
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
-                .toInstance(clusterWithHosts(
-                    Host.from(unreachableNode, 9042),
-                    cassandra.getHost())))
+                .toInstance(DockerCassandra.configurationBuilder(
+                        Host.from(unreachableNode, 9042),
+                        cassandra.getHost())
+                    .build()))
             .build();
 
         @Test
@@ -106,8 +108,9 @@ class CassandraNodeConfTest {
         @RegisterExtension
         JamesServerExtension testExtension =  extensionBuilder()
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
-                .toInstance(clusterWithHosts(
-                    Host.from(getDockerHostIp(), cassandra.getMappedPort(CASSANDRA_PORT)))))
+                .toInstance(DockerCassandra.configurationBuilder(
+                        Host.from(getDockerHostIp(), cassandra.getMappedPort(CASSANDRA_PORT)))
+                    .build()))
             .build();
 
         @Test
@@ -120,17 +123,6 @@ class CassandraNodeConfTest {
         server.start();
         socketChannel.connect(new InetSocketAddress("127.0.0.1", server.getProbe(ImapGuiceProbe.class).getImapPort()));
         assertThat(getServerConnectionResponse(socketChannel)).startsWith("* OK JAMES IMAP4rev1 Server");
-    }
-
-    private ClusterConfiguration clusterWithHosts(Host... hosts) {
-        return ClusterConfiguration.builder()
-            .hosts(hosts)
-            .keyspace("apache_james")
-            .createKeyspace()
-            .replicationFactor(1)
-            .maxRetry(10)
-            .minDelay(5000)
-            .build();
     }
 
     private String getServerConnectionResponse(SocketChannel socketChannel) throws IOException {
