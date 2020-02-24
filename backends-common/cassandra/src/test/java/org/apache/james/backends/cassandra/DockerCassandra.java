@@ -19,6 +19,9 @@
 
 package org.apache.james.backends.cassandra;
 
+import org.apache.james.backends.cassandra.init.ClusterFactory;
+import org.apache.james.backends.cassandra.init.KeyspaceFactory;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +31,110 @@ import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.images.builder.dockerfile.DockerfileBuilder;
 
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.github.dockerjava.api.DockerClient;
 import com.google.common.collect.ImmutableMap;
 
 public class DockerCassandra {
 
+    /**
+     * James uses a non privileged Cassandra user(role) in testing. To be able to do that, the non privileged user needs to be
+     * prepared along with a created keyspace.
+     *
+     * This process is done by using the default user provided by docker cassandra, it has the capability of creating roles,
+     * keyspaces, and granting permissions to those entities.
+     */
+    public static class CassandraResourcesManager {
+
+        private static final String CASSANDRA_SUPER_USER = "cassandra";
+        private static final String CASSANDRA_SUPER_USER_PASSWORD = "cassandra";
+
+        private final DockerCassandra cassandra;
+
+        private CassandraResourcesManager(DockerCassandra cassandra) {
+            this.cassandra = cassandra;
+        }
+
+        public void initializeKeyspace(String keyspace) {
+            ClusterConfiguration configuration = configurationBuilder(keyspace).build();
+
+            try (Cluster privilegedCluster = ClusterFactory.create(configuration)) {
+                provisionNonPrivilegedUser(privilegedCluster);
+                KeyspaceFactory.createKeyspace(configuration, privilegedCluster);
+                grantPermissionTestingUser(privilegedCluster, keyspace);
+            }
+        }
+
+        public void dropKeyspace(String keyspace) {
+            try (Cluster cluster = ClusterFactory.create(configurationBuilder(keyspace).build())) {
+                try (Session cassandraSession = cluster.newSession()) {
+                    boolean applied = cassandraSession.execute(
+                        SchemaBuilder.dropKeyspace(keyspace)
+                            .ifExists())
+                        .wasApplied();
+
+                    if (!applied) {
+                        throw new IllegalStateException("cannot drop keyspace '" + keyspace + "'");
+                    }
+                }
+            }
+
+        }
+
+        public boolean keyspaceExist(String keyspace) {
+            try (Cluster cluster = ClusterFactory.create(configurationBuilder(keyspace).build())) {
+                return KeyspaceFactory.keyspaceExist(cluster, keyspace);
+            }
+        }
+
+        private void provisionNonPrivilegedUser(Cluster privilegedCluster) {
+            try (Session session = privilegedCluster.newSession()) {
+                session.execute("CREATE ROLE IF NOT EXISTS " + CASSANDRA_TESTING_USER + " WITH PASSWORD = '" + CASSANDRA_TESTING_PASSWORD + "' AND LOGIN = true");
+            }
+        }
+
+        private void grantPermissionTestingUser(Cluster privilegedCluster, String keyspace) {
+            try (Session session = privilegedCluster.newSession()) {
+                session.execute("GRANT CREATE ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
+                session.execute("GRANT SELECT ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
+                session.execute("GRANT MODIFY ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
+                // some tests require dropping in setups
+                session.execute("GRANT DROP ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
+            }
+        }
+
+        private ClusterConfiguration.Builder configurationBuilder(String keyspace) {
+            return ClusterConfiguration.builder()
+                .host(cassandra.getHost())
+                .username(CASSANDRA_SUPER_USER)
+                .password(CASSANDRA_SUPER_USER_PASSWORD)
+                .keyspace(keyspace)
+                .createKeyspace()
+                .disableDurableWrites()
+                .replicationFactor(1)
+                .maxRetry(RELAXED_RETRIES);
+        }
+    }
+
+    public static ClusterConfiguration.Builder configurationBuilder(Host... hosts) {
+        return ClusterConfiguration.builder()
+            .hosts(hosts)
+            .keyspace(KEYSPACE)
+            .username(CASSANDRA_TESTING_USER)
+            .password(CASSANDRA_TESTING_PASSWORD)
+            .disableDurableWrites()
+            .replicationFactor(1)
+            .maxRetry(RELAXED_RETRIES);
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(DockerCassandra.class);
+    private static final String KEYSPACE = "testing";
+    private static final int RELAXED_RETRIES = 2;
+
+    public static final String CASSANDRA_TESTING_USER = "james_testing";
+    public static final String CASSANDRA_TESTING_PASSWORD = "james_testing_password";
 
     @FunctionalInterface
     public interface AdditionalDockerFileStep {
@@ -67,7 +168,9 @@ public class DockerCassandra {
                         .env("ENV CASSANDRA_CONFIG", "/etc/cassandra")
                         .run("echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
                         .run("echo \"-Xmx" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
-                        .run("sed", "-i", "s/auto_snapshot: true/auto_snapshot: false/g", "/etc/cassandra/cassandra.yaml"))
+                        .run("sed", "-i", "s/auto_snapshot: true/auto_snapshot: false/g", "/etc/cassandra/cassandra.yaml")
+                        .run("echo 'authenticator: PasswordAuthenticator' >> /etc/cassandra/cassandra.yaml")
+                        .run("echo 'authorizer: org.apache.cassandra.auth.CassandraAuthorizer' >> /etc/cassandra/cassandra.yaml"))
                         .build()))
             .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
             .withExposedPorts(CASSANDRA_PORT)
@@ -83,7 +186,12 @@ public class DockerCassandra {
     public void start() {
         if (!cassandraContainer.isRunning()) {
             cassandraContainer.start();
+            administrator().initializeKeyspace(KEYSPACE);
         }
+    }
+
+    public CassandraResourcesManager administrator() {
+        return new CassandraResourcesManager(this);
     }
 
     public void stop() {
@@ -118,4 +226,12 @@ public class DockerCassandra {
         client.unpauseContainerCmd(cassandraContainer.getContainerId()).exec();
     }
 
+    public ClusterConfiguration.Builder configurationBuilder() {
+        return configurationBuilder(getHost());
+    }
+
+    public ClusterConfiguration.Builder configurationBuilderForSuperUser() {
+        return administrator()
+            .configurationBuilder(KEYSPACE);
+    }
 }
