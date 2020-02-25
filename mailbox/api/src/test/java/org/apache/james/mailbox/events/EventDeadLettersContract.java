@@ -459,7 +459,7 @@ interface EventDeadLettersContract {
         default void containEventsShouldReturnFalseWhenRemoveAllStoredEvents() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
             EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
-            EventDeadLetters.InsertionId insertionId2 = eventDeadLetters().store(GROUP_B, EVENT_2).block();
+            EventDeadLetters.InsertionId insertionId2 = eventDeadLetters().store(GROUP_A, EVENT_2).block();
 
             assertThat(eventDeadLetters.containEvents().block()).isTrue();
 

@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 interface EventDeadLettersHealthCheckContract {
 
     ComponentName COMPONENT_NAME = new ComponentName("EventDeadLettersHealthCheck");
+    String EXPECTED_DEGRADED_MESSAGE = "EventDeadLetters contain events. This might indicate transient failure on mailbox event processing.";
 
     Username USERNAME = Username.of("user");
     MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "mailboxName");
@@ -67,7 +68,7 @@ interface EventDeadLettersHealthCheckContract {
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())
-            .isEqualTo(Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events"));
+            .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
     }
 
     @Test
@@ -77,7 +78,7 @@ interface EventDeadLettersHealthCheckContract {
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())
-            .isEqualTo(Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events"));
+            .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
     }
 
     @Test
@@ -87,7 +88,7 @@ interface EventDeadLettersHealthCheckContract {
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())
-            .isEqualTo(Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events"));
+            .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
 
         eventDeadLetters().remove(GROUP_A, insertionId1).block();
         eventDeadLetters().remove(GROUP_B, insertionId2).block();
@@ -104,13 +105,13 @@ interface EventDeadLettersHealthCheckContract {
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())
-            .isEqualTo(Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events"));
+            .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
 
         eventDeadLetters().remove(GROUP_A, insertionId1).block();
 
         assertThat(testee().check().isDegraded()).isTrue();
         assertThat(testee().check())
-            .isEqualTo(Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events"));
+            .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
     }
 
     @Test
