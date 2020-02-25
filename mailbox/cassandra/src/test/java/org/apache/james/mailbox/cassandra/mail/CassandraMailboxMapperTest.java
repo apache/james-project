@@ -141,7 +141,7 @@ class CassandraMailboxMapperTest {
 
                 cassandra.getConf()
                     .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName;")
+                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
                     .times(1)
                     .setExecutionHook();
 
@@ -354,7 +354,7 @@ class CassandraMailboxMapperTest {
 
             cassandra.getConf()
                 .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName;")
+                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
                 .times(TRY_COUNT_BEFORE_FAILURE)
                 .setExecutionHook();
 
@@ -385,7 +385,7 @@ class CassandraMailboxMapperTest {
 
             cassandra.getConf()
                 .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName;")
+                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
                 .times(TRY_COUNT_BEFORE_FAILURE)
                 .setExecutionHook();
 
@@ -408,7 +408,7 @@ class CassandraMailboxMapperTest {
 
             cassandra.getConf()
                 .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName;")
+                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
                 .times(TRY_COUNT_BEFORE_FAILURE)
                 .setExecutionHook();
 
@@ -613,7 +613,7 @@ class CassandraMailboxMapperTest {
 
             cassandra.getConf()
                 .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName;")
+                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
                 .times(TRY_COUNT_BEFORE_FAILURE)
                 .setExecutionHook();
 
