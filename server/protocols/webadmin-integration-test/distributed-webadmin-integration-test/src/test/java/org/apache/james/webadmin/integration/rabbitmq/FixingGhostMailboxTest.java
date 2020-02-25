@@ -43,12 +43,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.CassandraExtension;
-import org.apache.james.CassandraExtension.CassandraHost;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.backends.cassandra.init.ClusterFactory;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
@@ -71,7 +72,6 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.task.TaskManager;
-import org.apache.james.util.Host;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -122,7 +122,6 @@ class FixingGhostMailboxTest {
     private AccessToken accessToken;
     private MailboxProbeImpl mailboxProbe;
     private ACLProbe aclProbe;
-    private Session session;
     private ComposedMessageId message1;
     private MailboxId aliceGhostInboxId;
     private MailboxPath aliceInboxPath;
@@ -130,7 +129,7 @@ class FixingGhostMailboxTest {
     private RequestSpecification webadminSpecification;
 
     @BeforeEach
-    void setup(GuiceJamesServer server, @CassandraHost Host cassandraHost) throws Throwable {
+    void setup(GuiceJamesServer server) throws Throwable {
         WebAdminGuiceProbe webAdminProbe = server.getProbe(WebAdminGuiceProbe.class);
         mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         aclProbe = server.getProbe(ACLProbeImpl.class);
@@ -152,17 +151,15 @@ class FixingGhostMailboxTest {
             .addUser(BOB, BOB_SECRET);
         accessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(ALICE), ALICE_SECRET);
 
-        session = Cluster.builder()
-            .withoutJMXReporting()
-            .addContactPoint(cassandraHost.getHostName())
-            .withPort(cassandraHost.getPort())
-            .build()
-            .connect(server.getProbe(CassandraProbe.class).getKeyspace());
-
-        simulateGhostMailboxBug();
+        ClusterConfiguration cassandraConfiguration = server.getProbe(CassandraProbe.class).getConfiguration();
+        try (Cluster cluster = ClusterFactory.create(cassandraConfiguration)) {
+            try (Session session = cluster.connect(cassandraConfiguration.getKeyspace())) {
+                simulateGhostMailboxBug(session);
+            }
+        }
     }
 
-    private void simulateGhostMailboxBug() throws MailboxException, IOException {
+    private void simulateGhostMailboxBug(Session session) throws MailboxException, IOException {
         // State before ghost mailbox bug
         // Alice INBOX is delegated to Bob and contains one message
         aliceInboxPath = MailboxPath.inbox(Username.of(ALICE));

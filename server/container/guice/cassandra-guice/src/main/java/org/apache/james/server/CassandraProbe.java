@@ -32,7 +32,7 @@ public class CassandraProbe implements GuiceProbe {
         this.clusterConfiguration = configuration;
     }
 
-    public String getKeyspace() {
-        return clusterConfiguration.getKeyspace();
+    public ClusterConfiguration getConfiguration() {
+        return clusterConfiguration;
     }
 }
