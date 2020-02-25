@@ -22,7 +22,8 @@ advanced users.
  - [ElasticSearch Indexing](#Elasticsearch_Indexing)
  - [Solving cassandra inconsistencies](#Solving_cassandra_inconsistencies) 
  - [Setting Cassandra user permissions](#Setting_Cassandra_user_permissions)
-
+ - [Cassandra table level configuration](#Cassandra_table_level_configuration) 
+ 
 ## Overall architecture
 
 Guice distributed James server intends to provide a horizontally scalable email server.
@@ -406,3 +407,43 @@ For more information, have a look at [cassandra documentation](http://cassandra.
 Except for the case above, the permissions are not auto available for 
 a specific role unless they are granted by `GRANT` command. Therefore, 
 if you didn't provide more permissions than [granting section](#Grant_permissions_on_created_keyspace_to_the_role), there's no need to revoke.
+
+## Cassandra table level configuration
+
+While *Distributed James* is shipped with default table configuration options, these settings should be refined 
+depending of your usage.
+
+These options are:
+ - The [compaction algorithms](https://cassandra.apache.org/doc/latest/operating/compaction.html)
+ - The [bloom filter sizing](https://cassandra.apache.org/doc/latest/operating/bloom_filters.html)
+ - The [chunk size](https://cassandra.apache.org/doc/latest/operating/compression.html?highlight=chunk%20size)
+ - The [caching options](https://www.datastax.com/blog/2011/04/maximizing-cache-benefit-cassandra)
+ 
+The compaction algorithms allow a tradeoff between background IO upon writes and reads. We recommend:
+ - Using **Leveled Compaction Strategy** on read intensive tables subject to updates. This limits the count of SStables
+ being read at the cost of more background IO. High garbage collections can be caused by an inappropriate use of Leveled 
+ Compaction Strategy.
+ - Otherwise use the default **Size Tiered Compaction Strategy**.
+ 
+Bloom filters help avoiding unnecessary reads on SSTables. This probabilistic data structure can tell an entry absence 
+from a SSTable, as well as the presence of an entry with an associated probability. If a lot of false positives are 
+noticed, the size of the bloom filters can be increased.
+ 
+As explained in [this post](https://thelastpickle.com/blog/2018/08/08/compression_performance.html), chunk size used 
+upon compression allows a tradeoff between reads and writes. A smaller size will mean decreasing compression, thus it
+increases data being stored on disk, but allow lower chunks to be read to access data, and will favor reads. A bigger 
+size will mean better compression, thus writing less, but it might imply reading bigger chunks.
+
+Cassandra enables a key cache and a row cache. Key cache enables to skip reading the partition index upon reads,
+thus performing 1 read to the disk instead of 2. Enabling this cache is globally advised. Row cache stores the entire 
+row in memory. It can be seen as an optimization, but it might actually use memory no longer available for instance for 
+file system cache. We recommend turning it off on modern SSD hardware.
+
+A review of your usage can be conducted using 
+[nodetool](https://cassandra.apache.org/doc/latest/tools/nodetool/nodetool.html) utility. For example 
+`nodetool tablestats {keyspace}` allows reviewing the number of SSTables, the read/write ratios, bloom filter efficiency. 
+`nodetool tablehistograms {keyspace}.{table}` might give insight about read/write performance.
+
+Table level options can be changed using **ALTER TABLE** for example with the 
+[cqlsh](https://cassandra.apache.org/doc/latest/tools/cqlsh.html) utility. A full compaction might be 
+needed in order for the changes to be taken into account.
