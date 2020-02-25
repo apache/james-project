@@ -90,6 +90,7 @@ public class ConcurrentTestRunner implements Closeable {
         private final int threadCount;
         private final ConcurrentOperation operation;
         private Optional<Integer> operationCount;
+        private Optional<Boolean> noErrorLogs;
 
         private Builder(int threadCount, ConcurrentOperation operation) {
             Preconditions.checkArgument(threadCount > 0, "Thread count should be strictly positive");
@@ -98,6 +99,7 @@ public class ConcurrentTestRunner implements Closeable {
             this.threadCount = threadCount;
             this.operation = operation;
             this.operationCount = Optional.empty();
+            this.noErrorLogs = Optional.empty();
         }
 
         public Builder operationCount(int operationCount) {
@@ -106,10 +108,16 @@ public class ConcurrentTestRunner implements Closeable {
             return this;
         }
 
+        public Builder noErrorLogs() {
+            this.noErrorLogs = Optional.of(true);
+            return this;
+        }
+
         private ConcurrentTestRunner build() {
             return new ConcurrentTestRunner(
                 threadCount,
                 operationCount.orElse(DEFAULT_OPERATION_COUNT),
+                noErrorLogs.orElse(false),
                 operation);
         }
 
@@ -149,11 +157,13 @@ public class ConcurrentTestRunner implements Closeable {
     private class ConcurrentRunnableTask implements Runnable {
         private final int threadNumber;
         private final ConcurrentOperation concurrentOperation;
+        private final boolean noErrorLogs;
         private Exception exception;
 
-        public ConcurrentRunnableTask(int threadNumber, ConcurrentOperation concurrentOperation) {
+        public ConcurrentRunnableTask(int threadNumber, ConcurrentOperation concurrentOperation, boolean noErrorLogs) {
             this.threadNumber = threadNumber;
             this.concurrentOperation = concurrentOperation;
+            this.noErrorLogs = noErrorLogs;
         }
 
         @Override
@@ -164,7 +174,9 @@ public class ConcurrentTestRunner implements Closeable {
                 try {
                     concurrentOperation.execute(threadNumber, i);
                 } catch (Exception e) {
-                    LOGGER.error("Error caught during concurrent testing (iteration {}, threadNumber {})", i, threadNumber, e);
+                    if (!noErrorLogs) {
+                        LOGGER.error("Error caught during concurrent testing (iteration {}, threadNumber {})", i, threadNumber, e);
+                    }
                     exception = e;
                 }
             }
@@ -186,15 +198,17 @@ public class ConcurrentTestRunner implements Closeable {
 
     private final int threadCount;
     private final int operationCount;
+    private final boolean suppressLogger;
     private final CountDownLatch countDownLatch;
     private final ConcurrentOperation biConsumer;
     private final ExecutorService executorService;
     private final List<Future<?>> futures;
 
-    private ConcurrentTestRunner(int threadCount, int operationCount, ConcurrentOperation biConsumer) {
+    private ConcurrentTestRunner(int threadCount, int operationCount, boolean suppressLogger, ConcurrentOperation biConsumer) {
         this.threadCount = threadCount;
         this.operationCount = operationCount;
         this.countDownLatch = new CountDownLatch(threadCount);
+        this.suppressLogger = suppressLogger;
         this.biConsumer = biConsumer;
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         this.executorService = Executors.newFixedThreadPool(threadCount, threadFactory);
@@ -203,7 +217,7 @@ public class ConcurrentTestRunner implements Closeable {
 
     public ConcurrentTestRunner run() {
         for (int i = 0; i < threadCount; i++) {
-            futures.add(executorService.submit(new ConcurrentRunnableTask(i, biConsumer)));
+            futures.add(executorService.submit(new ConcurrentRunnableTask(i, biConsumer, suppressLogger)));
         }
         return this;
     }
