@@ -19,15 +19,20 @@
 
 package org.apache.james.backends.cassandra.init;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.QueryOptions;
+import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SocketOptions;
 import com.google.common.base.Preconditions;
 
 public class ClusterFactory {
+
     public static Cluster create(ClusterConfiguration configuration) {
         Preconditions.checkState(configuration.getUsername().isPresent() == configuration.getPassword().isPresent(), "If you specify username, you must specify password");
 
@@ -57,6 +62,7 @@ public class ClusterFactory {
         try {
             configuration.getQueryLoggerConfiguration().map(queryLoggerConfiguration ->
                 cluster.register(queryLoggerConfiguration.getQueryLogger()));
+            ensureContactable(cluster);
             return cluster;
         } catch (Exception e) {
             cluster.close();
@@ -67,5 +73,18 @@ public class ClusterFactory {
     private static QueryOptions queryOptions() {
         return new QueryOptions()
                 .setConsistencyLevel(ConsistencyLevel.QUORUM);
+    }
+
+    private static void ensureContactable(Cluster cluster) {
+        try (Session session = cluster.connect("system")) {
+            session.execute(checkConnectionStatement(session));
+        }
+    }
+
+    private static BoundStatement checkConnectionStatement(Session session) {
+        return session.prepare(select()
+                .fcall("NOW")
+                .from("local"))
+            .bind();
     }
 }

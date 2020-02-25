@@ -72,7 +72,7 @@ class ResilientClusterProviderTest {
         }
 
         @Test
-        void initializationShouldNotThrownWhenKeyspaceAlreadyExisted(DockerCassandra dockerCassandra) {
+        void initializationShouldNotThrowWhenKeyspaceAlreadyExisted(DockerCassandra dockerCassandra) {
             ClusterConfiguration configuration = dockerCassandra.configurationBuilder()
                 .keyspace(KEYSPACE)
                 .createKeyspace()
@@ -85,7 +85,7 @@ class ResilientClusterProviderTest {
         }
 
         @Test
-        void initializationShouldNotImpactToKeyspaceExistentWhenAlreadyExisted(DockerCassandra dockerCassandra) {
+        void initializationShouldNotImpactKeyspaceExistenceWhenItAlreadyExisted(DockerCassandra dockerCassandra) {
             ClusterConfiguration configuration = dockerCassandra.configurationBuilder()
                 .keyspace(KEYSPACE)
                 .createKeyspace()
@@ -116,7 +116,7 @@ class ResilientClusterProviderTest {
         }
 
         @Test
-        void initializationShouldNotThrownWhenKeyspaceAlreadyExisted(DockerCassandra dockerCassandra) {
+        void initializationShouldNotThrowWhenKeyspaceAlreadyExisted(DockerCassandra dockerCassandra) {
             ClusterConfiguration configuration = dockerCassandra.configurationBuilder()
                 .keyspace(KEYSPACE)
                 .build();
@@ -128,7 +128,7 @@ class ResilientClusterProviderTest {
         }
 
         @Test
-        void initializationShouldNotImpactToKeyspaceExistentWhenAlreadyExisted(DockerCassandra dockerCassandra) {
+        void initializationShouldNotImpactKeyspaceExistenceWhenItAlreadyExisted(DockerCassandra dockerCassandra) {
             ClusterConfiguration configuration = dockerCassandra.configurationBuilder()
                 .keyspace(KEYSPACE)
                 .build();

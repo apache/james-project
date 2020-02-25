@@ -18,27 +18,71 @@
  ****************************************************************/
 package org.apache.james.backends.cassandra.init;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.util.Host;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.DockerCassandra;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.exceptions.NoHostAvailableException;
 
 class ClusterFactoryTest {
 
+    @RegisterExtension
+    static CassandraClusterExtension cassandraExtension = new CassandraClusterExtension(CassandraModule.NO_MODULE);
+
+    @AfterEach
+    void tearDown(DockerCassandra dockerCassandra) {
+        dockerCassandra.unpause();
+    }
+
     @Test
-    void consistencyLevelShouldBeEqualToQuorum() {
-        Cluster cluster = ClusterFactory.create(ClusterConfiguration.builder()
-                .host(Host.from("localhost", ClusterConfiguration.DEFAULT_CASSANDRA_PORT))
-                .build());
+    void consistencyLevelShouldBeEqualToQuorum(DockerCassandra dockerCassandra) {
+        Cluster cluster = ClusterFactory.create(dockerCassandra.configurationBuilder()
+            .build());
 
         ConsistencyLevel consistencyLevel = cluster.getConfiguration()
-                .getQueryOptions()
-                .getConsistencyLevel();
+            .getQueryOptions()
+            .getConsistencyLevel();
 
         assertThat(consistencyLevel).isEqualTo(ConsistencyLevel.QUORUM);
+    }
+
+    @Test
+    void createShouldThrowWhenContactableCluster(DockerCassandra dockerCassandra) {
+        dockerCassandra.pause();
+
+        assertThatThrownBy(() -> ClusterFactory.create(
+            dockerCassandra.configurationBuilder()
+                .build()))
+            .isInstanceOf(NoHostAvailableException.class);
+    }
+
+    @Test
+    void createShouldReturnAContactableCluster(DockerCassandra dockerCassandra) {
+        Cluster cluster = ClusterFactory.create(dockerCassandra.configurationBuilder()
+            .build());
+
+        assertThatClusterIsContactable(cluster);
+    }
+
+    void assertThatClusterIsContactable(Cluster cluster) {
+        try (Session session = cluster.connect("system")) {
+            session.execute(
+                session.prepare(select()
+                    .fcall("NOW")
+                    .from("local"))
+                .bind());
+        } catch (Exception e) {
+            throw new AssertionError("expecting cluster can be connected but actually not", e);
+        }
     }
 }

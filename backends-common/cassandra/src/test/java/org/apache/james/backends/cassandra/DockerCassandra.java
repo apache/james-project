@@ -63,7 +63,7 @@ public class DockerCassandra {
             try (Cluster privilegedCluster = ClusterFactory.create(configuration)) {
                 provisionNonPrivilegedUser(privilegedCluster);
                 KeyspaceFactory.createKeyspace(configuration, privilegedCluster);
-                grantPermissionTestingUser(privilegedCluster, keyspace);
+                grantPermissionToTestingUser(privilegedCluster, keyspace);
             }
         }
 
@@ -95,7 +95,7 @@ public class DockerCassandra {
             }
         }
 
-        private void grantPermissionTestingUser(Cluster privilegedCluster, String keyspace) {
+        private void grantPermissionToTestingUser(Cluster privilegedCluster, String keyspace) {
             try (Session session = privilegedCluster.newSession()) {
                 session.execute("GRANT CREATE ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
                 session.execute("GRANT SELECT ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
@@ -223,7 +223,16 @@ public class DockerCassandra {
     }
 
     public void unpause() {
-        client.unpauseContainerCmd(cassandraContainer.getContainerId()).exec();
+        if (isPaused()) {
+            client.unpauseContainerCmd(cassandraContainer.getContainerId()).exec();
+        }
+    }
+
+    private boolean isPaused() {
+        return client.inspectContainerCmd(cassandraContainer.getContainerId())
+            .exec()
+            .getState()
+            .getPaused();
     }
 
     public ClusterConfiguration.Builder configurationBuilder() {
