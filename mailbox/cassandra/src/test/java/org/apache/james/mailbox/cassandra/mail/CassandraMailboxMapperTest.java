@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.apache.james.mailbox.model.MailboxAssertingTool.softly;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,6 +29,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
@@ -140,14 +142,11 @@ class CassandraMailboxMapperTest {
                 Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
                 cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
-                    .times(1)
-                    .setExecutionHook();
+                    .registerScenario(fail()
+                        .times(1)
+                        .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
                 testee.rename(inboxRenamed);
-
-                cassandra.getConf().resetExecutionHook();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly(softly)
@@ -170,14 +169,11 @@ class CassandraMailboxMapperTest {
                 Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
                 cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
+                    .registerScenario(fail()
                     .times(1)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
                 testee.rename(inboxRenamed);
-
-                cassandra.getConf().resetExecutionHook();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly(softly)
@@ -196,14 +192,11 @@ class CassandraMailboxMapperTest {
             @Test
             void createShouldRetryFailedMailboxSaving(CassandraCluster cassandra) throws Exception {
                 cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
-                    .times(1)
-                    .setExecutionHook();
+                    .registerScenario(fail()
+                        .times(1)
+                        .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
                 Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
-
-                cassandra.getConf().resetExecutionHook();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly(softly)
@@ -224,14 +217,11 @@ class CassandraMailboxMapperTest {
                 Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
 
                 cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
+                    .registerScenario(fail()
                     .times(1)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 testee.delete(inbox);
-
-                cassandra.getConf().resetExecutionHook();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     assertThatThrownBy(() -> testee.findMailboxById(inbox.getMailboxId()))
@@ -247,14 +237,11 @@ class CassandraMailboxMapperTest {
         @Test
         void createShouldBeConsistentWhenFailToPersistMailbox(CassandraCluster cassandra) {
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
-                .times(10)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(10)
+                    .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
             doQuietly(() -> testee.create(inboxPath, UID_VALIDITY));
-
-            cassandra.getConf().resetExecutionHook();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPath))
@@ -273,14 +260,13 @@ class CassandraMailboxMapperTest {
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;"));
 
             doQuietly(() -> testee.rename(inboxRenamed));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(Scenario.NOTHING);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -304,14 +290,11 @@ class CassandraMailboxMapperTest {
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;"));
 
             doQuietly(() -> testee.rename(inboxRenamed));
-
-            cassandra.getConf().resetExecutionHook();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
@@ -329,14 +312,11 @@ class CassandraMailboxMapperTest {
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;"));
 
             doQuietly(() -> testee.rename(inboxRenamed));
-
-            cassandra.getConf().resetExecutionHook();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPathRenamed))
@@ -353,14 +333,11 @@ class CassandraMailboxMapperTest {
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
             doQuietly(() -> testee.rename(inboxRenamed));
-
-            cassandra.getConf().resetExecutionHook();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -384,10 +361,9 @@ class CassandraMailboxMapperTest {
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
             doQuietly(() -> testee.rename(inboxRenamed));
 
@@ -407,14 +383,11 @@ class CassandraMailboxMapperTest {
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
             doQuietly(() -> testee.rename(inboxRenamed));
-
-            cassandra.getConf().resetExecutionHook();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPathRenamed))
@@ -431,14 +404,11 @@ class CassandraMailboxMapperTest {
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
             doQuietly(() -> testee.delete(inbox));
-
-            cassandra.getConf().resetExecutionHook();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThatCode(() -> testee.findMailboxById(inboxId))
@@ -479,14 +449,11 @@ class CassandraMailboxMapperTest {
         @Test
         void createAfterPreviousFailedCreateShouldCreateAMailbox(CassandraCluster cassandra) throws MailboxException {
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
             doQuietly(() -> testee.create(inboxPath, UID_VALIDITY));
-
-            cassandra.getConf().resetExecutionHook();
 
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
 
@@ -508,15 +475,12 @@ class CassandraMailboxMapperTest {
         @Test
         void createAfterPreviousDeleteOnFailedCreateShouldCreateAMailbox(CassandraCluster cassandra) throws MailboxException {
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
             doQuietly(() -> testee.create(inboxPath, UID_VALIDITY));
             doQuietly(() -> testee.delete(new Mailbox(inboxPath, UID_VALIDITY, CassandraId.timeBased())));
-
-            cassandra.getConf().resetExecutionHook();
 
             Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
 
@@ -541,14 +505,11 @@ class CassandraMailboxMapperTest {
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
             doQuietly(() -> testee.delete(inbox));
-
-            cassandra.getConf().resetExecutionHook();
 
             doQuietly(() -> testee.delete(inbox));
 
@@ -573,14 +534,11 @@ class CassandraMailboxMapperTest {
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;"));
 
             doQuietly(() -> testee.rename(inboxRenamed));
-
-            cassandra.getConf().resetExecutionHook();
 
             doQuietly(() -> testee.rename(inboxRenamed));
 
@@ -612,14 +570,11 @@ class CassandraMailboxMapperTest {
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
             cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;")
-                .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
             doQuietly(() -> testee.rename(inboxRenamed));
-
-            cassandra.getConf().resetExecutionHook();
 
             doQuietly(() -> testee.rename(inboxRenamed));
 

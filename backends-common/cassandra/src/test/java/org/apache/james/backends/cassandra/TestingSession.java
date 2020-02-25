@@ -20,11 +20,7 @@
 package org.apache.james.backends.cassandra;
 
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 
-import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
@@ -36,146 +32,20 @@ import com.datastax.driver.core.Statement;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public class TestingSession implements Session {
-    @FunctionalInterface
-    interface Behavior {
-        Behavior THROW = (session, statement) -> {
-            RuntimeException injected_failure = new RuntimeException("Injected failure");
-            injected_failure.printStackTrace();
-            throw injected_failure;
-        };
-
-        Behavior EXECUTE_NORMALLY = Session::executeAsync;
-
-        static Behavior awaitOn(Barrier barrier) {
-            return (session, statement) -> {
-                barrier.call();
-                return session.executeAsync(statement);
-            };
-        }
-
-        ResultSetFuture execute(Session session, Statement statement);
-    }
-
-    public static class Barrier {
-        private final CountDownLatch callerLatch = new CountDownLatch(1);
-        private final CountDownLatch awaitCallerLatch;
-
-        public Barrier() {
-            this(1);
-        }
-
-        public Barrier(int callerCount) {
-            awaitCallerLatch = new CountDownLatch(callerCount);
-        }
-
-        public void awaitCaller() throws InterruptedException {
-            awaitCallerLatch.await();
-        }
-
-        public void releaseCaller() {
-            callerLatch.countDown();
-        }
-
-        void call() {
-            awaitCallerLatch.countDown();
-            try {
-                callerLatch.await();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    @FunctionalInterface
-    interface StatementPredicate extends Predicate<Statement> {
-
-    }
-
-    static class BoundStatementStartingWith implements StatementPredicate {
-        private final String queryStringPrefix;
-
-        BoundStatementStartingWith(String queryStringPrefix) {
-            this.queryStringPrefix = queryStringPrefix;
-        }
-
-        @Override
-        public boolean test(Statement statement) {
-            if (statement instanceof BoundStatement) {
-                BoundStatement boundStatement = (BoundStatement) statement;
-                return boundStatement.preparedStatement()
-                    .getQueryString()
-                    .startsWith(queryStringPrefix);
-            }
-            return false;
-        }
-    }
-
-    @FunctionalInterface
-    public interface RequiresCondition {
-        RequiresApplyCount condition(StatementPredicate statementPredicate);
-
-        default RequiresApplyCount always() {
-            return condition(ALL_STATEMENTS);
-        }
-
-        default RequiresApplyCount whenBoundStatementStartsWith(String queryStringPrefix) {
-            return condition(new BoundStatementStartingWith(queryStringPrefix));
-        }
-    }
-
-    @FunctionalInterface
-    public interface RequiresApplyCount {
-        FinalStage times(int applyCount);
-    }
-
-    @FunctionalInterface
-    public interface FinalStage {
-        void setExecutionHook();
-    }
-
-    private static class ExecutionHook {
-        final StatementPredicate statementPredicate;
-        final Behavior behavior;
-        final AtomicInteger remaining;
-
-        private ExecutionHook(StatementPredicate statementPredicate, Behavior behavior, int applyCount) {
-            this.statementPredicate = statementPredicate;
-            this.behavior = behavior;
-            this.remaining = new AtomicInteger(applyCount);
-        }
-
-        ResultSetFuture execute(Session session, Statement statement) {
-            if (statementPredicate.test(statement)) {
-                int hookPosition = remaining.getAndDecrement();
-                if (hookPosition > 0) {
-                    return behavior.execute(session, statement);
-                }
-            }
-            return Behavior.EXECUTE_NORMALLY.execute(session, statement);
-        }
-    }
-
-    private static StatementPredicate ALL_STATEMENTS = statement -> true;
-    private static ExecutionHook NO_EXECUTION_HOOK = new ExecutionHook(ALL_STATEMENTS, Behavior.EXECUTE_NORMALLY, 0);
-
     private final Session delegate;
-    private volatile ExecutionHook executionHook;
+    private volatile Scenario scenario;
 
     TestingSession(Session delegate) {
         this.delegate = delegate;
-        this.executionHook = NO_EXECUTION_HOOK;
+        this.scenario = Scenario.NOTHING;
     }
 
-    public RequiresCondition fail() {
-        return condition -> applyCount -> () -> executionHook = new ExecutionHook(condition, Behavior.THROW, applyCount);
+    public void registerScenario(Scenario scenario) {
+        this.scenario = scenario;
     }
 
-    public RequiresCondition awaitOn(Barrier barrier) {
-        return condition -> applyCount -> () -> executionHook = new ExecutionHook(condition, Behavior.awaitOn(barrier), applyCount);
-    }
-
-    public void resetExecutionHook() {
-        executionHook = NO_EXECUTION_HOOK;
+    public void registerScenario(Scenario.ExecutionHook hook) {
+        this.scenario = Scenario.combine(hook);
     }
 
     @Override
@@ -230,7 +100,9 @@ public class TestingSession implements Session {
 
     @Override
     public ResultSetFuture executeAsync(Statement statement) {
-        return executionHook.execute(delegate, statement);
+        return scenario
+            .getCorrespondingBehavior(statement)
+            .execute(delegate, statement);
     }
 
     @Override

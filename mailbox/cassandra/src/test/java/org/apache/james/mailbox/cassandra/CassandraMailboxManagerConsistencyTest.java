@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.apache.james.backends.cassandra.Scenario.NOTHING;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -79,15 +81,13 @@ class CassandraMailboxManagerConsistencyTest {
 
         @Test
         void createMailboxShouldBeConsistentWhenMailboxDaoFails(CassandraCluster cassandra) {
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
             doQuietly(() -> testee.createMailbox(inboxPath, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
@@ -99,15 +99,13 @@ class CassandraMailboxManagerConsistencyTest {
 
         @Test
         void createMailboxShouldBeConsistentWhenMailboxPathDaoFails(CassandraCluster cassandra) {
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailboxPathV2")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailboxPathV2"));
 
             doQuietly(() -> testee.createMailbox(inboxPath, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
@@ -120,11 +118,9 @@ class CassandraMailboxManagerConsistencyTest {
         @Disabled("JAMES-3056 createMailbox() doesn't return mailboxId while it's supposed to")
         @Test
         void createMailboxAfterAFailedCreationShouldCreateTheMailboxWhenMailboxDaoFails(CassandraCluster cassandra) throws Exception {
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
             doQuietly(() -> testee.createMailbox(inboxPath, mailboxSession));
 
@@ -134,15 +130,13 @@ class CassandraMailboxManagerConsistencyTest {
 
         @Test
         void createMailboxAfterAFailedCreationShouldCreateTheMailboxWhenMailboxPathDaoFails(CassandraCluster cassandra) throws Exception {
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailboxPathV2")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailboxPathV2"));
 
             doQuietly(() -> testee.createMailbox(inboxPath, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                 .get();
@@ -161,15 +155,13 @@ class CassandraMailboxManagerConsistencyTest {
         @Disabled("JAMES-3056 createMailbox() doesn't return mailboxId while it's supposed to")
         @Test
         void createMailboxAfterDeletingShouldCreateTheMailboxWhenMailboxDaoFails(CassandraCluster cassandra) throws Exception {
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
             doQuietly(() -> testee.createMailbox(inboxPath, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
@@ -179,15 +171,13 @@ class CassandraMailboxManagerConsistencyTest {
 
         @Test
         void createMailboxAfterDeletingShouldCreateTheMailboxWhenMailboxPathDaoFails(CassandraCluster cassandra) throws Exception {
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailboxPathV2")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailboxPathV2"));
 
             doQuietly(() -> testee.createMailbox(inboxPath, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
@@ -214,15 +204,13 @@ class CassandraMailboxManagerConsistencyTest {
             MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                 .get();
 
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
             doQuietly(() -> testee.renameMailbox(inboxPath, inboxPathRenamed, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
@@ -240,15 +228,13 @@ class CassandraMailboxManagerConsistencyTest {
             MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                 .get();
 
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailboxPathV2")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailboxPathV2"));
 
             doQuietly(() -> testee.renameMailbox(inboxPath, inboxPathRenamed, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
@@ -267,15 +253,13 @@ class CassandraMailboxManagerConsistencyTest {
             MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                 .get();
 
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
             doQuietly(() -> testee.renameMailbox(inboxPath, inboxPathRenamed, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             MailboxId newMailboxId = testee.createMailbox(inboxPathRenamed, mailboxSession)
                 .get();
@@ -301,15 +285,13 @@ class CassandraMailboxManagerConsistencyTest {
             MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                 .get();
 
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailboxPathV2")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailboxPathV2"));
 
             doQuietly(() -> testee.renameMailbox(inboxPath, inboxPathRenamed, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             MailboxId newMailboxId = testee.createMailbox(inboxPathRenamed, mailboxSession)
                 .get();
@@ -336,15 +318,13 @@ class CassandraMailboxManagerConsistencyTest {
             MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                 .get();
 
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
             doQuietly(() -> testee.renameMailbox(inboxPath, inboxPathRenamed, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             testee.deleteMailbox(inboxId, mailboxSession);
             assertThat(testee.createMailbox(inboxPathRenamed, mailboxSession))
@@ -356,15 +336,13 @@ class CassandraMailboxManagerConsistencyTest {
             MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                 .get();
 
-            cassandra.getConf()
-                .fail()
-                .whenBoundStatementStartsWith("INSERT INTO mailboxPathV2")
+            cassandra.getConf().registerScenario(fail()
                 .times(TRY_COUNT_BEFORE_FAILURE)
-                .setExecutionHook();
+                .whenQueryStartsWith("INSERT INTO mailboxPathV2"));
 
             doQuietly(() -> testee.renameMailbox(inboxPath, inboxPathRenamed, mailboxSession));
 
-            cassandra.getConf().resetExecutionHook();
+            cassandra.getConf().registerScenario(NOTHING);
 
             testee.deleteMailbox(inboxId, mailboxSession);
             MailboxId newMailboxId = testee.createMailbox(inboxPathRenamed, mailboxSession)
@@ -393,15 +371,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
@@ -420,15 +396,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
@@ -446,15 +420,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
@@ -472,15 +444,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
@@ -501,15 +471,13 @@ class CassandraMailboxManagerConsistencyTest {
             void createMailboxShouldCreateWhenMailboxDaoFailsOnDeleteByPath(CassandraCluster cassandra) throws Exception {
                 testee.createMailbox(inboxPath, mailboxSession);
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
@@ -530,15 +498,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
@@ -559,15 +525,13 @@ class CassandraMailboxManagerConsistencyTest {
             void createMailboxShouldCreateWhenMailboxPathDaoFailsOnDeleteByPath(CassandraCluster cassandra) throws Exception {
                 testee.createMailbox(inboxPath, mailboxSession);
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
@@ -589,15 +553,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
@@ -622,19 +584,15 @@ class CassandraMailboxManagerConsistencyTest {
             void deleteMailboxByPathShouldDeleteWhenMailboxDaoFails(CassandraCluster cassandra) throws Exception {
                 testee.createMailbox(inboxPath, mailboxSession);
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
-
-                cassandra.getConf().resetExecutionHook();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
@@ -649,15 +607,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
@@ -673,15 +629,13 @@ class CassandraMailboxManagerConsistencyTest {
             void deleteMailboxByPathShouldDeleteWhenMailboxPathDaoFails(CassandraCluster cassandra) throws Exception {
                 testee.createMailbox(inboxPath, mailboxSession);
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
@@ -698,15 +652,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
@@ -726,15 +678,13 @@ class CassandraMailboxManagerConsistencyTest {
             void createMailboxShouldCreateWhenMailboxDaoFailsOnDeleteByPath(CassandraCluster cassandra) throws Exception {
                 testee.createMailbox(inboxPath, mailboxSession);
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
@@ -756,15 +706,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailbox WHERE id=:id;")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
                 MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
@@ -785,15 +733,13 @@ class CassandraMailboxManagerConsistencyTest {
             void createMailboxShouldCreateWhenMailboxPathDaoFailsOnDeleteByPath(CassandraCluster cassandra) throws Exception {
                 testee.createMailbox(inboxPath, mailboxSession);
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
                 MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
@@ -815,15 +761,13 @@ class CassandraMailboxManagerConsistencyTest {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
 
-                cassandra.getConf()
-                    .fail()
-                    .whenBoundStatementStartsWith("DELETE FROM mailboxPathV2")
+                cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .setExecutionHook();
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
-                cassandra.getConf().resetExecutionHook();
+                cassandra.getConf().registerScenario(NOTHING);
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
                 MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)

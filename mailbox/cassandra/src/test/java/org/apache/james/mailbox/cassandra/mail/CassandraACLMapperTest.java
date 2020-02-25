@@ -19,10 +19,10 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
+import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,7 +33,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.TestingSession.Barrier;
+import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -163,10 +163,9 @@ class CassandraACLMapperTest {
     void twoConcurrentUpdatesWhenNoACLStoredShouldReturnACLWithTwoEntries(CassandraCluster cassandra) throws Exception {
         Barrier barrier = new Barrier(2);
         cassandra.getConf()
-            .awaitOn(barrier)
-            .whenBoundStatementStartsWith("SELECT acl,version FROM acl WHERE id=:id;")
-            .times(2)
-            .setExecutionHook();
+            .registerScenario(awaitOn(barrier)
+                    .times(2)
+                    .whenQueryStartsWith("SELECT acl,version FROM acl WHERE id=:id;"));
 
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
@@ -185,17 +184,15 @@ class CassandraACLMapperTest {
 
     @Test
     void twoConcurrentUpdatesWhenStoredShouldReturnACLWithTwoEntries(CassandraCluster cassandra) throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(2);
         MailboxACL.EntryKey keyBenwa = new MailboxACL.EntryKey("benwa", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
         cassandraACLMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(keyBenwa).rights(rights).asAddition());
 
         Barrier barrier = new Barrier(2);
         cassandra.getConf()
-            .awaitOn(barrier)
-            .whenBoundStatementStartsWith("SELECT acl,version FROM acl WHERE id=:id;")
-            .times(2)
-            .setExecutionHook();
+            .registerScenario(awaitOn(barrier)
+                .times(2)
+                .whenQueryStartsWith("SELECT acl,version FROM acl WHERE id=:id;"));
 
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);
