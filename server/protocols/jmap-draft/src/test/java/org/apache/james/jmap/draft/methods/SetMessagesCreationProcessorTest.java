@@ -74,11 +74,11 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
+import org.apache.james.rrt.api.AliasReverseResolver;
+import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.CanSendFromImpl;
-import org.apache.james.rrt.lib.ReverseRecipientRewriteTableImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
@@ -156,8 +156,8 @@ public class SetMessagesCreationProcessorTest {
         domainList.addDomain(Domain.of("example.com"));
         domainList.addDomain(Domain.of("other.org"));
         recipientRewriteTable.setDomainList(domainList);
-        ReverseRecipientRewriteTable reverseRecipientRewriteTable = new ReverseRecipientRewriteTableImpl(recipientRewriteTable);
-        canSendFrom = new CanSendFromImpl(recipientRewriteTable, reverseRecipientRewriteTable);
+        AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
+        canSendFrom = new CanSendFromImpl(recipientRewriteTable, aliasReverseResolver);
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor,
             messageIdManager,
             new MemoryMessageFastViewProjection(new RecordingMetricFactory()));

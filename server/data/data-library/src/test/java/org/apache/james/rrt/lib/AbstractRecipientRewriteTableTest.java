@@ -19,6 +19,7 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
@@ -28,6 +29,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.junit.Rule;
@@ -58,6 +60,20 @@ public abstract class AbstractRecipientRewriteTableTest {
     protected AbstractRecipientRewriteTable virtualUserTable;
 
     public void setUp() throws Exception {
+        setRecursiveRecipientRewriteTable();
+    }
+
+    private void setRecursiveRecipientRewriteTable() throws Exception {
+        setNotConfiguredRecipientRewriteTable();
+        virtualUserTable.setConfiguration(new RecipientRewriteTableConfiguration(true, 10));
+    }
+
+    private void setNonRecursiveRecipientRewriteTable() throws Exception {
+        setNotConfiguredRecipientRewriteTable();
+        virtualUserTable.setConfiguration(new RecipientRewriteTableConfiguration(false, 0));
+    }
+
+    private void setNotConfiguredRecipientRewriteTable() throws Exception {
         virtualUserTable = getRecipientRewriteTable();
 
         SimpleDomainList domainList = new SimpleDomainList();
@@ -86,6 +102,19 @@ public abstract class AbstractRecipientRewriteTableTest {
         Domain domain = Domain.of("test");
         virtualUserTable.addMapping(MappingSource.fromDomain(domain), Mapping.regex("prefix_.*:admin@test"));
         assertThat(virtualUserTable.getResolvedMappings("prefix_abc", domain)).isNotEmpty();
+    }
+
+    @Test
+    public void notConfiguredResolutionShouldThrow() throws Exception {
+        setNotConfiguredRecipientRewriteTable();
+        assertThatCode(() -> virtualUserTable.getResolvedMappings(USER, Domain.LOCALHOST))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void configuringTwiceShouldThrow() {
+        assertThatCode(() -> virtualUserTable.setConfiguration(new RecipientRewriteTableConfiguration(true, 10)))
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -211,7 +240,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     }
 
     @Test
-    public void testRecursiveMapping() throws Exception {
+    public void testNonRecursiveMapping() throws Exception {
         String user1 = "user1";
         String user2 = "user2";
         String user3 = "user3";
@@ -220,26 +249,17 @@ public abstract class AbstractRecipientRewriteTableTest {
         Domain domain3 = Domain.of("domain3");
         MappingSource source1 = MappingSource.fromUser(user1, domain1);
         MappingSource source2 = MappingSource.fromUser(user2, domain2);
-        MappingSource source3 = MappingSource.fromUser(user3, domain3);
 
-        virtualUserTable.setRecursiveMapping(true);
+        setNonRecursiveRecipientRewriteTable();
 
         assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
 
         virtualUserTable.addMapping(source1, Mapping.address(user2 + "@" + domain2.asString()));
         virtualUserTable.addMapping(source2, Mapping.address(user3 + "@" + domain3.asString()));
-        assertThat(virtualUserTable.getResolvedMappings(user1, domain1)).containsOnly(Mapping.address(user3 + "@" + domain3.asString()));
-        virtualUserTable.addMapping(source3, Mapping.address(user1 + "@" + domain1.asString()));
-
         assertThatThrownBy(() ->
             virtualUserTable.getResolvedMappings(user1, domain1))
-            .describedAs("Exception thrown on to many mappings")
+            .describedAs("Exception thrown on too many mappings")
             .isInstanceOf(ErrorMappingException.class);
-
-        // disable recursive mapping
-        virtualUserTable.setRecursiveMapping(false);
-        assertThat(virtualUserTable.getResolvedMappings(user1, domain1)).describedAs("Not recursive mapped")
-            .containsExactly(Mapping.address(user2 + "@" + domain2.asString()));
     }
 
     @Test

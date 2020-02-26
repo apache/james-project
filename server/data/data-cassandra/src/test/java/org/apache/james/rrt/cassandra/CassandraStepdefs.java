@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.rrt.cassandra;
 
-import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -30,6 +29,7 @@ import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 import org.junit.Rule;
 
+import com.github.fge.lambdas.Throwing;
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 
@@ -51,7 +51,7 @@ public class CassandraStepdefs {
         cassandra = CassandraCluster.create(
             CassandraModule.aggregateModules(CassandraRRTModule.MODULE, CassandraSchemaVersionModule.MODULE),
             cassandraServer.getHost());
-        mainStepdefs.rewriteTable = getRecipientRewriteTable();
+        mainStepdefs.setUp(Throwing.supplier(this::getRecipientRewriteTable).sneakyThrow());
     }
 
     @After
@@ -64,7 +64,6 @@ public class CassandraStepdefs {
             new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
             new CassandraMappingsSourcesDAO(cassandra.getConf()),
             new CassandraSchemaVersionDAO(cassandra.getConf()));
-        rrt.configure(new BaseHierarchicalConfiguration());
         rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return rrt;
     }

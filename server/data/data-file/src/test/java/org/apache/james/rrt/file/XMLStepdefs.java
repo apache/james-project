@@ -33,10 +33,10 @@ public class XMLStepdefs {
 
     @Before
     public void setup() throws Throwable {
-        mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
+        mainStepdefs.setUp(this::getRecipientRewriteTable);
     }
 
-    private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
+    private AbstractRecipientRewriteTable getRecipientRewriteTable() {
         return new XMLRecipientRewriteTable();
     }
 }

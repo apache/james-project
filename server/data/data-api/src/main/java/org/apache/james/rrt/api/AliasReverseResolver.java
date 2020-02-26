@@ -24,6 +24,6 @@ import java.util.stream.Stream;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 
-public interface ReverseRecipientRewriteTable {
+public interface AliasReverseResolver {
     Stream<MailAddress> listAddresses(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException;
 }

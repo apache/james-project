@@ -19,11 +19,11 @@
 
 package org.apache.james.rrt.memory;
 
-import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 
+import com.github.fge.lambdas.Throwing;
 import cucumber.api.java.Before;
 
 public class InMemoryStepdefs {
@@ -36,12 +36,11 @@ public class InMemoryStepdefs {
 
     @Before
     public void setup() throws Throwable {
-        mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
+        mainStepdefs.setUp(Throwing.supplier(this::getRecipientRewriteTable).sneakyThrow());
     }
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         MemoryRecipientRewriteTable rrt = new MemoryRecipientRewriteTable();
-        rrt.configure(new BaseHierarchicalConfiguration());
         rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return rrt;
     }

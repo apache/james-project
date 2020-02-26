@@ -19,6 +19,8 @@
 
 package org.apache.james.rrt.lib;
 
+import static org.apache.james.rrt.api.RecipientRewriteTableConfiguration.DEFAULT_ENABLED_MAPPING_LIMIT;
+import static org.apache.james.rrt.api.RecipientRewriteTableConfiguration.RECURSIVE_MAPPING_ENABLE;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.core.Domain;
@@ -26,14 +28,15 @@ import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
+import org.apache.james.rrt.api.AliasReverseResolver;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.junit.jupiter.api.BeforeEach;
 
-public class ReverseRecipientRewriteTableImplTest implements ReverseRecipientRewriteTableContract {
+public class AliasReverseResolverImplTest implements AliasReverseResolverContract {
 
     AbstractRecipientRewriteTable recipientRewriteTable;
-    ReverseRecipientRewriteTableImpl reverseRecipientRewriteTable;
+    AliasReverseResolverImpl aliasReverseResolver;
 
     @BeforeEach
     void setup() throws Exception {
@@ -47,13 +50,14 @@ public class ReverseRecipientRewriteTableImplTest implements ReverseRecipientRew
         domainList.addDomain(DOMAIN);
         domainList.addDomain(OTHER_DOMAIN);
         recipientRewriteTable.setDomainList(domainList);
+        recipientRewriteTable.setConfiguration(new RecipientRewriteTableConfiguration(RECURSIVE_MAPPING_ENABLE, DEFAULT_ENABLED_MAPPING_LIMIT));
 
-        this.reverseRecipientRewriteTable = new ReverseRecipientRewriteTableImpl(recipientRewriteTable);
+        this.aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
     }
 
     @Override
-    public ReverseRecipientRewriteTable reverseRecipientRewriteTable() {
-        return reverseRecipientRewriteTable;
+    public AliasReverseResolver aliasReverseResolver() {
+        return aliasReverseResolver;
     }
 
     @Override

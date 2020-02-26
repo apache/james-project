@@ -19,7 +19,6 @@
 
 package org.apache.james.rrt.memory;
 
-import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.junit.After;
@@ -40,9 +39,7 @@ public class MemoryRecipientRewriteTableTest extends AbstractRecipientRewriteTab
     }
 
     @Override
-    protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
-        AbstractRecipientRewriteTable rrt = new MemoryRecipientRewriteTable();
-        rrt.configure(new BaseHierarchicalConfiguration());
-        return rrt;
+    protected AbstractRecipientRewriteTable getRecipientRewriteTable() {
+        return new MemoryRecipientRewriteTable();
     }
 }

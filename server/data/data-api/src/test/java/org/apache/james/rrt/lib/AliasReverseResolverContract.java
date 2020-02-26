@@ -26,12 +26,12 @@ import java.util.stream.IntStream;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
+import org.apache.james.rrt.api.AliasReverseResolver;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 
-public interface ReverseRecipientRewriteTableContract {
+public interface AliasReverseResolverContract {
 
     Domain DOMAIN = Domain.of("example.com");
     Domain OTHER_DOMAIN = Domain.of("other.org");
@@ -39,7 +39,7 @@ public interface ReverseRecipientRewriteTableContract {
     Username USER_ALIAS = Username.of("alias@example.com");
     Username OTHER_USER = Username.of("other@example.com");
 
-    ReverseRecipientRewriteTable reverseRecipientRewriteTable();
+    AliasReverseResolver aliasReverseResolver();
 
     void addAliasMapping(Username alias, Username user) throws Exception;
 
@@ -70,14 +70,14 @@ public interface ReverseRecipientRewriteTableContract {
     }
     @Test
     default void listAddressesShouldContainOnlyUserAddressWhenUserHasNoAlias() throws Exception {
-        assertThat(reverseRecipientRewriteTable().listAddresses(USER))
+        assertThat(aliasReverseResolver().listAddresses(USER))
             .containsExactly(USER.asMailAddress());
     }
 
     @Test
     default void listAddressesShouldContainOnlyUserAddressWhenUserHasNoAliasAndAnotherUserHasOne() throws Exception {
         redirectUser(USER_ALIAS).to(OTHER_USER);
-        assertThat(reverseRecipientRewriteTable().listAddresses(USER))
+        assertThat(aliasReverseResolver().listAddresses(USER))
             .containsExactly(USER.asMailAddress());
     }
 
@@ -85,17 +85,17 @@ public interface ReverseRecipientRewriteTableContract {
     default void listAddressesShouldContainUserAddressAndAnAliasOfTheUser() throws Exception {
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(reverseRecipientRewriteTable().listAddresses(USER))
+        assertThat(aliasReverseResolver().listAddresses(USER))
             .containsExactlyInAnyOrder(USER.asMailAddress(), USER_ALIAS.asMailAddress());
     }
 
     @Test
-    default void listAddressesFromShouldBeTrueWhenSenderIsAnAliasOfAnAliasOfTheUser() throws Exception {
+    default void listAddressesShouldBeTrueWhenSenderIsAnAliasOfAnAliasOfTheUser() throws Exception {
         Username userAliasBis = Username.of("aliasbis@" + DOMAIN.asString());
         redirectUser(userAliasBis).to(USER_ALIAS);
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(reverseRecipientRewriteTable().listAddresses(USER))
+        assertThat(aliasReverseResolver().listAddresses(USER))
             .containsExactlyInAnyOrder(USER.asMailAddress(), USER_ALIAS.asMailAddress(), userAliasBis.asMailAddress());
     }
 
@@ -105,7 +105,7 @@ public interface ReverseRecipientRewriteTableContract {
 
         redirectDomain(OTHER_DOMAIN).to(DOMAIN);
 
-        assertThat(reverseRecipientRewriteTable().listAddresses(USER))
+        assertThat(aliasReverseResolver().listAddresses(USER))
             .containsExactlyInAnyOrder(USER.asMailAddress(), fromUser.asMailAddress());
     }
 
@@ -118,7 +118,7 @@ public interface ReverseRecipientRewriteTableContract {
 
         Username userAliasMainDomain = USER_ALIAS.withOtherDomain(Optional.of(DOMAIN));
         Username userOtherDomain = USER.withOtherDomain(Optional.of(OTHER_DOMAIN));
-        assertThat(reverseRecipientRewriteTable().listAddresses(USER))
+        assertThat(aliasReverseResolver().listAddresses(USER))
             .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress(), userAliasMainDomain.asMailAddress(), userOtherDomain.asMailAddress());
     }
 
@@ -140,28 +140,28 @@ public interface ReverseRecipientRewriteTableContract {
         Username userAliasExcluded = Username.of("alias" + (recursionLevel - 1) + "@" + DOMAIN.asString());
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(reverseRecipientRewriteTable().listAddresses(USER))
+        assertThat(aliasReverseResolver().listAddresses(USER))
             .doesNotContain(userAliasExcluded.asMailAddress());
     }
 
     @Test
-    default void listAddressesShouldContainASendersAliasOfAnAliasInAnotherDomainOfTheUser() throws Exception {
+    default void listAddressesShouldContainASenderAliasOfAnAliasInAnotherDomainOfTheUser() throws Exception {
         Username userAlias = Username.of("aliasbis@" + OTHER_DOMAIN.asString());
         Username userAliasBis = Username.of("aliaster@" + OTHER_DOMAIN.asString());
         redirectUser(userAliasBis).to(userAlias);
         redirectUser(userAlias).to(USER);
 
-        assertThat(reverseRecipientRewriteTable().listAddresses(USER))
+        assertThat(aliasReverseResolver().listAddresses(USER))
             .contains(userAliasBis.asMailAddress());
     }
 
     @Test
-    default void listAddressesShouldContainAnUserAliasFollowingADomainAliasResolution() throws Exception {
+    default void listAddressesShouldContainAUserAliasFollowingADomainAliasResolution() throws Exception {
         Username userAliasBis = Username.of("aliasbis@" + OTHER_DOMAIN.asString());
         redirectUser(userAliasBis).to(USER_ALIAS);
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(reverseRecipientRewriteTable().listAddresses(USER))
+        assertThat(aliasReverseResolver().listAddresses(USER))
             .contains(userAliasBis.asMailAddress());
     }
 }

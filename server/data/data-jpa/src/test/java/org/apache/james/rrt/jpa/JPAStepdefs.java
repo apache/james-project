@@ -18,13 +18,13 @@
  ****************************************************************/
 package org.apache.james.rrt.jpa;
 
-import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 
+import com.github.fge.lambdas.Throwing;
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 
@@ -40,7 +40,7 @@ public class JPAStepdefs {
 
     @Before
     public void setup() throws Throwable {
-        mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
+        mainStepdefs.setUp(Throwing.supplier(this::getRecipientRewriteTable).sneakyThrow());
     }
 
     @After
@@ -51,8 +51,6 @@ public class JPAStepdefs {
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        BaseHierarchicalConfiguration defaultConfiguration = new BaseHierarchicalConfiguration();
-        localVirtualUserTable.configure(defaultConfiguration);
         localVirtualUserTable.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return localVirtualUserTable;
     }

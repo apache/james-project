@@ -18,19 +18,10 @@
  ****************************************************************/
 package org.apache.james.rrt.file;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
-import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
-import org.apache.james.rrt.lib.Mapping;
-import org.apache.james.rrt.lib.Mapping.Type;
-import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.rrt.lib.MappingsImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -55,22 +46,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
 
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() {
-        return new XMLRecipientRewriteTable() {
-            @Override
-            public void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-                addMappingToConfiguration(source, mapping.getType().withoutPrefix(mapping.asString()), mapping.getType());
-            }
-
-            @Override
-            public void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-                removeMappingFromConfiguration(source, mapping.getType().withoutPrefix(mapping.asString()), mapping.getType());
-            }
-
-            @Override
-            public void addAddressMapping(MappingSource source, String address) throws RecipientRewriteTableException {
-                addMapping(source, Mapping.address(address));
-            }
-        };
+        return new XMLRecipientRewriteTable();
     }
 
     @Test
@@ -85,57 +61,182 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     public void addMappingShouldThrowWhenMappingAlreadyExists() {
     }
 
-    protected void addMappingToConfiguration(MappingSource source, String mapping, Type type) throws RecipientRewriteTableException {
-        Mappings mappings = virtualUserTable.getStoredMappings(source);
-
-        Mappings updatedMappings = MappingsImpl.from(mappings)
-            .add(Mapping.of(type, mapping))
-            .build();
-
-        updateConfiguration(source, mappings, updatedMappings);
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void testStoreAndGetMappings() {
     }
 
-    protected void removeMappingFromConfiguration(MappingSource source, String mapping, Type type) throws RecipientRewriteTableException {
-        Mappings oldMappings = virtualUserTable.getStoredMappings(source);
-
-        if (oldMappings.isEmpty()) {
-            throw new RecipientRewriteTableException("Cannot remove from null mappings");
-        }
-
-        Mappings updatedMappings = oldMappings.remove(Mapping.of(type, mapping));
-
-        updateConfiguration(source, oldMappings, updatedMappings);
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void testStoreAndRetrieveRegexMapping() {
     }
 
-    private void updateConfiguration(MappingSource source, Mappings oldMappings, Mappings updatedMappings) throws RecipientRewriteTableException {
-        removeMappingsFromConfig(source, oldMappings);
-
-        if (!updatedMappings.isEmpty()) {
-            defaultConfiguration.addProperty("mapping", source.getFixedUser() + "@" + source.getFixedDomain() + "=" + updatedMappings.serialize());
-        }
-
-        try {
-            virtualUserTable.configure(defaultConfiguration);
-        } catch (Exception e) {
-            if (updatedMappings.size() > 0) {
-                throw new RecipientRewriteTableException("Error update mapping", e);
-            }
-        }
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void getAllMappingsShouldListAllEntries() {
     }
 
-    private void removeMappingsFromConfig(MappingSource source, Mappings mappings) {
-        List<String> stored = new ArrayList<>();
-        for (String c : defaultConfiguration.getStringArray("mapping")) {
-            String mapping = source.getFixedUser() + "@" + source.getFixedDomain() + "=" + mappings.serialize();
-            if (!c.equalsIgnoreCase(mapping)) {
-                stored.add(c);
-            }
-        }
-        // clear old values
-        defaultConfiguration.clear();
-        // add stored mappings
-        for (String aStored : stored) {
-            defaultConfiguration.addProperty("mapping", aStored);
-        }
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void testStoreAndRetrieveAddressMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void testStoreAndRetrieveErrorMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void testStoreAndRetrieveWildCardAddressMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void testNonRecursiveMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void testAliasDomainMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void addMappingShouldNotThrowWhenMappingAlreadyExistsWithAnOtherType() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void addForwardMappingShouldStore() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void removeForwardMappingShouldDelete() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void addGroupMappingShouldStore() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void removeGroupMappingShouldDelete() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void addAliasMappingShouldStore() {
+
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void removeAliasMappingShouldDelete() {
+
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldReturnWhenHasMapping() {
+
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldReturnWhenMultipleSourceMapping() {
+
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldReturnWhenHasForwardMapping() {
+
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldReturnAliasMappings() {
+
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldReturnWhenHasAddressMapping() {
+
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldThrowExceptionWhenHasRegexMapping() {
+
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldHandleDomainMapping() {
+
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldHandleDomainSource() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldHandleDomainSources() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldThrowExceptionWhenHasErrorMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldReturnEmptyWhenMappingDoesNotExist() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void getSourcesForTypeShouldReturnEmptyWhenNoMatchingMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void getSourcesForTypeShouldReturnMatchingMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void getSourcesForTypeShouldNotReturnDuplicatedSources() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void getSourcesForTypeShouldReturnSortedStream() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void getMappingsForTypeShouldReturnEmptyWhenNoMatchingMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void getMappingsForTypeShouldReturnMatchingMapping() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void getMappingsForTypeShouldNotReturnDuplicatedDestinations() {
+    }
+
+    @Test
+    @Ignore("XMLRecipientRewriteTable is read only")
+    public void getMappingsForTypeShouldReturnSortedStream() {
     }
 }

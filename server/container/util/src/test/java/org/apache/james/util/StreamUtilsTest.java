@@ -117,7 +117,7 @@ class StreamUtilsTest {
     }
 
     @Test
-    void unfoldShouldGenerateAnFiniteStream() {
+    void unfoldShouldGenerateAFiniteStream() {
         Stream<Integer> unfolded = StreamUtils.unfold(1, i -> {
             if (i < 10) {
                 return Optional.of(i + 1);

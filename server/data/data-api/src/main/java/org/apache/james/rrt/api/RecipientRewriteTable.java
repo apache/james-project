@@ -122,7 +122,7 @@ public interface RecipientRewriteTable {
      */
     Map<MappingSource, Mappings> getAllMappings() throws RecipientRewriteTableException;
 
-    int getMappingLimit();
+    RecipientRewriteTableConfiguration getConfiguration();
 
     default Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
         Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),

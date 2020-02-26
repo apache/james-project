@@ -40,6 +40,7 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.rrt.api.InvalidRegexException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
@@ -49,24 +50,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 
 public abstract class AbstractRecipientRewriteTable implements RecipientRewriteTable, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientRewriteTable.class);
 
-    // The maximum mappings which will process before throwing exception
-    private int mappingLimit = 10;
-
-    private boolean recursive = true;
-
+    private RecipientRewriteTableConfiguration configuration;
     private DomainList domainList;
 
-    @Override
-    public int getMappingLimit() {
-        if (recursive) {
-            return mappingLimit;
-        } else {
-            return 0;
-        }
+    public void setConfiguration(RecipientRewriteTableConfiguration configuration) {
+        Preconditions.checkState(this.configuration == null, "A configuration cannot be set twice");
+        this.configuration = configuration;
     }
 
     @Inject
@@ -76,44 +70,23 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
-        setRecursiveMapping(config.getBoolean("recursiveMapping", true));
-        try {
-            setMappingLimit(config.getInt("mappingLimit", 10));
-        } catch (IllegalArgumentException e) {
-            throw new ConfigurationException(e.getMessage());
-        }
+        setConfiguration(RecipientRewriteTableConfiguration.fromConfiguration(config));
         doConfigure(config);
     }
 
-    /**
-     * Override to handle config
-     */
-    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> conf) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> arg0) throws ConfigurationException {
+
     }
 
-    public void setRecursiveMapping(boolean recursive) {
-        this.recursive = recursive;
-    }
-
-    /**
-     * Set the mappingLimit
-     * 
-     * @param mappingLimit
-     *            the mappingLimit
-     * @throws IllegalArgumentException
-     *             get thrown if mappingLimit smaller then 1 is used
-     */
-    public void setMappingLimit(int mappingLimit) throws IllegalArgumentException {
-        if (mappingLimit < 1) {
-            throw new IllegalArgumentException("The minimum mappingLimit is 1");
-        }
-        this.mappingLimit = mappingLimit;
+    @Override
+    public RecipientRewriteTableConfiguration getConfiguration() {
+        return configuration;
     }
 
     @Override
     public Mappings getResolvedMappings(String user, Domain domain, EnumSet<Type> mappingTypes) throws ErrorMappingException, RecipientRewriteTableException {
-
-        return getMappings(Username.fromLocalPartWithDomain(user, domain), mappingLimit, mappingTypes);
+        Preconditions.checkState(this.configuration != null, "RecipientRewriteTable is not configured");
+        return getMappings(Username.fromLocalPartWithDomain(user, domain), configuration.getMappingLimit(), mappingTypes);
     }
 
     private Mappings getMappings(Username username, int mappingLimit, EnumSet<Type> mappingTypes) throws ErrorMappingException, RecipientRewriteTableException {
@@ -155,7 +128,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         LOGGER.debug("Valid virtual user mapping {} to {}", originalUsername.asString(), rewrittenUsername.asString());
 
         Stream<Mapping> nonRecursiveResult = Stream.of(toMapping(rewrittenUsername, mapping.getType()));
-        if (!recursive) {
+        if (!configuration.isRecursive()) {
             return nonRecursiveResult;
         }
 

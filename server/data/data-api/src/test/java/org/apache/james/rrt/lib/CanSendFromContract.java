@@ -206,7 +206,7 @@ public interface CanSendFromContract {
     }
 
     @Test
-    default void allValidFromAddressesShouldContainASendersAliasOfAnAliasOfTheUser() throws Exception {
+    default void allValidFromAddressesShouldContainASenderAliasOfAnAliasOfTheUser() throws Exception {
         Username userAliasBis = Username.of("aliasbis@" + DOMAIN.asString());
         redirectUser(userAliasBis).to(USER_ALIAS);
         redirectUser(USER_ALIAS).to(USER);
@@ -237,7 +237,7 @@ public interface CanSendFromContract {
     }
 
     @Test
-    default void allValidFromAddressesShouldContainASendersAliasOfAnAliasInAnotherDomainOfTheUser() throws Exception {
+    default void allValidFromAddressesShouldContainASenderAliasOfAnAliasInAnotherDomainOfTheUser() throws Exception {
         Username userAlias = Username.of("aliasbis@" + OTHER_DOMAIN.asString());
         Username userAliasBis = Username.of("aliaster@" + OTHER_DOMAIN.asString());
         redirectUser(userAliasBis).to(userAlias);
@@ -248,7 +248,7 @@ public interface CanSendFromContract {
     }
 
     @Test
-    default void allValidFromAddressesShouldContainAnUserAliasFollowingADomainAliasResolution() throws Exception {
+    default void allValidFromAddressesShouldContainAUserAliasFollowingADomainAliasResolution() throws Exception {
         Username userAliasBis = Username.of("aliasbis@" + OTHER_DOMAIN.asString());
         redirectUser(userAliasBis).to(USER_ALIAS);
         redirectUser(USER_ALIAS).to(USER);

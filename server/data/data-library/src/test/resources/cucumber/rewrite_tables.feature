@@ -107,13 +107,13 @@ Feature: Rewrite Tables tests
     Given recursive mapping is disable
     Given store "test@localhost" address mapping as wildcard for domain "localhost"
     And store "mine@localhost" address mapping for user "user" at domain "localhost"
-    Then mappings for user "user" at domain "localhost" should contain only "mine@localhost"
+    Then retrieving mappings for user "user" at domain "localhost" should raise an ErrorMappingException with message "554 Too many mappings to process"
 
   Scenario: direct mapping should override address mapping as wildcard (reverse insertion order)
     Given recursive mapping is disable
     Given store "mine@localhost" address mapping for user "user" at domain "localhost"
     And store "test@localhost" address mapping as wildcard for domain "localhost"
-    Then mappings for user "user" at domain "localhost" should contain only "mine@localhost"
+    Then retrieving mappings for user "user" at domain "localhost" should raise an ErrorMappingException with message "554 Too many mappings to process"
 
   Scenario: direct mapping should not override address mapping as wildcard when other user
     Given store "test@localhost" address mapping as wildcard for domain "localhost"
@@ -188,11 +188,11 @@ Feature: Rewrite Tables tests
 
 # Recursive mapping
 
-  Scenario: direct mapping should be returned when recursive mapping is disable
+  Scenario: direct mapping should throw when recursive mapping is disable
     Given recursive mapping is disable
     And store "user2@domain2" address mapping for user "user1" at domain "domain1"
     And store "user3@domain3" address mapping for user "user2" at domain "domain2"
-    Then mappings for user "user1" at domain "domain1" should contain only "user2@domain2"
+    Then retrieving mappings for user "user1" at domain "localhost1" should raise an ErrorMappingException with message "554 Too many mappings to process"
 
   Scenario: recursive mapping should work when two levels
     Given recursive mapping is enable

@@ -31,21 +31,23 @@ import javax.inject.Inject;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
 import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.StreamUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 
-public class ReverseRecipientRewriteTableImpl implements ReverseRecipientRewriteTable {
+public class AliasReverseResolverImpl implements AliasReverseResolver {
     private final RecipientRewriteTable recipientRewriteTable;
+    private final int mappingLimit;
 
     @Inject
-    public ReverseRecipientRewriteTableImpl(RecipientRewriteTable recipientRewriteTable) {
+    public AliasReverseResolverImpl(RecipientRewriteTable recipientRewriteTable) {
         this.recipientRewriteTable = recipientRewriteTable;
+        this.mappingLimit = recipientRewriteTable.getConfiguration().getMappingLimit();
     }
 
     @Override
@@ -64,7 +66,7 @@ public class ReverseRecipientRewriteTableImpl implements ReverseRecipientRewrite
     private Stream<Username> relatedAliases(Username user) {
         return StreamUtils.iterate(
             user,
-            (long) recipientRewriteTable.getMappingLimit(),
+            (long) mappingLimit,
             Throwing.<Username, Stream<Username>>function(targetUser ->
                 recipientRewriteTable
                     .listSources(Mapping.alias(targetUser.asString()))
@@ -94,7 +96,7 @@ public class ReverseRecipientRewriteTableImpl implements ReverseRecipientRewrite
     private Stream<Domain> fetchDomains(Domain domain) {
         return StreamUtils.iterate(
             domain,
-            (long) recipientRewriteTable.getMappingLimit(),
+            (long) mappingLimit,
             Throwing.<Domain, Stream<Domain>>function(targetDomain ->
                 recipientRewriteTable
                     .listSources(Mapping.domain(targetDomain))

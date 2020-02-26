@@ -69,7 +69,7 @@ public class StreamUtils {
     }
 
     public static <T> Stream<T> iterate(T seed, Long limit, Function<T, Stream<T>> generator) {
-        Preconditions.checkArgument(limit >= 0, "StreamUtils.iterate have a given limit ok '{}', while it should not be negative", limit);
+        Preconditions.checkArgument(limit >= 0, "StreamUtils.iterate have a given limit '{}', while it should not be negative", limit);
         return StreamUtils.unfold(Arrays.asList(seed), conservativeGenerator(generator))
             .limit(limit + 1)
             .flatMap(List::stream);

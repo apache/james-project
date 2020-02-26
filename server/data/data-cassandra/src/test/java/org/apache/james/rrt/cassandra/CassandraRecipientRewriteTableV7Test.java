@@ -69,7 +69,6 @@ public class CassandraRecipientRewriteTableV7Test extends AbstractRecipientRewri
             new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
             new CassandraMappingsSourcesDAO(cassandra.getConf()),
             cassandraSchemaVersionDAO);
-        rrt.configure(new BaseHierarchicalConfiguration());
 
         cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V7);
 

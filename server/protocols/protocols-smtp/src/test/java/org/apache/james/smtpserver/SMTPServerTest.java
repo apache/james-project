@@ -70,12 +70,12 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
+import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
-import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
+import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.rrt.lib.ReverseRecipientRewriteTableImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
@@ -200,7 +200,7 @@ public class SMTPServerTest {
     protected MemoryMailQueueFactory queueFactory;
     protected MemoryMailQueueFactory.MemoryMailQueue queue;
     protected MemoryRecipientRewriteTable rewriteTable;
-    private ReverseRecipientRewriteTable reverseRewriteTable;
+    private AliasReverseResolver aliasReverseResolver;
     protected CanSendFrom canSendFrom;
 
     private SMTPServer smtpServer;
@@ -279,8 +279,8 @@ public class SMTPServerTest {
         dnsServer = new AlterableDNSServer();
 
         rewriteTable = new MemoryRecipientRewriteTable();
-        reverseRewriteTable = new ReverseRecipientRewriteTableImpl(rewriteTable);
-        canSendFrom = new CanSendFromImpl(rewriteTable, reverseRewriteTable);
+        aliasReverseResolver = new AliasReverseResolverImpl(rewriteTable);
+        canSendFrom = new CanSendFromImpl(rewriteTable, aliasReverseResolver);
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 

@@ -46,8 +46,6 @@ public class JPARecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        BaseHierarchicalConfiguration defaultConfiguration = new BaseHierarchicalConfiguration();
-        localVirtualUserTable.configure(defaultConfiguration);
         return localVirtualUserTable;
     }
 }

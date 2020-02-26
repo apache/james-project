@@ -30,10 +30,10 @@ import javax.inject.Inject;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
 import org.apache.james.util.OptionalUtils;
 
 public class CanSendFromImpl implements CanSendFrom {
@@ -45,12 +45,12 @@ public class CanSendFromImpl implements CanSendFrom {
 
     public static final EnumSet<Mapping.Type> ALIAS_TYPES_ACCEPTED_IN_FROM = EnumSet.of(Alias, Domain);
     private final RecipientRewriteTable recipientRewriteTable;
-    private final ReverseRecipientRewriteTable reverseRecipientRewriteTable;
+    private final AliasReverseResolver aliasReverseResolver;
 
     @Inject
-    public CanSendFromImpl(RecipientRewriteTable recipientRewriteTable, ReverseRecipientRewriteTable reverseRecipientRewriteTable) {
+    public CanSendFromImpl(RecipientRewriteTable recipientRewriteTable, AliasReverseResolver aliasReverseResolver) {
         this.recipientRewriteTable = recipientRewriteTable;
-        this.reverseRecipientRewriteTable = reverseRecipientRewriteTable;
+        this.aliasReverseResolver = aliasReverseResolver;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class CanSendFromImpl implements CanSendFrom {
 
     @Override
     public Stream<MailAddress> allValidFromAddressesForUser(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
-        return reverseRecipientRewriteTable.listAddresses(user);
+        return aliasReverseResolver.listAddresses(user);
     }
 
     private boolean emailIsAnAliasOfTheConnectedUser(Username connectedUser, Username fromUser) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
