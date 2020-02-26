@@ -64,7 +64,7 @@ public class UidValidity {
         return new UidValidity(uidValidity);
     }
 
-    private static boolean isValid(long uidValidityAsLong) {
+    public static boolean isValid(long uidValidityAsLong) {
         return uidValidityAsLong > 0 && uidValidityAsLong < UPPER_EXCLUSIVE_BOUND;
     }
 

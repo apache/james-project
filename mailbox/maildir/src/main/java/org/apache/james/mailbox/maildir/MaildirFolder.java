@@ -281,8 +281,16 @@ public class MaildirFolder {
              InputStreamReader isr = new InputStreamReader(fis)) {
             char[] uidValidity = new char[20];
             int len = isr.read(uidValidity);
-            return UidValidity.of(Long.parseLong(String.valueOf(uidValidity, 0, len).trim()));
+            long uidValidityValue = Long.parseLong(String.valueOf(uidValidity, 0, len).trim());
+            return sanitizeUidValidity(uidValidityValue);
         }
+    }
+
+    private UidValidity sanitizeUidValidity(long uidValidityValue) throws IOException {
+        if (!UidValidity.isValid(uidValidityValue)) {
+            return resetUidValidity();
+        }
+        return UidValidity.ofValid(uidValidityValue);
     }
 
     /**
