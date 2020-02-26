@@ -42,9 +42,7 @@ import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -137,27 +135,16 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
-        List<Mailbox> mailboxesV2 = toMailboxes(query, mailboxPathV2DAO.listUserMailboxes(query.getFixedNamespace(), query.getFixedUser()));
-        List<Mailbox> mailboxesV1 = toMailboxes(query, mailboxPathDAO.listUserMailboxes(query.getFixedNamespace(), query.getFixedUser()));
+        String fixedNamespace = query.getFixedNamespace();
+        Username fixedUser = query.getFixedUser();
 
-        List<Mailbox> mailboxesV1NotInV2 = mailboxesV1.stream()
-            .filter(mailboxV1 -> mailboxesV2.stream()
-                .map(Mailbox::generateAssociatedPath)
-                .noneMatch(mailboxV2path -> mailboxV2path.equals(mailboxV1.generateAssociatedPath())))
-            .collect(Guavate.toImmutableList());
-
-        return ImmutableList.<Mailbox>builder()
-            .addAll(mailboxesV2)
-            .addAll(mailboxesV1NotInV2)
-            .build();
-    }
-
-    private List<Mailbox> toMailboxes(MailboxQuery.UserBound query, Flux<CassandraIdAndPath> listUserMailboxes) {
-        return listUserMailboxes
-                .filter(idAndPath -> query.isPathMatch(idAndPath.getMailboxPath()))
-                .concatMap(this::retrieveMailbox)
-                .collectList()
-                .block();
+        return Flux.concat(mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser),
+                mailboxPathDAO.listUserMailboxes(fixedNamespace, fixedUser))
+            .filter(idAndPath -> query.isPathMatch(idAndPath.getMailboxPath()))
+            .distinct(CassandraIdAndPath::getMailboxPath)
+            .concatMap(this::retrieveMailbox)
+            .collectList()
+            .block();
     }
 
     private Mono<Mailbox> retrieveMailbox(CassandraIdAndPath idAndPath) {
