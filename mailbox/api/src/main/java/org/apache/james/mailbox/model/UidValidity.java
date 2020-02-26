@@ -46,7 +46,7 @@ public class UidValidity {
     static UidValidity fromSupplier(Supplier<Long> longSupplier) {
         long randomValue = Math.abs(longSupplier.get());
         long sanitizedRandomValue = 1 + (randomValue % (UPPER_EXCLUSIVE_BOUND - 1));
-        return ofValid(sanitizedRandomValue);
+        return of(sanitizedRandomValue);
     }
 
     /**
@@ -56,10 +56,6 @@ public class UidValidity {
      * Strongly favor uses of  {@link #ofValid(long)}
      */
     public static UidValidity of(long uidValidity) {
-        return new UidValidity(uidValidity);
-    }
-
-    public static UidValidity ofValid(long uidValidity) {
         Preconditions.checkArgument(isValid(uidValidity), "uidValidity needs to be a non-zero unsigned 32-bit integer");
         return new UidValidity(uidValidity);
     }

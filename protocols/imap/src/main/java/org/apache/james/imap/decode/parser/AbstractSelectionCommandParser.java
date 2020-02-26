@@ -133,7 +133,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
 
     private UidValidity sanitizeUidValidity(long uidValidityAsNumber) {
         if (UidValidity.isValid(uidValidityAsNumber)) {
-            return UidValidity.ofValid(uidValidityAsNumber);
+            return UidValidity.of(uidValidityAsNumber);
         } else {
             // The UidValidity cached by the client is invalid
             // We know that the backend will regenerate it

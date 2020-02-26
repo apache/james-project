@@ -49,7 +49,7 @@ class QuotaCheckerTest {
     static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
     static final MailboxId MAILBOX_ID = TestId.of(42);
     static final MailboxPath MAILBOX_PATH = MailboxPath.inbox(Username.of("benwa"));
-    static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, UidValidity.ofValid(10), MAILBOX_ID);
+    static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, UidValidity.of(10), MAILBOX_ID);
 
     QuotaRootResolver mockedQuotaRootResolver;
     QuotaManager mockedQuotaManager;

@@ -62,7 +62,7 @@ import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import reactor.core.publisher.Mono;
 
 class CassandraMailboxMapperTest {
-    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(52);
+    private static final UidValidity UID_VALIDITY = UidValidity.of(52);
     private static final Username USER = Username.of("user");
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(USER, "name");

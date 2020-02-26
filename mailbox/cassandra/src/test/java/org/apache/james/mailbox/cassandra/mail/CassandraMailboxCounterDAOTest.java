@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailboxCounterDAOTest {
-    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(15);
+    private static final UidValidity UID_VALIDITY = UidValidity.of(15);
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
 
     @RegisterExtension

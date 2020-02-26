@@ -60,7 +60,7 @@ import com.google.common.collect.Lists;
 public class CopyProcessorTest {
     private static final Username USERNAME = Username.of("username");
     private static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
-    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(58L);
+    private static final UidValidity UID_VALIDITY = UidValidity.of(58L);
 
     private CopyProcessor testee;
     private ImapProcessor mockNextProcessor;

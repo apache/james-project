@@ -290,7 +290,7 @@ public class MaildirFolder {
         if (!UidValidity.isValid(uidValidityValue)) {
             return resetUidValidity();
         }
-        return UidValidity.ofValid(uidValidityValue);
+        return UidValidity.of(uidValidityValue);
     }
 
     /**

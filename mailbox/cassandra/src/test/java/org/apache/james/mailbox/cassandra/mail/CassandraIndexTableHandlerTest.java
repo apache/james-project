@@ -61,7 +61,7 @@ class CassandraIndexTableHandlerTest {
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final MessageUid MESSAGE_UID = MessageUid.of(18L);
     private static final CassandraMessageId CASSANDRA_MESSAGE_ID = new CassandraMessageId.Factory().generate();
-    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(15);
+    private static final UidValidity UID_VALIDITY = UidValidity.of(15);
     private static final ModSeq MODSEQ = ModSeq.of(17);
 
     @RegisterExtension

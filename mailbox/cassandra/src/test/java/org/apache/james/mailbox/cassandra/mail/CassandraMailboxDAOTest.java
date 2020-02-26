@@ -51,8 +51,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 class CassandraMailboxDAOTest {
-    private static final UidValidity UID_VALIDITY_1 = UidValidity.ofValid(145);
-    private static final UidValidity UID_VALIDITY_2 = UidValidity.ofValid(147);
+    private static final UidValidity UID_VALIDITY_1 = UidValidity.of(145);
+    private static final UidValidity UID_VALIDITY_2 = UidValidity.of(147);
     private static final Username USER = Username.of("user");
     private static final MailboxPath NEW_MAILBOX_PATH = MailboxPath.forUser(USER, "xyz");
     private static CassandraId CASSANDRA_ID_1 = CassandraId.timeBased();

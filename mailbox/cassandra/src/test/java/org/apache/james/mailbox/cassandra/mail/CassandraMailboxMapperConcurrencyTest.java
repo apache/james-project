@@ -42,7 +42,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailboxMapperConcurrencyTest {
 
-    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(52);
+    private static final UidValidity UID_VALIDITY = UidValidity.of(52);
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(Username.of("user"), "name");
     private static final int THREAD_COUNT = 10;
     private static final int OPERATION_COUNT = 10;

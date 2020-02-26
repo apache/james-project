@@ -49,7 +49,7 @@ import org.junit.jupiter.api.Test;
 public abstract class MailboxMapperTest {
 
     private static final char DELIMITER = '.';
-    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(42);
+    private static final UidValidity UID_VALIDITY = UidValidity.of(42);
     private static final Username BENWA = Username.of("benwa");
     protected static final MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
     private static final MailboxPath benwaWorkPath = MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work");

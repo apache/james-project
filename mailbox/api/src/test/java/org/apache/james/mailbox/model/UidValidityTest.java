@@ -21,6 +21,7 @@ package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.stream.IntStream;
 
@@ -45,23 +46,21 @@ class UidValidityTest {
     }
 
     @Test
-    void zeroUidValidityShouldBeInvalid() {
-        assertThat(UidValidity.of(0).isValid()).isFalse();
+    void ofShouldThrowWhenZero() {
+        assertThatThrownBy(() -> UidValidity.of(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void negativeUidValidityShouldBeInvalid() {
-        assertThat(UidValidity.of(-1).isValid()).isFalse();
+    void ofShouldThrowWhenNegative() {
+        assertThatThrownBy(() -> UidValidity.of(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void tooBigUidValidityShouldBeInvalid() {
-        assertThat(UidValidity.of(4294967296L).isValid()).isFalse();
-    }
-
-    @Test
-    void idValidityShouldBeValid() {
-        assertThat(UidValidity.of(42).isValid()).isTrue();
+    void ofShouldThrowWhenTooBig() {
+        assertThatThrownBy(() -> UidValidity.of(4294967296L))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

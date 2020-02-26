@@ -55,7 +55,7 @@ public abstract class MessageWithAttachmentMapperTest {
 
     private static final int LIMIT = 10;
     private static final int BODY_START = 16;
-    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(42);
+    private static final UidValidity UID_VALIDITY = UidValidity.of(42);
 
     private MapperProvider mapperProvider;
     private MessageMapper messageMapper;
