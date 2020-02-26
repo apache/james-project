@@ -19,12 +19,47 @@
 
 package org.apache.james.mailbox.model;
 
+import java.security.SecureRandom;
+import java.util.function.Supplier;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public class UidValidity {
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final long UPPER_EXCLUSIVE_BOUND = 1L << 32;
+
+    /**
+     * Despite RFC-3501 recommendations, we chose random as a UidVality generation mechanism.
+     * Timestamp base approach can lead to UidValidity being the same for two mailboxes simultaneously generated, leading
+     * to some IMPA clients not being able to detect changes.
+     *
+     * See https://issues.apache.org/jira/browse/JAMES-3074 for details
+     */
+    public static  UidValidity random() {
+        return fromSupplier(RANDOM::nextLong);
+    }
+
+    @VisibleForTesting
+    static UidValidity fromSupplier(Supplier<Long> longSupplier) {
+        long randomValue = Math.abs(longSupplier.get());
+        long sanitizedRandomValue = 1 + (randomValue % (UPPER_EXCLUSIVE_BOUND - 1));
+        return ofValid(sanitizedRandomValue);
+    }
+
     public static UidValidity of(long uidValidity) {
         return new UidValidity(uidValidity);
+    }
+
+    public static UidValidity ofValid(long uidValidity) {
+        Preconditions.checkArgument(isValid(uidValidity), "uidValidity needs to be a non-zero unsigned 32-bit integer");
+        return new UidValidity(uidValidity);
+    }
+
+    private static boolean isValid(long uidValidityAsLong) {
+        return uidValidityAsLong > 0 && uidValidityAsLong < UPPER_EXCLUSIVE_BOUND;
     }
 
     private final long uidValidity;
@@ -32,6 +67,17 @@ public class UidValidity {
     private UidValidity(long uidValidity) {
         this.uidValidity = uidValidity;
     }
+
+    public boolean isValid() {
+        // RFC-3501 section
+        /*
+        nz-number       = digit-nz *DIGIT
+                    ; Non-zero unsigned 32-bit integer
+                    ; (0 < n < 4,294,967,296)
+         */
+        return isValid(uidValidity);
+    }
+
 
     public long asLong() {
         return uidValidity;

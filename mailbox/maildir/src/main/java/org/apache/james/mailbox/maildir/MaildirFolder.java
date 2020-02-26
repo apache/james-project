@@ -341,10 +341,9 @@ public class MaildirFolder {
      * @return the new uidValidity
      */
     private UidValidity resetUidValidity() throws IOException {
-        // using the timestamp as uidValidity
-        UidValidity timestamp = UidValidity.of(System.currentTimeMillis());
-        setUidValidity(timestamp);
-        return timestamp;
+        UidValidity uidValidity = UidValidity.random();
+        setUidValidity(uidValidity);
+        return uidValidity;
     }
     
     /**

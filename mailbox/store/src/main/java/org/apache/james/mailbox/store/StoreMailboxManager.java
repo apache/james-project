@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store;
 
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -106,7 +105,6 @@ public class StoreMailboxManager implements MailboxManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManager.class);
     public static final char SQL_WILDCARD_CHAR = '%';
     public static final EnumSet<MessageCapabilities> DEFAULT_NO_MESSAGE_CAPABILITIES = EnumSet.noneOf(MessageCapabilities.class);
-    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final StoreRightManager storeRightManager;
     private final EventBus eventBus;
@@ -213,13 +211,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     public PreDeletionHooks getPreDeletionHooks() {
         return preDeletionHooks;
-    }
-
-    /**
-     * Generate and return the next uid validity
-     */
-    protected UidValidity randomUidValidity() {
-        return UidValidity.of(Math.abs(RANDOM.nextInt()));
     }
 
     @Override
@@ -382,7 +373,7 @@ public class StoreMailboxManager implements MailboxManager {
                 MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
                 try {
                     mapper.execute(Mapper.toTransaction(() -> {
-                        Mailbox mailbox = mapper.create(mailboxPath, randomUidValidity());
+                        Mailbox mailbox = mapper.create(mailboxPath, UidValidity.random());
                         mailboxIds.add(mailbox.getMailboxId());
                         // notify listeners
                         eventBus.dispatch(EventFactory.mailboxAdded()
