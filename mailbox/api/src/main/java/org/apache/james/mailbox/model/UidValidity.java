@@ -49,6 +49,12 @@ public class UidValidity {
         return ofValid(sanitizedRandomValue);
     }
 
+    /**
+     * This method allows deserialization of potentially invalid already stored UidValidity, and should only be used for
+     * compatibility purposes.
+     *
+     * Strongly favor uses of  {@link #ofValid(long)}
+     */
     public static UidValidity of(long uidValidity) {
         return new UidValidity(uidValidity);
     }
