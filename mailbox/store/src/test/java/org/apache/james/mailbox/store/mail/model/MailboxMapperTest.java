@@ -51,7 +51,7 @@ public abstract class MailboxMapperTest {
     private static final char DELIMITER = '.';
     private static final UidValidity UID_VALIDITY = UidValidity.ofValid(42);
     private static final Username BENWA = Username.of("benwa");
-    private static final MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
+    protected static final MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
     private static final MailboxPath benwaWorkPath = MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work");
     private static final MailboxPath benwaWorkTodoPath = MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work" + DELIMITER + "todo");
     private static final MailboxPath benwaPersoPath = MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "perso");
@@ -69,7 +69,7 @@ public abstract class MailboxMapperTest {
     private Mailbox bobInboxMailbox;
     private Mailbox bobDifferentNamespaceMailbox;
 
-    private MailboxMapper mailboxMapper;
+    protected MailboxMapper mailboxMapper;
 
     protected abstract MailboxMapper createMailboxMapper();
 

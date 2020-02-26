@@ -35,6 +35,8 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 
+import com.google.common.annotations.VisibleForTesting;
+
 @Entity(name = "Mailbox")
 @Table(name = "JAMES_MAILBOX")
 @NamedQueries({
@@ -107,10 +109,15 @@ public class JPAMailbox {
     }
     
     public JPAMailbox(MailboxPath path, UidValidity uidValidity) {
+        this(path, uidValidity.asLong());
+    }
+
+    @VisibleForTesting
+    public JPAMailbox(MailboxPath path, long uidValidity) {
         this.name = path.getName();
         this.user = path.getUser().asString();
         this.namespace = path.getNamespace();
-        this.uidValidity = uidValidity.asLong();
+        this.uidValidity = uidValidity;
     }
 
     public JPAMailbox(Mailbox mailbox) {
@@ -131,7 +138,17 @@ public class JPAMailbox {
 
     public Mailbox toMailbox() {
         MailboxPath path = new MailboxPath(namespace, Username.of(user), name);
-        return new Mailbox(path, UidValidity.of(uidValidity), new JPAId(mailboxId));
+        return new Mailbox(path, sanitizeUidValidity(), new JPAId(mailboxId));
+    }
+
+    private UidValidity sanitizeUidValidity() {
+        if (UidValidity.isValid(uidValidity)) {
+            return UidValidity.ofValid(uidValidity);
+        }
+        UidValidity sanitizedUidValidity = UidValidity.generate();
+        // Update storage layer thanks to JPA magics!
+        setUidValidity(sanitizedUidValidity.asLong());
+        return sanitizedUidValidity;
     }
 
     public void setMailboxId(long mailboxId) {
@@ -156,6 +173,10 @@ public class JPAMailbox {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public void setUidValidity(long uidValidity) {
+        this.uidValidity = uidValidity;
     }
 
     @Override

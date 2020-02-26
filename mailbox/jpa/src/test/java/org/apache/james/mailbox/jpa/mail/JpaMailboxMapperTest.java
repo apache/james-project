@@ -19,15 +19,22 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.persistence.EntityManager;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
+import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 class JpaMailboxMapperTest extends MailboxMapperTest {
 
@@ -48,5 +55,36 @@ class JpaMailboxMapperTest extends MailboxMapperTest {
     @AfterEach
     void cleanUp() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
+    }
+
+    @Test
+    void invalidUidValidityShouldBeSanitized() throws Exception {
+        EntityManager entityManager = JPA_TEST_CLUSTER.getEntityManagerFactory().createEntityManager();
+
+        entityManager.getTransaction().begin();
+        JPAMailbox jpaMailbox = new JPAMailbox(benwaInboxPath, -1L);// set an invalid uid validity
+        jpaMailbox.setUidValidity(-1L);
+        entityManager.persist(jpaMailbox);
+        entityManager.getTransaction().commit();
+
+        Mailbox readMailbox = mailboxMapper.findMailboxByPath(benwaInboxPath);
+
+        assertThat(readMailbox.getUidValidity().isValid()).isTrue();
+    }
+
+    @Test
+    void uidValiditySanitizingShouldPersistTheSanitizedUidValidity() throws Exception {
+        EntityManager entityManager = JPA_TEST_CLUSTER.getEntityManagerFactory().createEntityManager();
+
+        entityManager.getTransaction().begin();
+        JPAMailbox jpaMailbox = new JPAMailbox(benwaInboxPath, -1L);// set an invalid uid validity
+        jpaMailbox.setUidValidity(-1L);
+        entityManager.persist(jpaMailbox);
+        entityManager.getTransaction().commit();
+
+        Mailbox readMailbox1 = mailboxMapper.findMailboxByPath(benwaInboxPath);
+        Mailbox readMailbox2 = mailboxMapper.findMailboxByPath(benwaInboxPath);
+
+        assertThat(readMailbox1.getUidValidity()).isEqualTo(readMailbox2.getUidValidity());
     }
 }
