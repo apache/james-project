@@ -59,7 +59,6 @@ import org.slf4j.LoggerFactory;
 
 public class MaildirFolder {
     private static final Logger LOGGER = LoggerFactory.getLogger(MaildirFolder.class);
-    private static final UidValidity DEFAULT_UID_VALIDITY = UidValidity.of(-1);
 
     public static final String VALIDITY_FILE = "james-uidvalidity";
     public static final String UIDLIST_FILE = "james-uidlist";
@@ -79,7 +78,7 @@ public class MaildirFolder {
 
     private Optional<MessageUid> lastUid;
     private int messageCount = 0;
-    private UidValidity uidValidity = DEFAULT_UID_VALIDITY;
+    private Optional<UidValidity> uidValidity = Optional.empty();
     private MailboxACL acl;
     private boolean messageNameStrictParse = false;
 
@@ -252,10 +251,10 @@ public class MaildirFolder {
      * @return The uidValidity
      */
     public UidValidity getUidValidity() throws IOException {
-        if (uidValidity.equals(DEFAULT_UID_VALIDITY)) {
-            uidValidity = readUidValidity();
+        if (!uidValidity.isPresent()) {
+            uidValidity = Optional.of(readUidValidity());
         }
-        return uidValidity;
+        return uidValidity.get();
     }
     
     /**
@@ -263,7 +262,7 @@ public class MaildirFolder {
      */
     public void setUidValidity(UidValidity uidValidity) throws IOException {
         saveUidValidity(uidValidity);
-        this.uidValidity = uidValidity;
+        this.uidValidity = Optional.of(uidValidity);
     }
 
     /**
