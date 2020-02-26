@@ -65,6 +65,7 @@ public class CassandraMailboxDAO {
     private final PreparedStatement deleteStatement;
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
+    private final PreparedStatement updateUidValidityStatement;
 
     @Inject
     public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils) {
@@ -72,6 +73,7 @@ public class CassandraMailboxDAO {
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
         this.insertStatement = prepareInsert(session);
         this.updateStatement = prepareUpdate(session);
+        this.updateUidValidityStatement = prepareUpdateUidValidity(session);
         this.deleteStatement = prepareDelete(session);
         this.listStatement = prepareList(session);
         this.readStatement = prepareRead(session);
@@ -95,6 +97,12 @@ public class CassandraMailboxDAO {
         return session.prepare(update(TABLE_NAME)
             .with(set(MAILBOX_BASE, bindMarker(MAILBOX_BASE)))
             .and(set(NAME, bindMarker(NAME)))
+            .where(eq(ID, bindMarker(ID))));
+    }
+
+    private PreparedStatement prepareUpdateUidValidity(Session session) {
+        return session.prepare(update(TABLE_NAME)
+            .with(set(UIDVALIDITY, bindMarker(UIDVALIDITY)))
             .where(eq(ID, bindMarker(ID))));
     }
 
@@ -138,27 +146,47 @@ public class CassandraMailboxDAO {
         return executor.executeSingleRow(readStatement.bind()
             .setUUID(ID, mailboxId.asUuid())
             .setConsistencyLevel(QUORUM))
-            .map(row -> mailboxFromRow(row, mailboxId));
+            .flatMap(row -> mailboxFromRow(row, mailboxId));
     }
 
-    private Mailbox mailboxFromRow(Row row, CassandraId cassandraId) {
-        return new Mailbox(
-            new MailboxPath(
-                row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
-                Username.of(row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.USER)),
-                row.getString(NAME)),
-            UidValidity.of(row.getLong(UIDVALIDITY)),
-            cassandraId);
+    private Mono<Mailbox> mailboxFromRow(Row row, CassandraId cassandraId) {
+        return sanitizeUidValidity(cassandraId, row.getLong(UIDVALIDITY))
+            .map(uidValidity -> new Mailbox(
+                new MailboxPath(
+                    row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
+                    Username.of(row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.USER)),
+                    row.getString(NAME)),
+                uidValidity,
+                cassandraId));
+    }
+    
+    private Mono<UidValidity> sanitizeUidValidity(CassandraId cassandraId, long uidValidityAsLong) {
+        if (!UidValidity.isValid(uidValidityAsLong)) {
+            UidValidity newUidValidity = UidValidity.generate();
+            return updateUidValidity(cassandraId, newUidValidity)
+                .then(Mono.just(newUidValidity));
+        }
+        return Mono.just(UidValidity.ofValid(uidValidityAsLong));
+    }
+
+    /**
+     * Expected concurrency issue in the absence of performance expensive LightWeight transaction
+     * As the Uid validity is updated only when equal to 0 (1 chance out of 4 billion) the benefits of LWT don't
+     * outweigh the performance costs
+     */
+    private Mono<Void> updateUidValidity(CassandraId cassandraId, UidValidity uidValidity) {
+        return executor.executeVoid(updateUidValidityStatement.bind()
+                .setUUID(ID, cassandraId.asUuid())
+                .setLong(UIDVALIDITY, uidValidity.asLong()));
     }
 
     public Flux<Mailbox> retrieveAllMailboxes() {
         return executor.execute(listStatement.bind())
             .flatMapMany(cassandraUtils::convertToFlux)
-            .map(this::toMailboxWithId);
+            .flatMap(this::toMailboxWithId);
     }
 
-    private Mailbox toMailboxWithId(Row row) {
+    private Mono<Mailbox> toMailboxWithId(Row row) {
         return mailboxFromRow(row, CassandraId.of(row.getUUID(ID)));
     }
-
 }

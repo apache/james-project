@@ -19,6 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -26,6 +30,8 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.Scenario;
+import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.Username;
@@ -37,8 +43,12 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class CassandraMailboxDAOTest {
     private static final UidValidity UID_VALIDITY_1 = UidValidity.ofValid(145);
@@ -81,6 +91,64 @@ class CassandraMailboxDAOTest {
             .blockOptional();
         assertThat(readMailbox.isPresent()).isTrue();
         assertThat(readMailbox.get()).isEqualToComparingFieldByField(mailbox1);
+    }
+
+    @Test
+    void retrieveMailboxShouldSanitizeInvalidUidValidityUponRead(CassandraCluster cassandra) {
+        testee.save(mailbox1).block();
+
+        // Hack to insert a faulty value
+        cassandra.getConf().execute(update("mailbox")
+            .with(set("uidvalidity", -12))
+            .where(eq("id", CASSANDRA_ID_1.asUuid())));
+
+        Optional<Mailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1)
+            .blockOptional();
+        assertThat(readMailbox).isPresent()
+            .hasValueSatisfying(mailbox -> assertThat(mailbox.getUidValidity().isValid()).isTrue());
+    }
+
+    @Test
+    void retrieveAllShouldSanitizeInvalidUidValidityUponRead(CassandraCluster cassandra) {
+        testee.save(mailbox1).block();
+
+        // Hack to insert a faulty value
+        cassandra.getConf().execute(update("mailbox")
+            .with(set("uidvalidity", -12))
+            .where(eq("id", CASSANDRA_ID_1.asUuid())));
+
+        List<Mailbox> readMailbox = testee.retrieveAllMailboxes().collectList().block();
+        assertThat(readMailbox).hasSize(1)
+            .allSatisfy(mailbox -> assertThat(mailbox.getUidValidity().isValid()).isTrue());
+    }
+
+    @Disabled("Expected concurrency issue in the absence of performance expensive LightWeight transaction" +
+        "As the Uid validity is updated only when equal to 0 (1 chance out of 4 billion) the benefits of LWT don't" +
+        "outweigh the costs")
+    @Test
+    void retrieveMailboxShouldNotBeSubjectToDataRaceUponUidValiditySanitizing(CassandraCluster cassandra) throws Exception {
+        testee.save(mailbox1).block();
+
+        // Hack to insert a faulty value
+        cassandra.getConf().execute(update("mailbox")
+            .with(set("uidvalidity", -12))
+            .where(eq("id", CASSANDRA_ID_1.asUuid())));
+
+        Barrier barrier = new Barrier(2);
+        cassandra.getConf().registerScenario(awaitOn(barrier)
+            .times(2)
+            .whenQueryStartsWith("UPDATE mailbox SET"));
+
+        Mono<Mailbox> readMailbox1 = testee.retrieveMailbox(CASSANDRA_ID_1).cache();
+        Mono<Mailbox> readMailbox2 = testee.retrieveMailbox(CASSANDRA_ID_1).cache();
+        readMailbox1.subscribeOn(Schedulers.elastic()).subscribe();
+        readMailbox2.subscribeOn(Schedulers.elastic()).subscribe();
+
+        barrier.awaitCaller();
+        barrier.releaseCaller();
+
+        assertThat(readMailbox1.block().getUidValidity())
+            .isEqualTo(readMailbox2.block().getUidValidity());
     }
 
     @Test
