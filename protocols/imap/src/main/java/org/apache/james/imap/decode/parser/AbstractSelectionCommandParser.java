@@ -80,8 +80,9 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
                 
                 // Consume enclosing paren
                 request.consumeChar('(');
-                lastKnownUidValidity = UidValidity.of(request.number());
-                
+                long uidValidityAsNumber = request.number();
+                lastKnownUidValidity = sanitizeUidValidity(uidValidityAsNumber);
+
                 // Consume the SP
                 request.consumeChar(' ');
                 knownModSeq = request.number(true);
@@ -129,7 +130,19 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
         request.eol();
         return createRequest(mailboxName, condstore, lastKnownUidValidity, knownModSeq, uidSet, knownUidSet, knownSequenceSet, tag);
     }
-    
+
+    private UidValidity sanitizeUidValidity(long uidValidityAsNumber) {
+        if (UidValidity.isValid(uidValidityAsNumber)) {
+            return UidValidity.ofValid(uidValidityAsNumber);
+        } else {
+            // The UidValidity cached by the client is invalid
+            // We know that the backend will regenerate it
+            // Hence we force the mismatch
+            // QRSYNC command will be ignored
+            return UidValidity.random();
+        }
+    }
+
     /**
      * Check if the {@link IdRange}'s are formatted like stated in the QRESYNC RFC.
      * 
