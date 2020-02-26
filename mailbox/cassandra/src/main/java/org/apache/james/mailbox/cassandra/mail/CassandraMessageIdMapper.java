@@ -44,7 +44,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.util.FunctionalUtils;
-import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +52,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.GroupedFlux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -95,20 +95,22 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .filter(CassandraMessageDAO.MessageResult::isFound)
             .map(CassandraMessageDAO.MessageResult::message)
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType))
+            .groupBy(MailboxMessage::getMailboxId)
             .flatMap(this::keepMessageIfMailboxExists)
             .collectSortedList(Comparator.comparing(MailboxMessage::getUid))
             .block();
     }
 
-    private Mono<MailboxMessage> keepMessageIfMailboxExists(MailboxMessage message) {
-        CassandraId cassandraId = (CassandraId) message.getMailboxId();
+    private Flux<MailboxMessage> keepMessageIfMailboxExists(GroupedFlux<MailboxId, MailboxMessage> groupedFlux) {
+        CassandraId cassandraId = (CassandraId) groupedFlux.key();
         return mailboxDAO.retrieveMailbox(cassandraId)
-            .map(any -> message)
-            .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> {
-                    LOGGER.info("Mailbox {} have been deleted but message {} is still attached to it.",
-                        cassandraId,
-                        message.getMailboxId());
-                }));
+            .flatMapMany(any -> groupedFlux)
+            .switchIfEmpty(groupedFlux.map(message -> {
+                LOGGER.info("Mailbox {} have been deleted but message {} is still attached to it.",
+                    cassandraId.serialize(),
+                    message.getMessageId().serialize());
+                return message;
+            }).then(Mono.empty()));
     }
 
     @Override
