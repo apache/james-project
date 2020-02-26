@@ -28,7 +28,25 @@ Change list:
  - [Hybrid blobStore replaces Union blobStore](#hybrid-blobstore-replaces-union-blobstore)
  - [New forbidden set of characters in Usernames local part](#new-forbidden-set-of-characters-in-usernames-local-part)
  - [UidValidity and maildir](#uid-validity-and-maildir)
+ - [UidValidity and JPA or Cassandra](#uid-validity-and-jpa-or-cassandra)
  
+### UidValidity and JPA or Cassandra
+
+Date 26/02/2020
+
+SHA-1 XXX
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3074
+
+Concerned products: JPA mailbox backend, Cassandra mailbox backend
+
+Non-Maildir backends could generate '0' uid validity with a low probability, which is invalid regarding RFC-3501. 
+We changed the generation mechanism to use valid UidValidity for newly created mailboxes. Regarding persisted mailboxes,
+we regenerate invalid UidValidity upon reads.
+
+While this sanitizing is transparent to the end user and the admin, it might lead to rare IMAP client full mailbox
+ resynchronisation. (one chance out of two billions).
+
 ### UidValidity and maildir
 
 Date 26/02/2020

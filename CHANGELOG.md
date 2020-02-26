@@ -49,7 +49,7 @@ of tasks being currently executed.
 - JAMES-2972 Incorrect attribute name in the mailet configuration thanks to jtconsol
 - JAMES-2632 JMAP Draft GetMailboxes performance enhancements when retrieving all mailboxes of a user
 - JAMES-2964 Forbid to create User quota/ Domain quota/ Global quota using negative number
-- JAMES-3074 Maildir backend generated invalid UidValidity. Read upgrade instructions.
+- JAMES-3074 Fixing UidValidity generation, sanitizing of invalid values upon reads. Read upgrade instructions.
 
 ### Removed
 - Classes marked as deprecated whose removal was planned after 3.4.0 release (See JAMES-2703). This includes:
