@@ -31,7 +31,7 @@ pipeline {
             stages {
                 stage('Compile') {
                     steps {
-                        sh "mvn clean install -T1C -DskipTests"
+                        sh "mvn clean install -T1C -DskipTests -Dmaven.javadoc.skip=true"
                     }
                 }
                 stage('Build image') {
