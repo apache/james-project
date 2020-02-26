@@ -50,7 +50,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class MailboxPathV2MigrationTest {
 
     private static final MailboxPath MAILBOX_PATH_1 = MailboxPath.forUser(Username.of("bob"), "Important");
-    private static final UidValidity UID_VALIDITY_1 = UidValidity.of(452);
+    private static final UidValidity UID_VALIDITY_1 = UidValidity.ofValid(452);
     private static final CassandraId MAILBOX_ID_1 = CassandraId.timeBased();
 
     public static final CassandraModule MODULES = CassandraModule.aggregateModules(

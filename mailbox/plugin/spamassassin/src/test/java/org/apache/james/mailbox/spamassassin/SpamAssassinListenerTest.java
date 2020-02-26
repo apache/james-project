@@ -61,7 +61,7 @@ import org.junit.jupiter.api.Test;
 class SpamAssassinListenerTest {
     static final Username USER = Username.of("user");
     static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
-    static final UidValidity UID_VALIDITY = UidValidity.of(43);
+    static final UidValidity UID_VALIDITY = UidValidity.ofValid(43);
     static final TestMessageId MESSAGE_ID = TestMessageId.of(45);
 
     SpamAssassin spamAssassin;

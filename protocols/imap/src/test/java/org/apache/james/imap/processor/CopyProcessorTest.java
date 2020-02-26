@@ -60,6 +60,7 @@ import com.google.common.collect.Lists;
 public class CopyProcessorTest {
     private static final Username USERNAME = Username.of("username");
     private static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
+    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(58L);
 
     private CopyProcessor testee;
     private ImapProcessor mockNextProcessor;
@@ -98,7 +99,7 @@ public class CopyProcessorTest {
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
         Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getUidValidity()).thenReturn(UidValidity.of(58L));
+        when(mailbox.getUidValidity()).thenReturn(UID_VALIDITY);
         when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
@@ -131,7 +132,7 @@ public class CopyProcessorTest {
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
         Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getUidValidity()).thenReturn(UidValidity.of(58L));
+        when(mailbox.getUidValidity()).thenReturn(UID_VALIDITY);
         when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);

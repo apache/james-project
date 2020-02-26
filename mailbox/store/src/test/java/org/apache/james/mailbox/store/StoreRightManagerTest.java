@@ -59,7 +59,7 @@ import org.junit.jupiter.api.Test;
 class StoreRightManagerTest {
 
     static final MailboxId MAILBOX_ID = TestId.of(42);
-    static final UidValidity UID_VALIDITY = UidValidity.of(3421L);
+    static final UidValidity UID_VALIDITY = UidValidity.ofValid(3421L);
 
     StoreRightManager storeRightManager;
     MailboxSession aliceSession;

@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableMap;
 
 public abstract class MailboxMapperACLTest {
-    private static final UidValidity UID_VALIDITY = UidValidity.of(42);
+    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(42);
     private static final boolean POSITIVE = true;
     private static final boolean NEGATIVE = !POSITIVE;
     private static final Username USER = Username.of("user");

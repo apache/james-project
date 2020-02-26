@@ -48,7 +48,7 @@ import org.junit.jupiter.api.Test;
 public class MailboxManagementTest {
 
     public static final Username USER = Username.of("user");
-    public static final UidValidity UID_VALIDITY = UidValidity.of(10);
+    public static final UidValidity UID_VALIDITY = UidValidity.ofValid(10);
     public static final int LIMIT = 1;
 
     private MailboxManagerManagement mailboxManagerManagement;

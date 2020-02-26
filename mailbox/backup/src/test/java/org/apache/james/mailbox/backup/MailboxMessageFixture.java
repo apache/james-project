@@ -101,10 +101,10 @@ public interface MailboxMessageFixture {
     MailboxPath MAILBOX_PATH_USER1_MAILBOX2 = MailboxPath.forUser(USER, MAILBOX_2_NAME);
     MailboxPath MAILBOX_PATH_OTHER_USER_MAILBOX1 = MailboxPath.forUser(OTHER_USER, MAILBOX_OTHER_USER_NAME);
 
-    Mailbox MAILBOX_1 = new Mailbox(MAILBOX_PATH_USER1_MAILBOX1, UidValidity.of(42), MAILBOX_ID_1);
-    Mailbox MAILBOX_1_OTHER_USER = new Mailbox(MAILBOX_PATH_OTHER_USER_MAILBOX1, UidValidity.of(42), MAILBOX_ID_11);
-    Mailbox MAILBOX_1_SUB_1 = new Mailbox(MAILBOX_PATH_USER1_MAILBOX1_SUB_1, UidValidity.of(420), TestId.of(11L));
-    Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_USER1_MAILBOX2, UidValidity.of(43), MAILBOX_ID_2);
+    Mailbox MAILBOX_1 = new Mailbox(MAILBOX_PATH_USER1_MAILBOX1, UidValidity.ofValid(42), MAILBOX_ID_1);
+    Mailbox MAILBOX_1_OTHER_USER = new Mailbox(MAILBOX_PATH_OTHER_USER_MAILBOX1, UidValidity.ofValid(42), MAILBOX_ID_11);
+    Mailbox MAILBOX_1_SUB_1 = new Mailbox(MAILBOX_PATH_USER1_MAILBOX1_SUB_1, UidValidity.ofValid(420), TestId.of(11L));
+    Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_USER1_MAILBOX2, UidValidity.ofValid(43), MAILBOX_ID_2);
 
     List<MailboxAnnotation> NO_ANNOTATION = ImmutableList.of();
 

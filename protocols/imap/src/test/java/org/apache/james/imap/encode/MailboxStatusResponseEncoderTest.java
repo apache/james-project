@@ -51,7 +51,7 @@ public class MailboxStatusResponseEncoderTest  {
         final Long messages = 2L;
         final Long recent = 3L;
         final MessageUid uidNext = MessageUid.of(5);
-        final UidValidity uidValidity = UidValidity.of(7L);
+        final UidValidity uidValidity = UidValidity.ofValid(7L);
         final Long unseen = 11L;
         final String mailbox = "A mailbox named desire";
 

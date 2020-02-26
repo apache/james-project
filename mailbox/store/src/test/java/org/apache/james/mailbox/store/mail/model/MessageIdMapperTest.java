@@ -65,7 +65,7 @@ public abstract class MessageIdMapperTest {
 
     private static final char DELIMITER = '.';
     private static final int BODY_START = 16;
-    protected static final UidValidity UID_VALIDITY = UidValidity.of(42);
+    protected static final UidValidity UID_VALIDITY = UidValidity.ofValid(42);
 
     private MessageMapper messageMapper;
     private MailboxMapper mailboxMapper;

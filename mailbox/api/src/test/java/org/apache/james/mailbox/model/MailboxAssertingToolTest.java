@@ -31,7 +31,8 @@ class MailboxAssertingToolTest {
     private static final Username USER = Username.of("user");
     private static final Username USER1 = Username.of("user1");
 
-    private static final UidValidity UID_VALIDITY = UidValidity.of(42);
+    private static final UidValidity UID_VALIDITY = UidValidity.ofValid(42);
+    private static final UidValidity UID_VALIDITY_2 = UidValidity.ofValid(43);
     private static final TestId MAILBOX_ID = TestId.of(24);
 
     @Nested
@@ -83,7 +84,7 @@ class MailboxAssertingToolTest {
         @Test
         void isEqualToShouldFailWithNotEqualUidValidity() {
             Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UidValidity.of(UID_VALIDITY.asLong() + 1), MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY_2, MAILBOX_ID);
 
             assertThatThrownBy(() -> MailboxAssertingTool.assertThat(mailbox1).isEqualTo(mailbox2))
                 .isInstanceOf(AssertionError.class);
@@ -157,7 +158,7 @@ class MailboxAssertingToolTest {
         @Test
         void isEqualToShouldFailWithNotEqualUidValidity() {
             Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY, MAILBOX_ID);
-            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UidValidity.of(UID_VALIDITY.asLong() + 1), MAILBOX_ID);
+            Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY_2, MAILBOX_ID);
 
             assertThatThrownBy(() -> {
                     SoftAssertions.assertSoftly(softly -> {

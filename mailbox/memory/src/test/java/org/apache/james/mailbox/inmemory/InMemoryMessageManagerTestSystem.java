@@ -29,8 +29,6 @@ import org.apache.james.mailbox.store.MessageManagerTestSystem;
 
 public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
 
-    private static final UidValidity UID_VALIDITY = UidValidity.of(1024);
-
     private final MailboxManager mailboxManager;
 
     public InMemoryMessageManagerTestSystem(MailboxManager mailboxManager) {
@@ -42,6 +40,6 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
     public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        return new Mailbox(mailboxPath, UID_VALIDITY, messageManager.getId());
+        return messageManager.getMailboxEntity();
     }
 }

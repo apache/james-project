@@ -62,9 +62,9 @@ class LuceneMailboxMessageSearchIndexTest {
     static final TestId TEST_ID_3 = TestId.of(2);
 
     static final Username BOB = Username.of("bob");
-    Mailbox mailbox = new Mailbox(MailboxPath.forUser(BOB, "box"), UidValidity.of(18), TEST_ID_1);
-    Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(BOB, "box"), UidValidity.of(19), TEST_ID_2);
-    Mailbox mailbox3 = new Mailbox(MailboxPath.forUser(BOB, "box"), UidValidity.of(12), TEST_ID_3);
+    Mailbox mailbox = new Mailbox(MailboxPath.forUser(BOB, "box"), UidValidity.ofValid(18), TEST_ID_1);
+    Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(BOB, "box"), UidValidity.ofValid(19), TEST_ID_2);
+    Mailbox mailbox3 = new Mailbox(MailboxPath.forUser(BOB, "box"), UidValidity.ofValid(12), TEST_ID_3);
     LuceneMessageSearchIndex index;
     MailboxSession session;
 

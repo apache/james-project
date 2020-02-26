@@ -56,7 +56,7 @@ class CassandraModSeqProviderTest {
     void setUp(CassandraCluster cassandra) {
         modSeqProvider = new CassandraModSeqProvider(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
         MailboxPath path = new MailboxPath("gsoc", Username.of("ieugen"), "Trash");
-        mailbox = new Mailbox(path, UidValidity.of(1234), CASSANDRA_ID);
+        mailbox = new Mailbox(path, UidValidity.ofValid(1234), CASSANDRA_ID);
     }
 
     @Test
