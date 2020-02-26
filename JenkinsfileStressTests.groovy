@@ -50,6 +50,7 @@ pipeline {
                 stage('Start James') {
                     steps {
                         script {
+                            sh 'docker rm -f cassandra rabbitmq elasticsearch tika swift james_run || true'
                             if (fileExists('/srv/bench-running-docker')) {
                                 echo 'Last build failed, cleaning provisionning'
                                 sh 'sudo btrfs subvolume delete /srv/bench-running-docker'
