@@ -37,7 +37,7 @@ class ResilientClusterProviderTest {
     private static final String KEYSPACE = "my_keyspace";
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraExtension = new CassandraClusterExtension(CassandraModule.NO_MODULE);
+    static CassandraClusterExtension cassandraExtension = new CassandraClusterExtension(CassandraModule.EMPTY_MODULE);
 
     @AfterEach
     void tearDown(DockerCassandra dockerCassandra) {

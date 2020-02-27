@@ -37,7 +37,7 @@ import com.datastax.driver.core.exceptions.NoHostAvailableException;
 class ClusterFactoryTest {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraExtension = new CassandraClusterExtension(CassandraModule.NO_MODULE);
+    static CassandraClusterExtension cassandraExtension = new CassandraClusterExtension(CassandraModule.EMPTY_MODULE);
 
     @AfterEach
     void tearDown(DockerCassandra dockerCassandra) {
