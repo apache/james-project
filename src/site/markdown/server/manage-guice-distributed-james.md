@@ -330,7 +330,12 @@ avoiding peak traffic in order to address both inconsistencies diagnostic and fi
 
 #### How to solve
 
-Under development: Task for solving mailbox inconsistencies ([JAMES-3058](https://issues.apache.org/jira/browse/JAMES-3058)).
+An admin can run offline webadmin 
+[solve Cassandra mailbox object inconsistencies task](manage-webadmin.html#Fixing_mailboxes_inconsistencies) in order 
+to sanitize his mailbox denormalization.
+                                        
+In order to ensure being offline, stop the traffic on SMTP, JMAP and IMAP ports, for example via re-configuration or 
+firewall rules.
 
 ## Setting Cassandra user permissions
 
