@@ -50,7 +50,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -103,7 +102,6 @@ class CassandraIndexTableHandlerTest {
 
     @Nested
     class Failures {
-        @Disabled("JAMES-3075 prove that CassandraIndexTableHandler don't handle errors gracefully")
         @Test
         void messageCountShouldBeUpdatedUponDeletedMessageFailure(CassandraCluster cassandra) throws Exception {
             MailboxMessage message = new MessageBuilder()

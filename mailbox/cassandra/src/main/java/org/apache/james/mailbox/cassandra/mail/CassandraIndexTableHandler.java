@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.concurrent.Queues;
 
 public class CassandraIndexTableHandler {
 
@@ -57,36 +58,36 @@ public class CassandraIndexTableHandler {
     public Mono<Void> updateIndexOnDelete(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, CassandraId mailboxId) {
         MessageUid uid = composedMessageIdWithMetaData.getComposedMessageId().getUid();
 
-        return Flux.merge(
-               updateFirstUnseenOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags(), composedMessageIdWithMetaData.getComposedMessageId().getUid()),
-               mailboxRecentDAO.removeFromRecent(mailboxId, composedMessageIdWithMetaData.getComposedMessageId().getUid()),
-               mailboxCounterDAO.decrementCount(mailboxId),
-               deletedMessageDAO.removeDeleted(mailboxId, uid),
-               decrementUnseenOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags()))
-                .then();
+        return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
+                updateFirstUnseenOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags(), composedMessageIdWithMetaData.getComposedMessageId().getUid()),
+                mailboxRecentDAO.removeFromRecent(mailboxId, composedMessageIdWithMetaData.getComposedMessageId().getUid()),
+                mailboxCounterDAO.decrementCount(mailboxId),
+                deletedMessageDAO.removeDeleted(mailboxId, uid),
+                decrementUnseenOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags()))
+            .then();
     }
 
     public Mono<Void> updateIndexOnAdd(MailboxMessage message, CassandraId mailboxId) {
         Flags flags = message.createFlags();
 
-        return Flux.merge(
-               checkDeletedOnAdd(mailboxId, message.createFlags(), message.getUid()),
-               updateFirstUnseenOnAdd(mailboxId, message.createFlags(), message.getUid()),
-               addRecentOnSave(mailboxId, message),
-               incrementUnseenOnSave(mailboxId, flags),
-               mailboxCounterDAO.incrementCount(mailboxId),
-               applicableFlagDAO.updateApplicableFlags(mailboxId, ImmutableSet.copyOf(flags.getUserFlags())))
-                .then();
+        return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
+                checkDeletedOnAdd(mailboxId, message.createFlags(), message.getUid()),
+                updateFirstUnseenOnAdd(mailboxId, message.createFlags(), message.getUid()),
+                addRecentOnSave(mailboxId, message),
+                incrementUnseenOnSave(mailboxId, flags),
+                mailboxCounterDAO.incrementCount(mailboxId),
+                applicableFlagDAO.updateApplicableFlags(mailboxId, ImmutableSet.copyOf(flags.getUserFlags())))
+            .then();
     }
 
     public Mono<Void> updateIndexOnFlagsUpdate(CassandraId mailboxId, UpdatedFlags updatedFlags) {
-        return Flux.merge(
-               manageUnseenMessageCountsOnFlagsUpdate(mailboxId, updatedFlags),
-               manageRecentOnFlagsUpdate(mailboxId, updatedFlags),
-               updateFirstUnseenOnFlagsUpdate(mailboxId, updatedFlags),
-               applicableFlagDAO.updateApplicableFlags(mailboxId, ImmutableSet.copyOf(updatedFlags.userFlagIterator())),
-               updateDeletedOnFlagsUpdate(mailboxId, updatedFlags))
-                .then();
+        return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
+                manageUnseenMessageCountsOnFlagsUpdate(mailboxId, updatedFlags),
+                manageRecentOnFlagsUpdate(mailboxId, updatedFlags),
+                updateFirstUnseenOnFlagsUpdate(mailboxId, updatedFlags),
+                applicableFlagDAO.updateApplicableFlags(mailboxId, ImmutableSet.copyOf(updatedFlags.userFlagIterator())),
+                updateDeletedOnFlagsUpdate(mailboxId, updatedFlags))
+            .then();
     }
 
     private Mono<Void> updateDeletedOnFlagsUpdate(CassandraId mailboxId, UpdatedFlags updatedFlags) {
