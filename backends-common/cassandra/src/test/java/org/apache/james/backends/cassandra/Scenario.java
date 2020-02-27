@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
@@ -54,10 +55,10 @@ public class Scenario {
 
     @FunctionalInterface
     interface StatementPredicate {
-        class BoundStatementStartingWith implements StatementPredicate {
+        class StatementStartingWith implements StatementPredicate {
             private final String queryStringPrefix;
 
-            BoundStatementStartingWith(String queryStringPrefix) {
+            StatementStartingWith(String queryStringPrefix) {
                 this.queryStringPrefix = queryStringPrefix;
             }
 
@@ -67,6 +68,11 @@ public class Scenario {
                     BoundStatement boundStatement = (BoundStatement) statement;
                     return boundStatement.preparedStatement()
                         .getQueryString()
+                        .startsWith(queryStringPrefix);
+                }
+                if (statement instanceof RegularStatement) {
+                    RegularStatement regularStatement = (RegularStatement) statement;
+                    return regularStatement.getQueryString()
                         .startsWith(queryStringPrefix);
                 }
                 return false;
@@ -122,7 +128,7 @@ public class Scenario {
             }
 
             default ExecutionHook whenQueryStartsWith(String queryStringPrefix) {
-                return statementPredicate(new StatementPredicate.BoundStatementStartingWith(queryStringPrefix));
+                return statementPredicate(new StatementPredicate.StatementStartingWith(queryStringPrefix));
             }
         }
 

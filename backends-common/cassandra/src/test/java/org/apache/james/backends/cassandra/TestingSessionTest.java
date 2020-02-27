@@ -19,15 +19,19 @@
 
 package org.apache.james.backends.cassandra;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.apache.james.backends.cassandra.Scenario.combine;
+import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.TABLE_NAME;
+import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.Scenario.Barrier;
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
@@ -86,6 +90,19 @@ class TestingSessionTest {
                 .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
 
         assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
+            .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void regularStatementsShouldBeInstrumented(CassandraCluster cassandra) {
+        cassandra.getConf()
+            .registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+
+        assertThatThrownBy(() -> new CassandraAsyncExecutor(cassandra.getConf())
+                .execute(select(VALUE).from(TABLE_NAME))
+                .block())
             .isInstanceOf(RuntimeException.class);
     }
 
