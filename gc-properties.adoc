@@ -1,0 +1,23 @@
+= GC properties
+
+1. the execution time of the GC should be linked to
+active dataset but not to global dataset
+(for scalability purpose)
+
+2. GC should run on live dataset
+
+ 2.1. GC should not delete data being referenced by a pending process or
+still referenced
+
+ 2.2. GC should be idempotent: 2 concurrent or sequential runs should
+not have a different outcome than a single one
+
+3. GC should remove data from the underlying store
+
+ 3.1. an unreferenced piece of data should be removed after 1 day
+
+ 3.2. less than 10% of unreferenced data of a significant dataset
+should persist after three GC executions
+
+4. GC should report what it does
+
