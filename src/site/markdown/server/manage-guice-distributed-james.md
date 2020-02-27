@@ -24,7 +24,8 @@ advanced users.
  - [Setting Cassandra user permissions](#Setting_Cassandra_user_permissions)
  - [Cassandra table level configuration](#Cassandra_table_level_configuration) 
  - [Mail Queue](#Mail_Queue)
-
+ - [Updating Cassandra schema version](#Updating_Cassandra_schema_version)
+ 
 ## Overall architecture
 
 Guice distributed James server intends to provide a horizontally scalable email server.
@@ -493,3 +494,25 @@ Managing an email queue is an easy task if you follow this procedure:
 In case, you need to clear an email queue because there are only spam or trash emails in the email queue you have this procedure to follow:
 
 - All mails from the given mail queue will be deleted with [Clearing a mail queue](manage-webadmin.html#Clearing_a_mail_queue).
+
+## Updating Cassandra schema version
+
+A schema version indicates you which schema your James server is relying on. The schema version number tracks if a migration is required. For instance, when the latest schema version is 2, and the current schema version is 1, you might think that you still have data in the deprecated Message table in the database. Hence, you need to migrate these messages into the MessageV2 table. Once done, you can safely bump the current schema version to 2.
+
+Relying on outdated schema version prevents you to benefit from the newest performance and safety improvements. Otherwise, there's something very unexpected in the way we manage cassandra schema: we create new tables without asking the admin about it. That means your James version is always using the last tables but may also take into account the old ones if the migration is not done yet.
+
+### How to detect when we should update Cassandra schema version
+
+When you see in James logs `org.apache.james.modules.mailbox.CassandraSchemaVersionStartUpCheck` showing a warning like `Recommended version is versionX`, you should perform an update of the Cassandra schema version.
+
+Also, we keep track of changes needed when upgrading to a newer version. You can read this [upgrade instructions](https://github.com/apache/james-project/blob/master/upgrade-instructions.md).
+
+### How to update Cassandra schema version
+
+These schema updates can be triggered by webadmin using the Cassandra backend. Following steps are for updating Cassandra schema version:
+
+- At the very first step, you need to [retrieve current Cassandra schema version](manage-webadmin.html#Retrieving_current_Cassandra_schema_version)
+- And then, you [retrieve latest available Cassandra schema version](manage-webadmin.html#Retrieving_latest_available_Cassandra_schema_version) to make sure there is a latest available version
+- Eventually, you can update the current schema version to the one you got with [upgrading to the latest version](manage-webadmin.html#Upgrading_to_the_latest_version)
+
+Otherwise, if you need to run the migrations to a specific version, you can use [Upgrading to a specific version](manage-webadmin.html#Upgrading_to_a_specific_version)
