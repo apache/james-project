@@ -101,29 +101,27 @@ public class CassandraUserMailboxRightsDAO {
     public Mono<Void> update(CassandraId cassandraId, ACLDiff aclDiff) {
         PositiveUserACLDiff userACLDiff = new PositiveUserACLDiff(aclDiff);
         return Flux.merge(
-            addAll(cassandraId, userACLDiff.addedEntries()),
-            removeAll(cassandraId, userACLDiff.removedEntries()),
-            addAll(cassandraId, userACLDiff.changedEntries()))
+                addAll(cassandraId, userACLDiff.addedEntries()),
+                removeAll(cassandraId, userACLDiff.removedEntries()),
+                addAll(cassandraId, userACLDiff.changedEntries()))
             .then();
     }
 
-    private Mono<Void> removeAll(CassandraId cassandraId, Stream<MailboxACL.Entry> removedEntries) {
+    private Flux<Void> removeAll(CassandraId cassandraId, Stream<MailboxACL.Entry> removedEntries) {
         return Flux.fromStream(removedEntries)
             .flatMap(entry -> cassandraAsyncExecutor.executeVoid(
                 delete.bind()
                     .setString(USER_NAME, entry.getKey().getName())
-                    .setUUID(MAILBOX_ID, cassandraId.asUuid())))
-            .then();
+                    .setUUID(MAILBOX_ID, cassandraId.asUuid())));
     }
 
-    private Mono<Void> addAll(CassandraId cassandraId, Stream<MailboxACL.Entry> addedEntries) {
+    private Flux<Void> addAll(CassandraId cassandraId, Stream<MailboxACL.Entry> addedEntries) {
         return Flux.fromStream(addedEntries)
             .flatMap(entry -> cassandraAsyncExecutor.executeVoid(
                 insert.bind()
                     .setString(USER_NAME, entry.getKey().getName())
                     .setUUID(MAILBOX_ID, cassandraId.asUuid())
-                    .setString(RIGHTS, entry.getValue().serialize())))
-            .then();
+                    .setString(RIGHTS, entry.getValue().serialize())));
     }
 
     public Mono<Optional<Rfc4314Rights>> retrieve(Username userName, CassandraId mailboxId) {
