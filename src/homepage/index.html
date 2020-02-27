@@ -48,6 +48,7 @@ layout: default
         <li class="logo_li"><span class="logo"><img src="images/james-alt.svg" alt="james logo" /></span></li>
         <li><a href="#intro" class="active">About</a></li>
         <li><a href="#first">Get Started</a></li>
+        <li><a href="#roadmap">Roadmap</a></li>
         <li><a href="#posts">Last Posts</a></li>
         <li><a href="#second">Community</a></li>
         <li><a href="#third">Contribute</a></li>
@@ -120,6 +121,42 @@ WHAT WILL YOU TRY:</b><br>
               </li>
               <li class="post-template"><span class="long-arrow-right">&#8594;</span><span><b>ALTERNATIVES:</b><br>
                 Instructions that do not imply docker are also available <a href="/server/install.html">here</a>.
+              </span>
+              </li>
+            </ul>
+          </section>
+        </section>
+
+      <!-- Roadmap -->
+        <section id="roadmap" class="main">
+          <header class="major">
+            <h2>Roadmap</h2>
+          </header>
+          <section>
+            <ul class="james-ul">
+              <li class="post-template"><span><b>MAIN GOALS</b><br>
+                <ul>
+                  <li><span class="long-arrow-right">&#8594;</span>Providing a <b>distributed mail server</b>,
+                    fully horizontally scalable.</li>
+                  <li><span class="long-arrow-right">&#8594;</span><span>Maintaining a <b>standalone version</b>
+                    suitable for a single server, based on <b>JPA</b>.</span></li>
+                </ul>
+              </li>
+              <li class="post-template"><span><b>INCOMING FEATURES</b><br>
+                <ul>
+                  <li><span class="long-arrow-right">&#8594;</span><span><b>Blobs garbage collector</b>:
+                    the deduplication mechanism used to save some spaces makes it complicated to remove blobs. We are implementing a
+                    garbage collector responsible for removing the no more used blobs.
+                    See this <a href="https://github.com/linagora/james-project/pull/3122">ADR</a> (Architecture Decision Record) for more explanation.</span></li>
+                  <li><span class="long-arrow-right">&#8594;</span><span>Update the currently implemented JMAP draft specification
+                    to the <b>new JMAP RFC</b>. See this
+                    <a href="https://github.com/apache/james-project/blob/master/src/adr/0018-jmap-new-specs.md">ADR</a>
+                    for more information.</span></li>
+                  <li><span class="long-arrow-right">&#8594;</span><span>Enhance our eventual consistency model by providing
+                    <b>tools for reparing projections</b>. See this
+                    <a href="https://github.com/linagora/james-project/pull/3125">discussion</a> for more information.</span></li>
+                  <li><span class="long-arrow-right">&#8594;</span><span>Feel free to add your own items here: see <a href="#third">Contribute</a>.</span></li>
+                </ul>
               </span>
               </li>
             </ul>
@@ -368,6 +405,7 @@ WHAT WILL YOU TRY:</b><br>
         <ul class="no-padding">
           <li class="no-padding"><a href="#intro" class="active">About</a></li>
           <li class="no-padding"><a href="#first">Get Started</a></li>
+          <li class="no-padding"><a href="#roadmap">Roadmap</a></li>
           <li class="no-padding"><a href="#posts">Last Posts</a></li>
           <li class="no-padding"><a href="#second">Community</a></li>
           <li class="no-padding"><a href="#third">Contribute</a></li>
