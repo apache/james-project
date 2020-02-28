@@ -27,10 +27,6 @@ import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.TWO_SECONDS;
 import static org.mockito.Mockito.spy;
 
-import java.io.IOException;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
@@ -42,9 +38,7 @@ import org.apache.james.server.task.json.dto.TestTaskDTOModules;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.Task;
-import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
-import org.apache.james.task.TaskManagerWorker;
 import org.apache.james.task.TaskWithId;
 import org.awaitility.core.ConditionTimeoutException;
 import org.hamcrest.CoreMatchers;
@@ -52,9 +46,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 class RabbitMQWorkQueueTest {
     private static final TaskId TASK_ID = TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd");
@@ -73,33 +64,6 @@ class RabbitMQWorkQueueTest {
     private ImmediateWorker worker;
     private JsonTaskSerializer serializer;
 
-    private static class ImmediateWorker implements TaskManagerWorker {
-
-        ConcurrentLinkedQueue<TaskWithId> tasks = new ConcurrentLinkedQueue<>();
-        ConcurrentLinkedQueue<Task.Result> results = new ConcurrentLinkedQueue<>();
-        ConcurrentLinkedQueue<TaskId> failedTasks = new ConcurrentLinkedQueue<>();
-
-        @Override
-        public Mono<Task.Result> executeTask(TaskWithId taskWithId) {
-            tasks.add(taskWithId);
-            return Mono.fromCallable(() -> taskWithId.getTask().run())
-                .doOnNext(result -> results.add(result))
-                .subscribeOn(Schedulers.elastic());
-        }
-
-        @Override
-        public void cancelTask(TaskId taskId) {
-        }
-
-        @Override
-        public void fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation,String errorMessage, Throwable reason) {
-            failedTasks.add(taskId);
-        }
-
-        @Override
-        public void close() throws IOException {
-        }
-    }
 
     @BeforeEach
     void setUp() {
