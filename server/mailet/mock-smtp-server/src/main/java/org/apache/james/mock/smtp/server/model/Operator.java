@@ -21,10 +21,10 @@ package org.apache.james.mock.smtp.server.model;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 public interface Operator {
