@@ -38,7 +38,7 @@ public class UidValidity {
      *
      * See https://issues.apache.org/jira/browse/JAMES-3074 for details
      */
-    public static  UidValidity random() {
+    public static  UidValidity generate() {
         return fromSupplier(RANDOM::nextLong);
     }
 

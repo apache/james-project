@@ -341,7 +341,7 @@ public class MaildirFolder {
      * @return the new uidValidity
      */
     private UidValidity resetUidValidity() throws IOException {
-        UidValidity uidValidity = UidValidity.random();
+        UidValidity uidValidity = UidValidity.generate();
         setUidValidity(uidValidity);
         return uidValidity;
     }

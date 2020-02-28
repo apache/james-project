@@ -103,7 +103,7 @@ class UidValidityTest {
     // Sampling test
     @RepeatedTest(10000)
     void randomShouldGenerateValidValues() {
-        assertThatCode(UidValidity::random)
+        assertThatCode(UidValidity::generate)
             .doesNotThrowAnyException();
     }
 
@@ -112,7 +112,7 @@ class UidValidityTest {
     void randomShouldNotLeadToCollision() {
         int count = 1000000;
         long distinctCount = IntStream.range(0, count)
-            .mapToObj(any -> UidValidity.random())
+            .mapToObj(any -> UidValidity.generate())
             .distinct()
             .count();
 

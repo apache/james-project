@@ -373,7 +373,7 @@ public class StoreMailboxManager implements MailboxManager {
                 MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
                 try {
                     mapper.execute(Mapper.toTransaction(() -> {
-                        Mailbox mailbox = mapper.create(mailboxPath, UidValidity.random());
+                        Mailbox mailbox = mapper.create(mailboxPath, UidValidity.generate());
                         mailboxIds.add(mailbox.getMailboxId());
                         // notify listeners
                         eventBus.dispatch(EventFactory.mailboxAdded()
