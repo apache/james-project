@@ -17,15 +17,16 @@ advanced users.
 
  - [Overall architecture](#Overall_architecture)
  - [Basic Monitoring](#Basic_Monitoring)
+ - [Cassandra table level configuration](#Cassandra_table_level_configuration)
+ - [Deleted Messages Vault](#Deleted_Messages_Vault)
+ - [ElasticSearch Indexing](#Elasticsearch_Indexing)
  - [Mailbox Event Bus](#Mailbox_Event_Bus)
  - [Mail Processing](#Mail_Processing)
- - [ElasticSearch Indexing](#Elasticsearch_Indexing)
- - [Solving cassandra inconsistencies](#Solving_cassandra_inconsistencies) 
- - [Setting Cassandra user permissions](#Setting_Cassandra_user_permissions)
- - [Cassandra table level configuration](#Cassandra_table_level_configuration) 
  - [Mail Queue](#Mail_Queue)
+ - [Setting Cassandra user permissions](#Setting_Cassandra_user_permissions)
+ - [Solving cassandra inconsistencies](#Solving_cassandra_inconsistencies)
  - [Updating Cassandra schema version](#Updating_Cassandra_schema_version)
- 
+
 ## Overall architecture
 
 Guice distributed James server intends to provide a horizontally scalable email server.
@@ -516,3 +517,38 @@ These schema updates can be triggered by webadmin using the Cassandra backend. F
 - Eventually, you can update the current schema version to the one you got with [upgrading to the latest version](manage-webadmin.html#Upgrading_to_the_latest_version)
 
 Otherwise, if you need to run the migrations to a specific version, you can use [Upgrading to a specific version](manage-webadmin.html#Upgrading_to_a_specific_version)
+
+## Deleted Messages Vault
+
+Deleted Messages Vault is an interesting feature that will help James users have a chance to:
+
+- retain users deleted messages for some time.
+- restore & export deleted messages by various criteria.
+- permanently delete some retained messages.
+
+If the Deleted Messages Vault is enabled when users delete their mails, and by that we mean when they try to definitely delete them by emptying the trash, James will retain these mails into the Deleted Messages Vault, before an email or a mailbox is going to be deleted. And only administrators can interact with this component via [WebAdmin REST APIs](manage-webadmin.html#deleted-messages-vault).
+
+However, mails are not retained forever as you have to configure a retention period before using it (with one-year retention by default if not defined). It's also possible to permanently delete a mail if needed and we recommend the administrator to [run it](#Cleaning_expired_deleted_messages) in cron job to save storage volume.
+
+### How to configure deleted messages vault
+
+To setup James with Deleted Messages Vault, you need to follow those steps:
+
+- Enable Deleted Messages Vault by configuring Pre Deletion Hooks.
+- Configuring the retention time for the Deleted Messages Vault.
+
+#### Enable Deleted Messages Vault by configuring Pre Deletion Hooks
+
+You need to configure this hook in [listeners.xml](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listeners.xml) configuration file. More details about configuration & example can be found at [Pre Deletion Hook Configuration](http://james.apache.org/server/config-listeners.html)
+
+#### Configuring the retention time for the Deleted Messages Vault
+
+In order to configure the retention time for the Deleted Messages Vault, an administrator needs to perform fine configuration tunning as explained in [deletedMessageVault.properties](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/deletedMessageVault.properties). Mails are not retained forever as you have to configure a retention period (by `retentionPeriod`) before using it (with one-year retention by default if not defined).
+
+### Restore deleted messages after deletion
+
+After users deleted their mails and emptied the trash, the admin can use [Restore Deleted Messages](manage-webadmin.html#deleted-messages-vault) to restore all the deleted mails.  
+
+### Cleaning expired deleted messages
+
+You can delete all deleted messages older than the configured `retentionPeriod` by using [Purge Deleted Messages](manage-webadmin.html#deleted-messages-vault). We recommend calling this API in CRON job on 1st day each month.
