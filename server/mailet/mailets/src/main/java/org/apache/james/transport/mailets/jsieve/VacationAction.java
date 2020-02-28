@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.jsieve;
 import java.time.temporal.ChronoUnit;
 import java.util.Enumeration;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -34,8 +35,8 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class VacationAction implements MailAction {
@@ -80,10 +81,11 @@ public class VacationAction implements MailAction {
 
     private boolean isValidForReply(final Mail mail, ActionVacation actionVacation, final ActionContext context) {
         Set<MailAddress> currentMailAddresses = ImmutableSet.copyOf(mail.getRecipients());
-        Set<MailAddress> allowedMailAddresses = ImmutableSet.<MailAddress>builder().addAll(
-            Lists.transform(actionVacation.getAddresses(), s -> retrieveAddressFromString(s, context)))
-            .add(context.getRecipient())
-            .build();
+        Set<MailAddress> allowedMailAddresses = Stream
+            .concat(
+                actionVacation.getAddresses().stream().map(s -> retrieveAddressFromString(s, context)),
+                Stream.of(context.getRecipient()))
+            .collect(Guavate.toImmutableSet());
         return !Sets.intersection(currentMailAddresses, allowedMailAddresses).isEmpty();
     }
 

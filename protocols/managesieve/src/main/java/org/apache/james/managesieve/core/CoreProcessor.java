@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -56,7 +57,6 @@ import org.apache.james.user.api.UsersRepository;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -94,8 +94,11 @@ public class CoreProcessor implements CoreCommands {
     }
 
     private String convertCapabilityMapToString(Map<Capabilities, String> capabilitiesStringMap) {
-        return Joiner.on("\r\n").join(
-            Iterables.transform(capabilitiesStringMap.entrySet(), this::computeCapabilityEntryString));
+        return capabilitiesStringMap
+            .entrySet()
+            .stream()
+            .map(this::computeCapabilityEntryString)
+            .collect(Collectors.joining("\r\n"));
     }
 
     private Map<Capabilities, String> computeCapabilityMap(Session session) {
@@ -121,7 +124,7 @@ public class CoreProcessor implements CoreCommands {
 
     private String manageWarnings(List<String> warnings) {
         if (!warnings.isEmpty()) {
-            return "OK (WARNINGS) " + Joiner.on(' ').join(Iterables.transform(warnings, s -> '\"' + s + '"'));
+            return "OK (WARNINGS) " + warnings.stream().map(s -> '\"' + s + '"').collect(Collectors.joining(" "));
         } else {
             return "OK";
         }
@@ -161,9 +164,10 @@ public class CoreProcessor implements CoreCommands {
 
     private String listScriptsInternals(Session session) throws AuthenticationRequiredException, StorageException {
         authenticationCheck(session);
-        String list = Joiner.on("\r\n").join(
-            Iterables.transform(sieveRepository.listScripts(session.getUser()),
-                scriptSummary -> '"' + scriptSummary.getName().getValue() + '"' + (scriptSummary.isActive() ? " ACTIVE" : "")));
+        String list = sieveRepository.listScripts(session.getUser())
+            .stream()
+            .map(scriptSummary -> '"' + scriptSummary.getName().getValue() + '"' + (scriptSummary.isActive() ? " ACTIVE" : ""))
+            .collect(Collectors.joining("\r\n"));
         if (Strings.isNullOrEmpty(list)) {
             return "OK";
         } else {

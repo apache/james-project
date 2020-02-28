@@ -44,7 +44,6 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class JPAAnnotationMapper extends JPATransactionalMapper implements AnnotationMapper {
 
@@ -72,13 +71,14 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     public List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
         try {
             final JPAId jpaId = (JPAId) mailboxId;
-            return ImmutableList.copyOf(Iterables.transform(keys,
-                input -> READ_ROW.apply(
-                    getEntityManager()
-                        .createNamedQuery("retrieveByKey", JPAMailboxAnnotation.class)
-                        .setParameter("idParam", jpaId.getRawId())
-                        .setParameter("keyParam", input.asString())
-                        .getSingleResult())));
+            return keys.stream()
+                .map(input -> READ_ROW.apply(
+                        getEntityManager()
+                            .createNamedQuery("retrieveByKey", JPAMailboxAnnotation.class)
+                            .setParameter("idParam", jpaId.getRawId())
+                            .setParameter("keyParam", input.asString())
+                            .getSingleResult()))
+                .collect(Guavate.toImmutableList());
         } catch (NoResultException e) {
             return ImmutableList.of();
         }

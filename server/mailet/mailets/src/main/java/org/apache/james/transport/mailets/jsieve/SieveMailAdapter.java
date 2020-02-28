@@ -54,6 +54,7 @@ import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
@@ -383,7 +384,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
                 .contentTypes(Lists.newArrayList("text/plain"))
                 .includeHeaders(false)
                 .caseInsensitive(false)
-                .searchContents(Lists.transform(phrasesCaseInsensitive, s -> s)).build()
+                .searchContents(ImmutableList.copyOf(phrasesCaseInsensitive)).build()
                 .messageMatches(getMail().getMessage().getInputStream());
         } catch (Exception e) {
             throw new SieveMailException("Error searching in the mail content", e);
@@ -397,7 +398,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
                 .includeHeaders(false)
                 .caseInsensitive(false)
                 .ignoringMime(true)
-                .searchContents(Lists.transform(phrasesCaseInsensitive, s -> s)).build()
+                .searchContents(ImmutableList.copyOf(phrasesCaseInsensitive)).build()
                 .messageMatches(getMail().getMessage().getInputStream());
         } catch (Exception e) {
             throw new SieveMailException("Error searching in the mail content", e);
@@ -411,7 +412,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
                 .contentTypes(contentTypes)
                 .includeHeaders(false)
                 .caseInsensitive(false)
-                .searchContents(Lists.transform(phrasesCaseInsensitive, s -> s)).build()
+                .searchContents(ImmutableList.copyOf(phrasesCaseInsensitive)).build()
                 .messageMatches(getMail().getMessage().getInputStream());
         } catch (Exception e) {
             throw new SieveMailException("Error searching in the mail content", e);
