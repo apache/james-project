@@ -1162,6 +1162,19 @@ public abstract class MessageMapperTest {
     }
 
     @Test
+    void deleteMessagesShouldNotRequireMessagesToBeMarkedAsDeleted() throws Exception {
+        saveMessages();
+
+        messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message2.getUid(), message3.getUid()));
+
+        assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox))
+            .toIterable()
+            .containsOnly(message1.getUid(),
+                message4.getUid(),
+                message5.getUid());
+    }
+
+    @Test
     void getUidsShouldNotReturnUidsOfDeletedMessages() throws Exception {
         saveMessages();
 
