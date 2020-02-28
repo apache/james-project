@@ -20,7 +20,6 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -82,15 +81,10 @@ public class RemoveMimeHeaderByPrefix extends GenericMailet {
         mail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders()
                 .stream()
                 .collect(Collectors.toList()) // Streaming for concurrent modifications
-                .forEach(recipient -> {
-                    Iterator<org.apache.mailet.PerRecipientHeaders.Header> it = mail.getPerRecipientSpecificHeaders().getHeadersForRecipient(recipient).iterator();
-                    while (it.hasNext()) {
-                        org.apache.mailet.PerRecipientHeaders.Header next = it.next();
-                        if (next.getName().startsWith(prefix)) {
-                            it.remove();
-                        }
-                    }
-                });
+                .forEach(recipient -> 
+                    mail.getPerRecipientSpecificHeaders()
+                        .getHeadersForRecipient(recipient)
+                        .removeIf(next -> next.getName().startsWith(prefix)));
     }
 
     private List<String> headerNamesStartingByPrefix(Mail mail) throws MessagingException {

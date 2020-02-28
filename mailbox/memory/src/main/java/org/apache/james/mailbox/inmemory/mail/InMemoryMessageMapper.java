@@ -128,11 +128,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     @Override
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType ftype, int max) {
         List<MailboxMessage> results = new ArrayList<>(getMembershipByUidForMailbox(mailbox).values());
-        for (Iterator<MailboxMessage> it = results.iterator(); it.hasNext();) {
-            if (!set.includes(it.next().getUid())) {
-                it.remove();
-            }
-        }
+        results.removeIf(mailboxMessage -> !set.includes(mailboxMessage.getUid()));
         
         Collections.sort(results);
 
