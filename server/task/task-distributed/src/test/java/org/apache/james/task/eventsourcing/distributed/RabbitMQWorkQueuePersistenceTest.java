@@ -35,7 +35,6 @@ import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskWithId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -70,7 +69,6 @@ class RabbitMQWorkQueuePersistenceTest {
      * start a workqueue which consume messages
      * verify that the message is treated
      */
-    @Disabled("JAMES-3080 rabbitMQ messages need to be persisted")
     @Test
     void submittedMessageShouldSurviveRabbitMQRestart() throws Exception {
         Task TASK = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
