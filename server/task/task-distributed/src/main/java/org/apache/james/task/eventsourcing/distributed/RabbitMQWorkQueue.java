@@ -20,6 +20,8 @@
 
 package org.apache.james.task.eventsourcing.distributed;
 
+import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
@@ -185,8 +187,12 @@ public class RabbitMQWorkQueue implements WorkQueue {
         try {
             byte[] payload = taskSerializer.serialize(taskWithId.getTask()).getBytes(StandardCharsets.UTF_8);
             AMQP.BasicProperties basicProperties = new AMQP.BasicProperties.Builder()
+                .deliveryMode(PERSISTENT_TEXT_PLAIN.getDeliveryMode())
+                .priority(PERSISTENT_TEXT_PLAIN.getPriority())
+                .contentType(PERSISTENT_TEXT_PLAIN.getContentType())
                 .headers(ImmutableMap.of(TASK_ID, taskWithId.getId().asString()))
                 .build();
+
             OutboundMessage outboundMessage = new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, basicProperties, payload);
             channelPool.getSender().send(Mono.just(outboundMessage)).block();
         } catch (JsonProcessingException e) {
