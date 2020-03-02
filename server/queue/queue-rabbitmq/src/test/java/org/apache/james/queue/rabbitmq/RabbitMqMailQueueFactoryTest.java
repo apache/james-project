@@ -69,7 +69,8 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
         RabbitMQMailQueueFactory.PrivateFactory privateFactory = new RabbitMQMailQueueFactory.PrivateFactory(
             new RecordingMetricFactory(),
             new NoopGaugeRegistry(),
-            rabbitMQExtension.getRabbitChannelPool(),
+            rabbitMQExtension.getSender(),
+            rabbitMQExtension.getReceiverProvider(),
             mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
@@ -77,7 +78,7 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             new RawMailQueueItemDecoratorFactory(),
             configuration);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
-        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getRabbitChannelPool(), mqManagementApi, privateFactory);
+        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, privateFactory);
     }
 
     @AfterEach

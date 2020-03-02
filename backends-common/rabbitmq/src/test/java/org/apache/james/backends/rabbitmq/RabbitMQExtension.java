@@ -32,6 +32,8 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
+import reactor.rabbitmq.Sender;
+
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
     private static final Consumer<DockerRabbitMQ> DO_NOTHING = dockerRabbitMQ -> {};
@@ -113,7 +115,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
         RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
         connectionPool = new SimpleConnectionPool(connectionFactory);
-        channelPool = new ReactorRabbitMQChannelPool(connectionPool);
+        channelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(), 5);
         channelPool.start();
     }
 
@@ -142,6 +144,14 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
     public ReactorRabbitMQChannelPool getRabbitChannelPool() {
         return channelPool;
+    }
+
+    public Sender getSender() {
+        return channelPool.getSender();
+    }
+
+    public ReceiverProvider getReceiverProvider() {
+        return channelPool::createReceiver;
     }
 
     public SimpleConnectionPool getConnectionPool() {

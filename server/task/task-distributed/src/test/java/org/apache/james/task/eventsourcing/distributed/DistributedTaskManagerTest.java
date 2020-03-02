@@ -34,7 +34,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.eventstore.EventStore;
@@ -80,6 +80,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import reactor.rabbitmq.Sender;
 
 class DistributedTaskManagerTest implements TaskManagerContract {
 
@@ -87,9 +88,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         private final List<RabbitMQWorkQueue> workQueues;
         private final RabbitMQWorkQueueSupplier supplier;
 
-        TrackedRabbitMQWorkQueueSupplier(ReactorRabbitMQChannelPool rabbitConnectionPool, JsonTaskSerializer taskSerializer) {
+        TrackedRabbitMQWorkQueueSupplier(Sender sender, ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer) {
             workQueues = new ArrayList<>();
-            supplier = new RabbitMQWorkQueueSupplier(rabbitConnectionPool, taskSerializer);
+            supplier = new RabbitMQWorkQueueSupplier(sender, receiverProvider, taskSerializer);
         }
 
         @Override
@@ -114,7 +115,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     static final Hostname HOSTNAME_2 = new Hostname("bar");
 
     @RegisterExtension
-    static final RabbitMQExtension RABBIT_MQ_EXTENSION = RabbitMQExtension.singletonRabbitMQ();
+    static final RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
 
 
     @RegisterExtension
@@ -165,7 +166,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         CassandraCluster cassandra = CASSANDRA_CLUSTER.getCassandraCluster();
         CassandraTaskExecutionDetailsProjectionDAO projectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider(), JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER);
         this.executionDetailsProjection = new CassandraTaskExecutionDetailsProjection(projectionDAO);
-        this.workQueueSupplier = new TrackedRabbitMQWorkQueueSupplier(RABBIT_MQ_EXTENSION.getRabbitChannelPool(), taskSerializer);
+        this.workQueueSupplier = new TrackedRabbitMQWorkQueueSupplier(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), taskSerializer);
         this.eventStore = eventStore;
         this.terminationSubscribers = new ArrayList<>();
         this.eventSerializer = JsonEventSerializer.forModules(eventDtoModule).withoutNestedType();
@@ -182,7 +183,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     EventSourcingTaskManager taskManager(Hostname hostname) {
-        RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(RABBIT_MQ_EXTENSION.getRabbitChannelPool(), eventSerializer);
+        RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), eventSerializer);
         terminationSubscribers.add(terminationSubscriber);
         terminationSubscriber.start();
         return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, terminationSubscriber);

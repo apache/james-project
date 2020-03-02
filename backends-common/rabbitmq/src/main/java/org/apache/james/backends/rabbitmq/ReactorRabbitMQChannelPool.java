@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.BiConsumer;
 
 import javax.annotation.PreDestroy;
-import javax.inject.Inject;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -103,7 +102,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorRabbitMQChannelPool.class);
     private static final long MAXIMUM_BORROW_TIMEOUT_IN_MS = Duration.ofSeconds(5).toMillis();
-    private static final int MAX_CHANNELS_NUMBER = 5;
+    private static final int MAX_CHANNELS_NUMBER = 3;
     private static final int MAX_BORROW_RETRIES = 3;
     private static final Duration MIN_BORROW_DELAY = Duration.ofMillis(50);
     private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
@@ -113,7 +112,6 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     private final ConcurrentSkipListSet<Channel> borrowedChannels;
     private Sender sender;
 
-    @Inject
     public ReactorRabbitMQChannelPool(SimpleConnectionPool simpleConnectionPool) {
         this(simpleConnectionPool.getResilientConnection(), MAX_CHANNELS_NUMBER);
     }

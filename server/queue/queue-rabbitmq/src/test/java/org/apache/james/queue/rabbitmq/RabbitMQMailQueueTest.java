@@ -336,7 +336,7 @@ class RabbitMQMailQueueTest {
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             metricTestSystem.getMetricFactory(),
             metricTestSystem.getSpyGaugeRegistry(),
-            rabbitMQExtension.getRabbitChannelPool(),
+            rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
             mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
@@ -344,7 +344,7 @@ class RabbitMQMailQueueTest {
             new RawMailQueueItemDecoratorFactory(),
             configuration);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
-        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getRabbitChannelPool(), mqManagementApi, factory);
+        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, factory);
         mailQueue = mailQueueFactory.createQueue(SPOOL);
     }
 }

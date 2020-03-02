@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.james.backends.rabbitmq.Constants;
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
@@ -55,7 +55,6 @@ import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
-import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
 
 public class RabbitMQWorkQueue implements WorkQueue {
@@ -75,19 +74,20 @@ public class RabbitMQWorkQueue implements WorkQueue {
     public static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
 
     private final TaskManagerWorker worker;
-    private final ReactorRabbitMQChannelPool channelPool;
     private final JsonTaskSerializer taskSerializer;
+    private final Sender sender;
+    private final ReceiverProvider receiverProvider;
     private Receiver receiver;
     private UnicastProcessor<TaskId> sendCancelRequestsQueue;
     private Disposable sendCancelRequestsQueueHandle;
     private Disposable receiverHandle;
     private Disposable cancelRequestListenerHandle;
-    private Sender cancelRequestSender;
     private Receiver cancelRequestListener;
 
-    public RabbitMQWorkQueue(TaskManagerWorker worker, ReactorRabbitMQChannelPool reactorRabbitMQChannelPool, JsonTaskSerializer taskSerializer) {
+    public RabbitMQWorkQueue(TaskManagerWorker worker, Sender sender, ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer) {
         this.worker = worker;
-        this.channelPool = reactorRabbitMQChannelPool;
+        this.receiverProvider = receiverProvider;
+        this.sender = sender;
         this.taskSerializer = taskSerializer;
     }
 
@@ -104,13 +104,13 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     @VisibleForTesting
     void declareQueue() {
-        Mono<AMQP.Exchange.DeclareOk> declareExchange = channelPool.getSender()
+        Mono<AMQP.Exchange.DeclareOk> declareExchange = sender
             .declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME))
             .retryBackoff(NUM_RETRIES, FIRST_BACKOFF, FOREVER);
-        Mono<AMQP.Queue.DeclareOk> declareQueue = channelPool.getSender()
+        Mono<AMQP.Queue.DeclareOk> declareQueue = sender
             .declare(QueueSpecification.queue(QUEUE_NAME).durable(true).arguments(Constants.WITH_SINGLE_ACTIVE_CONSUMER))
             .retryBackoff(NUM_RETRIES, FIRST_BACKOFF, FOREVER);
-        Mono<AMQP.Queue.BindOk> bindQueueToExchange = channelPool.getSender()
+        Mono<AMQP.Queue.BindOk> bindQueueToExchange = sender
             .bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, QUEUE_NAME))
             .retryBackoff(NUM_RETRIES, FIRST_BACKOFF, FOREVER);
 
@@ -121,7 +121,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
     }
 
     private void consumeWorkqueue() {
-        receiver = new Receiver(new ReceiverOptions().connectionMono(channelPool.getConnectionMono()));
+        receiver = receiverProvider.createReceiver();
         receiverHandle = receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions())
             .subscribeOn(Schedulers.elastic())
             .concatMap(this::executeTask)
@@ -158,24 +158,23 @@ public class RabbitMQWorkQueue implements WorkQueue {
             .onErrorResume(error -> Mono.empty());
     }
 
-    void listenToCancelRequests() {
-        cancelRequestSender = channelPool.getSender();
+    private void listenToCancelRequests() {
         String queueName = CANCEL_REQUESTS_QUEUE_NAME_PREFIX + UUID.randomUUID().toString();
 
-        cancelRequestSender.declareExchange(ExchangeSpecification.exchange(CANCEL_REQUESTS_EXCHANGE_NAME)).block();
-        cancelRequestSender.declare(QueueSpecification.queue(queueName).durable(false).autoDelete(true)).block();
-        cancelRequestSender.bind(BindingSpecification.binding(CANCEL_REQUESTS_EXCHANGE_NAME, CANCEL_REQUESTS_ROUTING_KEY, queueName)).block();
+        sender.declareExchange(ExchangeSpecification.exchange(CANCEL_REQUESTS_EXCHANGE_NAME)).block();
+        sender.declare(QueueSpecification.queue(queueName).durable(false).autoDelete(true)).block();
+        sender.bind(BindingSpecification.binding(CANCEL_REQUESTS_EXCHANGE_NAME, CANCEL_REQUESTS_ROUTING_KEY, queueName)).block();
         registerCancelRequestsListener(queueName);
 
         sendCancelRequestsQueue = UnicastProcessor.create();
-        sendCancelRequestsQueueHandle = cancelRequestSender
+        sendCancelRequestsQueueHandle = sender
             .send(sendCancelRequestsQueue.map(this::makeCancelRequestMessage))
             .subscribeOn(Schedulers.elastic())
             .subscribe();
     }
 
     private void registerCancelRequestsListener(String queueName) {
-        cancelRequestListener = channelPool.createReceiver();
+        cancelRequestListener = receiverProvider.createReceiver();
         cancelRequestListenerHandle = cancelRequestListener
             .consumeAutoAck(queueName)
             .subscribeOn(Schedulers.elastic())
@@ -207,7 +206,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
                 .build();
 
             OutboundMessage outboundMessage = new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, basicProperties, payload);
-            channelPool.getSender().send(Mono.just(outboundMessage)).block();
+            sender.send(Mono.just(outboundMessage)).block();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

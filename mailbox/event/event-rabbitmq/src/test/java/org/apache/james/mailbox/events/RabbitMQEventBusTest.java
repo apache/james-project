@@ -56,7 +56,7 @@ import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension.DockerRestartPolicy;
 import org.apache.james.backends.rabbitmq.RabbitMQFixture;
 import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
@@ -119,19 +119,18 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         eventBus3.stop();
         ALL_GROUPS.stream()
             .map(GroupRegistration.WorkQueueName::of)
-            .forEach(queueName -> rabbitMQExtension.getRabbitChannelPool().getSender().delete(QueueSpecification.queue(queueName.asString())).block());
-        rabbitMQExtension.getRabbitChannelPool()
-            .getSender()
+            .forEach(queueName -> rabbitMQExtension.getSender().delete(QueueSpecification.queue(queueName.asString())).block());
+        rabbitMQExtension.getSender()
             .delete(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME))
             .block();
     }
 
     private RabbitMQEventBus newEventBus() {
-        return newEventBus(rabbitMQExtension.getRabbitChannelPool());
+        return newEventBus(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider());
     }
 
-    private RabbitMQEventBus newEventBus(ReactorRabbitMQChannelPool rabbitMQChannelPool) {
-        return new RabbitMQEventBus(rabbitMQChannelPool, eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, memoryEventDeadLetters, new RecordingMetricFactory());
+    private RabbitMQEventBus newEventBus(Sender sender, ReceiverProvider receiverProvider) {
+        return new RabbitMQEventBus(sender, receiverProvider, eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, memoryEventDeadLetters, new RecordingMetricFactory());
     }
 
     @Override
@@ -256,7 +255,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         @BeforeEach
         void setUp() {
-            Sender sender = rabbitMQExtension.getRabbitChannelPool().getSender();
+            Sender sender = rabbitMQExtension.getSender();
 
             sender.declareQueue(QueueSpecification.queue(MAILBOX_WORK_QUEUE_NAME)
                 .durable(DURABLE)
@@ -286,7 +285,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         }
 
         private Event dequeueEvent() {
-            try (Receiver receiver = rabbitMQExtension.getRabbitChannelPool().createReceiver()) {
+            try (Receiver receiver = rabbitMQExtension.getReceiverProvider().createReceiver()) {
                 byte[] eventInBytes = receiver.consumeAutoAck(MAILBOX_WORK_QUEUE_NAME)
                     .blockFirst()
                     .getBody();
@@ -328,7 +327,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
                 @BeforeEach
                 void beforeEach() {
-                    rabbitMQEventBusWithNetWorkIssue = newEventBus(rabbitMQNetWorkIssueExtension.getRabbitChannelPool());
+                    rabbitMQEventBusWithNetWorkIssue = newEventBus(rabbitMQNetWorkIssueExtension.getSender(), rabbitMQNetWorkIssueExtension.getReceiverProvider());
                 }
 
                 @Test

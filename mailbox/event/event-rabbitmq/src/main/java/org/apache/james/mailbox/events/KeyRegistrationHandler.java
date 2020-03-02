@@ -28,7 +28,7 @@ import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
@@ -62,13 +62,13 @@ class KeyRegistrationHandler {
     private final MailboxListenerExecutor mailboxListenerExecutor;
     private Optional<Disposable> receiverSubscriber;
 
-    KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer, ReactorRabbitMQChannelPool reactorRabbitMQChannelPool, RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry, MailboxListenerExecutor mailboxListenerExecutor) {
+    KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, ReceiverProvider receiverProvider, RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
-        this.sender = reactorRabbitMQChannelPool.getSender();
+        this.sender = sender;
         this.routingKeyConverter = routingKeyConverter;
         this.localListenerRegistry = localListenerRegistry;
-        this.receiver = reactorRabbitMQChannelPool.createReceiver();
+        this.receiver = receiverProvider.createReceiver();
         this.mailboxListenerExecutor = mailboxListenerExecutor;
         this.registrationQueue = new RegistrationQueueName();
         this.registrationBinder = new RegistrationBinder(sender, registrationQueue);

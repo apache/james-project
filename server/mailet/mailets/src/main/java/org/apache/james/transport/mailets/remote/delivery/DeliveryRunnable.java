@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets.remote.delivery;
 
 import java.time.Duration;
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import org.apache.james.dnsservice.api.DNSService;
@@ -48,7 +47,6 @@ public class DeliveryRunnable implements Disposable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeliveryRunnable.class);
 
     public static final Supplier<Date> CURRENT_DATE_SUPPLIER = Date::new;
-    public static final AtomicBoolean DEFAULT_NOT_STARTED = new AtomicBoolean(false);
     public static final String OUTGOING_MAILS = "outgoingMails";
     public static final String REMOTE_DELIVERY_TRIAL = "RemoteDeliveryTrial";
 

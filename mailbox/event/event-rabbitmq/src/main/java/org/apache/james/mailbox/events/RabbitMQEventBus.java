@@ -24,7 +24,7 @@ import java.util.Set;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
@@ -32,6 +32,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
+import reactor.rabbitmq.Sender;
 
 public class RabbitMQEventBus implements EventBus, Startable {
     private static final String NOT_RUNNING_ERROR_MESSAGE = "Event Bus is not running";
@@ -44,8 +45,9 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private final RetryBackoffConfiguration retryBackoff;
     private final EventBusId eventBusId;
     private final EventDeadLetters eventDeadLetters;
-    private final ReactorRabbitMQChannelPool channelPool;
     private final MailboxListenerExecutor mailboxListenerExecutor;
+    private final Sender sender;
+    private final ReceiverProvider receiverProvider;
 
     private volatile boolean isRunning;
     private volatile boolean isStopping;
@@ -54,11 +56,12 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private EventDispatcher eventDispatcher;
 
     @Inject
-    public RabbitMQEventBus(ReactorRabbitMQChannelPool reactorRabbitMQChannelPool, EventSerializer eventSerializer,
-                     RetryBackoffConfiguration retryBackoff,
-                     RoutingKeyConverter routingKeyConverter,
-                     EventDeadLetters eventDeadLetters, MetricFactory metricFactory) {
-        this.channelPool = reactorRabbitMQChannelPool;
+    public RabbitMQEventBus(Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
+                            RetryBackoffConfiguration retryBackoff,
+                            RoutingKeyConverter routingKeyConverter,
+                            EventDeadLetters eventDeadLetters, MetricFactory metricFactory) {
+        this.sender = sender;
+        this.receiverProvider = receiverProvider;
         this.mailboxListenerExecutor = new MailboxListenerExecutor(metricFactory);
         this.eventBusId = EventBusId.random();
         this.eventSerializer = eventSerializer;
@@ -73,9 +76,9 @@ public class RabbitMQEventBus implements EventBus, Startable {
         if (!isRunning && !isStopping) {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
-            keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, channelPool, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor);
-            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, channelPool, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
-            eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, channelPool.getSender(), localListenerRegistry, mailboxListenerExecutor);
+            keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor);
+            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, receiverProvider, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
+            eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, sender, localListenerRegistry, mailboxListenerExecutor);
 
             eventDispatcher.start();
             keyRegistrationHandler.start();

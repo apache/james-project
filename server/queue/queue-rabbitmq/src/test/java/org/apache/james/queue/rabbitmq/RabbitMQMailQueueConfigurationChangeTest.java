@@ -118,14 +118,15 @@ class RabbitMQMailQueueConfigurationChangeTest {
         RabbitMQMailQueueFactory.PrivateFactory privateFactory = new RabbitMQMailQueueFactory.PrivateFactory(
             new RecordingMetricFactory(),
             new NoopGaugeRegistry(),
-            rabbitMQExtension.getRabbitChannelPool(),
+            rabbitMQExtension.getSender(),
+            rabbitMQExtension.getReceiverProvider(),
             mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
             clock,
             new RawMailQueueItemDecoratorFactory(),
             mailQueueSizeConfiguration);
-        RabbitMQMailQueueFactory mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getRabbitChannelPool(), mqManagementApi, privateFactory);
+        RabbitMQMailQueueFactory mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, privateFactory);
         return mailQueueFactory.createQueue(SPOOL);
     }
 

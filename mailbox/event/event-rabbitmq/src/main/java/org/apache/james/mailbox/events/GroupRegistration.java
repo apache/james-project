@@ -31,7 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.util.MDCBuilder;
 
@@ -84,15 +84,15 @@ class GroupRegistration implements Registration {
     private final MailboxListenerExecutor mailboxListenerExecutor;
     private Optional<Disposable> receiverSubscriber;
 
-    GroupRegistration(ReactorRabbitMQChannelPool reactorRabbitMQChannelPool, EventSerializer eventSerializer,
+    GroupRegistration(Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
                       MailboxListener mailboxListener, Group group, RetryBackoffConfiguration retryBackoff,
                       EventDeadLetters eventDeadLetters,
                       Runnable unregisterGroup, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventSerializer = eventSerializer;
         this.mailboxListener = mailboxListener;
         this.queueName = WorkQueueName.of(group);
-        this.sender = reactorRabbitMQChannelPool.getSender();
-        this.receiver = reactorRabbitMQChannelPool.createReceiver();
+        this.sender = sender;
+        this.receiver = receiverProvider.createReceiver();
         this.mailboxListenerExecutor = mailboxListenerExecutor;
         this.receiverSubscriber = Optional.empty();
         this.unregisterGroup = unregisterGroup;

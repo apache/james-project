@@ -28,7 +28,6 @@ import java.time.Clock;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.metrics.api.Metric;
@@ -54,11 +53,11 @@ class Enqueuer {
     private final MailQueueView mailQueueView;
     private final Clock clock;
 
-    Enqueuer(MailQueueName name, ReactorRabbitMQChannelPool reactorRabbitMQChannelPool, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
+    Enqueuer(MailQueueName name, Sender sender, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
              MailQueueView mailQueueView, Clock clock) {
         this.name = name;
-        this.sender = reactorRabbitMQChannelPool.getSender();
+        this.sender = sender;
         this.mimeMessageStore = mimeMessageStore;
         this.mailReferenceSerializer = serializer;
         this.mailQueueView = mailQueueView;

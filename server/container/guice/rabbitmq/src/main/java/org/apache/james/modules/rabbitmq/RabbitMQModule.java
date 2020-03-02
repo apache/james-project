@@ -29,6 +29,8 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.RabbitMQHealthCheck;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.ReceiverProvider;
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
@@ -50,8 +52,6 @@ import org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfigurationModule;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,10 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.multibindings.ProvidesIntoSet;
+
+import reactor.rabbitmq.RabbitFlux;
+import reactor.rabbitmq.ReceiverOptions;
+import reactor.rabbitmq.Sender;
 
 public class RabbitMQModule extends AbstractModule {
 
@@ -71,7 +74,6 @@ public class RabbitMQModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ReactorRabbitMQChannelPool.class).in(Scopes.SINGLETON);
         bind(EnqueuedMailsDAO.class).in(Scopes.SINGLETON);
         bind(DeletedMailsDAO.class).in(Scopes.SINGLETON);
         bind(BrowseStartDAO.class).in(Scopes.SINGLETON);
@@ -143,10 +145,23 @@ public class RabbitMQModule extends AbstractModule {
         return RabbitMQMailQueueConfiguration.from(configuration);
     }
 
-    @ProvidesIntoSet
-    InitializationOperation workQueue(ReactorRabbitMQChannelPool instance) {
-        return InitilizationOperationBuilder
-            .forClass(ReactorRabbitMQChannelPool.class)
-            .init(instance::start);
+    @Provides
+    @Singleton
+    ReactorRabbitMQChannelPool provideReactorRabbitMQChannelPool(SimpleConnectionPool simpleConnectionPool) {
+        ReactorRabbitMQChannelPool channelPool = new ReactorRabbitMQChannelPool(simpleConnectionPool);
+        channelPool.start();
+        return channelPool;
+    }
+
+    @Provides
+    @Singleton
+    public Sender provideRabbitMQSender(ReactorRabbitMQChannelPool channelPool) {
+        return channelPool.getSender();
+    }
+
+    @Provides
+    @Singleton
+    public ReceiverProvider provideRabbitMQReceiver(SimpleConnectionPool simpleConnectionPool) {
+        return () -> RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(simpleConnectionPool.getResilientConnection()));
     }
 }

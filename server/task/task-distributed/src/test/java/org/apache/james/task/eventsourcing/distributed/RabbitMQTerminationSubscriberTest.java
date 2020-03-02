@@ -52,7 +52,7 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
 
     @Override
     public TerminationSubscriber subscriber() {
-        RabbitMQTerminationSubscriber subscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getRabbitChannelPool(), SERIALIZER);
+        RabbitMQTerminationSubscriber subscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), SERIALIZER);
         subscriber.start();
         return subscriber;
     }
