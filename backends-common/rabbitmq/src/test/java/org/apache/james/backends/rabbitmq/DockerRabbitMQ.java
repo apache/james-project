@@ -146,9 +146,10 @@ public class DockerRabbitMQ {
         container.stop();
     }
 
-    public void restart() {
-        DockerClientFactory.instance().client()
-            .restartContainerCmd(container.getContainerId());
+    public void restart() throws Exception {
+        stopApp();
+        startApp();
+        waitForReadyness();
     }
 
     public GenericContainer<?> container() {
