@@ -23,6 +23,8 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -242,6 +244,34 @@ class RabbitMQMailQueueTest {
             getMailQueue().enQueue(defaultMail()
                 .name(name3)
                 .build());
+
+            List<MailQueue.MailQueueItem> items = dequeueFlux.take(3).collectList().block(Duration.ofSeconds(10));
+
+            assertThat(items)
+                .extracting(item -> item.getMail().getName())
+                .containsExactly(name1, name2, name3);
+        }
+
+        @Test
+        void messagesShouldSurviveRabbitMQRestart() throws Exception {
+            String name1 = "myMail1";
+            String name2 = "myMail2";
+            String name3 = "myMail3";
+            Flux<MailQueue.MailQueueItem> dequeueFlux = Flux.from(getMailQueue().deQueue());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name2)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name3)
+                .build());
+
+            rabbitMQExtension.getRabbitMQ().restart();
 
             List<MailQueue.MailQueueItem> items = dequeueFlux.take(3).collectList().block(Duration.ofSeconds(10));
 
