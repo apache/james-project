@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.events;
 
+import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
 import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
@@ -64,6 +65,9 @@ class EventDispatcher {
         this.localListenerRegistry = localListenerRegistry;
         this.basicProperties = new AMQP.BasicProperties.Builder()
             .headers(ImmutableMap.of(EVENT_BUS_ID, eventBusId.asString()))
+            .deliveryMode(PERSISTENT_TEXT_PLAIN.getDeliveryMode())
+            .priority(PERSISTENT_TEXT_PLAIN.getPriority())
+            .contentType(PERSISTENT_TEXT_PLAIN.getContentType())
             .build();
         this.mailboxListenerExecutor = mailboxListenerExecutor;
     }

@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.events;
 
+import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
 import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
@@ -118,6 +119,9 @@ class GroupConsumerRetry {
             EMPTY_ROUTING_KEY,
             new AMQP.BasicProperties.Builder()
                 .headers(ImmutableMap.of(RETRY_COUNT, currentRetryCount + 1))
+                .deliveryMode(PERSISTENT_TEXT_PLAIN.getDeliveryMode())
+                .priority(PERSISTENT_TEXT_PLAIN.getPriority())
+                .contentType(PERSISTENT_TEXT_PLAIN.getContentType())
                 .build(),
             eventAsBytes));
 
