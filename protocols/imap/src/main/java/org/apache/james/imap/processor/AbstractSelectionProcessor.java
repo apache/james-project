@@ -38,6 +38,7 @@ import org.apache.james.imap.api.process.SearchResUtil;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
+import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest.ClientSpecifiedUidValidity;
 import org.apache.james.imap.message.response.ExistsResponse;
 import org.apache.james.imap.message.response.RecentResponse;
 import org.apache.james.imap.processor.base.SelectedMailboxImpl;
@@ -98,7 +99,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
     private void respond(ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) throws MailboxException, MessageRangeException {
 
-        UidValidity lastKnownUidValidity = request.getLastKnownUidValidity();
+        ClientSpecifiedUidValidity lastKnownUidValidity = request.getLastKnownUidValidity();
         Long modSeq = request.getKnownModSeq();
         IdRange[] knownSequences = request.getKnownSequenceSet();
         UidRange[] knownUids = request.getKnownUidSet();
@@ -112,7 +113,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         //    Resynchronization parameter to SELECT/EXAMINE command is specified
         //    and the client hasn't issued "ENABLE QRESYNC" in the current
         //    connection.
-        if (lastKnownUidValidity != null && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
+        if (!lastKnownUidValidity.isUnknown() && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
             taggedBad(request, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
             return;
         }
@@ -154,8 +155,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         // 
         // If the mailbox does not store the mod-sequence in a permanent way its needed to not process the QRESYNC paramters
         // The same is true if none are given ;)
-        if (metaData.isModSeqPermanent() && lastKnownUidValidity != null) {
-            if (lastKnownUidValidity == metaData.getUidValidity()) {
+        if (metaData.isModSeqPermanent() && !lastKnownUidValidity.isUnknown()) {
+            if (lastKnownUidValidity.correspondsTo(metaData.getUidValidity())) {
                 
                 final MailboxManager mailboxManager = getMailboxManager();
                 final MailboxSession mailboxSession = session.getMailboxSession();

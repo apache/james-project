@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.message.request;
 
+import java.util.Objects;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
@@ -26,29 +28,144 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.mailbox.model.UidValidity;
 
+import com.google.common.base.Preconditions;
+
 /**
  * {@link ImapRequest} which selects a Mailbox. 
  * 
  * This supports also the <code>CONDSTORE</code> and the <code>QRESYNC</code> extension
  */
 public abstract class AbstractMailboxSelectionRequest extends AbstractImapRequest {
+    public interface ClientSpecifiedUidValidity {
+        ClientSpecifiedUidValidity UNKNOWN = new ClientSpecifiedUidValidity() {
+            @Override
+            public boolean isUnknown() {
+                return true;
+            }
 
+            @Override
+            public boolean correspondsTo(UidValidity uidValidity) {
+                return false;
+            }
+
+            @Override
+            public String toString() {
+                return "UidValidity{UNKNOWN}";
+            }
+        };
+
+        static ClientSpecifiedUidValidity of(long value) {
+            if (UidValidity.isValid(value)) {
+                return valid(UidValidity.of(value));
+            }
+            return invalid(value);
+        }
+
+        class Invalid implements ClientSpecifiedUidValidity {
+            private final long invalidUidValidity;
+
+            public Invalid(long invalidUidValidity) {
+                Preconditions.checkArgument(!UidValidity.isValid(invalidUidValidity), "Need to supply an invalid value");
+                this.invalidUidValidity = invalidUidValidity;
+            }
+
+            @Override
+            public boolean isUnknown() {
+                return false;
+            }
+
+            @Override
+            public boolean correspondsTo(UidValidity uidValidity) {
+                return false;
+            }
+
+            @Override
+            public final boolean equals(Object o) {
+                if (o instanceof Invalid) {
+                    Invalid invalid = (Invalid) o;
+
+                    return Objects.equals(this.invalidUidValidity, invalid.invalidUidValidity);
+                }
+                return false;
+            }
+
+            @Override
+            public final int hashCode() {
+                return Objects.hash(invalidUidValidity);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("Invalid UidValidity{%d}", invalidUidValidity);
+            }
+        }
+
+        class Valid implements ClientSpecifiedUidValidity {
+            private final UidValidity uidValidity;
+
+            public Valid(UidValidity uidValidity) {
+                this.uidValidity = uidValidity;
+            }
+
+            @Override
+            public boolean isUnknown() {
+                return false;
+            }
+
+            @Override
+            public boolean correspondsTo(UidValidity uidValidity) {
+                return this.uidValidity.equals(uidValidity);
+            }
+
+            @Override
+            public final boolean equals(Object o) {
+                if (o instanceof Valid) {
+                    Valid valid = (Valid) o;
+
+                    return Objects.equals(this.uidValidity, valid.uidValidity);
+                }
+                return false;
+            }
+
+            @Override
+            public final int hashCode() {
+                return Objects.hash(uidValidity);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("UidValidity{%d}", uidValidity.asLong());
+            }
+        }
+
+        static ClientSpecifiedUidValidity invalid(long invalidValue) {
+            return new Invalid(invalidValue);
+        }
+
+        static ClientSpecifiedUidValidity valid(UidValidity uidValidity) {
+            return new Valid(uidValidity);
+        }
+
+        boolean isUnknown();
+
+        boolean correspondsTo(UidValidity uidValidity);
+    }
 
     private final String mailboxName;
     private final boolean condstore;
-    private final UidValidity lastKnownUidValidity;
+    private final ClientSpecifiedUidValidity lastKnownUidValidity;
     private final Long knownModSeq;
     private final UidRange[] uidSet;
     private final UidRange[] knownUidSet;
     private final IdRange[] knownSequenceSet;
 
-    public AbstractMailboxSelectionRequest(ImapCommand command, String mailboxName, boolean condstore, UidValidity lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, Tag tag) {
+    public AbstractMailboxSelectionRequest(ImapCommand command, String mailboxName, boolean condstore, ClientSpecifiedUidValidity lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, Tag tag) {
         super(tag, command);
         this.mailboxName = mailboxName;
         this.condstore = condstore;
         this.lastKnownUidValidity = lastKnownUidValidity;
         this.knownModSeq = knownModSeq;
-        if ((lastKnownUidValidity == null && knownModSeq != null) || (this.lastKnownUidValidity != null && knownModSeq == null)) {
+        if ((lastKnownUidValidity.isUnknown() && knownModSeq != null) || (! lastKnownUidValidity.isUnknown() && knownModSeq == null)) {
             throw new IllegalArgumentException();
         }
         this.uidSet = uidSet;
@@ -80,7 +197,7 @@ public abstract class AbstractMailboxSelectionRequest extends AbstractImapReques
      * 
      * @return lastKnownUidValidity
      */
-    public final UidValidity getLastKnownUidValidity() {
+    public final ClientSpecifiedUidValidity getLastKnownUidValidity() {
         return lastKnownUidValidity;
     }
     

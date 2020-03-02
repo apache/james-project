@@ -32,8 +32,8 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestLineReader.StringMatcherCharacterValidator;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
+import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest.ClientSpecifiedUidValidity;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.model.UidValidity;
 
 public abstract class AbstractSelectionCommandParser extends AbstractImapCommandParser {
     private static final String CONDSTORE = ImapConstants.SUPPORTS_CONDSTORE.asString();
@@ -47,7 +47,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         final String mailboxName = request.mailbox();
         boolean condstore = false;
-        UidValidity lastKnownUidValidity = null;
+        ClientSpecifiedUidValidity lastKnownUidValidity = ClientSpecifiedUidValidity.UNKNOWN;
         Long knownModSeq = null;
         UidRange[] uidSet = null;
         UidRange[] knownUidSet = null;
@@ -81,7 +81,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
                 // Consume enclosing paren
                 request.consumeChar('(');
                 long uidValidityAsNumber = request.number();
-                lastKnownUidValidity = sanitizeUidValidity(uidValidityAsNumber);
+                lastKnownUidValidity = ClientSpecifiedUidValidity.of(uidValidityAsNumber);
 
                 // Consume the SP
                 request.consumeChar(' ');
@@ -129,18 +129,6 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
 
         request.eol();
         return createRequest(mailboxName, condstore, lastKnownUidValidity, knownModSeq, uidSet, knownUidSet, knownSequenceSet, tag);
-    }
-
-    private UidValidity sanitizeUidValidity(long uidValidityAsNumber) {
-        if (UidValidity.isValid(uidValidityAsNumber)) {
-            return UidValidity.of(uidValidityAsNumber);
-        } else {
-            // The UidValidity cached by the client is invalid
-            // We know that the backend will regenerate it
-            // Hence we force the mismatch
-            // QRSYNC command will be ignored
-            return UidValidity.random();
-        }
     }
 
     /**
@@ -220,5 +208,5 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
     /**
      * Create a new {@link AbstractMailboxSelectionRequest} for the given arguments
      */
-    protected abstract AbstractMailboxSelectionRequest createRequest(String mailboxName, boolean condstore, UidValidity lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, Tag tag);
+    protected abstract AbstractMailboxSelectionRequest createRequest(String mailboxName, boolean condstore, ClientSpecifiedUidValidity lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, Tag tag);
 }
