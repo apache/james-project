@@ -95,6 +95,7 @@ pipeline {
         always {
             node('target') {
                 script {
+                    sh 'docker logs james_run || true'
                     sh 'docker rm -f cassandra rabbitmq elasticsearch tika swift james_run || true'
                     sh 'sudo btrfs subvolume delete /srv/bench-running-docker'
                 }
