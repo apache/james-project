@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.eventsourcing.eventstore.cassandra
 
+import com.datastax.driver.core.ConsistencyLevel.SERIAL
 import com.datastax.driver.core._
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder.{bindMarker, insertInto}
@@ -66,6 +67,7 @@ class EventStoreDao @Inject() (val session: Session, val jsonEventSerializer: Js
 
   private[cassandra] def getEventsOfAggregate(aggregateId: AggregateId): SMono[History] = {
     val preparedStatement = select.bind.setString(AGGREGATE_ID, aggregateId.asAggregateKey)
+      .setConsistencyLevel(SERIAL)
     val rows: SFlux[Row] = SFlux[Row](cassandraAsyncExecutor.executeRows(preparedStatement))
 
     val events: SFlux[Event] = rows.map(toEvent)
