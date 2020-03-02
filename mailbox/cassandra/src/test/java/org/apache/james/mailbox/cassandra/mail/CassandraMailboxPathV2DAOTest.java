@@ -19,16 +19,103 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.INBOX_ID;
+import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.INBOX_ID_AND_PATH;
+import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.OTHER_USER_MAILBOXPATH;
+import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.OUTBOX_ID;
+import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.USER_INBOX_MAILBOXPATH;
+import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.USER_OUTBOX_MAILBOXPATH;
+import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.otherMailboxId;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.junit.jupiter.api.Test;
+import java.util.List;
 
-class CassandraMailboxPathV2DAOTest extends CassandraMailboxPathDAOTest<CassandraMailboxPathV2DAO> {
-    @Override
-    CassandraMailboxPathV2DAO testee(CassandraCluster cassandra) {
-        return new CassandraMailboxPathV2DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
+
+class CassandraMailboxPathV2DAOTest {
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
+        CassandraMailboxModule.MODULE, CassandraSchemaVersionModule.MODULE));
+
+    CassandraMailboxPathV2DAO testee;
+
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
+        testee = new CassandraMailboxPathV2DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+    }
+
+    @Test
+    void cassandraIdAndPathShouldRespectBeanContract() {
+        EqualsVerifier.forClass(CassandraIdAndPath.class).verify();
+    }
+
+    @Test
+    void saveShouldInsertNewEntry() {
+        assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block()).isTrue();
+
+        assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).blockOptional())
+            .contains(INBOX_ID_AND_PATH);
+    }
+
+    @Test
+    void saveOnSecondShouldBeFalse() {
+        assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block()).isTrue();
+        assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block()).isFalse();
+    }
+
+    @Test
+    void retrieveIdShouldReturnEmptyWhenEmptyData() {
+        assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).blockOptional())
+            .isEmpty();
+    }
+
+    @Test
+    void retrieveIdShouldReturnStoredData() {
+        testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block();
+
+        assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).blockOptional())
+            .contains(INBOX_ID_AND_PATH);
+    }
+
+    @Test
+    void getUserMailboxesShouldReturnAllMailboxesOfUser() {
+        testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block();
+        testee.save(USER_OUTBOX_MAILBOXPATH, OUTBOX_ID).block();
+        testee.save(OTHER_USER_MAILBOXPATH, otherMailboxId).block();
+
+        List<CassandraIdAndPath> cassandraIds = testee
+            .listUserMailboxes(USER_INBOX_MAILBOXPATH.getNamespace(), USER_INBOX_MAILBOXPATH.getUser())
+            .collectList()
+            .block();
+
+        assertThat(cassandraIds)
+            .hasSize(2)
+            .containsOnly(INBOX_ID_AND_PATH, new CassandraIdAndPath(OUTBOX_ID, USER_OUTBOX_MAILBOXPATH));
+    }
+
+    @Test
+    void deleteShouldNotThrowWhenEmpty() {
+        testee.delete(USER_INBOX_MAILBOXPATH).block();
+    }
+
+    @Test
+    void deleteShouldDeleteTheExistingMailboxId() {
+        testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block();
+
+        testee.delete(USER_INBOX_MAILBOXPATH).block();
+
+        assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).blockOptional())
+            .isEmpty();
     }
 
     @Test

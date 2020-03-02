@@ -54,7 +54,7 @@ import com.google.common.annotations.VisibleForTesting;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
+public class CassandraMailboxPathDAOImpl {
 
     private static final int FIRST_CELL = 0;
 
@@ -135,7 +135,6 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
             .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> logGhostMailboxFailure(mailboxPath)));
     }
 
-    @Override
     public Flux<CassandraIdAndPath> listUserMailboxes(String namespace, Username user) {
         return cassandraAsyncExecutor.execute(
             selectAllForUser.bind()
@@ -151,12 +150,10 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
      * A missed read on an existing mailbox is the cause of the ghost mailbox bug. Here we log missing reads. Successful
      * reads and write operations are also added in order to allow audit in order to know if the mailbox existed.
      */
-    @Override
     public void logGhostMailboxSuccess(CassandraIdAndPath value) {
         logReadSuccess(value);
     }
 
-    @Override
     public void logGhostMailboxFailure(MailboxPath mailboxPath) {
         GhostMailbox.logger()
                 .addField(GhostMailbox.MAILBOX_NAME, mailboxPath)
@@ -187,7 +184,7 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
                 row.getString(MAILBOX_NAME)));
     }
 
-    @Override
+    @VisibleForTesting
     public Mono<Boolean> save(MailboxPath mailboxPath, CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeReturnApplied(insert.bind()
             .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser()))
@@ -195,7 +192,6 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
             .setUUID(MAILBOX_ID, mailboxId.asUuid()));
     }
 
-    @Override
     public Mono<Void> delete(MailboxPath mailboxPath) {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
             .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser()))

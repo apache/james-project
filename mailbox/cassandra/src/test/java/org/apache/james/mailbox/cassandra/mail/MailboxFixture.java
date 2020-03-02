@@ -23,21 +23,15 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxPath;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+public interface MailboxFixture {
+    Username USER = Username.of("user");
+    Username OTHER_USER = Username.of("other");
 
-public interface CassandraMailboxPathDAO {
-
-    Mono<CassandraIdAndPath> retrieveId(MailboxPath mailboxPath);
-
-    Flux<CassandraIdAndPath> listUserMailboxes(String namespace, Username user);
-
-    void logGhostMailboxSuccess(CassandraIdAndPath value);
-
-    void logGhostMailboxFailure(MailboxPath mailboxPath);
-
-    Mono<Boolean> save(MailboxPath mailboxPath, CassandraId mailboxId);
-
-    Mono<Void> delete(MailboxPath mailboxPath);
-
+    CassandraId INBOX_ID = CassandraId.timeBased();
+    CassandraId OUTBOX_ID = CassandraId.timeBased();
+    CassandraId otherMailboxId = CassandraId.timeBased();
+    MailboxPath USER_INBOX_MAILBOXPATH = MailboxPath.forUser(USER, "INBOX");
+    MailboxPath USER_OUTBOX_MAILBOXPATH = MailboxPath.forUser(USER, "OUTBOX");
+    MailboxPath OTHER_USER_MAILBOXPATH = MailboxPath.forUser(OTHER_USER, "INBOX");
+    CassandraIdAndPath INBOX_ID_AND_PATH = new CassandraIdAndPath(INBOX_ID, USER_INBOX_MAILBOXPATH);
 }
