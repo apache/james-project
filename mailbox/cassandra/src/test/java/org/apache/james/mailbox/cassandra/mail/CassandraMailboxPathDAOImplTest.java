@@ -67,12 +67,6 @@ class CassandraMailboxPathDAOImplTest {
     }
 
     @Test
-    void saveOnSecondShouldBeFalse() {
-        assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block()).isTrue();
-        assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block()).isFalse();
-    }
-
-    @Test
     void retrieveIdShouldReturnEmptyWhenEmptyData() {
         assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).blockOptional())
             .isEmpty();

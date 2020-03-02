@@ -90,16 +90,14 @@ public class CassandraMailboxPathDAOImpl {
         return session.prepare(QueryBuilder.delete()
             .from(TABLE_NAME)
             .where(eq(NAMESPACE_AND_USER, bindMarker(NAMESPACE_AND_USER)))
-            .and(eq(MAILBOX_NAME, bindMarker(MAILBOX_NAME)))
-            .ifExists());
+            .and(eq(MAILBOX_NAME, bindMarker(MAILBOX_NAME))));
     }
 
     private PreparedStatement prepareInsert(Session session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(NAMESPACE_AND_USER, bindMarker(NAMESPACE_AND_USER))
             .value(MAILBOX_NAME, bindMarker(MAILBOX_NAME))
-            .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
-            .ifNotExists());
+            .value(MAILBOX_ID, bindMarker(MAILBOX_ID)));
     }
 
     private PreparedStatement prepareSelect(Session session) {
