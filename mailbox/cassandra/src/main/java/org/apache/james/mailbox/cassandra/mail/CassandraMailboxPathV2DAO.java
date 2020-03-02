@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static com.datastax.driver.core.ConsistencyLevel.SERIAL;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -51,8 +52,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
-
-
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraUtils cassandraUtils;
     private final PreparedStatement delete;
@@ -116,7 +115,8 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
             select.bind()
                 .setString(NAMESPACE, mailboxPath.getNamespace())
                 .setString(USER, sanitizeUser(mailboxPath.getUser()))
-                .setString(MAILBOX_NAME, mailboxPath.getName()))
+                .setString(MAILBOX_NAME, mailboxPath.getName())
+                .setConsistencyLevel(SERIAL))
             .map(this::fromRowToCassandraIdAndPath)
             .map(FunctionalUtils.toFunction(this::logGhostMailboxSuccess))
             .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> logGhostMailboxFailure(mailboxPath)));
@@ -127,7 +127,8 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
         return cassandraAsyncExecutor.execute(
             selectUser.bind()
                 .setString(NAMESPACE, namespace)
-                .setString(USER, sanitizeUser(user)))
+                .setString(USER, sanitizeUser(user))
+                .setConsistencyLevel(SERIAL))
             .flatMapMany(resultSet -> cassandraUtils.convertToFlux(resultSet)
                 .map(this::fromRowToCassandraIdAndPath)
                 .map(FunctionalUtils.toFunction(this::logReadSuccess)));
