@@ -33,7 +33,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraGenericMailboxMapperTest extends MailboxMapperTest {
+class CassandraMailboxMapperGenericTest extends MailboxMapperTest {
 
     private static final CassandraModule MODULES = CassandraModule.aggregateModules(
         CassandraSchemaVersionModule.MODULE,
