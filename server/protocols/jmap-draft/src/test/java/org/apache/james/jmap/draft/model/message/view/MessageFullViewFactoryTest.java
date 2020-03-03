@@ -25,6 +25,7 @@ import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.
 import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.JACK_EMAIL;
 import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.JACOB_EMAIL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -34,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 
@@ -73,6 +75,7 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.SoftAssertions;
+import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -88,6 +91,8 @@ class MessageFullViewFactoryTest {
     private static final Instant INTERNAL_DATE = Instant.parse("2012-02-03T14:30:42Z");
     private static final String DEFAULT_PREVIEW_AS_STRING = "blabla bloblo";
     private static final Preview DEFAULT_PREVIEW = Preview.from(DEFAULT_PREVIEW_AS_STRING);
+    private static final ConditionFactory AWAIT_CONDITION = await()
+            .timeout(new org.awaitility.Duration(5, TimeUnit.SECONDS));
 
     private MessageIdManager messageIdManager;
     private MailboxSession session;
@@ -879,9 +884,10 @@ class MessageFullViewFactoryTest {
                 .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
             messageFullViewFactory.fromMessageResults(messages);
 
-            assertThat(Mono.from(fastViewProjection.retrieve(message1.getMessageId())).block())
-                .extracting(MessageFastViewPrecomputedProperties::getPreview)
-                .isEqualTo(DEFAULT_PREVIEW);
+            AWAIT_CONDITION.untilAsserted(() ->
+                assertThat(Mono.from(fastViewProjection.retrieve(message1.getMessageId())).block())
+                    .extracting(MessageFastViewPrecomputedProperties::getPreview)
+                    .isEqualTo(DEFAULT_PREVIEW));
         }
 
         @Test
