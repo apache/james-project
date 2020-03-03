@@ -103,7 +103,6 @@ public interface EventBusTestFixture {
     MailboxListener.MailboxRenamed EVENT_UNSUPPORTED_BY_LISTENER = new MailboxListener.MailboxRenamed(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, MAILBOX_PATH, EVENT_ID_2);
 
     java.time.Duration ONE_SECOND = java.time.Duration.ofSeconds(1);
-    java.time.Duration THIRTY_SECONDS = java.time.Duration.ofSeconds(30);
     java.time.Duration FIVE_HUNDRED_MS = java.time.Duration.ofMillis(500);
     MailboxId ID_1 = TEST_ID;
     MailboxId ID_2 = TestId.of(24);
@@ -118,10 +117,18 @@ public interface EventBusTestFixture {
     List<Group> ALL_GROUPS = ImmutableList.of(GROUP_A, GROUP_B, GROUP_C);
 
     ConditionFactory WAIT_CONDITION = await().timeout(Duration.FIVE_SECONDS);
+    ConditionFactory WAIT_CONDITION_LONG = await().timeout(Duration.ONE_MINUTE);
 
     static MailboxListener newListener() {
         MailboxListener listener = mock(MailboxListener.class);
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+        when(listener.isHandling(any(MailboxListener.MailboxAdded.class))).thenReturn(true);
+        return listener;
+    }
+
+    static MailboxListener newAsyncListener() {
+        MailboxListener listener = mock(MailboxListener.class);
+        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         when(listener.isHandling(any(MailboxListener.MailboxAdded.class))).thenReturn(true);
         return listener;
     }

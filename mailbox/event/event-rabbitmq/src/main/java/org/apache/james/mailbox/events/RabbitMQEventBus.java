@@ -29,6 +29,7 @@ import org.apache.james.event.json.EventSerializer;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
@@ -84,6 +85,27 @@ public class RabbitMQEventBus implements EventBus, Startable {
             keyRegistrationHandler.start();
             isRunning = true;
         }
+    }
+
+    @VisibleForTesting
+    void startWithoutStartingKeyRegistrationHandler() {
+        if (!isRunning && !isStopping) {
+
+            LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
+            keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, channelPool, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor, retryBackoff);
+            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, channelPool, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
+            eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, channelPool.getSender(), localListenerRegistry, mailboxListenerExecutor);
+
+            keyRegistrationHandler.declareQueue();
+
+            eventDispatcher.start();
+            isRunning = true;
+        }
+    }
+
+    @VisibleForTesting
+    void startKeyRegistrationHandler() {
+        keyRegistrationHandler.start();
     }
 
     @PreDestroy

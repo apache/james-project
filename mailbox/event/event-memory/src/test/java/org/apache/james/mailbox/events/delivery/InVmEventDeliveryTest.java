@@ -215,7 +215,13 @@ class InVmEventDeliveryTest {
         @Test
         void failureHandlerShouldWorkWhenRetryFails() {
             MailboxListenerCountingSuccessfulExecution listener = newListener();
+            //do throw  RetryBackoffConfiguration.DEFAULT.DEFAULT_MAX_RETRIES + 1 times
             doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
                 .doThrow(new RuntimeException())
                 .doThrow(new RuntimeException())
                 .doThrow(new RuntimeException())

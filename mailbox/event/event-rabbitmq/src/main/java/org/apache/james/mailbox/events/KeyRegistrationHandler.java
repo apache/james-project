@@ -28,6 +28,7 @@ import static org.apache.james.mailbox.events.RetryBackoffConfiguration.FOREVER;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
@@ -38,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Delivery;
 
@@ -63,6 +65,7 @@ class KeyRegistrationHandler {
     private final MailboxListenerExecutor mailboxListenerExecutor;
     private final RetryBackoffConfiguration retryBackoff;
     private Optional<Disposable> receiverSubscriber;
+    private AtomicBoolean registrationQueueInitialized = new AtomicBoolean(false);
 
     KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer,
                            Sender sender, ReceiverProvider receiverProvider,
@@ -78,22 +81,35 @@ class KeyRegistrationHandler {
         this.retryBackoff = retryBackoff;
         this.registrationQueue = new RegistrationQueueName();
         this.registrationBinder = new RegistrationBinder(sender, registrationQueue);
+        this.receiverSubscriber = Optional.empty();
+
     }
 
     void start() {
+        declareQueue();
+
+        receiverSubscriber = Optional.of(receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
+            .subscribeOn(Schedulers.parallel())
+            .flatMap(this::handleDelivery)
+            .subscribe());
+    }
+
+    @VisibleForTesting
+    void declareQueue() {
         sender.declareQueue(QueueSpecification.queue(eventBusId.asString())
             .durable(DURABLE)
             .exclusive(!EXCLUSIVE)
             .autoDelete(!AUTO_DELETE)
             .arguments(NO_ARGUMENTS))
             .map(AMQP.Queue.DeclareOk::getQueue)
-            .doOnSuccess(registrationQueue::initialize)
+            .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor())
+            .doOnSuccess(queueName -> {
+                if (!registrationQueueInitialized.get()) {
+                    registrationQueue.initialize(queueName);
+                    registrationQueueInitialized.set(true);
+                }
+            })
             .block();
-
-        receiverSubscriber = Optional.of(receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
-            .subscribeOn(Schedulers.parallel())
-            .flatMap(this::handleDelivery)
-            .subscribe());
     }
 
     void stop() {

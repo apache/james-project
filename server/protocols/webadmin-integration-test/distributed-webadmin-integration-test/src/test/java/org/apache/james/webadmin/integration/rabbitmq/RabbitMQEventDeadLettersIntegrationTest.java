@@ -179,7 +179,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
     //This value is duplicated from default configuration to ensure we keep the same behavior over time
     //unless we really want to change that default value
-    private static final int MAX_RETRIES = 3;
+    private static final int MAX_RETRIES = 8;
 
     private static final String DOMAIN = "domain.tld";
     private static final String BOB = "bob@" + DOMAIN;
@@ -220,7 +220,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     private String retrieveFirstFailedInsertionId() {
-        calmlyAwait.atMost(TEN_SECONDS)
+        calmlyAwait.atMost(ONE_MINUTE)
             .untilAsserted(() ->
                 when()
                     .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)

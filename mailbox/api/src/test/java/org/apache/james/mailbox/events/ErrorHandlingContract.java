@@ -26,6 +26,7 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
+import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION_LONG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
@@ -107,8 +108,13 @@ interface ErrorHandlingContract extends EventBusContract {
     @Test
     default void listenerShouldReceiveWhenFailsEqualsMaxRetries() {
         EventCollector eventCollector = eventCollector();
-
+        //do throw  RetryBackoffConfiguration.DEFAULT.DEFAULT_MAX_RETRIES
         doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doCallRealMethod()
@@ -117,7 +123,7 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(eventCollector, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        WAIT_CONDITION
+        WAIT_CONDITION_LONG
             .untilAsserted(() -> assertThat(eventCollector.getEvents()).hasSize(1));
     }
 
@@ -125,7 +131,13 @@ interface ErrorHandlingContract extends EventBusContract {
     default void listenerShouldNotReceiveWhenFailsGreaterThanMaxRetries() throws Exception {
         EventCollector eventCollector = eventCollector();
 
+        //do throw  RetryBackoffConfiguration.DEFAULT.DEFAULT_MAX_RETRIES + 1 times
         doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
@@ -147,9 +159,10 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(throwingListener, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        TimeUnit.SECONDS.sleep(5);
+        TimeUnit.MINUTES.sleep(1);
         int numberOfCallsAfterExceedMaxRetries = throwingListener.timeElapsed.size();
-        TimeUnit.SECONDS.sleep(5);
+        TimeUnit.MINUTES.sleep(1);
+
 
         assertThat(throwingListener.timeElapsed.size())
             .isEqualTo(numberOfCallsAfterExceedMaxRetries);
@@ -162,10 +175,10 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(throwingListener, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        TimeUnit.SECONDS.sleep(5);
+        TimeUnit.MINUTES.sleep(1);
         SoftAssertions.assertSoftly(softly -> {
             List<Instant> timeElapsed = throwingListener.timeElapsed;
-            softly.assertThat(timeElapsed).hasSize(4);
+            softly.assertThat(timeElapsed).hasSize(RetryBackoffConfiguration.DEFAULT.DEFAULT_MAX_RETRIES + 1);
 
             long minFirstDelayAfter = 100; // first backOff
             long minSecondDelayAfter = 50; // 50 * jitter factor (50 * 0.5)
@@ -207,7 +220,13 @@ interface ErrorHandlingContract extends EventBusContract {
     default void deadLettersIsNotAppliedForKeyRegistrations() throws Exception {
         EventCollector eventCollector = eventCollector();
 
+        //do throw  RetryBackoffConfiguration.DEFAULT.DEFAULT_MAX_RETRIES + 1 times
         doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
@@ -247,8 +266,13 @@ interface ErrorHandlingContract extends EventBusContract {
     @Test
     default void deadLetterShouldStoreWhenDispatchFailsGreaterThanMaxRetries() {
         EventCollector eventCollector = eventCollector();
-
+        //do throw  RetryBackoffConfiguration.DEFAULT.DEFAULT_MAX_RETRIES + 1 times
         doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
@@ -258,7 +282,7 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(eventCollector, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        WAIT_CONDITION.untilAsserted(() -> assertThat(deadLetter().failedIds(GROUP_A)
+        WAIT_CONDITION_LONG.untilAsserted(() -> assertThat(deadLetter().failedIds(GROUP_A)
                 .flatMap(insertionId -> deadLetter().failedEvent(GROUP_A, insertionId))
                 .toIterable())
             .containsOnly(EVENT));
@@ -270,7 +294,13 @@ interface ErrorHandlingContract extends EventBusContract {
     default void deadLetterShouldStoreWhenRedeliverFailsGreaterThanMaxRetries() {
         EventCollector eventCollector = eventCollector();
 
+        //do throw  RetryBackoffConfiguration.DEFAULT.DEFAULT_MAX_RETRIES + 1 times
         doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
@@ -280,7 +310,7 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(eventCollector, GROUP_A);
         eventBus().reDeliver(GROUP_A, EVENT).block();
 
-        WAIT_CONDITION.untilAsserted(() ->
+        WAIT_CONDITION_LONG.untilAsserted(() ->
                 assertThat(
                         deadLetter()
                             .failedIds(GROUP_A)
@@ -295,7 +325,14 @@ interface ErrorHandlingContract extends EventBusContract {
     default void retryShouldDeliverAsManyTimesAsInitialDeliveryAttempt() {
         EventCollector eventCollector = eventCollector();
 
+        //do throw  RetryBackoffConfiguration.DEFAULT.DEFAULT_MAX_RETRIES + 1 times
         doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doCallRealMethod()
@@ -304,7 +341,7 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(eventCollector, GROUP_A);
         eventBus().reDeliver(GROUP_A, EVENT).block();
 
-        WAIT_CONDITION.untilAsserted(() -> assertThat(eventCollector.getEvents()).isNotEmpty());
+        WAIT_CONDITION_LONG.untilAsserted(() -> assertThat(eventCollector.getEvents()).isNotEmpty());
     }
 
     @Test
