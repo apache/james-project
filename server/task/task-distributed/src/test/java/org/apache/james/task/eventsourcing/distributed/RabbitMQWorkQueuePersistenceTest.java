@@ -21,8 +21,6 @@ package org.apache.james.task.eventsourcing.distributed;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.mockito.Mockito.spy;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
@@ -33,6 +31,7 @@ import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskWithId;
+import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,7 +71,6 @@ class RabbitMQWorkQueuePersistenceTest {
     @Test
     void submittedMessageShouldSurviveRabbitMQRestart() throws Exception {
         Task TASK = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
-
         TaskWithId TASK_WITH_ID = new TaskWithId(TASK_ID, TASK);
 
         testee.submit(TASK_WITH_ID);
@@ -81,27 +79,19 @@ class RabbitMQWorkQueuePersistenceTest {
         Thread.sleep(500);
         testee.close();
 
-        restartRabbitMQ();
+        rabbitMQExtension.getRabbitMQ().restart();
 
-        startNewWorkqueue();
+        startNewConsumingWorkqueue();
 
-        await().atMost(FIVE_HUNDRED_MILLISECONDS).until(() -> !worker.results.isEmpty());
+        await().atMost(Duration.ONE_MINUTE).until(() -> !worker.results.isEmpty());
 
         assertThat(worker.tasks).containsExactly(TASK_WITH_ID);
         assertThat(worker.results).containsExactly(Task.Result.COMPLETED);
     }
 
-    private void startNewWorkqueue() {
+    private void startNewConsumingWorkqueue() {
         worker = spy(new ImmediateWorker());
         testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getRabbitChannelPool(), serializer);
         testee.start();
-    }
-
-    private void restartRabbitMQ() throws Exception {
-        rabbitMQExtension.getRabbitMQ().stopApp();
-        rabbitMQExtension.getRabbitMQ().startApp();
-        //wait until healthcheck is ok
-        await().atMost(FIVE_SECONDS).until(() -> rabbitMQExtension.managementAPI().listQueues().size() > 0);
-        rabbitMQExtension.getRabbitChannelPool().start();
     }
 }

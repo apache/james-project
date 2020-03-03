@@ -23,6 +23,7 @@ package org.apache.james.task.eventsourcing.distributed;
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -69,6 +70,10 @@ public class RabbitMQWorkQueue implements WorkQueue {
     private static final String CANCEL_REQUESTS_QUEUE_NAME_PREFIX = "taskManagerCancelRequestsQueue";
     public static final String TASK_ID = "taskId";
 
+    public static final int NUM_RETRIES = 8;
+    public static final Duration FIRST_BACKOFF = Duration.ofMillis(100);
+    public static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
+
     private final TaskManagerWorker worker;
     private final ReactorRabbitMQChannelPool channelPool;
     private final JsonTaskSerializer taskSerializer;
@@ -99,9 +104,20 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     @VisibleForTesting
     void declareQueue() {
-        channelPool.getSender().declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
-        channelPool.getSender().declare(QueueSpecification.queue(QUEUE_NAME).durable(true).arguments(Constants.WITH_SINGLE_ACTIVE_CONSUMER)).block();
-        channelPool.getSender().bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, QUEUE_NAME)).block();
+        Mono<AMQP.Exchange.DeclareOk> declareExchange = channelPool.getSender()
+            .declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME))
+            .retryBackoff(NUM_RETRIES, FIRST_BACKOFF, FOREVER);
+        Mono<AMQP.Queue.DeclareOk> declareQueue = channelPool.getSender()
+            .declare(QueueSpecification.queue(QUEUE_NAME).durable(true).arguments(Constants.WITH_SINGLE_ACTIVE_CONSUMER))
+            .retryBackoff(NUM_RETRIES, FIRST_BACKOFF, FOREVER);
+        Mono<AMQP.Queue.BindOk> bindQueueToExchange = channelPool.getSender()
+            .bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, QUEUE_NAME))
+            .retryBackoff(NUM_RETRIES, FIRST_BACKOFF, FOREVER);
+
+        declareExchange
+            .then(declareQueue)
+            .then(bindQueueToExchange)
+            .block();
     }
 
     private void consumeWorkqueue() {
