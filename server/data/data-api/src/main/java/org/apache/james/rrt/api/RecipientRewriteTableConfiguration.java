@@ -31,9 +31,12 @@ import com.google.common.base.Preconditions;
 
 public class RecipientRewriteTableConfiguration {
 
-    public static final boolean RECURSIVE_MAPPING_ENABLE = true;
+    public static final boolean RECURSIVE_MAPPING_ENABLED = true;
     public static final int DEFAULT_ENABLED_MAPPING_LIMIT = 10;
     public static final int DISABLED_MAPPING_LIMIT = 0;
+
+    public static final RecipientRewriteTableConfiguration DEFAULT_ENABLED = new RecipientRewriteTableConfiguration(RECURSIVE_MAPPING_ENABLED, DEFAULT_ENABLED_MAPPING_LIMIT);
+    public static final RecipientRewriteTableConfiguration DISABLED = new RecipientRewriteTableConfiguration(!RECURSIVE_MAPPING_ENABLED, DISABLED_MAPPING_LIMIT);
 
     // The maximum mappings which will process before throwing exception
     private final int mappingLimit;
@@ -48,7 +51,7 @@ public class RecipientRewriteTableConfiguration {
     }
 
     public static RecipientRewriteTableConfiguration fromConfiguration(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
-        boolean recursive = config.getBoolean("recursiveMapping", RECURSIVE_MAPPING_ENABLE);
+        boolean recursive = config.getBoolean("recursiveMapping", RECURSIVE_MAPPING_ENABLED);
         int mappingLimit;
         if (recursive) {
             mappingLimit = config.getInt("mappingLimit", DEFAULT_ENABLED_MAPPING_LIMIT);

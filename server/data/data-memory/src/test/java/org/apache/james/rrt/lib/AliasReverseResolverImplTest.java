@@ -19,8 +19,6 @@
 
 package org.apache.james.rrt.lib;
 
-import static org.apache.james.rrt.api.RecipientRewriteTableConfiguration.DEFAULT_ENABLED_MAPPING_LIMIT;
-import static org.apache.james.rrt.api.RecipientRewriteTableConfiguration.RECURSIVE_MAPPING_ENABLE;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.core.Domain;
@@ -50,7 +48,7 @@ public class AliasReverseResolverImplTest implements AliasReverseResolverContrac
         domainList.addDomain(DOMAIN);
         domainList.addDomain(OTHER_DOMAIN);
         recipientRewriteTable.setDomainList(domainList);
-        recipientRewriteTable.setConfiguration(new RecipientRewriteTableConfiguration(RECURSIVE_MAPPING_ENABLE, DEFAULT_ENABLED_MAPPING_LIMIT));
+        recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
 
         this.aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
     }

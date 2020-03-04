@@ -73,6 +73,7 @@ import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.MappingSource;
@@ -279,6 +280,7 @@ public class SMTPServerTest {
         dnsServer = new AlterableDNSServer();
 
         rewriteTable = new MemoryRecipientRewriteTable();
+        rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         aliasReverseResolver = new AliasReverseResolverImpl(rewriteTable);
         canSendFrom = new CanSendFromImpl(rewriteTable, aliasReverseResolver);
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());

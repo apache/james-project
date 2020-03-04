@@ -42,12 +42,10 @@ import com.github.steveash.guavate.Guavate;
 
 public class AliasReverseResolverImpl implements AliasReverseResolver {
     private final RecipientRewriteTable recipientRewriteTable;
-    private final int mappingLimit;
 
     @Inject
     public AliasReverseResolverImpl(RecipientRewriteTable recipientRewriteTable) {
         this.recipientRewriteTable = recipientRewriteTable;
-        this.mappingLimit = recipientRewriteTable.getConfiguration().getMappingLimit();
     }
 
     @Override
@@ -66,7 +64,7 @@ public class AliasReverseResolverImpl implements AliasReverseResolver {
     private Stream<Username> relatedAliases(Username user) {
         return StreamUtils.iterate(
             user,
-            (long) mappingLimit,
+            getMappingLimit(),
             Throwing.<Username, Stream<Username>>function(targetUser ->
                 recipientRewriteTable
                     .listSources(Mapping.alias(targetUser.asString()))
@@ -96,12 +94,16 @@ public class AliasReverseResolverImpl implements AliasReverseResolver {
     private Stream<Domain> fetchDomains(Domain domain) {
         return StreamUtils.iterate(
             domain,
-            (long) mappingLimit,
+            getMappingLimit(),
             Throwing.<Domain, Stream<Domain>>function(targetDomain ->
                 recipientRewriteTable
                     .listSources(Mapping.domain(targetDomain))
                     .map(MappingSource::asDomain)
                     .flatMap(OptionalUtils::toStream)).sneakyThrow()
         );
+    }
+
+    private long getMappingLimit() {
+        return recipientRewriteTable.getConfiguration().getMappingLimit();
     }
 }

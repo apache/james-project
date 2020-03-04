@@ -43,6 +43,7 @@ import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.MappingSource;
@@ -110,6 +111,7 @@ class UserRoutesTest {
             this.domainList = domainList;
             this.recipientRewriteTable = new MemoryRecipientRewriteTable();
             this.recipientRewriteTable.setDomainList(domainList);
+            this.recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
             this.aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
             this.canSendFrom = new CanSendFromImpl(recipientRewriteTable, aliasReverseResolver);
         }

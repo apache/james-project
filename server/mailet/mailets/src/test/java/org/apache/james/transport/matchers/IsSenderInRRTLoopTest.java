@@ -30,6 +30,7 @@ import java.util.Collection;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.mailet.base.test.FakeMail;
@@ -47,6 +48,7 @@ public class IsSenderInRRTLoopTest {
         SimpleDomainList domainList = new SimpleDomainList();
         domainList.addDomain(JAMES_LOCAL_DOMAIN);
         ((MemoryRecipientRewriteTable) recipientRewriteTable).setDomainList(domainList);
+        ((MemoryRecipientRewriteTable) recipientRewriteTable).setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         testee = new IsSenderInRRTLoop(recipientRewriteTable);
     }
 

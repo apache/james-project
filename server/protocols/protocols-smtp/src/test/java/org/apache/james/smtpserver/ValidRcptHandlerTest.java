@@ -34,6 +34,7 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
@@ -68,7 +69,7 @@ public class ValidRcptHandlerTest {
 
         memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
         memoryRecipientRewriteTable.setDomainList(memoryDomainList);
-
+        memoryRecipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         handler = new ValidRcptHandler(users, memoryRecipientRewriteTable, memoryDomainList);
 
         validUserEmail = new MailAddress(VALID_USER.asString() + "@localhost");

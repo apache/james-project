@@ -73,6 +73,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.rrt.api.CanSendFrom;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.lib.AliasReverseResolverImpl;
@@ -156,6 +157,7 @@ public class SetMessagesCreationProcessorTest {
         domainList.addDomain(Domain.of("example.com"));
         domainList.addDomain(Domain.of("other.org"));
         recipientRewriteTable.setDomainList(domainList);
+        recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
         canSendFrom = new CanSendFromImpl(recipientRewriteTable, aliasReverseResolver);
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor,

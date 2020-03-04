@@ -42,7 +42,7 @@ public class RewriteTablesStepdefs {
     public void setUp(Supplier<AbstractRecipientRewriteTable> recipientRewriteTableSupplier) {
         this.recipientRewriteTableSupplier = recipientRewriteTableSupplier;
         this.rewriteTable = this.recipientRewriteTableSupplier.get();
-        this.rewriteTable.setConfiguration(new RecipientRewriteTableConfiguration(true, 10));
+        this.rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
     }
 
     @Given("store \"([^\"]*)\" regexp mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
@@ -108,7 +108,7 @@ public class RewriteTablesStepdefs {
     @Given("recursive mapping is disable")
     public void disableRecursiveMapping() {
         this.rewriteTable = this.recipientRewriteTableSupplier.get();
-        this.rewriteTable.setConfiguration(new RecipientRewriteTableConfiguration(false, 0));
+        this.rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DISABLED);
     }
 
     @Given("recursive mapping is enable")
