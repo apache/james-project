@@ -121,6 +121,7 @@ public class NettyServer extends AbstractAsyncServer {
             maxCurConnections,
             maxCurConnectionsPerIP,
             group,
+            secure != null ? secure.getEnabledCipherSuites() : null,
             eHandler,
             getFrameHandlerFactory(),
             hashedWheelTimer) {
