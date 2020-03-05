@@ -40,7 +40,7 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [Cassandra Schema upgrades](#Cassandra_Schema_upgrades)
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
  - [Creating address aliases](#Creating_address_aliases)
- - [Creating address domain](#Creating_address_domain)
+ - [Creating address domain aliases](#Creating_address_domain_aliases)
  - [Creating address forwards](#Creating_address_forwards)
  - [Creating address group](#Creating_address_group)
  - [Creating regex mapping](#Creating_regex_mapping)
@@ -1765,7 +1765,7 @@ Response codes:
  - 204: OK
  - 400: Alias structure or member is not valid
 
-## Creating address domain
+## Creating address domain aliases
 
 You can use **webadmin** to define domain mappings.
 
