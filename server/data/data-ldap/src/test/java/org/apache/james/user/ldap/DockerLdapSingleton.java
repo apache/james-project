@@ -26,6 +26,8 @@ public class DockerLdapSingleton {
     public static final String PASSWORD = "secret";
     public static final String DOMAIN = "james.org";
     public static final String ADMIN_PASSWORD = "mysecretpassword";
+    public static final String ADMIN_LOCAL_PART = "admin";
+    public static final Username ADMIN = Username.fromLocalPartWithDomain(ADMIN_LOCAL_PART, DOMAIN);
 
     public static final LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
         .domain(DOMAIN)

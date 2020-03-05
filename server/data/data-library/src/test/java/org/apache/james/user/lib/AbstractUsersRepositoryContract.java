@@ -88,7 +88,7 @@ public interface AbstractUsersRepositoryContract {
     }
 
     class TestSystem {
-        static final Domain DOMAIN = Domain.of("domain");
+        static final Domain DOMAIN = Domain.of("james.org");
 
         private final boolean supportVirtualHosting;
         private final SimpleDomainList domainList;
@@ -122,18 +122,22 @@ public interface AbstractUsersRepositoryContract {
         public SimpleDomainList getDomainList() {
             return domainList;
         }
+
+        public Username getAdmin() {
+            return admin;
+        }
     }
 
     interface WithVirtualHostingContract extends AbstractUsersRepositoryContract {
 
         @Test
         default void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain(TestSystem testSystem) throws Exception {
-            testSystem.domainList.addDomain(Domain.of("jAmEs.oRg"));
+            testSystem.domainList.addDomain(Domain.of("Domain.OrG"));
             String username = "myuser";
             String password = "password";
-            testee().addUser(Username.of(username + "@jAmEs.oRg"), password);
+            testee().addUser(Username.of(username + "@Domain.OrG"), password);
 
-            boolean actual = testee().test(Username.of(username + "@james.org"), password);
+            boolean actual = testee().test(Username.of(username + "@domain.org"), password);
 
             assertThat(actual).isTrue();
         }
