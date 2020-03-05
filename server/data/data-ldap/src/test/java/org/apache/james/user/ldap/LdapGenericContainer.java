@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
+import java.util.Optional;
+
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.RateLimiters;
 import org.junit.rules.ExternalResource;
@@ -36,11 +38,16 @@ public class LdapGenericContainer extends ExternalResource {
     }
 
     public static class Builder {
-
+        private Optional<String> dockerFilePrefix = Optional.empty();
         private String domain;
         private String password;
 
         private Builder() {
+        }
+
+        public Builder dockerFilePrefix(String prefix) {
+            this.dockerFilePrefix = Optional.of(prefix);
+            return this;
         }
 
         public Builder domain(String domain) {
@@ -62,8 +69,8 @@ public class LdapGenericContainer extends ExternalResource {
         private DockerContainer createContainer() {
             return DockerContainer.fromDockerfile(
                 new ImageFromDockerfile()
-                    .withFileFromClasspath("populate.ldif", "ldif-files/populate.ldif")
-                    .withFileFromClasspath("Dockerfile", "ldif-files/Dockerfile"))
+                    .withFileFromClasspath("populate.ldif", dockerFilePrefix.orElse("") + "ldif-files/populate.ldif")
+                    .withFileFromClasspath("Dockerfile", dockerFilePrefix.orElse("") + "ldif-files/Dockerfile"))
                 .withAffinityToContainer()
                 .withEnv("SLAPD_DOMAIN", domain)
                 .withEnv("SLAPD_PASSWORD", password)
