@@ -81,6 +81,10 @@ public interface AbstractUsersRepositoryTest {
         public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
             return testSystem;
         }
+
+        public boolean isSupportVirtualHosting() {
+            return supportVirtualHosting;
+        }
     }
 
     class TestSystem {
