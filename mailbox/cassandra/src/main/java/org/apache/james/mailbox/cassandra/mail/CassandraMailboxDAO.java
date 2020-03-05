@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static com.datastax.driver.core.ConsistencyLevel.QUORUM;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -135,7 +136,8 @@ public class CassandraMailboxDAO {
 
     public Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         return executor.executeSingleRow(readStatement.bind()
-            .setUUID(ID, mailboxId.asUuid()))
+            .setUUID(ID, mailboxId.asUuid())
+            .setConsistencyLevel(QUORUM))
             .map(row -> mailboxFromRow(row, mailboxId));
     }
 

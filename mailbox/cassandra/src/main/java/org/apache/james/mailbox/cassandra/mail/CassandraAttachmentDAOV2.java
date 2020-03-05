@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static com.datastax.driver.core.ConsistencyLevel.QUORUM;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -154,7 +155,8 @@ public class CassandraAttachmentDAOV2 {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
-                .setUUID(ID_AS_UUID, attachmentId.asUUID()))
+                .setUUID(ID_AS_UUID, attachmentId.asUUID())
+                .setConsistencyLevel(QUORUM))
             .map(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory));
     }
 
