@@ -37,31 +37,28 @@ import org.apache.james.user.lib.model.DefaultUser;
 public class MemoryUsersRepository extends AbstractUsersRepository {
 
     public static MemoryUsersRepository withVirtualHosting(DomainList domainList) {
-        return new MemoryUsersRepository(domainList, true);
+         MemoryUsersRepository userRepository = new MemoryUsersRepository(domainList);
+         userRepository.setEnableVirtualHosting(true);
+         return userRepository;
     }
 
     public static MemoryUsersRepository withoutVirtualHosting(DomainList domainList) {
-        return new MemoryUsersRepository(domainList, false);
+        MemoryUsersRepository userRepository = new MemoryUsersRepository(domainList);
+        userRepository.setEnableVirtualHosting(false);
+        return userRepository;
     }
     
     private final Map<String, User> userByName;
-    private final boolean supportVirtualHosting;
     private String algo;
 
-    private MemoryUsersRepository(DomainList domainList, boolean supportVirtualHosting) {
+    private MemoryUsersRepository(DomainList domainList) {
         super(domainList);
         this.userByName = new HashMap<>();
         this.algo = "MD5";
-        this.supportVirtualHosting = supportVirtualHosting;
     }
 
     public void clear() {
         userByName.clear();
-    }
-
-    @Override
-    public boolean supportVirtualHosting() {
-        return supportVirtualHosting;
     }
 
     @Override
