@@ -31,30 +31,36 @@ import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
+    @RegisterExtension
+    static UserRepositoryExtension extension = new UserRepositoryExtension(true);
+
+    private MemoryUsersRepository memoryUsersRepository;
+
     @BeforeEach
-    void setup() throws Exception {
-        super.setUp();
+    void setUp(TestSystem testSystem) {
+        memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(testSystem.getDomainList());
     }
-    
+
     @Override
-    protected AbstractUsersRepository getUsersRepository() {
-        return MemoryUsersRepository.withVirtualHosting(domainList);
+    protected AbstractUsersRepository testee() {
+        return memoryUsersRepository;
     }
 
     @Test
-    void assertValidShouldThrowWhenDomainPartAndNoVirtualHosting() {
-        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList);
+    void assertValidShouldThrowWhenDomainPartAndNoVirtualHosting(TestSystem testSystem) {
+        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(testSystem.getDomainList());
 
         assertThatThrownBy(() -> memoryUsersRepository.assertValid(Username.of("user@domain.tld")))
             .isInstanceOf(UsersRepositoryException.class);
     }
 
     @Test
-    void assertValidShouldThrowWhenNoDomainPartAndVirtualHosting() {
-        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+    void assertValidShouldThrowWhenNoDomainPartAndVirtualHosting(TestSystem testSystem) {
+        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(testSystem.getDomainList());
 
         assertThatThrownBy(() -> memoryUsersRepository.assertValid(Username.of("user")))
             .isInstanceOf(UsersRepositoryException.class);
@@ -90,8 +96,8 @@ class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
     }
 
     @Test
-    void assertValidShouldNotThrowWhenNoDomainPartAndNoVirtualHosting() {
-        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList);
+    void assertValidShouldNotThrowWhenNoDomainPartAndNoVirtualHosting(TestSystem testSystem) {
+        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(testSystem.getDomainList());
 
         assertThatCode(() -> memoryUsersRepository.assertValid(Username.of("user")))
             .doesNotThrowAnyException();

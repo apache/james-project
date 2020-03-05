@@ -30,13 +30,17 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
-import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -44,80 +48,100 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractUsersRepositoryTest {
 
-    static final Domain DOMAIN = Domain.of("domain");
+    protected static class UserRepositoryExtension implements BeforeEachCallback, ParameterResolver {
 
-    protected AbstractUsersRepository usersRepository;
-    protected SimpleDomainList domainList;
+        private final boolean supportVirtualHosting;
+        private TestSystem testSystem;
 
-    /**
-     * Create the repository to be tested.
-     *
-     * @return the user repository
-     * @throws Exception
-     */
-    protected abstract AbstractUsersRepository getUsersRepository() throws Exception;
+        public UserRepositoryExtension(boolean supportVirtualHosting) {
+            this.supportVirtualHosting = supportVirtualHosting;
+        }
 
-    Username user1;
-    Username user1CaseVariation;
-    Username user2;
-    Username user3;
-    Username admin;
-    Username adminCaseVariation;
+        @Override
+        public void beforeEach(ExtensionContext extensionContext) throws Exception {
+            testSystem = new TestSystem(supportVirtualHosting);
+        }
 
-    protected void setUp() throws Exception {
-        domainList = new SimpleDomainList();
-        domainList.addDomain(DOMAIN);
-        this.usersRepository = getUsersRepository();
-        user1 = login("username");
-        user2 = login("username2");
-        user3 = login("username3");
-        user1CaseVariation = login("uSeRnaMe");
-        admin = login("admin");
-        adminCaseVariation = login("adMin");
-    }
+        @Override
+        public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+            return parameterContext.getParameter().getType() == TestSystem.class;
+        }
 
-    protected void tearDown() throws Exception {
-        LifecycleUtil.dispose(this.usersRepository);
-    }
-    
-    private Username login(String login) {
-        if (usersRepository.supportVirtualHosting()) {
-            return Username.of(login + '@' + DOMAIN.name());
-        } else {
-            return Username.of(login);
+        @Override
+        public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+            return testSystem;
         }
     }
+
+    protected static class TestSystem {
+        static final Domain DOMAIN = Domain.of("domain");
+
+        private final boolean supportVirtualHosting;
+        private final SimpleDomainList domainList;
+        private final Username user1;
+        private final Username user1CaseVariation;
+        private final Username user2;
+        private final Username user3;
+        private final Username admin;
+        private final Username adminCaseVariation;
+
+        TestSystem(boolean supportVirtualHosting) throws Exception {
+            this.supportVirtualHosting = supportVirtualHosting;
+            domainList = new SimpleDomainList();
+            domainList.addDomain(DOMAIN);
+            user1 = toUsername("username");
+            user2 = toUsername("username2");
+            user3 = toUsername("username3");
+            user1CaseVariation = toUsername("uSeRnaMe");
+            admin = toUsername("testSystem.admin");
+            adminCaseVariation = toUsername("testSystem.admin");
+        }
+
+        private Username toUsername(String login) {
+            if (supportVirtualHosting) {
+                return Username.of(login + '@' + DOMAIN.name());
+            } else {
+                return Username.of(login);
+            }
+        }
+
+        public SimpleDomainList getDomainList() {
+            return domainList;
+        }
+    }
+
+    protected abstract AbstractUsersRepository testee();
     
     @Test
     void countUsersShouldReturnZeroWhenEmptyRepository() throws UsersRepositoryException {
         //Given
         int expected = 0;
         //When
-        int actual = usersRepository.countUsers();
+        int actual = testee().countUsers();
         //Then
         assertThat(actual).isEqualTo(expected);
     }
     
     @Test
-    void countUsersShouldReturnNumberOfUsersWhenNotEmptyRepository() throws UsersRepositoryException {
+    void countUsersShouldReturnNumberOfUsersWhenNotEmptyRepository(TestSystem testSystem) throws UsersRepositoryException {
         //Given
         ArrayList<Username> keys = new ArrayList<>(3);
-        keys.add(user1);
-        keys.add(user2);
-        keys.add(user3);
+        keys.add(testSystem.user1);
+        keys.add(testSystem.user2);
+        keys.add(testSystem.user3);
         for (Username username : keys) {
-            usersRepository.addUser(username, username.asString());
+            testee().addUser(username, username.asString());
         }
         //When
-        int actual = usersRepository.countUsers();
+        int actual = testee().countUsers();
         //Then
         assertThat(actual).isEqualTo(keys.size());
     }
     
     @Test
-    void listShouldReturnEmptyIteratorWhenEmptyRepository() throws UsersRepositoryException {
+    void listShouldReturnEmptyIteratorWhenEmptyRepository(TestSystem testSystem) throws UsersRepositoryException {
         //When
-        Iterator<Username> actual = usersRepository.list();
+        Iterator<Username> actual = testee().list();
         //Then
         assertThat(actual)
             .toIterable()
@@ -125,400 +149,400 @@ public abstract class AbstractUsersRepositoryTest {
     }
     
     @Test
-    void listShouldReturnExactlyUsersInRepository() throws UsersRepositoryException {
+    void listShouldReturnExactlyUsersInRepository(TestSystem testSystem) throws UsersRepositoryException {
         //Given
         ArrayList<Username> keys = new ArrayList<>(3);
-        keys.add(user1);
-        keys.add(user2);
-        keys.add(user3);
+        keys.add(testSystem.user1);
+        keys.add(testSystem.user2);
+        keys.add(testSystem.user3);
         for (Username username : keys) {
-            usersRepository.addUser(username, username.asString());
+            testee().addUser(username, username.asString());
         }
         //When
-        Iterator<Username> actual = usersRepository.list();
+        Iterator<Username> actual = testee().list();
         //Then
         assertThat(actual)
             .toIterable()
-            .containsOnly(user1, user2, user3);
+            .containsOnly(testSystem.user1, testSystem.user2, testSystem.user3);
     }
     
     @Test
-    void addUserShouldAddAUserWhenEmptyRepository() throws UsersRepositoryException {
+    void addUserShouldAddAUserWhenEmptyRepository(TestSystem testSystem) throws UsersRepositoryException {
         //When
-        usersRepository.addUser(user2, "password2");
+        testee().addUser(testSystem.user2, "password2");
         //Then
-        assertThat(usersRepository.contains(user2)).isTrue();
+        assertThat(testee().contains(testSystem.user2)).isTrue();
     }
 
     @Test
-    void containsShouldPreserveCaseVariation() throws UsersRepositoryException {
-        usersRepository.addUser(user1CaseVariation, "password2");
+    void containsShouldPreserveCaseVariation(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1CaseVariation, "password2");
 
-        assertThat(usersRepository.contains(user1CaseVariation)).isTrue();
+        assertThat(testee().contains(testSystem.user1CaseVariation)).isTrue();
     }
 
     @Test
-    void containsShouldBeCaseInsentive() throws UsersRepositoryException {
-        usersRepository.addUser(user1CaseVariation, "password2");
+    void containsShouldBeCaseInsentive(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1CaseVariation, "password2");
 
-        assertThat(usersRepository.contains(user1)).isTrue();
+        assertThat(testee().contains(testSystem.user1)).isTrue();
     }
 
     @Test
-    void containsShouldBeCaseInsentiveWhenOriginalValueLowerCased() throws UsersRepositoryException {
-        usersRepository.addUser(user1, "password2");
+    void containsShouldBeCaseInsentiveWhenOriginalValueLowerCased(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1, "password2");
 
-        assertThat(usersRepository.contains(user1CaseVariation)).isTrue();
+        assertThat(testee().contains(testSystem.user1CaseVariation)).isTrue();
     }
 
     @Test
-    void addUserShouldDisableCaseVariationWhenOriginalValueLowerCased() throws UsersRepositoryException {
-        usersRepository.addUser(user1, "password2");
+    void addUserShouldDisableCaseVariationWhenOriginalValueLowerCased(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1, "password2");
 
-        assertThatThrownBy(() -> usersRepository.addUser(user1CaseVariation, "pass"))
+        assertThatThrownBy(() -> testee().addUser(testSystem.user1CaseVariation, "pass"))
             .isInstanceOf(UsersRepositoryException.class);
     }
 
     @Test
-    void addUserShouldDisableCaseVariation() throws UsersRepositoryException {
-        usersRepository.addUser(user1CaseVariation, "password2");
+    void addUserShouldDisableCaseVariation(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1CaseVariation, "password2");
 
-        assertThatThrownBy(() -> usersRepository.addUser(user1, "pass"))
+        assertThatThrownBy(() -> testee().addUser(testSystem.user1, "pass"))
             .isInstanceOf(UsersRepositoryException.class);
     }
 
     @Test
-    void listShouldReturnLowerCaseUser() throws UsersRepositoryException {
-        usersRepository.addUser(user1CaseVariation, "password2");
+    void listShouldReturnLowerCaseUser(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1CaseVariation, "password2");
 
-        assertThat(usersRepository.list())
+        assertThat(testee().list())
             .toIterable()
-            .containsExactly(user1);
+            .containsExactly(testSystem.user1);
     }
 
     @Test
-    void removeUserShouldBeCaseInsentiveOnCaseVariationUser() throws UsersRepositoryException {
-        usersRepository.addUser(user1CaseVariation, "password2");
+    void removeUserShouldBeCaseInsentiveOnCaseVariationUser(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1CaseVariation, "password2");
 
-        usersRepository.removeUser(user1);
+        testee().removeUser(testSystem.user1);
 
-        assertThat(usersRepository.list())
+        assertThat(testee().list())
             .toIterable()
             .isEmpty();
     }
 
     @Test
-    void removeUserShouldBeCaseInsentive() throws UsersRepositoryException {
-        usersRepository.addUser(user1, "password2");
+    void removeUserShouldBeCaseInsentive(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1, "password2");
 
-        usersRepository.removeUser(user1CaseVariation);
+        testee().removeUser(testSystem.user1CaseVariation);
 
-        assertThat(usersRepository.list())
+        assertThat(testee().list())
             .toIterable()
             .isEmpty();
     }
 
     @Test
-    void getUserByNameShouldBeCaseInsentive() throws UsersRepositoryException {
-        usersRepository.addUser(user1, "password2");
+    void getUserByNameShouldBeCaseInsentive(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1, "password2");
 
-        assertThat(usersRepository.getUserByName(user1CaseVariation).getUserName())
-            .isEqualTo(user1);
+        assertThat(testee().getUserByName(testSystem.user1CaseVariation).getUserName())
+            .isEqualTo(testSystem.user1);
     }
 
     @Test
-    void getUserByNameShouldReturnLowerCaseAddedUser() throws UsersRepositoryException {
-        usersRepository.addUser(user1CaseVariation, "password2");
+    void getUserByNameShouldReturnLowerCaseAddedUser(TestSystem testSystem) throws UsersRepositoryException {
+        testee().addUser(testSystem.user1CaseVariation, "password2");
 
-        assertThat(usersRepository.getUserByName(user1).getUserName())
-            .isEqualTo(user1);
+        assertThat(testee().getUserByName(testSystem.user1).getUserName())
+            .isEqualTo(testSystem.user1);
     }
 
     @Test
-    void getUserShouldBeCaseInsentive() throws Exception {
-        assertThat(usersRepository.getUsername(user1CaseVariation.asMailAddress()))
-            .isEqualTo(user1);
+    void getUserShouldBeCaseInsentive(TestSystem testSystem) throws Exception {
+        assertThat(testee().getUsername(testSystem.user1CaseVariation.asMailAddress()))
+            .isEqualTo(testSystem.user1);
     }
 
     @Test
-    void isAdministratorShouldBeCaseInsentive() throws Exception {
-        usersRepository.setAdministratorId(Optional.of(admin));
-        assertThat(usersRepository.isAdministrator(adminCaseVariation))
+    void isAdministratorShouldBeCaseInsentive(TestSystem testSystem) throws Exception {
+        testee().setAdministratorId(Optional.of(testSystem.admin));
+        assertThat(testee().isAdministrator(testSystem.adminCaseVariation))
             .isTrue();
     }
 
     @Test
-    void testShouldBeCaseInsentiveOnCaseVariationUser() throws UsersRepositoryException {
+    void testShouldBeCaseInsentiveOnCaseVariationUser(TestSystem testSystem) throws UsersRepositoryException {
         String password = "password2";
-        usersRepository.addUser(user1CaseVariation, password);
+        testee().addUser(testSystem.user1CaseVariation, password);
 
-        assertThat(usersRepository.test(user1, password))
+        assertThat(testee().test(testSystem.user1, password))
             .isTrue();
     }
 
     @Test
-    void testShouldBeCaseInsentive() throws UsersRepositoryException {
+    void testShouldBeCaseInsentive(TestSystem testSystem) throws UsersRepositoryException {
         String password = "password2";
-        usersRepository.addUser(user1, password);
+        testee().addUser(testSystem.user1, password);
 
-        assertThat(usersRepository.test(user1CaseVariation, password))
+        assertThat(testee().test(testSystem.user1CaseVariation, password))
             .isTrue();
     }
     
     @Test 
-    void addUserShouldAddAUserWhenNotEmptyRepository() throws UsersRepositoryException {
+    void addUserShouldAddAUserWhenNotEmptyRepository(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user2, "password2");
+        testee().addUser(testSystem.user2, "password2");
         //When
-        usersRepository.addUser(user3, "password3");
+        testee().addUser(testSystem.user3, "password3");
         //Then
-        assertThat(usersRepository.contains(user3)).isTrue();
+        assertThat(testee().contains(testSystem.user3)).isTrue();
     }
     
     @Test
-    void addUserShouldThrowWhenSameUsernameWithDifferentCase() throws UsersRepositoryException {
+    void addUserShouldThrowWhenSameUsernameWithDifferentCase(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(login("myUsername"), "password");
+        testee().addUser(testSystem.toUsername("myUsername"), "password");
         //When
-        assertThatThrownBy(() -> usersRepository.addUser(login("MyUsername"), "password"))
+        assertThatThrownBy(() -> testee().addUser(testSystem.toUsername("MyUsername"), "password"))
             .isInstanceOf(AlreadyExistInUsersRepositoryException.class);
     }
     
     @Test
-    void addUserShouldThrowWhenUserAlreadyPresentInRepository() throws UsersRepositoryException {
+    void addUserShouldThrowWhenUserAlreadyPresentInRepository(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
+        testee().addUser(testSystem.user1, "password");
         //When
-        assertThatThrownBy(() -> usersRepository.addUser(user1, "password2"))
+        assertThatThrownBy(() -> testee().addUser(testSystem.user1, "password2"))
             .isInstanceOf(AlreadyExistInUsersRepositoryException.class);
     }
     
     @Test
-    void getUserByNameShouldReturnAUserWhenContainedInRepository() throws UsersRepositoryException {
+    void getUserByNameShouldReturnAUserWhenContainedInRepository(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
+        testee().addUser(testSystem.user1, "password");
         //When
-        User actual = usersRepository.getUserByName(user1);
+        User actual = testee().getUserByName(testSystem.user1);
         //Then
         assertThat(actual).isNotNull();
-        assertThat(actual.getUserName()).isEqualTo(user1);
+        assertThat(actual.getUserName()).isEqualTo(testSystem.user1);
     }
 
     @Test
-    void getUserByNameShouldReturnUserWhenDifferentCase() throws UsersRepositoryException {
+    void getUserByNameShouldReturnUserWhenDifferentCase(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(login("username"), "password");
+        testee().addUser(testSystem.toUsername("username"), "password");
         //When
-        User actual = usersRepository.getUserByName(login("uSERNAMe"));
+        User actual = testee().getUserByName(testSystem.toUsername("uSERNAMe"));
         //Then
         assertThat(actual).isNotNull();
-        assertThat(actual.getUserName()).isEqualTo(user1);
+        assertThat(actual.getUserName()).isEqualTo(testSystem.user1);
     }
    
     @Test
-    void testShouldReturnTrueWhenAUserHasACorrectPassword() throws UsersRepositoryException { 
+    void testShouldReturnTrueWhenAUserHasACorrectPassword(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
+        testee().addUser(testSystem.user1, "password");
         //When
-        boolean actual = usersRepository.test(user1, "password");
+        boolean actual = testee().test(testSystem.user1, "password");
         //Then
         assertThat(actual).isTrue();
     }
     
     @Test
-    void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain() throws Exception { 
-        usersRepository.setEnableVirtualHosting(true);
+    void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain(TestSystem testSystem) throws Exception {
+        testee().setEnableVirtualHosting(true);
 
-        domainList.addDomain(Domain.of("jAmEs.oRg"));
+        testSystem.domainList.addDomain(Domain.of("jAmEs.oRg"));
         String username = "myuser";
         String password = "password";
-        usersRepository.addUser(Username.of(username + "@jAmEs.oRg"), password);
+        testee().addUser(Username.of(username + "@jAmEs.oRg"), password);
 
-        boolean actual = usersRepository.test(Username.of(username + "@james.org"), password);
+        boolean actual = testee().test(Username.of(username + "@james.org"), password);
 
         assertThat(actual).isTrue();
     }
 
     @Test
-    void testShouldReturnFalseWhenAUserHasAnIncorrectPassword() throws UsersRepositoryException { 
+    void testShouldReturnFalseWhenAUserHasAnIncorrectPassword(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
+        testee().addUser(testSystem.user1, "password");
         //When
-        boolean actual = usersRepository.test(user1, "password2");
+        boolean actual = testee().test(testSystem.user1, "password2");
         //Then
         assertThat(actual).isFalse();
     }
     
     @Test
-    void testShouldReturnFalseWhenAUserHasAnIncorrectCasePassword() throws UsersRepositoryException { 
+    void testShouldReturnFalseWhenAUserHasAnIncorrectCasePassword(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
+        testee().addUser(testSystem.user1, "password");
         //When
-        boolean actual = usersRepository.test(user1, "Password");
+        boolean actual = testee().test(testSystem.user1, "Password");
         //Then
         assertThat(actual).isFalse();
     }
     
     @Test
-    void testShouldReturnFalseWhenAUserIsNotInRepository() throws UsersRepositoryException { 
+    void testShouldReturnFalseWhenAUserIsNotInRepository(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(login("username"), "password");
+        testee().addUser(testSystem.toUsername("username"), "password");
         //When
-        boolean actual = usersRepository.test(login("username2"), "password"); 
+        boolean actual = testee().test(testSystem.toUsername("username2"), "password");
         //Then
         assertThat(actual).isFalse();
     }
 
     @Test
-    void testShouldReturnTrueWhenAUserHasAnIncorrectCaseName() throws UsersRepositoryException {
+    void testShouldReturnTrueWhenAUserHasAnIncorrectCaseName(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(login("username"), "password");
+        testee().addUser(testSystem.toUsername("username"), "password");
         //When
-        boolean actual = usersRepository.test(login("userName"), "password");
+        boolean actual = testee().test(testSystem.toUsername("userName"), "password");
         //Then
         assertThat(actual).isTrue();
     }
 
     @Test
-    void testShouldReturnFalseWhenEmptyRepository() throws UsersRepositoryException {
+    void testShouldReturnFalseWhenEmptyRepository(TestSystem testSystem) throws UsersRepositoryException {
         //When
-        boolean actual = usersRepository.test(user1, "password");
+        boolean actual = testee().test(testSystem.user1, "password");
         //Then
         assertThat(actual).isFalse();
     }
 
     @Test
-    void testShouldReturnFalseWhenAUserIsRemovedFromRepository() throws UsersRepositoryException {
+    void testShouldReturnFalseWhenAUserIsRemovedFromRepository(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
-        usersRepository.removeUser(user1);
+        testee().addUser(testSystem.user1, "password");
+        testee().removeUser(testSystem.user1);
         //When
-        boolean actual = usersRepository.test(user1, "password");
+        boolean actual = testee().test(testSystem.user1, "password");
         //Then
         assertThat(actual).isFalse();
     }
     
     @Test
-    void removeUserShouldRemoveAUserWhenPresentInRepository() throws UsersRepositoryException {
+    void removeUserShouldRemoveAUserWhenPresentInRepository(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
+        testee().addUser(testSystem.user1, "password");
         //When
-        usersRepository.removeUser(user1);
+        testee().removeUser(testSystem.user1);
         //Then
-        assertThat(usersRepository.contains(user1)).isFalse();
+        assertThat(testee().contains(testSystem.user1)).isFalse();
     }
     
     @Test
-    void removeUserShouldThrowWhenUserNotInRepository() {
+    void removeUserShouldThrowWhenUserNotInRepository(TestSystem testSystem) {
         //When
-        assertThatThrownBy(() -> usersRepository.removeUser(user1))
+        assertThatThrownBy(() -> testee().removeUser(testSystem.user1))
             .isInstanceOf(UsersRepositoryException.class);
     }
     
     @Test
-    void updateUserShouldAllowToAuthenticateWithNewPassword() throws UsersRepositoryException { 
+    void updateUserShouldAllowToAuthenticateWithNewPassword(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
-        User user = usersRepository.getUserByName(user1);
+        testee().addUser(testSystem.user1, "password");
+        User user = testee().getUserByName(testSystem.user1);
         user.setPassword("newpass");
         //When
-        usersRepository.updateUser(user);
+        testee().updateUser(user);
         //Then
-        assertThat(usersRepository.test(user1, "newpass")).isTrue();
+        assertThat(testee().test(testSystem.user1, "newpass")).isTrue();
     }
    
     @Test
-    void updateUserShouldNotAllowToAuthenticateWithOldPassword() throws UsersRepositoryException {
+    void updateUserShouldNotAllowToAuthenticateWithOldPassword(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
-        User user = usersRepository.getUserByName(user1);
+        testee().addUser(testSystem.user1, "password");
+        User user = testee().getUserByName(testSystem.user1);
         user.setPassword("newpass");
         //When
-        usersRepository.updateUser(user);
+        testee().updateUser(user);
         //Then
-        assertThat(usersRepository.test(user1, "password")).isFalse();
+        assertThat(testee().test(testSystem.user1, "password")).isFalse();
     }
     
     @Test
-    void updateUserShouldThrowWhenAUserIsNoMoreInRepository() throws UsersRepositoryException {
+    void updateUserShouldThrowWhenAUserIsNoMoreInRepository(TestSystem testSystem) throws UsersRepositoryException {
         //Given
-        usersRepository.addUser(user1, "password");
-        User user = usersRepository.getUserByName(user1);
-        usersRepository.removeUser(user1);
+        testee().addUser(testSystem.user1, "password");
+        User user = testee().getUserByName(testSystem.user1);
+        testee().removeUser(testSystem.user1);
         //When
-        assertThatThrownBy(() -> usersRepository.updateUser(user))
+        assertThatThrownBy(() -> testee().updateUser(user))
             .isInstanceOf(UsersRepositoryException.class);
     }
 
     @Test
     void virtualHostedUsersRepositoryShouldUseFullMailAddressAsUsername() throws Exception {
-        usersRepository.setEnableVirtualHosting(true);
+        testee().setEnableVirtualHosting(true);
 
         // Some implementations do not support changing virtual hosting value
-        Assumptions.assumeTrue(usersRepository.supportVirtualHosting());
+        Assumptions.assumeTrue(testee().supportVirtualHosting());
 
-        assertThat(usersRepository.getUsername(new MailAddress("local@domain"))).isEqualTo(Username.of("local@domain"));
+        assertThat(testee().getUsername(new MailAddress("local@domain"))).isEqualTo(Username.of("local@domain"));
     }
 
     @Test
     void nonVirtualHostedUsersRepositoryShouldUseLocalPartAsUsername() throws Exception {
-        usersRepository.setEnableVirtualHosting(false);
+        testee().setEnableVirtualHosting(false);
 
         // Some implementations do not support changing virtual hosting value
-        Assumptions.assumeFalse(usersRepository.supportVirtualHosting());
+        Assumptions.assumeFalse(testee().supportVirtualHosting());
 
-        assertThat(usersRepository.getUsername(new MailAddress("local@domain"))).isEqualTo(Username.of("local"));
+        assertThat(testee().getUsername(new MailAddress("local@domain"))).isEqualTo(Username.of("local"));
     }
 
     @Test
-    void isAdministratorShouldReturnFalseWhenNotConfigured() throws Exception {
-        usersRepository.setAdministratorId(Optional.empty());
+    void isAdministratorShouldReturnFalseWhenNotConfigured(TestSystem testSystem) throws Exception {
+        testee().setAdministratorId(Optional.empty());
 
-        assertThat(usersRepository.isAdministrator(admin)).isFalse();
+        assertThat(testee().isAdministrator(testSystem.admin)).isFalse();
     }
 
     @Test
-    void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin() throws Exception {
-        usersRepository.setAdministratorId(Optional.of(admin));
+    void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin(TestSystem testSystem) throws Exception {
+        testee().setAdministratorId(Optional.of(testSystem.admin));
 
-        assertThat(usersRepository.isAdministrator(admin)).isTrue();
+        assertThat(testee().isAdministrator(testSystem.admin)).isTrue();
     }
 
     @Test
-    void isAdministratorShouldReturnFalseWhenConfiguredAndUserIsNotAdmin() throws Exception {
-        usersRepository.setAdministratorId(Optional.of(admin));
+    void isAdministratorShouldReturnFalseWhenConfiguredAndUserIsNotAdmin(TestSystem testSystem) throws Exception {
+        testee().setAdministratorId(Optional.of(testSystem.admin));
 
-        assertThat(usersRepository.isAdministrator(user1)).isFalse();
+        assertThat(testee().isAdministrator(testSystem.user1)).isFalse();
     }
 
     @Test
     void getMailAddressForShouldBeIdentityWhenVirtualHosting() throws Exception {
-        usersRepository.setEnableVirtualHosting(true);
+        testee().setEnableVirtualHosting(true);
 
         // Some implementations do not support changing virtual hosting value
-        Assumptions.assumeTrue(usersRepository.supportVirtualHosting());
+        Assumptions.assumeTrue(testee().supportVirtualHosting());
 
         String username = "user@domain";
-        assertThat(usersRepository.getMailAddressFor(Username.of(username)))
+        assertThat(testee().getMailAddressFor(Username.of(username)))
             .isEqualTo(username);
     }
 
     @Test
-    void getMailAddressForShouldAppendDefaultDomainWhenNoVirtualHosting() throws Exception {
-        usersRepository.setEnableVirtualHosting(false);
+    void getMailAddressForShouldAppendDefaultDomainWhenNoVirtualHosting(TestSystem testSystem) throws Exception {
+        testee().setEnableVirtualHosting(false);
 
         // Some implementations do not support changing virtual hosting value
-        Assumptions.assumeFalse(usersRepository.supportVirtualHosting());
+        Assumptions.assumeFalse(testee().supportVirtualHosting());
 
         String username = "user";
-        assertThat(usersRepository.getMailAddressFor(Username.of(username)))
-            .isEqualTo(new MailAddress(username, domainList.getDefaultDomain()));
+        assertThat(testee().getMailAddressFor(Username.of(username)))
+            .isEqualTo(new MailAddress(username, testSystem.domainList.getDefaultDomain()));
     }
 
     @ParameterizedTest
     @MethodSource("illegalCharacters")
     void assertValidShouldThrowWhenUsernameLocalPartWithIllegalCharacter(String illegalCharacter) {
-        assertThatThrownBy(() -> usersRepository.assertValid(Username.of("a" + illegalCharacter + "a")))
+        assertThatThrownBy(() -> testee().assertValid(Username.of("a" + illegalCharacter + "a")))
             .isInstanceOf(InvalidUsernameException.class);
     }
 
