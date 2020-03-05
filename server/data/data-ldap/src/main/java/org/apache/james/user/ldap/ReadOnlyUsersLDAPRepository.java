@@ -46,14 +46,13 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.ldap.model.filter.FilterEncoder;
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.ldap.api.LdapConstants;
+import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.retry.DoublingRetrySchedule;
 import org.apache.james.util.retry.api.RetrySchedule;
@@ -243,7 +242,7 @@ import com.google.common.base.Strings;
  * @see ReadOnlyLDAPGroupRestriction
  *
  */
-public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurable {
+public class ReadOnlyUsersLDAPRepository extends AbstractUsersRepository implements Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepository.class);
 
     // The name of the factory class which creates the initial context
@@ -264,13 +263,11 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     // The schedule for retry attempts
     private RetrySchedule schedule = null;
 
-    private final DomainList domainList;
     private LdapRepositoryConfiguration ldapConfiguration;
 
     @Inject
     public ReadOnlyUsersLDAPRepository(DomainList domainList) {
-        super();
-        this.domainList = domainList;
+        super(domainList);
     }
 
     /**
@@ -666,6 +663,13 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     }
 
     @Override
+    protected void doAddUser(Username username, String password) throws UsersRepositoryException {
+        LOGGER.error("This user-repository is read-only. Modifications are not permitted.");
+        throw new UsersRepositoryException(
+                "This user-repository is read-only. Modifications are not permitted.");
+    }
+
+    @Override
     public boolean isAdministrator(Username username) {
         if (ldapConfiguration.getAdministratorId().isPresent()) {
             return ldapConfiguration.getAdministratorId().get().equals(username);
@@ -676,18 +680,5 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     @Override
     public boolean isReadOnly() {
         return true;
-    }
-
-
-    @Override
-    public MailAddress getMailAddressFor(Username username) throws UsersRepositoryException {
-        try {
-            if (supportVirtualHosting()) {
-                return new MailAddress(username.asString());
-            }
-            return new MailAddress(username.getLocalPart(), domainList.getDefaultDomain());
-        } catch (Exception e) {
-            throw new UsersRepositoryException("Failed to compute mail address associated with the user", e);
-        }
     }
 }
