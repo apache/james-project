@@ -34,13 +34,11 @@ import org.apache.commons.configuration2.plist.PropertyListConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryContract;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -48,8 +46,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 class ReadOnlyUsersLDAPRepositoryTest {
 
@@ -70,11 +66,11 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
     @AfterAll
     static void afterAll() {
-        ldapContainer.start();
+        ldapContainer.stop();
     }
 
     @Nested
-    class WhenEnableVirtualHosting implements AbstractUsersRepositoryContract.WithVirtualHostingContract {
+    class WhenEnableVirtualHosting implements AbstractUsersRepositoryContract.WithVirtualHostingReadOnlyContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
@@ -90,9 +86,8 @@ class ReadOnlyUsersLDAPRepositoryTest {
             return usersRepository;
         }
 
-        @Override
         @Test
-        public void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin(TestSystem testSystem) throws Exception {
+        void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin(TestSystem testSystem) throws Exception {
             assertThat(testee().isAdministrator(testSystem.getAdmin())).isTrue();
         }
 
@@ -122,11 +117,6 @@ class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Test
-        void unknownUserShouldNotBeAbleToLogInWithVirtualHosting() throws Exception {
-            assertThat(usersRepository.test(UNKNOWN, BAD_PASSWORD)).isFalse();
-        }
-
-        @Test
         void unknownUserShouldNotBeAbleToLogInWhenPasswordIsCorrectWithVirtualHosting() throws Exception {
             assertThat(usersRepository.test(UNKNOWN, PASSWORD)).isFalse();
         }
@@ -143,94 +133,10 @@ class ReadOnlyUsersLDAPRepositoryTest {
             assertThat(usersRepository.contains(usersRepository.getUsername(JAMES_USER_MAIL.asMailAddress()))).isTrue();
         }
 
-        @Disabled("JAMES-3088 isAdministrator is case sensitive")
-        @Override
-        @Test
-        public void isAdministratorShouldBeCaseInsentive(TestSystem testSystem) throws Exception {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void isAdministratorShouldReturnFalseWhenNotConfigured(TestSystem testSystem) throws Exception {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldThrowWhenSameUsernameWithDifferentCase(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void updateUserShouldThrowWhenAUserIsNoMoreInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void removeUserShouldBeCaseInsentive(TestSystem testSystem) {
-        }
-
         @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case")
         @Override
         @Test
         public void listShouldReturnEmptyIteratorWhenEmptyRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void countUsersShouldReturnNumberOfUsersWhenNotEmptyRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldDisableCaseVariation(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void updateUserShouldAllowToAuthenticateWithNewPassword(TestSystem testSystem){
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldAddAUserWhenNotEmptyRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnFalseWhenAUserHasAnIncorrectCasePassword(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void listShouldReturnExactlyUsersInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnTrueWhenAUserHasACorrectPassword(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void containsShouldBeCaseInsentiveWhenOriginalValueLowerCased(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void getUserByNameShouldReturnLowerCaseAddedUser(TestSystem testSystem) {
         }
 
         @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case")
@@ -238,124 +144,10 @@ class ReadOnlyUsersLDAPRepositoryTest {
         @Test
         public void countUsersShouldReturnZeroWhenEmptyRepository() {
         }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnFalseWhenAUserIsNotInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldDisableCaseVariationWhenOriginalValueLowerCased(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnTrueWhenAUserHasAnIncorrectCaseName(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldAddAUserWhenEmptyRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldBeCaseInsentive(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void containsShouldBeCaseInsentive(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void containsShouldPreserveCaseVariation(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void updateUserShouldNotAllowToAuthenticateWithOldPassword(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void getUserByNameShouldReturnAUserWhenContainedInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void removeUserShouldRemoveAUserWhenPresentInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnFalseWhenAUserHasAnIncorrectPassword(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnFalseWhenAUserIsRemovedFromRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void removeUserShouldBeCaseInsentiveOnCaseVariationUser(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void listShouldReturnLowerCaseUser(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void getUserByNameShouldBeCaseInsentive(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void getUserByNameShouldReturnUserWhenDifferentCase(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldThrowWhenUserAlreadyPresentInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldBeCaseInsentiveOnCaseVariationUser(TestSystem testSystem) {
-        }
     }
 
     @Nested
-    class WhenDisableVirtualHosting implements AbstractUsersRepositoryContract.WithOutVirtualHostingContract {
+    class WhenDisableVirtualHosting implements AbstractUsersRepositoryContract.WithOutVirtualHostingReadOnlyContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 
@@ -396,40 +188,9 @@ class ReadOnlyUsersLDAPRepositoryTest {
             assertThat(usersRepository.contains(usersRepository.getUsername(JAMES_USER_MAIL.asMailAddress()))).isTrue();
         }
 
-        @Override
         @Test
-        public void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin(TestSystem testSystem) throws Exception {
+        void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin(TestSystem testSystem) throws Exception {
             assertThat(testee().isAdministrator(testSystem.getAdmin())).isTrue();
-        }
-
-        @Disabled("JAMES-3088 isAdministrator is case sensitive")
-        @Override
-        @Test
-        public void isAdministratorShouldBeCaseInsentive(TestSystem testSystem) throws Exception {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void isAdministratorShouldReturnFalseWhenNotConfigured(TestSystem testSystem) throws Exception {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldThrowWhenSameUsernameWithDifferentCase(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void updateUserShouldThrowWhenAUserIsNoMoreInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void removeUserShouldBeCaseInsentive(TestSystem testSystem) {
         }
 
         @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case")
@@ -438,174 +199,11 @@ class ReadOnlyUsersLDAPRepositoryTest {
         public void listShouldReturnEmptyIteratorWhenEmptyRepository(TestSystem testSystem) {
         }
 
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void countUsersShouldReturnNumberOfUsersWhenNotEmptyRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldDisableCaseVariation(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void updateUserShouldAllowToAuthenticateWithNewPassword(TestSystem testSystem){
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldAddAUserWhenNotEmptyRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnFalseWhenAUserHasAnIncorrectCasePassword(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void listShouldReturnExactlyUsersInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnTrueWhenAUserHasACorrectPassword(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void containsShouldBeCaseInsentiveWhenOriginalValueLowerCased(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void getUserByNameShouldReturnLowerCaseAddedUser(TestSystem testSystem) {
-        }
-
         @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case")
         @Override
         @Test
         public void countUsersShouldReturnZeroWhenEmptyRepository() {
         }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnFalseWhenAUserIsNotInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldDisableCaseVariationWhenOriginalValueLowerCased(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnTrueWhenAUserHasAnIncorrectCaseName(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldAddAUserWhenEmptyRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldBeCaseInsentive(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void containsShouldBeCaseInsentive(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void containsShouldPreserveCaseVariation(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void updateUserShouldNotAllowToAuthenticateWithOldPassword(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void getUserByNameShouldReturnAUserWhenContainedInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void removeUserShouldRemoveAUserWhenPresentInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnFalseWhenAUserHasAnIncorrectPassword(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldReturnFalseWhenAUserIsRemovedFromRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void removeUserShouldBeCaseInsentiveOnCaseVariationUser(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void listShouldReturnLowerCaseUser(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void getUserByNameShouldBeCaseInsentive(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void getUserByNameShouldReturnUserWhenDifferentCase(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void addUserShouldThrowWhenUserAlreadyPresentInRepository(TestSystem testSystem) {
-        }
-
-        @Disabled("JAMES-3088 This user-repository is read-only. Modifications are not permitted.")
-        @Override
-        @Test
-        public void testShouldBeCaseInsentiveOnCaseVariationUser(TestSystem testSystem) {
-        }
-
     }
 
     @Nested

@@ -115,7 +115,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public User getUserByName(Username name) {
+    public User getUserByName(Username name) throws UsersRepositoryException {
         return executor.executeSingleRow(
                 getUserStatement.bind()
                     .setString(NAME, name.asString()))
@@ -126,6 +126,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void updateUser(User user) throws UsersRepositoryException {
+        assertDomainPartValid(user.getUserName());
         Preconditions.checkArgument(user instanceof DefaultUser);
         DefaultUser defaultUser = (DefaultUser) user;
         boolean executed = executor.executeReturnApplied(
@@ -143,6 +144,8 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
+        assertDomainPartValid(name);
+
         boolean executed = executor.executeReturnApplied(
             removeUserStatement.bind()
                 .setString(NAME, name.asString()))
@@ -154,7 +157,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public boolean contains(Username name) {
+    public boolean contains(Username name) throws UsersRepositoryException {
         return getUserByName(name) != null;
     }
 

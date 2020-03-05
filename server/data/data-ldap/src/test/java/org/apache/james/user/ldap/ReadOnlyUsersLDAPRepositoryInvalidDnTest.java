@@ -53,7 +53,7 @@ class ReadOnlyUsersLDAPRepositoryInvalidDnTest {
 
     @AfterAll
     static void afterAll() {
-        ldapContainer.start();
+        ldapContainer.stop();
     }
 
     @BeforeEach

@@ -71,7 +71,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -129,6 +128,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableList;
+
 import io.restassured.RestAssured;
 import io.restassured.filter.log.LogDetail;
 import reactor.core.publisher.Flux;
@@ -211,7 +211,6 @@ class DeletedMessagesVaultRoutesTest {
         domainList.addDomain(DOMAIN);
 
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
-        usersRepository.configure(new BaseHierarchicalConfiguration());
 
         usersRepository.addUser(USERNAME, "userPassword");
 

@@ -36,6 +36,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryUsersRepositoryTest {
 
+    private static final String LOCALHOST = "localhost";
+    private static final String LOCALHOST_ADDRESS = "127.0.0.1";
+
     @Nested
     class WhenEnableVirtualHosting implements AbstractUsersRepositoryContract.WithVirtualHostingContract {
         @RegisterExtension
@@ -62,8 +65,8 @@ class MemoryUsersRepositoryTest {
         @Test
         void assertValidShouldNotThrowWhenDomainPartAndVirtualHosting() throws Exception {
             MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
-                .registerMxRecord("localhost", "127.0.0.1")
-                .registerMxRecord("127.0.0.1", "127.0.0.1"));
+                .registerMxRecord(LOCALHOST, LOCALHOST_ADDRESS)
+                .registerMxRecord(LOCALHOST_ADDRESS, LOCALHOST_ADDRESS));
             domainList.setAutoDetect(false);
             domainList.setAutoDetectIP(false);
             domainList.addDomain(Domain.of("domain.tld"));
@@ -77,8 +80,8 @@ class MemoryUsersRepositoryTest {
         @Test
         void assertValidShouldNotThrowWhenDomainPartAndDomainNotFound() throws Exception {
             MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
-                .registerMxRecord("localhost", "127.0.0.1")
-                .registerMxRecord("127.0.0.1", "127.0.0.1"));
+                .registerMxRecord(LOCALHOST, LOCALHOST_ADDRESS)
+                .registerMxRecord(LOCALHOST_ADDRESS, LOCALHOST_ADDRESS));
             domainList.setAutoDetect(false);
             domainList.setAutoDetectIP(false);
 

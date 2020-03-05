@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 
 /**
  * JPA based UserRepository
@@ -111,6 +112,9 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      */
     @Override
     public void updateUser(User user) throws UsersRepositoryException {
+        Preconditions.checkNotNull(user);
+        assertDomainPartValid(user.getUserName());
+
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
         final EntityTransaction transaction = entityManager.getTransaction();
@@ -142,6 +146,8 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      */
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
+        assertDomainPartValid(name);
+
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
         final EntityTransaction transaction = entityManager.getTransaction();

@@ -35,7 +35,6 @@ import static org.mockito.Mockito.spy;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -119,7 +118,6 @@ class AliasRoutesTest {
             memoryRecipientRewriteTable.setDomainList(domainList);
 
             usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
-            usersRepository.configure(new BaseHierarchicalConfiguration());
 
             usersRepository.addUser(Username.of(BOB), BOB_PASSWORD);
             usersRepository.addUser(Username.of(BOB_WITH_SLASH), BOB_WITH_SLASH_PASSWORD);

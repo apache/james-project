@@ -628,9 +628,7 @@ public class ReadOnlyUsersLDAPRepository extends AbstractUsersRepository impleme
 
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
-        LOGGER.warn("This user-repository is read-only. Modifications are not permitted.");
-        throw new UsersRepositoryException(
-                "This user-repository is read-only. Modifications are not permitted.");
+        throw new UsersRepositoryException("This user-repository is read-only. Modifications are not permitted.");
 
     }
 
@@ -641,17 +639,8 @@ public class ReadOnlyUsersLDAPRepository extends AbstractUsersRepository impleme
     }
 
     @Override
-    public void addUser(Username username, String password) throws UsersRepositoryException {
-        LOGGER.error("This user-repository is read-only. Modifications are not permitted.");
-        throw new UsersRepositoryException(
-                "This user-repository is read-only. Modifications are not permitted.");
-    }
-
-    @Override
     public void updateUser(User user) throws UsersRepositoryException {
-        LOGGER.error("This user-repository is read-only. Modifications are not permitted.");
-        throw new UsersRepositoryException(
-                "This user-repository is read-only. Modifications are not permitted.");
+        throw new UsersRepositoryException("This user-repository is read-only. Modifications are not permitted.");
     }
 
     /**
@@ -664,13 +653,13 @@ public class ReadOnlyUsersLDAPRepository extends AbstractUsersRepository impleme
 
     @Override
     protected void doAddUser(Username username, String password) throws UsersRepositoryException {
-        LOGGER.error("This user-repository is read-only. Modifications are not permitted.");
-        throw new UsersRepositoryException(
-                "This user-repository is read-only. Modifications are not permitted.");
+        throw new UsersRepositoryException("This user-repository is read-only. Modifications are not permitted.");
     }
 
     @Override
-    public boolean isAdministrator(Username username) {
+    public boolean isAdministrator(Username username) throws UsersRepositoryException {
+        assertValid(username);
+
         if (ldapConfiguration.getAdministratorId().isPresent()) {
             return ldapConfiguration.getAdministratorId().get().equals(username);
         }

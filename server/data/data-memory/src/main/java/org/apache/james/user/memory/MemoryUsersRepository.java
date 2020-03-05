@@ -81,6 +81,8 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void updateUser(User user) throws UsersRepositoryException {
+        assertDomainPartValid(user.getUserName());
+
         User existingUser = getUserByName(user.getUserName());
         if (existingUser == null) {
             throw new UsersRepositoryException("Please provide an existing user to update");
@@ -90,6 +92,8 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
+        assertDomainPartValid(name);
+
         if (userByName.remove(name.asString()) == null) {
             throw new UsersRepositoryException("unable to remove unknown user " + name.asString());
         }

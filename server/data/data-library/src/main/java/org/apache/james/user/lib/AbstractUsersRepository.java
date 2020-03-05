@@ -75,6 +75,11 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
 
     @Override
     public void assertValid(Username username) throws UsersRepositoryException {
+        assertDomainPartValid(username);
+        assertLocalPartValid(username);
+    }
+
+    protected void assertDomainPartValid(Username username) throws UsersRepositoryException {
         if (supportVirtualHosting()) {
             // need a @ in the username
             if (!username.hasDomainPart()) {
@@ -95,8 +100,12 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
                 throw new InvalidUsernameException("Given Username contains a @domainpart but virtualhosting support is disabled");
             }
         }
+    }
 
-        if (!isLocalPartValid(username)) {
+    private void assertLocalPartValid(Username username) throws InvalidUsernameException {
+        boolean isValid = CharMatcher.anyOf(ILLEGAL_USERNAME_CHARACTERS)
+            .matchesNoneOf(username.getLocalPart());
+        if (!isValid) {
             throw new InvalidUsernameException(String.format("Given Username '%s' should not contain any of those characters: %s",
                 username.asString(), ILLEGAL_USERNAME_CHARACTERS));
         }
@@ -135,6 +144,8 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
 
     @Override
     public boolean isAdministrator(Username username) throws UsersRepositoryException {
+        assertValid(username);
+
         return administratorId.map(id -> id.equals(username))
             .orElse(false);
     }
@@ -154,10 +165,5 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
         } catch (Exception e) {
             throw new UsersRepositoryException("Failed to compute mail address associated with the user", e);
         }
-    }
-
-    private boolean isLocalPartValid(Username username) {
-        return CharMatcher.anyOf(ILLEGAL_USERNAME_CHARACTERS)
-            .matchesNoneOf(username.getLocalPart());
     }
 }
