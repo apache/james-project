@@ -297,6 +297,7 @@ Response codes:
 ## Administrating users
 
    - [Create a user](#Create_a_user)
+   - [Testing a user existence](#Testing_a_user_existence)
    - [Updating a user password](#Updating_a_user_password)
    - [Deleting a domain](#Deleting_a_user)
    - [Retrieving the user list](#Retrieving_the_user_list)
@@ -319,6 +320,21 @@ Response codes:
  - 400: The user name or the payload is invalid
 
 Note: if the user exists already, its password will be updated.
+
+###Testing a user existence
+
+```
+curl -XHEAD http://ip:port/users/usernameToBeUsed
+```
+
+Resource name "usernameToBeUsed" represents a valid user,
+hence it should match the criteria at [User Repositories documentation](/server/config-users.html) 
+
+Response codes:
+
+ - 200: The user exists
+ - 400: The user name is invalid
+ - 404: The user does not exist
 
 ### Updating a user password
 

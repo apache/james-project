@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.mail.internet.AddressException;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepository;
@@ -67,12 +66,7 @@ public class UserService {
     }
 
     public boolean userExists(Username username) throws UsersRepositoryException {
-        try {
-            return usersRepository.contains(usersRepository.getUser(username.asMailAddress()));
-        } catch (AddressException e) {
-            LOGGER.info("Unable to parse address '%s'", username.asString(), e);
-            return false;
-        }
+        return usersRepository.contains(username);
     }
 
     private void upsert(User user, Username username, char[] password) throws UsersRepositoryException {

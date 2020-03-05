@@ -246,6 +246,14 @@ class UserRoutesTest {
             }
 
             @Test
+            default void headShouldReturnBadRequestWhenEmptyUserName() {
+                when()
+                    .head("/")
+                .then()
+                    .statusCode(HttpStatus.NOT_FOUND_404);
+            }
+
+            @Test
             default void deleteShouldReturnBadRequestWhenUsernameIsTooLong() {
                 when()
                     .delete(USERNAME_WITH_DOMAIN.asString() + "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
@@ -514,6 +522,26 @@ class UserRoutesTest {
         }
 
         @Test
+        void headShouldReturnOKWhenUserExists() {
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITH_DOMAIN.asString());
+
+            when()
+                .head(USERNAME_WITH_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.OK_200);
+        }
+
+        @Test
+        void headShouldReturnNotFoundWhenUserDoesNotExist() {
+            when()
+                .head(USERNAME_WITH_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
         void puttingWithDomainPartInUsernameTwoTimesShouldBeAllowed() {
             // Given
             with()
@@ -680,6 +708,26 @@ class UserRoutesTest {
         UserRoutesExtension extension = UserRoutesExtension.withoutVirtualHosting();
 
         WithoutVirtualHosting() throws DomainListException {
+        }
+
+        @Test
+        void headShouldReturnOKWhenUserExists() {
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITHOUT_DOMAIN.asString());
+
+            when()
+                .head(USERNAME_WITHOUT_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.OK_200);
+        }
+
+        @Test
+        void headShouldReturnNotFoundWhenUserDoesNotExist() {
+            when()
+                .head(USERNAME_WITHOUT_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test

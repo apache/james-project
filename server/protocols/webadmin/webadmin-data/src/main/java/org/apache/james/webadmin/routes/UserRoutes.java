@@ -27,6 +27,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -38,6 +39,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AddUserRequest;
 import org.apache.james.webadmin.dto.UserResponse;
@@ -106,6 +108,8 @@ public class UserRoutes implements Routes {
         defineDeleteUser();
 
         defineAllowedFromHeaders();
+
+        defineUserExist();
     }
 
     @DELETE
@@ -122,6 +126,23 @@ public class UserRoutes implements Routes {
     })
     public void defineDeleteUser() {
         service.delete(USERS + SEPARATOR + USER_NAME, this::removeUser);
+    }
+
+    @HEAD
+    @Path("/{username}")
+    @ApiOperation(value = "Testing an user existence")
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK. User exists."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid input user."),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "User does not exist."),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.")
+    })
+    public void defineUserExist() {
+        service.head(USERS + SEPARATOR + USER_NAME, this::userExist);
     }
 
     @PUT
@@ -186,6 +207,16 @@ public class UserRoutes implements Routes {
                 .cause(e)
                 .haltError();
         }
+    }
+
+    private String userExist(Request request, Response response) throws UsersRepositoryException {
+        Username username = extractUsername(request);
+        if (userService.userExists(username)) {
+            response.status(HttpStatus.OK_200);
+        } else {
+            response.status(HttpStatus.NOT_FOUND_404);
+        }
+        return Constants.EMPTY_BODY;
     }
 
     private HaltException upsertUser(Request request, Response response) throws JsonExtractException {
