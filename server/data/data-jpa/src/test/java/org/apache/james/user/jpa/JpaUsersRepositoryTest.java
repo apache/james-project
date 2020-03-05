@@ -23,7 +23,7 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.jpa.model.JPAUser;
 import org.apache.james.user.lib.AbstractUsersRepository;
-import org.apache.james.user.lib.AbstractUsersRepositoryTest;
+import org.apache.james.user.lib.AbstractUsersRepositoryContract;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -34,7 +34,7 @@ class JpaUsersRepositoryTest {
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAUser.class);
 
     @Nested
-    class WhenEnableVirtualHosting implements AbstractUsersRepositoryTest.WithVirtualHostingContract {
+    class WhenEnableVirtualHosting implements AbstractUsersRepositoryContract.WithVirtualHostingContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
@@ -52,7 +52,7 @@ class JpaUsersRepositoryTest {
     }
 
     @Nested
-    class WhenDisableVirtualHosting implements AbstractUsersRepositoryTest.WithOutVirtualHostingContract {
+    class WhenDisableVirtualHosting implements AbstractUsersRepositoryContract.WithOutVirtualHostingContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 

@@ -28,7 +28,7 @@ import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.AbstractUsersRepository;
-import org.apache.james.user.lib.AbstractUsersRepositoryTest;
+import org.apache.james.user.lib.AbstractUsersRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class MemoryUsersRepositoryTest {
 
     @Nested
-    class WhenEnableVirtualHosting implements AbstractUsersRepositoryTest.WithVirtualHostingContract {
+    class WhenEnableVirtualHosting implements AbstractUsersRepositoryContract.WithVirtualHostingContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
@@ -90,7 +90,7 @@ class MemoryUsersRepositoryTest {
     }
 
     @Nested
-    class WhenDisableVirtualHosting implements AbstractUsersRepositoryTest.WithOutVirtualHostingContract {
+    class WhenDisableVirtualHosting implements AbstractUsersRepositoryContract.WithOutVirtualHostingContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 

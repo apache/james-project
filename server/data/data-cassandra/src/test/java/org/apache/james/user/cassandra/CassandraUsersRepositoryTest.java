@@ -23,7 +23,7 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.lib.AbstractUsersRepository;
-import org.apache.james.user.lib.AbstractUsersRepositoryTest;
+import org.apache.james.user.lib.AbstractUsersRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -34,7 +34,7 @@ class CassandraUsersRepositoryTest {
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUsersRepositoryModule.MODULE);
 
     @Nested
-    class WhenEnableVirtualHosting implements AbstractUsersRepositoryTest.WithVirtualHostingContract {
+    class WhenEnableVirtualHosting implements AbstractUsersRepositoryContract.WithVirtualHostingContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
@@ -52,7 +52,7 @@ class CassandraUsersRepositoryTest {
     }
 
     @Nested
-    class WhenDisableVirtualHosting implements AbstractUsersRepositoryTest.WithOutVirtualHostingContract {
+    class WhenDisableVirtualHosting implements AbstractUsersRepositoryContract.WithOutVirtualHostingContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 

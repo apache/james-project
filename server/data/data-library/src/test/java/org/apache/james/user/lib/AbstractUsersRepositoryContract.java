@@ -45,7 +45,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public interface AbstractUsersRepositoryTest {
+public interface AbstractUsersRepositoryContract {
 
     class UserRepositoryExtension implements BeforeEachCallback, ParameterResolver {
 
@@ -107,8 +107,8 @@ public interface AbstractUsersRepositoryTest {
             user2 = toUsername("username2");
             user3 = toUsername("username3");
             user1CaseVariation = toUsername("uSeRnaMe");
-            admin = toUsername("testSystem.admin");
-            adminCaseVariation = toUsername("testSystem.admin");
+            admin = toUsername("admin");
+            adminCaseVariation = toUsername("admin");
         }
 
         private Username toUsername(String login) {
@@ -124,7 +124,7 @@ public interface AbstractUsersRepositoryTest {
         }
     }
 
-    interface WithVirtualHostingContract extends AbstractUsersRepositoryTest {
+    interface WithVirtualHostingContract extends AbstractUsersRepositoryContract {
 
         @Test
         default void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain(TestSystem testSystem) throws Exception {
@@ -163,7 +163,7 @@ public interface AbstractUsersRepositoryTest {
         }
     }
 
-    interface WithOutVirtualHostingContract extends AbstractUsersRepositoryTest {
+    interface WithOutVirtualHostingContract extends AbstractUsersRepositoryContract {
         @Test
         default void nonVirtualHostedUsersRepositoryShouldUseLocalPartAsUsername() throws Exception {
             // Some implementations do not support changing virtual hosting value
