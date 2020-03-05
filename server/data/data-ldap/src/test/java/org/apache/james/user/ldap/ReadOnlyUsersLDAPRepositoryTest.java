@@ -25,7 +25,6 @@ import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
 import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConversionException;
@@ -33,6 +32,9 @@ import org.apache.commons.configuration2.plist.PropertyListConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +71,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        domainList = mock(DomainList.class);
+        domainList = new SimpleDomainList();
     }
 
     @Nested
