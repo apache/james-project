@@ -76,6 +76,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
+import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
@@ -351,6 +353,24 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     rabbitMQNetWorkIssueExtension.getRabbitMQ().unpause();
 
                     rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block();
+                    assertThatListenerReceiveOneEvent(listener);
+                }
+
+                @Test
+                void dispatchShouldWorkAfterNetworkIssuesForOldRegistrationAndKey() {
+                    rabbitMQEventBusWithNetWorkIssue.start();
+                    MailboxListener listener = newListener();
+                    rabbitMQEventBusWithNetWorkIssue.register(listener, KEY_1);
+
+                    rabbitMQNetWorkIssueExtension.getRabbitMQ().pause();
+
+                    assertThatThrownBy(() -> rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessageContaining("Retries exhausted");
+
+                    rabbitMQNetWorkIssueExtension.getRabbitMQ().unpause();
+
+                    rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
                     assertThatListenerReceiveOneEvent(listener);
                 }
             }
