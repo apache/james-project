@@ -99,7 +99,7 @@ class KeyRegistrationHandler {
         sender.declareQueue(QueueSpecification.queue(eventBusId.asString())
             .durable(DURABLE)
             .exclusive(!EXCLUSIVE)
-            .autoDelete(!AUTO_DELETE)
+            .autoDelete(AUTO_DELETE)
             .arguments(NO_ARGUMENTS))
             .map(AMQP.Queue.DeclareOk::getQueue)
             .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor())
