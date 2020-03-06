@@ -739,6 +739,26 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.errorMappingsCount", is(0));
     }
 
+    @Test
+    void recomputeMailboxCountersShouldComplete() {
+        String taskId = with()
+                .basePath("/mailboxes")
+                .queryParam("task", "RecomputeMailboxCounters")
+            .post()
+                .jsonPath()
+                .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(taskId))
+            .body("type", is("recompute-mailbox-counters"))
+            .body("additionalInformation.processedMailboxes", is(0));
+    }
+
     private MailboxListener.MailboxAdded createMailboxAdded() {
         String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
         return EventFactory.mailboxAdded()

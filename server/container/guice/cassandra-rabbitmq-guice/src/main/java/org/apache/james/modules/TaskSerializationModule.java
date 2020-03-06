@@ -35,6 +35,9 @@ import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskAdditionalInformationDTO;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskDTO;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskRunner;
+import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
+import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersTaskAdditionalInformationDTO;
+import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersTaskDTO;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesTaskAdditionalInformationDTO;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesTaskDTO;
@@ -260,6 +263,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> recomputeMailboxCountersTask(RecomputeMailboxCountersService service) {
+        return RecomputeMailboxCountersTaskDTO.module(service);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> messageIdReindexingTask(MessageIdReIndexingTask.Factory factory) {
         return MessageIdReindexingTaskDTO.module(factory);
     }
@@ -367,6 +375,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> solveMailboxInconsistenciesAdditionalInformation() {
         return SolveMailboxInconsistenciesTaskAdditionalInformationDTO.MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> recomputeMailboxCountersAdditionalInformation() {
+        return RecomputeMailboxCountersTaskAdditionalInformationDTO.MODULE;
     }
 
     @ProvidesIntoSet
