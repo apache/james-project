@@ -25,13 +25,15 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.incr;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable.COUNT;
+import static org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable.MAILBOX_ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable.TABLE_NAME;
+import static org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable.UNSEEN;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 
@@ -48,6 +50,8 @@ public class CassandraMailboxCounterDAO {
     private final PreparedStatement readStatement;
     private final PreparedStatement incrementUnseenCountStatement;
     private final PreparedStatement incrementMessageCountStatement;
+    private final PreparedStatement addToCounters;
+    private final PreparedStatement removeToCounters;
     private final PreparedStatement decrementUnseenCountStatement;
     private final PreparedStatement decrementMessageCountStatement;
 
@@ -55,36 +59,82 @@ public class CassandraMailboxCounterDAO {
     public CassandraMailboxCounterDAO(Session session) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         readStatement = createReadStatement(session);
-        incrementMessageCountStatement = updateMailboxStatement(session, incr(CassandraMailboxCountersTable.COUNT));
-        incrementUnseenCountStatement = updateMailboxStatement(session, incr(CassandraMailboxCountersTable.UNSEEN));
-        decrementMessageCountStatement = updateMailboxStatement(session, decr(CassandraMailboxCountersTable.COUNT));
-        decrementUnseenCountStatement = updateMailboxStatement(session, decr(CassandraMailboxCountersTable.UNSEEN));
+        incrementMessageCountStatement = updateMailboxStatement(session, incr(COUNT));
+        incrementUnseenCountStatement = updateMailboxStatement(session, incr(UNSEEN));
+        addToCounters = session.prepare(update(TABLE_NAME)
+            .with(incr(COUNT, bindMarker(COUNT)))
+            .and(incr(UNSEEN, bindMarker(UNSEEN)))
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+        removeToCounters = session.prepare(update(TABLE_NAME)
+            .with(decr(COUNT, bindMarker(COUNT)))
+            .and(decr(UNSEEN, bindMarker(UNSEEN)))
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+        decrementMessageCountStatement = updateMailboxStatement(session, decr(COUNT));
+        decrementUnseenCountStatement = updateMailboxStatement(session, decr(UNSEEN));
     }
 
     private PreparedStatement createReadStatement(Session session) {
         return session.prepare(
-            select(CassandraMailboxCountersTable.UNSEEN, CassandraMailboxCountersTable.COUNT)
-                .from(CassandraMailboxCountersTable.TABLE_NAME)
-                .where(eq(CassandraMailboxCountersTable.MAILBOX_ID, bindMarker(CassandraMailboxCountersTable.MAILBOX_ID))));
+            select(UNSEEN, COUNT)
+                .from(TABLE_NAME)
+                .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
     private PreparedStatement updateMailboxStatement(Session session, Assignment operation) {
         return session.prepare(
-            update(CassandraMailboxCountersTable.TABLE_NAME)
+            update(TABLE_NAME)
                 .with(operation)
-                .where(eq(CassandraMailboxCountersTable.MAILBOX_ID, bindMarker(CassandraMailboxCountersTable.MAILBOX_ID))));
+                .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
     public Mono<MailboxCounters> retrieveMailboxCounters(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(mailboxId, readStatement))
             .map(row ->  MailboxCounters.builder()
                 .mailboxId(mailboxId)
-                .count(row.getLong(CassandraMailboxCountersTable.COUNT))
-                .unseen(row.getLong(CassandraMailboxCountersTable.UNSEEN))
+                .count(row.getLong(COUNT))
+                .unseen(row.getLong(UNSEEN))
                 .build());
     }
 
-    public Mono<Long> countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
+    public Mono<Void> resetCounters(MailboxCounters counters) {
+        CassandraId mailboxId = (CassandraId) counters.getMailboxId();
+
+        return retrieveMailboxCounters(mailboxId)
+            .switchIfEmpty(Mono.just(emptyCounters(mailboxId)))
+            .flatMap(storedCounters -> {
+                if (storedCounters.equals(counters)) {
+                    return Mono.empty();
+                }
+                return remove(storedCounters)
+                    .then(add(counters));
+            });
+    }
+
+    private MailboxCounters emptyCounters(CassandraId mailboxId) {
+        return MailboxCounters.builder()
+            .count(0)
+            .unseen(0)
+            .mailboxId(mailboxId)
+            .build();
+    }
+
+    private Mono<Void> add(MailboxCounters counters) {
+        CassandraId mailboxId = (CassandraId) counters.getMailboxId();
+        return cassandraAsyncExecutor.executeVoid(
+            bindWithMailbox(mailboxId, addToCounters)
+                .setLong(COUNT, counters.getCount())
+                .setLong(UNSEEN, counters.getUnseen()));
+    }
+
+    private Mono<Void> remove(MailboxCounters counters) {
+        CassandraId mailboxId = (CassandraId) counters.getMailboxId();
+        return cassandraAsyncExecutor.executeVoid(
+            bindWithMailbox(mailboxId, removeToCounters)
+                .setLong(COUNT, counters.getCount())
+                .setLong(UNSEEN, counters.getUnseen()));
+    }
+
+    public Mono<Long> countMessagesInMailbox(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return countMessagesInMailbox(mailboxId);
@@ -92,14 +142,14 @@ public class CassandraMailboxCounterDAO {
 
     public Mono<Long> countMessagesInMailbox(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(cassandraId, readStatement))
-            .map(row -> row.getLong(CassandraMailboxCountersTable.COUNT));
+            .map(row -> row.getLong(COUNT));
     }
 
-    public Mono<Long> countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
+    public Mono<Long> countUnseenMessagesInMailbox(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(mailboxId, readStatement))
-            .map(row -> row.getLong(CassandraMailboxCountersTable.UNSEEN));
+            .map(row -> row.getLong(UNSEEN));
     }
 
     public Mono<Void> decrementCount(CassandraId mailboxId) {
@@ -120,6 +170,6 @@ public class CassandraMailboxCounterDAO {
 
     private BoundStatement bindWithMailbox(CassandraId mailboxId, PreparedStatement statement) {
         return statement.bind()
-            .setUUID(CassandraMailboxCountersTable.MAILBOX_ID, mailboxId.asUuid());
+            .setUUID(MAILBOX_ID, mailboxId.asUuid());
     }
 }

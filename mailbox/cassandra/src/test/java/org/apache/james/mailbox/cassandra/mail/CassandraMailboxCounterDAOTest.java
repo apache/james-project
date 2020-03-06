@@ -52,36 +52,36 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void countMessagesInMailboxShouldReturnEmptyByDefault() throws Exception {
+    void countMessagesInMailboxShouldReturnEmptyByDefault() {
         assertThat(testee.countMessagesInMailbox(mailbox).hasElement().block()).isFalse();
     }
 
     @Test
-    void countUnseenMessagesInMailboxShouldReturnEmptyByDefault() throws Exception {
+    void countUnseenMessagesInMailboxShouldReturnEmptyByDefault() {
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).hasElement().block()).isFalse();
     }
 
     @Test
-    void retrieveMailboxCounterShouldReturnEmptyByDefault() throws Exception {
+    void retrieveMailboxCounterShouldReturnEmptyByDefault() {
         assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).hasElement().block()).isFalse();
     }
 
     @Test
-    void incrementCountShouldAddOneWhenAbsent() throws Exception {
+    void incrementCountShouldAddOneWhenAbsent() {
         testee.incrementCount(MAILBOX_ID).block();
 
         assertThat(testee.countMessagesInMailbox(mailbox).block()).isEqualTo(1L);
     }
 
     @Test
-    void incrementUnseenShouldAddOneWhenAbsent() throws Exception {
+    void incrementUnseenShouldAddOneWhenAbsent() {
         testee.incrementUnseen(MAILBOX_ID).block();
 
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).block()).isEqualTo(1L);
     }
 
     @Test
-    void incrementUnseenShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
+    void incrementUnseenShouldAddOneWhenAbsentOnMailboxCounters() {
         testee.incrementUnseen(MAILBOX_ID).block();
 
         assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
@@ -93,7 +93,7 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void incrementCountShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
+    void incrementCountShouldAddOneWhenAbsentOnMailboxCounters() {
         testee.incrementCount(MAILBOX_ID).block();
 
         assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
@@ -105,7 +105,7 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void retrieveMailboxCounterShouldWorkWhenFullRow() throws Exception {
+    void retrieveMailboxCounterShouldWorkWhenFullRow() {
         testee.incrementCount(MAILBOX_ID).block();
         testee.incrementUnseen(MAILBOX_ID).block();
 
@@ -118,7 +118,7 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void decrementCountShouldRemoveOne() throws Exception {
+    void decrementCountShouldRemoveOne() {
         testee.incrementCount(MAILBOX_ID).block();
 
         testee.decrementCount(MAILBOX_ID).block();
@@ -128,7 +128,7 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void decrementUnseenShouldRemoveOne() throws Exception {
+    void decrementUnseenShouldRemoveOne() {
         testee.incrementUnseen(MAILBOX_ID).block();
 
         testee.decrementUnseen(MAILBOX_ID).block();
@@ -138,7 +138,7 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void incrementUnseenShouldHaveNoImpactOnMessageCount() throws Exception {
+    void incrementUnseenShouldHaveNoImpactOnMessageCount() {
         testee.incrementUnseen(MAILBOX_ID).block();
 
         assertThat(testee.countMessagesInMailbox(mailbox).block())
@@ -146,7 +146,7 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void incrementCountShouldHaveNoEffectOnUnseenCount() throws Exception {
+    void incrementCountShouldHaveNoEffectOnUnseenCount() {
         testee.incrementCount(MAILBOX_ID).block();
 
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).block())
@@ -154,7 +154,7 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void decrementUnseenShouldHaveNoEffectOnMessageCount() throws Exception {
+    void decrementUnseenShouldHaveNoEffectOnMessageCount() {
         testee.incrementCount(MAILBOX_ID).block();
 
         testee.decrementUnseen(MAILBOX_ID).block();
@@ -164,7 +164,7 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void decrementCountShouldHaveNoEffectOnUnseenCount() throws Exception {
+    void decrementCountShouldHaveNoEffectOnUnseenCount() {
         testee.incrementUnseen(MAILBOX_ID).block();
 
         testee.decrementCount(MAILBOX_ID).block();
@@ -174,7 +174,7 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void decrementCountCanLeadToNegativeValue() throws Exception {
+    void decrementCountCanLeadToNegativeValue() {
         testee.decrementCount(MAILBOX_ID).block();
 
         assertThat(testee.countMessagesInMailbox(mailbox).block())
@@ -182,10 +182,121 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    void decrementUnseenCanLeadToNegativeValue() throws Exception {
+    void decrementUnseenCanLeadToNegativeValue() {
         testee.decrementUnseen(MAILBOX_ID).block();
 
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).block())
             .isEqualTo(-1L);
+    }
+
+    @Test
+    void resetCountersShouldNoopWhenZeroAndNoData() {
+        MailboxCounters counters = MailboxCounters.builder()
+            .unseen(0)
+            .count(0)
+            .mailboxId(MAILBOX_ID)
+            .build();
+
+        testee.resetCounters(counters).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).blockOptional())
+            .isEmpty();
+    }
+
+    @Test
+    void resetCountersShouldNoopWhenZeroAndZeroData() {
+        MailboxCounters counters = MailboxCounters.builder()
+            .unseen(0)
+            .count(0)
+            .mailboxId(MAILBOX_ID)
+            .build();
+
+        testee.incrementUnseen(MAILBOX_ID).block();
+        testee.decrementUnseen(MAILBOX_ID).block();
+
+        testee.resetCounters(counters).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).blockOptional())
+            .contains(counters);
+    }
+
+    @Test
+    void resetCountersShouldReInitCountWhenNothing() {
+        MailboxCounters counters = MailboxCounters.builder()
+            .unseen(45)
+            .count(78)
+            .mailboxId(MAILBOX_ID)
+            .build();
+
+        testee.resetCounters(counters).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).blockOptional())
+            .contains(counters);
+    }
+
+    @Test
+    void resetCountersShouldReInitCountWhenData() {
+        MailboxCounters counters = MailboxCounters.builder()
+            .unseen(45)
+            .count(78)
+            .mailboxId(MAILBOX_ID)
+            .build();
+
+        testee.incrementCount(MAILBOX_ID).block();
+        testee.incrementUnseen(MAILBOX_ID).block();
+
+        testee.resetCounters(counters).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).blockOptional())
+            .contains(counters);
+    }
+
+    @Test
+    void resetCountersShouldBeIdempotent() {
+        MailboxCounters counters = MailboxCounters.builder()
+            .unseen(45)
+            .count(78)
+            .mailboxId(MAILBOX_ID)
+            .build();
+
+        testee.resetCounters(counters).block();
+        testee.resetCounters(counters).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).blockOptional())
+            .contains(counters);
+    }
+
+    @Test
+    void resetCountersShouldReInitCountWhenZeroUnseen() {
+        MailboxCounters counters = MailboxCounters.builder()
+            .unseen(0)
+            .count(78)
+            .mailboxId(MAILBOX_ID)
+            .build();
+
+        testee.incrementCount(MAILBOX_ID).block();
+        testee.incrementUnseen(MAILBOX_ID).block();
+
+        testee.resetCounters(counters).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).blockOptional())
+            .contains(counters);
+    }
+
+    @Test
+    void resetCountersShouldReInitCountWhenZeroCount() {
+        MailboxCounters counters = MailboxCounters.builder()
+            .unseen(46)
+            .count(0)
+            .mailboxId(MAILBOX_ID)
+            .build();
+
+        testee.incrementCount(MAILBOX_ID).block();
+        testee.incrementUnseen(MAILBOX_ID).block();
+
+        testee.resetCounters(counters).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).blockOptional())
+            .contains(counters);
     }
 }
