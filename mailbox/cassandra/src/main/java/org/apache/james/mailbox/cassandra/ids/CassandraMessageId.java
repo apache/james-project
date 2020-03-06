@@ -41,7 +41,7 @@ public class CassandraMessageId implements MessageId {
         }
 
         @Override
-        public MessageId fromString(String serialized) {
+        public CassandraMessageId fromString(String serialized) {
             return of(UUID.fromString(serialized));
         }
     }
