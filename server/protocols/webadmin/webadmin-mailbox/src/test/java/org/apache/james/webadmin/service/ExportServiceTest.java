@@ -20,59 +20,35 @@
 package org.apache.james.webadmin.service;
 
 import static org.apache.james.mailbox.DefaultMailboxes.INBOX;
+import static org.apache.james.webadmin.service.ExportServiceTestSystem.BOB;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
-import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.blob.export.file.FileSystemExtension;
-import org.apache.james.blob.export.file.LocalFileBlobExportMechanism;
-import org.apache.james.blob.memory.MemoryBlobStore;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.backup.ArchiveService;
-import org.apache.james.mailbox.backup.DefaultMailboxBackup;
-import org.apache.james.mailbox.backup.MailArchivesLoader;
-import org.apache.james.mailbox.backup.MailboxBackup;
 import org.apache.james.mailbox.backup.ZipAssert;
-import org.apache.james.mailbox.backup.ZipMailArchiveRestorer;
-import org.apache.james.mailbox.backup.zip.ZipArchivesLoader;
-import org.apache.james.mailbox.backup.zip.Zipper;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
-import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.mailet.base.MailAddressFixture;
-import org.apache.mailet.base.test.FakeMailContext;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
@@ -84,7 +60,6 @@ class ExportServiceTest {
 
     private static final String JAMES_HOST = "james-host";
     private static final Domain DOMAIN = Domain.of("domain.tld");
-    private static final Username BOB = Username.fromLocalPartWithDomain("bob", DOMAIN);
     private static final Username UNKNOWN_USER = Username.fromLocalPartWithDomain("unknown", DOMAIN);
     private static final String PASSWORD = "password";
     private static final String CORRESPONDING_FILE_HEADER = "corresponding-file";
@@ -98,53 +73,16 @@ class ExportServiceTest {
     private static final BlobId.Factory FACTORY = new HashBlobId.Factory();
 
     private ExportService testee;
-    private InMemoryMailboxManager mailboxManager;
-    private MailboxSession bobSession;
-    private BlobStore blobStore;
-    private FakeMailContext mailetContext;
+    private ExportServiceTestSystem testSystem;
 
     @BeforeEach
     void setUp(FileSystem fileSystem) throws Exception {
-        mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        bobSession = mailboxManager.createSystemSession(BOB);
-
-        MailboxBackup backup = createMailboxBackup();
-        DNSService dnsService = createDnsService();
-        blobStore = Mockito.spy(new MemoryBlobStore(FACTORY, new MemoryDumbBlobStore()));
-        mailetContext = FakeMailContext.builder().postmaster(MailAddressFixture.POSTMASTER_AT_JAMES).build();
-        BlobExportMechanism blobExport = new LocalFileBlobExportMechanism(mailetContext, blobStore, fileSystem, dnsService,
-            LocalFileBlobExportMechanism.Configuration.DEFAULT_CONFIGURATION);
-        MemoryUsersRepository usersRepository = createUsersRepository(dnsService);
-
-        testee = new ExportService(backup, blobStore, blobExport, usersRepository);
-    }
-
-    private MemoryUsersRepository createUsersRepository(DNSService dnsService) throws Exception {
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
-
-        domainList.addDomain(DOMAIN);
-        usersRepository.addUser(BOB, PASSWORD);
-        return usersRepository;
-    }
-
-    private DNSService createDnsService() throws UnknownHostException {
-        InetAddress localHost = mock(InetAddress.class);
-        when(localHost.getHostName()).thenReturn(JAMES_HOST);
-        DNSService dnsService = mock(DNSService.class);
-        when(dnsService.getLocalHost()).thenReturn(localHost);
-        return dnsService;
-    }
-
-    private DefaultMailboxBackup createMailboxBackup() {
-        ArchiveService archiveService = new Zipper();
-        MailArchivesLoader archiveLoader = new ZipArchivesLoader();
-        ZipMailArchiveRestorer archiveRestorer = new ZipMailArchiveRestorer(mailboxManager, archiveLoader);
-        return new DefaultMailboxBackup(mailboxManager, archiveService, archiveRestorer);
+        testSystem = new ExportServiceTestSystem(fileSystem);
+        testee = new ExportService(testSystem.backup, testSystem.blobStore, testSystem.blobExport, testSystem.usersRepository);
     }
 
     private String getFileUrl() throws MessagingException {
-        return mailetContext.getSentMails().get(0).getMsg().getHeader(CORRESPONDING_FILE_HEADER)[0];
+        return testSystem.mailetContext.getSentMails().get(0).getMsg().getHeader(CORRESPONDING_FILE_HEADER)[0];
     }
 
     @Test
@@ -169,11 +107,11 @@ class ExportServiceTest {
 
     private ComposedMessageId createAMailboxWithAMail(String message) throws MailboxException {
         MailboxPath bobInboxPath = MailboxPath.inbox(BOB);
-        mailboxManager.createMailbox(bobInboxPath, bobSession);
-        return mailboxManager.getMailbox(bobInboxPath, bobSession)
+        testSystem.mailboxManager.createMailbox(bobInboxPath, testSystem.bobSession);
+        return testSystem.mailboxManager.getMailbox(bobInboxPath, testSystem.bobSession)
             .appendMessage(MessageManager.AppendCommand.builder()
                     .build(message),
-                bobSession);
+                testSystem.bobSession);
     }
 
     @Test
@@ -246,10 +184,10 @@ class ExportServiceTest {
         String blobId = fileName.substring(fileName.lastIndexOf("-") + 1);
 
         SoftAssertions.assertSoftly(softly -> {
-            assertThatThrownBy(() -> blobStore.read(blobStore.getDefaultBucketName(), FACTORY.from(blobId)))
+            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.from(blobId)))
                 .isInstanceOf(ObjectNotFoundException.class);
-            assertThatThrownBy(() -> blobStore.read(blobStore.getDefaultBucketName(), FACTORY.from(blobId)))
-                .hasMessage(String.format("blob '%s' not found in bucket '%s'", blobId, blobStore.getDefaultBucketName().asString()));
+            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.from(blobId)))
+                .hasMessage(String.format("blob '%s' not found in bucket '%s'", blobId, testSystem.blobStore.getDefaultBucketName().asString()));
         });
     }
 
@@ -258,7 +196,7 @@ class ExportServiceTest {
         createAMailboxWithAMail(MESSAGE_CONTENT);
 
         doReturn(Mono.error(new RuntimeException()))
-            .when(blobStore)
+            .when(testSystem.blobStore)
             .delete(any(), any());
 
         Task.Result result = testee.export(BOB).block();
@@ -266,7 +204,7 @@ class ExportServiceTest {
         String fileName = Files.getNameWithoutExtension(getFileUrl());
         String blobId = fileName.substring(fileName.lastIndexOf("-") + 1);
 
-        blobStore.read(blobStore.getDefaultBucketName(), FACTORY.from(blobId));
+        testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.from(blobId));
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
     }
