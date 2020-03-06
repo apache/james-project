@@ -22,11 +22,12 @@ package org.apache.james.mailbox.events;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
-import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
 import static org.apache.james.mailbox.events.RetryBackoffConfiguration.FOREVER;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Delivery;
 
@@ -53,6 +55,9 @@ import reactor.rabbitmq.Sender;
 
 class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
+    private static final String EVENTBUS_QUEUE_NAME_PREFIX = "eventbus-";
+    private static final Duration EXPIRATION_TIMEOUT = Duration.ofMinutes(30);
+    private static final Map<String, Object> QUEUE_ARGUMENTS = ImmutableMap.of("x-expires", EXPIRATION_TIMEOUT.toMillis());
 
     private final EventBusId eventBusId;
     private final LocalListenerRegistry localListenerRegistry;
@@ -96,11 +101,11 @@ class KeyRegistrationHandler {
 
     @VisibleForTesting
     void declareQueue() {
-        sender.declareQueue(QueueSpecification.queue(eventBusId.asString())
+        sender.declareQueue(QueueSpecification.queue(EVENTBUS_QUEUE_NAME_PREFIX + eventBusId.asString())
             .durable(DURABLE)
             .exclusive(!EXCLUSIVE)
             .autoDelete(AUTO_DELETE)
-            .arguments(NO_ARGUMENTS))
+            .arguments(QUEUE_ARGUMENTS))
             .map(AMQP.Queue.DeclareOk::getQueue)
             .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor())
             .doOnSuccess(queueName -> {
