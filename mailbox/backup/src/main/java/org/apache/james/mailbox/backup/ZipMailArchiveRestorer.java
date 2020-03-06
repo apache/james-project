@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
@@ -48,6 +50,7 @@ public class ZipMailArchiveRestorer implements MailArchiveRestorer {
     private final MailboxManager mailboxManager;
     private final MailArchivesLoader archiveLoader;
 
+    @Inject
     public ZipMailArchiveRestorer(MailboxManager mailboxManager, MailArchivesLoader archiveLoader) {
         this.mailboxManager = mailboxManager;
         this.archiveLoader = archiveLoader;

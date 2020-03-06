@@ -24,6 +24,8 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -77,6 +79,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
     private final ArchiveService archiveService;
     private final MailArchiveRestorer archiveRestorer;
 
+    @Inject
     public DefaultMailboxBackup(MailboxManager mailboxManager, ArchiveService archiveService, MailArchiveRestorer archiveRestorer) {
         this.mailboxManager = mailboxManager;
         this.archiveService = archiveService;
