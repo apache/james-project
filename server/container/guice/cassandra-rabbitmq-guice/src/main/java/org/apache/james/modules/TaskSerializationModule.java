@@ -77,6 +77,9 @@ import org.apache.james.webadmin.service.EventDeadLettersRedeliverGroupTaskDTO;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverOneTaskDTO;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverService;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.ExportService;
+import org.apache.james.webadmin.service.MailboxesExportTask;
+import org.apache.james.webadmin.service.MailboxesExportTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingOneMailTaskAdditionalInformationDTO;
@@ -200,6 +203,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> recomputeUserJmapPreviewsTask(MessageFastViewProjectionCorrector corrector) {
         return RecomputeUserFastViewProjectionItemsTask.module(corrector);
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> mailboxesExportTask(ExportService exportService) {
+        return MailboxesExportTask.module(exportService);
     }
 
     @ProvidesIntoSet
@@ -425,6 +433,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> recomputeUserJmapPreviewsAdditionalInformation() {
         return RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> mailboxesExportAdditionalInformation() {
+        return MailboxesExportTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @Named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME)
