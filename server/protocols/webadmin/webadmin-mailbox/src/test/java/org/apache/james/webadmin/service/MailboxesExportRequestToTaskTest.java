@@ -28,8 +28,11 @@ import static org.apache.james.webadmin.service.ExportServiceTestSystem.CEDRIC;
 import static org.apache.james.webadmin.service.ExportServiceTestSystem.PASSWORD;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Optional;
 
 import org.apache.james.blob.export.file.FileSystemExtension;
@@ -59,6 +62,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.restassured.RestAssured;
 import io.restassured.filter.log.LogDetail;
+import reactor.core.publisher.Mono;
 import spark.Service;
 
 @ExtendWith(FileSystemExtension.class)
@@ -278,6 +282,31 @@ class MailboxesExportRequestToTaskTest {
         ZipAssert.assertThatZip(new FileInputStream(fileUrl))
             .containsOnlyEntriesMatching(
                 ZipAssert.EntryChecks.hasName(INBOX + "/").isDirectory());
+    }
+
+    @Test
+    void exportMailboxesShouldFailWhenCannotSaveToBlobStore() throws Exception {
+        testSystem.mailboxManager.createMailbox(MailboxPath.inbox(BOB), testSystem.bobSession);
+
+        doReturn(Mono.error(new RuntimeException()))
+            .when(testSystem.blobStore)
+            .save(any(), any(InputStream.class), any());
+
+        String taskId = with()
+            .queryParam("action", "export")
+            .post()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("failed"))
+            .body("taskId", is(taskId))
+            .body("type", is("MailboxesExportTask"))
+            .body("additionalInformation.username", is(BOB.asString()));
     }
 
     @Test
