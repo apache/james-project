@@ -14,6 +14,7 @@ of tasks being currently executed.
 - JAMES-3066 Add "allowed From headers" webadmin endpoint
 - JAMES-3062 EventDeadLettersHealthCheck
 - JAMES-3058 WebAdmin offline task to correct mailbox inconsistencies on top of Cassandra products
+- JAMES-3105 WebAdmin offline task to recompute mailbox counters on top of Cassandra products
 
 ### Changed
 - Multiple changes have been made to enhance ElasticSearch performance:
