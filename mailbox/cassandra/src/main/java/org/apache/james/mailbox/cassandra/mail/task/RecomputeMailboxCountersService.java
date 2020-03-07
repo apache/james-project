@@ -193,6 +193,21 @@ public class RecomputeMailboxCountersService {
     private Flux<ComposedMessageIdWithMetaData> latestMetadata(CassandraId mailboxId, ComposedMessageIdWithMetaData message) {
         CassandraMessageId messageId = (CassandraMessageId) message.getComposedMessageId().getMessageId();
 
-        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId));
+        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId))
+            .doOnNext(trustedMessage -> {
+                if (!trustedMessage.equals(message)) {
+                    LOGGER.warn("Possible denormalization issue on {}. " +
+                            "Mismatch between the two denormalization table. " +
+                            "This can also be due to concurrent modifications.",
+                        message.getComposedMessageId());
+                }
+            })
+            .switchIfEmpty(Flux.<ComposedMessageIdWithMetaData>empty()
+                .doOnComplete(() -> {
+                    LOGGER.warn("Possible denormalization issue on {}. " +
+                            "Source of truth do not contain listed entry." +
+                            "This can also be due to concurrent modifications.",
+                        message.getComposedMessageId());
+                }));
     }
 }
