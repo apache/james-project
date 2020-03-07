@@ -453,6 +453,41 @@ A dirty read is when data is read between the two writes of the denormalization 
 In order to ensure being offline, stop the traffic on SMTP, JMAP and IMAP ports, for example via re-configuration or 
 firewall rules.
 
+#### Recomputing mailbox counters
+
+This task is only available on top of Guice Cassandra products.
+
+```
+curl -XPOST /mailboxes?task=RecomputeMailboxCounters
+```
+
+Will recompute counters (unseen & total count) for the mailbox object stored in Cassandra.
+
+Cassandra maintains a per mailbox projection for message count and unseen message count. As with any projection, it can 
+go out of sync, leading to inconsistent results being returned to the client.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+The scheduled task will have the following type `recompute-mailbox-counters` and the following `additionalInformation`:
+
+```
+{
+  "type":"recompute-mailbox-counters",
+  "processedMailboxes": 3,
+  "failedMailboxes": ["464765a0-e4e7-11e4-aba4-710c1de3782b"]
+}
+```
+
+Note that conflicting inconsistencies entries will not be fixed and will require to explicitly use 
+[ghost mailbox](#correcting-ghost-mailbox) endpoint in order to merge the conflicting mailboxes and prevent any message
+loss.
+
+**WARNING**: this task do not take into account concurrent modifications upon a single mailbox counter recomputation. 
+Rerunning the task will *eventually* provide the consistent result. As such we advise to run this task offline. 
+
+In order to ensure being offline, stop the traffic on SMTP, JMAP and IMAP ports, for example via re-configuration or 
+firewall rules.
+
 #### Recomputing Global JMAP fast message view projection
 
 This action is only available for backends supporting JMAP protocol.
