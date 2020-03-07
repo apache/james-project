@@ -21,6 +21,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.Optional;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -95,5 +96,14 @@ public class MailboxCounters {
     @Override
     public final int hashCode() {
         return Objects.hashCode(count, unseen, mailboxId);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxId", mailboxId)
+            .add("count", count)
+            .add("unseen", unseen)
+            .toString();
     }
 }
