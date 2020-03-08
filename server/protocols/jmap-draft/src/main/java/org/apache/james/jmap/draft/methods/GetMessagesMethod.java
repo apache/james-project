@@ -89,19 +89,21 @@ public class GetMessagesMethod implements Method {
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
         MessageProperties outputProperties = getMessagesRequest.getProperties().toOutputProperties();
 
-        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "GET_MESSAGES")
-                .addContext("accountId", getMessagesRequest.getAccountId())
-                .addContext("ids", getMessagesRequest.getIds())
-                .addContext("properties", getMessagesRequest.getProperties())
-                .wrapArround(
+
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "GET_MESSAGES")
+            .addContext("accountId", getMessagesRequest.getAccountId())
+            .addContext("ids", getMessagesRequest.getIds())
+            .addContext("properties", getMessagesRequest.getProperties())
+            .wrapArround(
+                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
                     () -> Stream.of(JmapResponse.builder().methodCallId(methodCallId)
                         .response(getMessagesResponse(mailboxSession, getMessagesRequest))
                         .responseName(RESPONSE_NAME)
                         .properties(outputProperties.getOptionalMessageProperties())
                         .filterProvider(buildOptionalHeadersFilteringFilterProvider(outputProperties))
-                        .build())));
+                        .build())))
+            .get();
     }
 
     private Optional<SimpleFilterProvider> buildOptionalHeadersFilteringFilterProvider(MessageProperties properties) {

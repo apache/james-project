@@ -70,15 +70,17 @@ public class GetVacationResponseMethod implements Method {
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetVacationRequest);
 
-        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "VACATION")
-                .wrapArround(
+
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "VACATION")
+            .wrapArround(
+                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
                     () -> Stream.of(JmapResponse.builder()
                         .methodCallId(methodCallId)
                         .responseName(RESPONSE_NAME)
                         .response(process(mailboxSession))
-                        .build())));
+                        .build())))
+            .get();
     }
 
     private GetVacationResponse process(MailboxSession mailboxSession) {

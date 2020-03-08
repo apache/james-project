@@ -94,7 +94,7 @@ public class GetMessageListMethod implements Method {
 
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
 
-        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(), MDCBuilder.create()
+        return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "GET_MESSAGE_LIST")
             .addContext("accountId", messageListRequest.getAccountId())
             .addContext("limit", messageListRequest.getLimit())
@@ -107,7 +107,9 @@ public class GetMessageListMethod implements Method {
             .addContext("isFetchMessage", messageListRequest.isFetchMessages())
             .addContext("isCollapseThread", messageListRequest.isCollapseThreads())
             .wrapArround(
-                () -> process(methodCallId, mailboxSession, messageListRequest)));
+                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+                    () -> process(methodCallId, mailboxSession, messageListRequest)))
+            .get();
     }
 
     private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetMessageListRequest messageListRequest) {

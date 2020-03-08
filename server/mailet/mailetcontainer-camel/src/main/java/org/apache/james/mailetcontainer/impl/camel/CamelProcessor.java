@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl.camel;
 
+import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
+
 import java.io.Closeable;
 import java.util.List;
 import java.util.Locale;
@@ -97,7 +99,7 @@ public class CamelProcessor {
             }
 
         } finally {
-            timeMetric.stopAndPublish();
+            timeMetric.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD);
             MailetPipelineLogging.logEndOfMailetProcess(mailet, mail);
             List<MailetProcessorListener> listeners = processor.getListeners();
             long complete = System.currentTimeMillis() - start;

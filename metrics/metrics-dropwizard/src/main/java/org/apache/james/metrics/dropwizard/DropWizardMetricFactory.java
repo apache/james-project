@@ -53,7 +53,7 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
 
     @Override
     public TimeMetric timer(String name) {
-        return new DropWizardTimeMetric(name, metricRegistry.timer(name).time());
+        return new DropWizardTimeMetric(name, metricRegistry.timer(name));
     }
 
     @Override

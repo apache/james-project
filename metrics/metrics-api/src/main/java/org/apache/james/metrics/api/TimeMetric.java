@@ -18,10 +18,20 @@
  ****************************************************************/
 package org.apache.james.metrics.api;
 
+import java.time.Duration;
+
 public interface TimeMetric {
+
+    interface ExecutionResult {
+        Duration DEFAULT_100_MS_THRESHOLD = Duration.ofMillis(100);
+
+        Duration elasped();
+
+        ExecutionResult logWhenExceedP99(Duration thresholdInNanoSeconds);
+    }
 
     String name();
 
-    long stopAndPublish();
+    ExecutionResult stopAndPublish();
 
 }

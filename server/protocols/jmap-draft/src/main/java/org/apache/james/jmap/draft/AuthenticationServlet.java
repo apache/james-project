@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.draft;
 
+import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
+
 import java.io.IOException;
 
 import javax.inject.Inject;
@@ -97,7 +99,7 @@ public class AuthenticationServlet extends HttpServlet {
             LOG.error("Internal error", e);
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } finally {
-            timeMetric.stopAndPublish();
+            timeMetric.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD);
         }
     }
     

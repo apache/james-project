@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
+import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -105,7 +107,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             LOGGER.error("Unexpected error during IMAP processing", unexpectedException);
             no(acceptableMessage, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
-        timeMetric.stopAndPublish();
+        timeMetric.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD);
     }
 
     protected void flags(Responder responder, SelectedMailbox selected) {

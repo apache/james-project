@@ -36,11 +36,13 @@ public class MailboxListenerExecutor {
 
     void execute(MailboxListener listener, MDCBuilder mdcBuilder, Event event) throws Exception {
         if (listener.isHandling(event)) {
-            TimeMetric timer = metricFactory.timer(timerName(listener));
             try (Closeable mdc = buildMDC(listener, mdcBuilder, event)) {
-                listener.event(event);
-            } finally {
-                timer.stopAndPublish();
+                TimeMetric timer = metricFactory.timer(timerName(listener));
+                try {
+                    listener.event(event);
+                } finally {
+                    timer.stopAndPublish();
+                }
             }
         }
     }

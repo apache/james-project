@@ -111,12 +111,13 @@ public class SetFilterMethod implements Method {
 
         SetFilterRequest setFilterRequest = (SetFilterRequest) request;
 
-        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "SET_FILTER")
-                .addContext("update", setFilterRequest.getSingleton())
-                .wrapArround(
-                    () -> process(methodCallId, mailboxSession, setFilterRequest)));
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SET_FILTER")
+            .addContext("update", setFilterRequest.getSingleton())
+            .wrapArround(
+                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+                    () -> process(methodCallId, mailboxSession, setFilterRequest)))
+            .get();
     }
 
     private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, SetFilterRequest request) {

@@ -19,6 +19,8 @@
 
 package org.apache.james.metrics.api;
 
+import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
+
 import java.util.function.Supplier;
 
 import org.reactivestreams.Publisher;
@@ -35,6 +37,15 @@ public interface MetricFactory {
             return operation.get();
         } finally {
             timer.stopAndPublish();
+        }
+    }
+
+    default <T> T runPublishingTimerMetricLogP99(String name, Supplier<T> operation) {
+        TimeMetric timer = timer(name);
+        try {
+            return operation.get();
+        } finally {
+            timer.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD);
         }
     }
 

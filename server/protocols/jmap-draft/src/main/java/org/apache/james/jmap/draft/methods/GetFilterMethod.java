@@ -73,10 +73,13 @@ public class GetFilterMethod implements Method {
 
         GetFilterRequest filterRequest = (GetFilterRequest) request;
 
-        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "GET_FILTER")
-                .wrapArround(() -> process(methodCallId, mailboxSession, filterRequest)));
+
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "GET_FILTER")
+            .wrapArround(
+                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+                    () -> process(methodCallId, mailboxSession, filterRequest)))
+            .get();
     }
 
     private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetFilterRequest request) {

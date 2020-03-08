@@ -76,12 +76,14 @@ public class SetVacationResponseMethod implements Method {
         Preconditions.checkArgument(request instanceof SetVacationRequest);
         SetVacationRequest setVacationRequest = (SetVacationRequest) request;
 
-        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "SET_VACATION")
-                .addContext("update", setVacationRequest.getUpdate())
-                .wrapArround(
-                    () -> process(methodCallId, mailboxSession, setVacationRequest)));
+
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SET_VACATION")
+            .addContext("update", setVacationRequest.getUpdate())
+            .wrapArround(
+                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+                    () -> process(methodCallId, mailboxSession, setVacationRequest)))
+            .get();
     }
 
     private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, SetVacationRequest setVacationRequest) {
