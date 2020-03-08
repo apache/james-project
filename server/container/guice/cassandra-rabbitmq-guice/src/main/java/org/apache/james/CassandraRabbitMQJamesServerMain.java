@@ -27,24 +27,17 @@ import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class CassandraRabbitMQJamesServerMain {
+public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
     public static final Module MODULES =
         Modules
             .override(Modules.combine(REQUIRE_TASK_MANAGER_MODULE, new DistributedTaskManagerModule()))
             .with(new RabbitMQModule(), new BlobStoreChoosingModule(), new RabbitMQEventBusModule(), new TaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
-            .useWorkingDirectoryEnvProperty()
-            .build();
-
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(MODULES, new JMXServerModule());
-        server.start();
+        JamesServerMain.main(MODULES, new JMXServerModule());
     }
 }

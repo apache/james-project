@@ -19,18 +19,18 @@
 
 package org.apache.james;
 
-import org.apache.james.data.LdapUsersRepositoryModule;
-import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
 
-public class CassandraRabbitMQLdapJamesServerMain implements JamesServerMain {
-    public static final Module MODULES = Modules
-        .override(CassandraRabbitMQJamesServerMain.MODULES)
-        .with(new LdapUsersRepositoryModule());
+public interface JamesServerMain {
+    static void main(Module... modules) throws Exception {
+        Configuration configuration = Configuration.builder()
+            .useWorkingDirectoryEnvProperty()
+            .build();
 
-    public static void main(String[] args) throws Exception {
-        JamesServerMain.main(MODULES, new JMXServerModule());
+        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(modules);
+        server.start();
     }
 }

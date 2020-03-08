@@ -70,7 +70,6 @@ import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
-import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -78,7 +77,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
-public class CassandraJamesServerMain {
+public class CassandraJamesServerMain implements JamesServerMain {
 
     public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
@@ -157,13 +156,7 @@ public class CassandraJamesServerMain {
     );
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
-            .useWorkingDirectoryEnvProperty()
-            .build();
-
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE, new JMXServerModule());
-        server.start();
+        JamesServerMain.main(ALL_BUT_JMX_CASSANDRA_MODULE, new JMXServerModule());
     }
 
 }

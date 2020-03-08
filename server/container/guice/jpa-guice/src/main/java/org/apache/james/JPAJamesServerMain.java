@@ -33,7 +33,6 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
-import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
@@ -49,12 +48,11 @@ import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
-import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class JPAJamesServerMain {
+public class JPAJamesServerMain implements JamesServerMain {
 
     public static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
@@ -94,15 +92,7 @@ public class JPAJamesServerMain {
     public static final Module JPA_MODULE_AGGREGATE = Modules.combine(JPA_SERVER_MODULE, PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
-            .useWorkingDirectoryEnvProperty()
-            .build();
-
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(JPA_MODULE_AGGREGATE,
-                            new JMXServerModule(),
-                            new DKIMMailetModule());
-        server.start();
+        JamesServerMain.main(JPA_MODULE_AGGREGATE, new JMXServerModule());
     }
 
 }

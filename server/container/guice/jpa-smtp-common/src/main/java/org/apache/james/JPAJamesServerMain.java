@@ -34,12 +34,11 @@ import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminServerModule;
-import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class JPAJamesServerMain {
+public class JPAJamesServerMain implements JamesServerMain {
 
     public static final Module PROTOCOLS = Modules.combine(
         new ProtocolHandlerModule(),
@@ -60,13 +59,7 @@ public class JPAJamesServerMain {
         new ElasticSearchMetricReporterModule());
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
-            .useWorkingDirectoryEnvProperty()
-            .build();
-
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(JPA_SERVER_MODULE, PROTOCOLS, new DKIMMailetModule());
-        server.start();
+        JamesServerMain.main(JPA_SERVER_MODULE,  PROTOCOLS, new DKIMMailetModule());
     }
 
 }
