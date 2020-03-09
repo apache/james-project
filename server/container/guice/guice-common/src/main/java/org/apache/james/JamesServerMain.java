@@ -32,5 +32,7 @@ public interface JamesServerMain {
         GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
             .combineWith(modules);
         server.start();
+        
+        Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
 }
