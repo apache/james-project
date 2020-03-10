@@ -134,48 +134,93 @@ Feature: Rewrite Tables tests
 # Alias mapping
 
   Scenario: address mapping should be retrieved when searching with a domain alias
-    Given store "aliasdomain" alias domain mapping for domain "localhost"
+    Given store "aliasdomain" domain mapping for domain "localhost"
     Then mappings for user "test" at domain "aliasdomain" should contain only "test@localhost"
 
   Scenario: address mapping should be retrieved when searching with a domain alias
     Given store "test2@localhost" address mapping for user "test" at domain "localhost"
-    And store "aliasdomain" alias domain mapping for domain "localhost"
+    And store "aliasdomain" domain mapping for domain "localhost"
     Then mappings for user "test" at domain "aliasdomain" should contain only "test2@localhost"
 
   Scenario: address mapping should be retrieved when searching with a domain alias (reverse insertion order)
-    Given store "aliasdomain" alias domain mapping for domain "localhost"
+    Given store "aliasdomain" domain mapping for domain "localhost"
+    And store "test2@localhost" address mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contain only "test2@localhost"
+
+  Scenario: address mapping should be retrieved when searching with a domain alias
+    Given store "aliasdomain" domain alias for domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contain only "test@localhost"
+
+  Scenario: address mapping should be retrieved when searching with a domain alias
+    Given store "test2@localhost" address mapping for user "test" at domain "localhost"
+    And store "aliasdomain" domain alias for domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contain only "test2@localhost"
+
+  Scenario: address mapping should be retrieved when searching with a domain alias (reverse insertion order)
+    Given store "aliasdomain" domain alias for domain "localhost"
     And store "test2@localhost" address mapping for user "test" at domain "localhost"
     Then mappings for user "test" at domain "aliasdomain" should contain only "test2@localhost"
 
   Scenario: address mapping should be retrieved when searching with the correct domain and exists an alias domain
     Given store "test2@localhost" address mapping for user "test" at domain "localhost"
-    And store "aliasdomain" alias domain mapping for domain "localhost"
+    And store "aliasdomain" domain mapping for domain "localhost"
     Then mappings for user "test" at domain "localhost" should contain only "test2@localhost"
 
   Scenario: wildcard address mapping should be retrieved when searching with a domain alias
     Given store "wildcard@localhost" address mapping as wildcard for domain "localhost"
-    And store "aliasdomain" alias domain mapping for domain "localhost"
+    And store "aliasdomain" domain mapping for domain "localhost"
     Then mappings for user "test" at domain "aliasdomain" should contain only "wildcard@localhost"
 
   Scenario: wildcard address mapping should be retrieved when searching with a domain and exists an alias domain
     Given store "wildcard@localhost" address mapping as wildcard for domain "localhost"
-    And store "aliasdomain" alias domain mapping for domain "localhost"
+    And store "aliasdomain" domain mapping for domain "localhost"
     Then mappings for user "test" at domain "localhost" should contain only "wildcard@localhost"
 
   Scenario: both wildcard address mapping and default user address should be retrieved when wildcard address mapping on alias domain
     Given store "wildcard@localhost" address mapping as wildcard for domain "aliasdomain"
-    And store "aliasdomain" alias domain mapping for domain "localhost"
+    And store "aliasdomain" domain mapping for domain "localhost"
     Then mappings for user "test" at domain "aliasdomain" should contain only "test@localhost, wildcard@localhost"
 
   Scenario: both wildcard address mapping and default user address should be retrieved when wildcard address mapping on alias domain (reverse insertion order)
-    Given store "aliasdomain" alias domain mapping for domain "localhost"
+    Given store "aliasdomain" domain mapping for domain "localhost"
     And store "wildcard@localhost" address mapping as wildcard for domain "aliasdomain"
     Then mappings for user "test" at domain "aliasdomain" should contain only "test@localhost, wildcard@localhost"
 
   Scenario: asking for a removed domain alias should fail
     Given store "wildcard@localhost" address mapping as wildcard for domain "localhost"
-    And store "aliasdomain" alias domain mapping for domain "localhost"
-    When alias domain mapping "aliasdomain" for "localhost" domain is removed
+    And store "aliasdomain" domain mapping for domain "localhost"
+    When domain mapping "aliasdomain" for "localhost" domain is removed
+    Then mappings for user "test" at domain "aliasdomain" should be empty
+
+  Scenario: address mapping should be retrieved when searching with the correct domain and exists an alias domain
+    Given store "test2@localhost" address mapping for user "test" at domain "localhost"
+    And store "aliasdomain" domain alias for domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "test2@localhost"
+
+  Scenario: wildcard address mapping should be retrieved when searching with a domain alias
+    Given store "wildcard@localhost" address mapping as wildcard for domain "localhost"
+    And store "aliasdomain" domain alias for domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contain only "wildcard@localhost"
+
+  Scenario: wildcard address mapping should be retrieved when searching with a domain and exists an alias domain
+    Given store "wildcard@localhost" address mapping as wildcard for domain "localhost"
+    And store "aliasdomain" domain alias for domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "wildcard@localhost"
+
+  Scenario: both wildcard address mapping and default user address should be retrieved when wildcard address mapping on alias domain
+    Given store "wildcard@localhost" address mapping as wildcard for domain "aliasdomain"
+    And store "aliasdomain" domain alias for domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contain only "test@localhost, wildcard@localhost"
+
+  Scenario: both wildcard address mapping and default user address should be retrieved when wildcard address mapping on alias domain (reverse insertion order)
+    Given store "aliasdomain" domain alias for domain "localhost"
+    And store "wildcard@localhost" address mapping as wildcard for domain "aliasdomain"
+    Then mappings for user "test" at domain "aliasdomain" should contain only "test@localhost, wildcard@localhost"
+
+  Scenario: asking for a removed domain alias should fail
+    Given store "wildcard@localhost" address mapping as wildcard for domain "localhost"
+    And store "aliasdomain" domain alias for domain "localhost"
+    When domain alias "aliasdomain" for "localhost" domain is removed
     Then mappings for user "test" at domain "aliasdomain" should be empty
 
 # Mixed mapping
@@ -183,7 +228,13 @@ Feature: Rewrite Tables tests
   Scenario: mixed mapping should work
     Given store "test2@localhost" address mapping for user "test" at domain "localhost"
     And store "(.*)@localhost:user@localhost" regexp mapping for user "test" at domain "localhost"
-    And store "aliasdomain" alias domain mapping for domain "localhost"
+    And store "aliasdomain" domain mapping for domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "test2@localhost, user@localhost"
+
+  Scenario: mixed mapping should work
+    Given store "test2@localhost" address mapping for user "test" at domain "localhost"
+    And store "(.*)@localhost:user@localhost" regexp mapping for user "test" at domain "localhost"
+    And store "aliasdomain" domain alias for domain "localhost"
     Then mappings for user "test" at domain "localhost" should contain only "test2@localhost, user@localhost"
 
 # Recursive mapping
@@ -223,9 +274,15 @@ Feature: Rewrite Tables tests
     Then mappings for user "user1" at domain "domain1" should contain only "user2@domain2"
 
   Scenario: recursive mapping should work when three levels on alias domains
-    Given store "domain2" alias domain mapping for domain "domain1"
-    And store "domain3" alias domain mapping for domain "domain2"
-    And store "domain4" alias domain mapping for domain "domain3"
+    Given store "domain2" domain mapping for domain "domain1"
+    And store "domain3" domain mapping for domain "domain2"
+    And store "domain4" domain mapping for domain "domain3"
+    Then mappings for user "test" at domain "domain4" should contain only "test@domain1"
+
+  Scenario: recursive mapping should work when three levels on alias domains
+    Given store "domain2" domain alias for domain "domain1"
+    And store "domain3" domain alias for domain "domain2"
+    And store "domain4" domain alias for domain "domain3"
     Then mappings for user "test" at domain "domain4" should contain only "test@domain1"
 
 # Forward mapping

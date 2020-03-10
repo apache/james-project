@@ -85,6 +85,10 @@ public interface Mapping {
         return of(Type.Domain, mapping.asString());
     }
 
+    static Mapping domainAlias(Domain mapping) {
+        return of(Type.DomainAlias, mapping.asString());
+    }
+
     static Mapping forward(String mapping) {
         return of(Type.Forward, mapping);
     }
@@ -116,6 +120,8 @@ public interface Mapping {
         Regex("regex:", new UserRewritter.RegexRewriter(), IdentityMappingPolicy.Throw,
             MailAddressConversionPolicy.ToEmpty, TypeOrder.TYPE_ORDER_4),
         Domain("domain:", new UserRewritter.DomainRewriter(), IdentityMappingPolicy.Throw,
+            MailAddressConversionPolicy.ToEmpty, TypeOrder.TYPE_ORDER_1),
+        DomainAlias("domainAlias:", new UserRewritter.DomainRewriter(), IdentityMappingPolicy.Throw,
             MailAddressConversionPolicy.ToEmpty, TypeOrder.TYPE_ORDER_1),
         Error("error:", new UserRewritter.ThrowingRewriter(), IdentityMappingPolicy.Throw,
             MailAddressConversionPolicy.ToEmpty, TypeOrder.TYPE_ORDER_4),

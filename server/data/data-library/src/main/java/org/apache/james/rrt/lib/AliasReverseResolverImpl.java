@@ -97,7 +97,7 @@ public class AliasReverseResolverImpl implements AliasReverseResolver {
             getMappingLimit(),
             Throwing.<Domain, Stream<Domain>>function(targetDomain ->
                 recipientRewriteTable
-                    .listSources(Mapping.domain(targetDomain))
+                    .listSources(Mapping.domainAlias(targetDomain))
                     .map(MappingSource::asDomain)
                     .flatMap(OptionalUtils::toStream)).sneakyThrow()
         );

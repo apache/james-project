@@ -154,9 +154,9 @@ class DomainMappingsRoutesTest {
             Domain expectedDomain = Domain.of("abc.com");
             MappingSource mappingSource = MappingSource.fromDomain(expectedDomain);
 
-            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias1));
-            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias2));
-            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias3));
+            recipientRewriteTable.addDomainMapping(mappingSource, Domain.of(alias1));
+            recipientRewriteTable.addDomainMapping(mappingSource, Domain.of(alias2));
+            recipientRewriteTable.addDomainMapping(mappingSource, Domain.of(alias3));
 
             Map<String, List<String>> map =
                 when()
@@ -245,7 +245,7 @@ class DomainMappingsRoutesTest {
             MappingSource mappingSource = MappingSource.fromDomain(Domain.of("from.com"));
             String alias = "to.com";
 
-            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias));
+            recipientRewriteTable.addDomainMapping(mappingSource, Domain.of(alias));
 
             Assumptions.assumeTrue(recipientRewriteTable.getStoredMappings(mappingSource) != null);
 
@@ -301,7 +301,7 @@ class DomainMappingsRoutesTest {
             recipientRewriteTable.addGroupMapping(mappingSource, "user@domain.com");
             recipientRewriteTable.addForwardMapping(mappingSource, "user@domain.com");
             recipientRewriteTable.addErrorMapping(mappingSource, "disabled");
-            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(aliasDomain));
+            recipientRewriteTable.addDomainMapping(mappingSource, Domain.of(aliasDomain));
 
             List<String> body =
                 when()

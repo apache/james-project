@@ -43,7 +43,7 @@ public interface AliasReverseResolverContract {
 
     void addAliasMapping(Username alias, Username user) throws Exception;
 
-    void addDomainMapping(Domain alias, Domain domain) throws Exception;
+    void addDomainAlias(Domain alias, Domain domain) throws Exception;
 
     void addGroupMapping(String group, Username user) throws Exception;
 
@@ -62,7 +62,7 @@ public interface AliasReverseResolverContract {
     }
 
     default CanSendFromContract.RequireDomain redirectDomain(Domain alias) {
-        return domain -> addDomainMapping(alias, domain);
+        return domain -> addDomainAlias(alias, domain);
     }
 
     default CanSendFromContract.RequireUserName redirectGroup(String group) {

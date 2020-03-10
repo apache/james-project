@@ -65,6 +65,7 @@ import io.restassured.http.ContentType;
 class GroupsRoutesTest {
 
     private static final Domain DOMAIN = Domain.of("b.com");
+    private static final Domain DOMAIN_MAPPING = Domain.of("mapping");
     private static final Domain ALIAS_DOMAIN = Domain.of("alias");
     private static final String GROUP1 = "group1" + "@" + DOMAIN.name();
     private static final String GROUP2 = "group2" + "@" + DOMAIN.name();
@@ -106,6 +107,7 @@ class GroupsRoutesTest {
             domainList = new MemoryDomainList(dnsService);
             domainList.addDomain(DOMAIN);
             domainList.addDomain(ALIAS_DOMAIN);
+            domainList.addDomain(DOMAIN_MAPPING);
             memoryRecipientRewriteTable.setDomainList(domainList);
             usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
@@ -427,8 +429,8 @@ class GroupsRoutesTest {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
             memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
-
+            memoryRecipientRewriteTable.addDomainMapping(MappingSource.fromDomain(DOMAIN_MAPPING), DOMAIN);
+            memoryRecipientRewriteTable.addDomainAliasMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
         }
 
     }

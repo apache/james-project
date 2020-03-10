@@ -188,6 +188,12 @@ public class MappingTest {
     }
 
     @Test
+    void domainAliasFactoryMethodShouldThrowOnNull() {
+        assertThatThrownBy(() -> Mapping.domainAlias(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
     void errorFactoryMethodShouldThrowOnNull() {
         assertThatThrownBy(() -> Mapping.error(null))
             .isInstanceOf(NullPointerException.class);
@@ -272,6 +278,11 @@ public class MappingTest {
     }
 
     @Test
+    void getTypeShouldReturnDomainAliasWhenDomainAliasPrefix() {
+        assertThat(Mapping.domainAlias(Domain.of("abc")).getType()).isEqualTo(Type.DomainAlias);
+    }
+
+    @Test
     void getTypeShouldReturnForwardWhenForwardPrefix() {
         assertThat(Mapping.forward("abc").getType()).isEqualTo(Mapping.Type.Forward);
     }
@@ -327,6 +338,11 @@ public class MappingTest {
     @Test
     void asMailAddressShouldReturnEmptyForDomain() {
         assertThat(Mapping.domain(Domain.of("value")).asMailAddress()).isEmpty();
+    }
+
+    @Test
+    void asMailAddressShouldReturnEmptyForDomainAlias() {
+        assertThat(Mapping.domainAlias(Domain.of("value")).asMailAddress()).isEmpty();
     }
 
     @Test

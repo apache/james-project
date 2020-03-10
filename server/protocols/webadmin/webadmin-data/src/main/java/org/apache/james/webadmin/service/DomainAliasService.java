@@ -70,14 +70,14 @@ public class DomainAliasService {
     }
 
     public ImmutableSet<DomainAliasResponse> listDomainAliases(Domain domain) throws RecipientRewriteTableException {
-        return recipientRewriteTable.listSources(Mapping.domain(domain))
+        return recipientRewriteTable.listSources(Mapping.domainAlias(domain))
             .map(DomainAliasResponse::new)
             .collect(Guavate.toImmutableSet());
     }
 
     public boolean hasAliases(Domain domain) throws DomainListException, RecipientRewriteTableException {
         return domainList.containsDomain(domain)
-            || recipientRewriteTable.listSources(Mapping.domain(domain)).findFirst().isPresent();
+            || recipientRewriteTable.listSources(Mapping.domainAlias(domain)).findFirst().isPresent();
     }
 
     public void addDomainAlias(Domain sourceDomain, Domain destinationDomain) throws DomainListException, RecipientRewriteTableException {
@@ -94,7 +94,7 @@ public class DomainAliasService {
         }
 
         checkSameSourceAndDestination(sourceDomain, destinationDomain);
-        operation.perform(MappingSource.fromDomain(sourceDomain), Mapping.domain(destinationDomain));
+        operation.perform(MappingSource.fromDomain(sourceDomain), Mapping.domainAlias(destinationDomain));
     }
 
     private void checkSameSourceAndDestination(Domain source, Domain destination) throws RecipientRewriteTableException {

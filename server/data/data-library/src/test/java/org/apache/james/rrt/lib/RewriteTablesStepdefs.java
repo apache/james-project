@@ -82,9 +82,14 @@ public class RewriteTablesStepdefs {
         storeAddressMappingForUserAtDomain(address, MappingSource.fromDomain(Domain.of(domain)));
     }
 
-    @Given("store \"([^\"]*)\" alias domain mapping for domain \"([^\"]*)\"")
-    public void storeAliasDomainMappingForDomain(String aliasDomain, String domain) throws Throwable {
-        rewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of(aliasDomain)), Domain.of(domain));
+    @Given("store \"([^\"]*)\" domain mapping for domain \"([^\"]*)\"")
+    public void storeDomainMappingForDomain(String aliasDomain, String domain) throws Throwable {
+        rewriteTable.addDomainMapping(MappingSource.fromDomain(Domain.of(aliasDomain)), Domain.of(domain));
+    }
+
+    @Given("store \"([^\"]*)\" domain alias for domain \"([^\"]*)\"")
+    public void storeDomainAliasMappingForDomain(String aliasDomain, String domain) throws Throwable {
+        rewriteTable.addDomainAliasMapping(MappingSource.fromDomain(Domain.of(aliasDomain)), Domain.of(domain));
     }
 
     @Given("store \"([^\"]*)\" forward mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
@@ -161,9 +166,14 @@ public class RewriteTablesStepdefs {
         userAtDomainRemovesAddressMapping(address, MappingSource.fromDomain(Domain.of(domain)));
     }
 
-    @When("alias domain mapping \"([^\"]*)\" for \"([^\"]*)\" domain is removed")
-    public void removeAliasDomainMappingForDomain(String aliasdomain, String domain) throws Throwable {
-        rewriteTable.removeAliasDomainMapping(MappingSource.fromDomain(Domain.of(aliasdomain)), Domain.of(domain));
+    @When("domain mapping \"([^\"]*)\" for \"([^\"]*)\" domain is removed")
+    public void removeDomainMappingForDomain(String aliasdomain, String domain) throws Throwable {
+        rewriteTable.removeDomainMapping(MappingSource.fromDomain(Domain.of(aliasdomain)), Domain.of(domain));
+    }
+
+    @When("domain alias \"([^\"]*)\" for \"([^\"]*)\" domain is removed")
+    public void removeDomainAliasForDomain(String aliasdomain, String domain) throws Throwable {
+        rewriteTable.removeDomainAliasMapping(MappingSource.fromDomain(Domain.of(aliasdomain)), Domain.of(domain));
     }
 
     @Then("mappings should be empty")

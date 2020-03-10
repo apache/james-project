@@ -43,6 +43,8 @@ public interface CanSendFromContract {
 
     void addAliasMapping(Username alias, Username user) throws Exception;
 
+    void addDomainAlias(Domain alias, Domain domain) throws Exception;
+
     void addDomainMapping(Domain alias, Domain domain) throws Exception;
 
     void addGroupMapping(String group, Username user) throws Exception;
@@ -62,7 +64,7 @@ public interface CanSendFromContract {
     }
 
     default RequireDomain redirectDomain(Domain alias) {
-        return domain -> addDomainMapping(alias, domain);
+        return domain -> addDomainAlias(alias, domain);
     }
 
     default RequireUserName redirectGroup(String group) {
@@ -139,6 +141,15 @@ public interface CanSendFromContract {
         redirectDomain(OTHER_DOMAIN).to(DOMAIN);
 
         assertThat(canSendFrom().userCanSendFrom(USER, fromUser)).isTrue();
+    }
+
+    @Test
+    default void userCanSendFromShouldBeFalseWhenDomainMapping() throws Exception {
+        Username fromUser = USER.withOtherDomain(Optional.of(OTHER_DOMAIN));
+
+        addDomainMapping(OTHER_DOMAIN, DOMAIN);
+
+        assertThat(canSendFrom().userCanSendFrom(USER, fromUser)).isFalse();
     }
 
     @Test

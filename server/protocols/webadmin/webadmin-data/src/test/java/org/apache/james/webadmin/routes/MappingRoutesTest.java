@@ -69,6 +69,7 @@ class MappingRoutesTest {
         DomainList domainList = new MemoryDomainList(dnsService);
         domainList.addDomain(Domain.of("domain.tld"));
         domainList.addDomain(Domain.of("aliasdomain.tld"));
+        domainList.addDomain(Domain.of("domain.mapping.tld"));
         domainList.addDomain(Domain.of("abc"));
         domainList.addDomain(Domain.of("xyz"));
 
@@ -135,13 +136,13 @@ class MappingRoutesTest {
     }
 
     @Test
-    void getMappingsShouldReturnAliasDomainMappings() throws RecipientRewriteTableException {
+    void getMappingsShouldReturnDomainMappings() throws RecipientRewriteTableException {
         Domain domain = Domain.of("aliasdomain.tld");
 
-        recipientRewriteTable.addAliasDomainMapping(
+        recipientRewriteTable.addDomainMapping(
             MappingSource.fromDomain(domain),
             Domain.of("domain1abc.tld"));
-        recipientRewriteTable.addAliasDomainMapping(
+        recipientRewriteTable.addDomainMapping(
             MappingSource.fromDomain(domain),
             Domain.of("domain2cde.tld"));
 
@@ -164,6 +165,42 @@ class MappingRoutesTest {
                 "    }," +
                 "    {" +
                 "      \"type\": \"Domain\"," +
+                "      \"mapping\" : \"domain2cde.tld\"" +
+                "    }" +
+                "  ]" +
+                "}");
+    }
+
+    @Test
+    void getMappingsShouldReturnDomainAliases() throws RecipientRewriteTableException {
+        Domain domain = Domain.of("aliasdomain.tld");
+
+        recipientRewriteTable.addDomainAliasMapping(
+            MappingSource.fromDomain(domain),
+            Domain.of("domain1abc.tld"));
+        recipientRewriteTable.addDomainAliasMapping(
+            MappingSource.fromDomain(domain),
+            Domain.of("domain2cde.tld"));
+
+        String jsonBody = when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+            .extract()
+                .body()
+                .asString();
+
+        assertThatJson(jsonBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo("{" +
+                "  \"aliasdomain.tld\" : [" +
+                "    {" +
+                "      \"type\": \"DomainAlias\"," +
+                "      \"mapping\": \"domain1abc.tld\"" +
+                "    }," +
+                "    {" +
+                "      \"type\": \"DomainAlias\"," +
                 "      \"mapping\" : \"domain2cde.tld\"" +
                 "    }" +
                 "  ]" +
@@ -348,7 +385,11 @@ class MappingRoutesTest {
             MappingSource.fromUser(Username.of("alias@domain.tld")),
             "user@domain.tld");
 
-        recipientRewriteTable.addAliasDomainMapping(
+        recipientRewriteTable.addDomainMapping(
+            MappingSource.fromDomain(Domain.of("domain.mapping.tld")),
+            Domain.of("realdomain.tld"));
+
+        recipientRewriteTable.addDomainAliasMapping(
             MappingSource.fromDomain(Domain.of("aliasdomain.tld")),
             Domain.of("realdomain.tld"));
 
@@ -386,9 +427,15 @@ class MappingRoutesTest {
                 "      \"mapping\": \"user@domain.tld\"" +
                 "    }" +
                 "  ]," +
-                "  \"aliasdomain.tld\": [" +
+                "  \"domain.mapping.tld\": [" +
                 "    {" +
                 "      \"type\": \"Domain\"," +
+                "      \"mapping\": \"realdomain.tld\"" +
+                "    }" +
+                "  ]," +
+                "  \"aliasdomain.tld\": [" +
+                "    {" +
+                "      \"type\": \"DomainAlias\"," +
                 "      \"mapping\": \"realdomain.tld\"" +
                 "    }" +
                 "  ]," +

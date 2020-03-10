@@ -612,8 +612,14 @@ public abstract class AbstractRecipientRewriteTableTest {
     }
 
     @Test
-    public void addAliasDomainMappingShouldThrowWhenSourceDomainIsNotInDomainList() {
-        assertThatThrownBy(() -> virtualUserTable.addAliasDomainMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, SUPPORTED_DOMAIN))
+    public void addDomainMappingShouldThrowWhenSourceDomainIsNotInDomainList() {
+        assertThatThrownBy(() -> virtualUserTable.addDomainMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, SUPPORTED_DOMAIN))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class);
+    }
+
+    @Test
+    public void addDomainAliasShouldThrowWhenSourceDomainIsNotInDomainList() {
+        assertThatThrownBy(() -> virtualUserTable.addDomainAliasMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, SUPPORTED_DOMAIN))
             .isInstanceOf(SourceDomainIsNotInDomainListException.class);
     }
 

@@ -108,14 +108,18 @@ public class MappingsImplTest {
         MappingsImpl actual = MappingsImpl.fromRawString("error:test");
         assertThat(actual).containsOnly(Mapping.error("test"));
     }
-    
 
     @Test
     public void fromRawStringShouldNotUseColonDelimiterWhenValueStartsWithDomain() {
         MappingsImpl actual = MappingsImpl.fromRawString("domain:test");
         assertThat(actual).containsOnly(Mapping.domain(Domain.of("test")));
     }
-    
+
+    @Test
+    public void fromRawStringShouldNotUseColonDelimiterWhenValueStartsWithDomainAlias() {
+        MappingsImpl actual = MappingsImpl.fromRawString("domainAlias:test");
+        assertThat(actual).containsOnly(Mapping.domainAlias(Domain.of("test")));
+    }
 
     @Test
     public void fromRawStringShouldNotUseColonDelimiterWhenValueStartsWithRegex() {
@@ -328,7 +332,7 @@ public class MappingsImplTest {
     }
     
     @Test
-    public void builderShouldPutDomainAliasFirstThenForwardWhenVariousMappings() {
+    public void builderShouldPutDomainMappingFirstThenForwardWhenVariousMappings() {
         Mapping regexMapping = Mapping.regex("regex");
         Mapping forwardMapping = Mapping.forward("forward");
         Mapping domainMapping = Mapping.domain(Domain.of("domain"));
@@ -338,6 +342,19 @@ public class MappingsImplTest {
                 .add(domainMapping)
                 .build();
         assertThat(mappingsImpl).containsExactly(domainMapping, forwardMapping, regexMapping);
+    }
+
+    @Test
+    public void builderShouldPutDomainAliasFirstThenForwardWhenVariousMappings() {
+        Mapping regexMapping = Mapping.regex("regex");
+        Mapping forwardMapping = Mapping.forward("forward");
+        Mapping domainAlias = Mapping.domainAlias(Domain.of("domain"));
+        MappingsImpl mappingsImpl = MappingsImpl.builder()
+                .add(regexMapping)
+                .add(forwardMapping)
+                .add(domainAlias)
+                .build();
+        assertThat(mappingsImpl).containsExactly(domainAlias, forwardMapping, regexMapping);
     }
 
     @Test

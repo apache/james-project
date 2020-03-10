@@ -20,6 +20,7 @@ package org.apache.james.rrt.lib;
 
 import static org.apache.james.rrt.lib.Mapping.Type.Alias;
 import static org.apache.james.rrt.lib.Mapping.Type.Domain;
+import static org.apache.james.rrt.lib.Mapping.Type.DomainAlias;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -43,7 +44,7 @@ public class CanSendFromImpl implements CanSendFrom {
         List<Domain> fetch(Username user);
     }
 
-    public static final EnumSet<Mapping.Type> ALIAS_TYPES_ACCEPTED_IN_FROM = EnumSet.of(Alias, Domain);
+    public static final EnumSet<Mapping.Type> ALIAS_TYPES_ACCEPTED_IN_FROM = EnumSet.of(Alias, DomainAlias);
     private final RecipientRewriteTable recipientRewriteTable;
     private final AliasReverseResolver aliasReverseResolver;
 

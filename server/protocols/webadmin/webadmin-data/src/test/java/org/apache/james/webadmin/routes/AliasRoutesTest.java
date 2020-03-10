@@ -66,6 +66,7 @@ class AliasRoutesTest {
 
     private static final Domain DOMAIN = Domain.of("b.com");
     private static final Domain ALIAS_DOMAIN = Domain.of("alias");
+    private static final Domain DOMAIN_MAPPING = Domain.of("mapping");
     public static final String BOB = "bob@" + DOMAIN.name();
     public static final String BOB_WITH_SLASH = "bob/@" + DOMAIN.name();
     public static final String BOB_WITH_ENCODED_SLASH = "bob%2F@" + DOMAIN.name();
@@ -113,6 +114,7 @@ class AliasRoutesTest {
                 .autoDetectIp(false));
             domainList.addDomain(DOMAIN);
             domainList.addDomain(ALIAS_DOMAIN);
+            domainList.addDomain(DOMAIN_MAPPING);
             MappingSourceModule module = new MappingSourceModule();
             memoryRecipientRewriteTable.setDomainList(domainList);
 
@@ -406,7 +408,8 @@ class AliasRoutesTest {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
             memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
+            memoryRecipientRewriteTable.addDomainAliasMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
+            memoryRecipientRewriteTable.addDomainMapping(MappingSource.fromDomain(DOMAIN_MAPPING), DOMAIN);
         }
 
     }

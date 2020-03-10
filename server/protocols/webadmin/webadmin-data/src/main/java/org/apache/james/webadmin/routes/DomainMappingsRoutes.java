@@ -114,7 +114,7 @@ public class DomainMappingsRoutes implements Routes {
 
     private void addAliasDomainMapping(MappingSource source, Domain destinationDomain) throws RecipientRewriteTableException {
         try {
-            recipientRewriteTable.addAliasDomainMapping(source, destinationDomain);
+            recipientRewriteTable.addDomainAliasMapping(source, destinationDomain);
         } catch (SourceDomainIsNotInDomainListException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -140,7 +140,7 @@ public class DomainMappingsRoutes implements Routes {
         MappingSource mappingSource = mappingSourceFrom(request);
         Domain destinationDomain = extractDomain(request.body());
 
-        recipientRewriteTable.removeAliasDomainMapping(mappingSource, destinationDomain);
+        recipientRewriteTable.removeDomainMapping(mappingSource, destinationDomain);
         return halt(HttpStatus.NO_CONTENT_204);
     }
 

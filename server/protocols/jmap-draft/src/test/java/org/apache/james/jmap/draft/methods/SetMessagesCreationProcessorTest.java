@@ -466,7 +466,7 @@ public class SetMessagesCreationProcessorTest {
             .email("user@other.org")
             .build();
 
-           recipientRewriteTable.addMapping(MappingSource.fromDomain(Domain.of("other.org")), Mapping.domain(Domain.of("example.com")));
+           recipientRewriteTable.addMapping(MappingSource.fromDomain(Domain.of("other.org")), Mapping.domainAlias(Domain.of("example.com")));
 
         assertThatCode(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)))
             .doesNotThrowAnyException();

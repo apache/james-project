@@ -64,8 +64,8 @@ public class AliasReverseResolverImplTest implements AliasReverseResolverContrac
     }
 
     @Override
-    public void addDomainMapping(Domain alias, Domain domain) throws Exception {
-        recipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(alias), domain);
+    public void addDomainAlias(Domain alias, Domain domain) throws Exception {
+        recipientRewriteTable.addDomainAliasMapping(MappingSource.fromDomain(alias), domain);
     }
 
     @Override

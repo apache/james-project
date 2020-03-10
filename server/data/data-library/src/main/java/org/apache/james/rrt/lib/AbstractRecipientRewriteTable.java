@@ -158,6 +158,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                 return Mapping.of(type, rewrittenUsername.asString());
             case Regex:
             case Domain:
+            case DomainAlias:
             case Error:
             case Address:
                 return Mapping.address(rewrittenUsername.asString());
@@ -242,7 +243,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     }
 
     @Override
-    public void addAliasDomainMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
+    public void addDomainMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
         checkDomainMappingSourceIsManaged(source);
 
         LOGGER.info("Add domain mapping: {} => {}", source.asDomain().map(Domain::asString).orElse("null"), realDomain);
@@ -250,9 +251,23 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     }
 
     @Override
-    public void removeAliasDomainMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
+    public void removeDomainMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
         LOGGER.info("Remove domain mapping: {} => {}", source.asDomain().map(Domain::asString).orElse("null"), realDomain);
         removeMapping(source, Mapping.domain(realDomain));
+    }
+
+    @Override
+    public void addDomainAliasMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
+        checkDomainMappingSourceIsManaged(source);
+
+        LOGGER.info("Add domain alias mapping: {} => {}", source.asDomain().map(Domain::asString).orElse("null"), realDomain);
+        addMapping(source, Mapping.domainAlias(realDomain));
+    }
+
+    @Override
+    public void removeDomainAliasMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
+        LOGGER.info("Remove domain alias mapping: {} => {}", source.asDomain().map(Domain::asString).orElse("null"), realDomain);
+        removeMapping(source, Mapping.domainAlias(realDomain));
     }
 
     @Override

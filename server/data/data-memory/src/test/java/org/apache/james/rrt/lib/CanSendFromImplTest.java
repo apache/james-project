@@ -65,8 +65,13 @@ public class CanSendFromImplTest implements CanSendFromContract {
     }
 
     @Override
+    public void addDomainAlias(Domain alias, Domain domain) throws Exception {
+        recipientRewriteTable.addDomainAliasMapping(MappingSource.fromDomain(alias), domain);
+    }
+
+    @Override
     public void addDomainMapping(Domain alias, Domain domain) throws Exception {
-        recipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(alias), domain);
+        recipientRewriteTable.addDomainMapping(MappingSource.fromDomain(alias), domain);
     }
 
     @Override

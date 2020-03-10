@@ -68,6 +68,7 @@ class ForwardRoutesTest {
 
     private static final Domain DOMAIN = Domain.of("b.com");
     private static final Domain ALIAS_DOMAIN = Domain.of("alias");
+    private static final Domain DOMAIN_MAPPING = Domain.of("mapping");
     public static final String CEDRIC = "cedric@" + DOMAIN.name();
     public static final String ALICE = "alice@" + DOMAIN.name();
     public static final String ALICE_WITH_SLASH = "alice/@" + DOMAIN.name();
@@ -112,6 +113,7 @@ class ForwardRoutesTest {
                 .autoDetectIp(false));
             domainList.addDomain(DOMAIN);
             domainList.addDomain(ALIAS_DOMAIN);
+            domainList.addDomain(DOMAIN_MAPPING);
             memoryRecipientRewriteTable.setDomainList(domainList);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
 
@@ -436,7 +438,8 @@ class ForwardRoutesTest {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
             memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
+            memoryRecipientRewriteTable.addDomainMapping(MappingSource.fromDomain(DOMAIN_MAPPING), DOMAIN);
+            memoryRecipientRewriteTable.addDomainAliasMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
         }
 
     }
