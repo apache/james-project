@@ -21,7 +21,6 @@ package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 import org.apache.james.core.Domain;
@@ -101,7 +100,7 @@ public interface AliasReverseResolverContract {
 
     @Test
     default void listAddressesShouldContainUserAddressAndAnAliasOfTheDomainUser() throws Exception {
-        Username fromUser = USER.withOtherDomain(Optional.of(OTHER_DOMAIN));
+        Username fromUser = USER.withOtherDomain(OTHER_DOMAIN);
 
         redirectDomain(OTHER_DOMAIN).to(DOMAIN);
 
@@ -111,13 +110,13 @@ public interface AliasReverseResolverContract {
 
     @Test
     default void listAddressesShouldContainUserAddressAndAnAliasOfTheDomainUserFromAnotherDomain() throws Exception {
-        Username userAliasOtherDomain = USER_ALIAS.withOtherDomain(Optional.of(OTHER_DOMAIN));
+        Username userAliasOtherDomain = USER_ALIAS.withOtherDomain(OTHER_DOMAIN);
 
         redirectDomain(OTHER_DOMAIN).to(DOMAIN);
         redirectUser(userAliasOtherDomain).to(USER);
 
-        Username userAliasMainDomain = USER_ALIAS.withOtherDomain(Optional.of(DOMAIN));
-        Username userOtherDomain = USER.withOtherDomain(Optional.of(OTHER_DOMAIN));
+        Username userAliasMainDomain = USER_ALIAS.withOtherDomain(DOMAIN);
+        Username userOtherDomain = USER.withOtherDomain(OTHER_DOMAIN);
         assertThat(aliasReverseResolver().listAddresses(USER))
             .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress(), userAliasMainDomain.asMailAddress(), userOtherDomain.asMailAddress());
     }

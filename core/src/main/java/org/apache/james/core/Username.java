@@ -101,6 +101,10 @@ public class Username {
         return new Username(localPart, domain);
     }
 
+    public Username withOtherDomain(Domain domain) {
+        return withOtherDomain(Optional.of(domain));
+    }
+
     public boolean hasDomainPart() {
         return domainPart.isPresent();
     }

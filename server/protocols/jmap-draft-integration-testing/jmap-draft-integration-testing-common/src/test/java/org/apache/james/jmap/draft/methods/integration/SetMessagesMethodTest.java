@@ -64,6 +64,7 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -73,6 +74,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.jmap.AccessToken;
@@ -2605,7 +2607,7 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addDomainAliasMapping(DOMAIN_ALIAS, DOMAIN);
 
         String messageCreationId = "creationId1337";
-        String alias = USERNAME.getLocalPart() + "@" + DOMAIN_ALIAS;
+        String alias = USERNAME.withOtherDomain(Domain.of(DOMAIN_ALIAS)).asString();
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\"," +
