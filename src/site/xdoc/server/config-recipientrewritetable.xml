@@ -29,6 +29,37 @@
 
     <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/recipientrewritetable.xml">recipientrewritetable.xml</a> in GIT to get some examples and hints.</p>
 
+    <subsection name="Mapping types">
+        <ul>James allow using various mapping types for better expressing the intent of your address rewritting logic:
+        <li><b>Domain mapping</b>: Rewrites the domain of mail addresses. Use it for technical purposes, user will not
+            be allowed to use the source in their FROM address headers. Domain mappings can be managed via the CLI and
+            added via <a href="webadmin.html#Creating_domain_mappings">WebAdmin</a></li>
+        <li><b>Domain aliases</b>: Rewrites the domain of mail addresses. Express the idea that both domain can be used
+            inter-changeably. User will be allowed to use the source in their FROM address headers. Domain aliases can
+            be managed via <a href="webadmin.html#Get_the_list_of_aliases_for_a_domain">WebAdmin</a></li>
+        <li><b>Forwards</b>: Replaces the source address by another one. Vehicles the intent of forwarding incoming mails
+            to other users. Listing the forward source in the forward destinations keeps a local copy. User will not be
+            allowed to use the source in their FROM address headers. Forward can
+            be managed via <a href="webadmin.html#Creating_address_forwards">WebAdmin</a></li>
+        <li><b>Groups</b>: Replaces the source address by another one. Vehicles the intent of a group registration: group
+            address will be swapped by group member addresses (Feature poor mailing list). User will not be
+            allowed to use the source in their FROM address headers. Groups can
+            be managed via <a href="webadmin.html#Creating_address_group">WebAdmin</a></li>
+        <li><b>Aliases</b>: Replaces the source address by another one. Represents user owned mail address, with which
+            he can interact as if it was his main mail address. User will be allowed to use the source in their FROM
+            address headers. Aliases can be managed via <a href="webadmin.html#Creating_address_aliases">WebAdmin</a></li>
+        <li><b>Address mappings</b>: Replaces the source address by another one. Use for technical purposes, this mapping type do
+            not hold specific intent. Prefer using one of the above mapping types... User will not be allowed to use the source
+            in their FROM address headers. Address mappings can be managed via the CLI or via
+            <a href="webadmin.html#Address_Mappings">WebAdmin</a></li>
+        <li><b>Regex mappings</b>: Applies the regex on the supplied address. User will not be allowed to use the source
+            in their FROM address headers. Regex mappings can be managed via the CLI or via
+            <a href="webadmin.html#Creating_regex_mapping">WebAdmin</a></li>
+        <li><b>Error</b>: Throws an error upon processing. User will not be allowed to use the source
+            in their FROM address headers. Errors can be managed via the CLI</li>
+        </ul>
+    </subsection>
+
     <subsection name="JPA Recipient Rewrite Table">
     
      <p>The default table for storing James' Recipient Rewrite mappings.</p>
