@@ -19,32 +19,24 @@
 
 package org.apache.james.modules.server;
 
-import org.apache.james.mailbox.backup.ArchiveService;
-import org.apache.james.mailbox.backup.DefaultMailboxBackup;
-import org.apache.james.mailbox.backup.MailArchiveRestorer;
-import org.apache.james.mailbox.backup.MailArchivesLoader;
-import org.apache.james.mailbox.backup.MailboxBackup;
-import org.apache.james.mailbox.backup.ZipMailArchiveRestorer;
-import org.apache.james.mailbox.backup.zip.ZipArchivesLoader;
-import org.apache.james.mailbox.backup.zip.Zipper;
+import org.apache.james.webadmin.routes.UserMailboxesRoutes;
+import org.apache.james.webadmin.service.ExportService;
+import org.apache.james.webadmin.service.MailboxesExportRequestToTask;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
-public class MailboxesBackupModule extends AbstractModule {
+public class MailboxesExportRoutesModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(Zipper.class).in(Scopes.SINGLETON);
-        bind(ArchiveService.class).to(Zipper.class);
+        install(new MailboxesBackupModule());
 
-        bind(ZipMailArchiveRestorer.class).in(Scopes.SINGLETON);
-        bind(MailArchiveRestorer.class).to(ZipMailArchiveRestorer.class);
-
-        bind(ZipArchivesLoader.class).in(Scopes.SINGLETON);
-        bind(MailArchivesLoader.class).to(ZipArchivesLoader.class);
-
-        bind(DefaultMailboxBackup.class).in(Scopes.SINGLETON);
-        bind(MailboxBackup.class).to(DefaultMailboxBackup.class);
+        bind(ExportService.class).in(Scopes.SINGLETON);
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
+            .addBinding().to(MailboxesExportRequestToTask.class);
     }
 }
