@@ -21,6 +21,7 @@ package org.apache.james.utils;
 
 import java.util.Objects;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 
@@ -64,5 +65,12 @@ public class ClassName {
     @Override
     public final int hashCode() {
         return Objects.hash(name);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("name", name)
+            .toString();
     }
 }
