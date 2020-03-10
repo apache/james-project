@@ -52,6 +52,7 @@ public class ClusterFactory {
         socketOptions.setReadTimeoutMillis(configuration.getReadTimeoutMillis());
         socketOptions.setConnectTimeoutMillis(configuration.getConnectTimeoutMillis());
         clusterBuilder.withSocketOptions(socketOptions);
+        clusterBuilder.withRetryPolicy(new NotConsistencyAllRetryPolicy());
         configuration.getPoolingOptions().ifPresent(clusterBuilder::withPoolingOptions);
 
         if (configuration.useSsl()) {
