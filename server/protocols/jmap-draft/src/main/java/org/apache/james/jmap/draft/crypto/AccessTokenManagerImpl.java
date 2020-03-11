@@ -29,6 +29,8 @@ import org.apache.james.jmap.draft.api.AccessTokenManager;
 
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Mono;
+
 public class AccessTokenManagerImpl implements AccessTokenManager {
 
     private final AccessTokenRepository accessTokenRepository;
@@ -39,31 +41,32 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
     }
 
     @Override
-    public AccessToken grantAccessToken(Username username) {
+    public Mono<AccessToken> grantAccessToken(Username username) {
         Preconditions.checkNotNull(username);
         AccessToken accessToken = AccessToken.generate();
-        accessTokenRepository.addToken(username, accessToken).block();
-        return accessToken;
+
+        return accessTokenRepository.addToken(username, accessToken)
+            .thenReturn(accessToken);
     }
 
     @Override
-    public Username getUsernameFromToken(AccessToken token) throws InvalidAccessToken {
-        return accessTokenRepository.getUsernameFromToken(token).block();
+    public Mono<Username> getUsernameFromToken(AccessToken token) throws InvalidAccessToken {
+        return accessTokenRepository.getUsernameFromToken(token);
     }
     
     @Override
-    public boolean isValid(AccessToken token) throws InvalidAccessToken {
+    public Mono<Boolean> isValid(AccessToken token) throws InvalidAccessToken {
         try {
-            getUsernameFromToken(token);
-            return true;
+            return getUsernameFromToken(token)
+                .thenReturn(true);
         } catch (InvalidAccessToken e) {
-            return false;
+            return Mono.just(false);
         }
     }
 
     @Override
-    public void revoke(AccessToken token) {
-        accessTokenRepository.removeToken(token).block();
+    public Mono<Void> revoke(AccessToken token) {
+        return accessTokenRepository.removeToken(token);
     }
 
 }

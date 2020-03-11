@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.metrics.logger;
 
+import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
+
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -47,4 +49,10 @@ public class DefaultMetricFactory implements MetricFactory {
         return Flux.from(publisher).doOnComplete(timer::stopAndPublish);
     }
 
+    @Override
+    public <T> Publisher<T> runPublishingTimerMetricLogP99(String name, Publisher<T> publisher) {
+        TimeMetric timer = timer(name);
+        return Flux.from(publisher)
+            .doOnComplete(() -> timer.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD));
+    }
 }

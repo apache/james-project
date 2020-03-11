@@ -51,6 +51,8 @@ public interface MetricFactory {
 
     <T> Publisher<T> runPublishingTimerMetric(String name, Publisher<T> publisher);
 
+    <T> Publisher<T> runPublishingTimerMetricLogP99(String name, Publisher<T> publisher);
+
     default void runPublishingTimerMetric(String name, Runnable runnable) {
         runPublishingTimerMetric(name, () -> {
             runnable.run();

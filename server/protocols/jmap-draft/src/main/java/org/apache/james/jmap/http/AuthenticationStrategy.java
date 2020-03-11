@@ -16,24 +16,25 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.draft.model;
+package org.apache.james.jmap.http;
+
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession;
 
-public class AuthenticatedRequest extends InvocationRequest {
-    public static AuthenticatedRequest decorate(InvocationRequest request, MailboxSession session) {
-        return new AuthenticatedRequest(request, session);
-    }
+import com.google.common.base.Preconditions;
 
-    private final MailboxSession session;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
 
-    private AuthenticatedRequest(InvocationRequest request, MailboxSession session) {
-        super(request.getMethodName(), request.getParameters(), request.getMethodCallId());
-        this.session = session;
-        
-    }
+public interface AuthenticationStrategy {
+    Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest);
 
-    public MailboxSession getMailboxSession() {
-        return session;
+    String AUTHORIZATION_HEADERS = "Authorization";
+
+    default Stream<String> authHeaders(HttpServerRequest httpRequest) {
+        Preconditions.checkArgument(httpRequest != null, "'httpRequest' is mandatory");
+
+        return httpRequest.requestHeaders().getAll(AUTHORIZATION_HEADERS).stream();
     }
 }

@@ -16,22 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.draft;
+package org.apache.james.jmap.http;
 
-import java.util.Optional;
+import static org.apache.james.jmap.http.DownloadRoutes.BLOB_ID_PATH_PARAM;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.api.SimpleTokenManager;
 import org.apache.james.jmap.draft.exceptions.UnauthorizedException;
 import org.apache.james.jmap.draft.model.AttachmentAccessToken;
-import org.apache.james.jmap.draft.utils.DownloadPath;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
 
 public class QueryParameterAccessTokenAuthenticationStrategy implements AuthenticationStrategy {
     private static final String AUTHENTICATION_PARAMETER = "access_token";
@@ -47,26 +48,21 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
     }
 
     @Override
-    public MailboxSession createMailboxSession(HttpServletRequest httpRequest) {
-
+    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
         return getAccessToken(httpRequest)
             .filter(tokenManager::isValid)
             .map(AttachmentAccessToken::getUsername)
             .map(Username::of)
             .map(mailboxManager::createSystemSession)
-            .orElseThrow(UnauthorizedException::new);
+            .switchIfEmpty(Mono.error(new UnauthorizedException()));
     }
 
-    private Optional<AttachmentAccessToken> getAccessToken(HttpServletRequest httpRequest) {
+    private Mono<AttachmentAccessToken> getAccessToken(HttpServerRequest httpRequest) {
         try {
-            return Optional.of(AttachmentAccessToken.from(httpRequest.getParameter(AUTHENTICATION_PARAMETER), getBlobId(httpRequest)));
+            return Mono.justOrEmpty(httpRequest.param(BLOB_ID_PATH_PARAM))
+                .map(blobId -> AttachmentAccessToken.from(httpRequest.param(AUTHENTICATION_PARAMETER), blobId));
         } catch (IllegalArgumentException e) {
-            return Optional.empty();
+            return Mono.empty();
         }
-    }
-
-    private String getBlobId(HttpServletRequest httpRequest) {
-        String pathInfo = httpRequest.getPathInfo();
-        return DownloadPath.from(pathInfo).getBlobId();
     }
 }

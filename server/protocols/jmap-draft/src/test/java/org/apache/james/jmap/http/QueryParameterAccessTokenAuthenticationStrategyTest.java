@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.draft;
+package org.apache.james.jmap.http;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.jmap.draft.api.SimpleTokenManager;
 import org.apache.james.jmap.draft.exceptions.UnauthorizedException;
@@ -30,35 +28,37 @@ import org.apache.james.mailbox.MailboxManager;
 import org.junit.Before;
 import org.junit.Test;
 
+import reactor.netty.http.server.HttpServerRequest;
+
 public class QueryParameterAccessTokenAuthenticationStrategyTest {
 
     private QueryParameterAccessTokenAuthenticationStrategy testee;
-    private HttpServletRequest request;
+    private HttpServerRequest mockedRequest;
 
     @Before
     public void setup() {
         SimpleTokenManager mockedSimpleTokenManager = mock(SimpleTokenManager.class);
         MailboxManager mockedMailboxManager = mock(MailboxManager.class);
-        request = mock(HttpServletRequest.class);
+        mockedRequest = mock(HttpServerRequest.class);
 
         testee = new QueryParameterAccessTokenAuthenticationStrategy(mockedSimpleTokenManager, mockedMailboxManager);
     }
 
     @Test
     public void createMailboxSessionShouldThrowWhenNoAccessTokenProvided() {
-        when(request.getParameter("access_token"))
+        when(mockedRequest.param("access_token"))
             .thenReturn(null);
 
-        assertThatThrownBy(() -> testee.createMailboxSession(request))
+        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
             .isExactlyInstanceOf(UnauthorizedException.class);
     }
 
     @Test
     public void createMailboxSessionShouldThrowWhenAccessTokenIsNotValid() {
-        when(request.getParameter("access_token"))
+        when(mockedRequest.param("access_token"))
             .thenReturn("bad");
 
-        assertThatThrownBy(() -> testee.createMailboxSession(request))
-                .isExactlyInstanceOf(UnauthorizedException.class);
+        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
+            .isExactlyInstanceOf(UnauthorizedException.class);
     }
 }

@@ -16,17 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.draft;
+package org.apache.james.jmap.http;
 
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
-import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -35,27 +33,27 @@ import org.apache.james.user.api.UsersRepositoryException;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+
 public class JWTAuthenticationStrategy implements AuthenticationStrategy {
 
     @VisibleForTesting static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
     private final JwtTokenVerifier tokenManager;
     private final MailboxManager mailboxManager;
-    private final HeadersAuthenticationExtractor authenticationExtractor;
     private final UsersRepository usersRepository;
 
     @Inject
     @VisibleForTesting
-    JWTAuthenticationStrategy(JwtTokenVerifier tokenManager, MailboxManager mailboxManager, HeadersAuthenticationExtractor authenticationExtractor, UsersRepository usersRepository) {
+    JWTAuthenticationStrategy(JwtTokenVerifier tokenManager, MailboxManager mailboxManager, UsersRepository usersRepository) {
         this.tokenManager = tokenManager;
         this.mailboxManager = mailboxManager;
-        this.authenticationExtractor = authenticationExtractor;
         this.usersRepository = usersRepository;
     }
 
     @Override
-    public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
-
-        Stream<Username> userLoginStream = extractTokensFromAuthHeaders(authenticationExtractor.authHeaders(httpRequest))
+    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
+        Stream<Username> userLoginStream = extractTokensFromAuthHeaders(authHeaders(httpRequest))
             .filter(tokenManager::verify)
             .map(tokenManager::extractLogin)
             .map(Username::of)
@@ -70,9 +68,8 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
         Stream<MailboxSession> mailboxSessionStream = userLoginStream
                 .map(mailboxManager::createSystemSession);
 
-        return mailboxSessionStream
-                .findFirst()
-                .orElseThrow(NoValidAuthHeaderException::new);
+        return Mono.justOrEmpty(mailboxSessionStream.findFirst())
+            .switchIfEmpty(Mono.error(new NoValidAuthHeaderException()));
     }
 
     private Stream<String> extractTokensFromAuthHeaders(Stream<String> authHeaders) {

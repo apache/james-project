@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.draft;
+package org.apache.james.jmap.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,15 +24,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.stream.Stream;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
-import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -40,33 +35,42 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
+import io.netty.handler.codec.http.HttpHeaders;
+import reactor.netty.http.server.HttpServerRequest;
+
 public class JWTAuthenticationStrategyTest {
+    private static final String AUTHORIZATION_HEADERS = "Authorization";
     private static final DomainList NO_DOMAIN_LIST = null;
 
     private JWTAuthenticationStrategy testee;
     private MailboxManager mockedMailboxManager;
     private JwtTokenVerifier stubTokenVerifier;
-    private HttpServletRequest request;
-    private HeadersAuthenticationExtractor mockAuthenticationExtractor;
+    private HttpServerRequest mockedRequest;
+    private HttpHeaders mockedHeaders;
 
     @Before
     public void setup() {
         stubTokenVerifier = mock(JwtTokenVerifier.class);
         mockedMailboxManager = mock(MailboxManager.class);
-        mockAuthenticationExtractor = mock(HeadersAuthenticationExtractor.class);
-        request = mock(HttpServletRequest.class);
+        mockedRequest = mock(HttpServerRequest.class);
+        mockedHeaders = mock(HttpHeaders.class);
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
 
-        testee = new JWTAuthenticationStrategy(stubTokenVerifier, mockedMailboxManager, mockAuthenticationExtractor, usersRepository);
+        when(mockedRequest.requestHeaders())
+            .thenReturn(mockedHeaders);
+
+        testee = new JWTAuthenticationStrategy(stubTokenVerifier, mockedMailboxManager, usersRepository);
     }
 
 
     @Test
     public void createMailboxSessionShouldThrowWhenAuthHeaderIsEmpty() {
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.empty());
+        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
+            .thenReturn(ImmutableList.of());
 
-        assertThatThrownBy(() -> testee.createMailboxSession(request))
+        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
             .isExactlyInstanceOf(NoValidAuthHeaderException.class);
     }
 
@@ -81,20 +85,20 @@ public class JWTAuthenticationStrategyTest {
         when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
         when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
 
+        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
+            .thenReturn(ImmutableList.of(fakeAuthHeaderWithPrefix));
 
-        assertThatThrownBy(() -> testee.createMailboxSession(request))
+        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
             .isExactlyInstanceOf(NoValidAuthHeaderException.class);
     }
 
     @Test
-    public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsInvalid() {
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of("bad"));
+    public void createMailboxSessionShouldThrowWhenAuthHeaderIsInvalid() {
+        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
+            .thenReturn(ImmutableList.of("bad"));
 
-        assertThatThrownBy(() -> testee.createMailboxSession(request))
+        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
             .isExactlyInstanceOf(NoValidAuthHeaderException.class);
     }
 
@@ -109,11 +113,10 @@ public class JWTAuthenticationStrategyTest {
         when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
         when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
+        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
+            .thenReturn(ImmutableList.of(fakeAuthHeaderWithPrefix));
 
-
-        MailboxSession result = testee.createMailboxSession(request);
+        MailboxSession result = testee.createMailboxSession(mockedRequest).block();
         assertThat(result).isEqualTo(fakeMailboxSession);
     }
 
@@ -128,11 +131,11 @@ public class JWTAuthenticationStrategyTest {
         when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
         when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
+        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
+            .thenReturn(ImmutableList.of(fakeAuthHeaderWithPrefix));
 
 
-        assertThatThrownBy(() -> testee.createMailboxSession(request))
+        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
             .isInstanceOf(MailboxSessionCreationException.class);
     }
 }

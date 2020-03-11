@@ -90,6 +90,7 @@ public abstract class JMAPAuthenticationTest {
     public void mustReturnMalformedRequestWhenContentTypeIsMissing() {
         given()
             .accept(ContentType.JSON)
+            .contentType("")
         .when()
             .post("/authentication")
         .then()
@@ -110,6 +111,7 @@ public abstract class JMAPAuthenticationTest {
     @Test
     public void mustReturnMalformedRequestWhenAcceptIsMissing() {
         given()
+            .accept("")
             .contentType(ContentType.JSON)
         .when()
             .post("/authentication")

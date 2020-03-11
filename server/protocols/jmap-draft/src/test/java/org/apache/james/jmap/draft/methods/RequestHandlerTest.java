@@ -21,21 +21,21 @@ package org.apache.james.jmap.draft.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.Mockito.mock;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.json.ObjectMapperFactory;
 import org.apache.james.jmap.draft.model.AuthenticatedRequest;
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.InvocationRequest;
 import org.apache.james.jmap.draft.model.InvocationResponse;
+import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.junit.Before;
@@ -121,14 +121,14 @@ public class RequestHandlerTest {
     private RequestHandler testee;
     private JmapRequestParser jmapRequestParser;
     private JmapResponseWriter jmapResponseWriter;
-    private HttpServletRequest mockHttpServletRequest;
+    private MailboxSession session;
 
     @Before
     public void setup() {
         ObjectMapperFactory objectMapperFactory = new ObjectMapperFactory(new InMemoryId.Factory(), new InMemoryMessageId.Factory());
         jmapRequestParser = new JmapRequestParserImpl(objectMapperFactory);
         jmapResponseWriter = new JmapResponseWriterImpl(objectMapperFactory);
-        mockHttpServletRequest = mock(HttpServletRequest.class);
+        session = MailboxSessionUtil.create(Username.of("bob"));
         testee = new RequestHandler(ImmutableSet.of(new TestMethod()), jmapRequestParser, jmapResponseWriter);
     }
 
@@ -140,7 +140,7 @@ public class RequestHandlerTest {
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
         RequestHandler requestHandler = new RequestHandler(ImmutableSet.of(), jmapRequestParser, jmapResponseWriter);
-        requestHandler.handle(AuthenticatedRequest.decorate(InvocationRequest.deserialize(nodes), mockHttpServletRequest));
+        requestHandler.handle(AuthenticatedRequest.decorate(InvocationRequest.deserialize(nodes), session));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -208,7 +208,7 @@ public class RequestHandlerTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
-        List<InvocationResponse> responses = testee.handle(AuthenticatedRequest.decorate(InvocationRequest.deserialize(nodes), mockHttpServletRequest))
+        List<InvocationResponse> responses = testee.handle(AuthenticatedRequest.decorate(InvocationRequest.deserialize(nodes), session))
                 .collect(Collectors.toList());
 
         assertThat(responses).hasSize(1)

@@ -17,25 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.utils;
+package org.apache.james.jmap.http;
 
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.stream.Stream;
-
-import javax.servlet.http.HttpServletRequest;
-
-import com.google.common.base.Preconditions;
-
-public class HeadersAuthenticationExtractor {
-
-    private static final String AUTHORIZATION_HEADERS = "Authorization";
-
-    public Stream<String> authHeaders(HttpServletRequest httpRequest) {
-        Preconditions.checkArgument(httpRequest != null, "'httpRequest' is mandatory");
-        Enumeration<String> authHeaders = httpRequest.getHeaders(AUTHORIZATION_HEADERS);
-
-        return authHeaders != null ? Collections.list(authHeaders).stream() : Stream.of();
-    }
-
+public interface JMAPUrls {
+    String JMAP = "/jmap";
+    String AUTHENTICATION = "/authentication";
+    String DOWNLOAD = "/download";
+    String UPLOAD = "/upload";
+    String NOT_IMPLEMENTED = "/notImplemented";
 }

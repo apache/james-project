@@ -16,49 +16,40 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.draft;
-
-import java.util.Optional;
+package org.apache.james.jmap.http;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 
-import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
-import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy {
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
 
+public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy {
     private final AccessTokenManager accessTokenManager;
     private final MailboxManager mailboxManager;
-    private final HeadersAuthenticationExtractor authenticationExtractor;
 
     @Inject
     @VisibleForTesting
-    AccessTokenAuthenticationStrategy(AccessTokenManager accessTokenManager, MailboxManager mailboxManager, HeadersAuthenticationExtractor authenticationExtractor) {
+    AccessTokenAuthenticationStrategy(AccessTokenManager accessTokenManager, MailboxManager mailboxManager) {
         this.accessTokenManager = accessTokenManager;
         this.mailboxManager = mailboxManager;
-        this.authenticationExtractor = authenticationExtractor;
     }
 
     @Override
-    public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws NoValidAuthHeaderException {
-
-        Optional<Username> username = authenticationExtractor.authHeaders(httpRequest)
+    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) throws NoValidAuthHeaderException {
+        return Flux.fromStream(authHeaders(httpRequest))
             .map(AccessToken::fromString)
-            .filter(accessTokenManager::isValid)
-            .map(accessTokenManager::getUsernameFromToken)
-            .findFirst();
-
-        if (username.isPresent()) {
-            return mailboxManager.createSystemSession(username.get());
-        }
-        throw new NoValidAuthHeaderException();
+            .filterWhen(accessTokenManager::isValid)
+            .flatMap(accessTokenManager::getUsernameFromToken)
+            .map(mailboxManager::createSystemSession)
+            .singleOrEmpty();
     }
 }
