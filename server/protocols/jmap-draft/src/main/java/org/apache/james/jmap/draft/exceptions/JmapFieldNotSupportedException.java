@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft;
+package org.apache.james.jmap.draft.exceptions;
 
 import org.apache.commons.lang3.NotImplementedException;
 

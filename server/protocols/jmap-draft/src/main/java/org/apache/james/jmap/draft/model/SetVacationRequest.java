@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.model;
 import java.util.Map;
 
 import org.apache.james.jmap.api.vacation.Vacation;
-import org.apache.james.jmap.draft.JmapFieldNotSupportedException;
+import org.apache.james.jmap.draft.exceptions.JmapFieldNotSupportedException;
 import org.apache.james.jmap.draft.methods.JmapRequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

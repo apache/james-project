@@ -21,7 +21,7 @@ package org.apache.james.jmap.draft.model;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.james.jmap.draft.JmapFieldNotSupportedException;
+import org.apache.james.jmap.draft.exceptions.JmapFieldNotSupportedException;
 import org.apache.james.jmap.draft.methods.JmapRequest;
 import org.apache.james.mailbox.model.MailboxId;
 

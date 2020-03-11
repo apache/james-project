@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.model.mailbox;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.james.jmap.draft.JmapFieldNotSupportedException;
+import org.apache.james.jmap.draft.exceptions.JmapFieldNotSupportedException;
 import org.apache.james.jmap.draft.model.MailboxCreationId;
 import org.apache.james.mailbox.Role;
 
