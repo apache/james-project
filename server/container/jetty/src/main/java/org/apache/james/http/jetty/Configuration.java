@@ -21,7 +21,6 @@ package org.apache.james.http.jetty;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.apache.james.util.Port;
@@ -42,8 +41,6 @@ public class Configuration {
     }
     
     public static class Builder {
-
-        private static final String TEMPLATE_LEVEL1 = "/*";
 
         private final ImmutableMap.Builder<String, Object> mappings;
         private final ImmutableListMultimap.Builder<String, Object> filters;
@@ -69,35 +66,6 @@ public class Configuration {
             }
         }
         
-        public class FilterBinder {
-            private final String filterUrl;
-
-            private FilterBinder(String filterUrl) {
-                this.filterUrl = filterUrl;
-            }
-            
-            public FilterBinder with(Filter filter) {
-                Preconditions.checkNotNull(filter);
-                filters.put(filterUrl, filter);
-                return this;
-            }
-            
-            public FilterBinder and(Filter filter) {
-                return with(filter);
-            }
-
-            public FilterBinder with(Class<? extends Filter> filterClass) {
-                Preconditions.checkNotNull(filterClass);
-                filters.put(filterUrl, filterClass);
-                return this;
-            }
-
-            public Configuration.Builder only() {
-                return Builder.this;
-            }
-
-        }
-        
         private Builder() {
             mappings = ImmutableMap.builder();
             filters = ImmutableListMultimap.builder();
@@ -107,21 +75,6 @@ public class Configuration {
         public ServletBinder serve(String mappingUrl) {
             urlPreconditions(mappingUrl);
             return new ServletBinder(mappingUrl);
-        }
-        
-        public ServletBinder serveAsOneLevelTemplate(String mappingUrl) {
-            urlPreconditions(mappingUrl);
-            return new ServletBinder(mappingUrl + TEMPLATE_LEVEL1);
-        }
-        
-        public FilterBinder filter(String mappingUrl) {
-            urlPreconditions(mappingUrl);
-            return new FilterBinder(mappingUrl);
-        }
-        
-        public FilterBinder filterAsOneLevelTemplate(String mappingUrl) {
-            urlPreconditions(mappingUrl);
-            return new FilterBinder(mappingUrl + TEMPLATE_LEVEL1);
         }
 
         private void urlPreconditions(String mappingUrl) {

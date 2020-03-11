@@ -21,12 +21,9 @@ package org.apache.james.http.jetty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class ConfigurationTest {
 
@@ -40,8 +37,6 @@ public class ConfigurationTest {
     @Test
     public void shouldAllowWorkingDefinition() {
         Bad400 bad400 = new Bad400();
-        SpyFilter spyFilter = new SpyFilter();
-        LambdaFilter anotherFilter = (req, resp, chain) -> chain.doFilter(req, resp);
         Configuration testee = Configuration
                 .builder()
                 .port(2000)
@@ -49,24 +44,12 @@ public class ConfigurationTest {
                 .with(Ok200.class)
                 .serve("/def")
                 .with(bad400)
-                .filter("/123")
-                .with(CoolFilter.class)
-                .and(anotherFilter).only()
-                .filter("/456")
-                .with(spyFilter).only()
-                .serveAsOneLevelTemplate("/level")
-                .with(Ok200.class)
                 .build();
         assertThat(testee.getPort()).isPresent().contains(2000);
         assertThat(testee.getMappings())
-            .hasSize(3)
-            .containsEntry("/abc", Ok200.class)
-            .containsEntry("/def", bad400)
-            .containsEntry("/level/*", Ok200.class);
-        assertThat(testee.getFilters().asMap())
             .hasSize(2)
-            .containsEntry("/123", ImmutableList.of(CoolFilter.class, anotherFilter))
-            .containsEntry("/456", ImmutableList.of(spyFilter));
+            .containsEntry("/abc", Ok200.class)
+            .containsEntry("/def", bad400);
     }
 
     @Test
@@ -122,75 +105,5 @@ public class ConfigurationTest {
     @Test
     public void shouldNotAllowNullServletClassname() {
         assertThatThrownBy(() -> Configuration.builder().serve("/").with((Class<? extends Servlet>)null)).isInstanceOf(NullPointerException.class);
-    }
-    
-    @Test
-    public void shouldNotAllowNullServletAsOneLevelTemplateMappingUrl() {
-        assertThatThrownBy(() -> Configuration.builder().serveAsOneLevelTemplate(null)).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    public void shouldNotAllowEmptyServletAsOneLevelTemplateMappingUrl() {
-        assertThatThrownBy(() -> Configuration.builder().serveAsOneLevelTemplate("")).isInstanceOf(IllegalArgumentException.class);
-    }
-
-
-    @Test
-    public void shouldNotAllowWhitespaceOnlyServletAsOneLevelTemplateMappingUrl() {
-        assertThatThrownBy(() -> Configuration.builder().serveAsOneLevelTemplate("    ")).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    public void shouldNotAllowNullFilterMappingUrl() {
-        assertThatThrownBy(() -> Configuration.builder().filter(null)).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    public void shouldNotAllowEmptyFilterMappingUrl() {
-        assertThatThrownBy(() -> Configuration.builder().filter("")).isInstanceOf(IllegalArgumentException.class);
-    }
-
-
-    @Test
-    public void shouldNotAllowWhitespaceOnlyFilterMappingUrl() {
-        assertThatThrownBy(() -> Configuration.builder().filter("    ")).isInstanceOf(IllegalArgumentException.class);
-    }
-    
-
-    @Test
-    public void shouldNotAllowNullFilter() {
-        assertThatThrownBy(() -> Configuration.builder().filter("/").with((Filter)null)).isInstanceOf(NullPointerException.class);
-    }
-    
-    @Test
-    public void shouldNotAllowNullFilterClassname() {
-        assertThatThrownBy(() -> Configuration.builder().filter("/").with((Class<? extends Filter>)null)).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    public void shouldNotAllowNullFilterAsOneLevelTemplateMappingUrl() {
-        assertThatThrownBy(() -> Configuration.builder().filterAsOneLevelTemplate(null)).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    public void shouldNotAllowEmptyFilterAsOneLevelTemplateMappingUrl() {
-        assertThatThrownBy(() -> Configuration.builder().filterAsOneLevelTemplate("")).isInstanceOf(IllegalArgumentException.class);
-    }
-
-
-    @Test
-    public void shouldNotAllowWhitespaceOnlyFilterAsOneLevelTemplateMappingUrl() {
-        assertThatThrownBy(() -> Configuration.builder().filterAsOneLevelTemplate("    ")).isInstanceOf(IllegalArgumentException.class);
-    }
-    
-
-    @Test
-    public void shouldNotAllowNullFilterAsOneLevelTemplate() {
-        assertThatThrownBy(() -> Configuration.builder().filterAsOneLevelTemplate("/").with((Filter)null)).isInstanceOf(NullPointerException.class);
-    }
-    
-    @Test
-    public void shouldNotAllowNullFilterClassnameAsOneLevelTemplate() {
-        assertThatThrownBy(() -> Configuration.builder().filterAsOneLevelTemplate("/").with((Class<? extends Filter>)null)).isInstanceOf(NullPointerException.class);
     }
 }

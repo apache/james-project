@@ -24,12 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.io.Closeables;
+
 import io.restassured.RestAssured;
 
 public class JettyHttpServerTest {
@@ -58,25 +54,6 @@ public class JettyHttpServerTest {
                 method.handle(req, resp);
             }
         };
-    }
-    
-    public static class OverrideFilter implements Filter {
-
-        @Override
-        public void init(FilterConfig filterConfig) throws ServletException {
-        }
-
-        @Override
-        public void doFilter(ServletRequest request, ServletResponse response,
-                FilterChain chain) throws IOException, ServletException {
-            response.getWriter().print("overriden by filter");
-            response.flushBuffer();
-        }
-
-        @Override
-        public void destroy() {
-        }
-        
     }
     
     private JettyHttpServer testee;
@@ -177,49 +154,6 @@ public class JettyHttpServerTest {
             .assertThat()
                 .statusCode(200)
                 .body(Matchers.equalTo("Ok"));
-    }
-    
-    @Test
-    public void shouldCallFilterWhenConfiguredByClass() throws Exception {
-        testee = JettyHttpServer.create(configurationBuilder
-                .serve("/foo")
-                .with(Ok200.class)
-                .filter("/foo")
-                .with(OverrideFilter.class).only()
-                .build())
-        .start();
-        
-        RestAssured.port = testee.getPort();
-        
-        when()
-            .get("/foo")
-        .then()
-            .assertThat()
-                .statusCode(200)
-                .body(Matchers.equalTo("overriden by filter"));
-    }
-    
-    @Test
-    public void shouldLetConfiguredServletHandleIncomingRequestAfterFilterHandling() throws Exception {
-        
-        SpyFilter spyFilter = new SpyFilter();
-        testee = JettyHttpServer.create(configurationBuilder
-                                        .serve("/foo")
-                                        .with(Ok200.class)
-                                        .filter("/foo")
-                                        .with(spyFilter).only()
-                                        .build())
-                                .start();
-        
-        RestAssured.port = testee.getPort();
-        
-        when()
-            .get("/foo")
-        .then()
-            .assertThat()
-                .statusCode(200)
-                .body(Matchers.equalTo("Ok"));
-        assertThat(spyFilter.filtered).isTrue();
     }
     
 }
