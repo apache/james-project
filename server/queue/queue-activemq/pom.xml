@@ -33,6 +33,12 @@
     <name>Apache James :: Server :: Mail Queue :: ActiveMQ</name>
 
     <dependencies>
+        <!-- Forcing netty-transport version -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport</artifactId>
+            <version>4.1.39.Final</version>
+        </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
