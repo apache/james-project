@@ -19,32 +19,15 @@
 
 package org.apache.james.jmap.draft.utils;
 
-import java.util.List;
 import java.util.Optional;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
-
 public class DownloadPath {
-
-    public static DownloadPath from(String path) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(path), "'path' is mandatory");
-
-        // path =  /blobId/name
-        // idx  = 0 1      2
-        List<String> pathVariables = Splitter.on('/').splitToList(path);
-        Preconditions.checkArgument(pathVariables.size() >= 1 && pathVariables.size() <= 3, "'blobId' is mandatory");
-
-        String blobId = Iterables.get(pathVariables, 1, null);
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(blobId), "'blobId' is mandatory");
-
-        return new DownloadPath(blobId, name(pathVariables));
+    public static DownloadPath ofBlobId(String blobId) {
+        return new DownloadPath(blobId, Optional.empty());
     }
 
-    private static Optional<String> name(List<String> pathVariables) {
-        return Optional.ofNullable(Strings.emptyToNull(Iterables.get(pathVariables, 2, null)));
+    public static DownloadPath of(String blobId, String name) {
+        return new DownloadPath(blobId, Optional.of(name));
     }
 
     private final String blobId;

@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.IOUtils;
@@ -32,12 +33,15 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 class ReactorUtilsTest {
+    static final int BUFFER_SIZE = 5;
 
     @Nested
     class ExecuteAndEmpty {
@@ -86,7 +90,7 @@ class ReactorUtilsTest {
     class ToInputStream {
 
         @Test
-        void givenAFluxOf3BytesShouldReadSuccessfullyTheWholeSource() throws IOException, InterruptedException {
+        void givenAFluxOf3BytesShouldReadSuccessfullyTheWholeSource() {
             byte[] bytes = "foo bar ...".getBytes(StandardCharsets.US_ASCII);
 
             Flux<ByteBuffer> source = Flux.fromIterable(Bytes.asList(bytes))
@@ -101,7 +105,7 @@ class ReactorUtilsTest {
         }
 
         @Test
-        void givenALongFluxBytesShouldReadSuccessfullyTheWholeSource() throws IOException, InterruptedException {
+        void givenALongFluxBytesShouldReadSuccessfullyTheWholeSource() {
             byte[] bytes = RandomStringUtils.randomAlphabetic(41111).getBytes(StandardCharsets.US_ASCII);
 
             Flux<ByteBuffer> source = Flux.fromIterable(Bytes.asList(bytes))
@@ -156,7 +160,7 @@ class ReactorUtilsTest {
         }
 
         @Test
-        void givenAFluxOf3BytesWithAnEmptyByteArrayShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
+        void givenAFluxOf3BytesWithAnEmptyByteArrayShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException {
             AtomicInteger generateElements = new AtomicInteger(0);
             Flux<ByteBuffer> source = Flux.just(
                 new byte[] {0, 1, 2},
@@ -193,6 +197,87 @@ class ReactorUtilsTest {
             //make sure reactor is done with prefetch
             Thread.sleep(200);
             assertThat(generateElements.get()).isEqualTo(1);
+        }
+    }
+
+    @Nested
+    class ToChunks {
+        @Test
+        void givenInputStreamSmallerThanBufferSizeShouldReturnOneChunk() {
+            byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
+            InputStream source = new ByteArrayInputStream(bytes);
+
+            List<ByteBuffer> expected = ImmutableList.of(ByteBuffer.wrap(bytes));
+
+            List<ByteBuffer> chunks = ReactorUtils.toChunks(source, BUFFER_SIZE)
+                .collectList()
+                .block();
+
+            assertThat(chunks).isEqualTo(expected);
+        }
+
+        @Test
+        void givenInputStreamEqualToBufferSizeShouldReturnOneChunk() {
+            byte[] bytes = "foooo".getBytes(StandardCharsets.UTF_8);
+            InputStream source = new ByteArrayInputStream(bytes);
+
+            List<ByteBuffer> expected = ImmutableList.of(ByteBuffer.wrap(bytes));
+
+            List<ByteBuffer> chunks = ReactorUtils.toChunks(source, BUFFER_SIZE)
+                .collectList()
+                .block();
+
+            assertThat(chunks).isEqualTo(expected);
+        }
+
+        @Test
+        void givenInputStreamSlightlyBiggerThanBufferSizeShouldReturnTwoChunks() {
+            byte[] bytes = "foobar...".getBytes(StandardCharsets.UTF_8);
+            InputStream source = new ByteArrayInputStream(bytes);
+
+            List<ByteBuffer> expected = ImmutableList.of(
+                ByteBuffer.wrap("fooba".getBytes(StandardCharsets.UTF_8)),
+                ByteBuffer.wrap("r...".getBytes(StandardCharsets.UTF_8)));
+
+            List<ByteBuffer> chunks = ReactorUtils.toChunks(source, BUFFER_SIZE)
+                .collectList()
+                .block();
+
+            assertThat(chunks).isEqualTo(expected);
+        }
+
+        @Test
+        void givenInputStreamBiggerThanBufferSizeShouldReturnMultipleChunks() {
+            byte[] bytes = RandomStringUtils.randomAlphabetic(41111).getBytes(StandardCharsets.UTF_8);
+            InputStream source = new ByteArrayInputStream(bytes);
+
+            List<ByteBuffer> expected = Flux.fromIterable(Bytes.asList(bytes))
+                .window(BUFFER_SIZE)
+                .flatMapSequential(Flux::collectList)
+                .map(Bytes::toArray)
+                .map(ByteBuffer::wrap)
+                .collectList()
+                .block();
+
+            List<ByteBuffer> chunks = ReactorUtils.toChunks(source, BUFFER_SIZE)
+                .collectList()
+                .block();
+
+            assertThat(chunks).isEqualTo(expected);
+        }
+
+        @Test
+        void givenEmptyInputStreamShouldReturnEmptyChunk() {
+            byte[] bytes = "".getBytes(StandardCharsets.UTF_8);
+            InputStream source = new ByteArrayInputStream(bytes);
+
+            List<ByteBuffer> chunks = ReactorUtils.toChunks(source, BUFFER_SIZE)
+                .collectList()
+                .block();
+
+            List<ByteBuffer> expected = ImmutableList.of(ByteBuffer.wrap(bytes));
+
+            assertThat(chunks).isEqualTo(expected);
         }
     }
 }

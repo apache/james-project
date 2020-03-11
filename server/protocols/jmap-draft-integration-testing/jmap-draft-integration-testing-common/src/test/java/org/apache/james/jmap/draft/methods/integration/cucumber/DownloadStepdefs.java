@@ -450,7 +450,7 @@ public class DownloadStepdefs {
     @Then("^the user should receive an attachment access token$")
     public void accessTokenResponse() throws Throwable {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(response.getHeaders("Content-Type")).extracting(Header::toString).containsExactly("Content-Type: text/plain");
+        assertThat(response.getHeaders("Content-Type")).extracting(Header::getValue).containsExactly("text/plain");
         assertThat(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8)).isNotEmpty();
     }
 
