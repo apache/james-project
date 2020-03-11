@@ -52,6 +52,7 @@ public class DockerRabbitMQ {
     private static final int CHANNEL_RPC_TIMEOUT_OF_ONE_SECOND = 1000;
     private static final int HANDSHAKE_TIMEOUT_OF_ONE_SECOND = 1000;
     private static final int SHUTDOWN_TIMEOUT_OF_ONE_SECOND = 1000;
+    private static final int NETWORK_RECOVERY_INTERVAL_OF_ONE_SECOND = 1000;
     private static final String DEFAULT_RABBIT_HOST_NAME_PREFIX = "my-rabbit";
     private static final String DEFAULT_RABBIT_NODE_NAME_PREFIX = "rabbit";
     private static final int DEFAULT_RABBITMQ_PORT = 5672;
@@ -263,6 +264,7 @@ public class DockerRabbitMQ {
             .channelRpcTimeoutInMs(CHANNEL_RPC_TIMEOUT_OF_ONE_SECOND)
             .handshakeTimeoutInMs(HANDSHAKE_TIMEOUT_OF_ONE_SECOND)
             .shutdownTimeoutInMs(SHUTDOWN_TIMEOUT_OF_ONE_SECOND)
+            .networkRecoveryIntervalInMs(NETWORK_RECOVERY_INTERVAL_OF_ONE_SECOND)
             .build();
 
         return new RabbitMQConnectionFactory(rabbitMQConfiguration);

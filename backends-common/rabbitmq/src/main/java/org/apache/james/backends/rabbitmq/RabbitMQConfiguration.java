@@ -102,6 +102,7 @@ public class RabbitMQConfiguration {
         static final int DEFAULT_CHANNEL_RPC_TIMEOUT = 60_000;
         static final int DEFAULT_HANDSHAKE_TIMEOUT = 10_000;
         static final int DEFAULT_SHUTDOWN_TIMEOUT = 10_000;
+        static final int DEFAULT_NETWORK_RECOVERY_INTERVAL = 5_000;
 
         private final URI amqpUri;
         private final URI managementUri;
@@ -112,6 +113,7 @@ public class RabbitMQConfiguration {
         private Optional<Integer> channelRpcTimeoutInMs;
         private Optional<Integer> handshakeTimeoutInMs;
         private Optional<Integer> shutdownTimeoutInMs;
+        private Optional<Integer> networkRecoveryIntervalInMs;
 
         private Builder(URI amqpUri, URI managementUri, ManagementCredentials managementCredentials) {
             this.amqpUri = amqpUri;
@@ -123,6 +125,7 @@ public class RabbitMQConfiguration {
             this.channelRpcTimeoutInMs = Optional.empty();
             this.handshakeTimeoutInMs = Optional.empty();
             this.shutdownTimeoutInMs = Optional.empty();
+            this.networkRecoveryIntervalInMs = Optional.empty();
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -155,6 +158,11 @@ public class RabbitMQConfiguration {
             return this;
         }
 
+        public Builder networkRecoveryIntervalInMs(int networkRecoveryInterval) {
+            this.networkRecoveryIntervalInMs = Optional.of(networkRecoveryInterval);
+            return this;
+        }
+
         public RabbitMQConfiguration build() {
             Preconditions.checkNotNull(amqpUri, "'amqpUri' should not be null");
             Preconditions.checkNotNull(managementUri, "'managementUri' should not be null");
@@ -167,7 +175,8 @@ public class RabbitMQConfiguration {
                     connectionTimeoutInMs.orElse(DEFAULT_CONNECTION_TIMEOUT),
                     channelRpcTimeoutInMs.orElse(DEFAULT_CHANNEL_RPC_TIMEOUT),
                     handshakeTimeoutInMs.orElse(DEFAULT_HANDSHAKE_TIMEOUT),
-                    shutdownTimeoutInMs.orElse(DEFAULT_SHUTDOWN_TIMEOUT)
+                    shutdownTimeoutInMs.orElse(DEFAULT_SHUTDOWN_TIMEOUT),
+                    networkRecoveryIntervalInMs.orElse(DEFAULT_NETWORK_RECOVERY_INTERVAL)
                 );
         }
     }
@@ -212,12 +221,13 @@ public class RabbitMQConfiguration {
     private final int channelRpcTimeoutInMs;
     private final int handshakeTimeoutInMs;
     private final int shutdownTimeoutInMs;
+    private final int networkRecoveryIntervalInMs;
 
 
     private final ManagementCredentials managementCredentials;
 
     private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs,
-                                  int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs) {
+                                  int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs, int networkRecoveryIntervalInMs) {
         this.uri = uri;
         this.managementUri = managementUri;
         this.managementCredentials = managementCredentials;
@@ -227,6 +237,7 @@ public class RabbitMQConfiguration {
         this.channelRpcTimeoutInMs = channelRpcTimeoutInMs;
         this.handshakeTimeoutInMs = handshakeTimeoutInMs;
         this.shutdownTimeoutInMs = shutdownTimeoutInMs;
+        this.networkRecoveryIntervalInMs = networkRecoveryIntervalInMs;
     }
 
     public URI getUri() {
@@ -261,6 +272,10 @@ public class RabbitMQConfiguration {
         return shutdownTimeoutInMs;
     }
 
+    public int getNetworkRecoveryIntervalInMs() {
+        return networkRecoveryIntervalInMs;
+    }
+
     public ManagementCredentials getManagementCredentials() {
         return managementCredentials;
     }
@@ -278,7 +293,9 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.channelRpcTimeoutInMs, that.channelRpcTimeoutInMs)
                 && Objects.equals(this.handshakeTimeoutInMs, that.handshakeTimeoutInMs)
                 && Objects.equals(this.shutdownTimeoutInMs, that.shutdownTimeoutInMs)
-                && Objects.equals(this.managementCredentials, that.managementCredentials);
+                && Objects.equals(this.networkRecoveryIntervalInMs, that.networkRecoveryIntervalInMs)
+                && Objects.equals(this.managementCredentials, that.managementCredentials
+            );
         }
         return false;
     }
@@ -286,6 +303,6 @@ public class RabbitMQConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs,
-            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, managementCredentials);
+            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials);
     }
 }

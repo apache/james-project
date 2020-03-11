@@ -48,6 +48,7 @@ public class RabbitMQConnectionFactory {
             connectionFactory.setShutdownTimeout(rabbitMQConfiguration.getShutdownTimeoutInMs());
             connectionFactory.setChannelRpcTimeout(rabbitMQConfiguration.getChannelRpcTimeoutInMs());
             connectionFactory.setConnectionTimeout(rabbitMQConfiguration.getConnectionTimeoutInMs());
+            connectionFactory.setNetworkRecoveryInterval(rabbitMQConfiguration.getNetworkRecoveryIntervalInMs());
             return connectionFactory;
         } catch (Exception e) {
             throw new RuntimeException(e);
