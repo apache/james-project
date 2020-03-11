@@ -34,6 +34,7 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,8 +75,8 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
-    public void storeAttachment(Attachment attachment, MailboxSession mailboxSession) throws MailboxException {
-        attachmentMapperFactory.getAttachmentMapper(mailboxSession)
+    public Publisher<Void> storeAttachment(Attachment attachment, MailboxSession mailboxSession) {
+        return attachmentMapperFactory.getAttachmentMapper(mailboxSession)
             .storeAttachmentForOwner(attachment, mailboxSession.getUser());
     }
 

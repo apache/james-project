@@ -28,6 +28,7 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.transaction.Mapper;
+import org.reactivestreams.Publisher;
 
 public interface AttachmentMapper extends Mapper {
 
@@ -35,7 +36,7 @@ public interface AttachmentMapper extends Mapper {
 
     List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds);
 
-    void storeAttachmentForOwner(Attachment attachment, Username owner) throws MailboxException;
+    Publisher<Void> storeAttachmentForOwner(Attachment attachment, Username owner);
 
     void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException;
 

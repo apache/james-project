@@ -465,6 +465,7 @@ public class StoreMessageManager implements MessageManager {
                     .addMetaData(message.metaData())
                     .build(),
                     new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                    .subscribeOn(Schedulers.elastic())
                     .block();
                 return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
             }, MailboxPathLocker.LockType.Write);

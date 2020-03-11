@@ -110,12 +110,11 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public void storeAttachmentForOwner(Attachment attachment, Username owner) throws MailboxException {
-        ownerDAO.addOwner(attachment.getAttachmentId(), owner)
+    public Mono<Void> storeAttachmentForOwner(Attachment attachment, Username owner) {
+        return ownerDAO.addOwner(attachment.getAttachmentId(), owner)
             .then(Mono.from(blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST)))
             .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
-            .flatMap(attachmentDAOV2::storeAttachment)
-            .block();
+            .flatMap(attachmentDAOV2::storeAttachment);
     }
 
     @Override

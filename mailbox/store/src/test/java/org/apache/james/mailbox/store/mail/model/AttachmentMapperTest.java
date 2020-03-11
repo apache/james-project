@@ -37,6 +37,8 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 public abstract class AttachmentMapperTest {
     private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.from("unknown");
     private static final Username OWNER = Username.of("owner");
@@ -73,7 +75,7 @@ public abstract class AttachmentMapperTest {
                 .type("content")
                 .build();
         AttachmentId attachmentId = expected.getAttachmentId();
-        attachmentMapper.storeAttachmentForOwner(expected, OWNER);
+        Mono.from(attachmentMapper.storeAttachmentForOwner(expected, OWNER)).block();
         //When
         Attachment attachment = attachmentMapper.getAttachment(attachmentId);
         //Then
@@ -116,21 +118,21 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    void getAttachmentsShouldReturnTheAttachmentsWhenSome() throws Exception {
+    void getAttachmentsShouldReturnTheAttachmentsWhenSome() {
         //Given
         Attachment expected = Attachment.builder()
                 .bytes("payload".getBytes(StandardCharsets.UTF_8))
                 .type("content")
                 .build();
         AttachmentId attachmentId = expected.getAttachmentId();
-        attachmentMapper.storeAttachmentForOwner(expected, OWNER);
+        Mono.from(attachmentMapper.storeAttachmentForOwner(expected, OWNER)).block();
 
         Attachment expected2 = Attachment.builder()
                 .bytes("payload2".getBytes(StandardCharsets.UTF_8))
                 .type("content")
                 .build();
         AttachmentId attachmentId2 = expected2.getAttachmentId();
-        attachmentMapper.storeAttachmentForOwner(expected2, OWNER);
+        Mono.from(attachmentMapper.storeAttachmentForOwner(expected2, OWNER)).block();
 
         //When
         List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(attachmentId, attachmentId2));
@@ -153,7 +155,7 @@ public abstract class AttachmentMapperTest {
                 .type("content")
                 .build();
         AttachmentId attachmentId = attachment.getAttachmentId();
-        attachmentMapper.storeAttachmentForOwner(attachment, OWNER);
+        Mono.from(attachmentMapper.storeAttachmentForOwner(attachment, OWNER)).block();
         
         //When
         Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(attachmentId);
@@ -270,7 +272,7 @@ public abstract class AttachmentMapperTest {
             .build();
 
         AttachmentId attachmentId = attachment.getAttachmentId();
-        attachmentMapper.storeAttachmentForOwner(attachment, OWNER);
+        Mono.from(attachmentMapper.storeAttachmentForOwner(attachment, OWNER)).block();
 
         //When
         Collection<Username> expectedOwners = ImmutableList.of(OWNER);
@@ -305,8 +307,8 @@ public abstract class AttachmentMapperTest {
             .build();
 
         AttachmentId attachmentId = attachment.getAttachmentId();
-        attachmentMapper.storeAttachmentForOwner(attachment, OWNER);
-        attachmentMapper.storeAttachmentForOwner(attachment, ADDITIONAL_OWNER);
+        Mono.from(attachmentMapper.storeAttachmentForOwner(attachment, OWNER)).block();
+        Mono.from(attachmentMapper.storeAttachmentForOwner(attachment, ADDITIONAL_OWNER)).block();
 
         //When
         Collection<Username> expectedOwners = ImmutableList.of(OWNER, ADDITIONAL_OWNER);

@@ -38,6 +38,8 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
+import reactor.core.publisher.Mono;
+
 public class InMemoryAttachmentMapper implements AttachmentMapper {
     
     private static final int INITIAL_SIZE = 128;
@@ -73,9 +75,11 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public void storeAttachmentForOwner(Attachment attachment, Username owner) throws MailboxException {
-        attachmentsById.put(attachment.getAttachmentId(), attachment);
-        ownersByAttachmentId.put(attachment.getAttachmentId(), owner);
+    public Mono<Void> storeAttachmentForOwner(Attachment attachment, Username owner) {
+        return Mono.fromRunnable(() -> {
+            attachmentsById.put(attachment.getAttachmentId(), attachment);
+            ownersByAttachmentId.put(attachment.getAttachmentId(), owner);
+        });
     }
 
     @Override
