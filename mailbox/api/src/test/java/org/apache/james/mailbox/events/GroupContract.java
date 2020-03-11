@@ -29,7 +29,6 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_B;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_C;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ONE_SECOND;
-import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.apache.james.mailbox.events.EventBusTestFixture.newListener;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -96,7 +95,8 @@ public interface GroupContract {
             IntStream.range(0, eventCount)
                 .forEach(i -> eventBus().dispatch(EVENT, NO_KEYS).block());
 
-            WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_MINUTES).untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
+            getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_MINUTES)
+                .untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
             assertThat(rateExceeded).isFalse();
         }
 
@@ -145,7 +145,7 @@ public interface GroupContract {
                 eventBus().dispatch(EVENT, NO_KEYS).subscribeOn(Schedulers.elastic()).subscribe();
 
 
-                WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_SECONDS)
+                getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_SECONDS)
                     .untilAsserted(() -> assertThat(threads).hasSize(3));
                 assertThat(threads).doesNotHaveDuplicates();
             } finally {
@@ -166,7 +166,7 @@ public interface GroupContract {
             eventBus().register(listener, GROUP_A);
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            WAIT_CONDITION.until(successfulRetry::get);
+            getSpeedProfile().shortWaitCondition().until(successfulRetry::get);
         }
 
         @Test
@@ -318,7 +318,7 @@ public interface GroupContract {
             eventBus().dispatch(EVENT, NO_KEYS).block();
             eventBus().dispatch(EVENT_2, NO_KEYS).block();
 
-            WAIT_CONDITION
+            getSpeedProfile().shortWaitCondition()
                 .untilAsserted(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
         }
 

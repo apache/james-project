@@ -37,6 +37,11 @@ public class InVMEventBusTest implements KeyContract.SingleEventBusKeyContract, 
     }
 
     @Override
+    public EnvironmentSpeedProfile getSpeedProfile() {
+        return EnvironmentSpeedProfile.FAST;
+    }
+
+    @Override
     public EventBus eventBus() {
         return eventBus;
     }

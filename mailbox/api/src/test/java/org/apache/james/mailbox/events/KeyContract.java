@@ -27,7 +27,6 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_2;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ONE_SECOND;
-import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.apache.james.mailbox.events.EventBusTestFixture.newListener;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -82,7 +81,7 @@ public interface KeyContract extends EventBusContract {
             IntStream.range(0, eventCount)
                 .forEach(i -> eventBus().dispatch(EVENT, KEY_1).block());
 
-            WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_MINUTES)
+            getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_MINUTES)
                 .untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
             assertThat(rateExceeded).isFalse();
         }
@@ -108,7 +107,7 @@ public interface KeyContract extends EventBusContract {
                 eventBus().dispatch(EVENT, KEY_1).subscribeOn(Schedulers.elastic()).subscribe();
 
 
-                WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_SECONDS)
+                getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_SECONDS)
                     .untilAsserted(() -> assertThat(threads).hasSize(3));
                 assertThat(threads).doesNotHaveDuplicates();
             } finally {
@@ -362,7 +361,7 @@ public interface KeyContract extends EventBusContract {
             eventBus().dispatch(EVENT, KEY_1).block();
             eventBus().dispatch(EVENT_2, KEY_1).block();
 
-            WAIT_CONDITION
+            getSpeedProfile().shortWaitCondition()
                 .untilAsserted(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
         }
 
