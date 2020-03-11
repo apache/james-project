@@ -28,7 +28,7 @@ import java.security.KeyStoreException;
 import java.util.Optional;
 
 import org.apache.james.filesystem.api.FileSystemFixture;
-import org.apache.james.jmap.draft.JMAPConfiguration;
+import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -37,7 +37,7 @@ class SecurityKeyLoaderTest {
 
     @Test
     void loadShouldThrowWhenJMAPIsNotEnabled() throws Exception {
-        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+        JMAPDraftConfiguration jmapConfiguration = JMAPDraftConfiguration.builder()
             .disable()
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
@@ -55,7 +55,7 @@ class SecurityKeyLoaderTest {
 
     @Test
     void loadShouldThrowWhenWrongKeystore() throws Exception {
-        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+        JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
             .keystore("badAliasKeystore")
@@ -64,7 +64,7 @@ class SecurityKeyLoaderTest {
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
             FileSystemFixture.CLASSPATH_FILE_SYSTEM,
-            jmapConfiguration);
+            jmapDraftConfiguration);
 
         assertThatThrownBy(loader::load)
             .isInstanceOf(KeyStoreException.class)
@@ -73,7 +73,7 @@ class SecurityKeyLoaderTest {
 
     @Test
     void loadShouldThrowWhenWrongPassword() throws Exception {
-        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+        JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
@@ -82,7 +82,7 @@ class SecurityKeyLoaderTest {
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
             FileSystemFixture.CLASSPATH_FILE_SYSTEM,
-            jmapConfiguration);
+            jmapDraftConfiguration);
 
         assertThatThrownBy(loader::load)
             .isInstanceOf(IOException.class)
@@ -91,7 +91,7 @@ class SecurityKeyLoaderTest {
 
     @Test
     void loadShouldReturnAsymmetricKeysWhenCorrectPassword() throws Exception {
-        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+        JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
@@ -100,7 +100,7 @@ class SecurityKeyLoaderTest {
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
             FileSystemFixture.CLASSPATH_FILE_SYSTEM,
-            jmapConfiguration);
+            jmapDraftConfiguration);
 
         assertThat(loader.load())
             .isNotNull();
@@ -114,7 +114,7 @@ class SecurityKeyLoaderTest {
     void loadShouldReturnAsymmetricKeysWhenUsingKeyStoreGeneratedByDifferentJavaVersions(
         String keyStoreInDifferentVersion) throws Exception {
 
-        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+        JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
             .keystore(keyStoreInDifferentVersion)
@@ -123,7 +123,7 @@ class SecurityKeyLoaderTest {
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
             FileSystemFixture.CLASSPATH_FILE_SYSTEM,
-            jmapConfiguration);
+            jmapDraftConfiguration);
 
         assertThat(loader.load())
             .isNotNull();

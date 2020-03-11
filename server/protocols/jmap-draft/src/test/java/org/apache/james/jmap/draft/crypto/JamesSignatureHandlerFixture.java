@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.crypto;
 import java.util.Optional;
 
 import org.apache.james.filesystem.api.FileSystemFixture;
-import org.apache.james.jmap.draft.JMAPConfiguration;
+import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 
 class JamesSignatureHandlerFixture {
 
@@ -38,7 +38,7 @@ class JamesSignatureHandlerFixture {
 
     static JamesSignatureHandler defaultSignatureHandler() {
 
-        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+        JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .enable()
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
@@ -47,7 +47,7 @@ class JamesSignatureHandlerFixture {
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
             FileSystemFixture.CLASSPATH_FILE_SYSTEM,
-            jmapConfiguration);
+            jmapDraftConfiguration);
 
         return new JamesSignatureHandler(loader);
     }

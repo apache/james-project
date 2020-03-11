@@ -21,12 +21,17 @@ package org.apache.james.modules.protocols;
 
 import java.security.Security;
 
-import org.apache.james.jmap.draft.JMAPConfiguration;
+import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.JMAPRoutes;
+import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.draft.JMAPModule;
-import org.apache.james.jmap.draft.JMAPServer;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.MessageIdProbe;
 import org.apache.james.jmap.draft.crypto.JamesSignatureHandler;
+import org.apache.james.jmap.http.AuthenticationRoutes;
+import org.apache.james.jmap.http.DownloadRoutes;
+import org.apache.james.jmap.http.JMAPApiRoutes;
+import org.apache.james.jmap.http.UploadRoutes;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -43,8 +48,13 @@ public class JMAPDraftServerModule extends AbstractModule {
         install(new JMAPModule());
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MessageIdProbe.class);
-    }
+        Multibinder<JMAPRoutes> routesBinder = Multibinder.newSetBinder(binder(), JMAPRoutes.class);
 
+        routesBinder.addBinding().to(AuthenticationRoutes.class);
+        routesBinder.addBinding().to(JMAPApiRoutes.class);
+        routesBinder.addBinding().to(UploadRoutes.class);
+        routesBinder.addBinding().to(DownloadRoutes.class);
+    }
 
     @ProvidesIntoSet
     InitializationOperation startJmap(JMAPServer server, JamesSignatureHandler signatureHandler, JMAPConfiguration jmapConfiguration) {

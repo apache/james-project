@@ -31,7 +31,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.jmap.draft.JMAPConfiguration;
+import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -42,21 +42,21 @@ public class SecurityKeyLoader {
     private static final String JKS = "JKS";
 
     private final FileSystem fileSystem;
-    private final JMAPConfiguration jmapConfiguration;
+    private final JMAPDraftConfiguration jmapDraftConfiguration;
 
     @VisibleForTesting
     @Inject
-    SecurityKeyLoader(FileSystem fileSystem, JMAPConfiguration jmapConfiguration) {
+    SecurityKeyLoader(FileSystem fileSystem, JMAPDraftConfiguration jmapDraftConfiguration) {
         this.fileSystem = fileSystem;
-        this.jmapConfiguration = jmapConfiguration;
+        this.jmapDraftConfiguration = jmapDraftConfiguration;
     }
 
     public AsymmetricKeys load() throws Exception {
-        Preconditions.checkState(jmapConfiguration.isEnabled(), "JMAP is not enabled");
+        Preconditions.checkState(jmapDraftConfiguration.isEnabled(), "JMAP is not enabled");
 
         KeyStore keystore = KeyStore.getInstance(JKS);
-        InputStream fis = fileSystem.getResource(jmapConfiguration.getKeystore());
-        char[] secret = jmapConfiguration.getSecret().toCharArray();
+        InputStream fis = fileSystem.getResource(jmapDraftConfiguration.getKeystore());
+        char[] secret = jmapDraftConfiguration.getSecret().toCharArray();
         keystore.load(fis, secret);
         Certificate aliasCertificate = Optional
                 .ofNullable(keystore.getCertificate(ALIAS))

@@ -29,6 +29,8 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.draft.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
@@ -44,6 +46,7 @@ import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.transport.matchers.RecipientIsLocal;
+import org.apache.james.util.Port;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
@@ -90,7 +93,6 @@ public class JMAPModule extends AbstractModule {
 
         bind(JMAPServer.class).in(Scopes.SINGLETON);
         bind(RequestHandler.class).in(Scopes.SINGLETON);
-        bind(UploadHandler.class).in(Scopes.SINGLETON);
         bind(JsoupHtmlTextExtractor.class).in(Scopes.SINGLETON);
 
         bind(HtmlTextExtractor.class).to(JsoupHtmlTextExtractor.class);
@@ -107,15 +109,12 @@ public class JMAPModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider, FileSystem fileSystem) throws ConfigurationException, IOException {
+    JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, IOException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration("jmap");
             return JMAPConfiguration.builder()
                 .enabled(configuration.getBoolean("enabled", true))
-                .keystore(configuration.getString("tls.keystoreURL"))
-                .secret(configuration.getString("tls.secret"))
-                .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
-                .port(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT))
+                .port(Port.of(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT)))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");
@@ -127,7 +126,26 @@ public class JMAPModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JwtConfiguration providesJwtConfiguration(JMAPConfiguration jmapConfiguration) {
+    JMAPDraftConfiguration provideDraftConfiguration(PropertiesProvider propertiesProvider, FileSystem fileSystem) throws ConfigurationException, IOException {
+        try {
+            Configuration configuration = propertiesProvider.getConfiguration("jmap");
+            return JMAPDraftConfiguration.builder()
+                .enabled(configuration.getBoolean("enabled", true))
+                .keystore(configuration.getString("tls.keystoreURL"))
+                .secret(configuration.getString("tls.secret"))
+                .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
+                .build();
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");
+            return JMAPDraftConfiguration.builder()
+                .disable()
+                .build();
+        }
+    }
+
+    @Provides
+    @Singleton
+    JwtConfiguration providesJwtConfiguration(JMAPDraftConfiguration jmapConfiguration) {
         return new JwtConfiguration(jmapConfiguration.getJwtPublicKeyPem());
     }
 

@@ -32,10 +32,10 @@ public class JMAPConfigurationStartUpCheck implements StartUpCheck {
     public static final String CHECK_NAME = "JMAPConfigurationStartUpCheck";
 
     private final SecurityKeyLoader securityKeyLoader;
-    private final JMAPConfiguration jmapConfiguration;
+    private final JMAPDraftConfiguration jmapConfiguration;
 
     @Inject
-    JMAPConfigurationStartUpCheck(SecurityKeyLoader securityKeyLoader, JMAPConfiguration jmapConfiguration) {
+    JMAPConfigurationStartUpCheck(SecurityKeyLoader securityKeyLoader, JMAPDraftConfiguration jmapConfiguration) {
         this.securityKeyLoader = securityKeyLoader;
         this.jmapConfiguration = jmapConfiguration;
     }

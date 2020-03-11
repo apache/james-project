@@ -25,7 +25,8 @@ import java.util.Optional;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.jmap.draft.JMAPConfiguration;
+import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.apache.james.jmap.draft.methods.GetMessageListMethod;
 
 import com.google.inject.AbstractModule;
@@ -89,13 +90,12 @@ public class TestJMAPServerModule extends AbstractModule {
             "ICQil1aaN7/2au+p7E4n7nzfYG7nRX5syDoqgBbdhpJxV8/5ohA=\n" +
             "-----END RSA PRIVATE KEY-----\n";
 
-    public static JMAPConfiguration.Builder jmapConfigurationBuilder() {
-        return JMAPConfiguration.builder()
+    public static JMAPDraftConfiguration.Builder jmapDraftConfigurationBuilder() {
+        return JMAPDraftConfiguration.builder()
                 .enable()
                 .keystore("keystore")
                 .secret("james72laBalle")
-                .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY))
-                .randomPort();
+                .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY));
     }
 
     private final long maximumLimit;
@@ -112,6 +112,15 @@ public class TestJMAPServerModule extends AbstractModule {
     @Provides
     @Singleton
     JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException {
-        return jmapConfigurationBuilder().build();
+        return JMAPConfiguration.builder()
+            .enable()
+            .randomPort()
+            .build();
+    }
+
+    @Provides
+    @Singleton
+    JMAPDraftConfiguration provideDraftConfiguration() throws FileNotFoundException, ConfigurationException {
+        return jmapDraftConfigurationBuilder().build();
     }
 }

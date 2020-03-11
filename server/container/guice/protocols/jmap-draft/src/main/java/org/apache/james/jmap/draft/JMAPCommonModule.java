@@ -39,8 +39,11 @@ import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageHeaderViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageMetadataViewFactory;
 import org.apache.james.jmap.draft.send.MailSpool;
-import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.jmap.event.ComputeMessageFastViewProjectionListener;
+import org.apache.james.jmap.http.AccessTokenAuthenticationStrategy;
+import org.apache.james.jmap.http.AuthenticationStrategy;
+import org.apache.james.jmap.http.JWTAuthenticationStrategy;
+import org.apache.james.jmap.http.QueryParameterAccessTokenAuthenticationStrategy;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
@@ -79,7 +82,6 @@ public class JMAPCommonModule extends AbstractModule {
         bind(MessageFastViewFactory.class).in(Scopes.SINGLETON);
 
         bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
-        bind(HeadersAuthenticationExtractor.class).in(Scopes.SINGLETON);
         bind(SecurityKeyLoader.class).in(Scopes.SINGLETON);
 
         bind(SignatureHandler.class).to(JamesSignatureHandler.class);
