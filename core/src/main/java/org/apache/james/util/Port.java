@@ -19,6 +19,7 @@
 
 package org.apache.james.util;
 
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.base.Preconditions;
@@ -58,5 +59,20 @@ public class Port {
 
     public int getValue() {
         return value;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Port) {
+            Port indexName = (Port) o;
+
+            return Objects.equals(this.value, indexName.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
     }
 }

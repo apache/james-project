@@ -24,7 +24,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class PortTest {
+
+    @Test
+    void portShouldRespectBeanContract() {
+        EqualsVerifier.forClass(Port.class)
+            .verify();
+    }
+
     @Test
     void assertValidShouldThrowOnNegativePort() {
         assertThatThrownBy(() -> Port.assertValid(-1))
