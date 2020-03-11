@@ -85,6 +85,7 @@
         <module>protocols/fetchmail</module>
         <module>protocols/jmap</module>
         <module>protocols/jmap-draft</module>
+        <module>protocols/jmap-rfc-8621</module>
         <module>protocols/jmap-draft-integration-testing</module>
         <module>protocols/jwt</module>
         <module>protocols/protocols-imap4</module>
@@ -114,7 +115,6 @@
     <properties>
         <productName>Apache-James Mail Server</productName>
     </properties>
-
     <build>
         <pluginManagement>
             <plugins>

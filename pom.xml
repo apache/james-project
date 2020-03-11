@@ -650,7 +650,7 @@
 
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.1</scala.version>
-
+        <scalatestplus-play.version>5.0.0</scalatestplus-play.version>
         <doclint>none</doclint>
     </properties>
 
@@ -1521,6 +1521,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-jmap-rfc-8621</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-jmap-draft-integration-testing</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -2020,6 +2025,7 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+
             <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
@@ -2065,6 +2071,11 @@
                 <groupId>com.thoughtworks.qdox</groupId>
                 <artifactId>qdox</artifactId>
                 <version>${qdox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.typesafe.play</groupId>
+                <artifactId>play-json_${scala.base}</artifactId>
+                <version>2.8.1</version>
             </dependency>
             <dependency>
                 <groupId>commons-beanutils</groupId>
@@ -3378,7 +3389,6 @@
             </build>
         </profile>
     </profiles>
-
     <reporting>
         <plugins>
             <!-- Order matters. First project-info-reports, second jxr. -->
