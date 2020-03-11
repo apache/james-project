@@ -33,10 +33,12 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailbox.events.EventBusTestFixture;
 import org.apache.james.mailbox.events.GenericGroup;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
@@ -58,7 +60,7 @@ class MailboxListenersLoaderImplTest {
         when(fileSystem.getFile(anyString()))
             .thenThrow(new FileNotFoundException());
 
-        eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()));
+        eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
 
         GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(fileSystem));
         testee = new MailboxListenersLoaderImpl(new MailboxListenerFactory(genericLoader), eventBus, ImmutableSet.of());

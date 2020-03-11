@@ -30,7 +30,6 @@ import org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHa
 import org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.BackoffRetryer;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -54,11 +53,6 @@ public class InVMEventBus implements EventBus {
         this.eventDeadLetters = eventDeadLetters;
         this.registrations = Multimaps.synchronizedSetMultimap(HashMultimap.create());
         this.groups = new ConcurrentHashMap<>();
-    }
-
-    @VisibleForTesting
-    public InVMEventBus(EventDelivery eventDelivery) {
-        this(eventDelivery, RetryBackoffConfiguration.DEFAULT, new MemoryEventDeadLetters());
     }
 
     @Override

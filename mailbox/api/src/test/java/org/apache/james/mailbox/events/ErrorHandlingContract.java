@@ -19,12 +19,14 @@
 
 package org.apache.james.mailbox.events;
 
+import static org.apache.james.mailbox.events.EventBusTestFixture.DEFAULT_FIRST_BACKOFF;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_2;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_ID;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
+import static org.apache.james.mailbox.events.EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION;
 import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION_LONG;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -178,11 +180,11 @@ interface ErrorHandlingContract extends EventBusContract {
         TimeUnit.MINUTES.sleep(1);
         SoftAssertions.assertSoftly(softly -> {
             List<Instant> timeElapsed = throwingListener.timeElapsed;
-            softly.assertThat(timeElapsed).hasSize(RetryBackoffConfiguration.DEFAULT.DEFAULT_MAX_RETRIES + 1);
+            softly.assertThat(timeElapsed).hasSize(RETRY_BACKOFF_CONFIGURATION.getMaxRetries() + 1);
 
-            long minFirstDelayAfter = 100; // first backOff
-            long minSecondDelayAfter = 50; // 50 * jitter factor (50 * 0.5)
-            long minThirdDelayAfter = 100; // 100 * jitter factor (100 * 0.5)
+            long minFirstDelayAfter = DEFAULT_FIRST_BACKOFF.toMillis(); // first backOff
+            long minSecondDelayAfter = DEFAULT_FIRST_BACKOFF.toMillis() / 2; // first_backOff * jitter factor (first_backOff * 0.5)
+            long minThirdDelayAfter = DEFAULT_FIRST_BACKOFF.toMillis(); // first_backOff * jitter factor (first_backOff * 1)
 
             softly.assertThat(timeElapsed.get(1))
                 .isAfterOrEqualTo(timeElapsed.get(0).plusMillis(minFirstDelayAfter));

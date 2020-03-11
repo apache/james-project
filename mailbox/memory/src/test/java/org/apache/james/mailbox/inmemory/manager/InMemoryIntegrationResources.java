@@ -28,8 +28,10 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.EventBusTestFixture;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
@@ -101,7 +103,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             RequireAnnotationLimits eventBus(EventBus eventBus);
 
             default RequireAnnotationLimits inVmEventBus() {
-                return eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory())));
+                return eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters()));
             }
         }
 
