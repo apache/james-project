@@ -56,17 +56,14 @@ public interface AliasReverseResolverContract {
         void to(Domain domain) throws Exception;
     }
 
-    default CanSendFromContract.RequireUserName redirectUser(Username alias) {
+    default RequireUserName redirectUser(Username alias) {
         return user -> addAliasMapping(alias, user);
     }
 
-    default CanSendFromContract.RequireDomain redirectDomain(Domain alias) {
+    default RequireDomain redirectDomain(Domain alias) {
         return domain -> addDomainAlias(alias, domain);
     }
 
-    default CanSendFromContract.RequireUserName redirectGroup(String group) {
-        return user -> addGroupMapping(group, user);
-    }
     @Test
     default void listAddressesShouldContainOnlyUserAddressWhenUserHasNoAlias() throws Exception {
         assertThat(aliasReverseResolver().listAddresses(USER))

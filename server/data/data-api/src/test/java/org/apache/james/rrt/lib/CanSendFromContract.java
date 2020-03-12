@@ -41,9 +41,7 @@ public interface CanSendFromContract {
 
     void addAliasMapping(Username alias, Username user) throws Exception;
 
-    void addDomainAlias(Domain alias, Domain domain) throws Exception;
-
-    void addDomainMapping(Domain alias, Domain domain) throws Exception;
+    void addDomainMapping(Domain alias, Domain domain, Mapping.Type type) throws Exception;
 
     void addGroupMapping(String group, Username user) throws Exception;
 
@@ -54,7 +52,20 @@ public interface CanSendFromContract {
 
     @FunctionalInterface
     interface RequireDomain {
-        void to(Domain domain) throws Exception;
+        RequireType to(Domain domain) throws Exception;
+    }
+
+    @FunctionalInterface
+    interface RequireType {
+        void withType(Mapping.Type mappingType) throws Exception;
+
+        default void asAlias() throws Exception {
+            withType(Mapping.Type.DomainAlias);
+        };
+
+        default void asMapping() throws Exception {
+            withType(Mapping.Type.Domain);
+        }
     }
 
     default RequireUserName redirectUser(Username alias) {
@@ -62,7 +73,7 @@ public interface CanSendFromContract {
     }
 
     default RequireDomain redirectDomain(Domain alias) {
-        return domain -> addDomainAlias(alias, domain);
+        return domain -> type -> addDomainMapping(alias, domain, type);
     }
 
     default RequireUserName redirectGroup(String group) {
@@ -136,7 +147,7 @@ public interface CanSendFromContract {
     default void userCanSendFromShouldBeTrueWhenSenderIsAnAliasOfTheDomainUser() throws Exception {
         Username fromUser = USER.withOtherDomain(OTHER_DOMAIN);
 
-        redirectDomain(OTHER_DOMAIN).to(DOMAIN);
+        redirectDomain(OTHER_DOMAIN).to(DOMAIN).asAlias();
 
         assertThat(canSendFrom().userCanSendFrom(USER, fromUser)).isTrue();
     }
@@ -145,7 +156,7 @@ public interface CanSendFromContract {
     default void userCanSendFromShouldBeFalseWhenDomainMapping() throws Exception {
         Username fromUser = USER.withOtherDomain(OTHER_DOMAIN);
 
-        addDomainMapping(OTHER_DOMAIN, DOMAIN);
+        redirectDomain(OTHER_DOMAIN).to(DOMAIN).asMapping();
 
         assertThat(canSendFrom().userCanSendFrom(USER, fromUser)).isFalse();
     }
@@ -195,7 +206,7 @@ public interface CanSendFromContract {
     default void allValidFromAddressesShouldContainUserAddressAndAnAliasOfTheDomainUser() throws Exception {
         Username fromUser = USER.withOtherDomain(OTHER_DOMAIN);
 
-        redirectDomain(OTHER_DOMAIN).to(DOMAIN);
+        redirectDomain(OTHER_DOMAIN).to(DOMAIN).asAlias();
 
         assertThat(canSendFrom().allValidFromAddressesForUser(USER))
             .containsExactlyInAnyOrder(USER.asMailAddress(), fromUser.asMailAddress());
@@ -205,7 +216,7 @@ public interface CanSendFromContract {
     default void allValidFromAddressesShouldContainUserAddressAndAnAliasOfTheDomainUserFromAnotherDomain() throws Exception {
         Username userAliasOtherDomain = USER_ALIAS.withOtherDomain(OTHER_DOMAIN);
 
-        redirectDomain(OTHER_DOMAIN).to(DOMAIN);
+        redirectDomain(OTHER_DOMAIN).to(DOMAIN).asAlias();
         redirectUser(userAliasOtherDomain).to(USER);
 
         Username userAliasMainDomain = USER_ALIAS.withOtherDomain(DOMAIN);
