@@ -39,20 +39,26 @@ public class MailboxesExportTask implements Task {
     static final TaskType TASK_TYPE = TaskType.of("MailboxesExportTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private static AdditionalInformation from(Username username) {
-            return new AdditionalInformation(username, Clock.systemUTC().instant());
+        private static AdditionalInformation from(ExportService.Progress progress, Username username) {
+            return new AdditionalInformation(username, progress.getStage(), Clock.systemUTC().instant());
         }
 
         private final Username username;
+        private final ExportService.Stage stage;
         private final Instant timestamp;
 
-        public AdditionalInformation(Username username, Instant timestamp) {
+        public AdditionalInformation(Username username, ExportService.Stage stage, Instant timestamp) {
             this.username = username;
+            this.stage = stage;
             this.timestamp = timestamp;
         }
 
         public String getUsername() {
             return username.asString();
+        }
+
+        public ExportService.Stage getStage() {
+            return stage;
         }
 
         @Override
@@ -93,15 +99,17 @@ public class MailboxesExportTask implements Task {
 
     private final Username username;
     private final ExportService service;
+    private final ExportService.Progress progress;
 
     MailboxesExportTask(ExportService service, Username username) {
         this.username = username;
         this.service = service;
+        this.progress = new ExportService.Progress();
     }
 
     @Override
     public Result run() {
-        return service.export(username)
+        return service.export(progress, username)
             .subscribeOn(Schedulers.elastic())
             .block();
     }
@@ -113,6 +121,6 @@ public class MailboxesExportTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(AdditionalInformation.from(username));
+        return Optional.of(AdditionalInformation.from(progress, username));
     }
 }

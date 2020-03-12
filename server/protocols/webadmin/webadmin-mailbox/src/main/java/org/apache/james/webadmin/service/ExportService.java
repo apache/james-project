@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import javax.inject.Inject;
 
@@ -39,11 +40,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class ExportService {
+
+    public enum Stage {
+        STARTING,
+        ZIPPING,
+        EXPORTING,
+        COMPLETED,
+    }
+
+    public static class Progress {
+        private final ConcurrentLinkedDeque<Stage> stages;
+
+        public Progress() {
+            this.stages = new ConcurrentLinkedDeque<>(Lists.newArrayList(Stage.STARTING));
+        }
+
+        public Stage getStage() {
+            return stages.getLast();
+        }
+
+        public void setStage(Stage stage) {
+            this.stages.add(stage);
+        }
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportService.class);
     private static final String EXPLANATION = "The backup of your mailboxes has been exported to you";
@@ -62,17 +87,18 @@ public class ExportService {
         this.usersRepository = usersRepository;
     }
 
-    public Mono<Task.Result> export(Username username) {
+    public Mono<Task.Result> export(Progress progress, Username username) {
         return Mono.usingWhen(
-            Mono.fromCallable(() -> zipMailboxesContent(username)),
-            inputStream -> export(username, inputStream),
+            Mono.fromCallable(() -> zipMailboxesContent(progress, username)),
+            inputStream -> export(progress, username, inputStream),
             this::closeResource,
             (inputStream, throwable) -> closeResource(inputStream),
             this::closeResource
         );
     }
 
-    private InputStream zipMailboxesContent(Username username) throws IOException {
+    InputStream zipMailboxesContent(Progress progress, Username username) throws IOException {
+        progress.setStage(Stage.ZIPPING);
         PipedOutputStream out = new PipedOutputStream();
         PipedInputStream in = new PipedInputStream(out);
 
@@ -83,16 +109,18 @@ public class ExportService {
         return in;
     }
 
-    private Mono<Task.Result> export(Username username, InputStream inputStream) {
-        return Mono.usingWhen(
+    Mono<Task.Result> export(Progress progress, Username username, InputStream inputStream) {
+        return Mono.fromRunnable(() -> progress.setStage(Stage.EXPORTING))
+            .then(Mono.usingWhen(
                 blobStore.save(blobStore.getDefaultBucketName(), inputStream, BlobStore.StoragePolicy.LOW_COST),
                 blobId -> export(username, blobId),
                 this::deleteBlob)
+            .doOnSuccess(any -> progress.setStage(Stage.COMPLETED))
             .thenReturn(Task.Result.COMPLETED)
             .onErrorResume(e -> {
                 LOGGER.error("Error exporting mailboxes of user: {}", username.asString(), e);
                 return Mono.just(Task.Result.PARTIAL);
-            });
+            }));
     }
 
     private Mono<Void> export(Username username, BlobId blobId) {

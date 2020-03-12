@@ -221,6 +221,7 @@ class MailboxesExportRequestToTaskTest {
             .body("taskId", is(taskId))
             .body("type", is("MailboxesExportTask"))
             .body("additionalInformation.username", is(BOB.asString()))
+            .body("additionalInformation.stage", is(ExportService.Stage.COMPLETED.toString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -258,6 +259,7 @@ class MailboxesExportRequestToTaskTest {
             .body("taskId", is(taskId))
             .body("type", is("MailboxesExportTask"))
             .body("additionalInformation.username", is(BOB.asString()))
+            .body("additionalInformation.stage", is(ExportService.Stage.COMPLETED.toString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
@@ -333,6 +335,7 @@ class MailboxesExportRequestToTaskTest {
             .body("taskId", is(taskId))
             .body("type", is("MailboxesExportTask"))
             .body("additionalInformation.username", is(BOB.asString()))
+            .body("additionalInformation.stage", is(ExportService.Stage.COMPLETED.toString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));

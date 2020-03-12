@@ -35,24 +35,29 @@ public class MailboxesExportTaskAdditionalInformationDTO implements AdditionalIn
             .convertToDTO(MailboxesExportTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new MailboxesExportTask.AdditionalInformation(
                 Username.of(dto.username),
+                dto.getStage(),
                 dto.timestamp))
             .toDTOConverter((details, type) -> new MailboxesExportTaskAdditionalInformationDTO(
                 type,
                 details.timestamp(),
-                details.getUsername()))
+                details.getUsername(),
+                details.getStage()))
             .typeName(MailboxesExportTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
     private final String username;
     private final Instant timestamp;
     private final String type;
+    private final ExportService.Stage stage;
 
     private MailboxesExportTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                         @JsonProperty("timestamp") Instant timestamp,
-                                                        @JsonProperty("username") String username) {
+                                                        @JsonProperty("username") String username,
+                                                        @JsonProperty("stage") ExportService.Stage stage) {
         this.type = type;
         this.timestamp = timestamp;
         this.username = username;
+        this.stage = stage;
     }
 
     @Override
@@ -67,5 +72,9 @@ public class MailboxesExportTaskAdditionalInformationDTO implements AdditionalIn
 
     public String getUsername() {
         return username;
+    }
+
+    public ExportService.Stage getStage() {
+        return stage;
     }
 }

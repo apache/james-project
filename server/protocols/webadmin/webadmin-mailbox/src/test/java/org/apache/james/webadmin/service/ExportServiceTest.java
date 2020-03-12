@@ -26,8 +26,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.mail.MessagingException;
 
@@ -49,6 +52,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
@@ -58,10 +62,8 @@ import reactor.core.publisher.Mono;
 @ExtendWith(FileSystemExtension.class)
 class ExportServiceTest {
 
-    private static final String JAMES_HOST = "james-host";
     private static final Domain DOMAIN = Domain.of("domain.tld");
     private static final Username UNKNOWN_USER = Username.fromLocalPartWithDomain("unknown", DOMAIN);
-    private static final String PASSWORD = "password";
     private static final String CORRESPONDING_FILE_HEADER = "corresponding-file";
     private static final String MESSAGE_CONTENT = "MIME-Version: 1.0\r\n" +
         "Subject: test\r\n" +
@@ -74,11 +76,13 @@ class ExportServiceTest {
 
     private ExportService testee;
     private ExportServiceTestSystem testSystem;
+    private ExportService.Progress progress;
 
     @BeforeEach
     void setUp(FileSystem fileSystem) throws Exception {
         testSystem = new ExportServiceTestSystem(fileSystem);
-        testee = new ExportService(testSystem.backup, testSystem.blobStore, testSystem.blobExport, testSystem.usersRepository);
+        testee = Mockito.spy(new ExportService(testSystem.backup, testSystem.blobStore, testSystem.blobExport, testSystem.usersRepository));
+        progress = new ExportService.Progress();
     }
 
     private String getFileUrl() throws MessagingException {
@@ -87,13 +91,13 @@ class ExportServiceTest {
 
     @Test
     void exportUserMailboxesDataShouldReturnCompletedWhenUserDoesNotExist() {
-        assertThat(testee.export(UNKNOWN_USER).block())
+        assertThat(testee.export(progress, UNKNOWN_USER).block())
             .isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
     void exportUserMailboxesDataShouldReturnCompletedWhenExistingUserWithoutMailboxes() {
-        assertThat(testee.export(BOB).block())
+        assertThat(testee.export(progress, BOB).block())
             .isEqualTo(Task.Result.COMPLETED);
     }
 
@@ -101,7 +105,7 @@ class ExportServiceTest {
     void exportUserMailboxesDataShouldReturnCompletedWhenExistingUser() throws Exception {
         createAMailboxWithAMail(MESSAGE_CONTENT);
 
-        assertThat(testee.export(BOB).block())
+        assertThat(testee.export(progress, BOB).block())
             .isEqualTo(Task.Result.COMPLETED);
     }
 
@@ -116,7 +120,7 @@ class ExportServiceTest {
 
     @Test
     void exportUserMailboxesDataShouldProduceAnEmptyZipWhenUserDoesNotExist() throws Exception {
-        testee.export(UNKNOWN_USER).block();
+        testee.export(progress, UNKNOWN_USER).block();
 
         ZipAssert.assertThatZip(new FileInputStream(getFileUrl()))
             .hasNoEntry();
@@ -124,7 +128,7 @@ class ExportServiceTest {
 
     @Test
     void exportUserMailboxesDataShouldProduceAnEmptyZipWhenExistingUserWithoutAnyMailboxes() throws Exception {
-        testee.export(BOB).block();
+        testee.export(progress, BOB).block();
 
         ZipAssert.assertThatZip(new FileInputStream(getFileUrl()))
             .hasNoEntry();
@@ -134,7 +138,7 @@ class ExportServiceTest {
     void exportUserMailboxesDataShouldProduceAZipWithEntry() throws Exception {
         ComposedMessageId id = createAMailboxWithAMail(MESSAGE_CONTENT);
 
-        testee.export(BOB).block();
+        testee.export(progress, BOB).block();
 
         ZipAssert.assertThatZip(new FileInputStream(getFileUrl()))
             .containsOnlyEntriesMatching(
@@ -146,7 +150,7 @@ class ExportServiceTest {
     void exportUserMailboxesDataShouldProduceAFileWithExpectedExtension() throws Exception {
         createAMailboxWithAMail(MESSAGE_CONTENT);
 
-        testee.export(BOB).block();
+        testee.export(progress, BOB).block();
 
         assertThat(Files.getFileExtension(getFileUrl())).isEqualTo(FileExtension.ZIP.getExtension());
     }
@@ -155,7 +159,7 @@ class ExportServiceTest {
     void exportUserMailboxesDataShouldProduceAFileWithExpectedName() throws Exception {
         createAMailboxWithAMail(MESSAGE_CONTENT);
 
-        testee.export(BOB).block();
+        testee.export(progress, BOB).block();
 
         File file = new File(getFileUrl());
 
@@ -166,7 +170,7 @@ class ExportServiceTest {
     void exportUserMailboxesWithSizableDataShouldProduceAFile() throws Exception {
         ComposedMessageId id = createAMailboxWithAMail(TWELVE_MEGABYTES_STRING);
 
-        testee.export(BOB).block();
+        testee.export(progress, BOB).block();
 
         ZipAssert.assertThatZip(new FileInputStream(getFileUrl()))
             .containsOnlyEntriesMatching(
@@ -178,7 +182,7 @@ class ExportServiceTest {
     void exportUserMailboxesDataShouldDeleteBlobAfterCompletion() throws Exception {
         createAMailboxWithAMail(MESSAGE_CONTENT);
 
-        testee.export(BOB).block();
+        testee.export(progress, BOB).block();
 
         String fileName = Files.getNameWithoutExtension(getFileUrl());
         String blobId = fileName.substring(fileName.lastIndexOf("-") + 1);
@@ -199,7 +203,7 @@ class ExportServiceTest {
             .when(testSystem.blobStore)
             .delete(any(), any());
 
-        Task.Result result = testee.export(BOB).block();
+        Task.Result result = testee.export(progress, BOB).block();
 
         String fileName = Files.getNameWithoutExtension(getFileUrl());
         String blobId = fileName.substring(fileName.lastIndexOf("-") + 1);
@@ -207,5 +211,30 @@ class ExportServiceTest {
         testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.from(blobId));
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
+    void exportUserMailboxesDataShouldUpdateProgressWhenZipping() throws IOException {
+        testee.zipMailboxesContent(progress, BOB);
+
+        assertThat(progress.getStage()).isEqualTo(ExportService.Stage.ZIPPING);
+    }
+
+    @Test
+    void exportUserMailboxesDataShouldUpdateProgressWhenExporting() {
+        doReturn(Mono.error(new RuntimeException()))
+            .when(testSystem.blobStore)
+            .save(any(), any(InputStream.class), any());
+
+        testee.export(progress, BOB, new ByteArrayInputStream(MESSAGE_CONTENT.getBytes())).block();
+
+        assertThat(progress.getStage()).isEqualTo(ExportService.Stage.EXPORTING);
+    }
+
+    @Test
+    void exportUserMailboxesDataShouldUpdateProgressWhenComplete() {
+        testee.export(progress, BOB).block();
+
+        assertThat(progress.getStage()).isEqualTo(ExportService.Stage.COMPLETED);
     }
 }

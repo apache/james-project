@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 class MailboxesExportTaskAdditionalInformationDTOTest {
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
     private static final MailboxesExportTask.AdditionalInformation DOMAIN_OBJECT = new MailboxesExportTask.AdditionalInformation(
-        Username.of("bob"), INSTANT);
+        Username.of("bob"), ExportService.Stage.STARTING, INSTANT);
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
