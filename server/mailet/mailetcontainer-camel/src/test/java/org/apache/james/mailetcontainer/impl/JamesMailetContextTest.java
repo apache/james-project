@@ -40,6 +40,7 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.MimeMessageUtil;
@@ -80,11 +81,13 @@ public class JamesMailetContextTest {
             .build());
 
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+        MemoryRecipientRewriteTable recipientRewriteTable = new MemoryRecipientRewriteTable();
+        recipientRewriteTable.configure(new BaseHierarchicalConfiguration());
         MailQueueFactory<MailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         spoolMailQueue = mock(MailQueue.class);
         when(mailQueueFactory.createQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);
         DNSService dnsService = null;
-        testee = new JamesMailetContext(dnsService, usersRepository, domainList, mailQueueFactory);
+        testee = new JamesMailetContext(dnsService, usersRepository, domainList, recipientRewriteTable, mailQueueFactory);
         testee.configure(new BaseHierarchicalConfiguration());
         mailAddress = new MailAddress(USERMAIL.asString());
     }

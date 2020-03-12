@@ -22,6 +22,7 @@ package org.apache.james.mailetcontainer.impl;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -56,6 +57,10 @@ import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -66,11 +71,13 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 public class JamesMailetContext implements MailetContext, Configurable, Disposable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JamesMailetContext.class);
+    public static final EnumSet<Mapping.Type> ALIAS_TYPES = EnumSet.of(Mapping.Type.Alias, Mapping.Type.DomainAlias);
 
     /**
      * A hash table of server attributes These are the MailetContext attributes
@@ -80,15 +87,17 @@ public class JamesMailetContext implements MailetContext, Configurable, Disposab
     protected final DNSService dns;
     private final UsersRepository localusers;
     private final DomainList domains;
+    private final RecipientRewriteTable recipientRewriteTable;
     private final MailQueueFactory<?> mailQueueFactory;
     private MailQueue rootMailQueue;
     private MailAddress postmaster;
 
     @Inject
-    public JamesMailetContext(DNSService dns, UsersRepository localusers, DomainList domains, MailQueueFactory<?> mailQueueFactory) {
+    public JamesMailetContext(DNSService dns, UsersRepository localusers, DomainList domains, RecipientRewriteTable recipientRewriteTable, MailQueueFactory<?> mailQueueFactory) {
         this.dns = dns;
         this.localusers = localusers;
         this.domains = domains;
+        this.recipientRewriteTable = recipientRewriteTable;
         this.mailQueueFactory = mailQueueFactory;
     }
 
@@ -261,12 +270,25 @@ public class JamesMailetContext implements MailetContext, Configurable, Disposab
                 return false;
             }
             try {
-                return localusers.contains(localusers.getUser(mailAddress));
-            } catch (UsersRepositoryException e) {
+                return isLocaluser(mailAddress)
+                    || isLocalAlias(mailAddress);
+            } catch (UsersRepositoryException | ErrorMappingException | RecipientRewriteTableException e) {
                 LOGGER.error("Unable to access UsersRepository", e);
             }
         }
         return false;
+    }
+
+    private boolean isLocaluser(MailAddress mailAddress) throws UsersRepositoryException {
+        return localusers.contains(localusers.getUser(mailAddress));
+    }
+
+    private boolean isLocalAlias(MailAddress mailAddress) throws UsersRepositoryException, ErrorMappingException, RecipientRewriteTableException {
+        return recipientRewriteTable.getResolvedMappings(mailAddress.getLocalPart(), mailAddress.getDomain(), ALIAS_TYPES)
+            .asStream()
+            .map(mapping -> mapping.asMailAddress()
+                .orElseThrow(() -> new IllegalStateException(String.format("Can not compute address for mapping %s", mapping.asString()))))
+            .anyMatch(Throwing.predicate(this::isLocaluser).sneakyThrow());
     }
 
     @Override
