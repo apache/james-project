@@ -29,6 +29,28 @@ Change list:
  - [New forbidden set of characters in Usernames local part](#new-forbidden-set-of-characters-in-usernames-local-part)
  - [UidValidity and maildir](#uid-validity-and-maildir)
  - [UidValidity and JPA or Cassandra](#uid-validity-and-jpa-or-cassandra)
+ - [Differentiation between domain alias and domain mapping](#differentiation-between-domain-alias-and-domain-mapping)
+ 
+### Differentiation between domain alias and domain mapping
+
+Date 10/03/2020
+
+SHA-1 XXX
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3112
+
+Concerned products: Guice products
+
+We added strong typing for Domain aliases (exposed by this 
+[endpoint](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#get-the-list-of-aliases-for-a-domain))
+to distinguish them from domain mappings (exposed by this 
+[endpoint](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#creating-address-domain-aliases)).
+
+Read [this page](https://james.apache.org/server/config-recipientrewritetable.html) to understand the difference between 
+Domain Alias and Domain Mapping.
+
+As a consequence, existing values returned by the domain alias endpoint (before this fix this is domain mapping) will be 
+considered as domain mappings and might need to be deleted and re-created.
  
 ### UidValidity and JPA or Cassandra
 
