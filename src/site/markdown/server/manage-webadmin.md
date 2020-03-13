@@ -701,6 +701,7 @@ Warning: During the re-indexing, the result of search operations might be altere
  - [Testing existence of a mailbox](#Testing_existence_of_a_mailbox)
  - [Listing user mailboxes](#Listing_user_mailboxes)
  - [Deleting user mailboxes](#Deleting_user_mailboxes)
+ - [Exporting user mailboxes](#Exporting_user_mailboxes)
  - [ReIndexing a user mails](#ReIndexing_a_user_mails)
  - [Recomputing User JMAP fast message view projection](#Recomputing_User_JMAP_fast_message_view_projection)
 
@@ -786,6 +787,30 @@ Response codes:
 
  - 204: The user do not have mailboxes anymore
  - 404: The user name does not exist
+
+### Exporting user mailboxes
+
+```
+curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes?action=export
+```
+
+Resource name `usernameToBeUsed` should be an existing user
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned
+ - 404: The user name does not exist
+
+The scheduled task will have the following type `MailboxesExportTask` and the following `additionalInformation`:
+
+```
+{
+  "type":"MailboxesExportTask",
+  "timestamp":"2007-12-03T10:15:30Z",
+  "username": "user",
+  "stage": "STARTING"
+}
+```
 
 ### ReIndexing a user mails
  
