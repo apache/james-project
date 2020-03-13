@@ -74,6 +74,31 @@ class CassandraMailboxCounterDAOTest {
     }
 
     @Test
+    void incrementUnseenAndCountShouldAddOneWhenAbsent() {
+        testee.incrementUnseenAndCount(MAILBOX_ID).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(1)
+                .unseen(1)
+                .build());
+    }
+
+    @Test
+    void incrementUnseenAndCountShouldBeApplicableSeveralTimes() {
+        testee.incrementUnseenAndCount(MAILBOX_ID).block();
+        testee.incrementUnseenAndCount(MAILBOX_ID).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(2)
+                .unseen(2)
+                .build());
+    }
+
+    @Test
     void incrementUnseenShouldAddOneWhenAbsent() {
         testee.incrementUnseen(MAILBOX_ID).block();
 
@@ -179,6 +204,32 @@ class CassandraMailboxCounterDAOTest {
 
         assertThat(testee.countMessagesInMailbox(mailbox).block())
             .isEqualTo(-1L);
+    }
+
+    @Test
+    void decrementUnseenAndCountCanLeadToNegativeValue() {
+        testee.decrementUnseenAndCount(MAILBOX_ID).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(-1)
+                .unseen(-1)
+                .build());
+    }
+
+    @Test
+    void decrementUnseenAndCountShouldRevertIncrementUnseenAndCount() {
+        testee.incrementUnseenAndCount(MAILBOX_ID).block();
+
+        testee.decrementUnseenAndCount(MAILBOX_ID).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(0)
+                .unseen(0)
+                .build());
     }
 
     @Test

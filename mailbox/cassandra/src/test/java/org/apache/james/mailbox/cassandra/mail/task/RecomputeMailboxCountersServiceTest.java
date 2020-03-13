@@ -108,7 +108,7 @@ class RecomputeMailboxCountersServiceTest {
         mailboxDAO.save(MAILBOX).block();
         imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
         messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
-        counterDAO.incrementUnseen(CASSANDRA_ID_1).block();
+        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
         counterDAO.incrementCount(CASSANDRA_ID_1).block();
 
         testee.recomputeMailboxCounters(new Context()).block();
@@ -122,7 +122,7 @@ class RecomputeMailboxCountersServiceTest {
         mailboxDAO.save(MAILBOX).block();
         imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
         messageIdToImapUidDAO.insert(METADATA_SEEN).block();
-        counterDAO.incrementUnseen(CASSANDRA_ID_1).block();
+        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
         counterDAO.incrementCount(CASSANDRA_ID_1).block();
 
         testee.recomputeMailboxCounters(new Context()).block();
@@ -147,7 +147,7 @@ class RecomputeMailboxCountersServiceTest {
     void recomputeMailboxCountersShouldReturnCompletedWhenOrphanMailboxRegistration() {
         mailboxDAO.save(MAILBOX).block();
         imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
-        counterDAO.incrementUnseen(CASSANDRA_ID_1).block();
+        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
         counterDAO.incrementCount(CASSANDRA_ID_1).block();
 
         testee.recomputeMailboxCounters(new Context()).block();
@@ -160,7 +160,7 @@ class RecomputeMailboxCountersServiceTest {
     void recomputeMailboxCountersShouldReturnCompletedWhenMailboxListReferenceIsMissing() {
         mailboxDAO.save(MAILBOX).block();
         messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
-        counterDAO.incrementUnseen(CASSANDRA_ID_1).block();
+        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
         counterDAO.incrementCount(CASSANDRA_ID_1).block();
 
         testee.recomputeMailboxCounters(new Context()).block();
@@ -184,7 +184,7 @@ class RecomputeMailboxCountersServiceTest {
         mailboxDAO.save(MAILBOX).block();
         imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
         messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
-        counterDAO.incrementUnseen(CASSANDRA_ID_1).block();
+        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
         counterDAO.incrementCount(CASSANDRA_ID_1).block();
 
         testee.recomputeMailboxCounters(new Context()).block();

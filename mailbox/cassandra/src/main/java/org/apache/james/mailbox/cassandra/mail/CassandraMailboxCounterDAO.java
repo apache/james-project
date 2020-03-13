@@ -54,6 +54,8 @@ public class CassandraMailboxCounterDAO {
     private final PreparedStatement removeToCounters;
     private final PreparedStatement decrementUnseenCountStatement;
     private final PreparedStatement decrementMessageCountStatement;
+    private final PreparedStatement incrementUnseenAndCountStatement;
+    private final PreparedStatement decrementUnseenAndCountStatement;
 
     @Inject
     public CassandraMailboxCounterDAO(Session session) {
@@ -71,6 +73,14 @@ public class CassandraMailboxCounterDAO {
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
         decrementMessageCountStatement = updateMailboxStatement(session, decr(COUNT));
         decrementUnseenCountStatement = updateMailboxStatement(session, decr(UNSEEN));
+        incrementUnseenAndCountStatement =  session.prepare(update(TABLE_NAME)
+            .with(incr(COUNT))
+            .and(incr(UNSEEN))
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+        decrementUnseenAndCountStatement = session.prepare(update(TABLE_NAME)
+            .with(decr(COUNT))
+            .and(decr(UNSEEN))
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
     private PreparedStatement createReadStatement(Session session) {
@@ -166,6 +176,14 @@ public class CassandraMailboxCounterDAO {
 
     public Mono<Void> incrementUnseen(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, incrementUnseenCountStatement));
+    }
+
+    public Mono<Void> decrementUnseenAndCount(CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, decrementUnseenAndCountStatement));
+    }
+
+    public Mono<Void> incrementUnseenAndCount(CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, incrementUnseenAndCountStatement));
     }
 
     private BoundStatement bindWithMailbox(CassandraId mailboxId, PreparedStatement statement) {

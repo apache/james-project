@@ -61,9 +61,8 @@ public class CassandraIndexTableHandler {
         return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
                 updateFirstUnseenOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags(), composedMessageIdWithMetaData.getComposedMessageId().getUid()),
                 mailboxRecentDAO.removeFromRecent(mailboxId, composedMessageIdWithMetaData.getComposedMessageId().getUid()),
-                mailboxCounterDAO.decrementCount(mailboxId),
                 deletedMessageDAO.removeDeleted(mailboxId, uid),
-                decrementUnseenOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags()))
+                decrementCountersOnDelete(mailboxId, composedMessageIdWithMetaData.getFlags()))
             .then();
     }
 
@@ -74,8 +73,7 @@ public class CassandraIndexTableHandler {
                 checkDeletedOnAdd(mailboxId, message.createFlags(), message.getUid()),
                 updateFirstUnseenOnAdd(mailboxId, message.createFlags(), message.getUid()),
                 addRecentOnSave(mailboxId, message),
-                incrementUnseenOnSave(mailboxId, flags),
-                mailboxCounterDAO.incrementCount(mailboxId),
+                incrementCountersOnSave(mailboxId, flags),
                 applicableFlagDAO.updateApplicableFlags(mailboxId, ImmutableSet.copyOf(flags.getUserFlags())))
             .then();
     }
@@ -100,18 +98,18 @@ public class CassandraIndexTableHandler {
         }
     }
 
-    private Mono<Void> decrementUnseenOnDelete(CassandraId mailboxId, Flags flags) {
+    private Mono<Void> decrementCountersOnDelete(CassandraId mailboxId, Flags flags) {
         if (flags.contains(Flags.Flag.SEEN)) {
-            return Mono.empty();
+            return mailboxCounterDAO.decrementCount(mailboxId);
         }
-        return mailboxCounterDAO.decrementUnseen(mailboxId);
+        return mailboxCounterDAO.decrementUnseenAndCount(mailboxId);
     }
 
-    private Mono<Void> incrementUnseenOnSave(CassandraId mailboxId, Flags flags) {
+    private Mono<Void> incrementCountersOnSave(CassandraId mailboxId, Flags flags) {
         if (flags.contains(Flags.Flag.SEEN)) {
-            return Mono.empty();
+            return mailboxCounterDAO.incrementCount(mailboxId);
         }
-        return mailboxCounterDAO.incrementUnseen(mailboxId);
+        return mailboxCounterDAO.incrementUnseenAndCount(mailboxId);
     }
 
     private Mono<Void> addRecentOnSave(CassandraId mailboxId, MailboxMessage message) {
