@@ -21,6 +21,7 @@ package org.apache.james.backends.es.search;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.elasticsearch.action.search.ClearScrollRequest;
@@ -31,11 +32,14 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
 
-import reactor.core.Disposable;
+import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 
 public class ScrolledSearch {
+
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
 
     private final ReactorElasticSearchClient client;
@@ -46,52 +50,59 @@ public class ScrolledSearch {
         this.searchRequest = searchRequest;
     }
 
-
     public Flux<SearchHit> searchHits() {
         return searchResponses()
-            .flatMap(searchResponse -> Flux.fromArray(searchResponse.getHits().getHits()));
+            .concatMap(searchResponse -> Flux.just(searchResponse.getHits().getHits()));
     }
 
     public Flux<SearchResponse> searchResponses() {
-        return ensureClosing(Flux.from(startScrolling(searchRequest))
-            .expand(this::nextResponse));
+        return Flux.push(sink -> {
+            AtomicReference<Optional<String>> scrollId = new AtomicReference<>(Optional.empty());
+            sink.onRequest(numberOfRequestedElements -> next(sink, scrollId, numberOfRequestedElements));
+
+            sink.onDispose(() -> close(scrollId));
+        });
     }
 
-    private Mono<SearchResponse> startScrolling(SearchRequest searchRequest) {
-        return client.search(searchRequest, RequestOptions.DEFAULT);
-    }
-
-    public Mono<SearchResponse> nextResponse(SearchResponse previous) {
-        if (allSearchResponsesConsumed(previous)) {
-            return Mono.empty();
+    private void next(FluxSink<SearchResponse> sink, AtomicReference<Optional<String>> scrollId, long numberOfRequestedElements) {
+        if (numberOfRequestedElements <= 0) {
+            return;
         }
 
-        return client.scroll(
-            new SearchScrollRequest()
-                .scrollId(previous.getScrollId())
-                .scroll(TIMEOUT),
-            RequestOptions.DEFAULT);
+        Consumer<SearchResponse> onResponse = searchResponse -> {
+            scrollId.set(Optional.of(searchResponse.getScrollId()));
+            sink.next(searchResponse);
+
+            boolean noHitsLeft = searchResponse.getHits().getHits().length == 0;
+            if (noHitsLeft) {
+                sink.complete();
+            } else {
+                next(sink, scrollId, numberOfRequestedElements - 1);
+            }
+        };
+
+        Consumer<Throwable> onFailure = sink::error;
+
+        buildRequest(scrollId.get())
+            .subscribe(onResponse, onFailure);
     }
 
-    private boolean allSearchResponsesConsumed(SearchResponse searchResponse) {
-        return searchResponse.getHits().getHits().length == 0;
+    private Mono<SearchResponse> buildRequest(Optional<String> scrollId) {
+        return scrollId.map(id ->
+            client.scroll(
+                new SearchScrollRequest()
+                    .scrollId(scrollId.get())
+                    .scroll(TIMEOUT),
+                RequestOptions.DEFAULT))
+            .orElseGet(() -> client.search(searchRequest, RequestOptions.DEFAULT));
     }
 
-    private Flux<SearchResponse> ensureClosing(Flux<SearchResponse> origin) {
-        AtomicReference<SearchResponse> latest = new AtomicReference<>();
-        return origin
-            .doOnNext(latest::set)
-            .doOnTerminate(close(latest));
+    public void close(AtomicReference<Optional<String>> scrollId) {
+        scrollId.get().map(id -> {
+                ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+                clearScrollRequest.addScrollId(id);
+                return clearScrollRequest;
+            }).ifPresent(Throwing.<ClearScrollRequest>consumer(clearScrollRequest -> client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT).subscribe()).sneakyThrow());
     }
 
-    public Runnable close(AtomicReference<SearchResponse> latest) {
-        return () -> Optional.ofNullable(latest.getAndSet(null)).map(this::clearScroll);
-    }
-
-    private Disposable clearScroll(SearchResponse current) {
-        ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
-        clearScrollRequest.addScrollId(current.getScrollId());
-
-        return client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT).subscribe();
-    }
 }
