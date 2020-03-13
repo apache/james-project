@@ -95,12 +95,8 @@ public class MemoryDataModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public DomainListConfiguration provideDomainListConfiguration(ConfigurationProvider configurationProvider) {
-        try {
-            return DomainListConfiguration.from(configurationProvider.getConfiguration("domainlist"));
-        } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
-        }
+    public DomainListConfiguration provideDomainListConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+        return DomainListConfiguration.from(configurationProvider.getConfiguration("domainlist"));
     }
 
     @ProvidesIntoSet
