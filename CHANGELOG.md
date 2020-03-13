@@ -15,6 +15,7 @@ of tasks being currently executed.
 - JAMES-3062 EventDeadLettersHealthCheck
 - JAMES-3058 WebAdmin offline task to correct mailbox inconsistencies on top of Cassandra products
 - JAMES-3105 WebAdmin offline task to recompute mailbox counters on top of Cassandra products
+- JAMES-3072 Webadmin endpoint to export mailbox backup
 
 ### Changed
 - Multiple changes have been made to enhance ElasticSearch performance:
