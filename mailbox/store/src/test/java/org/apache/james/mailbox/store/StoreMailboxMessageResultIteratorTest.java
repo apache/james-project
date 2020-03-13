@@ -72,17 +72,13 @@ class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public <T> T execute(Transaction<T> transaction) throws MailboxException {
+        public <T> T execute(Transaction<T> transaction) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException {
-            return MailboxCounters.builder()
-                .mailboxId(mailbox.getMailboxId())
-                .count(countMessagesInMailbox(mailbox))
-                .unseen(countUnseenMessagesInMailbox(mailbox))
-                .build();
+        public MailboxCounters getMailboxCounters(Mailbox mailbox) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -125,11 +121,6 @@ class StoreMailboxMessageResultIteratorTest {
         public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
             throw new UnsupportedOperationException();
 
-        }
-
-        @Override
-        public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
-            throw new UnsupportedOperationException();
         }
 
         @Override

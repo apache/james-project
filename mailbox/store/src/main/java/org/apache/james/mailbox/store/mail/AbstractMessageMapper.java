@@ -141,6 +141,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
      */
     protected abstract MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException;
 
+    protected abstract long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException;
     
     /**
      * Copy the MailboxMessage to the Mailbox, using the given uid and modSeq for the new MailboxMessage

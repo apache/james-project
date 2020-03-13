@@ -117,11 +117,6 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public long countUnseenMessagesInMailbox(Mailbox mailbox) {
-        return getMailboxCounters(mailbox).getUnseen();
-    }
-
-    @Override
     public MailboxCounters getMailboxCounters(Mailbox mailbox) {
         return getMailboxCountersAsMono(mailbox).block();
     }

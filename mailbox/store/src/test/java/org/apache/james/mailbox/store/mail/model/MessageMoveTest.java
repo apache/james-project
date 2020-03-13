@@ -118,8 +118,8 @@ public abstract class MessageMoveTest {
 
         messageMapper.move(benwaWorkMailbox, message1);
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaWorkMailbox)).isEqualTo(1);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(0);
+        assertThat(messageMapper.getMailboxCounters(benwaWorkMailbox).getUnseen()).isEqualTo(1);
     }
 
     @Test
@@ -130,8 +130,8 @@ public abstract class MessageMoveTest {
 
         messageMapper.move(benwaWorkMailbox, message1);
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaWorkMailbox)).isEqualTo(0);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(0);
+        assertThat(messageMapper.getMailboxCounters(benwaWorkMailbox).getUnseen()).isEqualTo(0);
     }
 
     private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {

@@ -95,8 +95,7 @@ public class TransactionalMessageMapper implements MessageMapper {
         return messageMapper.countMessagesInMailbox(mailbox);
     }
 
-    @Override
-    public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
+    private long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         return messageMapper.countUnseenMessagesInMailbox(mailbox);
     }
 

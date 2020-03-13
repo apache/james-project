@@ -737,7 +737,7 @@ public abstract class MessageIdMapperTest {
         message1.setFlags(new Flags(Flag.SEEN));
         sut.save(message1);
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(0);
     }
 
     @Test
@@ -746,7 +746,7 @@ public abstract class MessageIdMapperTest {
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
         sut.save(message1);
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(1);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(1);
     }
 
     @Test
@@ -768,7 +768,7 @@ public abstract class MessageIdMapperTest {
 
         sut.delete(message1.getMessageId(), ImmutableList.of(benwaInboxMailbox.getMailboxId()));
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(0);
     }
 
     @Test
@@ -784,7 +784,7 @@ public abstract class MessageIdMapperTest {
 
         sut.delete(message1.getMessageId(), ImmutableList.of(benwaInboxMailbox.getMailboxId()));
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(1);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(1);
     }
 
     @Test
@@ -795,7 +795,7 @@ public abstract class MessageIdMapperTest {
 
         sut.setFlags(message1.getMessageId(), ImmutableList.of(message1.getMailboxId()), new Flags(Flag.SEEN), FlagsUpdateMode.ADD);
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(0);
     }
 
     @Test
@@ -807,7 +807,7 @@ public abstract class MessageIdMapperTest {
 
         sut.setFlags(message1.getMessageId(), ImmutableList.of(message1.getMailboxId()), new Flags(Flag.SEEN), FlagsUpdateMode.REMOVE);
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(1);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(1);
     }
 
     @Test
@@ -880,7 +880,7 @@ public abstract class MessageIdMapperTest {
 
         sut.setFlags(message1.getMessageId(), ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), FlagsUpdateMode.REMOVE);
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(1);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(1);
     }
 
     @Test
@@ -944,7 +944,7 @@ public abstract class MessageIdMapperTest {
                 .put(message2.getMessageId(), benwaInboxMailbox.getMailboxId())
                 .build());
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox))
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen())
             .isEqualTo(0);
     }
 

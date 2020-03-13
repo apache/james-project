@@ -153,13 +153,13 @@ public abstract class MessageMapperTest {
 
     @Test
     void emptyMailboxShouldNotHaveUnseenMessages() throws MailboxException {
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(0);
     }
 
     @Test
     void mailboxContainingMessagesShouldHaveTheGoodUnseenMessageCount() throws MailboxException {
         saveMessages();
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(5);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(5);
     }
 
     @Test
@@ -169,7 +169,7 @@ public abstract class MessageMapperTest {
 
         messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
 
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(4);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4);
     }
 
     @Test
@@ -177,14 +177,14 @@ public abstract class MessageMapperTest {
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(5);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(5);
     }
 
     @Test
     void mailboxUnSeenCountShouldBeDecrementedAfterAMessageDelete() throws MailboxException {
         saveMessages();
         messageMapper.delete(benwaInboxMailbox, message1);
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(4);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4);
     }
 
     @Test
@@ -573,7 +573,7 @@ public abstract class MessageMapperTest {
     void copyOfUnSeenMessageShouldIncrementUnSeenMessageCount() throws MailboxException {
         saveMessages();
         messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(6);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(6);
     }
 
     @Test
@@ -606,10 +606,10 @@ public abstract class MessageMapperTest {
     void copyOfSeenMessageShouldNotIncrementUnSeenMessageCount() throws MailboxException {
         message6.setFlags(new Flags(Flags.Flag.SEEN));
         saveMessages();
-        long expectedUnseenMessages = messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox);
+        long expectedUnseenMessages = messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen();
 
         messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
-        assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(expectedUnseenMessages);
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(expectedUnseenMessages);
     }
 
     @Test

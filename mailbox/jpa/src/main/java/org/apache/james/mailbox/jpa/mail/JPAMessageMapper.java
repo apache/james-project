@@ -138,7 +138,6 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
         }
     }
 
-    @Override
     public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         JPAId mailboxId = (JPAId) mailbox.getMailboxId();
         return countUnseenMessagesInMailbox(mailboxId);

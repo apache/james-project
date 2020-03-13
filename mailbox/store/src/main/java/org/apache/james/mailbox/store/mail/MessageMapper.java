@@ -68,12 +68,6 @@ public interface MessageMapper extends Mapper {
     long countMessagesInMailbox(Mailbox mailbox)
             throws MailboxException;
 
-    /**
-     * Return the count of unseen messages in the mailbox
-     */
-    long countUnseenMessagesInMailbox(Mailbox mailbox)
-            throws MailboxException;
-
     MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException;
 
     List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) throws MailboxException;
