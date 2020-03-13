@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,7 @@ class IndexCreationFactoryTest {
 
     @RegisterExtension
     public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
-    private RestHighLevelClient client;
+    private ReactorElasticSearchClient client;
 
     @BeforeEach
     void setUp() {

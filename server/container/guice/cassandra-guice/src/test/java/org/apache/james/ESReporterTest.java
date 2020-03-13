@@ -34,6 +34,7 @@ import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import org.apache.commons.net.imap.IMAPClient;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
@@ -45,7 +46,6 @@ import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.awaitility.Duration;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -152,12 +152,13 @@ class ESReporterTest {
     }
 
     private boolean checkMetricRecordedInElasticSearch() {
-        try (RestHighLevelClient client = elasticSearchExtension.getDockerES().clientProvider().get()) {
+        try (ReactorElasticSearchClient client = elasticSearchExtension.getDockerES().clientProvider().get()) {
             SearchRequest searchRequest = new SearchRequest()
                 .source(new SearchSourceBuilder()
                     .query(QueryBuilders.matchAllQuery()));
             return !Arrays.stream(client
                     .search(searchRequest)
+                    .block()
                     .getHits()
                     .getHits())
                 .filter(searchHit -> searchHit.getIndex().startsWith(TestDockerESMetricReporterModule.METRICS_INDEX))

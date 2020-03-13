@@ -25,17 +25,17 @@ import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.WriteAliasName;
-import org.elasticsearch.client.RestHighLevelClient;
 
 public class MailboxIndexCreationUtil {
 
-    public static RestHighLevelClient prepareClient(RestHighLevelClient client,
-                                       ReadAliasName readAlias,
-                                       WriteAliasName writeAlias,
-                                       IndexName indexName,
-                                       ElasticSearchConfiguration configuration) throws IOException {
+    public static ReactorElasticSearchClient prepareClient(ReactorElasticSearchClient client,
+                                                           ReadAliasName readAlias,
+                                                           WriteAliasName writeAlias,
+                                                           IndexName indexName,
+                                                           ElasticSearchConfiguration configuration) throws IOException {
         return NodeMappingFactory.applyMapping(
             new IndexCreationFactory(configuration)
                 .useIndex(indexName)
@@ -46,7 +46,7 @@ public class MailboxIndexCreationUtil {
             MailboxMappingFactory.getMappingContent());
     }
 
-    public static RestHighLevelClient prepareDefaultClient(RestHighLevelClient client, ElasticSearchConfiguration configuration) throws IOException {
+    public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, ElasticSearchConfiguration configuration) throws IOException {
         return prepareClient(client,
             MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
             MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,

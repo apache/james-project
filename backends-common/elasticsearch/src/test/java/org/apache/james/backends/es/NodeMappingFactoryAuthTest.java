@@ -25,7 +25,6 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +41,7 @@ class NodeMappingFactoryAuthTest {
         DockerAuthElasticSearchSingleton.INSTANCE,
         new DockerElasticSearch.WithAuth()));
 
-    private RestHighLevelClient client;
+    private ReactorElasticSearchClient client;
 
     @BeforeEach
     void setUp(ElasticSearchClusterExtension.ElasticSearchCluster esCluster) throws Exception {

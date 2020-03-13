@@ -30,6 +30,7 @@ import org.apache.james.backends.es.DockerElasticSearchExtension;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
@@ -41,7 +42,6 @@ import org.apache.james.quota.search.elasticsearch.UserRoutingKeyFactory;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -58,7 +58,7 @@ class ElasticSearchQuotaMailboxListenerTest {
     DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
 
     ElasticSearchQuotaMailboxListener quotaMailboxListener;
-    RestHighLevelClient client;
+    ReactorElasticSearchClient client;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -100,10 +100,11 @@ class ElasticSearchQuotaMailboxListenerTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        SearchResponse searchResponse = client.search(new SearchRequest(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
-                .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-                .source(new SearchSourceBuilder()
-                    .query(QueryBuilders.matchAllQuery())));
+        SearchRequest searchRequest = new SearchRequest(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
+            .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+            .source(new SearchSourceBuilder()
+                .query(QueryBuilders.matchAllQuery()));
+        SearchResponse searchResponse = client.search(searchRequest).block();
 
         assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
     }

@@ -24,10 +24,10 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import org.apache.james.backends.es.ElasticSearchConfiguration;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.elasticsearch.Version;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +40,10 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
 
     public static final String CHECK_NAME = "ElasticSearchStartUpCheck";
 
-    private final RestHighLevelClient client;
+    private final ReactorElasticSearchClient client;
 
     @Inject
-    private ElasticSearchStartUpCheck(RestHighLevelClient client) {
+    private ElasticSearchStartUpCheck(ReactorElasticSearchClient client) {
         this.client = client;
     }
 

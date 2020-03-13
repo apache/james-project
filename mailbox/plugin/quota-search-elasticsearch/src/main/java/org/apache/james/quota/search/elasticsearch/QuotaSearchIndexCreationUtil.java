@@ -26,11 +26,11 @@ import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 
 public class QuotaSearchIndexCreationUtil {
 
-    public static RestHighLevelClient prepareClient(RestHighLevelClient client,
+    public static ReactorElasticSearchClient prepareClient(ReactorElasticSearchClient client,
                                        AliasName readAlias,
                                        AliasName writeAlias,
                                        IndexName indexName,
@@ -46,7 +46,7 @@ public class QuotaSearchIndexCreationUtil {
             QuotaRatioMappingFactory.getMappingContent());
     }
 
-    public static RestHighLevelClient prepareDefaultClient(RestHighLevelClient client, ElasticSearchConfiguration configuration) throws IOException {
+    public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, ElasticSearchConfiguration configuration) throws IOException {
         return prepareClient(client,
             QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS,
             QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,

@@ -57,7 +57,7 @@ import com.google.common.annotations.VisibleForTesting;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-public class ClientProvider implements Provider<RestHighLevelClient> {
+public class ClientProvider implements Provider<ReactorElasticSearchClient> {
 
     private static class HttpAsyncClientConfigurer {
 
@@ -165,15 +165,17 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProvider.class);
 
     private final ElasticSearchConfiguration configuration;
-    private final RestHighLevelClient client;
+    private final RestHighLevelClient elasticSearchRestHighLevelClient;
     private final HttpAsyncClientConfigurer httpAsyncClientConfigurer;
+    private final ReactorElasticSearchClient client;
 
     @Inject
     @VisibleForTesting
     ClientProvider(ElasticSearchConfiguration configuration) {
         this.httpAsyncClientConfigurer = new HttpAsyncClientConfigurer(configuration);
         this.configuration = configuration;
-        this.client = connect(configuration);
+        this.elasticSearchRestHighLevelClient = connect(configuration);
+        this.client = new ReactorElasticSearchClient(this.elasticSearchRestHighLevelClient);
     }
 
     private RestHighLevelClient connect(ElasticSearchConfiguration configuration) {
@@ -206,12 +208,12 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
     }
 
     @Override
-    public RestHighLevelClient get() {
+    public ReactorElasticSearchClient get() {
         return client;
     }
 
     @PreDestroy
     public void close() throws IOException {
-        client.close();
+        elasticSearchRestHighLevelClient.close();
     }
 }

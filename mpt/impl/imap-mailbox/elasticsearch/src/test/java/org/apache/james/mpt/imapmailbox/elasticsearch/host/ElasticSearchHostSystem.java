@@ -27,6 +27,7 @@ import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.backends.es.DockerElasticSearchSingleton;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -54,7 +55,6 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.elasticsearch.client.RestHighLevelClient;
 
 public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
@@ -63,7 +63,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     private DockerElasticSearch dockerElasticSearch;
     private StoreMailboxManager mailboxManager;
-    private RestHighLevelClient client;
+    private ReactorElasticSearchClient client;
 
     @Override
     public void beforeTest() throws Exception {

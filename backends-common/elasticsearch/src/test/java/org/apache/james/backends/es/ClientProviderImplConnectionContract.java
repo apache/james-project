@@ -25,7 +25,6 @@ import org.apache.james.backends.es.ElasticSearchClusterExtension.ElasticSearchC
 import org.awaitility.Awaitility;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.Test;
@@ -75,11 +74,11 @@ interface ClientProviderImplConnectionContract {
     }
 
     default boolean isConnected(ClientProvider clientProvider) {
-        try (RestHighLevelClient client = clientProvider.get()) {
+        try (ReactorElasticSearchClient client = clientProvider.get()) {
             client.search(
                 new SearchRequest()
                     .source(new SearchSourceBuilder().query(QueryBuilders.existsQuery("any"))),
-                RequestOptions.DEFAULT);
+                RequestOptions.DEFAULT).block();
             return true;
         } catch (Exception e) {
             LOGGER.info("Caught exception while trying to connect", e);

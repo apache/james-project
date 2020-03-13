@@ -29,13 +29,13 @@ import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.backends.es.ReadAliasName;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -56,7 +56,7 @@ class ScrolledSearchTest {
 
     @RegisterExtension
     public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
-    private RestHighLevelClient client;
+    private ReactorElasticSearchClient client;
 
     @BeforeEach
     void setUp() {
@@ -81,7 +81,7 @@ class ScrolledSearchTest {
                 .query(QueryBuilders.matchAllQuery())
                 .size(SIZE));
 
-        assertThat(new ScrolledSearch(client, searchRequest).searchHits())
+        assertThat(new ScrolledSearch(client, searchRequest).searchHits().collectList().block())
             .isEmpty();
     }
 
@@ -92,7 +92,8 @@ class ScrolledSearchTest {
                 .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id)
                 .source(MESSAGE, "Sample message"),
-            RequestOptions.DEFAULT);
+            RequestOptions.DEFAULT)
+        .block();
 
         elasticSearch.awaitForElasticSearch();
         WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id));
@@ -103,26 +104,28 @@ class ScrolledSearchTest {
                 .query(QueryBuilders.matchAllQuery())
                 .size(SIZE));
 
-        assertThat(new ScrolledSearch(client, searchRequest).searchHits())
+        assertThat(new ScrolledSearch(client, searchRequest).searchHits().collectList().block())
             .extracting(SearchHit::getId)
             .containsOnly(id);
     }
 
     @Test
-    void scrollIterableShouldWorkWhenSizeElement() throws Exception {
+    void scrollIterableShouldWorkWhenSizeElement() {
         String id1 = "1";
         client.index(new IndexRequest(INDEX_NAME.getValue())
                 .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id1)
                 .source(MESSAGE, "Sample message"),
-            RequestOptions.DEFAULT);
+            RequestOptions.DEFAULT)
+            .block();
 
         String id2 = "2";
         client.index(new IndexRequest(INDEX_NAME.getValue())
                 .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id2)
                 .source(MESSAGE, "Sample message"),
-            RequestOptions.DEFAULT);
+            RequestOptions.DEFAULT)
+            .block();
 
         elasticSearch.awaitForElasticSearch();
         WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2));
@@ -133,33 +136,36 @@ class ScrolledSearchTest {
                 .query(QueryBuilders.matchAllQuery())
                 .size(SIZE));
 
-        assertThat(new ScrolledSearch(client, searchRequest).searchHits())
+        assertThat(new ScrolledSearch(client, searchRequest).searchHits().collectList().block())
             .extracting(SearchHit::getId)
             .containsOnly(id1, id2);
     }
 
     @Test
-    void scrollIterableShouldWorkWhenMoreThanSizeElement() throws Exception {
+    void scrollIterableShouldWorkWhenMoreThanSizeElement() {
         String id1 = "1";
         client.index(new IndexRequest(INDEX_NAME.getValue())
                 .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id1)
                 .source(MESSAGE, "Sample message"),
-            RequestOptions.DEFAULT);
+            RequestOptions.DEFAULT)
+            .block();
 
         String id2 = "2";
         client.index(new IndexRequest(INDEX_NAME.getValue())
                 .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id2)
                 .source(MESSAGE, "Sample message"),
-            RequestOptions.DEFAULT);
+            RequestOptions.DEFAULT)
+            .block();
 
         String id3 = "3";
         client.index(new IndexRequest(INDEX_NAME.getValue())
                 .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id3)
                 .source(MESSAGE, "Sample message"),
-            RequestOptions.DEFAULT);
+            RequestOptions.DEFAULT)
+            .block();
 
         elasticSearch.awaitForElasticSearch();
         WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2, id3));
@@ -170,18 +176,19 @@ class ScrolledSearchTest {
                 .query(QueryBuilders.matchAllQuery())
                 .size(SIZE));
 
-        assertThat(new ScrolledSearch(client, searchRequest).searchHits())
+        assertThat(new ScrolledSearch(client, searchRequest).searchHits().collectList().block())
             .extracting(SearchHit::getId)
             .containsOnly(id1, id2, id3);
     }
 
-    private void hasIdsInIndex(RestHighLevelClient client, String... ids) throws IOException {
+    private void hasIdsInIndex(ReactorElasticSearchClient client, String... ids) {
         SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
             .scroll(TIMEOUT)
             .source(new SearchSourceBuilder()
                 .query(QueryBuilders.matchAllQuery()));
 
         SearchHit[] hits = client.search(searchRequest, RequestOptions.DEFAULT)
+            .block()
             .getHits()
             .getHits();
 

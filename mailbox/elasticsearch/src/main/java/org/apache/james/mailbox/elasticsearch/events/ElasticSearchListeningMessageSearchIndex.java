@@ -52,7 +52,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.james.util.OptionalUtils;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +61,8 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
     public static class ElasticSearchListeningMessageSearchIndexGroup extends Group {
@@ -112,7 +113,8 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
         return searcher
             .search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit)
-            .map(SearchResult::getMessageUid);
+            .map(SearchResult::getMessageUid)
+            .toStream();
     }
     
     @Override
@@ -123,15 +125,14 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             return ImmutableList.of();
         }
 
-        try (Stream<SearchResult> searchResults = searcher.search(mailboxIds, searchQuery, Optional.empty())) {
-            return searchResults
-                .peek(this::logIfNoMessageId)
-                .map(SearchResult::getMessageId)
-                .flatMap(OptionalUtils::toStream)
-                .distinct()
-                .limit(limit)
-                .collect(Guavate.toImmutableList());
-        }
+        return searcher.search(mailboxIds, searchQuery, Optional.empty())
+            .doOnNext(this::logIfNoMessageId)
+            .map(SearchResult::getMessageId)
+            .flatMap(Mono::justOrEmpty)
+            .distinct()
+            .take(limit)
+            .collect(Guavate.toImmutableList())
+            .block();
     }
 
     @Override
@@ -144,7 +145,9 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
         String jsonContent = generateIndexedJson(mailbox, message, session);
 
-        elasticSearchIndexer.index(indexIdFor(mailbox, message.getUid()), jsonContent, routingKeyFactory.from(mailbox.getMailboxId()));
+        elasticSearchIndexer
+            .index(indexIdFor(mailbox, message.getUid()), jsonContent, routingKeyFactory.from(mailbox.getMailboxId()))
+            .block();
     }
 
     private String generateIndexedJson(Mailbox mailbox, MailboxMessage message, MailboxSession session) throws JsonProcessingException {
@@ -162,12 +165,13 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws IOException {
+    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
             elasticSearchIndexer
                 .delete(expungedUids.stream()
                     .map(uid ->  indexIdFor(mailbox, uid))
                     .collect(Guavate.toImmutableList()),
-                    routingKeyFactory.from(mailbox.getMailboxId()));
+                    routingKeyFactory.from(mailbox.getMailboxId()))
+                .block();
     }
 
     @Override
@@ -181,14 +185,16 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws IOException {
+    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
         ImmutableList<UpdatedRepresentation> updates = updatedFlagsList.stream()
             .map(Throwing.<UpdatedFlags, UpdatedRepresentation>function(
                 updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
                 .sneakyThrow())
             .collect(Guavate.toImmutableList());
 
-        elasticSearchIndexer.update(updates, routingKeyFactory.from(mailbox.getMailboxId()));
+        elasticSearchIndexer
+            .update(updates, routingKeyFactory.from(mailbox.getMailboxId()))
+            .block();
     }
 
     private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) throws JsonProcessingException {

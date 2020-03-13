@@ -26,6 +26,7 @@ import java.io.IOException;
 import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.backends.es.DockerElasticSearchSingleton;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -34,7 +35,6 @@ import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -45,7 +45,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
     private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
-    private RestHighLevelClient client;
+    private ReactorElasticSearchClient client;
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {

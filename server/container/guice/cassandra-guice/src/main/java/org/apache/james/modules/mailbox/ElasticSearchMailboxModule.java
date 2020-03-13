@@ -32,6 +32,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.backends.es.RoutingKey;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.Startable;
@@ -51,7 +52,6 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,12 +68,12 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
         private final ElasticSearchConfiguration configuration;
         private final ElasticSearchMailboxConfiguration mailboxConfiguration;
-        private final RestHighLevelClient client;
+        private final ReactorElasticSearchClient client;
 
         @Inject
         MailboxIndexCreator(ElasticSearchConfiguration configuration,
                             ElasticSearchMailboxConfiguration mailboxConfiguration,
-                            RestHighLevelClient client) {
+                            ReactorElasticSearchClient client) {
             this.configuration = configuration;
             this.mailboxConfiguration = mailboxConfiguration;
             this.client = client;
@@ -114,7 +114,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Provides
     @Singleton
     @Named(MailboxElasticSearchConstants.InjectionNames.MAILBOX)
-    private ElasticSearchIndexer createMailboxElasticSearchIndexer(RestHighLevelClient client,
+    private ElasticSearchIndexer createMailboxElasticSearchIndexer(ReactorElasticSearchClient client,
                                                                    ElasticSearchMailboxConfiguration configuration) {
         return new ElasticSearchIndexer(
             client,
@@ -123,7 +123,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private ElasticSearchSearcher createMailboxElasticSearchSearcher(RestHighLevelClient client,
+    private ElasticSearchSearcher createMailboxElasticSearchSearcher(ReactorElasticSearchClient client,
                                                                      QueryConverter queryConverter,
                                                                      MailboxId.Factory mailboxIdFactory,
                                                                      MessageId.Factory messageIdFactory,

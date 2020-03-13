@@ -24,10 +24,10 @@ import java.util.Set;
 import org.apache.james.backends.es.ClientProvider;
 import org.apache.james.backends.es.ElasticSearchHealthCheck;
 import org.apache.james.backends.es.IndexName;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchMailboxConfiguration;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaConfiguration;
-import org.elasticsearch.client.RestHighLevelClient;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -41,7 +41,7 @@ public class ElasticSearchClientModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(ClientProvider.class).in(Scopes.SINGLETON);
-        bind(RestHighLevelClient.class).toProvider(ClientProvider.class);
+        bind(ReactorElasticSearchClient.class).toProvider(ClientProvider.class);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding()

@@ -31,7 +31,6 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,7 @@ public class IndexCreationFactory {
             return this;
         }
 
-        public RestHighLevelClient createIndexAndAliases(RestHighLevelClient client) {
+        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
             return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build()).createIndexAndAliases(client);
         }
     }
@@ -83,7 +82,7 @@ public class IndexCreationFactory {
             this.aliases = aliases;
         }
 
-        public RestHighLevelClient createIndexAndAliases(RestHighLevelClient client) {
+        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
             Preconditions.checkNotNull(indexName);
             try {
                 createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica, waitForActiveShards));
@@ -95,7 +94,7 @@ public class IndexCreationFactory {
             return client;
         }
 
-        private void createAliasIfNeeded(RestHighLevelClient client, IndexName indexName, AliasName aliasName) throws IOException {
+        private void createAliasIfNeeded(ReactorElasticSearchClient client, IndexName indexName, AliasName aliasName) throws IOException {
             if (!aliasExist(client, aliasName)) {
                 client.indices()
                     .updateAliases(
@@ -107,12 +106,12 @@ public class IndexCreationFactory {
             }
         }
 
-        private boolean aliasExist(RestHighLevelClient client, AliasName aliasName) throws IOException {
+        private boolean aliasExist(ReactorElasticSearchClient client, AliasName aliasName) throws IOException {
             return client.indices()
                 .existsAlias(new GetAliasesRequest().aliases(aliasName.getValue()), RequestOptions.DEFAULT);
         }
 
-        private void createIndexIfNeeded(RestHighLevelClient client, IndexName indexName, XContentBuilder settings) throws IOException {
+        private void createIndexIfNeeded(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder settings) throws IOException {
             try {
                 client.indices()
                     .create(

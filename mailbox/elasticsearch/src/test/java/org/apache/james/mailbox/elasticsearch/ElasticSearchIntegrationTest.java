@@ -27,6 +27,7 @@ import java.time.ZoneId;
 
 import org.apache.james.backends.es.DockerElasticSearchExtension;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -48,7 +49,6 @@ import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -67,7 +67,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
 
     TikaTextExtractor textExtractor;
-    RestHighLevelClient client;
+    ReactorElasticSearchClient client;
 
     @AfterEach
     void tearDown() throws IOException {

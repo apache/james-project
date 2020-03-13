@@ -32,7 +32,6 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,10 +43,10 @@ public class ElasticSearchHealthCheck implements HealthCheck {
     private static final ComponentName COMPONENT_NAME = new ComponentName("ElasticSearch Backend");
 
     private final Set<IndexName> indexNames;
-    private final RestHighLevelClient client;
+    private final ReactorElasticSearchClient client;
 
     @Inject
-    ElasticSearchHealthCheck(RestHighLevelClient client, Set<IndexName> indexNames) {
+    ElasticSearchHealthCheck(ReactorElasticSearchClient client, Set<IndexName> indexNames) {
         this.client = client;
         this.indexNames = indexNames;
     }

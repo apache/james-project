@@ -70,9 +70,11 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
 
     private void handleEvent(QuotaUsageUpdatedEvent event) throws IOException {
         Username user = event.getUsername();
-        indexer.index(toDocumentId(user),
-            quotaRatioToElasticSearchJson.convertToJson(event),
-            routingKeyFactory.from(user));
+        indexer
+            .index(toDocumentId(user),
+                quotaRatioToElasticSearchJson.convertToJson(event),
+                routingKeyFactory.from(user))
+            .block();
     }
 
     private DocumentId toDocumentId(Username user) {
