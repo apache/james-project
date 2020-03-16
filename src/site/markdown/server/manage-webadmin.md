@@ -299,7 +299,7 @@ Response codes:
    - [Create a user](#Create_a_user)
    - [Testing a user existence](#Testing_a_user_existence)
    - [Updating a user password](#Updating_a_user_password)
-   - [Deleting a domain](#Deleting_a_user)
+   - [Deleting a user](#Deleting_a_user)
    - [Retrieving the user list](#Retrieving_the_user_list)
    - [Retrieving the list of allowed `From` headers for a given user](Retrieving_the_list_of_allowed_From_headers_for_a_given_user)
 
@@ -743,11 +743,11 @@ Response codes:
 ### Testing existence of a mailbox
 
 ```
-curl -XGET http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxNameToBeCreated}
+curl -XGET http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxNameToBeTested}
 ```
 
 Resource name `usernameToBeUsed` should be an existing user
-Resource name `mailboxNameToBeCreated` should not be empty
+Resource name `mailboxNameToBeTested` should not be empty
 
 Response codes:
 
