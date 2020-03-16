@@ -32,8 +32,11 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -83,13 +86,15 @@ public class AliasRoutes implements Routes {
     private static final String ADDRESS_TYPE = "alias";
 
     private final UsersRepository usersRepository;
+    private final DomainList domainList;
     private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     @VisibleForTesting
-    AliasRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository, JsonTransformer jsonTransformer) {
+    AliasRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository, DomainList domainList, JsonTransformer jsonTransformer) {
         this.usersRepository = usersRepository;
+        this.domainList = domainList;
         this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
     }
@@ -140,14 +145,15 @@ public class AliasRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = ALIAS_DESTINATION_ADDRESS + " or alias structure format is not valid"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The alias source exists as an user already"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Source and destination can't be the same!"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the source is not managed by the DomainList"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the destination or source is not managed by the DomainList"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public HaltException addAlias(Request request, Response response) throws UsersRepositoryException, RecipientRewriteTableException {
+    public HaltException addAlias(Request request, Response response) throws UsersRepositoryException, RecipientRewriteTableException, DomainListException {
         MailAddress aliasSourceAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_SOURCE_ADDRESS), ADDRESS_TYPE);
         ensureUserDoesNotExist(aliasSourceAddress);
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
+        ensureDomainIsSupported(destinationAddress.getDomain());
         MappingSource source = MappingSource.fromUser(Username.fromMailAddress(aliasSourceAddress));
         addAlias(source, destinationAddress);
         return halt(HttpStatus.NO_CONTENT_204);
@@ -163,6 +169,16 @@ public class AliasRoutes implements Routes {
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message(e.getMessage())
+                .haltError();
+        }
+    }
+
+    private void ensureDomainIsSupported(Domain domain) throws DomainListException {
+        if (!domainList.containsDomain(domain)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Domain in the destination is not managed by the DomainList")
                 .haltError();
         }
     }

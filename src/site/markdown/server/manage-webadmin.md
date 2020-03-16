@@ -1859,7 +1859,7 @@ Response codes:
  - 400: Alias structure or member is not valid
  - 400: The alias source exists as an user already
  - 400: Source and destination can't be the same!
- - 400: Domain in the source is not managed by the DomainList
+ - 400: Domain in the destination or source is not managed by the DomainList
 
 ### Removing an alias of an user
 
