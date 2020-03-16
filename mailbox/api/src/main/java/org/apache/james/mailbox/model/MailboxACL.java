@@ -180,12 +180,16 @@ public class MailboxACL {
             return new Rfc4314Rights(serialized);
         }
 
+        public static Rfc4314Rights of(Collection<Right> rights) {
+            return new Rfc4314Rights(rights);
+        }
+
         private static final char c_ObsoleteCreate = 'c';
         private static final char d_ObsoleteDelete = 'd';
 
         private final EnumSet<Right> value;
 
-        private Rfc4314Rights(Collection<Right> rights) {
+        public Rfc4314Rights(Collection<Right> rights) {
             this.value = copyOf(rights);
         }
 
