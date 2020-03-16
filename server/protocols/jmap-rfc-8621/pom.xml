@@ -34,6 +34,15 @@
 
     <dependencies>
         <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>testing-base</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>be.venneborg</groupId>
             <artifactId>play27-refined_${scala.base}</artifactId>
             <version>0.5.0</version>
@@ -48,24 +57,23 @@
             <version>0.9.13</version>
         </dependency>
         <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>testing-base</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.scalatestplus.play</groupId>
             <artifactId>scalatestplus-play_${scala.base}</artifactId>
-            <version>${scalatestplus-play.version}</version>
+            <version>4.0.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
 </project>
-
