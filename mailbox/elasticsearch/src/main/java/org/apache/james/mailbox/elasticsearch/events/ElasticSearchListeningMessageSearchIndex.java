@@ -166,12 +166,12 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     @Override
     public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
-            elasticSearchIndexer
-                .delete(expungedUids.stream()
-                    .map(uid ->  indexIdFor(mailbox, uid))
-                    .collect(Guavate.toImmutableList()),
-                    routingKeyFactory.from(mailbox.getMailboxId()))
-                .block();
+        elasticSearchIndexer
+            .delete(expungedUids.stream()
+                .map(uid ->  indexIdFor(mailbox, uid))
+                .collect(Guavate.toImmutableList()),
+                routingKeyFactory.from(mailbox.getMailboxId()))
+            .block();
     }
 
     @Override
@@ -198,10 +198,10 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) throws JsonProcessingException {
-            return new UpdatedRepresentation(
-                indexIdFor(mailbox, updatedFlags.getUid()),
-                messageToElasticSearchJson
-                    .getUpdatedJsonMessagePart(updatedFlags.getNewFlags(), updatedFlags.getModSeq()));
+        return new UpdatedRepresentation(
+            indexIdFor(mailbox, updatedFlags.getUid()),
+            messageToElasticSearchJson
+                .getUpdatedJsonMessagePart(updatedFlags.getNewFlags(), updatedFlags.getModSeq()));
     }
 
     private DocumentId indexIdFor(Mailbox mailbox, MessageUid uid) {

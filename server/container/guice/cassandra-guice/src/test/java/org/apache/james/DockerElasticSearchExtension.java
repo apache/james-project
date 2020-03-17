@@ -49,8 +49,16 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
     }
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) {
+    public void beforeAll(ExtensionContext extensionContext) {
         getDockerES().start();
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) {
+        if (!getDockerES().isRunning()) {
+            getDockerES().unpause();
+        }
+        await();
     }
 
     @Override
