@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -63,21 +62,24 @@ public class RemoveMimeHeader extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        MimeMessage  message = mail.getMessage();
-        
+        MimeMessage message = mail.getMessage();
+
+        boolean hasHeadersToRemove = message.getMatchingHeaderLines(headers.toArray(new String[0]))
+            .hasMoreElements();
+
         for (String header : headers) {
             message.removeHeader(header);
         }
-        
+
         removeSpecific(mail);
 
-        message.saveChanges();
+        if (hasHeadersToRemove) {
+            message.saveChanges();
+        }
     }
 
     protected void removeSpecific(Mail mail) {
-        mail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders() 
-                .stream()
-                .collect(Collectors.toList()) // Streaming for concurrent modifications
+        ImmutableList.copyOf(mail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders()) // Copying to avoid concurrent modifications
                 .forEach(recipient -> {
                     mail.getPerRecipientSpecificHeaders()
                         .getHeadersForRecipient(recipient)
