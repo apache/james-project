@@ -49,12 +49,13 @@ public class EventDeadLettersHealthCheck implements HealthCheck {
             boolean containEvents = eventDeadLetters.containEvents().block();
 
             if (containEvents) {
+                LOGGER.warn("EventDeadLetters is not empty");
                 return Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events. This might indicate transient failure on mailbox event processing.");
             }
 
             return Result.healthy(COMPONENT_NAME);
         } catch (Exception e) {
-            LOGGER.error("Error checking EventDeadLettersHealthCheck", e);
+            LOGGER.error("EventDeadLettersHealthCheck threw an exception", e);
             return Result.unhealthy(COMPONENT_NAME, e.getMessage());
         }
     }

@@ -24,8 +24,11 @@ import javax.inject.Inject;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GuiceLifecycleHealthCheck implements HealthCheck {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GuiceLifecycleHealthCheck.class);
     private final IsStartedProbe probe;
 
     @Inject
@@ -43,6 +46,7 @@ public class GuiceLifecycleHealthCheck implements HealthCheck {
         if (probe.isStarted()) {
             return Result.healthy(componentName());
         } else {
+            LOGGER.error("James server is not started");
             return Result.unhealthy(componentName(), "James server is not started.");
         }
     }

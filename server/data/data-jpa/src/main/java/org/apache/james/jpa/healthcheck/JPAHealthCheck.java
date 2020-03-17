@@ -55,9 +55,11 @@ public class JPAHealthCheck implements HealthCheck {
                 return healthy(componentName());
             }
         } catch (IllegalStateException stateException) {
-            LOGGER.debug("EntityManagerFactory or EntityManager thrown an IllegalStateException, the connection is unhealthy");
+            LOGGER.debug("EntityManagerFactory or EntityManager threw an IllegalStateException, the connection is unhealthy");
             return unhealthy(componentName(), stateException.getMessage());
         }
+
+        LOGGER.error("EntityManager is not open, the connection is unhealthy");
         return unhealthy(componentName(), "entityManager is not open");
     }
 }
