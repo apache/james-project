@@ -21,7 +21,7 @@ package org.apache.james.jmap.http;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE;
-import static org.apache.james.jmap.http.JMAPUrls.JMAP;
+import static org.apache.james.jmap.JMAPUrls.JMAP;
 import static org.apache.james.jmap.http.LoggingHelper.jmapAuthContext;
 import static org.apache.james.jmap.http.LoggingHelper.jmapContext;
 import static org.apache.james.util.ReactorUtils.logOnError;

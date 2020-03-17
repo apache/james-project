@@ -21,7 +21,7 @@ package org.apache.james.jmap.http;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
-import static org.apache.james.jmap.http.JMAPUrls.JMAP;
+import static org.apache.james.jmap.JMAPUrls.JMAP;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;

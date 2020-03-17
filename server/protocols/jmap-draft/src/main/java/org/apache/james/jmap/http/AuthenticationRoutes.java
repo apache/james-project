@@ -28,7 +28,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 import static org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE;
 import static org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8;
-import static org.apache.james.jmap.http.JMAPUrls.AUTHENTICATION;
+import static org.apache.james.jmap.JMAPUrls.AUTHENTICATION;
 import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
 import static org.apache.james.jmap.http.LoggingHelper.jmapAuthContext;
 import static org.apache.james.jmap.http.LoggingHelper.jmapContext;
@@ -42,6 +42,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.JMAPRoutes;
+import org.apache.james.jmap.JMAPUrls;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;

@@ -22,7 +22,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.apache.james.jmap.HttpConstants.TEXT_PLAIN_CONTENT_TYPE;
-import static org.apache.james.jmap.http.JMAPUrls.DOWNLOAD;
+import static org.apache.james.jmap.JMAPUrls.DOWNLOAD;
 import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
 import static org.apache.james.jmap.http.LoggingHelper.jmapAuthContext;
 import static org.apache.james.jmap.http.LoggingHelper.jmapContext;

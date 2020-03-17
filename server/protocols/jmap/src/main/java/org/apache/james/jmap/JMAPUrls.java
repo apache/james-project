@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.http;
+package org.apache.james.jmap;
 
 public interface JMAPUrls {
     String JMAP = "/jmap";
