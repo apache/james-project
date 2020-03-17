@@ -38,6 +38,7 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.mailetcontainer.LocalResources;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
@@ -87,7 +88,8 @@ public class JamesMailetContextTest {
         spoolMailQueue = mock(MailQueue.class);
         when(mailQueueFactory.createQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);
         DNSService dnsService = null;
-        testee = new JamesMailetContext(dnsService, usersRepository, domainList, recipientRewriteTable, mailQueueFactory);
+        LocalResources localResources = new LocalResources(usersRepository, domainList, recipientRewriteTable);
+        testee = new JamesMailetContext(dnsService, domainList, localResources, mailQueueFactory);
         testee.configure(new BaseHierarchicalConfiguration());
         mailAddress = new MailAddress(USERMAIL.asString());
     }
