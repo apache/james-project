@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -29,11 +30,13 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -171,6 +174,20 @@ class RemoveMimeHeaderTest {
 
         assertThat(mail.getMessage().getHeader(HEADER1)).isNotNull();
         assertThat(mail.getMessage().getHeader(HEADER2)).isNotNull();
+    }
+
+    @Test
+    void serviceShouldNotThrowWhenNoneMatchingAndIncorrectHeaders() throws MessagingException {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("name", "")
+                .build();
+        mailet.init(mailetConfig);
+
+        Mail mail = MailUtil.createMockMail2Recipients(
+                MimeMessageUtil.mimeMessageFromStream(
+                        ClassLoader.getSystemResourceAsStream("mime/incorrect-headers.mime")));
+        assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
     }
 
     @Test
