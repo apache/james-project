@@ -19,9 +19,26 @@
 
 package org.apache.james.jmap;
 
+import reactor.netty.http.server.HttpServerRoutes;
+
 public enum Verb {
     GET,
     POST,
     DELETE,
-    OPTIONS
+    OPTIONS;
+
+    HttpServerRoutes registerRoute(HttpServerRoutes builder, String path, JMAPRoute.Action action) {
+        switch (this) {
+            case GET:
+                return builder.get(path, action);
+            case POST:
+                return builder.post(path, action);
+            case DELETE:
+                return builder.delete(path, action);
+            case OPTIONS:
+                return builder.options(path, action);
+            default:
+                return builder;
+        }
+    }
 }

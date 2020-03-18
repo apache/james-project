@@ -33,10 +33,15 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.Endpoint;
+import org.apache.james.jmap.JMAPRoute;
 import org.apache.james.jmap.JMAPRoutes;
+import org.apache.james.jmap.Verb;
+import org.apache.james.jmap.Version;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
 import org.apache.james.jmap.draft.exceptions.BadRequestException;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
@@ -65,7 +70,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
-import reactor.netty.http.server.HttpServerRoutes;
 
 public class DownloadRoutes implements JMAPRoutes {
     private static final Logger LOGGER = LoggerFactory.getLogger(DownloadRoutes.class);
@@ -95,13 +99,15 @@ public class DownloadRoutes implements JMAPRoutes {
     }
 
     @Override
-    public HttpServerRoutes define(HttpServerRoutes builder) {
-        return builder.post(DOWNLOAD_FROM_ID, JMAPRoutes.corsHeaders(this::postFromId))
-            .get(DOWNLOAD_FROM_ID, JMAPRoutes.corsHeaders(this::getFromId))
-            .post(DOWNLOAD_FROM_ID_AND_NAME, JMAPRoutes.corsHeaders(this::postFromIdAndName))
-            .get(DOWNLOAD_FROM_ID_AND_NAME, JMAPRoutes.corsHeaders(this::getFromIdAndName))
-            .options(DOWNLOAD_FROM_ID, CORS_CONTROL)
-            .options(DOWNLOAD_FROM_ID_AND_NAME, CORS_CONTROL);
+    public Stream<JMAPRoute> routes() {
+        return Stream.of(
+            new JMAPRoute(new Endpoint(Verb.POST, DOWNLOAD_FROM_ID), Version.DRAFT, JMAPRoutes.corsHeaders(this::postFromId)),
+            new JMAPRoute(new Endpoint(Verb.GET, DOWNLOAD_FROM_ID), Version.DRAFT, JMAPRoutes.corsHeaders(this::getFromId)),
+            new JMAPRoute(new Endpoint(Verb.POST, DOWNLOAD_FROM_ID_AND_NAME), Version.DRAFT, JMAPRoutes.corsHeaders(this::postFromIdAndName)),
+            new JMAPRoute(new Endpoint(Verb.GET, DOWNLOAD_FROM_ID_AND_NAME), Version.DRAFT, JMAPRoutes.corsHeaders(this::getFromIdAndName)),
+            new JMAPRoute(new Endpoint(Verb.OPTIONS, DOWNLOAD_FROM_ID), Version.DRAFT, CORS_CONTROL),
+            new JMAPRoute(new Endpoint(Verb.OPTIONS, DOWNLOAD_FROM_ID_AND_NAME), Version.DRAFT, CORS_CONTROL)
+        );
     }
 
     private Mono<Void> postFromId(HttpServerRequest request, HttpServerResponse response) {

@@ -23,22 +23,19 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 
-import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 
 import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
-import reactor.netty.http.server.HttpServerRoutes;
 
 public interface JMAPRoutes {
-    HttpServerRoutes define(HttpServerRoutes builder);
+    Stream<JMAPRoute> routes();
 
-    BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> CORS_CONTROL = corsHeaders((req, res) -> res.send());
+    JMAPRoute.Action CORS_CONTROL = corsHeaders((req, res) -> res.send());
 
-    static BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> corsHeaders(BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> action) {
+    static JMAPRoute.Action corsHeaders(JMAPRoute.Action action) {
         return (req, res) -> action.apply(req, res
             .header("Access-Control-Allow-Origin", "*")
             .header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")

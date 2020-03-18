@@ -19,44 +19,37 @@
 
 package org.apache.james.jmap;
 
-import java.util.Objects;
+import java.util.function.BiFunction;
 
-import reactor.netty.http.server.HttpServerRoutes;
+import org.reactivestreams.Publisher;
 
-public class Endpoint {
-    private final Verb verb;
-    private final String path;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
 
-    public Endpoint(Verb verb, String path) {
-        this.verb = verb;
-        this.path = path;
+public class JMAPRoute {
+    public interface Action extends BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
+
     }
 
-    public Verb getVerb() {
-        return verb;
+    private final Endpoint endpoint;
+    private final Version version;
+    private final Action action;
+
+    public JMAPRoute(Endpoint endpoint, Version version, Action action) {
+        this.endpoint = endpoint;
+        this.version = version;
+        this.action = action;
     }
 
-    public String getPath() {
-        return path;
+    public Endpoint getEndpoint() {
+        return endpoint;
     }
 
-    HttpServerRoutes registerRoute(HttpServerRoutes builder, JMAPRoute.Action action) {
-        return verb.registerRoute(builder, this.path, action);
+    public Version getVersion() {
+        return version;
     }
 
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof Endpoint) {
-            Endpoint endpoint = (Endpoint) o;
-
-            return Objects.equals(this.verb, endpoint.verb)
-                && Objects.equals(this.path, endpoint.path);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(verb, path);
+    public Action getAction() {
+        return action;
     }
 }

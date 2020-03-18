@@ -31,6 +31,8 @@ import static org.mockito.Mockito.when;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.JMAPRoute;
+import org.apache.james.jmap.Verb;
 import org.apache.james.jmap.draft.methods.ErrorResponse;
 import org.apache.james.jmap.draft.methods.Method;
 import org.apache.james.jmap.draft.methods.RequestHandler;
@@ -73,9 +75,14 @@ public class JMAPApiRoutesTest {
         JMAPApiRoutes jmapApiRoutes = new JMAPApiRoutes(requestHandler, new RecordingMetricFactory(),
             mockedAuthFilter, mockedUserProvisionner, mockedMailboxesProvisionner);
 
+        JMAPRoute postApiRoute = jmapApiRoutes.routes()
+            .filter(jmapRoute -> jmapRoute.getEndpoint().getVerb().equals(Verb.POST))
+            .findFirst()
+            .get();
+
         server = HttpServer.create()
             .port(RANDOM_PORT)
-            .route(jmapApiRoutes::define)
+            .route(routes -> routes.post(postApiRoute.getEndpoint().getPath(), (req, res) -> postApiRoute.getAction().apply(req, res)))
             .bindNow();
 
         RestAssured.requestSpecification = new RequestSpecBuilder()

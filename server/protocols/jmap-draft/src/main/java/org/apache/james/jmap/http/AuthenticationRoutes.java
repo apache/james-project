@@ -37,12 +37,17 @@ import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.Endpoint;
+import org.apache.james.jmap.JMAPRoute;
 import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.JMAPUrls;
+import org.apache.james.jmap.Verb;
+import org.apache.james.jmap.Version;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
@@ -69,7 +74,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
-import reactor.netty.http.server.HttpServerRoutes;
 
 public class AuthenticationRoutes implements JMAPRoutes {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationRoutes.class);
@@ -102,12 +106,13 @@ public class AuthenticationRoutes implements JMAPRoutes {
     }
 
     @Override
-    public HttpServerRoutes define(HttpServerRoutes builder) {
-        return builder
-            .post(AUTHENTICATION, JMAPRoutes.corsHeaders(this::post))
-            .get(AUTHENTICATION, JMAPRoutes.corsHeaders(this::returnEndPointsResponse))
-            .delete(AUTHENTICATION, JMAPRoutes.corsHeaders(this::delete))
-            .options(AUTHENTICATION, CORS_CONTROL);
+    public Stream<JMAPRoute> routes() {
+        return Stream.of(
+            new JMAPRoute(new Endpoint(Verb.POST, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::post)),
+            new JMAPRoute(new Endpoint(Verb.GET, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::returnEndPointsResponse)),
+            new JMAPRoute(new Endpoint(Verb.DELETE, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::delete)),
+            new JMAPRoute(new Endpoint(Verb.OPTIONS, AUTHENTICATION), Version.DRAFT, CORS_CONTROL)
+        );
     }
 
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response) {
