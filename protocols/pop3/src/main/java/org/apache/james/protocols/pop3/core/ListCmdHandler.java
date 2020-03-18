@@ -31,6 +31,7 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -55,8 +56,8 @@ public class ListCmdHandler implements CommandHandler<POP3Session> {
     @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
         String parameters = request.getArgument();
-        List<MessageMetaData> uidList = (List<MessageMetaData>) session.getAttachment(POP3Session.UID_LIST, State.Transaction);
-        List<String> deletedUidList = (List<String>) session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction);
+        List<MessageMetaData> uidList = session.getAttachment(POP3Session.UID_LIST, State.Transaction).orElse(ImmutableList.of());
+        List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction).orElse(ImmutableList.of());
 
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
             POP3Response response = null;
@@ -66,10 +67,10 @@ public class ListCmdHandler implements CommandHandler<POP3Session> {
                 long size = 0;
                 int count = 0;
                 List<MessageMetaData> validResults = new ArrayList<>();
-                if (uidList.isEmpty() == false) {
+                if (!uidList.isEmpty()) {
 
                     for (MessageMetaData data : uidList) {
-                        if (deletedUidList.contains(data.getUid()) == false) {
+                        if (!deletedUidList.contains(data.getUid())) {
                             size += data.getSize();
                             count++;
                             validResults.add(data);
@@ -95,7 +96,7 @@ public class ListCmdHandler implements CommandHandler<POP3Session> {
                         return  new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
                     }
                     
-                    if (deletedUidList.contains(data.getUid()) == false) {
+                    if (!deletedUidList.contains(data.getUid())) {
                         StringBuilder responseBuffer = new StringBuilder(64).append(num).append(" ").append(data.getSize());
                         response = new POP3Response(POP3Response.OK_RESPONSE, responseBuffer.toString());
                     } else {

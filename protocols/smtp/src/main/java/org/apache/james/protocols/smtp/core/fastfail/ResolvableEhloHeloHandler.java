@@ -24,6 +24,7 @@ import java.net.UnknownHostException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -39,7 +40,7 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
  */
 public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
 
-    public static final String BAD_EHLO_HELO = "BAD_EHLO_HELO";
+    public static final ProtocolSession.AttachmentKey<Boolean> BAD_EHLO_HELO = ProtocolSession.AttachmentKey.of("BAD_EHLO_HELO", Boolean.class);
 
     /**
      * Check if EHLO/HELO is resolvable
@@ -50,9 +51,8 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
      *            The argument
      */
     protected void checkEhloHelo(SMTPSession session, String argument) {
-        
         if (isBadHelo(session, argument)) {
-            session.setAttachment(BAD_EHLO_HELO, "true", State.Transaction);
+            session.setAttachment(BAD_EHLO_HELO, true, State.Transaction);
         }
     }
     
@@ -74,11 +74,7 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
 
     protected boolean check(SMTPSession session,MailAddress rcpt) {
         // not reject it
-        if (session.getAttachment(BAD_EHLO_HELO, State.Transaction) == null) {
-            return false;
-        }
-
-        return true;
+        return session.getAttachment(BAD_EHLO_HELO, State.Transaction).isPresent();
     }
 
     @Override

@@ -69,7 +69,7 @@ public class RsetCmdHandler implements CommandHandler<POP3Session> {
             List<MessageMetaData> messages = session.getUserMailbox().getMessages();
 
             session.setAttachment(POP3Session.UID_LIST, messages, State.Transaction);
-            session.setAttachment(POP3Session.DELETED_UID_LIST, new ArrayList<String>(), State.Transaction);
+            session.setAttachment(POP3Session.DELETED_UID_LIST, new ArrayList<>(), State.Transaction);
         } catch (IOException e) {
             // In the event of an exception being thrown there may or may not be
             // anything in userMailbox

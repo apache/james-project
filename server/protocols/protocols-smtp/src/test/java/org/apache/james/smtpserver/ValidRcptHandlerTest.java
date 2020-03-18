@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.util.HashMap;
+import java.util.Optional;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -42,6 +43,8 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.base.Preconditions;
 
 public class ValidRcptHandlerTest {
     private static final Username VALID_USER = Username.of("postmaster");
@@ -85,30 +88,38 @@ public class ValidRcptHandlerTest {
                 return relayingAllowed;
             }
             
-            private final HashMap<String, Object> sstate = new HashMap<>();
-            private final HashMap<String, Object> connectionState = new HashMap<>();
+            private final HashMap<AttachmentKey<?>, Object> sessionState = new HashMap<>();
+            private final HashMap<AttachmentKey<?>, Object> connectionState = new HashMap<>();
 
             @Override
-            public Object setAttachment(String key, Object value, State state) {
+            public <T> Optional<T> setAttachment(AttachmentKey<T> key, T value, State state) {
+                Preconditions.checkNotNull(key, "key cannot be null");
+                Preconditions.checkNotNull(value, "value cannot be null");
+
                 if (state == State.Connection) {
-                    if (value == null) {
-                        return connectionState.remove(key);
-                    }
-                    return connectionState.put(key, value);
+                    return key.convert(connectionState.put(key, value));
                 } else {
-                    if (value == null) {
-                        return sstate.remove(key);
-                    }
-                    return sstate.put(key, value);
+                    return key.convert(sessionState.put(key, value));
                 }
             }
 
             @Override
-            public Object getAttachment(String key, State state) {
+            public <T> Optional<T> removeAttachment(AttachmentKey<T> key, State state) {
+                Preconditions.checkNotNull(key, "key cannot be null");
+
                 if (state == State.Connection) {
-                    return connectionState.get(key);
+                    return key.convert(connectionState.remove(key));
                 } else {
-                    return sstate.get(key);
+                    return key.convert(sessionState.remove(key));
+                }
+            }
+
+            @Override
+            public <T> Optional<T> getAttachment(AttachmentKey<T> key, State state) {
+                if (state == State.Connection) {
+                    return key.convert(connectionState.get(key));
+                } else {
+                    return key.convert(sessionState.get(key));
                 }
             }
         };

@@ -87,7 +87,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
         // Check if the response was not ok
         if (response.getRetCode().equals(SMTPRetCode.MAIL_OK) == false) {
             // cleanup the session
-            session.setAttachment(SMTPSession.SENDER, null,  State.Transaction);
+            session.removeAttachment(SMTPSession.SENDER, State.Transaction);
         }
 
         return response;
@@ -99,16 +99,14 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
      * 
      * @param session
      *            SMTP session object
-     * @param argument
-     *            the argument passed in with the command by the SMTP client
      */
-    private Response doMAIL(SMTPSession session, String argument) {
+    private Response doMAIL(SMTPSession session) {
         StringBuilder responseBuffer = new StringBuilder();
-        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+        MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
         responseBuffer.append(
                 DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.ADDRESS_OTHER))
                 .append(" Sender <");
-        if (sender != null) {
+        if (!sender.isNullSender()) {
             responseBuffer.append(sender.asString());
         }
         responseBuffer.append("> OK");
@@ -123,7 +121,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
     @Override
     protected Response doCoreCmd(SMTPSession session, String command,
                                  String parameters) {
-        return doMAIL(session, parameters);
+        return doMAIL(session);
     }
 
     @Override
@@ -146,10 +144,10 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
             sender = argument.substring(colonIndex + 1);
             argument = argument.substring(0, colonIndex);
         }
-        if (session.getAttachment(SMTPSession.SENDER, State.Transaction) != null) {
+        if (session.getAttachment(SMTPSession.SENDER, State.Transaction).isPresent()) {
             return SENDER_ALREADY_SPECIFIED;
-        } else if (session.getAttachment(
-                SMTPSession.CURRENT_HELO_MODE, State.Connection) == null
+        } else if (!session.getAttachment(
+                SMTPSession.CURRENT_HELO_MODE, State.Connection).isPresent()
                 && session.getConfiguration().useHeloEhloEnforcement()) {
             return EHLO_HELO_NEEDED;
         } else if (argument == null
@@ -248,7 +246,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
 
     @Override
     protected HookResult callHook(MailHook rawHook, SMTPSession session, String parameters) {
-        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+        MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
         return rawHook.doMail(session, sender);
     }
     

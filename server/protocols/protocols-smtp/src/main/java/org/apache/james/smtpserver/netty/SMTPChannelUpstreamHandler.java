@@ -76,8 +76,8 @@ public class SMTPChannelUpstreamHandler extends BasicChannelUpstreamHandler {
         SMTPSession smtpSession = (SMTPSession) ctx.getAttachment();
 
         if (smtpSession != null) {
-            LifecycleUtil.dispose(smtpSession.getAttachment(SMTPConstants.MAIL, State.Transaction));
-            LifecycleUtil.dispose(smtpSession.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction));
+            smtpSession.getAttachment(SMTPConstants.MAIL, State.Transaction).ifPresent(LifecycleUtil::dispose);
+            smtpSession.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction).ifPresent(LifecycleUtil::dispose);
         }
 
         super.cleanup(ctx);

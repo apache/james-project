@@ -37,10 +37,11 @@ import com.google.common.collect.ImmutableSet;
 public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
 
     private static final Collection<String> COMMANDS = ImmutableSet.of("APOP");
-    
+    private static final String MISSING_APOP_TIMESTAMP = "";
+
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        if (session.getAttachment(POP3Session.APOP_TIMESTAMP, State.Connection) == null) {
+        if (!session.getAttachment(POP3Session.APOP_TIMESTAMP, State.Connection).isPresent()) {
             // APOP timestamp was not found in the session so APOP is not supported
             return POP3Response.ERR;
         }
@@ -81,7 +82,7 @@ public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
     
     @Override
     protected final Mailbox auth(POP3Session session, Username username, String password) throws Exception {
-        return auth(session, (String)session.getAttachment(POP3Session.APOP_TIMESTAMP, State.Connection), username, password);
+        return auth(session, session.getAttachment(POP3Session.APOP_TIMESTAMP, State.Connection).orElse(MISSING_APOP_TIMESTAMP), username, password);
     }
 
 

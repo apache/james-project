@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.Response;
@@ -65,27 +65,19 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     @Override
     public void resetState() {
         // remember the ehlo mode between resets
-        Object currentHeloMode = getState().get(CURRENT_HELO_MODE);
+        Optional<String> currentHeloMode = getAttachment(CURRENT_HELO_MODE, State.Transaction);
 
         getState().clear();
 
         // start again with the old helo mode
-        if (currentHeloMode != null) {
-            getState().put(CURRENT_HELO_MODE, currentHeloMode);
-        }
+        currentHeloMode.ifPresent(heloMode -> setAttachment(CURRENT_HELO_MODE, heloMode, State.Transaction));
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public int getRcptCount() {
-        int count = 0;
-
-        // check if the key exists
-        if (getState().get(SMTPSession.RCPT_LIST) != null) {
-            count = ((Collection<MailAddress>) getState().get(SMTPSession.RCPT_LIST)).size();
-        }
-
-        return count;
+        return getAttachment(SMTPSession.RCPT_LIST, State.Transaction)
+            .map(List::size)
+            .orElse(0);
     }
 
     @Override

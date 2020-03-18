@@ -20,6 +20,7 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -33,7 +34,7 @@ public class MaxUnknownCmdHandler implements UnknownHook {
 
     public static final int DEFAULT_MAX_UNKOWN = 5;
     
-    private static final String UNKOWN_COMMAND_COUNT = "UNKNOWN_COMMAND_COUNT";
+    private static final ProtocolSession.AttachmentKey<Integer> UNKOWN_COMMAND_COUNT = ProtocolSession.AttachmentKey.of("UNKNOWN_COMMAND_COUNT", Integer.class);
     private int maxUnknown = DEFAULT_MAX_UNKOWN;
 
     public void setMaxUnknownCmdCount(int maxUnknown) {
@@ -42,12 +43,10 @@ public class MaxUnknownCmdHandler implements UnknownHook {
     
     @Override
     public HookResult doUnknown(SMTPSession session, String command) {
-        Integer count = (Integer) session.getAttachment(UNKOWN_COMMAND_COUNT, State.Transaction);
-        if (count == null) {
-            count = 1;
-        } else {
-            count++;
-        }
+        Integer count = session.getAttachment(UNKOWN_COMMAND_COUNT, State.Transaction)
+            .map(fetchedCount -> fetchedCount + 1)
+            .orElse(1);
+
         session.setAttachment(UNKOWN_COMMAND_COUNT, count, State.Transaction);
         if (count > maxUnknown) {
             return HookResult.builder()

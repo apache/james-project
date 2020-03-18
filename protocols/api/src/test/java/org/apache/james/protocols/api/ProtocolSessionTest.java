@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,20 +15,18 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
+ ***************************************************************/
 
-package org.apache.james.smtpserver;
+package org.apache.james.protocols.api;
 
-import org.apache.james.protocols.api.ProtocolSession;
-import org.apache.james.server.core.MimeMessageInputStreamSource;
-import org.apache.mailet.Mail;
+import org.junit.jupiter.api.Test;
 
-/**
- * Constants which are used within SMTP Session
- */
-public interface SMTPConstants {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    ProtocolSession.AttachmentKey<MimeMessageInputStreamSource> DATA_MIMEMESSAGE_STREAMSOURCE = ProtocolSession.AttachmentKey.of("org.apache.james.core.DataCmdHandler.DATA_MIMEMESSAGE_STREAMSOURCE", MimeMessageInputStreamSource.class);
-    ProtocolSession.AttachmentKey<Mail> MAIL = ProtocolSession.AttachmentKey.of("MAIL", Mail.class);
+class ProtocolSessionTest {
 
+    @Test
+    void attachmentKeyShouldRespectBeanContract() {
+        EqualsVerifier.forClass(ProtocolSession.AttachmentKey.class).verify();
+    }
 }

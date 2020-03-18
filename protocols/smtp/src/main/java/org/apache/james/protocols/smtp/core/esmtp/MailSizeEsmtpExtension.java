@@ -23,8 +23,10 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.core.MaybeSender;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
@@ -48,8 +50,9 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailSizeEsmtpExtension.class);
 
-    private static final String MESG_SIZE = "MESG_SIZE"; // The size of the
-    private static final String MESG_FAILED = "MESG_FAILED";   // Message failed flag
+    private static final ProtocolSession.AttachmentKey<Integer> MESG_SIZE = ProtocolSession.AttachmentKey.of("MESG_SIZE", Integer.class); // The size of the
+    private static final ProtocolSession.AttachmentKey<Boolean> MESG_FAILED = ProtocolSession.AttachmentKey.of("MESG_FAILED", Boolean.class);   // Message failed flag
+    public static final ProtocolSession.AttachmentKey<Long> CURRENT_SIZE = ProtocolSession.AttachmentKey.of("CURRENT_SIZE", Long.class);
     private static final String[] MAIL_PARAMS = { "SIZE" };
     
     private static final HookResult SYNTAX_ERROR = HookResult.builder()
@@ -68,7 +71,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
     @Override
     public HookResult doMailParameter(SMTPSession session, String paramName,
                                       String paramValue) {
-        MaybeSender tempSender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+        MaybeSender tempSender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
         return doMailSize(session, paramValue, tempSender);
     }
 
@@ -134,10 +137,10 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
 
     @Override
     public Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
-        Boolean failed = (Boolean) session.getAttachment(MESG_FAILED, State.Transaction);
+        Optional<Boolean> failed = session.getAttachment(MESG_FAILED, State.Transaction);
         // If we already defined we failed and sent a reply we should simply
         // wait for a CRLF.CRLF to be sent by the client.
-        if (failed != null && failed) {
+        if (failed.isPresent() && failed.get()) {
             if (isDataTerminated(line)) {
                 line.rewind();
                 next.onLine(session, line);
@@ -151,15 +154,11 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                 return next.onLine(session, line);
             } else {
                 line.rewind();
-                Long currentSize = (Long) session.getAttachment("CURRENT_SIZE", State.Transaction);
-                Long newSize;
-                if (currentSize == null) {
-                    newSize = Long.valueOf(line.remaining());
-                } else {
-                    newSize = Long.valueOf(currentSize.intValue() + line.remaining());
-                }
+                Long newSize = session.getAttachment(CURRENT_SIZE, State.Transaction)
+                    .map(currentSize -> Long.valueOf(currentSize.intValue() + line.remaining()))
+                    .orElseGet(() -> Long.valueOf(line.remaining()));
 
-                session.setAttachment("CURRENT_SIZE", newSize, State.Transaction);
+                session.setAttachment(CURRENT_SIZE, newSize, State.Transaction);
 
                 if (session.getConfiguration().getMaxMessageSize() > 0 && newSize.intValue() > session.getConfiguration().getMaxMessageSize()) {
                     // Add an item to the state to suppress
@@ -183,8 +182,8 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
 
     @Override
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-        Boolean failed = (Boolean) session.getAttachment(MESG_FAILED, State.Transaction);
-        if (failed != null && failed) {
+        Optional<Boolean> failed = session.getAttachment(MESG_FAILED, State.Transaction);
+        if (failed.isPresent() && failed.get()) {
             LOGGER.error("Rejected message from {} from {} exceeding system maximum message size of {}", session.getAttachment(SMTPSession.SENDER, State.Transaction), session.getRemoteAddress().getAddress().getHostAddress(), session.getConfiguration().getMaxMessageSize());
             return QUOTA_EXCEEDED;
         } else {

@@ -19,6 +19,7 @@
 
 package org.apache.james.protocols.pop3.core;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -61,7 +62,12 @@ public class DeleCmdHandler implements CommandHandler<POP3Session> {
                     StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
                     return  new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
                 }
-                List<String> deletedUidList = (List<String>) session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction);
+                List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction)
+                    .orElseGet(() -> {
+                        ArrayList<String> uidList = new ArrayList<>();
+                        session.setAttachment(POP3Session.DELETED_UID_LIST, uidList, State.Transaction);
+                        return uidList;
+                    });
 
                 String uid = meta.getUid();
 

@@ -35,10 +35,10 @@ public class MaxRcptHandlerTest {
     
     private SMTPSession setupMockedSession(final int rcptCount) {
         return new BaseFakeSMTPSession() {
-            HashMap<String,Object> state = new HashMap<>();
+            HashMap<AttachmentKey<?>, Object> state = new HashMap<>();
 
             @Override
-            public Map<String,Object> getState() {
+            public Map<AttachmentKey<?>, Object> getState() {
                 return state;
             }
 

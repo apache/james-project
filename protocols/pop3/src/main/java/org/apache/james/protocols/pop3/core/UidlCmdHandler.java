@@ -33,6 +33,7 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -47,13 +48,12 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
      * of message ids to the client.
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
         POP3Response response = null;
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
-            List<MessageMetaData> uidList = (List<MessageMetaData>) session.getAttachment(POP3Session.UID_LIST, State.Transaction);
-            List<String> deletedUidList = (List<String>) session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction);
+            List<MessageMetaData> uidList = session.getAttachment(POP3Session.UID_LIST, State.Transaction).orElse(ImmutableList.of());
+            List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction).orElse(ImmutableList.of());
             try {
                 String identifier = session.getUserMailbox().getIdentifier();
                 if (parameters == null) {
@@ -61,7 +61,7 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
 
                     for (int i = 0; i < uidList.size(); i++) {
                         MessageMetaData metadata = uidList.get(i);
-                        if (deletedUidList.contains(metadata.getUid()) == false) {
+                        if (!deletedUidList.contains(metadata.getUid())) {
                             StringBuilder responseBuffer = new StringBuilder().append(i + 1).append(" ").append(metadata.getUid(identifier));
                             response.appendLine(responseBuffer.toString());
                         }

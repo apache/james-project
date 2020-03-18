@@ -19,8 +19,6 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import java.util.Collection;
-
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -40,25 +38,23 @@ public class SupressDuplicateRcptHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(SupressDuplicateRcptHandler.class);
 
     @Override
-    @SuppressWarnings("unchecked")
     public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
-        Collection<MailAddress> rcptList = (Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction);
-    
-        // Check if the recipient is already in the rcpt list
-        if (rcptList != null && rcptList.contains(rcpt)) {
-            StringBuilder responseBuffer = new StringBuilder();
-        
-            responseBuffer.append(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.ADDRESS_VALID))
-                          .append(" Recipient <")
-                          .append(rcpt.toString())
-                          .append("> OK");
-            LOGGER.debug("Duplicate recipient not add to recipient list: {}", rcpt);
-            return HookResult.builder()
-                .hookReturnCode(HookReturnCode.ok())
-                .smtpReturnCode(SMTPRetCode.MAIL_OK)
-                .smtpDescription(responseBuffer.toString())
-                .build();
-        }
-        return HookResult.DECLINED;
+        return session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction)
+            .filter(rcptList -> rcptList.contains(rcpt))
+            .map(rcptList -> {
+                StringBuilder responseBuffer = new StringBuilder();
+
+                responseBuffer.append(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.ADDRESS_VALID))
+                              .append(" Recipient <")
+                              .append(rcpt.toString())
+                              .append("> OK");
+                LOGGER.debug("Duplicate recipient not add to recipient list: {}", rcpt);
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.ok())
+                    .smtpReturnCode(SMTPRetCode.MAIL_OK)
+                    .smtpDescription(responseBuffer.toString())
+                    .build();
+            })
+            .orElse(HookResult.DECLINED);
     }
 }

@@ -26,6 +26,7 @@ import java.util.Collection;
 import javax.inject.Inject;
 
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.UnknownCommandHandler;
@@ -47,6 +48,8 @@ public class UnknownCmdHandler extends AbstractHookableCmdHandler<UnknownHook> {
      * The name of the command handled by the command handler
      */
     private static final Collection<String> COMMANDS = ImmutableSet.of(UnknownCommandHandler.COMMAND_IDENTIFIER);
+    private static final String MISSING_CURR_COMMAND = "";
+    public static final ProtocolSession.AttachmentKey<String> CURR_COMMAND = ProtocolSession.AttachmentKey.of("CURR_COMMAND", String.class);
 
     @Inject
     public UnknownCmdHandler(MetricFactory metricFactory) {
@@ -67,13 +70,13 @@ public class UnknownCmdHandler extends AbstractHookableCmdHandler<UnknownHook> {
 
     @Override
     protected Response doFilterChecks(SMTPSession session, String command, String parameters) {
-        session.setAttachment("CURR_COMMAND", command, State.Transaction);
+        session.setAttachment(CURR_COMMAND, command, State.Transaction);
         return null;
     }
 
     @Override
     protected HookResult callHook(UnknownHook rawHook, SMTPSession session, String parameters) {
-        return rawHook.doUnknown(session, (String) session.getAttachment("CURR_COMMAND", State.Transaction));
+        return rawHook.doUnknown(session, session.getAttachment(CURR_COMMAND, State.Transaction).orElse(MISSING_CURR_COMMAND));
     }
 
     @Override

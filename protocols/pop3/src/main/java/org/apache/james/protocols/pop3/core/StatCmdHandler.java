@@ -31,6 +31,7 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -44,18 +45,17 @@ public class StatCmdHandler implements CommandHandler<POP3Session> {
      * of messages in the mailbox and its aggregate size.
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
 
-            List<MessageMetaData> uidList = (List<MessageMetaData>) session.getAttachment(POP3Session.UID_LIST, State.Transaction);
-            List<String> deletedUidList = (List<String>) session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction);
+            List<MessageMetaData> uidList = session.getAttachment(POP3Session.UID_LIST, State.Transaction).orElse(ImmutableList.of());
+            List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction).orElse(ImmutableList.of());
             long size = 0;
             int count = 0;
-            if (uidList.isEmpty() == false) {
+            if (!uidList.isEmpty()) {
                 List<MessageMetaData> validResults = new ArrayList<>();
                 for (MessageMetaData data : uidList) {
-                    if (deletedUidList.contains(data.getUid()) == false) {
+                    if (!deletedUidList.contains(data.getUid())) {
                         size += data.getSize();
                         count++;
                         validResults.add(data);

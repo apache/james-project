@@ -21,7 +21,6 @@ package org.apache.james.protocols.smtp.core;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,6 +48,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.util.MDCBuilder;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 
@@ -112,7 +112,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
         }
     }
    
-    public static final String MAILENV = "MAILENV";
+    public static final ProtocolSession.AttachmentKey<MailEnvelope> MAILENV = ProtocolSession.AttachmentKey.of("MAILENV", MailEnvelope.class);
 
     private final MetricFactory metricFactory;
 
@@ -161,9 +161,9 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
      */
     @SuppressWarnings("unchecked")
     protected Response doDATA(SMTPSession session, String argument) {
-        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction);
-        MailEnvelope env = createEnvelope(session, sender, new ArrayList<>((Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)));
-        session.setAttachment(MAILENV, env,ProtocolSession.State.Transaction);
+        MaybeSender sender = session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction).orElse(MaybeSender.nullSender());
+        MailEnvelope env = createEnvelope(session, sender, session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction).orElse(ImmutableList.of()));
+        session.setAttachment(MAILENV, env, ProtocolSession.State.Transaction);
         session.pushLineHandler(lineHandler);
         
         return DATA_READY;
@@ -208,9 +208,9 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
         if ((argument != null) && (argument.length() > 0)) {
             return UNEXPECTED_ARG;
         }
-        if (session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction) == null) {
+        if (!session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction).isPresent()) {
             return NO_SENDER;
-        } else if (session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction) == null) {
+        } else if (!session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction).isPresent()) {
             return NO_RECIPIENT;
         }
         return null;

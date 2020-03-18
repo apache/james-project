@@ -30,7 +30,25 @@ Change list:
  - [UidValidity and maildir](#uid-validity-and-maildir)
  - [UidValidity and JPA or Cassandra](#uid-validity-and-jpa-or-cassandra)
  - [Differentiation between domain alias and domain mapping](#differentiation-between-domain-alias-and-domain-mapping)
+ - [ProtocolSession storng typing](#protocolsession-storng-typing)
  
+### ProtocolSession storng typing
+
+Date 19/03/2020
+
+SHA-1 XXX
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3119
+
+`ProtocolSession` have been reworked in order to increase type strengh
+and reduce errors.
+
+Now `setAttachment` and `getAttachment` are expecting an `AttachmentKey` as key
+and return an `Optional` instead of a `null`-able value.
+
+Moreover `setAttachment` do not allow `null` values and `removeAttachment`
+should be use now to remove elements.
+
 ### Differentiation between domain alias and domain mapping
 
 Date 10/03/2020

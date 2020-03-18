@@ -74,7 +74,8 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         byte[] line = new byte[lineByteBuffer.remaining()];
         lineByteBuffer.get(line, 0, line.length);
 
-        MimeMessageInputStreamSource mmiss = (MimeMessageInputStreamSource) session.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction);
+        MimeMessageInputStreamSource mmiss = session.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction)
+            .orElseThrow(() -> new RuntimeException("'" + SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE.asString() + "' has not been filled."));
 
         try {
             OutputStream out = mmiss.getWritableOutputStream();
@@ -85,9 +86,8 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 out.flush();
                 out.close();
 
-                @SuppressWarnings("unchecked")
-                List<MailAddress> recipientCollection = (List<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction);
-                MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+                List<MailAddress> recipientCollection = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
+                MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
 
                 MailImpl mail = MailImpl.builder()
                     .name(MailImpl.getId())
@@ -140,7 +140,8 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
     protected Response processExtensions(SMTPSession session, Mail mail) {
         if (mail != null && messageHandlers != null) {
             try {
-                MimeMessageInputStreamSource mmiss = (MimeMessageInputStreamSource) session.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction);
+                MimeMessageInputStreamSource mmiss = session.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction)
+                    .orElseThrow(() -> new RuntimeException("'" + SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE.asString() + "' has not been filled."));
                 OutputStream out;
                 out = mmiss.getWritableOutputStream();
                 for (MessageHook rawHandler : mHandlers) {

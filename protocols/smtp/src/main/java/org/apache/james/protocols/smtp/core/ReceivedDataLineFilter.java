@@ -25,10 +25,13 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * {@link AbstractAddHeadersFilter} which adds the Received header for the message.
@@ -85,30 +88,31 @@ public class ReceivedDataLineFilter extends AbstractAddHeadersFilter {
 
         StringBuilder headerLineBuffer = new StringBuilder();
 
-        String heloMode = (String) session.getAttachment(SMTPSession.CURRENT_HELO_MODE, State.Connection);
-        String heloName = (String) session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection);
+        Optional<String> heloMode = session.getAttachment(SMTPSession.CURRENT_HELO_MODE, State.Connection);
+        Optional<String> heloName = session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection);
 
         // Put our Received header first
         headerLineBuffer.append("from ").append(session.getRemoteAddress().getHostName());
 
-        if (heloName != null) {
-            headerLineBuffer.append(" (").append(heloMode).append(" ").append(heloName).append(")");
+        if (heloName.isPresent() && heloMode.isPresent()) {
+            headerLineBuffer.append(" (").append(heloMode.get()).append(" ").append(heloName.get()).append(")");
         }
         headerLineBuffer.append(" ([").append(session.getRemoteAddress().getAddress().getHostAddress()).append("])");
         Header header = new Header("Received", headerLineBuffer.toString());
         
         headerLineBuffer = new StringBuilder();
-        headerLineBuffer.append("by ").append(session.getConfiguration().getHelloName()).append(" (").append(session.getConfiguration().getSoftwareName()).append(") with ").append(getServiceType(session, heloMode));
+        headerLineBuffer.append("by ").append(session.getConfiguration().getHelloName()).append(" (").append(session.getConfiguration().getSoftwareName()).append(") with ").append(getServiceType(session, heloMode.orElse("NOT-DEFINED")));
         headerLineBuffer.append(" ID ").append(session.getSessionID());
 
-        if (((Collection<?>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction)).size() == 1) {
+        List<MailAddress> rcptList = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
+        if (rcptList.size() == 1) {
             // Only indicate a recipient if they're the only recipient
             // (prevents email address harvesting and large headers in
             // bulk email)
             header.add(headerLineBuffer.toString());
             
             headerLineBuffer = new StringBuilder();
-            headerLineBuffer.append("for <").append(((List<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction)).get(0).toString()).append(">;");
+            headerLineBuffer.append("for <").append(rcptList.get(0).toString()).append(">;");
         } else {
             // Put the ; on the end of the 'by' line
             headerLineBuffer.append(";");

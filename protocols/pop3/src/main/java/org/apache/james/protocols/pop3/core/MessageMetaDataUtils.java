@@ -19,7 +19,6 @@
 
 package org.apache.james.protocols.pop3.core;
 
-import java.util.List;
 import java.util.stream.IntStream;
 
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -33,13 +32,10 @@ public class MessageMetaDataUtils {
      * found.
      */
     public static MessageMetaData getMetaData(POP3Session session, int number) {
-        @SuppressWarnings("unchecked")
-        List<MessageMetaData> uidList = (List<MessageMetaData>) session.getAttachment(POP3Session.UID_LIST, State.Transaction);
-        if (uidList == null || number > uidList.size()) {
-            return null;
-        } else {
-            return uidList.get(number - 1);
-        }
+        return session.getAttachment(POP3Session.UID_LIST, State.Transaction)
+            .filter(uidList -> number <= uidList.size())
+            .map(uidList -> uidList.get(number - 1))
+            .orElse(null);
     }
 
     /**

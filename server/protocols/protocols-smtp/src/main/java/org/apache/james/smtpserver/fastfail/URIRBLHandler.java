@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -35,6 +36,7 @@ import javax.mail.internet.MimePart;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -55,9 +57,9 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
     /** This log is the fall back shared by all instances */
     private static final Logger LOGGER = LoggerFactory.getLogger(URIRBLHandler.class);
 
-    private static final String LISTED_DOMAIN = "LISTED_DOMAIN";
+    private static final ProtocolSession.AttachmentKey<String> LISTED_DOMAIN = ProtocolSession.AttachmentKey.of("LISTED_DOMAIN", String.class);
 
-    private static final String URBLSERVER = "URBL_SERVER";
+    private static final ProtocolSession.AttachmentKey<String> URBLSERVER = ProtocolSession.AttachmentKey.of("URBL_SERVER", String.class);
 
     private DNSService dnsService;
 
@@ -108,13 +110,13 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         if (check(session, mail)) {
-            String uRblServer = (String) session.getAttachment(URBLSERVER, State.Transaction);
-            String target = (String) session.getAttachment(LISTED_DOMAIN, State.Transaction);
+            Optional<String> uRblServer = session.getAttachment(URBLSERVER, State.Transaction);
+            Optional<String> target = session.getAttachment(LISTED_DOMAIN, State.Transaction);
             String detail = null;
 
             // we should try to retrieve details
-            if (getDetail) {
-                Collection<String> txt = dnsService.findTXTRecords(target + "." + uRblServer);
+            if (uRblServer.isPresent() && target.isPresent() && getDetail) {
+                Collection<String> txt = dnsService.findTXTRecords(target.get() + "." + uRblServer.get());
 
                 // Check if we found a txt record
                 if (!txt.isEmpty()) {
@@ -127,12 +129,12 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
             if (detail != null) {
                 return HookResult.builder()
                     .hookReturnCode(HookReturnCode.deny())
-                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + "Rejected: message contains domain " + target + " listed by " + uRblServer + " . Details: " + detail)
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + "Rejected: message contains domain " + target.get() + " listed by " + uRblServer + " . Details: " + detail)
                     .build();
             } else {
                 return HookResult.builder()
                     .hookReturnCode(HookReturnCode.deny())
-                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + " Rejected: message contains domain " + target + " listed by " + uRblServer)
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + " Rejected: message contains domain " + target.orElse("[target not set]") + " listed by " + uRblServer)
                     .build();
             }
 

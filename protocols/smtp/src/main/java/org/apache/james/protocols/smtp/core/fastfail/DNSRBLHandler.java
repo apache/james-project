@@ -22,10 +22,12 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -49,11 +51,9 @@ public class DNSRBLHandler implements RcptHook {
         
     private boolean getDetail = false;
     
-    private final String blocklistedDetail = null;
+    public static final ProtocolSession.AttachmentKey<Boolean> RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME = ProtocolSession.AttachmentKey.of("org.apache.james.smtpserver.rbl.blocklisted", Boolean.class);
     
-    public static final String RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME = "org.apache.james.smtpserver.rbl.blocklisted";
-    
-    public static final String RBL_DETAIL_MAIL_ATTRIBUTE_NAME = "org.apache.james.smtpserver.rbl.detail";
+    public static final ProtocolSession.AttachmentKey<String> RBL_DETAIL_MAIL_ATTRIBUTE_NAME = ProtocolSession.AttachmentKey.of("org.apache.james.smtpserver.rbl.detail", String.class);
 
     /**
      * Set the whitelist array
@@ -154,7 +154,7 @@ public class DNSRBLHandler implements RcptHook {
                             }
                         }
 
-                        session.setAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, "true", State.Connection);
+                        session.setAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, true, State.Connection);
                         return;
                     } else {
                         // if it is unknown, it isn't blocked
@@ -171,10 +171,11 @@ public class DNSRBLHandler implements RcptHook {
         checkDNSRBL(session, session.getRemoteAddress().getAddress().getHostAddress());
     
         if (!session.isRelayingAllowed()) {
-            String blocklisted = (String) session.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, State.Connection);
-    
-            if (blocklisted != null) { // was found in the RBL
-                if (blocklistedDetail == null) {
+            Optional<Boolean> blocklisted = session.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, State.Connection);
+            Optional<String> blocklistedDetail = session.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, State.Connection);
+
+            if (blocklisted.isPresent()) { // was found in the RBL
+                if (!blocklistedDetail.isPresent()) {
                     return HookResult.builder()
                         .hookReturnCode(HookReturnCode.deny())
                         .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
@@ -185,7 +186,7 @@ public class DNSRBLHandler implements RcptHook {
 
                     return HookResult.builder()
                         .hookReturnCode(HookReturnCode.deny())
-                        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SECURITY_AUTH) + " " + blocklistedDetail)
+                        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SECURITY_AUTH) + " " + blocklistedDetail.get())
                         .build();
                 }
                

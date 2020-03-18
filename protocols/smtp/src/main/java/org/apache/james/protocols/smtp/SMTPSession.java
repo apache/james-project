@@ -19,6 +19,10 @@
 
 package org.apache.james.protocols.smtp;
 
+import java.util.List;
+
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession;
 
 /**
@@ -30,12 +34,13 @@ public interface SMTPSession extends ProtocolSession {
 
     // Keys used to store/lookup data in the internal state hash map
     /** Sender's email address */
-    String SENDER = "SENDER_ADDRESS";
+    AttachmentKey<MaybeSender> SENDER = AttachmentKey.of("SENDER_ADDRESS", MaybeSender.class);
     /** The message recipients */
-    String RCPT_LIST = "RCPT_LIST";
+    @SuppressWarnings("unchecked")
+    AttachmentKey<List<MailAddress>> RCPT_LIST = AttachmentKey.of("RCPT_LIST", (Class<List<MailAddress>>) (Object) List.class);
     /** HELO or EHLO */
-    String CURRENT_HELO_MODE = "CURRENT_HELO_MODE";
-    String CURRENT_HELO_NAME = "CURRENT_HELO_NAME";
+    AttachmentKey<String> CURRENT_HELO_MODE = AttachmentKey.of("CURRENT_HELO_MODE", String.class);
+    AttachmentKey<String> CURRENT_HELO_NAME = AttachmentKey.of("CURRENT_HELO_NAME", String.class);
 
     /**
      * Returns the service wide configuration

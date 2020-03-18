@@ -20,6 +20,7 @@ package org.apache.james.protocols.smtp.core;
 
 import java.nio.ByteBuffer;
 
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
@@ -46,11 +47,11 @@ import org.apache.james.protocols.smtp.SMTPSession;
  */
 public abstract class SeparatingDataLineFilter implements DataLineFilter {
 
-    private static final String HEADERS_COMPLETE = "HEADERS_COMPLETE";
+    private static final ProtocolSession.AttachmentKey<Boolean> HEADERS_COMPLETE = ProtocolSession.AttachmentKey.of("HEADERS_COMPLETE", Boolean.class);
     
     @Override
     public final Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
-        if (session.getAttachment(HEADERS_COMPLETE, State.Transaction) == null) {
+        if (!session.getAttachment(HEADERS_COMPLETE, State.Transaction).isPresent()) {
             if (line.remaining() == 2) {
                 if (line.get() == '\r' && line.get() == '\n') {
                     line.rewind();

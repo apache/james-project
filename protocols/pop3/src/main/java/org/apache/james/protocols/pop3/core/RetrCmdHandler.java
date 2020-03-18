@@ -34,6 +34,7 @@ import org.apache.james.protocols.pop3.POP3StreamResponse;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -70,10 +71,10 @@ public class RetrCmdHandler implements CommandHandler<POP3Session> {
                     response = new POP3Response(POP3Response.ERR_RESPONSE, responseBuffer.toString());
                     return response;
                 }
-                List<String> deletedUidList = (List<String>) session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction);
+                List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction).orElse(ImmutableList.of());
 
                 String uid = data.getUid();
-                if (deletedUidList.contains(uid) == false) {
+                if (!deletedUidList.contains(uid)) {
                     InputStream content = session.getUserMailbox().getMessage(uid);
 
                     if (content != null) {

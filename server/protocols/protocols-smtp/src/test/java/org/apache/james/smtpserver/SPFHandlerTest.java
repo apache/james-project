@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -35,6 +36,8 @@ import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.SPFHandler;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.base.Preconditions;
 
 public class SPFHandlerTest {
 
@@ -128,32 +131,40 @@ public class SPFHandlerTest {
     private void setupMockedSMTPSession(String ip, final String helo) {
         mockedSMTPSession = new BaseFakeSMTPSession() {
 
-            private final HashMap<String, Object> sstate = new HashMap<>();
-            private final HashMap<String, Object> connectionState = new HashMap<>();
+            private final HashMap<AttachmentKey<?>, Object> sessionState = new HashMap<>();
+            private final HashMap<AttachmentKey<?>, Object> connectionState = new HashMap<>();
 
             @Override
-            public Object setAttachment(String key, Object value, State state) {
+            public <T> Optional<T> setAttachment(AttachmentKey<T> key, T value, State state) {
+                Preconditions.checkNotNull(key, "key cannot be null");
+                Preconditions.checkNotNull(value, "value cannot be null");
+
                 if (state == State.Connection) {
-                    if (value == null) {
-                        return connectionState.remove(key);
-                    }
-                    return connectionState.put(key, value);
+                    return key.convert(connectionState.put(key, value));
                 } else {
-                    if (value == null) {
-                        return sstate.remove(key);
-                    }
-                    return sstate.put(key, value);
+                    return key.convert(sessionState.put(key, value));
                 }
             }
 
             @Override
-            public Object getAttachment(String key, State state) {
-                sstate.put(SMTPSession.CURRENT_HELO_NAME, helo);
+            public <T> Optional<T> removeAttachment(AttachmentKey<T> key, State state) {
+                Preconditions.checkNotNull(key, "key cannot be null");
 
                 if (state == State.Connection) {
-                    return connectionState.get(key);
+                    return key.convert(connectionState.remove(key));
                 } else {
-                    return sstate.get(key);
+                    return key.convert(sessionState.remove(key));
+                }
+            }
+
+            @Override
+            public <T> Optional<T> getAttachment(AttachmentKey<T> key, State state) {
+                sessionState.put(SMTPSession.CURRENT_HELO_NAME, helo);
+
+                if (state == State.Connection) {
+                    return key.convert(connectionState.get(key));
+                } else {
+                    return key.convert(sessionState.get(key));
                 }
             }
 

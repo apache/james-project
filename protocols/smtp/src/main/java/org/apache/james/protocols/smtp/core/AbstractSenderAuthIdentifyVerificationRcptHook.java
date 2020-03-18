@@ -46,7 +46,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
     @Override
     public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (session.getUsername() != null) {
-            MaybeSender senderAddress = (MaybeSender) session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction);
+            MaybeSender senderAddress = session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction).orElse(MaybeSender.nullSender());
             
             // Check if the sender address is the same as the user which was used to authenticate.
             // Its important to ignore case here to fix JAMES-837. This is save todo because if the handler is called

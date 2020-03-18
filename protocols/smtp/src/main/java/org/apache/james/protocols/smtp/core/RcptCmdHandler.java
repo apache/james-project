@@ -21,6 +21,7 @@ package org.apache.james.protocols.smtp.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
@@ -29,6 +30,7 @@ import javax.inject.Inject;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -49,7 +51,7 @@ import com.google.common.collect.ImmutableSet;
 public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> implements
         CommandHandler<SMTPSession> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RcptCmdHandler.class);
-    public static final String CURRENT_RECIPIENT = "CURRENT_RECIPIENT"; 
+    public static final ProtocolSession.AttachmentKey<MailAddress> CURRENT_RECIPIENT = ProtocolSession.AttachmentKey.of("CURRENT_RECIPIENT", MailAddress.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("RCPT");
     private static final Response MAIL_NEEDED = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_OTHER) + " Need MAIL before RCPT").immutable();
     private static final Response SYNTAX_ERROR_ARGS = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Usage: RCPT TO:<recipient>").immutable();
@@ -74,16 +76,9 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
      *            parameters passed in with the command by the SMTP client
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected Response doCoreCmd(SMTPSession session, String command,
-            String parameters) {
-        Collection<MailAddress> rcptColl = (Collection<MailAddress>) session.getAttachment(
-                SMTPSession.RCPT_LIST, State.Transaction);
-        if (rcptColl == null) {
-            rcptColl = new ArrayList<>();
-        }
-        MailAddress recipientAddress = (MailAddress) session.getAttachment(
-                CURRENT_RECIPIENT, State.Transaction);
+    protected Response doCoreCmd(SMTPSession session, String command, String parameters) {
+        List<MailAddress> rcptColl = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElseGet(ArrayList::new);
+        MailAddress recipientAddress = session.getAttachment(CURRENT_RECIPIENT, State.Transaction).orElse(MailAddress.nullSender());
         rcptColl.add(recipientAddress);
         session.setAttachment(SMTPSession.RCPT_LIST, rcptColl, State.Transaction);
         StringBuilder response = new StringBuilder();
@@ -111,7 +106,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
             recipient = argument.substring(colonIndex + 1);
             argument = argument.substring(0, colonIndex);
         }
-        if (session.getAttachment(SMTPSession.SENDER, State.Transaction) == null) {
+        if (!session.getAttachment(SMTPSession.SENDER, State.Transaction).isPresent()) {
             return MAIL_NEEDED;
         } else if (argument == null
                 || !argument.toUpperCase(Locale.US).equals("TO")
@@ -187,7 +182,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
             optionTokenizer = null;
         }
 
-        session.setAttachment(CURRENT_RECIPIENT,recipientAddress, State.Transaction);
+        session.setAttachment(CURRENT_RECIPIENT, recipientAddress, State.Transaction);
 
         return null;
     }
@@ -199,8 +194,9 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         } else if (null != recipient) {
             sb.append(" [to:").append(recipient).append(']');
         }
-       MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
-        if (null != sender && !sender.isNullSender()) {
+
+        MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
+        if (!sender.isNullSender()) {
             sb.append(" [from:").append(sender.asString()).append(']');
         }
         return sb.toString();
@@ -218,9 +214,8 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
 
     @Override
     protected HookResult callHook(RcptHook rawHook, SMTPSession session, String parameters) {
-        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
-        return rawHook.doRcpt(session, sender,
-                (MailAddress) session.getAttachment(CURRENT_RECIPIENT, State.Transaction));
+        MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
+        return rawHook.doRcpt(session, sender, session.getAttachment(CURRENT_RECIPIENT, State.Transaction).orElse(MailAddress.nullSender()));
     }
 
     protected String getDefaultDomain() {

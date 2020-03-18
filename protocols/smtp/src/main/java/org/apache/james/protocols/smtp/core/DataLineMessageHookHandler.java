@@ -32,7 +32,7 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.smtp.MailEnvelopeImpl;
+import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -59,8 +59,10 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
 
     @Override
     public Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
-        MailEnvelopeImpl env = (MailEnvelopeImpl) session.getAttachment(DataCmdHandler.MAILENV, ProtocolSession.State.Transaction);
-        OutputStream out = env.getMessageOutputStream();
+        MailEnvelope env = session.getAttachment(DataCmdHandler.MAILENV, ProtocolSession.State.Transaction)
+            .orElseThrow(() -> new RuntimeException("'" + DataCmdHandler.MAILENV.asString() + "' has not been filled."));
+
+        OutputStream out = getMessageOutputStream(env);
         try {
             // 46 is "."
             // Stream terminated            
@@ -95,6 +97,14 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
         return null;
     }
 
+    private OutputStream getMessageOutputStream(MailEnvelope env) {
+        try {
+            return env.getMessageOutputStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private byte[] readBytes(ByteBuffer line) {
         line.rewind();
         byte[] bline;
@@ -107,10 +117,10 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
         return bline;
     }
 
-    protected Response processExtensions(SMTPSession session, MailEnvelopeImpl mail) {
+    protected Response processExtensions(SMTPSession session, MailEnvelope mail) {
        
 
-        if (mail != null && messageHandlers != null) {
+        if (messageHandlers != null) {
             for (Object messageHandler : messageHandlers) {
                 MessageHook rawHandler = (MessageHook) messageHandler;
                 LOGGER.debug("executing message handler {}", rawHandler);

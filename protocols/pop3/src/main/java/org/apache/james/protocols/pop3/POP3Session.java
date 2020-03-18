@@ -19,8 +19,11 @@
 
 package org.apache.james.protocols.pop3;
 
+import java.util.List;
+
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
+import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
 /**
  * All the handlers access this interface to communicate with POP3Handler object
@@ -28,9 +31,11 @@ import org.apache.james.protocols.pop3.mailbox.Mailbox;
 
 public interface POP3Session extends ProtocolSession {
 
-    String UID_LIST = "UID_LIST";
-    String DELETED_UID_LIST = "DELETED_UID_LIST";
-    String APOP_TIMESTAMP = "APOP_TIMESTAMP";
+    @SuppressWarnings("unchecked")
+    AttachmentKey<List<MessageMetaData>> UID_LIST = AttachmentKey.of("UID_LIST", (Class<List<MessageMetaData>>) (Object) List.class);
+    @SuppressWarnings("unchecked")
+    AttachmentKey<List<String>> DELETED_UID_LIST = AttachmentKey.of("DELETED_UID_LIST", (Class<List<String>>) (Object) List.class);
+    AttachmentKey<String> APOP_TIMESTAMP = AttachmentKey.of("APOP_TIMESTAMP", String.class);
 
     // Authentication states for the POP3 interaction
     /** Waiting for user id */
