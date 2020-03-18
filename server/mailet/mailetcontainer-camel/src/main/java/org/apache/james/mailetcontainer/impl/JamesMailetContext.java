@@ -405,24 +405,6 @@ public class JamesMailetContext implements MailetContext, Configurable, Disposab
         }
     }
 
-    /**
-     * <p>
-     * This method has been moved to LocalDelivery (the only client of the
-     * method). Now we can safely remove it from the Mailet API and from this
-     * implementation of MailetContext.
-     * </p>
-     * <p>
-     * The local field localDeliveryMailet will be removed when we remove the
-     * storeMail method.
-     * </p>
-     *
-     * @deprecated since 2.2.0 look at the LocalDelivery code to find out how to
-     *             do the local delivery.
-     */
-    public void storeMail(MailAddress sender, MailAddress recipient, MimeMessage msg) {
-        throw new UnsupportedOperationException("Was removed");
-    }
-
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         this.rootMailQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);

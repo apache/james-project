@@ -20,13 +20,13 @@
 package org.apache.james.mailetcontainer.impl;
 
 import java.util.EnumSet;
-import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.mail.internet.ParseException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -34,13 +34,10 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 
 class LocalResources {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LocalResources.class);
     private static final EnumSet<Mapping.Type> ALIAS_TYPES = EnumSet.of(Mapping.Type.Alias, Mapping.Type.DomainAlias);
 
     private final UsersRepository localUsers;
