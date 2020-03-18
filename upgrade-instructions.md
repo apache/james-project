@@ -31,6 +31,7 @@ Change list:
  - [UidValidity and JPA or Cassandra](#uid-validity-and-jpa-or-cassandra)
  - [Differentiation between domain alias and domain mapping](#differentiation-between-domain-alias-and-domain-mapping)
  - [ProtocolSession storng typing](#protocolsession-storng-typing)
+ - [Tune Cassandra time serie tables options](#tune-cassandra-time-serie-tables-options)
  - [LogEnabled removal](#logenabled-removal)
 
 ### LogEnabled removal
@@ -47,12 +48,55 @@ As Log4J 1.x is not compatible with Java 9+ runtime, we adopted Log4J2 as a logg
 
 As a consequence, the deprecated `LogEnabled` API will be removed. We recommend extension developers to obtain their
 Logger instance using the SLF4J `LoggerFactory` class instead.
- 
+
+### Tune Cassandra time serie tables options
+
+Date 18/03/2020
+
+SHA-1 XXX
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3121
+
+Impacted product: Guice distributed James
+
+Our usage of Cassandra for the time series have been improved by fine tuning the compaction strategy and
+the read repair option.
+
+#### Upgrade procedure
+
+In order to unlock these improvements we advise you running the following commands on existing instalations
+
+```
+ALTER TABLE james_keyspace.deletedMailsV2 WITH compaction = { 'class' :  'TimeWindowCompactionStrategy'  };
+ALTER TABLE james_keyspace.enqueuedMailsV3 WITH  compaction = {'compaction_window_size': '1',
+                                                               'compaction_window_unit': 'HOURS',
+                                                               'class': 'org.apache.cassandra.db.compaction.TimeWindowCompaction' };
+ALTER TABLE james_keyspace.applicableFlag WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.attachmentMessageId WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.attachmentV2 WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.firstUnseen WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.mailboxCounters WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.mailboxRecents WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.messageCounter WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.messageDeleted WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.modseq WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.imapUidTable WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.messageIdTable WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+ALTER TABLE james_keyspace.eventStore WITH compaction = { 'class' :  'LeveledCompactionStrategy'  };
+ALTER TABLE james_keyspace.attachmentOwners WITH bloom_filter_fp_chance = 0.01;
+ALTER TABLE james_keyspace.deletedMailsV2 WITH bloom_filter_fp_chance = 0.01;
+ALTER TABLE james_keyspace.firstUnseen WITH bloom_filter_fp_chance = 0.01;
+ALTER TABLE james_keyspace.mailboxCounters WITH bloom_filter_fp_chance = 0.01;
+ALTER TABLE james_keyspace.messageCounter WITH bloom_filter_fp_chance = 0.01;
+ALTER TABLE james_keyspace.deletedMailsV2 WITH read_repair_chance = 0.0;
+ALTER TABLE james_keyspace.enqueuedMailsV3 WITH read_repair_chance = 0.0;
+```
+
 ### ProtocolSession storng typing
 
 Date 19/03/2020
 
-SHA-1 XXX
+SHA-1 58b1d879ab
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3119
 
