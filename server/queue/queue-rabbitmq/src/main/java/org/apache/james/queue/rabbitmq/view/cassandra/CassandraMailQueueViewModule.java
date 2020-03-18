@@ -26,12 +26,14 @@ import static com.datastax.driver.core.DataType.map;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timestamp;
 import static com.datastax.driver.core.DataType.uuid;
+import static com.datastax.driver.core.schemabuilder.TableOptions.CompactionOptions.TimeWindowCompactionStrategyOptions.CompactionWindowUnit.HOURS;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
 import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.TupleType;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraMailQueueViewModule {
 
@@ -84,7 +86,10 @@ public interface CassandraMailQueueViewModule {
             " when a mail is dequeued from a mail queue, the record associated with that mail still available in this" +
             " table and will not be deleted immediately regarding to the performance impacts," +
             " but after some scheduled tasks")
-        .options(options -> options)
+        .options(options -> options
+            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()
+                .compactionWindowSize(1)
+                .compactionWindowUnit(HOURS)))
         .statement(statement -> statement
             .addPartitionKey(EnqueuedMailsTable.QUEUE_NAME, text())
             .addPartitionKey(EnqueuedMailsTable.TIME_RANGE_START, timestamp())
@@ -114,9 +119,10 @@ public interface CassandraMailQueueViewModule {
 
         .table(DeletedMailTable.TABLE_NAME)
         .comment("this table stores the dequeued mails, while browsing mail from table: "
-            + EnqueuedMailsTable.TABLE_NAME + " we need to filter out mails have been dequeued by checking their " +
+            + DeletedMailTable.TABLE_NAME + " we need to filter out mails have been dequeued by checking their " +
             "existence in this table")
-        .options(options -> options)
+        .options(options -> options
+            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()))
         .statement(statement -> statement
             .addPartitionKey(DeletedMailTable.QUEUE_NAME, text())
             .addPartitionKey(DeletedMailTable.ENQUEUE_ID, uuid()))
