@@ -37,6 +37,8 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraMailQueueViewModule {
 
+    Double NO_READ_REPAIR = 0.0;
+
     interface EnqueuedMailsTable {
         String TABLE_NAME = "enqueuedMailsV3";
 
@@ -89,7 +91,8 @@ public interface CassandraMailQueueViewModule {
         .options(options -> options
             .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()
                 .compactionWindowSize(1)
-                .compactionWindowUnit(HOURS)))
+                .compactionWindowUnit(HOURS))
+            .readRepairChance(NO_READ_REPAIR))
         .statement(statement -> statement
             .addPartitionKey(EnqueuedMailsTable.QUEUE_NAME, text())
             .addPartitionKey(EnqueuedMailsTable.TIME_RANGE_START, timestamp())
@@ -122,7 +125,8 @@ public interface CassandraMailQueueViewModule {
             + DeletedMailTable.TABLE_NAME + " we need to filter out mails have been dequeued by checking their " +
             "existence in this table")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()))
+            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy())
+            .readRepairChance(NO_READ_REPAIR))
         .statement(statement -> statement
             .addPartitionKey(DeletedMailTable.QUEUE_NAME, text())
             .addPartitionKey(DeletedMailTable.ENQUEUE_ID, uuid()))
