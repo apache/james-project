@@ -32,32 +32,36 @@ object UnsignedInt {
 
   private val ZERO_VALUE: Long = 0
   val MAX_VALUE: Long = LongMath.pow(2, 53)
-  val ZERO = new UnsignedInt(ZERO_VALUE)
+  val ZERO = UnsignedInt.apply(ZERO_VALUE)
 
   val DEFAULT_FACTORY: UnsignedInt.Factory[Option[UnsignedInt]] = (value: Long) => Some(value)
     .filter(UnsignedInt.isValid)
-    .map(UnsignedInt(_))
+    .map(UnsignedInt.apply)
 
   val BOUND_SANITIZING_FACTORY: UnsignedInt.Factory[UnsignedInt] = {
     case x if x < ZERO_VALUE =>
       LOGGER.warn("Received a negative Number")
-      new UnsignedInt(ZERO_VALUE)
+      UnsignedInt.apply(ZERO_VALUE)
     case x if x > MAX_VALUE =>
       LOGGER.warn("Received a too big Number")
-      new UnsignedInt(MAX_VALUE)
-    case value => UnsignedInt(value)
+      UnsignedInt.apply(MAX_VALUE)
+    case value => UnsignedInt.apply(value)
   }
 
-  def fromLong(value: Long) = new UnsignedInt(value)
+  def fromLong(value: Long) = apply(value)
 
   private def isValid(value: Long) = value >= ZERO_VALUE && value <= MAX_VALUE
 
-  implicit def asValidNumber(x: Long): UnsignedInt = UnsignedInt(x)
+  implicit def asValidNumber(x: Long): UnsignedInt = apply(x)
+
+  def apply(value: Long): UnsignedInt = {
+    require(UnsignedInt.isValid(value), UnsignedInt.VALIDATION_MESSAGE)
+
+    new UnsignedInt(value)
+  }
 }
 
 final case class UnsignedInt private(value: Long) extends Ordered[UnsignedInt] {
-  require(UnsignedInt.isValid(value), UnsignedInt.VALIDATION_MESSAGE)
-
   def asLong: Long = value
 
   override def compare(that: UnsignedInt): Int = this.value.compare(that.value)

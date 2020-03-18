@@ -25,42 +25,72 @@ import org.apache.james.core.Username
 import CapabilityIdentifier.JMAP_CORE
 import CapabilityIdentifier.JMAP_MAIL
 
-final case class Account(name: Username,
-                         isPersonal: Boolean,
-                         isReadOnly: Boolean,
-                         accountCapabilities: Set[_ <: Capability]) {
-  require(Option(name).isDefined, "name cannot be null")
-  require(Option(accountCapabilities).isDefined, "accountCapabilities cannot be null")
+object Account {
+  def apply(name: Username,
+            isPersonal: Boolean,
+            isReadOnly: Boolean,
+            accountCapabilities: Set[_ <: Capability]): Account = {
+
+    require(Option(name).isDefined, "name cannot be null")
+    require(Option(accountCapabilities).isDefined, "accountCapabilities cannot be null")
+
+    new Account(name, isPersonal, isReadOnly, accountCapabilities)
+  }
 }
 
-final case class State(value: String) {
-  require(Option(value).isDefined, "value cannot be null")
-  require(!value.isEmpty, "value cannot be empty")
+final case class Account private(name: Username,
+                                 isPersonal: Boolean,
+                                 isReadOnly: Boolean,
+                                 accountCapabilities: Set[_ <: Capability])
+
+object State {
+  def apply(value: String): State = {
+    require(Option(value).isDefined, "value cannot be null")
+    require(!value.isEmpty, "value cannot be empty")
+
+    new State(value)
+  }
 }
 
-case class Session(capabilities: Set[_ <: Capability],
-                   accounts: Map[Id, Account],
-                   primaryAccounts: Map[CapabilityIdentifier, Id],
-                   username: Username,
-                   apiUrl: URL,
-                   downloadUrl: URL,
-                   uploadUrl: URL,
-                   eventSourceUrl: URL,
-                   state: State) {
-  require(Option(capabilities).isDefined, "capabilities cannot be null")
-  require(capabilities.exists(_.isInstanceOf[CoreCapability]),
-    s"capabilities should contain ${JMAP_CORE.value.toString} capability")
-  require(capabilities.exists(_.isInstanceOf[MailCapability]),
-    s"capabilities should contain ${JMAP_MAIL.value.toString} capability")
-  require(capabilities.map(_.identifier()).size == capabilities.size,
-    "capabilities should not be duplicated")
+final case class State private(value: String)
 
-  require(Option(accounts).isDefined, "accounts cannot be null")
-  require(Option(primaryAccounts).isDefined, "primaryAccounts cannot be null")
-  require(Option(username).isDefined, "username cannot be null")
-  require(Option(apiUrl).isDefined, "apiUrl cannot be null")
-  require(Option(downloadUrl).isDefined, "downloadUrl cannot be null")
-  require(Option(uploadUrl).isDefined, "uploadUrl cannot be null")
-  require(Option(eventSourceUrl).isDefined, "eventSourceUrl cannot be null")
-  require(Option(state).isDefined, "state cannot be null")
+object Session {
+  def apply(capabilities: Set[_ <: Capability],
+            accounts: Map[Id, Account],
+            primaryAccounts: Map[CapabilityIdentifier, Id],
+            username: Username,
+            apiUrl: URL,
+            downloadUrl: URL,
+            uploadUrl: URL,
+            eventSourceUrl: URL,
+            state: State): Session = {
+    require(Option(capabilities).isDefined, "capabilities cannot be null")
+    require(capabilities.exists(_.isInstanceOf[CoreCapability]),
+      s"capabilities should contain ${JMAP_CORE.value.toString} capability")
+    require(capabilities.exists(_.isInstanceOf[MailCapability]),
+      s"capabilities should contain ${JMAP_MAIL.value.toString} capability")
+    require(capabilities.map(_.identifier()).size == capabilities.size,
+      "capabilities should not be duplicated")
+
+    require(Option(accounts).isDefined, "accounts cannot be null")
+    require(Option(primaryAccounts).isDefined, "primaryAccounts cannot be null")
+    require(Option(username).isDefined, "username cannot be null")
+    require(Option(apiUrl).isDefined, "apiUrl cannot be null")
+    require(Option(downloadUrl).isDefined, "downloadUrl cannot be null")
+    require(Option(uploadUrl).isDefined, "uploadUrl cannot be null")
+    require(Option(eventSourceUrl).isDefined, "eventSourceUrl cannot be null")
+    require(Option(state).isDefined, "state cannot be null")
+
+    new Session(capabilities, accounts, primaryAccounts, username, apiUrl, downloadUrl, uploadUrl, eventSourceUrl, state)
+  }
 }
+
+final case class Session private(capabilities: Set[_ <: Capability],
+                           accounts: Map[Id, Account],
+                           primaryAccounts: Map[CapabilityIdentifier, Id],
+                           username: Username,
+                           apiUrl: URL,
+                           downloadUrl: URL,
+                           uploadUrl: URL,
+                           eventSourceUrl: URL,
+                           state: State)

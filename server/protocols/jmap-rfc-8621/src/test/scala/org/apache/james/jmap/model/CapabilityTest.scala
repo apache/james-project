@@ -33,7 +33,7 @@ class CapabilityTest extends WordSpec with Matchers {
   "CapabilityIdentifier" should {
     "return raw value" in {
       val uri = "apache:james:jmap:filter"
-      val asString = CapabilityIdentifier(new URI(uri)).asString()
+      val asString = CapabilityIdentifier(new URI(uri)).asString
       asString should equal(uri)
     }
   }

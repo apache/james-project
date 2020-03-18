@@ -24,7 +24,7 @@ import java.net.URI
 import org.apache.james.jmap.model.CapabilityIdentifier.{JMAP_CORE, JMAP_MAIL}
 
 final case class CapabilityIdentifier(value: URI) {
-  def asString(): String = value.toString
+  val asString: String = value.toString
 }
 
 object CapabilityIdentifier {
@@ -42,28 +42,38 @@ sealed trait Capability {
 final case class CoreCapability(identifier: CapabilityIdentifier = JMAP_CORE,
                                 properties: CoreCapabilityProperties) extends Capability
 
-final case class CoreCapabilityProperties(maxSizeUpload: UnsignedInt, maxConcurrentUpload: UnsignedInt,
-                                          maxSizeRequest: UnsignedInt, maxConcurrentRequests: UnsignedInt,
-                                          maxCallsInRequest: UnsignedInt, maxObjectsInGet: UnsignedInt,
-                                          maxObjectsInSet: UnsignedInt, collationAlgorithms: List[String]) extends CapabilityProperties {
-  require(Option(maxSizeUpload).isDefined, "maxSizeUpload cannot be null")
-  require(Option(maxConcurrentUpload).isDefined, "maxConcurrentUpload cannot be null")
-  require(Option(maxSizeRequest).isDefined, "maxSizeRequest cannot be null")
-  require(Option(maxConcurrentRequests).isDefined, "maxConcurrentRequests cannot be null")
-  require(Option(maxCallsInRequest).isDefined, "maxCallsInRequest cannot be null")
-  require(Option(maxObjectsInGet).isDefined, "maxObjectsInGet cannot be null")
-  require(Option(maxObjectsInSet).isDefined, "maxObjectsInSet cannot be null")
-  require(Option(collationAlgorithms).isDefined, "collationAlgorithms cannot be null")
+object CoreCapabilityProperties {
+  def apply(maxSizeUpload: UnsignedInt, maxConcurrentUpload: UnsignedInt,
+            maxSizeRequest: UnsignedInt, maxConcurrentRequests: UnsignedInt,
+            maxCallsInRequest: UnsignedInt, maxObjectsInGet: UnsignedInt,
+            maxObjectsInSet: UnsignedInt, collationAlgorithms: List[String]): CoreCapabilityProperties = {
+
+    new CoreCapabilityProperties(maxSizeUpload, maxConcurrentUpload, maxSizeRequest, maxConcurrentRequests, maxCallsInRequest,
+      maxObjectsInGet, maxObjectsInSet, collationAlgorithms)
+  }
+}
+
+final case class CoreCapabilityProperties private(maxSizeUpload: UnsignedInt, maxConcurrentUpload: UnsignedInt,
+                                                  maxSizeRequest: UnsignedInt, maxConcurrentRequests: UnsignedInt,
+                                                  maxCallsInRequest: UnsignedInt, maxObjectsInGet: UnsignedInt,
+                                                  maxObjectsInSet: UnsignedInt, collationAlgorithms: List[String]) extends CapabilityProperties {
 }
 
 final case class MailCapability(identifier: CapabilityIdentifier = JMAP_MAIL,
-                                properties: MailCapabilityProperties)  extends Capability
+                                properties: MailCapabilityProperties) extends Capability
 
-final case class MailCapabilityProperties(maxMailboxesPerEmail: Option[UnsignedInt], maxMailboxDepth: Option[UnsignedInt],
-                                          maxSizeMailboxName: UnsignedInt, maxSizeAttachmentsPerEmail: UnsignedInt,
-                                          emailQuerySortOptions: List[String], mayCreateTopLevelMailbox: Boolean) extends CapabilityProperties {
-  require(Option(maxSizeMailboxName).isDefined, "maxSizeMailboxName cannot be null")
-  require(Option(maxSizeAttachmentsPerEmail).isDefined, "maxSizeAttachmentsPerEmail cannot be null")
-  require(Option(emailQuerySortOptions).isDefined, "emailQuerySortOptions cannot be null")
+object MailCapabilityProperties {
+  def apply(maxMailboxesPerEmail: Option[UnsignedInt], maxMailboxDepth: Option[UnsignedInt],
+            maxSizeMailboxName: UnsignedInt, maxSizeAttachmentsPerEmail: UnsignedInt,
+            emailQuerySortOptions: List[String], mayCreateTopLevelMailbox: Boolean): MailCapabilityProperties = {
+
+    new MailCapabilityProperties(maxMailboxesPerEmail, maxMailboxDepth, maxSizeMailboxName, maxSizeAttachmentsPerEmail,
+      emailQuerySortOptions, mayCreateTopLevelMailbox)
+  }
+}
+
+final case class MailCapabilityProperties private(maxMailboxesPerEmail: Option[UnsignedInt], maxMailboxDepth: Option[UnsignedInt],
+                                                  maxSizeMailboxName: UnsignedInt, maxSizeAttachmentsPerEmail: UnsignedInt,
+                                                  emailQuerySortOptions: List[String], mayCreateTopLevelMailbox: Boolean) extends CapabilityProperties {
 }
 

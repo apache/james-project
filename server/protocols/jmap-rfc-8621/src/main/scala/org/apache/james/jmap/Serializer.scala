@@ -22,9 +22,8 @@ package org.apache.james.jmap
 import java.net.URL
 
 import org.apache.james.core.Username
-import org.apache.james.jmap.model.{Account, CapabilityIdentifier, CoreCapabilityProperties, Id, MailCapabilityProperties, Session, UnsignedInt}
-import play.api.libs.json.{JsNumber, JsObject, JsString, Json, Writes}
-import org.apache.james.jmap.model._
+import org.apache.james.jmap.model.{Account, CapabilityIdentifier, CoreCapabilityProperties, Id, MailCapabilityProperties, Session, UnsignedInt, _}
+import play.api.libs.json._
 
 class Serializer {
   implicit val unsignedIntWrites: Writes[UnsignedInt] = unsignedInt => JsNumber(unsignedInt.value)
@@ -40,7 +39,7 @@ class Serializer {
     (m: Map[CapabilityIdentifier, Any]) => {
       JsObject(
         m.map {
-          case (identifier, id: Id) => (identifier.asString(), idWriter.writes(id))
+          case (identifier, id: Id) => (identifier.asString, idWriter.writes(id))
           case _ => throw new RuntimeException("non supported serializer")
         }.toSeq
       )
@@ -51,9 +50,9 @@ class Serializer {
     (set: Set[_ <: Capability]) => {
       JsObject(set.map {
         case capability: CoreCapability => (
-          capability.identifier.asString(), corePropertiesWriter.writes(capability.properties))
+          capability.identifier.asString, corePropertiesWriter.writes(capability.properties))
         case capability: MailCapability => (
-          capability.identifier.asString(), mailCapabilityWrites.writes(capability.properties))
+          capability.identifier.asString, mailCapabilityWrites.writes(capability.properties))
       }.toSeq)
     }
 

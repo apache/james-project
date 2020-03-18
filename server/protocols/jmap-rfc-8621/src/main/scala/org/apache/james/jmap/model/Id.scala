@@ -19,10 +19,15 @@
 
 package org.apache.james.jmap.model
 
-final case class Id(value: String) {
-  require(Option(value).isDefined, "value cannot be null")
-  require(!value.isEmpty, "value cannot be empty")
-  require(value.length <= 255, "value length cannot exceed 255 characters")
-  require(value.matches("^[a-zA-Z0-9-_]*$"), "value should contains only 'URL and Filename Safe' base64 alphabet characters, " +
-    "see Section 5 of [@!RFC4648]")
+object Id {
+  def apply(value: String): Id = {
+    require(Option(value).isDefined, "value cannot be null")
+    require(!value.isEmpty, "value cannot be empty")
+    require(value.length <= 255, "value length cannot exceed 255 characters")
+    require(value.matches("^[a-zA-Z0-9-_]*$"), "value should contains only 'URL and Filename Safe' base64 alphabet characters, " +
+      "see Section 5 of [@!RFC4648]")
+    new Id(value)
+  }
 }
+
+final case class Id private(value: String)
