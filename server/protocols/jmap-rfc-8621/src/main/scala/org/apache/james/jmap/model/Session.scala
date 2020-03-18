@@ -28,7 +28,7 @@ import CapabilityIdentifier.JMAP_MAIL
 final case class Account(name: Username,
                          isPersonal: Boolean,
                          isReadOnly: Boolean,
-                         accountCapabilities: Map[CapabilityIdentifier, Capability]) {
+                         accountCapabilities: Set[_ <: Capability]) {
   require(Option(name).isDefined, "name cannot be null")
   require(Option(accountCapabilities).isDefined, "accountCapabilities cannot be null")
 }
@@ -38,7 +38,7 @@ final case class State(value: String) {
   require(!value.isEmpty, "value cannot be empty")
 }
 
-case class Session(capabilities: Map[CapabilityIdentifier, Capability],
+case class Session(capabilities: Set[_ <: Capability],
                    accounts: Map[Id, Account],
                    primaryAccounts: Map[CapabilityIdentifier, Id],
                    username: Username,
@@ -48,12 +48,12 @@ case class Session(capabilities: Map[CapabilityIdentifier, Capability],
                    eventSourceUrl: URL,
                    state: State) {
   require(Option(capabilities).isDefined, "capabilities cannot be null")
-  require(capabilities.exists(
-    record => record._1.equals(JMAP_CORE) && record._2.isInstanceOf[CoreCapability]),
+  require(capabilities.exists(_.isInstanceOf[CoreCapability]),
     s"capabilities should contain ${JMAP_CORE.value.toString} capability")
-  require(capabilities.exists(
-    record => record._1.equals(JMAP_MAIL) && record._2.isInstanceOf[MailCapability]),
+  require(capabilities.exists(_.isInstanceOf[MailCapability]),
     s"capabilities should contain ${JMAP_MAIL.value.toString} capability")
+  require(capabilities.map(_.identifier()).size == capabilities.size,
+    "capabilities should not be duplicated")
 
   require(Option(accounts).isDefined, "accounts cannot be null")
   require(Option(primaryAccounts).isDefined, "primaryAccounts cannot be null")

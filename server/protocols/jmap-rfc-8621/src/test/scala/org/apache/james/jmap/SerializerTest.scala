@@ -48,43 +48,39 @@ object SerializerTest {
   private val URL = new URL("http://james.org")
   private val STATE = State("fda9342jcm")
 
-  private val CORE_IDENTIFIER = CapabilityIdentifier(new URI("urn:ietf:params:jmap:core"))
   private val MAIL_IDENTIFIER = CapabilityIdentifier(new URI("urn:ietf:params:jmap:mail"))
   private val CONTACT_IDENTIFIER = CapabilityIdentifier(new URI("urn:ietf:params:jmap:contact"))
 
-  private val CORE_CAPABILITY = CoreCapability(
+  private val CORE_CAPABILITY = CoreCapability(properties = CoreCapabilityProperties(
     maxSizeUpload = MAX_SIZE_UPLOAD, maxConcurrentUpload = MAX_CONCURRENT_UPLOAD,
     maxSizeRequest = MAX_SIZE_REQUEST, maxConcurrentRequests = MAX_CONCURRENT_REQUESTS,
     maxCallsInRequest = MAX_CALLS_IN_REQUEST, maxObjectsInGet = MAX_OBJECTS_IN_GET, maxObjectsInSet = MAX_OBJECTS_IN_SET,
-    collationAlgorithms = List(ALGO_1, ALGO_2, ALGO_3))
+    collationAlgorithms = List(ALGO_1, ALGO_2, ALGO_3)))
   private val MAX_MAILBOX_DEPTH = Some(UnsignedInt(1432))
   private val MAX_MAILBOXES_PER_EMAIL = Some(UnsignedInt(9359))
   private val MAX_SIZE_MAILBOX_NAME = UnsignedInt(9000)
   private val MAX_SIZE_ATTACHMENTS_PER_EMAIL = UnsignedInt(890099)
 
-  private val MAIL_CAPABILITY = MailCapability(
+  private val MAIL_CAPABILITY = MailCapability(properties = MailCapabilityProperties(
     maxMailboxDepth = MAX_MAILBOX_DEPTH,
     maxMailboxesPerEmail = MAX_MAILBOXES_PER_EMAIL,
     maxSizeMailboxName = MAX_SIZE_MAILBOX_NAME,
     maxSizeAttachmentsPerEmail = MAX_SIZE_ATTACHMENTS_PER_EMAIL,
     emailQuerySortOptions = List(),
-    mayCreateTopLevelMailbox = true)
+    mayCreateTopLevelMailbox = true))
 
-  private val CAPABILITIES = Map(
-    CORE_IDENTIFIER -> CORE_CAPABILITY,
-    MAIL_IDENTIFIER -> MAIL_CAPABILITY
-  )
+  private val CAPABILITIES = Set(CORE_CAPABILITY,MAIL_CAPABILITY)
 
   private val ACCOUNT_1 = Account(
     name = USER_1,
     isPersonal = true,
     isReadOnly = false,
-    accountCapabilities = Map(CORE_IDENTIFIER -> CORE_CAPABILITY))
+    accountCapabilities = Set(CORE_CAPABILITY))
   private val ACCOUNT_2 = Account(
     name = USER_2,
     isPersonal = false,
     isReadOnly = false,
-    accountCapabilities = Map(CORE_IDENTIFIER -> CORE_CAPABILITY))
+    accountCapabilities = Set(CORE_CAPABILITY))
   private val ACCOUNTS = Map(
     USER_1_ID -> ACCOUNT_1,
     USER_2_ID -> ACCOUNT_2,
@@ -105,8 +101,10 @@ object SerializerTest {
     eventSourceUrl = URL,
     state = STATE)
 
-  def readResource(resourceFileName: String): Source = {
-    Source.fromURL(getClass.getResource(resourceFileName), "UTF-8")
+  def readResource(resourceFileName: String): String = {
+    Using(Source.fromURL(getClass.getResource(resourceFileName), "UTF-8")) { source =>
+      source.mkString
+    }.get
   }
 }
 
@@ -114,10 +112,8 @@ class SerializerTest extends PlaySpec {
 
   "sessionWrites" should {
     "serialize session" in {
-      Using(readResource("/sessionObject.json")) { source =>
-        new Serializer().sessionWrites
-          .writes(SESSION) must equal(Json.parse(source.mkString))
-      }
+      val jsonString = Json.parse(readResource("/sessionObject.json")).toString
+      new Serializer().serialize(SESSION) must equal(jsonString)
     }
   }
 }

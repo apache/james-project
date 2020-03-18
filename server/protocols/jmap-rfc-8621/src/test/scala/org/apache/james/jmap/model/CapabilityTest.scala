@@ -38,10 +38,10 @@ class CapabilityTest extends WordSpec with Matchers {
     }
   }
 
-  "CoreCapability" should {
+  "CoreCapabilityProperties" should {
     "throw when null maxSizeUpload" in {
       the [IllegalArgumentException] thrownBy {
-        CoreCapability(
+        CoreCapabilityProperties(
           maxSizeUpload = null,
           maxCallsInRequest = UNSIGNED_INT,
           maxConcurrentUpload = UNSIGNED_INT,
@@ -55,7 +55,7 @@ class CapabilityTest extends WordSpec with Matchers {
 
     "throw when null maxCallsInRequest" in {
       the [IllegalArgumentException] thrownBy {
-        CoreCapability(
+        CoreCapabilityProperties(
           maxSizeUpload = UNSIGNED_INT,
           maxCallsInRequest = null,
           maxConcurrentUpload = UNSIGNED_INT,
@@ -69,7 +69,7 @@ class CapabilityTest extends WordSpec with Matchers {
 
     "throw when null maxConcurrentUpload" in {
       the [IllegalArgumentException] thrownBy {
-        CoreCapability(
+        CoreCapabilityProperties(
           maxSizeUpload = UNSIGNED_INT,
           maxCallsInRequest = UNSIGNED_INT,
           maxConcurrentUpload = null,
@@ -83,7 +83,7 @@ class CapabilityTest extends WordSpec with Matchers {
 
     "throw when null maxSizeRequest" in {
       the [IllegalArgumentException] thrownBy {
-        CoreCapability(
+        CoreCapabilityProperties(
           maxSizeUpload = UNSIGNED_INT,
           maxCallsInRequest = UNSIGNED_INT,
           maxConcurrentUpload = UNSIGNED_INT,
@@ -97,7 +97,7 @@ class CapabilityTest extends WordSpec with Matchers {
 
     "throw when null maxConcurrentRequests" in {
       the [IllegalArgumentException] thrownBy {
-        CoreCapability(
+        CoreCapabilityProperties(
           maxSizeUpload = UNSIGNED_INT,
           maxCallsInRequest = UNSIGNED_INT,
           maxConcurrentUpload = UNSIGNED_INT,
@@ -111,7 +111,7 @@ class CapabilityTest extends WordSpec with Matchers {
 
     "throw when null maxObjectsInGet" in {
       the [IllegalArgumentException] thrownBy {
-        CoreCapability(
+        CoreCapabilityProperties(
           maxSizeUpload = UNSIGNED_INT,
           maxCallsInRequest = UNSIGNED_INT,
           maxConcurrentUpload = UNSIGNED_INT,
@@ -125,7 +125,7 @@ class CapabilityTest extends WordSpec with Matchers {
 
     "throw when null maxObjectsInSet" in {
       the [IllegalArgumentException] thrownBy {
-        CoreCapability(
+        CoreCapabilityProperties(
           maxSizeUpload = UNSIGNED_INT,
           maxCallsInRequest = UNSIGNED_INT,
           maxConcurrentUpload = UNSIGNED_INT,
@@ -139,7 +139,7 @@ class CapabilityTest extends WordSpec with Matchers {
 
     "throw when null collationAlgorithms" in {
       the [IllegalArgumentException] thrownBy {
-        CoreCapability(
+        CoreCapabilityProperties(
           maxSizeUpload = UNSIGNED_INT,
           maxCallsInRequest = UNSIGNED_INT,
           maxConcurrentUpload = UNSIGNED_INT,
@@ -152,10 +152,10 @@ class CapabilityTest extends WordSpec with Matchers {
     }
   }
 
-  "MailCapability" should {
+  "MailCapabilityProperties" should {
     "throw when null maxSizeMailboxName" in {
       the [IllegalArgumentException] thrownBy {
-        MailCapability(
+        MailCapabilityProperties(
           maxMailboxesPerEmail = Some(UNSIGNED_INT),
           maxMailboxDepth = Some(UNSIGNED_INT),
           maxSizeMailboxName = null,
@@ -167,7 +167,7 @@ class CapabilityTest extends WordSpec with Matchers {
 
     "throw when null maxSizeAttachmentsPerEmail" in {
       the [IllegalArgumentException] thrownBy {
-        MailCapability(
+        MailCapabilityProperties(
           maxMailboxesPerEmail = Some(UNSIGNED_INT),
           maxMailboxDepth = Some(UNSIGNED_INT),
           maxSizeMailboxName = UNSIGNED_INT,
@@ -179,7 +179,7 @@ class CapabilityTest extends WordSpec with Matchers {
 
     "throw when null mayCreateTopLevelMailbox" in {
       the [IllegalArgumentException] thrownBy {
-        MailCapability(
+        MailCapabilityProperties(
           maxMailboxesPerEmail = Some(UNSIGNED_INT),
           maxMailboxDepth = Some(UNSIGNED_INT),
           maxSizeMailboxName = UNSIGNED_INT,

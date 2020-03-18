@@ -21,10 +21,10 @@ package org.apache.james.jmap.model
 
 import java.net.URI
 
+import org.apache.james.jmap.model.CapabilityIdentifier.{JMAP_CORE, JMAP_MAIL}
+
 final case class CapabilityIdentifier(value: URI) {
-  def asString(): String = {
-    value.toString
-  }
+  def asString(): String = value.toString
 }
 
 object CapabilityIdentifier {
@@ -32,12 +32,20 @@ object CapabilityIdentifier {
   val JMAP_MAIL = CapabilityIdentifier(new URI("urn:ietf:params:jmap:mail"))
 }
 
-sealed trait Capability
+sealed trait CapabilityProperties
 
-final case class CoreCapability(maxSizeUpload: UnsignedInt, maxConcurrentUpload: UnsignedInt,
-                                maxSizeRequest: UnsignedInt, maxConcurrentRequests: UnsignedInt,
-                                maxCallsInRequest: UnsignedInt, maxObjectsInGet: UnsignedInt,
-                                maxObjectsInSet: UnsignedInt, collationAlgorithms: List[String]) extends Capability {
+sealed trait Capability {
+  def identifier(): CapabilityIdentifier
+  def properties(): CapabilityProperties
+}
+
+final case class CoreCapability(identifier: CapabilityIdentifier = JMAP_CORE,
+                                properties: CoreCapabilityProperties) extends Capability
+
+final case class CoreCapabilityProperties(maxSizeUpload: UnsignedInt, maxConcurrentUpload: UnsignedInt,
+                                          maxSizeRequest: UnsignedInt, maxConcurrentRequests: UnsignedInt,
+                                          maxCallsInRequest: UnsignedInt, maxObjectsInGet: UnsignedInt,
+                                          maxObjectsInSet: UnsignedInt, collationAlgorithms: List[String]) extends CapabilityProperties {
   require(Option(maxSizeUpload).isDefined, "maxSizeUpload cannot be null")
   require(Option(maxConcurrentUpload).isDefined, "maxConcurrentUpload cannot be null")
   require(Option(maxSizeRequest).isDefined, "maxSizeRequest cannot be null")
@@ -48,9 +56,12 @@ final case class CoreCapability(maxSizeUpload: UnsignedInt, maxConcurrentUpload:
   require(Option(collationAlgorithms).isDefined, "collationAlgorithms cannot be null")
 }
 
-final case class MailCapability(maxMailboxesPerEmail: Option[UnsignedInt], maxMailboxDepth: Option[UnsignedInt],
-                                maxSizeMailboxName: UnsignedInt, maxSizeAttachmentsPerEmail: UnsignedInt,
-                                emailQuerySortOptions: List[String], mayCreateTopLevelMailbox: Boolean) extends Capability {
+final case class MailCapability(identifier: CapabilityIdentifier = JMAP_MAIL,
+                                properties: MailCapabilityProperties)  extends Capability
+
+final case class MailCapabilityProperties(maxMailboxesPerEmail: Option[UnsignedInt], maxMailboxDepth: Option[UnsignedInt],
+                                          maxSizeMailboxName: UnsignedInt, maxSizeAttachmentsPerEmail: UnsignedInt,
+                                          emailQuerySortOptions: List[String], mayCreateTopLevelMailbox: Boolean) extends CapabilityProperties {
   require(Option(maxSizeMailboxName).isDefined, "maxSizeMailboxName cannot be null")
   require(Option(maxSizeAttachmentsPerEmail).isDefined, "maxSizeAttachmentsPerEmail cannot be null")
   require(Option(emailQuerySortOptions).isDefined, "emailQuerySortOptions cannot be null")

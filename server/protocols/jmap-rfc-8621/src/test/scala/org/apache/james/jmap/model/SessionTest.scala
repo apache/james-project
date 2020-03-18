@@ -30,7 +30,7 @@ object SessionTest {
   private val URL = new JavaNetURL("http://james.org")
   private val STATE = State("fda9342jcm")
   private val UNSIGNED_INT = UnsignedInt(1)
-  private val CORE_CAPABILITY = CoreCapability(
+  private val CORE_CAPABILITY = CoreCapability(properties = CoreCapabilityProperties(
     maxSizeUpload = UNSIGNED_INT,
     maxCallsInRequest = UNSIGNED_INT,
     maxConcurrentUpload = UNSIGNED_INT,
@@ -38,17 +38,22 @@ object SessionTest {
     maxConcurrentRequests = UNSIGNED_INT,
     maxObjectsInGet = UNSIGNED_INT,
     maxObjectsInSet = UNSIGNED_INT,
-    collationAlgorithms = List())
-  private val MAIL_CAPABILITY = MailCapability(
+    collationAlgorithms = List()))
+  private val MAIL_CAPABILITY = MailCapability(properties = MailCapabilityProperties(
     maxMailboxDepth = Some(UNSIGNED_INT),
     maxMailboxesPerEmail = Some(UNSIGNED_INT),
     maxSizeMailboxName = UNSIGNED_INT,
     maxSizeAttachmentsPerEmail = UNSIGNED_INT,
     emailQuerySortOptions = List(),
-    mayCreateTopLevelMailbox = true)
-  private val CAPABILITIES = Map(
-    CapabilityIdentifier.JMAP_CORE -> CORE_CAPABILITY,
-    CapabilityIdentifier.JMAP_MAIL -> MAIL_CAPABILITY)
+    mayCreateTopLevelMailbox = true))
+  private val ANOTHER_MAIL_CAPABILITY = MailCapability(properties = MailCapabilityProperties(
+    maxMailboxDepth = Some(UNSIGNED_INT),
+    maxMailboxesPerEmail = Some(UNSIGNED_INT),
+    maxSizeMailboxName = UNSIGNED_INT,
+    maxSizeAttachmentsPerEmail = UNSIGNED_INT,
+    emailQuerySortOptions = List("flags", "subject"),
+    mayCreateTopLevelMailbox = false))
+  private val CAPABILITIES = Set(CORE_CAPABILITY, MAIL_CAPABILITY)
 }
 
 class SessionTest extends WordSpec with Matchers {
@@ -60,7 +65,7 @@ class SessionTest extends WordSpec with Matchers {
           name = null,
           isPersonal = true,
           isReadOnly = false,
-          accountCapabilities = Map())
+          accountCapabilities = CAPABILITIES)
       } should have message "requirement failed: name cannot be null"
     }
 
@@ -108,7 +113,7 @@ class SessionTest extends WordSpec with Matchers {
     "throw when missing core capability" in {
       the [IllegalArgumentException] thrownBy {
         Session(
-          capabilities = Map(CapabilityIdentifier.JMAP_MAIL -> MAIL_CAPABILITY),
+          capabilities = Set(MAIL_CAPABILITY),
           accounts = Map(),
           primaryAccounts = Map(),
           username = USERNAME,
@@ -123,7 +128,7 @@ class SessionTest extends WordSpec with Matchers {
     "throw when missing mail capability" in {
       the [IllegalArgumentException] thrownBy {
         Session(
-          capabilities = Map(CapabilityIdentifier.JMAP_CORE -> CORE_CAPABILITY),
+          capabilities = Set(CORE_CAPABILITY),
           accounts = Map(),
           primaryAccounts = Map(),
           username = USERNAME,
@@ -133,6 +138,21 @@ class SessionTest extends WordSpec with Matchers {
           eventSourceUrl = URL,
           state = STATE)
       } should have message "requirement failed: capabilities should contain urn:ietf:params:jmap:mail capability"
+    }
+
+    "throw when missing duplicate capability identifier" in {
+      the [IllegalArgumentException] thrownBy {
+        Session(
+          capabilities = Set(CORE_CAPABILITY, MAIL_CAPABILITY, ANOTHER_MAIL_CAPABILITY),
+          accounts = Map(),
+          primaryAccounts = Map(),
+          username = USERNAME,
+          apiUrl = URL,
+          downloadUrl = URL,
+          uploadUrl = URL,
+          eventSourceUrl = URL,
+          state = STATE)
+      } should have message "requirement failed: capabilities should not be duplicated"
     }
 
     "throw when null accounts" in {
