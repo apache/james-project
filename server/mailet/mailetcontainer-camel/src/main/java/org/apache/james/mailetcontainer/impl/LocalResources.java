@@ -68,16 +68,11 @@ class LocalResources {
             return false;
         }
         try {
-            if (!name.contains("@")) {
-                try {
-                    return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US), domains.getDefaultDomain().asString()));
-                } catch (DomainListException e) {
-                    LOGGER.error("Unable to access DomainList", e);
-                    return false;
-                }
-            } else {
-                return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US)));
-            }
+            MailAddress mailAddress = Username.of(name).withDefaultDomain(domains.getDefaultDomain()).asMailAddress();
+            return isLocalEmail(mailAddress);
+        } catch (DomainListException e) {
+            LOGGER.error("Unable to access DomainList", e);
+            return false;
         } catch (ParseException e) {
             LOGGER.info("Error checking isLocalUser for user {}", name, e);
             return false;
