@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailetcontainer;
+package org.apache.james.mailetcontainer.impl;
 
 import java.util.EnumSet;
 import java.util.Locale;
@@ -39,22 +39,22 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 
-public class LocalResources {
+class LocalResources {
     private static final Logger LOGGER = LoggerFactory.getLogger(LocalResources.class);
     private static final EnumSet<Mapping.Type> ALIAS_TYPES = EnumSet.of(Mapping.Type.Alias, Mapping.Type.DomainAlias);
 
-    private final UsersRepository localusers;
+    private final UsersRepository localUsers;
     private final DomainList domains;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
-    public LocalResources(UsersRepository localusers, DomainList domains, RecipientRewriteTable recipientRewriteTable) {
-        this.localusers = localusers;
+    LocalResources(UsersRepository localUsers, DomainList domains, RecipientRewriteTable recipientRewriteTable) {
+        this.localUsers = localUsers;
         this.domains = domains;
         this.recipientRewriteTable = recipientRewriteTable;
     }
 
-    public boolean isLocalServer(Domain domain) {
+    boolean isLocalServer(Domain domain) {
         try {
             return domains.containsDomain(domain);
         } catch (DomainListException e) {
@@ -63,7 +63,7 @@ public class LocalResources {
         }
     }
 
-    public boolean isLocalUser(String name) {
+    boolean isLocalUser(String name) {
         if (name == null) {
             return false;
         }
@@ -84,7 +84,7 @@ public class LocalResources {
         }
     }
 
-    public boolean isLocalEmail(MailAddress mailAddress) {
+    boolean isLocalEmail(MailAddress mailAddress) {
         if (mailAddress != null) {
             if (!isLocalServer(mailAddress.getDomain())) {
                 return false;
@@ -100,7 +100,7 @@ public class LocalResources {
     }
 
     private boolean isLocaluser(MailAddress mailAddress) throws UsersRepositoryException {
-        return localusers.contains(localusers.getUser(mailAddress));
+        return localUsers.contains(localUsers.getUser(mailAddress));
     }
 
     private boolean isLocalAlias(MailAddress mailAddress) throws UsersRepositoryException, RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {

@@ -33,7 +33,7 @@
       it is used - Seems like a Spring bug.
     -->
     <bean id="mailetcontext" class="org.apache.james.mailetcontainer.impl.JamesMailetContext" autowire="byType"/>
-    <bean id="localResources" class="org.apache.james.mailetcontainer.LocalResources" autowire="byType"/>
+    <bean id="localResources" class="org.apache.james.mailetcontainer.impl.LocalResources" autowire="byType"/>
     <bean id="mailspooler" class="org.apache.james.mailetcontainer.impl.JamesMailSpooler" autowire="byType"/>
     
 </beans>
