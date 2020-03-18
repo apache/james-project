@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap
 
-import java.net.URI
+import java.net.{URI, URL}
 
 import org.apache.james.core.Username
 import org.apache.james.jmap.SerializerTest.{SESSION, readResource}
@@ -45,8 +45,8 @@ object SerializerTest {
   private val USER_1_ID = Id("user1Id")
   private val USER_2 = Username.of("user2@james.org")
   private val USER_2_ID = Id("user2Id")
-  private val URL = "http://james.org"
-  private val STATE = "fda9342jcm"
+  private val URL = new URL("http://james.org")
+  private val STATE = State("fda9342jcm")
 
   private val CORE_IDENTIFIER = CapabilityIdentifier(new URI("urn:ietf:params:jmap:core"))
   private val MAIL_IDENTIFIER = CapabilityIdentifier(new URI("urn:ietf:params:jmap:mail"))

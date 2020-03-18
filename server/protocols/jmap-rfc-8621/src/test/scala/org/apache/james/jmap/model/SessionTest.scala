@@ -19,14 +19,16 @@
 
 package org.apache.james.jmap.model
 
+import java.net.{URL => JavaNetURL}
+
 import org.apache.james.core.Username
 import org.apache.james.jmap.model.SessionTest._
 import org.scalatest.{Matchers, WordSpec}
 
 object SessionTest {
   private val USERNAME = Username.of("bob@james.org")
-  private val URL = "http://james.org"
-  private val STATE = "fda9342jcm"
+  private val URL = new JavaNetURL("http://james.org")
+  private val STATE = State("fda9342jcm")
   private val UNSIGNED_INT = UnsignedInt(1)
   private val CORE_CAPABILITY = CoreCapability(
     maxSizeUpload = UNSIGNED_INT,
@@ -70,6 +72,20 @@ class SessionTest extends WordSpec with Matchers {
           isReadOnly = false,
           accountCapabilities = null)
       } should have message "requirement failed: accountCapabilities cannot be null"
+    }
+  }
+
+  "State" should {
+    "throw when null value" in {
+      the [IllegalArgumentException] thrownBy {
+        State(null)
+      } should have message "requirement failed: value cannot be null"
+    }
+
+    "throw when empty value" in {
+      the [IllegalArgumentException] thrownBy {
+        State("")
+      } should have message "requirement failed: value cannot be empty"
     }
   }
 

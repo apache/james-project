@@ -19,15 +19,19 @@
 
 package org.apache.james.jmap
 
+import java.net.URL
+
 import org.apache.james.core.Username
 import org.apache.james.jmap.model.{Account, CapabilityIdentifier, CoreCapability, Id, MailCapability, Session, UnsignedInt}
 import play.api.libs.json.{JsNumber, JsObject, JsString, Json, Writes}
 import org.apache.james.jmap.model._
 
 class Serializer {
-  implicit val unsignedIntWrites: Writes[UnsignedInt] = size => JsNumber(size.value)
+  implicit val unsignedIntWrites: Writes[UnsignedInt] = unsignedInt => JsNumber(unsignedInt.value)
   implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
   implicit val idWrites: Writes[Id] = id => JsString(id.value)
+  implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
+  implicit val stateWrites: Writes[State] = state => JsString(state.value)
   implicit val capabilityIdentifierWrites: Writes[CapabilityIdentifier] = identifier => JsString(identifier.value.toString)
   implicit val coreCapabilityWrites: Writes[CoreCapability] = Json.writes[CoreCapability]
   implicit val mailCapabilityWrites: Writes[MailCapability] = Json.writes[MailCapability]

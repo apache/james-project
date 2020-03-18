@@ -19,8 +19,9 @@
 
 package org.apache.james.jmap.model
 
-import org.apache.james.core.Username
+import java.net.URL
 
+import org.apache.james.core.Username
 import CapabilityIdentifier.JMAP_CORE
 import CapabilityIdentifier.JMAP_MAIL
 
@@ -32,15 +33,20 @@ final case class Account(name: Username,
   require(Option(accountCapabilities).isDefined, "accountCapabilities cannot be null")
 }
 
+final case class State(value: String) {
+  require(Option(value).isDefined, "value cannot be null")
+  require(!value.isEmpty, "value cannot be empty")
+}
+
 case class Session(capabilities: Map[CapabilityIdentifier, Capability],
                    accounts: Map[Id, Account],
                    primaryAccounts: Map[CapabilityIdentifier, Id],
                    username: Username,
-                   apiUrl: String,
-                   downloadUrl: String,
-                   uploadUrl: String,
-                   eventSourceUrl: String,
-                   state: String) {
+                   apiUrl: URL,
+                   downloadUrl: URL,
+                   uploadUrl: URL,
+                   eventSourceUrl: URL,
+                   state: State) {
   require(Option(capabilities).isDefined, "capabilities cannot be null")
   require(capabilities.exists(
     record => record._1.equals(JMAP_CORE) && record._2.isInstanceOf[CoreCapability]),
