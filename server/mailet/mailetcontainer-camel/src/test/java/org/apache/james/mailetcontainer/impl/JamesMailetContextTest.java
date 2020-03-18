@@ -20,7 +20,11 @@
 package org.apache.james.mailetcontainer.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -36,12 +40,15 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
@@ -56,11 +63,11 @@ import org.mockito.ArgumentCaptor;
 import com.google.common.collect.ImmutableList;
 
 public class JamesMailetContextTest {
-    public static final Domain DOMAIN_COM = Domain.of("domain.com");
-    public static final String USERNAME = "user";
-    public static final Username USERMAIL = Username.of(USERNAME + "@" + DOMAIN_COM.name());
-    public static final String PASSWORD = "password";
-    public static final DNSService DNS_SERVICE = null;
+    private static final Domain DOMAIN_COM = Domain.of("domain.com");
+    private static final String USERNAME = "user";
+    private static final Username USERMAIL = Username.of(USERNAME + "@" + DOMAIN_COM.name());
+    private static final String PASSWORD = "password";
+    private static final DNSService DNS_SERVICE = null;
 
     @Rule
     public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
@@ -70,18 +77,19 @@ public class JamesMailetContextTest {
     private JamesMailetContext testee;
     private MailAddress mailAddress;
     private MailQueue spoolMailQueue;
+    private MemoryRecipientRewriteTable recipientRewriteTable;
 
     @Before
     @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
-        domainList = new MemoryDomainList(DNS_SERVICE);
+        domainList = spy(new MemoryDomainList(DNS_SERVICE));
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
             .build());
 
-        usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
-        MemoryRecipientRewriteTable recipientRewriteTable = new MemoryRecipientRewriteTable();
+        usersRepository = spy(MemoryUsersRepository.withVirtualHosting(domainList));
+        recipientRewriteTable = spy(new MemoryRecipientRewriteTable());
         recipientRewriteTable.configure(new BaseHierarchicalConfiguration());
         MailQueueFactory<MailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         spoolMailQueue = mock(MailQueue.class);
@@ -101,6 +109,52 @@ public class JamesMailetContextTest {
     @Test
     public void isLocalServerShouldBeFalseWhenDomainDoNotExist() {
         assertThat(testee.isLocalServer(DOMAIN_COM)).isFalse();
+    }
+
+    @Test
+    public void isLocalServerShouldPropagateDomainExceptions() throws Exception {
+        when(domainList.getDomains()).thenThrow(new DomainListException("fail!"));
+
+        assertThatThrownBy(() -> testee.isLocalServer(DOMAIN_COM))
+            .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    public void isLocalUserShouldPropagateDomainExceptions() throws Exception {
+        when(domainList.getDefaultDomain()).thenThrow(new DomainListException("fail!"));
+
+        assertThatThrownBy(() -> testee.isLocalUser("user"))
+            .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    public void isLocalUserShouldPropagateUserExceptions() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .defaultDomain(Domain.of("any"))
+            .build());
+        domainList.addDomain(DOMAIN_COM);
+
+        doThrow(new UsersRepositoryException("fail!")).when(usersRepository).contains(any());
+
+        assertThatThrownBy(() -> testee.isLocalUser(USERNAME))
+            .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    public void isLocalUserShouldPropagateRrtExceptions() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .defaultDomain(Domain.of("any"))
+            .build());
+        domainList.addDomain(DOMAIN_COM);
+
+        doThrow(new RecipientRewriteTableException("fail!")).when(recipientRewriteTable).getResolvedMappings(any(), any(), any());
+
+        assertThatThrownBy(() -> testee.isLocalUser(USERNAME))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test
@@ -146,12 +200,12 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalUserShouldBeFalseWhenUsernameDoNotExist() throws Exception {
+    public void isLocalUserShouldBeFalseWhenUsernameDoNotExist() {
         assertThat(testee.isLocalUser(USERMAIL.asString())).isFalse();
     }
 
     @Test
-    public void isLocalEmailShouldBeFalseWhenUsernameDoNotExist() throws Exception {
+    public void isLocalEmailShouldBeFalseWhenUsernameDoNotExist() {
         assertThat(testee.isLocalEmail(mailAddress)).isFalse();
     }
 
@@ -171,8 +225,46 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalEmailShouldBeFalseWhenMailIsNull() throws Exception {
+    public void isLocalEmailShouldBeFalseWhenMailIsNull() {
         assertThat(testee.isLocalEmail(null)).isFalse();
+    }
+
+    @Test
+    public void isLocalEmailShouldPropagateDomainExceptions() throws Exception {
+        when(domainList.getDomains()).thenThrow(new DomainListException("fail!"));
+
+        assertThatThrownBy(() -> testee.isLocalEmail(mailAddress))
+            .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    public void isLocalEmailShouldPropagateUserExceptions() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .defaultDomain(Domain.of("any"))
+            .build());
+        domainList.addDomain(DOMAIN_COM);
+
+        doThrow(new UsersRepositoryException("fail!")).when(usersRepository).contains(any());
+
+        assertThatThrownBy(() -> testee.isLocalEmail(mailAddress))
+            .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    public void isLocalEmailShouldPropagateRrtExceptions() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .defaultDomain(Domain.of("any"))
+            .build());
+        domainList.addDomain(DOMAIN_COM);
+
+        doThrow(new RecipientRewriteTableException("fail!")).when(recipientRewriteTable).getResolvedMappings(any(), any(), any());
+
+        assertThatThrownBy(() -> testee.isLocalEmail(mailAddress))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test

@@ -58,8 +58,7 @@ class LocalResources {
         try {
             return domains.containsDomain(domain);
         } catch (DomainListException e) {
-            LOGGER.error("Unable to retrieve domains", e);
-            return false;
+            throw new RuntimeException("Unable to retrieve domains", e);
         }
     }
 
@@ -71,11 +70,9 @@ class LocalResources {
             MailAddress mailAddress = Username.of(name).withDefaultDomain(domains.getDefaultDomain()).asMailAddress();
             return isLocalEmail(mailAddress);
         } catch (DomainListException e) {
-            LOGGER.error("Unable to access DomainList", e);
-            return false;
+            throw new RuntimeException("Unable to retrieve domains", e);
         } catch (ParseException e) {
-            LOGGER.info("Error checking isLocalUser for user {}", name, e);
-            return false;
+            throw new RuntimeException("Unable to parse mail address", e);
         }
     }
 
@@ -87,8 +84,10 @@ class LocalResources {
             try {
                 return isLocaluser(mailAddress)
                     || isLocalAlias(mailAddress);
-            } catch (UsersRepositoryException | RecipientRewriteTable.ErrorMappingException | RecipientRewriteTableException e) {
-                LOGGER.error("Unable to access UsersRepository", e);
+            } catch (UsersRepositoryException e) {
+                throw new RuntimeException("Unable to retrieve users", e);
+            } catch (RecipientRewriteTable.ErrorMappingException | RecipientRewriteTableException e) {
+                throw new RuntimeException("Unable to retrieve RRTs", e);
             }
         }
         return false;
