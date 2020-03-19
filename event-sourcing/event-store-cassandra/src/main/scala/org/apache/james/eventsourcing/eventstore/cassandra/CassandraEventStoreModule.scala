@@ -26,9 +26,11 @@ import com.datastax.driver.core.schemabuilder.{Create, SchemaBuilder}
 object CassandraEventStoreModule {
   val MODULE = CassandraModule.table(CassandraEventStoreTable.EVENTS_TABLE)
     .comment("Store events of a EventSourcing aggregate")
-    .options((options: Create.Options) => options.caching(
-      SchemaBuilder.KeyCaching.ALL,
-      SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+    .options((options: Create.Options) => options
+      .compactionOptions(SchemaBuilder.leveledStrategy())
+      .caching(
+        SchemaBuilder.KeyCaching.ALL,
+        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
     .statement(_.addPartitionKey(CassandraEventStoreTable.AGGREGATE_ID, DataType.varchar)
       .addClusteringColumn(CassandraEventStoreTable.EVENT_ID, DataType.cint)
       .addColumn(CassandraEventStoreTable.EVENT, DataType.text))
