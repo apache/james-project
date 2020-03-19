@@ -33,7 +33,7 @@ public interface CassandraMailboxRecentsModule {
         .comment("Denormalisation table. This table holds for each mailbox the messages marked as RECENT. This" +
             " is a SELECT optimisation.")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.leveledStrategy())
+            .compactionOptions(SchemaBuilder.sizedTieredStategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement

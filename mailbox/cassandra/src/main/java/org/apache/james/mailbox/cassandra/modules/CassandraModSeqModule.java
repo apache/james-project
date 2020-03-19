@@ -32,7 +32,7 @@ public interface CassandraModSeqModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMessageModseqTable.TABLE_NAME)
         .comment("Holds and is used to generate MODSEQ. A monotic counter is implemented on top of this table.")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.leveledStrategy())
+            .compactionOptions(SchemaBuilder.sizedTieredStategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement

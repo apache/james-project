@@ -45,7 +45,7 @@ public interface CassandraMessageModule {
         .table(CassandraMessageIdTable.TABLE_NAME)
         .comment("Holds mailbox and flags for each message, lookup by mailbox ID + UID")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.leveledStrategy())
+            .compactionOptions(SchemaBuilder.sizedTieredStategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS)))
         .statement(statement -> statement
@@ -64,7 +64,7 @@ public interface CassandraMessageModule {
         .table(MessageIdToImapUid.TABLE_NAME)
         .comment("Holds mailbox and flags for each message, lookup by message ID")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.leveledStrategy())
+            .compactionOptions(SchemaBuilder.sizedTieredStategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CACHED_IMAP_UID_ROWS)))
         .statement(statement -> statement

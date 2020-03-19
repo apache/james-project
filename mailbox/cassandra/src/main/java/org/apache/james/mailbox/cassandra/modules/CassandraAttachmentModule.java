@@ -46,7 +46,7 @@ public interface CassandraAttachmentModule {
         .comment("Holds attachment for fast attachment retrieval. Content of messages is stored" +
             "in `blobs` and `blobparts` tables.")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.leveledStrategy())
+            .compactionOptions(SchemaBuilder.sizedTieredStategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement
@@ -58,7 +58,7 @@ public interface CassandraAttachmentModule {
         .table(CassandraAttachmentMessageIdTable.TABLE_NAME)
         .comment("Holds ids of messages owning the attachment")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.leveledStrategy())
+            .compactionOptions(SchemaBuilder.sizedTieredStategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement
