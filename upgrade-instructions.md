@@ -565,7 +565,7 @@ We will assume that Cassandra had been installed with a debian package. Upgrade 
 1. Update Cassandra dists in `/etc/apt/sources.list.d/cassandra.list` to match 311x repository
 
 ```
-deb http://www.apache.org/dist/cassandra/debian 311x main
+deb http://downloads.apache.org/cassandra/debian 311x main
 ```
 
 

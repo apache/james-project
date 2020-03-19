@@ -8,6 +8,6 @@ categories: james update
 James PMC is proud to announce the [availability][availability] of the first release candidate
 of James Server 2.3.1. This release is maintenance release. See the [changelog][changelog] for more detail.
 
-[availability]: http://www.apache.org/dist/james/server/rc
+[availability]: http://downloads.apache.org/james/server/rc
 [changelog]: http://issues.apache.org/jira/browse/James?report=com.atlassian.jira.plugin.system.project:changelog-panel
 

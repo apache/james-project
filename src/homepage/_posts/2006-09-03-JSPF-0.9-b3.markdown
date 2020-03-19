@@ -8,4 +8,4 @@ categories: james update
 James PMC is proud to announce the [availability][availability] of the third beta of jspf 0.9.
 This version has start to use the official spf testsuite to fix all rfc issues.
 
-[availability]: http://people.apache.org/dist/james/jspf/
+[availability]: http://downloads.apache.org/james/jspf/

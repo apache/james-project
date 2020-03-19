@@ -8,5 +8,5 @@ categories: james update
 James PMC is proud to announce the [availability][availability] of the fourth beta of jspf
 0.9. This version pass all tests in the last official release of the [spf testsuite][spf_testsuite] .
 
-[availability]: http://www.apache.org/dist/james/jspf/beta
+[availability]: http://downloads.apache.org/james/jspf/beta
 [spf_testsuite]: http://www.openspf.org/svn/project/test-suite/rfc4408-tests-2007.01.yml

@@ -56,7 +56,7 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
     
     <p>Only current recommended releases are available on the main
        distribution site and its mirrors.  Older releases are available from
-       the <a href="https://archive.apache.org/dist/james/">archive download
+       the <a href="https://downloads.apache.org/james/">archive download
        site.</a></p>
     
     <ul>
@@ -111,10 +111,10 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
       files using the PGP or SHA-1 signatures.</p>
       
       <p>The PGP signatures can be verified using PGP or GPG.  First
-      download the <a href="https://apache.org/dist/james/KEYS">KEYS</a>
+      download the <a href="https://downloads.apache.org/james/KEYS">KEYS</a>
       as well as the <code>asc</code> signature file for the particular
       distribution.  Make sure you get these files from the <a
-      href="https://apache.org/dist/james/">main distribution
+      href="https://downloads.apache.org/james/">main distribution
       directory</a>, rather than from a mirror. Then verify the signatures
       using</p>
       
@@ -160,13 +160,13 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
       <ul>
         <li>Source code (ZIP Format):
           <a href="https://www.apache.org/dyn/closer.lua/james/server/3.4.0/james-project-3.4.0-source-release.zip">james-project-3.4.0-source-release.zip</a>
-          [<a href="https://apache.org/dist/james/server/3.4.0/james-project-3.4.0-source-release.zip.sha512">SHA-512</a>]
-          [<a href="https://apache.org/dist/james/server/3.4.0/james-project-3.4.0-source-release.zip.asc">PGP</a>]</li>
+          [<a href="https://downloads.apache.org/james/server/3.4.0/james-project-3.4.0-source-release.zip.sha512">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.4.0/james-project-3.4.0-source-release.zip.asc">PGP</a>]</li>
 
         <li>Binary (ZIP Format) for Spring wiring:
           <a href="https://www.apache.org/dyn/closer.lua/james/server/3.4.0/james-server-app-3.4.0-app.zip">apache-james-3.4.0-app.zip</a>
-          [<a href="https://apache.org/dist/james/server/3.4.0/james-server-app-3.4.0-app.zip.sha512">SHA-512</a>]
-          [<a href="https://apache.org/dist/james/server/3.4.0/james-server-app-3.4.0-app.zip.asc">PGP</a>]
+          [<a href="https://downloads.apache.org/james/server/3.4.0/james-server-app-3.4.0-app.zip.sha512">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.4.0/james-server-app-3.4.0-app.zip.asc">PGP</a>]
         </li>
 
       </ul>
@@ -200,30 +200,30 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
       <ul>
 
         <li>Source (Unix TAR): <a href="[preferred]/james/server/james-2.3.2.1-src.tar.gz">james-2.3.2.1-src.tar.gz</a>
-          [<a href="https://apache.org/dist/james/server/james-2.3.2.1-src.tar.gz.sha1">SHA-1</a>]
-          [<a href="https://apache.org/dist/james/server/james-2.3.2.1-src.tar.gz.asc">PGP</a>]
+          [<a href="https://downloads.apache.org/james/server/james-2.3.2.1-src.tar.gz.sha1">SHA-1</a>]
+          [<a href="https://downloads.apache.org/james/server/james-2.3.2.1-src.tar.gz.asc">PGP</a>]
         </li>
 
         <li>Source (ZIP Format): <a href="[preferred]/james/server/james-2.3.2.1-src.zip">james-2.3.2.1-src.zip</a>
-          [<a href="https://apache.org/dist/james/server/james-2.3.2.1-src.zip.sha1">SHA-1</a>]
-          [<a href="https://apache.org/dist/james/server/james-2.3.2.1-src.zip.asc">PGP</a>]
+          [<a href="https://downloads.apache.org/james/server/james-2.3.2.1-src.zip.sha1">SHA-1</a>]
+          [<a href="https://downloads.apache.org/james/server/james-2.3.2.1-src.zip.asc">PGP</a>]
         </li>
       
         <li>Binary (Unix TAR): <a href="[preferred]/james/server/james-binary-2.3.2.1.tar.gz">james-binary-2.3.2.1.tar.gz</a>
-          [<a href="https://apache.org/dist/james/server/james-binary-2.3.2.1.tar.gz.sha1">SHA-1</a>]
-          [<a href="https://apache.org/dist/james/server/james-binary-2.3.2.1.tar.gz.asc">PGP</a>]
+          [<a href="https://downloads.apache.org/james/server/james-binary-2.3.2.1.tar.gz.sha1">SHA-1</a>]
+          [<a href="https://downloads.apache.org/james/server/james-binary-2.3.2.1.tar.gz.asc">PGP</a>]
         </li>
       
         <li>Binary (ZIP Format): <a href="[preferred]/james/server/james-binary-2.3.2.1.zip">james-binary-2.3.2.1.zip</a>
-          [<a href="https://apache.org/dist/james/server/james-binary-2.3.2.1.zip.sha1">SHA-1</a>]
-          [<a href="https://apache.org/dist/james/server/james-binary-2.3.2.1.zip.asc">PGP</a>]
+          [<a href="https://downloads.apache.org/james/server/james-binary-2.3.2.1.zip.sha1">SHA-1</a>]
+          [<a href="https://downloads.apache.org/james/server/james-binary-2.3.2.1.zip.asc">PGP</a>]
         </li>
       
       </ul>
     
     <subsection name="Earlier Releases">
     
-      <p>Are now <a href='https://archive.apache.org/dist/james/server'>archived</a></p>
+      <p>Are now <a href='https://downloads.apache.org/james/server'>archived</a></p>
 
     </subsection>
 
@@ -237,8 +237,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Sources:
       <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.3/james-mime4j-sources-0.8.3.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/mime4j/0.8.3/james-mime4j-sources-0.8.3.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mime4j/0.8.3/james-mime4j-sources-0.8.3.zip.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.3/james-mime4j-sources-0.8.3.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.3/james-mime4j-sources-0.8.3.zip.asc">PGP</a>]
     </p>
 
     <p>You can directly use the core library with maven:</p>
@@ -255,8 +255,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.3/apache-mime4j-core-0.8.3.jar">(Jar)</a>
-      [<a href="https://apache.org/dist/james/mime4j/0.8.3/apache-mime4j-core-0.8.3.jar.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mime4j/0.8.3/apache-mime4j-core-0.8.3.jar.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.3/apache-mime4j-core-0.8.3.jar.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.3/apache-mime4j-core-0.8.3.jar.asc">PGP</a>]
       </p>
 
     <p>In order to use Mime-4j DOM:</p>
@@ -273,8 +273,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.3/apache-mime4j-dom-0.8.3.jar">(Jar)</a>
-      [<a href="https://apache.org/dist/james/mime4j/0.8.3/apache-mime4j-dom-0.8.3.jar.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mime4j/0.8.3/apache-mime4j-dom-0.8.3.jar.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.3/apache-mime4j-dom-0.8.3.jar.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.3/apache-mime4j-dom-0.8.3.jar.asc">PGP</a>]
     </p>
 
     <p>An aggregator project is also available:</p>
@@ -291,8 +291,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.3/apache-mime4j-0.8.3-bin.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/mime4j/0.8.3/apache-mime4j-0.8.3-bin.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mime4j/0.8.3/apache-mime4j-0.8.3-bin.zip.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.3/apache-mime4j-0.8.3-bin.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.3/apache-mime4j-0.8.3-bin.zip.asc">PGP</a>]
     </p>
   
   </section>
@@ -303,8 +303,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Sources:
       <a href="https://www.apache.org/dyn/closer.lua/james/jspf/1.0.1/apache-jspf-sources-1.0.1.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/jspf/1.0.1/apache-jspf-sources-1.0.1.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/jspf/1.0.1/apache-jspf-sources-1.0.1.zip.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/jspf/1.0.1/apache-jspf-sources-1.0.1.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jspf/1.0.1/apache-jspf-sources-1.0.1.zip.asc">PGP</a>]
     </p>
 
     <p>You can directly use it with maven:</p>
@@ -321,8 +321,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/jspf/1.0.1/apache-jspf-1.0.1-bin.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/jspf/1.0.1/apache-jspf-1.0.1-bin.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/jspf/1.0.1/apache-jspf-1.0.1-bin.zip.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/jspf/1.0.1/apache-jspf-1.0.1-bin.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jspf/1.0.1/apache-jspf-1.0.1-bin.zip.asc">PGP</a>]
     </p>
   
   </section>
@@ -333,8 +333,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Sources:
       <a href="https://www.apache.org/dyn/closer.lua/james/jdkim/apache-jdkim-project-0.2-source-release.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/jdkim/apache-jdkim-project-0.2-source-release.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/jdkim/apache-jdkim-project-0.2-source-release.zip.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-project-0.2-source-release.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-project-0.2-source-release.zip.asc">PGP</a>]
     </p>
 
     <p>You can directly use it with maven:</p>
@@ -351,8 +351,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/jdkim/apache-jdkim-0.2-bin.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.zip.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-0.2-bin.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-0.2-bin.zip.asc">PGP</a>]
     </p>
   
   </section>
@@ -363,8 +363,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Sources:
       <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.7/apache-jsieve-sources-0.7.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/jsieve/0.7/apache-jsieve-sources-0.7.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/jsieve/0.7/apache-jsieve-sources-0.7.zip.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-sources-0.7.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-sources-0.7.zip.asc">PGP</a>]
     </p>
 
     <p>You can directly use it with maven:</p>
@@ -381,8 +381,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.7/apache-jsieve-core-0.7.jar">(Jar)</a>
-      [<a href="https://apache.org/dist/james/jsieve/0.7/apache-jsieve-core-0.7.jar.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/jsieve/0.7/apache-jsieve-core-0.7.jar.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-core-0.7.jar.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-core-0.7.jar.asc">PGP</a>]
     </p>
 
     <p>An aggregator project is also available:</p>
@@ -399,8 +399,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <p>Direct download link:
       <a href="https://www.apache.org/dyn/closer.lua/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz">(Tar Gz)</a>
-      [<a href="https://apache.org/dist/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz.asc">PGP</a>]
     </p>
 
   
@@ -565,13 +565,13 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
     
     <li>Source (Unix TAR):
       <a href="https://www.apache.org/dyn/closer.lua/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz">apache-james-mpt-0.1-src.tar.gz</a>
-      [<a href="https://apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.asc">PGP</a>]
     </li>
     
     <li>Source (ZIP Format): <a href="https://www.apache.org/dyn/closer.lua/james/mpt/0.1/apache-james-mpt-0.1-src.zip">apache-james-mpt-0.1-src.zip</a>
-      [<a href="https://apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip.asc">PGP</a>]
+      [<a href="https://downloads.apache.org/james/mpt/0.1/apache-james-mpt-0.1-src.zip.sha1">SHA-1</a>]
+      [<a href="https://downloads.apache.org/james/mpt/0.1/apache-james-mpt-0.1-src.zip.asc">PGP</a>]
     </li>
     
     <li>Jars (including source and javadocs) for the modules are distributed through the standard 

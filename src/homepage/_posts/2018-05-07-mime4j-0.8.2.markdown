@@ -31,4 +31,4 @@ The library is available as a maven artifact, for instance for mime4j core:
 
 You can also download the release artifacts [here].
 
-[here]: https://www.apache.org/dist/james/mime4j/0.8.2/
+[here]: https://downloads.apache.org/james/mime4j/0.8.2/

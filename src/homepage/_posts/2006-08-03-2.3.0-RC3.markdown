@@ -10,4 +10,4 @@ last, release candidate of James Server 2.3.0. More information on what's new ca
 
 New development roadmaps are being discussed right now, so stay tuned for 2.3.0 final and for the following news.
 
-[availability]: http://people.apache.org/dist/james/server/
+[availability]: http://downloads.apache.org/james/server/

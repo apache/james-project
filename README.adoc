@@ -149,7 +149,7 @@ In short, just follow the 'standard' process:
 * vote
 * release
 
-Don't forget to add your key to http://www.apache.org/dist/james/KEYS
+Don't forget to add your key to https://downloads.apache.org/james/KEYS
 
     $ ssh people.apache.org
     $ cd /www/www.apache.org/dist/james

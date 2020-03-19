@@ -8,4 +8,4 @@ categories: james update
 After a long time of development we have released the first [release candidate][rc]
  of James Server 2.3.0. After a period of user testing version 2.3.0 will be released.
 
-[rc]: http://people.apache.org/dist/james/server/
+[rc]: http://downloads.apache.org/james/server/
