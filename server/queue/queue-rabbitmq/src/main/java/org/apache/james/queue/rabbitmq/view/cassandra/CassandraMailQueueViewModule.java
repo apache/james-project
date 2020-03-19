@@ -126,6 +126,7 @@ public interface CassandraMailQueueViewModule {
             "existence in this table")
         .options(options -> options
             .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy())
+            .bloomFilterFPChance(0.01)
             .readRepairChance(NO_READ_REPAIR))
         .statement(statement -> statement
             .addPartitionKey(DeletedMailTable.QUEUE_NAME, text())

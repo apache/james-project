@@ -31,6 +31,7 @@ public interface CassandraFirstUnseenModule {
         .comment("Denormalisation table. Allow to quickly retrieve the first UNSEEN UID of a specific mailbox.")
         .options(options -> options
             .compactionOptions(SchemaBuilder.sizedTieredStategy())
+            .bloomFilterFPChance(0.01)
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
             .clusteringOrder(CassandraFirstUnseenTable.UID, SchemaBuilder.Direction.ASC))

@@ -33,6 +33,7 @@ public interface CassandraUidModule {
         .comment("Holds and is used to generate UID. A monotic counter is implemented on top of this table.")
         .options(options -> options
             .compactionOptions(SchemaBuilder.sizedTieredStategy())
+            .bloomFilterFPChance(0.01)
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement
