@@ -38,9 +38,10 @@ import play.api.libs.json.Json;
 import scala.math.BigDecimal;
 
 class QuotaSizeTest {
+
     @Test
     void quotaSizeLimitShouldBeWellSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.quotaLimitValueWrites().writes(QuotaSizeLimit.size(18)))
+        assertThat(DTO_JSON_SERIALIZE.quotaSizeLimitWrites().writes(QuotaSizeLimit.size(18)))
             .isEqualTo(new JsNumber(BigDecimal.valueOf(18)));
     }
 
@@ -52,7 +53,7 @@ class QuotaSizeTest {
 
     @Test
     void quotaSizeLimitShouldBeWellSerializedWhenUnlimited() {
-        assertThat(DTO_JSON_SERIALIZE.quotaLimitValueWrites().writes(QuotaSizeLimit.unlimited()))
+        assertThat(DTO_JSON_SERIALIZE.quotaSizeLimitWrites().writes(QuotaSizeLimit.unlimited()))
             .isEqualTo(JsNull$.MODULE$);
     }
 
@@ -70,7 +71,7 @@ class QuotaSizeTest {
 
     @Test
     void quotaSizeUsageShouldBeWellSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.quotaUsageValueWrites().writes(QuotaSizeUsage.size(18)))
+        assertThat(DTO_JSON_SERIALIZE.quotaSizeUsageWrites().writes(QuotaSizeUsage.size(18)))
             .isEqualTo(new JsNumber(BigDecimal.valueOf(18)));
     }
 

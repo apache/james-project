@@ -41,7 +41,7 @@ import scala.math.BigDecimal;
 class QuotaCountTest {
     @Test
     void quotaCountLimitShouldBeWellSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.quotaLimitValueWrites().writes(QuotaCountLimit.count(18)))
+        assertThat(DTO_JSON_SERIALIZE.quotaCountLimitWrites().writes(QuotaCountLimit.count(18)))
             .isEqualTo(new JsNumber(BigDecimal.valueOf(18)));
     }
 
@@ -53,7 +53,7 @@ class QuotaCountTest {
 
     @Test
     void quotaCountLimitShouldBeWellSerializedWhenUnlimited() {
-        assertThat(DTO_JSON_SERIALIZE.quotaLimitValueWrites().writes(QuotaCountLimit.unlimited()))
+        assertThat(DTO_JSON_SERIALIZE.quotaCountLimitWrites().writes(QuotaCountLimit.unlimited()))
             .isEqualTo(JsNull$.MODULE$);
     }
 
@@ -71,7 +71,7 @@ class QuotaCountTest {
 
     @Test
     void quotaCountUsageShouldBeWellSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.quotaUsageValueWrites().writes(QuotaCountUsage.count(18)))
+        assertThat(DTO_JSON_SERIALIZE.quotaCountUsageWrites().writes(QuotaCountUsage.count(18)))
             .isEqualTo(new JsNumber(BigDecimal.valueOf(18)));
     }
 

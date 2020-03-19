@@ -205,9 +205,11 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val systemFlagsWrites: Writes[SystemFlag] = Writes.enumNameWrites
   implicit val userWriters: Writes[Username] = (user: Username) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
-  implicit val quotaUsageValueWrites: Writes[QuotaUsageValue[_, _]] = value => JsNumber(value.asLong())
-  implicit val quotaLimitValueWrites: Writes[QuotaLimitValue[_]] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
   implicit val quotaScopeWrites: Writes[JavaQuota.Scope] = value => JsString(value.name)
+  implicit val quotaCountLimitWrites: Writes[QuotaCountLimit] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
+  implicit val quotaCountUsageWrites: Writes[QuotaCountUsage] = value => JsNumber(value.asLong())
+  implicit val quotaSizeLimitWrites: Writes[QuotaSizeLimit] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
+  implicit val quotaSizeUsageWrites: Writes[QuotaSizeUsage] = value => JsNumber(value.asLong())
   implicit val quotaCountWrites: Writes[Quota[QuotaCountLimit, QuotaCountUsage]] = Json.writes[Quota[QuotaCountLimit, QuotaCountUsage]]
   implicit val quotaSizeWrites: Writes[Quota[QuotaSizeLimit, QuotaSizeUsage]] = Json.writes[Quota[QuotaSizeLimit, QuotaSizeUsage]]
   implicit val mailboxPathWrites: Writes[MailboxPath] = Json.writes[MailboxPath]
