@@ -1,10 +1,10 @@
 = GC properties
 
 1. the execution time of the GC should be linked to
-active dataset but not to global dataset
-(for scalability purpose)
+active dataset (ie. where the number of references have changed)
+but not to global dataset (for scalability purpose)
 
-2. GC should run on live dataset
+2. GC should run on active dataset
 
  2.1. GC should not delete data being referenced by a pending process or
 still referenced
@@ -17,7 +17,7 @@ not have a different outcome than a single one
  3.1. an unreferenced piece of data should be removed after 1 day
 
  3.2. less than 10% of unreferenced data of a significant dataset
-should persist after three GC executions
+should persist
 
 4. GC should report what it does
 
