@@ -127,7 +127,7 @@ public class ToRecipientFolderTest {
     @Test
     public void folderParameterShouldIndicateDestinationFolder() throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
-        when(usersRepository.getUser(new MailAddress(USER))).thenReturn(USERNAME);
+        when(usersRepository.getUsername(new MailAddress(USER))).thenReturn(USERNAME);
         when(mailboxManager.getMailbox(eq(JUNK_VIRTUAL_HOSTING), any(MailboxSession.class))).thenReturn(messageManager);
 
         testee.init(FakeMailetConfig.builder()
@@ -143,7 +143,7 @@ public class ToRecipientFolderTest {
     @Test
     public void folderParameterShouldBeInboxByDefault() throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
-        when(usersRepository.getUser(new MailAddress(USER))).thenReturn(USERNAME);
+        when(usersRepository.getUsername(new MailAddress(USER))).thenReturn(USERNAME);
         when(mailboxManager.getMailbox(eq(INBOX), any(MailboxSession.class))).thenReturn(messageManager);
 
         testee.init(FakeMailetConfig.builder()
@@ -158,8 +158,8 @@ public class ToRecipientFolderTest {
     @Test
     public void folderParameterShouldWorkWhenVirtualHostingIsTurnedOff() throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
-        when(usersRepository.getUser(new MailAddress(USER_LOCAL_PART + "@localhost"))).thenReturn(USERNAME_LOCAL_PART);
-        when(usersRepository.getUser(new MailAddress(USER))).thenReturn(USERNAME_LOCAL_PART);
+        when(usersRepository.getUsername(new MailAddress(USER_LOCAL_PART + "@localhost"))).thenReturn(USERNAME_LOCAL_PART);
+        when(usersRepository.getUsername(new MailAddress(USER))).thenReturn(USERNAME_LOCAL_PART);
         when(mailboxManager.getMailbox(eq(JUNK), any(MailboxSession.class))).thenReturn(messageManager);
         when(session.getUser()).thenReturn(Username.of(USER_LOCAL_PART));
 

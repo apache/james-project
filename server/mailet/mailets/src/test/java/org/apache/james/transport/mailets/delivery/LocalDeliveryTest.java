@@ -85,7 +85,7 @@ public class LocalDeliveryTest {
         MessageManager messageManager = mock(MessageManager.class);
 
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
-        when(usersRepository.getUser(new MailAddress(username.asString()))).thenReturn(username);
+        when(usersRepository.getUsername(new MailAddress(username.asString()))).thenReturn(username);
         when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
         when(session.getUser()).thenReturn(username);
 
@@ -105,8 +105,8 @@ public class LocalDeliveryTest {
         MailboxPath inbox = MailboxPath.inbox(username);
         MessageManager messageManager = mock(MessageManager.class);
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
-        when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn(username);
-        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(username);
+        when(usersRepository.getUsername(new MailAddress("receiver@localhost"))).thenReturn(username);
+        when(usersRepository.getUsername(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(username);
         when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
         when(session.getUser()).thenReturn(username);
 

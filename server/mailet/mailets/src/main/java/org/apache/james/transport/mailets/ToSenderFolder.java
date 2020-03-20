@@ -92,7 +92,7 @@ public class ToSenderFolder extends GenericMailet {
 
     private Username retrieveUser(MailAddress sender) throws MessagingException {
         try {
-            return usersRepository.getUser(sender);
+            return usersRepository.getUsername(sender);
         } catch (UsersRepositoryException e) {
             throw new MessagingException(e.getMessage());
         }

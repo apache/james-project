@@ -236,7 +236,7 @@ public abstract class AbstractUsersRepositoryTest {
 
     @Test
     void getUserShouldBeCaseInsentive() throws Exception {
-        assertThat(usersRepository.getUser(user1CaseVariation.asMailAddress()))
+        assertThat(usersRepository.getUsername(user1CaseVariation.asMailAddress()))
             .isEqualTo(user1);
     }
 
@@ -457,7 +457,7 @@ public abstract class AbstractUsersRepositoryTest {
         // Some implementations do not support changing virtual hosting value
         Assumptions.assumeTrue(usersRepository.supportVirtualHosting());
 
-        assertThat(usersRepository.getUser(new MailAddress("local@domain"))).isEqualTo(Username.of("local@domain"));
+        assertThat(usersRepository.getUsername(new MailAddress("local@domain"))).isEqualTo(Username.of("local@domain"));
     }
 
     @Test
@@ -467,7 +467,7 @@ public abstract class AbstractUsersRepositoryTest {
         // Some implementations do not support changing virtual hosting value
         Assumptions.assumeFalse(usersRepository.supportVirtualHosting());
 
-        assertThat(usersRepository.getUser(new MailAddress("local@domain"))).isEqualTo(Username.of("local"));
+        assertThat(usersRepository.getUsername(new MailAddress("local@domain"))).isEqualTo(Username.of("local"));
     }
 
     @Test

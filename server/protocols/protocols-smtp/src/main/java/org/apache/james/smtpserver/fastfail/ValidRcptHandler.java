@@ -65,7 +65,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     @Override
     protected boolean isValidRecipient(SMTPSession session, MailAddress recipient) {
         try {
-            Username username = users.getUser(recipient);
+            Username username = users.getUsername(recipient);
 
             if (users.contains(username)) {
                 return true;

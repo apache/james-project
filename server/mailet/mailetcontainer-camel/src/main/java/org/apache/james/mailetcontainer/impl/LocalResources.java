@@ -91,7 +91,7 @@ class LocalResources {
     }
 
     private boolean isLocaluser(MailAddress mailAddress) throws UsersRepositoryException {
-        return localUsers.contains(localUsers.getUser(mailAddress));
+        return localUsers.contains(localUsers.getUsername(mailAddress));
     }
 
     private boolean isLocalAlias(MailAddress mailAddress) throws UsersRepositoryException, RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {

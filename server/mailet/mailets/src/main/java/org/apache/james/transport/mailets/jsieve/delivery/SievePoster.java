@@ -90,7 +90,7 @@ public class SievePoster implements Poster {
         String user = url.substring(startOfUser, endOfUser).toLowerCase(Locale.US);
         // Check if we should use the full email address as username
         try {
-            return usersRepository.getUser(new MailAddress(user, host));
+            return usersRepository.getUsername(new MailAddress(user, host));
         } catch (UsersRepositoryException e) {
             throw new MessagingException("Unable to accessUsersRepository", e);
         }

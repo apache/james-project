@@ -134,7 +134,7 @@ public interface UsersRepository {
      *
      * @return Username used by James for this mailAddress
      */
-    default Username getUser(MailAddress mailAddress) throws UsersRepositoryException {
+    default Username getUsername(MailAddress mailAddress) throws UsersRepositoryException {
         if (supportVirtualHosting()) {
             return Username.of(mailAddress.asString());
         } else {

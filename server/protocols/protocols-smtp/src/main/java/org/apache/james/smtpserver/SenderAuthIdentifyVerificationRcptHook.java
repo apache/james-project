@@ -70,7 +70,7 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
     @Override
     protected Username getUser(MailAddress mailAddress) {
         try {
-            return users.getUser(mailAddress);
+            return users.getUsername(mailAddress);
         } catch (UsersRepositoryException e) {
             throw new RuntimeException(e);
         }

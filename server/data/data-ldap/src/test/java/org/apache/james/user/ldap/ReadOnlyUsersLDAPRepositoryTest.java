@@ -202,13 +202,13 @@ class ReadOnlyUsersLDAPRepositoryTest {
         @Test
         void containsWithGetUserShouldBeTrue() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfiguration(ldapContainer));
-            assertThat(ldapRepository.contains(ldapRepository.getUser(JAMES_USER_MAIL.asMailAddress()))).isTrue();
+            assertThat(ldapRepository.contains(ldapRepository.getUsername(JAMES_USER_MAIL.asMailAddress()))).isTrue();
         }
 
         @Test
         void containsWithGetUserShouldBeTrueWithVirtualHosting() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer));
-            assertThat(ldapRepository.contains(ldapRepository.getUser(JAMES_USER_MAIL.asMailAddress()))).isTrue();
+            assertThat(ldapRepository.contains(ldapRepository.getUsername(JAMES_USER_MAIL.asMailAddress()))).isTrue();
         }
 
         private ReadOnlyUsersLDAPRepository startUsersRepository(HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration) throws Exception {

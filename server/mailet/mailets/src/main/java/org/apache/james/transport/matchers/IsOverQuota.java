@@ -72,7 +72,7 @@ public class IsOverQuota extends GenericMatcher {
         try {
             List<MailAddress> result = new ArrayList<>();
             for (MailAddress mailAddress : mail.getRecipients()) {
-                Username userName = usersRepository.getUser(mailAddress);
+                Username userName = usersRepository.getUsername(mailAddress);
                 MailboxPath mailboxPath = MailboxPath.inbox(userName);
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
 

@@ -173,7 +173,7 @@ public class ForwardRoutes implements Routes {
     }
 
     private void ensureUserExist(MailAddress mailAddress) throws UsersRepositoryException {
-        if (!usersRepository.contains(usersRepository.getUser(mailAddress))) {
+        if (!usersRepository.contains(usersRepository.getUsername(mailAddress))) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorType.INVALID_ARGUMENT)

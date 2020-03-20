@@ -92,7 +92,7 @@ public class SieveIntegrationTest {
     @Test
     public void serviceShouldNotModifyEmailWhenErrorRetrievingScript() throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
-        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(Username.of(RECEIVER_DOMAIN_COM));
+        when(usersRepository.getUsername(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(Username.of(RECEIVER_DOMAIN_COM));
         when(resourceLocator.get(new MailAddress(RECEIVER_DOMAIN_COM))).thenThrow(new ScriptNotFoundException());
 
         FakeMail mail = createMail();
@@ -106,7 +106,7 @@ public class SieveIntegrationTest {
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
-        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(Username.of(RECEIVER_DOMAIN_COM));
+        when(usersRepository.getUsername(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(Username.of(RECEIVER_DOMAIN_COM));
 
         FakeMail mail = createMail();
         testee.service(mail);
@@ -118,7 +118,7 @@ public class SieveIntegrationTest {
     public void mailShouldBeWellDeliveredByDefaultToUserWhenvirtualHostingIsTurnedOff() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
-        when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn(Username.of("receiver"));
+        when(usersRepository.getUsername(new MailAddress("receiver@localhost"))).thenReturn(Username.of("receiver"));
 
         FakeMail mail = createMail();
         testee.service(mail);
@@ -959,8 +959,8 @@ public class SieveIntegrationTest {
 
     private void prepareTestUsingScriptAndDates(String script, ZonedDateTime scriptCreationDate, ZonedDateTime scriptExecutionDate) throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
-        when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@localhost"))).thenReturn(Username.of(LOCAL_PART));
-        when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@domain.com"))).thenReturn(Username.of(LOCAL_PART));
+        when(usersRepository.getUsername(new MailAddress(LOCAL_PART + "@localhost"))).thenReturn(Username.of(LOCAL_PART));
+        when(usersRepository.getUsername(new MailAddress(LOCAL_PART + "@domain.com"))).thenReturn(Username.of(LOCAL_PART));
         when(resourceLocator.get(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(new ResourceLocator.UserSieveInformation(scriptCreationDate,
             scriptExecutionDate,
             ClassLoader.getSystemResourceAsStream(script)));

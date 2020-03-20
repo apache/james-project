@@ -184,7 +184,7 @@ public class AliasRoutes implements Routes {
     }
 
     private void ensureUserDoesNotExist(MailAddress mailAddress) throws UsersRepositoryException {
-        Username username = usersRepository.getUser(mailAddress);
+        Username username = usersRepository.getUsername(mailAddress);
 
         if (usersRepository.contains(username)) {
             throw ErrorResponder.builder()

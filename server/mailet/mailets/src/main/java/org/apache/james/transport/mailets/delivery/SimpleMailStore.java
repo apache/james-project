@@ -110,7 +110,7 @@ public class SimpleMailStore implements MailStore {
 
     private Username computeUsername(MailAddress recipient) {
         try {
-            return usersRepository.getUser(recipient);
+            return usersRepository.getUsername(recipient);
         } catch (UsersRepositoryException e) {
             LOGGER.warn("Unable to retrieve username for {}", recipient.asPrettyString(), e);
             return Username.of(recipient.asString());

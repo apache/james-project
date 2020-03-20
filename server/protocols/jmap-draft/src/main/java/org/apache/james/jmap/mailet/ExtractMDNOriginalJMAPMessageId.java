@@ -102,7 +102,7 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
     private Optional<MessageId> findMessageIdForRFC822MessageId(String messageId, MailAddress recipient) {
         LOGGER.debug("Searching message {} for recipient {}", messageId, recipient.asPrettyString());
         try {
-            MailboxSession session = mailboxManager.createSystemSession(usersRepository.getUser(recipient));
+            MailboxSession session = mailboxManager.createSystemSession(usersRepository.getUsername(recipient));
             int limit = 1;
             MultimailboxesSearchQuery searchByRFC822MessageId = MultimailboxesSearchQuery
                 .from(new SearchQuery(SearchQuery.mimeMessageID(messageId)))

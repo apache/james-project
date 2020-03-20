@@ -610,7 +610,7 @@ public abstract class AbstractSign extends GenericMailet {
 
     private Username getUsername(MailAddress mailAddress) {
         try {
-            return usersRepository.getUser(mailAddress);
+            return usersRepository.getUsername(mailAddress);
         } catch (UsersRepositoryException e) {
             throw new RuntimeException(e);
         }

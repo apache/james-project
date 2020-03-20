@@ -63,7 +63,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
     @Override
     public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
         try {
-            Username username = users.getUser(recipient);
+            Username username = users.getUsername(recipient);
 
             MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             MailboxPath inbox = MailboxPath.inbox(mailboxSession);

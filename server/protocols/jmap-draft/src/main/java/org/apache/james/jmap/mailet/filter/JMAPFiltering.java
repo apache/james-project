@@ -88,7 +88,7 @@ public class JMAPFiltering extends GenericMailet {
 
     private Optional<Username> retrieveUser(MailAddress recipient) {
         try {
-            return Optional.ofNullable(usersRepository.getUser(recipient));
+            return Optional.ofNullable(usersRepository.getUsername(recipient));
         } catch (UsersRepositoryException e) {
             logger.error("cannot retrieve user " + recipient.asString(), e);
             return Optional.empty();

@@ -168,7 +168,7 @@ public class GroupsRoutes implements Routes {
     }
 
     private void ensureNotShadowingAnotherAddress(MailAddress groupAddress) throws UsersRepositoryException {
-        if (usersRepository.contains(usersRepository.getUser(groupAddress))) {
+        if (usersRepository.contains(usersRepository.getUsername(groupAddress))) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.CONFLICT_409)
                 .type(ErrorType.INVALID_ARGUMENT)

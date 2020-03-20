@@ -842,7 +842,7 @@ public class MessageProcessor extends ProcessorAbstract {
         // the recipient in respect of this
         // See JAMES-1135
         return isLocalServer(recipient)
-            && getLocalUsers().contains(getLocalUsers().getUser(recipient));
+            && getLocalUsers().contains(getLocalUsers().getUsername(recipient));
     }
 
     /**
