@@ -31,6 +31,22 @@ Change list:
  - [UidValidity and JPA or Cassandra](#uid-validity-and-jpa-or-cassandra)
  - [Differentiation between domain alias and domain mapping](#differentiation-between-domain-alias-and-domain-mapping)
  - [ProtocolSession storng typing](#protocolsession-storng-typing)
+ - [LogEnabled removal](#logenabled-removal)
+
+### LogEnabled removal
+
+Date 20/03/2020
+
+SHA-1 XXX
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3122
+
+Concerned product: Spring
+
+As Log4J 1.x is not compatible with Java 9+ runtime, we adopted Log4J2 as a logging solution for the Spring product.
+
+As a consequence, the deprecated `LogEnabled` API will be removed. We recommend extension developers to obtain their
+Logger instance using the SLF4J `LoggerFactory` class instead.
  
 ### ProtocolSession storng typing
 

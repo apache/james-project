@@ -259,7 +259,6 @@
                 <!--
                           <entry key="org.apache.james:type=component,name=james23importer" value-ref="james23importermanagement"/>
                 -->
-                <entry key="org.apache.james:type=container,name=logprovider" value-ref="logprovider"/>
                 <entry key="org.apache.james:type=component,name=quotamanagerbean" value-ref="quotamanagermanagement"/>
                 <entry key="org.apache.james:type=component,name=reindexerbean" value-ref="reindexermanagement"/>
                 <entry key="org.apache.james:type=component,name=sievemanagerbean" value-ref="sievemanagerbean"/>
@@ -268,7 +267,7 @@
         <property name="assembler">
             <bean class="org.springframework.jmx.export.assembler.InterfaceBasedMBeanInfoAssembler">
                 <property name="managedInterfaces"
-                          value="org.apache.james.fetchmail.FetchSchedulerMBean,org.apache.james.domainlist.api.DomainListManagementMBean,org.apache.james.dnsservice.api.DNSServiceMBean,org.apache.james.rrt.api.RecipientRewriteTableManagementMBean,org.apache.james.user.api.UsersRepositoryManagementMBean,org.apache.james.adapter.mailbox.MailboxManagerManagementMBean,org.apache.james.adapter.mailbox.MailboxCopierManagementMBean,org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean,org.apache.james.container.spring.lifecycle.LogProviderManagementMBean,org.apache.james.adapter.mailbox.QuotaManagementMBean,org.apache.james.adapter.mailbox.ReIndexerManagementMBean,org.apache.james.sieverepository.api.SieveRepositoryManagementMBean"/>
+                          value="org.apache.james.fetchmail.FetchSchedulerMBean,org.apache.james.domainlist.api.DomainListManagementMBean,org.apache.james.dnsservice.api.DNSServiceMBean,org.apache.james.rrt.api.RecipientRewriteTableManagementMBean,org.apache.james.user.api.UsersRepositoryManagementMBean,org.apache.james.adapter.mailbox.MailboxManagerManagementMBean,org.apache.james.adapter.mailbox.MailboxCopierManagementMBean,org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean,org.apache.james.adapter.mailbox.QuotaManagementMBean,org.apache.james.adapter.mailbox.ReIndexerManagementMBean,org.apache.james.sieverepository.api.SieveRepositoryManagementMBean"/>
             </bean>
         </property>
     </bean>

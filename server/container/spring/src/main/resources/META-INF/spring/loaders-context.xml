@@ -23,16 +23,6 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <!--
-      Spring "Bean-Post-Processor" for LogEnabled interface.
-     -->
-    <bean class="org.apache.james.container.spring.lifecycle.LogEnabledBeanPostProcessor">
-        <property name="logProvider" ref="logprovider"/>
-        <property name="order" value="0"/>
-    </bean>
-    <bean id="logprovider" class="org.apache.james.container.spring.lifecycle.LogProviderImpl">
-    </bean>
-
-    <!--
       Configuration "Bean-Factory-Post-Processor"
         responsible to register beans from James specific configuration files
     -->

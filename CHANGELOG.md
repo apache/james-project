@@ -65,7 +65,8 @@ of tasks being currently executed.
 - JAMES-3016 RemoteDelivery now doesn't enable `allow8bitmime` property by default. 
 This parameter could cause body content alteration leading to DKIM invalid DKIM signatures to be positioned. 
 Thanks to Sergey B. for the report. 
-More details about the property is at [java mail doc](https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html) 
+More details about the property is at [java mail doc](https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html)
+ - JAMES-3122 LogEnabled API in Spring product had been removed for Log4J2 adoption for Java 9+ runtime compatibility. 
  
 ### Third party softwares
  - The distributed James server product (relying on Guice, Cassandra, ElasticSearch, RabbitMQ and optionally Swift) now needs at least RabbitMQ 3.8.
