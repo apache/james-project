@@ -52,6 +52,9 @@ public class RecomputeMailboxCountersService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RecomputeMailboxCountersService.class);
 
+    private static final int MAILBOX_CONCURRENCY = 2;
+    private static final int MESSAGE_CONCURRENCY = 8;
+
     private static class Counter {
         private final CassandraId mailboxId;
         private final AtomicLong total;
@@ -162,7 +165,7 @@ public class RecomputeMailboxCountersService {
 
     Mono<Result> recomputeMailboxCounters(Context context) {
         return mailboxDAO.retrieveAllMailboxes()
-            .flatMap(mailbox -> recomputeMailboxCounter(context, mailbox))
+            .flatMap(mailbox -> recomputeMailboxCounter(context, mailbox), MAILBOX_CONCURRENCY)
             .reduce(Result.COMPLETED, Task::combine)
             .onErrorResume(e -> {
                 LOGGER.error("Error listing mailboxes", e);
@@ -175,7 +178,7 @@ public class RecomputeMailboxCountersService {
         Counter counter = new Counter(mailboxId);
 
         return imapUidToMessageIdDAO.retrieveMessages(mailboxId, MessageRange.all())
-            .flatMap(message -> latestMetadata(mailboxId, message))
+            .flatMap(message -> latestMetadata(mailboxId, message), MESSAGE_CONCURRENCY)
             .doOnNext(counter::process)
             .then(Mono.defer(() -> counterDAO.resetCounters(counter.snapshot())))
             .then(Mono.just(Result.COMPLETED))
