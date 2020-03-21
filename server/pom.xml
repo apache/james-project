@@ -47,7 +47,6 @@
         <module>container/core</module>
         <module>container/filesystem-api</module>
         <module>container/guice</module>
-        <module>container/jetty</module>
         <module>container/lifecycle-api</module>
         <module>container/mailbox-adapter</module>
         <module>container/mailbox-jmx</module>

@@ -619,7 +619,6 @@
         <jackson.version>2.9.9</jackson.version>
         <feign.version>10.3.0</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
-        <jetty.version>9.4.19.v20190610</jetty.version>
         <metrics.version>4.1.0</metrics.version>
         <testcontainers.version>1.12.0</testcontainers.version>
         <assertj.version>3.3.0</assertj.version>
@@ -1513,11 +1512,6 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-webadmin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -2502,21 +2496,6 @@
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
                 <version>${bouncycastle.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-http</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-server</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-servlet</artifactId>
-                <version>${jetty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>
