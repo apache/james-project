@@ -19,105 +19,78 @@
 
 package org.apache.james.mock.smtp.server;
 
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
+import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 import java.io.IOException;
+import java.util.Optional;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.james.http.jetty.Configuration;
-import org.apache.james.http.jetty.JettyHttpServer;
 import org.apache.james.mock.smtp.server.jackson.MailAddressModule;
 import org.apache.james.mock.smtp.server.model.Mails;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.apache.james.util.Port;
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.steveash.guavate.Guavate;
 
+import reactor.core.publisher.Mono;
+import reactor.netty.DisposableServer;
+import reactor.netty.http.server.HttpServer;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+
 public class HTTPConfigurationServer {
 
-    public static class RunningStage {
-        private final HTTPConfigurationServer underlyingServer;
+    public static final String APPLICATION_JSON = "application/json";
 
-        private RunningStage(HTTPConfigurationServer underlyingServer) {
-            this.underlyingServer = underlyingServer;
+    public static class Configuration {
+        static Configuration port(Port port) {
+            return new Configuration(Optional.of(port));
+        }
+
+        static Configuration randomPort() {
+            return new Configuration(Optional.empty());
+        }
+
+        private final Optional<Port> port;
+
+        Configuration(Optional<Port> port) {
+            this.port = port;
+        }
+
+        Optional<Port> getPort() {
+            return port;
+        }
+    }
+
+    public static class RunningStage {
+        private final DisposableServer server;
+
+        private RunningStage(DisposableServer server) {
+            this.server = server;
         }
 
         public Port getPort() {
-            return underlyingServer.getPort();
+            return Port.of(server.port());
         }
 
-        public void stop() throws Exception {
-            underlyingServer.stop();
-        }
-    }
-
-    static class SMTPBehaviorsServlet extends HttpServlet {
-        private final SMTPBehaviorRepository smtpBehaviorRepository;
-
-        SMTPBehaviorsServlet(SMTPBehaviorRepository smtpBehaviorRepository) {
-            this.smtpBehaviorRepository = smtpBehaviorRepository;
-        }
-
-        @Override
-        protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
-            try {
-                MockSmtpBehaviors behaviors = OBJECT_MAPPER.readValue(req.getInputStream(), MockSmtpBehaviors.class);
-                smtpBehaviorRepository.setBehaviors(behaviors);
-                resp.setStatus(SC_NO_CONTENT);
-            } catch (IOException e) {
-                resp.setStatus(SC_BAD_REQUEST);
-            }
-        }
-
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-            MockSmtpBehaviors mockSmtpBehaviors = new MockSmtpBehaviors(smtpBehaviorRepository.remainingBehaviors()
-                .map(MockSMTPBehaviorInformation::getBehavior)
-                .collect(Guavate.toImmutableList()));
-
-            resp.setStatus(SC_OK);
-            resp.setContentType("application/json");
-            OBJECT_MAPPER.writeValue(resp.getOutputStream(), mockSmtpBehaviors);
-        }
-
-        @Override
-        protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
-            smtpBehaviorRepository.clearBehaviors();
-            resp.setStatus(SC_NO_CONTENT);
+        public void stop() {
+            server.disposeNow();
         }
     }
 
-    static class SMTPMailsServlet extends HttpServlet {
-        private final ReceivedMailRepository receivedMailRepository;
-
-        SMTPMailsServlet(ReceivedMailRepository receivedMailRepository) {
-            this.receivedMailRepository = receivedMailRepository;
-        }
-
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-            Mails mails = new Mails(receivedMailRepository.list());
-            resp.setStatus(SC_OK);
-            resp.setContentType("application/json");
-            OBJECT_MAPPER.writeValue(resp.getOutputStream(), mails);
-        }
-
-        @Override
-        protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
-            receivedMailRepository.clear();
-            resp.setStatus(SC_NO_CONTENT);
-        }
-    }
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(HTTPConfigurationServer.class);
+    private static final int RANDOM_PORT = 0;
     static final String SMTP_BEHAVIORS = "/smtpBehaviors";
     static final String SMTP_MAILS = "/smtpMails";
 
@@ -129,35 +102,88 @@ public class HTTPConfigurationServer {
     public static HTTPConfigurationServer onRandomPort(SMTPBehaviorRepository smtpBehaviorRepository, ReceivedMailRepository receivedMailRepository) {
         return new HTTPConfigurationServer(smtpBehaviorRepository,
             receivedMailRepository,
-            Configuration.builder().randomPort());
+            Configuration.randomPort());
     }
 
     public static HTTPConfigurationServer onPort(SMTPBehaviorRepository smtpBehaviorRepository, ReceivedMailRepository receivedMailRepository, Port port) {
         return new HTTPConfigurationServer(smtpBehaviorRepository,
             receivedMailRepository,
-            Configuration.builder().port(port.getValue()));
+            Configuration.port(port));
     }
 
-    private final JettyHttpServer jettyHttpServer;
+    private final SMTPBehaviorRepository smtpBehaviorRepository;
+    private final ReceivedMailRepository receivedMailRepository;
+    private final Configuration configuration;
 
-    private HTTPConfigurationServer(SMTPBehaviorRepository smtpBehaviorRepository, ReceivedMailRepository receivedMailRepository, Configuration.Builder configurationBuilder) {
-        jettyHttpServer = JettyHttpServer.create(configurationBuilder.serve(SMTP_BEHAVIORS)
-            .with(new SMTPBehaviorsServlet(smtpBehaviorRepository))
-            .serve(SMTP_MAILS)
-            .with(new SMTPMailsServlet(receivedMailRepository))
-            .build());
+    private HTTPConfigurationServer(SMTPBehaviorRepository smtpBehaviorRepository, ReceivedMailRepository receivedMailRepository, Configuration configuration) {
+        this.smtpBehaviorRepository = smtpBehaviorRepository;
+        this.receivedMailRepository = receivedMailRepository;
+        this.configuration = configuration;
     }
 
-    public RunningStage start() throws Exception {
-        jettyHttpServer.start();
-        return new RunningStage(this);
+    public RunningStage start() {
+        return new RunningStage(HttpServer.create()
+            .port(configuration.getPort()
+                .map(Port::getValue)
+                .orElse(RANDOM_PORT))
+            .route(routes -> routes
+                .get(SMTP_BEHAVIORS, this::getBehaviors)
+                .put(SMTP_BEHAVIORS, this::putBehaviors)
+                .delete(SMTP_BEHAVIORS, this::deleteBehaviors)
+                .get(SMTP_MAILS, this::getMails)
+                .delete(SMTP_MAILS, this::deleteMails))
+            .bindNow());
     }
 
-    private Port getPort() {
-        return new Port(jettyHttpServer.getPort());
+    private Publisher<Void> getBehaviors(HttpServerRequest req, HttpServerResponse res) {
+        MockSmtpBehaviors mockSmtpBehaviors = new MockSmtpBehaviors(smtpBehaviorRepository.remainingBehaviors()
+            .map(MockSMTPBehaviorInformation::getBehavior)
+            .collect(Guavate.toImmutableList()));
+
+        try {
+            return res.status(OK)
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(mockSmtpBehaviors)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Could not serialize JSON", e);
+            return res.status(INTERNAL_SERVER_ERROR).send();
+        }
     }
 
-    private void stop() throws Exception {
-        jettyHttpServer.stop();
+    private Publisher<Void> putBehaviors(HttpServerRequest req, HttpServerResponse res) {
+        return req.receive().aggregate().asInputStream()
+            .flatMap(inputStream -> {
+                try {
+                    MockSmtpBehaviors behaviors = OBJECT_MAPPER.readValue(inputStream, MockSmtpBehaviors.class);
+                    smtpBehaviorRepository.setBehaviors(behaviors);
+                    return res.status(NO_CONTENT).send();
+                } catch (IOException e) {
+                    LOGGER.info("Bad request", e);
+                    return res.status(BAD_REQUEST).send();
+                }
+            });
+    }
+
+    private Publisher<Void> deleteBehaviors(HttpServerRequest req, HttpServerResponse res) {
+        smtpBehaviorRepository.clearBehaviors();
+        return res.status(NO_CONTENT).send();
+    }
+
+    private Publisher<Void> deleteMails(HttpServerRequest req, HttpServerResponse res) {
+        receivedMailRepository.clear();
+        return res.status(NO_CONTENT).send();
+    }
+
+    private Publisher<Void> getMails(HttpServerRequest req, HttpServerResponse res) {
+        Mails mails = new Mails(receivedMailRepository.list());
+
+        try {
+            return res.status(OK)
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(mails)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Could not serialize JSON", e);
+            return res.status(INTERNAL_SERVER_ERROR).send();
+        }
     }
 }

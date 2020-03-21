@@ -24,8 +24,8 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
-import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
 import static org.apache.james.mock.smtp.server.Fixture.JSON_BEHAVIORS;
 import static org.apache.james.mock.smtp.server.Fixture.JSON_MAIL;
 import static org.apache.james.mock.smtp.server.Fixture.JSON_MAILS_LIST;
@@ -34,7 +34,6 @@ import static org.hamcrest.Matchers.hasSize;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.mock.smtp.server.Fixture.MailsFixutre;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -52,7 +51,7 @@ class HTTPConfigurationServerTest {
     @Nested
     class SMTPBehaviorsTest {
         @BeforeEach
-        void setUp() throws Exception {
+        void setUp() {
             server = HTTPConfigurationServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository())
                 .start();
 
@@ -66,7 +65,7 @@ class HTTPConfigurationServerTest {
         }
 
         @AfterEach
-        void tearDown() throws Exception {
+        void tearDown() {
             server.stop();
         }
 
@@ -115,7 +114,7 @@ class HTTPConfigurationServerTest {
             .when()
                 .put()
             .then()
-                .statusCode(HttpStatus.NO_CONTENT_204);
+                .statusCode(NO_CONTENT.code());
         }
 
         @Test
@@ -127,7 +126,7 @@ class HTTPConfigurationServerTest {
             .when()
                 .put()
             .then()
-                .statusCode(HttpStatus.NO_CONTENT_204);
+                .statusCode(NO_CONTENT.code());
         }
 
         @Test
@@ -135,7 +134,7 @@ class HTTPConfigurationServerTest {
             when()
                 .delete()
             .then()
-                .statusCode(HttpStatus.NO_CONTENT_204);
+                .statusCode(NO_CONTENT.code());
         }
     }
 
@@ -144,7 +143,7 @@ class HTTPConfigurationServerTest {
         private ReceivedMailRepository mailRepository;
 
         @BeforeEach
-        void setUp() throws Exception {
+        void setUp() {
             mailRepository = new ReceivedMailRepository();
 
             server = HTTPConfigurationServer.onRandomPort(new SMTPBehaviorRepository(), mailRepository)
@@ -160,7 +159,7 @@ class HTTPConfigurationServerTest {
         }
 
         @AfterEach
-        void tearDown() throws Exception {
+        void tearDown() {
             server.stop();
         }
 
@@ -225,7 +224,7 @@ class HTTPConfigurationServerTest {
             when()
                 .delete()
             .then()
-                .statusCode(SC_NO_CONTENT);
+                .statusCode(NO_CONTENT.code());
         }
 
         @Test

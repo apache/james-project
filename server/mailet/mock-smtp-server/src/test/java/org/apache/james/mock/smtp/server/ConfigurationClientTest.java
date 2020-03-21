@@ -34,7 +34,7 @@ class ConfigurationClientTest {
     private ReceivedMailRepository mailRepository;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         behaviorRepository = new SMTPBehaviorRepository();
         mailRepository = new ReceivedMailRepository();
         server = HTTPConfigurationServer.onRandomPort(behaviorRepository, mailRepository)
@@ -44,7 +44,7 @@ class ConfigurationClientTest {
     }
 
     @AfterEach
-    void tearDown() throws Exception {
+    void tearDown() {
         server.stop();
     }
 
