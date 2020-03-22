@@ -49,6 +49,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import reactor.core.publisher.Mono;
+
 public class LocalDeliveryTest {
 
     public static final String RECEIVER_DOMAIN_COM = "receiver@domain.com";
@@ -69,6 +71,7 @@ public class LocalDeliveryTest {
         session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
         when(mailboxManager.createSystemSession(any(Username.class))).thenReturn(session);
+        when(mailboxManager.mailboxExists(any(), any())).thenReturn(Mono.just(true));
 
 
         config = FakeMailetConfig.builder()

@@ -60,6 +60,8 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
+import reactor.core.publisher.Mono;
+
 public class MoveProcessorTest {
     private static final Username USERNAME = Username.of("username");
     private static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
@@ -111,7 +113,7 @@ public class MoveProcessorTest {
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         imapSession.selected(selectedMailbox);
-        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(true);
+        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(true));
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
         Mailbox mailbox = mock(Mailbox.class);
@@ -144,7 +146,7 @@ public class MoveProcessorTest {
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         imapSession.selected(selectedMailbox);
-        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(true);
+        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(true));
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(INBOX, mailboxSession)).thenReturn(targetMessageManager);
         Mailbox mailbox = mock(Mailbox.class);
@@ -175,7 +177,7 @@ public class MoveProcessorTest {
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         imapSession.selected(selectedMailbox);
-        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(false);
+        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(false));
 
         StatusResponse noResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedNo(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(noResponse);

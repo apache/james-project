@@ -93,6 +93,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import reactor.core.publisher.Mono;
+
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
  * {@link MailboxManager} implementation. If you plan to write your own {@link MailboxManager} its most times so easiest
@@ -318,7 +320,7 @@ public class StoreMailboxManager implements MailboxManager {
             MailboxPath sanitizedMailboxPath = mailboxPath.sanitize(mailboxSession.getPathDelimiter());
             sanitizedMailboxPath.assertAcceptable(mailboxSession.getPathDelimiter());
 
-            if (mailboxExists(sanitizedMailboxPath, mailboxSession)) {
+            if (mailboxExists(sanitizedMailboxPath, mailboxSession).block()) {
                 throw new MailboxExistsException(sanitizedMailboxPath.asString());
             }
 
@@ -346,7 +348,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private Stream<MailboxId> manageMailboxCreation(MailboxSession mailboxSession, boolean isRootPath, MailboxPath mailboxPath) throws MailboxException {
         if (mailboxPath.isInbox()) {
-            if (hasInbox(mailboxSession)) {
+            if (Mono.from(hasInbox(mailboxSession)).block()) {
                 return duplicatedINBOXCreation(isRootPath, mailboxPath);
             }
 
@@ -368,7 +370,7 @@ public class StoreMailboxManager implements MailboxManager {
     private List<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxException {
         List<MailboxId> mailboxIds = new ArrayList<>();
         locker.executeWithLock(mailboxPath, (LockAwareExecution<Void>) () -> {
-            if (!mailboxExists(mailboxPath, mailboxSession)) {
+            if (!mailboxExists(mailboxPath, mailboxSession).block()) {
                 MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
                 try {
                     mapper.execute(Mapper.toTransaction(() -> {
@@ -494,7 +496,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private void validateDestinationPath(MailboxPath newMailboxPath, MailboxSession session) throws MailboxException {
-        if (mailboxExists(newMailboxPath, session)) {
+        if (mailboxExists(newMailboxPath, session).block()) {
             throw new MailboxExistsException(newMailboxPath.toString());
         }
         assertIsOwner(session, newMailboxPath);
@@ -695,11 +697,10 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public boolean mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+    public Mono<Boolean> mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         return mapper.findMailboxByPath(mailboxPath)
-            .blockOptional()
-            .isPresent();
+            .hasElement();
     }
 
     /**

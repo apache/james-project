@@ -33,15 +33,16 @@ import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-public class DefaultMailboxesReactiveProvisioner {
+class DefaultMailboxesReactiveProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMailboxesReactiveProvisioner.class);
     private final MailboxManager mailboxManager;
     private final SubscriptionManager subscriptionManager;
@@ -57,31 +58,29 @@ public class DefaultMailboxesReactiveProvisioner {
         this.metricFactory = metricFactory;
     }
 
-    public Mono<Void> createMailboxesIfNeeded(MailboxSession session) {
-        return Mono.fromRunnable(() -> {
-            TimeMetric timeMetric = metricFactory.timer("JMAP-mailboxes-provisioning");
-            try {
+    Mono<Void> createMailboxesIfNeeded(MailboxSession session) {
+        return metricFactory.runPublishingTimerMetric("JMAP-mailboxes-provisioning",
+            () -> {
                 Username username = session.getUser();
-                createDefaultMailboxes(username);
-            } catch (MailboxException e) {
-                throw new RuntimeException(e);
-            } finally {
-                timeMetric.stopAndPublish();
-            }
-        });
+                return createDefaultMailboxes(username);
+            });
     }
 
-    private void createDefaultMailboxes(Username username) throws MailboxException {
+    private Mono<Void> createDefaultMailboxes(Username username) {
         MailboxSession session = mailboxManager.createSystemSession(username);
-        DefaultMailboxes.DEFAULT_MAILBOXES.stream()
+
+        return Flux.fromIterable(DefaultMailboxes.DEFAULT_MAILBOXES)
             .map(toMailboxPath(session))
-            .filter(mailboxPath -> mailboxDoesntExist(mailboxPath, session))
-            .forEach(mailboxPath -> createMailbox(mailboxPath, session));
+            .filterWhen(mailboxPath -> mailboxDoesntExist(mailboxPath, session))
+            .concatMap(mailboxPath -> Mono.fromRunnable(() -> createMailbox(mailboxPath, session))
+                .subscribeOn(Schedulers.elastic()))
+            .then();
     }
 
-    private boolean mailboxDoesntExist(MailboxPath mailboxPath, MailboxSession session) {
+    private Mono<Boolean> mailboxDoesntExist(MailboxPath mailboxPath, MailboxSession session) {
         try {
-            return !mailboxManager.mailboxExists(mailboxPath, session);
+            return Mono.from(mailboxManager.mailboxExists(mailboxPath, session))
+                .map(x -> !x);
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }

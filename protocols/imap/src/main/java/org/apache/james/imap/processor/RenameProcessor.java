@@ -40,6 +40,8 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Mono;
+
 public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RenameProcessor.class);
 
@@ -58,7 +60,7 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
             MailboxSession mailboxsession = session.getMailboxSession();
             mailboxManager.renameMailbox(existingPath, newPath, mailboxsession);
 
-            if (existingPath.getName().equalsIgnoreCase(ImapConstants.INBOX_NAME) && !mailboxManager.mailboxExists(existingPath, mailboxsession)) {
+            if (existingPath.getName().equalsIgnoreCase(ImapConstants.INBOX_NAME) && !Mono.from(mailboxManager.mailboxExists(existingPath, mailboxsession)).block()) {
                 mailboxManager.createMailbox(existingPath, mailboxsession);
             }
             okComplete(request, responder);

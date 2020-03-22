@@ -44,6 +44,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Mono;
+
 public abstract class AbstractAuthProcessor<R extends ImapRequest> extends AbstractMailboxProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAuthProcessor.class);
 
@@ -124,7 +126,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
 
     private void provisionInbox(ImapSession session, MailboxManager mailboxManager, MailboxSession mailboxSession) throws MailboxException {
         final MailboxPath inboxPath = PathConverter.forSession(session).buildFullPath(MailboxConstants.INBOX);
-        if (mailboxManager.mailboxExists(inboxPath, mailboxSession)) {
+        if (Mono.from(mailboxManager.mailboxExists(inboxPath, mailboxSession)).block()) {
             LOGGER.debug("INBOX exists. No need to create it.");
         } else {
             try {

@@ -45,6 +45,8 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Mono;
+
 
 public class UserMailboxesService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserMailboxesService.class);
@@ -89,9 +91,10 @@ public class UserMailboxesService {
     public boolean testMailboxExists(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        return mailboxManager.mailboxExists(
+        return Mono.from(mailboxManager.mailboxExists(
             MailboxPath.forUser(username, mailboxName.asString()),
-            mailboxSession);
+            mailboxSession))
+            .block();
     }
 
     public void deleteMailbox(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException, MailboxHaveChildrenException {

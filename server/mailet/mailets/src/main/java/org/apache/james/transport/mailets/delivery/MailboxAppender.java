@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 
+import reactor.core.publisher.Mono;
+
 public class MailboxAppender {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxAppender.class);
 
@@ -86,7 +88,7 @@ public class MailboxAppender {
     }
 
     private void createMailboxIfNotExist(MailboxSession session, MailboxPath path) throws MailboxException {
-        if (!mailboxManager.mailboxExists(path, session)) {
+        if (!Mono.from(mailboxManager.mailboxExists(path, session)).block()) {
             try {
                 mailboxManager.createMailbox(path, session);
             } catch (MailboxExistsException e) {

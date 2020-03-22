@@ -182,7 +182,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             session = mailboxManager.createSystemSession(USER_1);
             mailboxManager.startProcessingRequest(session);
 
-            assertThat(mailboxManager.hasInbox(session)).isFalse();
+            assertThat(Mono.from(mailboxManager.hasInbox(session)).block()).isFalse();
         }
 
         @Test
@@ -194,7 +194,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
             MessageManager retrievedMailbox = mailboxManager.getMailbox(mailboxPath, session);
 
-            assertThat(mailboxManager.hasInbox(session)).isTrue();
+            assertThat(Mono.from(mailboxManager.hasInbox(session)).block()).isTrue();
             assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
         }
 
@@ -206,7 +206,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> mailboxId = mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "iNbOx"), session);
             MessageManager retrievedMailbox = mailboxManager.getMailbox(MailboxPath.inbox(session), session);
 
-            assertThat(mailboxManager.hasInbox(session)).isTrue();
+            assertThat(Mono.from(mailboxManager.hasInbox(session)).block()).isTrue();
             assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
         }
 
@@ -242,7 +242,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> mailboxId = mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "iNbOx.submailbox"), session);
             MessageManager retrievedMailbox = mailboxManager.getMailbox(MailboxPath.inbox(session), session);
 
-            assertThat(mailboxManager.hasInbox(session)).isTrue();
+            assertThat(Mono.from(mailboxManager.hasInbox(session)).block()).isTrue();
         }
 
         @Test
@@ -254,7 +254,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> mailboxId = mailboxManager.createMailbox(childPath, session);
             MessageManager retrievedMailbox = mailboxManager.getMailbox(childPath, session);
 
-            assertThat(mailboxManager.hasInbox(session)).isTrue();
+            assertThat(Mono.from(mailboxManager.hasInbox(session)).block()).isTrue();
             assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
         }
     }
@@ -1524,7 +1524,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.startProcessingRequest(session);
 
             MailboxPath inbox = MailboxPath.inbox(session);
-            assertThat(mailboxManager.mailboxExists(inbox, session)).isFalse();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inbox, session)).block()).isFalse();
         }
 
         @Test
@@ -1535,7 +1535,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session);
 
-            assertThat(mailboxManager.mailboxExists(inbox, session)).isTrue();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inbox, session)).block()).isTrue();
         }
 
         @Test
@@ -1661,7 +1661,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session);
 
-            assertThat(mailboxManager.mailboxExists(new MailboxPath(inbox, "INBOX.Test"), session)).isFalse();
+            assertThat(Mono.from(mailboxManager.mailboxExists(new MailboxPath(inbox, "INBOX.Test"), session)).block()).isFalse();
         }
 
         @Test
@@ -1674,7 +1674,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath inboxSubMailbox = new MailboxPath(inbox, "INBOX.Test");
             mailboxManager.createMailbox(inboxSubMailbox, session);
 
-            assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isTrue();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inboxSubMailbox, session)).block()).isTrue();
         }
 
         @Test
@@ -1689,8 +1689,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             mailboxManager.deleteMailbox(inbox, session);
 
-            assertThat(mailboxManager.mailboxExists(inbox, session)).isFalse();
-            assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isTrue();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inbox, session)).block()).isFalse();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inboxSubMailbox, session)).block()).isTrue();
         }
 
 
@@ -1706,8 +1706,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             mailboxManager.deleteMailbox(inboxId, session);
 
-            assertThat(mailboxManager.mailboxExists(inbox, session)).isFalse();
-            assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isTrue();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inbox, session)).block()).isFalse();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inboxSubMailbox, session)).block()).isTrue();
         }
 
         @Test
@@ -1747,8 +1747,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             mailboxManager.deleteMailbox(inboxSubMailbox, session);
 
-            assertThat(mailboxManager.mailboxExists(inbox, session)).isTrue();
-            assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isFalse();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inbox, session)).block()).isTrue();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inboxSubMailbox, session)).block()).isFalse();
         }
 
         @Test
@@ -1763,8 +1763,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             mailboxManager.deleteMailbox(inboxSubMailboxId, session);
 
-            assertThat(mailboxManager.mailboxExists(inbox, session)).isTrue();
-            assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isFalse();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inbox, session)).block()).isTrue();
+            assertThat(Mono.from(mailboxManager.mailboxExists(inboxSubMailbox, session)).block()).isFalse();
         }
 
         @Test
@@ -1791,7 +1791,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath trash = MailboxPath.forUser(USER_2, "Trash");
             mailboxManager.createMailbox(trash, session);
 
-            assertThat(mailboxManager.mailboxExists(trash, session)).isTrue();
+            assertThat(Mono.from(mailboxManager.mailboxExists(trash, session)).block()).isTrue();
         }
 
         @Test
@@ -1800,7 +1800,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath nestedFolder = MailboxPath.forUser(USER_2, "INBOX.testfolder");
             mailboxManager.createMailbox(nestedFolder, session);
 
-            assertThat(mailboxManager.mailboxExists(nestedFolder, session)).isTrue();
+            assertThat(Mono.from(mailboxManager.mailboxExists(nestedFolder, session)).block()).isTrue();
             mailboxManager.getMailbox(MailboxPath.inbox(session), session)
                 .appendMessage(AppendCommand.from(message), session);
         }

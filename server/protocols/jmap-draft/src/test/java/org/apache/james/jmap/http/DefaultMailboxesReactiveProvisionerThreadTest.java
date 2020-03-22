@@ -40,6 +40,8 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 
+import reactor.core.publisher.Mono;
+
 public class DefaultMailboxesReactiveProvisionerThreadTest {
 
     private static final Username USERNAME = Username.of("username");
@@ -62,7 +64,7 @@ public class DefaultMailboxesReactiveProvisionerThreadTest {
         doNothing().when(subscriptionManager).subscribe(eq(session), anyString());
 
         when(mailboxManager.createMailbox(any(MailboxPath.class), eq(session))).thenReturn(Optional.of(TestId.of(18L)));
-        when(mailboxManager.mailboxExists(any(MailboxPath.class), eq(session))).thenReturn(false);
+        when(mailboxManager.mailboxExists(any(MailboxPath.class), eq(session))).thenReturn(Mono.just(false));
         when(mailboxManager.createSystemSession(USERNAME)).thenReturn(session);
 
         ConcurrentTestRunner

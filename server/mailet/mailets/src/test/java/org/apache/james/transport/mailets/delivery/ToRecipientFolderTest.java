@@ -50,6 +50,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import reactor.core.publisher.Mono;
+
 @Deprecated
 public class ToRecipientFolderTest {
 
@@ -83,6 +85,7 @@ public class ToRecipientFolderTest {
         session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
         when(mailboxManager.createSystemSession(any(Username.class))).thenReturn(session);
+        when(mailboxManager.mailboxExists(any(), any())).thenReturn(Mono.just(true));
         when(session.getUser()).thenReturn(Username.of(USER));
     }
 

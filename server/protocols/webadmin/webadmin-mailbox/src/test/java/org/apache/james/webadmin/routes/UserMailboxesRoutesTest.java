@@ -29,6 +29,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -83,6 +84,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import reactor.core.publisher.Mono;
 
 class UserMailboxesRoutesTest {
     private static final Username USERNAME = Username.of("username");
@@ -942,7 +944,7 @@ class UserMailboxesRoutesTest {
 
         @Test
         void getShouldGenerateInternalErrorOnUnknownException() throws Exception {
-            doThrow(new RuntimeException()).when(mailboxManager).mailboxExists(any(), any());
+            doReturn(Mono.error(new RuntimeException())).when(mailboxManager).mailboxExists(any(), any());
 
             when()
                 .get(MAILBOX_NAME)
@@ -952,7 +954,7 @@ class UserMailboxesRoutesTest {
 
         @Test
         void getShouldGenerateInternalErrorOnUnknownMailboxException() throws Exception {
-            doThrow(new MailboxException()).when(mailboxManager).mailboxExists(any(), any());
+            doReturn(Mono.error(new MailboxException())).when(mailboxManager).mailboxExists(any(), any());
 
             when()
                 .get(MAILBOX_NAME)

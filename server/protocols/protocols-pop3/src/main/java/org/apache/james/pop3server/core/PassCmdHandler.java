@@ -43,6 +43,8 @@ import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Mono;
+
 /**
  * {@link PassCmdHandler} which also handles POP3 Before SMTP
  * 
@@ -76,7 +78,7 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
             MailboxPath inbox = MailboxPath.inbox(mSession);
             
             // check if the mailbox exists, if not create it
-            if (!manager.mailboxExists(inbox, mSession)) {
+            if (!Mono.from(manager.mailboxExists(inbox, mSession)).block()) {
                 Optional<MailboxId> mailboxId = manager.createMailbox(inbox, mSession);
                 LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             }

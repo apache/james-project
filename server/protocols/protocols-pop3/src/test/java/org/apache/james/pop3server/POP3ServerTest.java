@@ -210,7 +210,7 @@ public class POP3ServerTest {
         pop3Client.disconnect();
         MailboxPath mailboxPath = MailboxPath.inbox(username);
         MailboxSession session = mailboxManager.login(username, "bar");
-        if (!mailboxManager.mailboxExists(mailboxPath, session)) {
+        if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
         }
         setupTestMails(session, mailboxManager.getMailbox(mailboxPath, session));
@@ -297,7 +297,7 @@ public class POP3ServerTest {
         MailboxPath mailboxPath = MailboxPath.inbox(username);
         MailboxSession session = mailboxManager.login(username, "bar2");
 
-        if (!mailboxManager.mailboxExists(mailboxPath, session)) {
+        if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
         }
 
@@ -387,7 +387,7 @@ public class POP3ServerTest {
         MailboxPath mailboxPath = MailboxPath.inbox(username);
         MailboxSession session = mailboxManager.login(username, "bar2");
 
-        if (!mailboxManager.mailboxExists(mailboxPath, session)) {
+        if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
         }
 
@@ -441,7 +441,7 @@ public class POP3ServerTest {
         MailboxPath mailboxPath = MailboxPath.inbox(username);
         MailboxSession session = mailboxManager.login(username, "bar2");
 
-        if (!mailboxManager.mailboxExists(mailboxPath, session)) {
+        if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
         }
 
@@ -653,7 +653,7 @@ public class POP3ServerTest {
         MailboxPath mailboxPath = MailboxPath.inbox(username);
 
         mailboxManager.startProcessingRequest(session);
-        if (!mailboxManager.mailboxExists(mailboxPath, session)) {
+        if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
         }
 

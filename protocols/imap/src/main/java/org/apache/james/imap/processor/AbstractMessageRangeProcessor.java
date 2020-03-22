@@ -48,6 +48,8 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 
+import reactor.core.publisher.Mono;
+
 public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageRangeProcessor.class);
 
@@ -70,7 +72,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
         try {
             MailboxSession mailboxSession = session.getMailboxSession();
 
-            if (!getMailboxManager().mailboxExists(targetMailbox, mailboxSession)) {
+            if (!Mono.from(getMailboxManager().mailboxExists(targetMailbox, mailboxSession)).block()) {
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
             } else {
                 StatusResponse.ResponseCode code = handleRanges(request, session, targetMailbox, mailboxSession);
