@@ -106,7 +106,7 @@ public class RequestHandlerTest {
         }
 
         @Override
-        public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+        public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
             Preconditions.checkArgument(request instanceof TestJmapRequest);
             TestJmapRequest typedRequest = (TestJmapRequest) request;
             return Stream.of(
@@ -193,7 +193,7 @@ public class RequestHandlerTest {
         }
         
         @Override
-        public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+        public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
             return null;
         }
     }
@@ -209,7 +209,8 @@ public class RequestHandlerTest {
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
         List<InvocationResponse> responses = testee.handle(AuthenticatedRequest.decorate(InvocationRequest.deserialize(nodes), session))
-                .collect(Collectors.toList());
+                .collectList()
+                .block();
 
         assertThat(responses).hasSize(1)
                 .extracting(

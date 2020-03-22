@@ -64,7 +64,7 @@ public class GetVacationResponseMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
         Preconditions.checkNotNull(methodCallId);
         Preconditions.checkNotNull(mailboxSession);

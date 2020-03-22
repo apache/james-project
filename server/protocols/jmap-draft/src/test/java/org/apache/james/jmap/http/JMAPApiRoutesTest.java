@@ -48,6 +48,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
@@ -115,7 +116,7 @@ public class JMAPApiRoutesTest {
         json.put("type", "invalidArgument");
 
         when(requestHandler.handle(any()))
-            .thenReturn(Stream.of(new InvocationResponse(ErrorResponse.ERROR_METHOD, json, MethodCallId.of("#0"))));
+            .thenReturn(Flux.just(new InvocationResponse(ErrorResponse.ERROR_METHOD, json, MethodCallId.of("#0"))));
 
         given()
             .body("[[\"getAccounts\", {\"state\":false}, \"#0\"]]")
@@ -137,7 +138,7 @@ public class JMAPApiRoutesTest {
         arrayNode.add(list);
 
         when(requestHandler.handle(any()))
-            .thenReturn(Stream.of(new InvocationResponse(Method.Response.name("accounts"), json, MethodCallId.of("#0"))));
+            .thenReturn(Flux.just(new InvocationResponse(Method.Response.name("accounts"), json, MethodCallId.of("#0"))));
 
         given()
             .body("[[\"getAccounts\", {}, \"#0\"]]")

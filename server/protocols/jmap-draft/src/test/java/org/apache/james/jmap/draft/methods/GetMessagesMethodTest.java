@@ -155,24 +155,24 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldThrowWhenNullRequest() {
         GetMessagesRequest request = null;
-        assertThatThrownBy(() -> testee.process(request, mock(MethodCallId.class), mock(MailboxSession.class))).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> testee.processToStream(request, mock(MethodCallId.class), mock(MailboxSession.class))).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void processShouldThrowWhenNullSession() {
         MailboxSession mailboxSession = null;
-        assertThatThrownBy(() -> testee.process(mock(GetMessagesRequest.class), mock(MethodCallId.class), mailboxSession)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> testee.processToStream(mock(GetMessagesRequest.class), mock(MethodCallId.class), mailboxSession)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void processShouldThrowWhenNullMethodCallId() {
         MethodCallId methodCallId = null;
-        assertThatThrownBy(() -> testee.process(mock(GetMessagesRequest.class), methodCallId, mock(MailboxSession.class))).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> testee.processToStream(mock(GetMessagesRequest.class), methodCallId, mock(MailboxSession.class))).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void processShouldThrowWhenRequestHasAccountId() {
-        assertThatThrownBy(() -> testee.process(
+        assertThatThrownBy(() -> testee.processToStream(
             GetMessagesRequest.builder().accountId("abc").build(), mock(MethodCallId.class), mock(MailboxSession.class))).isInstanceOf(NotImplementedException.class);
     }
 
@@ -190,7 +190,7 @@ public class GetMessagesMethodTest {
                 message3.getMessageId()))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getResponse)
@@ -221,7 +221,7 @@ public class GetMessagesMethodTest {
             .ids(ImmutableList.of(message.getMessageId()))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getResponse)
@@ -244,7 +244,7 @@ public class GetMessagesMethodTest {
             .properties(ImmutableList.of())
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getProperties())
@@ -261,7 +261,7 @@ public class GetMessagesMethodTest {
             .ids(ImmutableList.of(message1.getMessageId()))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getProperties())
             .isEqualTo(Optional.of(MessageProperty.allOutputProperties()));
@@ -280,7 +280,7 @@ public class GetMessagesMethodTest {
 
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.subject);
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getProperties())
             .isEqualTo(Optional.of(expected));
@@ -299,7 +299,7 @@ public class GetMessagesMethodTest {
 
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.textBody);
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getProperties())
@@ -322,7 +322,7 @@ public class GetMessagesMethodTest {
             .ids(ImmutableList.of(message.getMessageId()))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getResponse)
@@ -350,7 +350,7 @@ public class GetMessagesMethodTest {
             .ids(ImmutableList.of(message.getMessageId()))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getResponse)
@@ -384,7 +384,7 @@ public class GetMessagesMethodTest {
             .ids(ImmutableList.of(message.getMessageId()))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getResponse)
@@ -418,7 +418,7 @@ public class GetMessagesMethodTest {
 
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.headers);
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getProperties())
@@ -444,7 +444,7 @@ public class GetMessagesMethodTest {
             .properties(ImmutableList.of("headers.from", "headers.heADER2"))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result)
             .hasSize(1)
@@ -481,7 +481,7 @@ public class GetMessagesMethodTest {
             .properties(ImmutableList.of("mailboxIds"))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1);
         Method.Response response = result.get(0).getResponse();
@@ -518,7 +518,7 @@ public class GetMessagesMethodTest {
             .properties(ImmutableList.of("mailboxIds"))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1);
         Method.Response response = result.get(0).getResponse();
@@ -553,7 +553,7 @@ public class GetMessagesMethodTest {
             .properties(ImmutableList.of("mailboxIds", "textBody"))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1);
         Method.Response response = result.get(0).getResponse();
@@ -588,7 +588,7 @@ public class GetMessagesMethodTest {
             .properties(ImmutableList.of("mailboxIds", "to"))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1);
         Method.Response response = result.get(0).getResponse();
@@ -624,7 +624,7 @@ public class GetMessagesMethodTest {
             .properties(ImmutableList.of("mailboxIds"))
             .build();
 
-        List<JmapResponse> responses = testee.process(request, methodCallId, session).collect(Guavate.toImmutableList());
+        List<JmapResponse> responses = testee.processToStream(request, methodCallId, session).collect(Guavate.toImmutableList());
 
         assertThat(responses).hasSize(1);
         Method.Response response = responses.get(0).getResponse();
@@ -661,7 +661,7 @@ public class GetMessagesMethodTest {
                 message3.getMessageId()))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getResponse)
@@ -720,7 +720,7 @@ public class GetMessagesMethodTest {
                 message3.getMessageId()))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getResponse)
@@ -762,7 +762,7 @@ public class GetMessagesMethodTest {
             .ids(ImmutableList.of(message1.getMessageId()))
             .build();
 
-        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> result = testee.processToStream(request, methodCallId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
             .extracting(JmapResponse::getResponse)

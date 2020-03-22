@@ -28,10 +28,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.jmap.draft.json.ObjectMapperFactory;
-import org.apache.james.jmap.draft.model.MethodCallId;
-import org.apache.james.jmap.draft.model.Property;
 import org.apache.james.jmap.draft.model.InvocationRequest;
 import org.apache.james.jmap.draft.model.InvocationResponse;
+import org.apache.james.jmap.draft.model.MethodCallId;
+import org.apache.james.jmap.draft.model.Property;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.junit.Before;
@@ -45,6 +45,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+
+import reactor.core.publisher.Flux;
 
 public class JmapResponseWriterImplTest {
     private JmapResponseWriterImpl testee;
@@ -61,16 +63,17 @@ public class JmapResponseWriterImplTest {
         String expectedMethodCallId = "#1";
         String expectedId = "myId";
 
-        Stream<InvocationResponse> response = testee.formatMethodResponse(Stream.of(JmapResponse
-                .builder()
-                .methodCallId(MethodCallId.of(expectedMethodCallId))
-                .response(null)
-                .build()));
+        Stream<InvocationResponse> response = testee.formatMethodResponse(Flux.just(JmapResponse
+            .builder()
+            .methodCallId(MethodCallId.of(expectedMethodCallId))
+            .response(null)
+            .build()))
+            .toStream();
 
         List<InvocationResponse> responseList = response.collect(Collectors.toList());
         assertThat(responseList).hasSize(1)
-                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("id").asText(), InvocationResponse::getMethodCallId)
-                .containsExactly(tuple(expectedMethod, expectedId, expectedMethodCallId));
+            .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("id").asText(), InvocationResponse::getMethodCallId)
+            .containsExactly(tuple(expectedMethod, expectedId, expectedMethodCallId));
     }
 
     @Test
@@ -82,24 +85,25 @@ public class JmapResponseWriterImplTest {
         responseClass.id = expectedId;
 
         List<InvocationResponse> response = testee.formatMethodResponse(
-                Stream.of(JmapResponse
+            Flux.just(JmapResponse
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
                 .methodCallId(MethodCallId.of(expectedMethodCallId))
                 .response(responseClass)
                 .build()))
-                .collect(Collectors.toList());
+            .collectList()
+            .block();
 
         assertThat(response).hasSize(1)
-                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("id").asText(), InvocationResponse::getMethodCallId)
-                .containsExactly(tuple(Method.Response.name("unknownMethod"), expectedId, MethodCallId.of(expectedMethodCallId)));
+            .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("id").asText(), InvocationResponse::getMethodCallId)
+            .containsExactly(tuple(Method.Response.name("unknownMethod"), expectedId, MethodCallId.of(expectedMethodCallId)));
     }
 
     private static class ResponseClass implements Method.Response {
 
         @SuppressWarnings("unused")
         public String id;
-        
+
     }
 
     @Test
@@ -109,21 +113,21 @@ public class JmapResponseWriterImplTest {
         Property property = () -> "id";
 
         List<InvocationResponse> response = testee.formatMethodResponse(
-                Stream.of(JmapResponse
+            Flux.just(JmapResponse
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
                 .methodCallId(MethodCallId.of("#1"))
                 .properties(ImmutableSet.of(property))
                 .response(responseClass)
                 .build()))
-                .collect(Collectors.toList());
+            .collectList()
+            .block();
 
         assertThat(response).hasSize(1);
         JsonNode firstObject = Iterables.getOnlyElement(response).getResults().get("list").elements().next();
         assertThat(firstObject.get("id").asText()).isEqualTo("id");
         assertThat(firstObject.get("name")).isNull();
     }
-
 
 
     @Test
@@ -134,22 +138,24 @@ public class JmapResponseWriterImplTest {
 
         @SuppressWarnings("unused")
         Stream<InvocationResponse> ignoredResponse = testee.formatMethodResponse(
-                Stream.of(JmapResponse
-                        .builder()
-                        .responseName(Method.Response.name("unknownMethod"))
-                        .methodCallId(MethodCallId.of("#1"))
-                        .properties(ImmutableSet.of(property))
-                        .response(responseClass)
-                        .build()));
+            Flux.just(JmapResponse
+                .builder()
+                .responseName(Method.Response.name("unknownMethod"))
+                .methodCallId(MethodCallId.of("#1"))
+                .properties(ImmutableSet.of(property))
+                .response(responseClass)
+                .build()))
+            .toStream();
 
         List<InvocationResponse> response = testee.formatMethodResponse(
-                Stream.of(JmapResponse
+            Flux.just(JmapResponse
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
                 .methodCallId(MethodCallId.of("#1"))
                 .response(responseClass)
                 .build()))
-                .collect(Collectors.toList());
+            .collect(Collectors.toList())
+            .block();
 
         assertThat(response).hasSize(1);
         JsonNode firstObject = Iterables.getOnlyElement(response).getResults().get("list").elements().next();
@@ -166,28 +172,29 @@ public class JmapResponseWriterImplTest {
         Property nameProperty = () -> "name";
 
         List<InvocationResponse> response = testee.formatMethodResponse(
-                Stream.of(JmapResponse
-                            .builder()
-                            .responseName(Method.Response.name("unknownMethod"))
-                            .methodCallId(MethodCallId.of("#1"))
-                            .properties(ImmutableSet.of(idProperty, nameProperty))
-                            .response(responseClass)
-                            .build(),
-                        JmapResponse
-                            .builder()
-                            .responseName(Method.Response.name("unknownMethod"))
-                            .methodCallId(MethodCallId.of("#1"))
-                            .properties(ImmutableSet.of(idProperty))
-                            .response(responseClass)
-                            .build()))
-                .collect(Collectors.toList());
+            Flux.just(JmapResponse
+                    .builder()
+                    .responseName(Method.Response.name("unknownMethod"))
+                    .methodCallId(MethodCallId.of("#1"))
+                    .properties(ImmutableSet.of(idProperty, nameProperty))
+                    .response(responseClass)
+                    .build(),
+                JmapResponse
+                    .builder()
+                    .responseName(Method.Response.name("unknownMethod"))
+                    .methodCallId(MethodCallId.of("#1"))
+                    .properties(ImmutableSet.of(idProperty))
+                    .response(responseClass)
+                    .build()))
+            .collectList()
+            .block();
 
         assertThat(response).hasSize(2)
-                .extracting(x -> x.getResults().get("list").elements().next())
-                .extracting(
-                        x -> x.get("id").asText(),
-                        x -> Optional.ofNullable(x.get("name")).map(JsonNode::asText).orElse(null))
-                .containsExactly(tuple("id", "name"), tuple("id", null));
+            .extracting(x -> x.getResults().get("list").elements().next())
+            .extracting(
+                x -> x.get("id").asText(),
+                x -> Optional.ofNullable(x.get("name")).map(JsonNode::asText).orElse(null))
+            .containsExactly(tuple("id", "name"), tuple("id", null));
     }
 
     @SuppressWarnings("unused")
@@ -196,13 +203,13 @@ public class JmapResponseWriterImplTest {
         private static class Foo {
             public String id;
             public String name;
-            
+
             public Foo(String id, String name) {
                 this.id = id;
                 this.name = name;
             }
         }
-        
+
         public List<Foo> list;
     }
 
@@ -212,21 +219,22 @@ public class JmapResponseWriterImplTest {
 
         ObjectNode parameters = new ObjectNode(new JsonNodeFactory(false));
         parameters.put("id", "myId");
-        JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
-                parameters,
-                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedMethodCallId)};
+        JsonNode[] nodes = new JsonNode[]{new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
+            parameters,
+            new ObjectNode(new JsonNodeFactory(false)).textNode(expectedMethodCallId)};
 
         List<InvocationResponse> response = testee.formatMethodResponse(
-                Stream.of(JmapResponse
-                    .builder()
-                    .methodCallId(InvocationRequest.deserialize(nodes).getMethodCallId())
-                    .error()
-                    .build()))
-                .collect(Collectors.toList());
+            Flux.just(JmapResponse
+                .builder()
+                .methodCallId(InvocationRequest.deserialize(nodes).getMethodCallId())
+                .error()
+                .build()))
+            .collectList()
+            .block();
 
         assertThat(response).hasSize(1)
-                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("type").asText(), InvocationResponse::getMethodCallId)
-                .containsExactly(tuple(ErrorResponse.ERROR_METHOD, ErrorResponse.DEFAULT_ERROR_MESSAGE, MethodCallId.of(expectedMethodCallId)));
+            .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("type").asText(), InvocationResponse::getMethodCallId)
+            .containsExactly(tuple(ErrorResponse.ERROR_METHOD, ErrorResponse.DEFAULT_ERROR_MESSAGE, MethodCallId.of(expectedMethodCallId)));
     }
 
     @Test
@@ -235,25 +243,26 @@ public class JmapResponseWriterImplTest {
 
         ObjectNode parameters = new ObjectNode(new JsonNodeFactory(false));
         parameters.put("id", "myId");
-        JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
-                parameters,
-                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedMethodCallId)};
+        JsonNode[] nodes = new JsonNode[]{new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
+            parameters,
+            new ObjectNode(new JsonNodeFactory(false)).textNode(expectedMethodCallId)};
 
         List<InvocationResponse> response = testee.formatMethodResponse(
-                Stream.of(JmapResponse
+            Flux.just(JmapResponse
+                .builder()
+                .methodCallId(InvocationRequest.deserialize(nodes).getMethodCallId())
+                .error(ErrorResponse
                     .builder()
-                    .methodCallId(InvocationRequest.deserialize(nodes).getMethodCallId())
-                    .error(ErrorResponse
-                            .builder()
-                            .type("errorType")
-                            .description("complete description")
-                            .build())
-                    .build()))
-                .collect(Collectors.toList());
+                    .type("errorType")
+                    .description("complete description")
+                    .build())
+                .build()))
+            .collectList()
+            .block();
 
         assertThat(response).hasSize(1)
-                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("type").asText(), x -> x.getResults().get("description").asText(), InvocationResponse::getMethodCallId)
-                .containsExactly(tuple(ErrorResponse.ERROR_METHOD, "errorType", "complete description", MethodCallId.of(expectedMethodCallId)));
+            .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("type").asText(), x -> x.getResults().get("description").asText(), InvocationResponse::getMethodCallId)
+            .containsExactly(tuple(ErrorResponse.ERROR_METHOD, "errorType", "complete description", MethodCallId.of(expectedMethodCallId)));
     }
 
 }

@@ -104,7 +104,7 @@ public class JMAPApiRoutes implements JMAPRoutes {
             requestAsJsonStream(request)
                 .map(InvocationRequest::deserialize)
                 .map(invocationRequest -> AuthenticatedRequest.decorate(invocationRequest, session))
-                .concatMap(this::handle)
+                .concatMap(requestHandler::handle)
                 .map(InvocationResponse::asProtocolSpecification);
 
         return sendResponses(response, responses);
@@ -123,12 +123,6 @@ public class JMAPApiRoutes implements JMAPRoutes {
                 .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
                 .sendString(Mono.just(json))
                 .then());
-    }
-
-    private Flux<? extends InvocationResponse> handle(AuthenticatedRequest request) {
-        return Mono.fromCallable(() -> requestHandler.handle(request))
-            .flatMapMany(Flux::fromStream)
-            .subscribeOn(Schedulers.elastic());
     }
 
     private Flux<JsonNode[]> requestAsJsonStream(HttpServerRequest req) {

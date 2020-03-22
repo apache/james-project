@@ -19,12 +19,12 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import java.util.stream.Stream;
-
 import org.apache.james.jmap.draft.model.InvocationResponse;
+
+import reactor.core.publisher.Flux;
 
 public interface JmapResponseWriter {
 
-    Stream<InvocationResponse> formatMethodResponse(Stream<JmapResponse> jmapResponse);
+    Flux<InvocationResponse> formatMethodResponse(Flux<JmapResponse> jmapResponse);
 
 }

@@ -105,7 +105,7 @@ public class GetVacationResponseMethodTest {
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
 
-        Stream<JmapResponse> result = testee.process(getVacationRequest, methodCallId, mailboxSession);
+        Stream<JmapResponse> result = testee.processToStream(getVacationRequest, methodCallId, mailboxSession);
 
         JmapResponse expected = JmapResponse.builder()
             .methodCallId(methodCallId)
@@ -137,7 +137,7 @@ public class GetVacationResponseMethodTest {
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
 
-        Stream<JmapResponse> result = testee.process(getVacationRequest, methodCallId, mailboxSession);
+        Stream<JmapResponse> result = testee.processToStream(getVacationRequest, methodCallId, mailboxSession);
 
         JmapResponse expected = JmapResponse.builder()
             .methodCallId(methodCallId)
@@ -171,7 +171,7 @@ public class GetVacationResponseMethodTest {
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
 
-        Stream<JmapResponse> result = testee.process(getVacationRequest, methodCallId, mailboxSession);
+        Stream<JmapResponse> result = testee.processToStream(getVacationRequest, methodCallId, mailboxSession);
 
         JmapResponse expected = JmapResponse.builder()
             .methodCallId(methodCallId)

@@ -73,22 +73,22 @@ public class SetVacationResponseMethodTest {
 
     @Test(expected = NullPointerException.class)
     public void processShouldThrowOnNullRequest() {
-        testee.process(null, mock(MethodCallId.class), mock(MailboxSession.class));
+        testee.processToStream(null, mock(MethodCallId.class), mock(MailboxSession.class));
     }
 
     @Test(expected = NullPointerException.class)
     public void processShouldThrowOnNullMethodCallId() {
-        testee.process(mock(SetMailboxesRequest.class), null, mock(MailboxSession.class));
+        testee.processToStream(mock(SetMailboxesRequest.class), null, mock(MailboxSession.class));
     }
 
     @Test(expected = NullPointerException.class)
     public void processShouldThrowOnNullMailboxSession() {
-        testee.process(mock(SetMailboxesRequest.class), mock(MethodCallId.class), null);
+        testee.processToStream(mock(SetMailboxesRequest.class), mock(MethodCallId.class), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void processShouldThrowOnWrongRequestType() {
-        testee.process(mock(GetMailboxesRequest.class), mock(MethodCallId.class), mock(MailboxSession.class));
+        testee.processToStream(mock(GetMailboxesRequest.class), mock(MethodCallId.class), mock(MailboxSession.class));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class SetVacationResponseMethodTest {
             .update(ImmutableMap.of())
             .build();
 
-        Stream<JmapResponse> result = testee.process(setVacationRequest, methodCallId, mock(MailboxSession.class));
+        Stream<JmapResponse> result = testee.processToStream(setVacationRequest, methodCallId, mock(MailboxSession.class));
 
         JmapResponse expected = JmapResponse.builder()
             .methodCallId(methodCallId)
@@ -120,7 +120,7 @@ public class SetVacationResponseMethodTest {
                 .build()))
             .build();
 
-        Stream<JmapResponse> result = testee.process(setVacationRequest, methodCallId, mock(MailboxSession.class));
+        Stream<JmapResponse> result = testee.processToStream(setVacationRequest, methodCallId, mock(MailboxSession.class));
 
         JmapResponse expected = JmapResponse.builder()
             .methodCallId(methodCallId)
@@ -148,7 +148,7 @@ public class SetVacationResponseMethodTest {
                     .build()))
             .build();
 
-        Stream<JmapResponse> result = testee.process(setVacationRequest, methodCallId, mock(MailboxSession.class));
+        Stream<JmapResponse> result = testee.processToStream(setVacationRequest, methodCallId, mock(MailboxSession.class));
 
         JmapResponse expected = JmapResponse.builder()
             .methodCallId(methodCallId)
@@ -178,7 +178,7 @@ public class SetVacationResponseMethodTest {
         when(notificationRegistry.flush(any()))
             .thenReturn(Mono.empty());
 
-        Stream<JmapResponse> result = testee.process(setVacationRequest, methodCallId, mailboxSession);
+        Stream<JmapResponse> result = testee.processToStream(setVacationRequest, methodCallId, mailboxSession);
 
         JmapResponse expected = JmapResponse.builder()
             .methodCallId(methodCallId)
@@ -205,7 +205,7 @@ public class SetVacationResponseMethodTest {
             .build();
         when(mailboxSession.getUser()).thenReturn(USERNAME);
 
-        Stream<JmapResponse> result = testee.process(setVacationRequest, methodCallId, mailboxSession);
+        Stream<JmapResponse> result = testee.processToStream(setVacationRequest, methodCallId, mailboxSession);
 
         JmapResponse expected = JmapResponse.builder()
             .methodCallId(methodCallId)

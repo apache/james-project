@@ -89,7 +89,7 @@ public class GetMessageListMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMessageListRequest);
 
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
@@ -180,7 +180,7 @@ public class GetMessageListMethod implements Method {
                     .ids(messageListResponse.getMessageIds())
                     .properties(messageListRequest.getFetchMessageProperties())
                     .build();
-            return getMessagesMethod.process(getMessagesRequest, methodCallId, mailboxSession);
+            return getMessagesMethod.processToStream(getMessagesRequest, methodCallId, mailboxSession);
         }
         return Stream.empty();
     }

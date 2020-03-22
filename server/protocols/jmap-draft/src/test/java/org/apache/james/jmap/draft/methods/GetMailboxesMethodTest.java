@@ -88,7 +88,7 @@ public class GetMailboxesMethodTest {
 
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -112,7 +112,7 @@ public class GetMailboxesMethodTest {
                 .build();
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
 
-        List<JmapResponse> getMailboxesResponse = testee.process(getMailboxesRequest, methodCallId, session).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = testee.processToStream(getMailboxesRequest, methodCallId, session).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -142,7 +142,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -167,7 +167,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, userSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, userSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -188,7 +188,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -209,7 +209,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -230,7 +230,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -258,7 +258,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -288,7 +288,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -318,7 +318,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -357,7 +357,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)
@@ -387,7 +387,7 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.processToStream(getMailboxesRequest, methodCallId, mailboxSession).collect(Collectors.toList());
 
         assertThat(getMailboxesResponse)
                 .hasSize(1)

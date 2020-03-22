@@ -88,7 +88,7 @@ public class GetMailboxesMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;
 

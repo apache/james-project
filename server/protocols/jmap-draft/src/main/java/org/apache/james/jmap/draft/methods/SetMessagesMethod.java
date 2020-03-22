@@ -59,7 +59,7 @@ public class SetMessagesMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof SetMessagesRequest);
         SetMessagesRequest setMessagesRequest = (SetMessagesRequest) request;
 

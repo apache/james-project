@@ -21,7 +21,6 @@ package org.apache.james.jmap.draft.methods;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -36,6 +35,8 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.github.steveash.guavate.Guavate;
 
+import reactor.core.publisher.Flux;
+
 public class JmapResponseWriterImpl implements JmapResponseWriter {
 
     public static final String PROPERTIES_FILTER = "propertiesFilter";
@@ -47,7 +48,7 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
     }
 
     @Override
-    public Stream<InvocationResponse> formatMethodResponse(Stream<JmapResponse> jmapResponses) {
+    public Flux<InvocationResponse> formatMethodResponse(Flux<JmapResponse> jmapResponses) {
         return jmapResponses.map(jmapResponse -> {
             ObjectMapper objectMapper = newConfiguredObjectMapper(jmapResponse);
 
