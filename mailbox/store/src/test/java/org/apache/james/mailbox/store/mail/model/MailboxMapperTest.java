@@ -82,15 +82,15 @@ public abstract class MailboxMapperTest {
 
     @Test
     void findMailboxByPathWhenAbsentShouldFail() {
-        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(MailboxPath.forUser(BENWA, "INBOX")))
-            .isInstanceOf(MailboxNotFoundException.class);
+        assertThat(mailboxMapper.findMailboxByPath(MailboxPath.forUser(BENWA, "INBOX")).blockOptional())
+            .isEmpty();
     }
 
     @Test
     void createShouldPersistTheMailbox() throws MailboxException {
         benwaInboxMailbox = createMailbox(benwaInboxPath);
 
-        assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
+        assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath).blockOptional()).contains(benwaInboxMailbox);
         assertThat(mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId())).isEqualTo(benwaInboxMailbox);
     }
 
@@ -149,8 +149,8 @@ public abstract class MailboxMapperTest {
         benwaWorkMailbox = new Mailbox(benwaWorkPath, UID_VALIDITY, mailboxId);
         mailboxMapper.rename(benwaWorkMailbox);
 
-        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(benwaInboxPath))
-            .isInstanceOf(MailboxNotFoundException.class);
+        assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath).blockOptional())
+            .isEmpty();
     }
 
     @Test
@@ -200,8 +200,8 @@ public abstract class MailboxMapperTest {
         createAll();
         mailboxMapper.delete(benwaInboxMailbox);
 
-        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(benwaInboxPath))
-            .isInstanceOf(MailboxNotFoundException.class);
+        assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath).blockOptional())
+            .isEmpty();
     }
 
     @Test

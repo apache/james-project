@@ -157,7 +157,7 @@ class CassandraMailboxMapperTest {
                         .assertThat(testee.findMailboxById(inboxId))
                         .isEqualTo(inboxRenamed);
                     softly(softly)
-                        .assertThat(testee.findMailboxByPath(inboxPathRenamed))
+                        .assertThat(testee.findMailboxByPath(inboxPathRenamed).block())
                         .isEqualTo(inboxRenamed);
                     softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
                         .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
@@ -184,7 +184,7 @@ class CassandraMailboxMapperTest {
                         .assertThat(testee.findMailboxById(inboxId))
                         .isEqualTo(inboxRenamed);
                     softly(softly)
-                        .assertThat(testee.findMailboxByPath(inboxPathRenamed))
+                        .assertThat(testee.findMailboxByPath(inboxPathRenamed).block())
                         .isEqualTo(inboxRenamed);
                     softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
                         .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
@@ -207,7 +207,7 @@ class CassandraMailboxMapperTest {
                         .assertThat(testee.findMailboxById(inbox.getMailboxId()))
                         .isEqualTo(inbox);
                     softly(softly)
-                        .assertThat(testee.findMailboxByPath(inboxPath))
+                        .assertThat(testee.findMailboxByPath(inboxPath).block())
                         .isEqualTo(inbox);
                     softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
                         .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
@@ -228,10 +228,10 @@ class CassandraMailboxMapperTest {
                 testee.delete(inbox);
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    assertThatThrownBy(() -> testee.findMailboxById(inbox.getMailboxId()))
+                    softly.assertThatThrownBy(() -> testee.findMailboxById(inbox.getMailboxId()))
                         .isInstanceOf(MailboxNotFoundException.class);
-                    assertThatThrownBy(() -> testee.findMailboxByPath(inboxPath))
-                        .isInstanceOf(MailboxNotFoundException.class);
+                    softly.assertThat(testee.findMailboxByPath(inboxPath).blockOptional())
+                        .isEmpty();
                     softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
                         .isEmpty();
                 }));
@@ -248,8 +248,8 @@ class CassandraMailboxMapperTest {
             doQuietly(() -> testee.create(inboxPath, UID_VALIDITY));
 
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPath))
-                    .isInstanceOf(MailboxNotFoundException.class);
+                softly.assertThat(testee.findMailboxByPath(inboxPath).blockOptional())
+                    .isEmpty();
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .isEmpty();
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
@@ -277,7 +277,7 @@ class CassandraMailboxMapperTest {
                     .assertThat(testee.findMailboxById(inboxId))
                     .isEqualTo(inbox);
                 softly(softly)
-                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .assertThat(testee.findMailboxByPath(inboxPath).block())
                     .isEqualTo(inbox);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
@@ -348,7 +348,7 @@ class CassandraMailboxMapperTest {
                     .assertThat(testee.findMailboxById(inboxId))
                     .isEqualTo(inbox);
                 softly(softly)
-                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .assertThat(testee.findMailboxByPath(inboxPath).block())
                     .isEqualTo(inbox);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
@@ -463,7 +463,7 @@ class CassandraMailboxMapperTest {
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
-                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .assertThat(testee.findMailboxByPath(inboxPath).block())
                     .isEqualTo(inbox);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
@@ -490,7 +490,7 @@ class CassandraMailboxMapperTest {
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
-                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .assertThat(testee.findMailboxByPath(inboxPath).block())
                     .isEqualTo(inbox);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
@@ -520,8 +520,8 @@ class CassandraMailboxMapperTest {
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThatThrownBy(() -> testee.findMailboxById(inboxId))
                     .isInstanceOf(MailboxNotFoundException.class);
-                softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPath))
-                    .isInstanceOf(MailboxNotFoundException.class);
+                    softly.assertThat(testee.findMailboxByPath(inboxPath).blockOptional())
+                        .isEmpty();
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .isEmpty();
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
@@ -551,7 +551,7 @@ class CassandraMailboxMapperTest {
                     .assertThat(testee.findMailboxById(inboxId))
                     .isEqualTo(inboxRenamed);
                 softly(softly)
-                    .assertThat(testee.findMailboxByPath(inboxPathRenamed))
+                    .assertThat(testee.findMailboxByPath(inboxPathRenamed).block())
                     .isEqualTo(inboxRenamed);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .isEmpty();
@@ -587,7 +587,7 @@ class CassandraMailboxMapperTest {
                     .assertThat(testee.findMailboxById(inboxId))
                     .isEqualTo(inboxRenamed);
                 softly(softly)
-                    .assertThat(testee.findMailboxByPath(inboxPathRenamed))
+                    .assertThat(testee.findMailboxByPath(inboxPathRenamed).block())
                     .isEqualTo(inboxRenamed);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .isEmpty();
@@ -620,7 +620,7 @@ class CassandraMailboxMapperTest {
     @Test
     void renameShouldNotRemoveOldMailboxPathWhenCreatingTheNewMailboxPathFails() throws Exception {
         testee.create(MAILBOX_PATH, UID_VALIDITY);
-        Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH);
+        Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH).block();
 
         Mailbox newMailbox = new Mailbox(tooLongMailboxPath(mailbox.generateAssociatedPath()), UID_VALIDITY, mailbox.getMailboxId());
         assertThatThrownBy(() -> testee.rename(newMailbox))
@@ -643,8 +643,8 @@ class CassandraMailboxMapperTest {
 
         testee.delete(MAILBOX);
 
-        assertThatThrownBy(() -> testee.findMailboxByPath(MAILBOX_PATH))
-            .isInstanceOf(MailboxNotFoundException.class);
+        assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
+            .isEmpty();
     }
 
     @Test
@@ -656,36 +656,36 @@ class CassandraMailboxMapperTest {
 
         testee.delete(MAILBOX);
 
-        assertThatThrownBy(() -> testee.findMailboxByPath(MAILBOX_PATH))
-            .isInstanceOf(MailboxNotFoundException.class);
+        assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
+            .isEmpty();
     }
 
     @Test
-    void findMailboxByPathShouldReturnMailboxWhenExistsInV1Table() throws Exception {
+    void findMailboxByPathShouldReturnMailboxWhenExistsInV1Table() {
         mailboxDAO.save(MAILBOX)
             .block();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
 
-        Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH);
+        Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH).block();
 
         assertThat(mailbox.generateAssociatedPath()).isEqualTo(MAILBOX_PATH);
     }
 
     @Test
-    void findMailboxByPathShouldReturnMailboxWhenExistsInV2Table() throws Exception {
+    void findMailboxByPathShouldReturnMailboxWhenExistsInV2Table() {
         mailboxDAO.save(MAILBOX)
             .block();
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
 
-        Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH);
+        Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH).block();
 
         assertThat(mailbox.generateAssociatedPath()).isEqualTo(MAILBOX_PATH);
     }
 
     @Test
-    void findMailboxByPathShouldReturnMailboxWhenExistsInBothTables() throws Exception {
+    void findMailboxByPathShouldReturnMailboxWhenExistsInBothTables() {
         mailboxDAO.save(MAILBOX)
             .block();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -693,7 +693,7 @@ class CassandraMailboxMapperTest {
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
 
-        Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH);
+        Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH).block();
 
         assertThat(mailbox.generateAssociatedPath()).isEqualTo(MAILBOX_PATH);
     }
@@ -709,8 +709,8 @@ class CassandraMailboxMapperTest {
 
         testee.delete(MAILBOX);
 
-        assertThatThrownBy(() -> testee.findMailboxByPath(MAILBOX_PATH))
-            .isInstanceOf(MailboxNotFoundException.class);
+        assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
+            .isEmpty();
     }
 
     @Test
@@ -722,8 +722,8 @@ class CassandraMailboxMapperTest {
 
         testee.delete(MAILBOX);
 
-        assertThatThrownBy(() -> testee.findMailboxByPath(MAILBOX_PATH))
-            .isInstanceOf(MailboxNotFoundException.class);
+        assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
+            .isEmpty();
     }
 
     @Test
@@ -735,8 +735,8 @@ class CassandraMailboxMapperTest {
 
         testee.delete(MAILBOX);
 
-        assertThatThrownBy(() -> testee.findMailboxByPath(MAILBOX_PATH))
-            .isInstanceOf(MailboxNotFoundException.class);
+        assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
+            .isEmpty();
     }
 
     @Test
@@ -744,8 +744,8 @@ class CassandraMailboxMapperTest {
         mailboxDAO.save(MAILBOX)
             .block();
 
-        assertThatThrownBy(() -> testee.findMailboxByPath(MAILBOX_PATH))
-            .isInstanceOf(MailboxNotFoundException.class);
+        assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
+            .isEmpty();
     }
 
     @Test

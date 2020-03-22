@@ -78,7 +78,7 @@ public class MessageIdManagerTestSystem {
 
     public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         mailboxManager.createMailbox(mailboxPath, session);
-        return mapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath);
+        return mapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath).block();
     }
 
     public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession mailboxSession) {

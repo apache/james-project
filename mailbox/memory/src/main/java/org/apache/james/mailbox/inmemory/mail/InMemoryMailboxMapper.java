@@ -44,6 +44,8 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Mono;
+
 public class InMemoryMailboxMapper implements MailboxMapper {
     
     private static final int INITIAL_SIZE = 128;
@@ -64,13 +66,10 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public synchronized Mailbox findMailboxByPath(MailboxPath path) throws MailboxException {
+    public synchronized Mono<Mailbox> findMailboxByPath(MailboxPath path) {
         Mailbox result = mailboxesByPath.get(path);
-        if (result == null) {
-            throw new MailboxNotFoundException(path);
-        } else {
-            return new Mailbox(result);
-        }
+        return Mono.justOrEmpty(result)
+            .map(Mailbox::new);
     }
 
     @Override

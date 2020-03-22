@@ -82,13 +82,11 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public Mailbox findMailboxByPath(MailboxPath path) throws MailboxException {
+    public Mono<Mailbox> findMailboxByPath(MailboxPath path) {
         return mailboxPathV2DAO.retrieveId(path)
             .map(CassandraIdAndPath::getCassandraId)
             .flatMap(this::retrieveMailbox)
-            .switchIfEmpty(fromPreviousTable(path))
-            .blockOptional()
-            .orElseThrow(() -> new MailboxNotFoundException(path));
+            .switchIfEmpty(fromPreviousTable(path));
     }
 
     private Mono<Mailbox> fromPreviousTable(MailboxPath path) {

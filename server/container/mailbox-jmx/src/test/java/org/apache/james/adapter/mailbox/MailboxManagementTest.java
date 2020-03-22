@@ -132,7 +132,10 @@ public class MailboxManagementTest {
     void createMailboxShouldCreateAMailbox() throws Exception {
         mailboxManagerManagement.createMailbox(MailboxConstants.USER_NAMESPACE, USER.asString(), "name");
         assertThat(mapperFactory.createMailboxMapper(session).list()).hasSize(1);
-        assertThat(mapperFactory.createMailboxMapper(session).findMailboxByPath(MailboxPath.forUser(USER, "name"))).isNotNull();
+        assertThat(mapperFactory.createMailboxMapper(session)
+                .findMailboxByPath(MailboxPath.forUser(USER, "name"))
+                .blockOptional())
+            .isPresent();
     }
 
     @Test

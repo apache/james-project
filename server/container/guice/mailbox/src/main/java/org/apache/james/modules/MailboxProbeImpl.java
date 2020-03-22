@@ -34,6 +34,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -84,7 +85,11 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         try {
             mailboxSession = mailboxManager.createSystemSession(username);
             MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(mailboxSession);
-            return mailboxMapper.findMailboxByPath(new MailboxPath(namespace, username, name)).getMailboxId();
+            MailboxPath path = new MailboxPath(namespace, username, name);
+            return mailboxMapper.findMailboxByPath(path)
+                .blockOptional()
+                .orElseThrow(() -> new MailboxNotFoundException(path.asString()))
+                .getMailboxId();
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         } finally {

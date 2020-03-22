@@ -255,13 +255,12 @@ public class StoreMailboxManager implements MailboxManager {
     public MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session)
             throws MailboxException {
         final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailboxRow = mapper.findMailboxByPath(mailboxPath);
-
-        if (mailboxRow == null) {
-            LOGGER.info("Mailbox '{}' not found.", mailboxPath);
-            throw new MailboxNotFoundException(mailboxPath);
-
-        }
+        Mailbox mailboxRow = mapper.findMailboxByPath(mailboxPath)
+            .blockOptional()
+            .orElseThrow(() -> {
+                LOGGER.info("Mailbox '{}' not found.", mailboxPath);
+                return new MailboxNotFoundException(mailboxPath);
+            });
 
         if (!assertUserHasAccessTo(mailboxRow, session)) {
             LOGGER.info("Mailbox '{}' does not belong to user '{}' but to '{}'", mailboxPath, session.getUser(), mailboxRow.getUser());
@@ -409,10 +408,7 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         mailboxMapper.execute(() -> {
-            Mailbox mailbox = mailboxMapper.findMailboxByPath(mailboxPath);
-            if (mailbox == null) {
-                throw new MailboxNotFoundException(mailboxPath);
-            }
+            Mailbox mailbox = mailboxMapper.findMailboxByPathBlocking(mailboxPath);
             return doDeleteMailbox(mailboxMapper, mailbox, session);
         });
     }
@@ -476,8 +472,7 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         mapper.execute(Mapper.toTransaction(() -> {
-            Mailbox mailbox = Optional.ofNullable(mapper.findMailboxByPath(from))
-                .orElseThrow(() -> new MailboxNotFoundException(from));
+            Mailbox mailbox = mapper.findMailboxByPathBlocking(from);
             doRenameMailbox(mailbox, sanitizedMailboxPath, session, mapper);
         }));
     }
@@ -701,13 +696,10 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public boolean mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-        try {
-            final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-            mapper.findMailboxByPath(mailboxPath);
-            return true;
-        } catch (MailboxNotFoundException e) {
-            return false;
-        }
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        return mapper.findMailboxByPath(mailboxPath)
+            .blockOptional()
+            .isPresent();
     }
 
     /**
@@ -819,7 +811,7 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
+        Mailbox mailbox = mapper.findMailboxByPathBlocking(mailboxPath);
         return mapper.hasChildren(mailbox, session.getPathDelimiter());
     }
 

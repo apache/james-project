@@ -33,6 +33,8 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Mapper for {@link Mailbox} actions. A {@link MailboxMapper} has a lifecycle from the start of a request 
  * to the end of the request.
@@ -59,8 +61,21 @@ public interface MailboxMapper extends Mapper {
     /**
      * Return the {@link Mailbox} for the given name
      */
-    Mailbox findMailboxByPath(MailboxPath mailboxName)
-            throws MailboxException, MailboxNotFoundException;
+    Mono<Mailbox> findMailboxByPath(MailboxPath mailboxName);
+
+    default Mailbox findMailboxByPathBlocking(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
+        try {
+            return findMailboxByPath(mailboxPath)
+                .blockOptional()
+                .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));
+        } catch (Exception e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof MailboxException) {
+                throw (MailboxException) cause;
+            }
+            throw e;
+        }
+    }
 
     /**
      * Return the {@link Mailbox} for the given name

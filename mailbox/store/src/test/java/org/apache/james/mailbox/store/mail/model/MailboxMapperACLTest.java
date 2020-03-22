@@ -396,6 +396,7 @@ public abstract class MailboxMapperACLTest {
 
         assertThat(
             mailboxMapper.findMailboxByPath(benwaInboxMailbox.generateAssociatedPath())
+                .block()
                 .getACL()
                 .getEntries())
             .hasSize(1)

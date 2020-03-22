@@ -69,7 +69,7 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
 
     public MailboxId checkThenGetMailboxId(MailboxPath path, MailboxSession session) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = mailboxMapper.findMailboxByPath(path);
+        Mailbox mailbox = mailboxMapper.findMailboxByPathBlocking(path);
         if (!rightManager.hasRight(mailbox, Right.Read, session)) {
             throw new InsufficientRightsException("Not enough rights on " + path);
         }

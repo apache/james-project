@@ -60,6 +60,8 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Mono;
+
 class StoreMailboxManagerTest {
     static final Username CURRENT_USER = Username.of("user");
     static final String CURRENT_USER_PASSWORD = "secret";
@@ -146,7 +148,7 @@ class StoreMailboxManagerTest {
         when(mockedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
         when(mockedMailbox.getUser()).thenReturn(otherUser);
         when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(mockedMailbox);
-        when(mockedMailboxMapper.findMailboxByPath(any())).thenReturn(mockedMailbox);
+        when(mockedMailboxMapper.findMailboxByPath(any())).thenReturn(Mono.just(mockedMailbox));
 
         assertThatThrownBy(() -> storeMailboxManager.getMailbox(MAILBOX_ID, mockedMailboxSession))
             .isInstanceOf(MailboxNotFoundException.class);

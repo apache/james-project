@@ -50,6 +50,8 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Data access management for mailbox.
  */
@@ -129,27 +131,24 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     private boolean isPathAlreadyUsedByAnotherMailbox(MailboxPath mailboxPath) throws MailboxException {
-        try {
-            findMailboxByPath(mailboxPath);
-            return true;
-        } catch (MailboxNotFoundException e) {
-            return false;
-        }
+        return findMailboxByPath(mailboxPath)
+            .blockOptional()
+            .isPresent();
     }
 
     @Override
-    public Mailbox findMailboxByPath(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
+    public Mono<Mailbox> findMailboxByPath(MailboxPath mailboxPath)  {
         try {
-            return getEntityManager().createNamedQuery("findMailboxByNameWithUser", JPAMailbox.class)
+            return Mono.just(getEntityManager().createNamedQuery("findMailboxByNameWithUser", JPAMailbox.class)
                 .setParameter("nameParam", mailboxPath.getName())
                 .setParameter("namespaceParam", mailboxPath.getNamespace())
                 .setParameter("userParam", mailboxPath.getUser().asString())
                 .getSingleResult()
-                .toMailbox();
+                .toMailbox());
         } catch (NoResultException e) {
-            throw new MailboxNotFoundException(mailboxPath);
+            return Mono.empty();
         } catch (PersistenceException e) {
-            throw new MailboxException("Search of mailbox " + mailboxPath + " failed", e);
+            return Mono.error(new MailboxException("Exception upon JPA execution", e));
         }
     }
 

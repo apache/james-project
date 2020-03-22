@@ -56,6 +56,8 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Mono;
+
 class StoreRightManagerTest {
 
     static final MailboxId MAILBOX_ID = TestId.of(42);
@@ -84,7 +86,7 @@ class StoreRightManagerTest {
     @Test
     void hasRightShouldThrowMailboxNotFoundExceptionWhenMailboxDoesNotExist() throws MailboxException {
         MailboxPath mailboxPath = MailboxPath.forUser(MailboxFixture.ALICE, "unexisting mailbox");
-        when(mockedMailboxMapper.findMailboxByPath(mailboxPath))
+        when(mockedMailboxMapper.findMailboxByPathBlocking(mailboxPath))
             .thenThrow(new MailboxNotFoundException(""));
 
         assertThatThrownBy(() ->

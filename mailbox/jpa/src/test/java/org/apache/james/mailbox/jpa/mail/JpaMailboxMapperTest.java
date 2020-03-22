@@ -67,7 +67,7 @@ class JpaMailboxMapperTest extends MailboxMapperTest {
         entityManager.persist(jpaMailbox);
         entityManager.getTransaction().commit();
 
-        Mailbox readMailbox = mailboxMapper.findMailboxByPath(benwaInboxPath);
+        Mailbox readMailbox = mailboxMapper.findMailboxByPath(benwaInboxPath).block();
 
         assertThat(readMailbox.getUidValidity().isValid()).isTrue();
     }
@@ -82,8 +82,8 @@ class JpaMailboxMapperTest extends MailboxMapperTest {
         entityManager.persist(jpaMailbox);
         entityManager.getTransaction().commit();
 
-        Mailbox readMailbox1 = mailboxMapper.findMailboxByPath(benwaInboxPath);
-        Mailbox readMailbox2 = mailboxMapper.findMailboxByPath(benwaInboxPath);
+        Mailbox readMailbox1 = mailboxMapper.findMailboxByPath(benwaInboxPath).block();
+        Mailbox readMailbox2 = mailboxMapper.findMailboxByPath(benwaInboxPath).block();
 
         assertThat(readMailbox1.getUidValidity()).isEqualTo(readMailbox2.getUidValidity());
     }

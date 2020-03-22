@@ -36,6 +36,8 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
+import reactor.core.publisher.Mono;
+
 public class TransactionalMailboxMapper implements MailboxMapper {
     private final JPAMailboxMapper wrapped;
 
@@ -69,7 +71,7 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public Mailbox findMailboxByPath(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
+    public Mono<Mailbox> findMailboxByPath(MailboxPath mailboxPath) {
         return wrapped.findMailboxByPath(mailboxPath);
     }
 

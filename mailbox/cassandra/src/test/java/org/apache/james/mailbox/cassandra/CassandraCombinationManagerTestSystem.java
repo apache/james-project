@@ -26,6 +26,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -54,7 +55,9 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
     @Override
     public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         cassandraMailboxManager.createMailbox(mailboxPath, session);
-        return mapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath);
+        return mapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath)
+            .blockOptional()
+            .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));
     }
 
     @Override

@@ -54,6 +54,8 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 public class MaildirMailboxMapper extends NonTransactionalMapper implements MailboxMapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MaildirMailboxMapper.class);
@@ -106,9 +108,12 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
    
     @Override
-    public Mailbox findMailboxByPath(MailboxPath mailboxPath)
-            throws MailboxException, MailboxNotFoundException {      
-        return maildirStore.loadMailbox(session, mailboxPath);
+    public Mono<Mailbox> findMailboxByPath(MailboxPath mailboxPath) {
+        try {
+            return Mono.just(maildirStore.loadMailbox(session, mailboxPath));
+        } catch (MailboxException e) {
+            return Mono.empty();
+        }
     }
     
     @Override

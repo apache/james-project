@@ -77,7 +77,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         inboxPath = MailboxPath.forUser(USERNAME, "INBOX");
         mailboxManager = getMailboxManager();
         mailboxManager.createMailbox(inboxPath, mailboxSession);
-        inbox = mailboxMapper.findMailboxByPath(inboxPath);
+        inbox = mailboxMapper.findMailboxByPath(inboxPath).block();
         inboxMessageManager = mailboxManager.getMailbox(inboxPath, mailboxSession);
         attachmentMapper = getAttachmentMapperFactory().createAttachmentMapper(mailboxSession);
     }

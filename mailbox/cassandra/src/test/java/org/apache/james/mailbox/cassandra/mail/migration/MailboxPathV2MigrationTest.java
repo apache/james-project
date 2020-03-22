@@ -110,7 +110,7 @@ class MailboxPathV2MigrationTest {
         daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).block();
         mailboxDAO.save(mailbox).block();
 
-        mailboxMapper.findMailboxByPath(MAILBOX_PATH_1);
+        mailboxMapper.findMailboxByPath(MAILBOX_PATH_1).block();
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional()).isEmpty();
