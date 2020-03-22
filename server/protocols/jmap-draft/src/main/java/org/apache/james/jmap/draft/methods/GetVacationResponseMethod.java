@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.vacation.AccountId;
@@ -32,10 +30,12 @@ import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 
 import com.google.common.base.Preconditions;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class GetVacationResponseMethod implements Method {
 
@@ -64,27 +64,27 @@ public class GetVacationResponseMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Flux<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
         Preconditions.checkNotNull(methodCallId);
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetVacationRequest);
 
-
-        return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "VACATION")
-            .wrapArround(
-                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-                    () -> Stream.of(JmapResponse.builder()
-                        .methodCallId(methodCallId)
-                        .responseName(RESPONSE_NAME)
-                        .response(process(mailboxSession))
-                        .build())))
-            .get();
+        return Flux.from(metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+            process(mailboxSession)
+                .flatMapMany(response -> Flux.just(JmapResponse.builder()
+                    .methodCallId(methodCallId)
+                    .responseName(RESPONSE_NAME)
+                    .response(response)
+                    .build()))));
     }
 
-    private GetVacationResponse process(MailboxSession mailboxSession) {
-        Vacation vacation = vacationRepository.retrieveVacation(AccountId.fromUsername(mailboxSession.getUser())).block();
+    private Mono<GetVacationResponse> process(MailboxSession mailboxSession) {
+        return vacationRepository.retrieveVacation(AccountId.fromUsername(mailboxSession.getUser()))
+            .map(vacation -> asVacationResponse(mailboxSession, vacation));
+    }
+
+    private GetVacationResponse asVacationResponse(MailboxSession mailboxSession, Vacation vacation) {
         return GetVacationResponse.builder()
             .accountId(mailboxSession.getUser().asString())
             .vacationResponse(VacationResponse.builder()
