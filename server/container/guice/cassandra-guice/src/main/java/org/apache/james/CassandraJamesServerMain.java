@@ -25,6 +25,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
+import org.apache.james.modules.PeriodicalHealthChecksModule;
 import org.apache.james.modules.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
@@ -131,6 +132,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
         new CassandraUsersRepositoryModule(),
+        new PeriodicalHealthChecksModule(),
         BLOB_MODULE,
         CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);
 
