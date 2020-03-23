@@ -24,7 +24,6 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
-import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -52,7 +51,7 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
     }
 
     @Override
-    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
+    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) throws MailboxSessionCreationException {
         Stream<Username> userLoginStream = extractTokensFromAuthHeaders(authHeaders(httpRequest))
             .filter(tokenManager::verify)
             .map(tokenManager::extractLogin)
@@ -68,8 +67,7 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
         Stream<MailboxSession> mailboxSessionStream = userLoginStream
                 .map(mailboxManager::createSystemSession);
 
-        return Mono.justOrEmpty(mailboxSessionStream.findFirst())
-            .switchIfEmpty(Mono.error(new NoValidAuthHeaderException()));
+        return Mono.justOrEmpty(mailboxSessionStream.findFirst());
     }
 
     private Stream<String> extractTokensFromAuthHeaders(Stream<String> authHeaders) {

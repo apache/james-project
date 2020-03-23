@@ -26,7 +26,6 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.api.SimpleTokenManager;
-import org.apache.james.jmap.draft.exceptions.UnauthorizedException;
 import org.apache.james.jmap.draft.model.AttachmentAccessToken;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -56,8 +55,7 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
             .filter(tokenManager::isValid)
             .map(AttachmentAccessToken::getUsername)
             .map(Username::of)
-            .map(mailboxManager::createSystemSession)
-            .switchIfEmpty(Mono.error(new UnauthorizedException()));
+            .map(mailboxManager::createSystemSession);
     }
 
     private Optional<AttachmentAccessToken> getAccessToken(HttpServerRequest httpRequest) {

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.http;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -49,8 +50,8 @@ public class QueryParameterAccessTokenAuthenticationStrategyTest {
         when(mockedRequest.param("access_token"))
             .thenReturn(null);
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
-            .isExactlyInstanceOf(UnauthorizedException.class);
+        assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
+            .isEmpty();
     }
 
     @Test
@@ -58,7 +59,7 @@ public class QueryParameterAccessTokenAuthenticationStrategyTest {
         when(mockedRequest.param("access_token"))
             .thenReturn("bad");
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
-            .isExactlyInstanceOf(UnauthorizedException.class);
+        assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
+            .isEmpty();
     }
 }

@@ -22,7 +22,6 @@ import javax.inject.Inject;
 
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
-import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 
@@ -44,7 +43,7 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
     }
 
     @Override
-    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) throws NoValidAuthHeaderException {
+    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
         return Flux.fromStream(authHeaders(httpRequest))
             .map(AccessToken::fromString)
             .filterWhen(accessTokenManager::isValid)

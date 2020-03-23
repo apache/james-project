@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
-import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -70,8 +69,8 @@ public class JWTAuthenticationStrategyTest {
         when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
             .thenReturn(ImmutableList.of());
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
-            .isExactlyInstanceOf(NoValidAuthHeaderException.class);
+        assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
+            .isEmpty();
     }
 
     @Test
@@ -89,8 +88,8 @@ public class JWTAuthenticationStrategyTest {
         when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
             .thenReturn(ImmutableList.of(fakeAuthHeaderWithPrefix));
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
-            .isExactlyInstanceOf(NoValidAuthHeaderException.class);
+        assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
+            .isEmpty();
     }
 
     @Test
@@ -98,8 +97,8 @@ public class JWTAuthenticationStrategyTest {
         when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
             .thenReturn(ImmutableList.of("bad"));
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
-            .isExactlyInstanceOf(NoValidAuthHeaderException.class);
+        assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
+            .isEmpty();
     }
 
     @Test
