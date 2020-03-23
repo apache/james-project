@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
         <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-                <file>test-run.log</file>
+                <file>target/test-run.log</file>
                 <append>false</append>
                 <!-- set immediateFlush to false for much higher logging throughput -->
                 <immediateFlush>false</immediateFlush>
