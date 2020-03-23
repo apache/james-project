@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.Port;
+import org.slf4j.LoggerFactory;
 
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
@@ -58,9 +59,13 @@ public class JMAPServer implements Startable {
                     .map(Port::getValue)
                     .orElse(RANDOM_PORT))
                 .route(routes -> jmapRoutes.forEach(jmapRoute -> jmapRoute.define(routes)))
-                .wiretap(configuration.wiretapEnabled())
+                .wiretap(wireTapEnabled())
                 .bindNow());
         }
+    }
+
+    private boolean wireTapEnabled() {
+        return LoggerFactory.getLogger("org.apache.james.jmap.wire").isTraceEnabled();
     }
 
     @PreDestroy

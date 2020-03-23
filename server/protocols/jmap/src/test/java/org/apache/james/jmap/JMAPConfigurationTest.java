@@ -41,7 +41,7 @@ class JMAPConfigurationTest {
 
     @Test
     void buildShouldWorkWhenRandomPort() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, false, Optional.empty());
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.empty());
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .enable()
@@ -51,8 +51,8 @@ class JMAPConfigurationTest {
     }
 
     @Test
-    public void buildShouldWorkWhenFixedPort() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, false, Optional.of(Port.of(80)));
+    void buildShouldWorkWhenFixedPort() {
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.of(Port.of(80)));
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .enable()
@@ -63,21 +63,8 @@ class JMAPConfigurationTest {
     }
 
     @Test
-    public void buildShouldWorkWhenWiretap() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, true, Optional.empty());
-
-        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
-            .enable()
-            .wiretap()
-            .randomPort()
-            .build();
-
-        assertThat(jmapConfiguration).isEqualToComparingFieldByField(expectedJMAPConfiguration);
-    }
-
-    @Test
-    public void buildShouldWorkWhenDisabled() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(DISABLED, false, Optional.empty());
+    void buildShouldWorkWhenDisabled() {
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(DISABLED, Optional.empty());
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .disable()

@@ -43,6 +43,10 @@
                     <dt><strong>enabled</strong></dt>
                     <dd>true/false. Governs whether JMAP should be enabled</dd>
 
+                    <dt><strong>jmap.port</strong></dt>
+                    <dd>Optional. Defaults to 80. The port this server will be listening on. This value must be a valid
+                    port, ranging between 1 and 65535 (inclusive)</dd>
+
                     <dt><strong>tls.keystoreURL</strong></dt>
                     <dd>Keystore to be used for generating authentication tokens for password authentication mechanism.
                     This should not be the same keystore than the ones used by TLS based protocols.</dd>
@@ -55,7 +59,11 @@
                 </dl>
 
             </subsection>
-
+            <subsection name="Wire tapping">
+                <p>Enabling <b>TRACE</b> on <b>org.apache.james.jmap.wire</b>enables reactor-netty wiretap, logging of
+                all incoming and outgoing requests, outgoing requests. This will log also potentially sensible information
+                like authentication credentials.</p>
+            </subsection>
         </section>
 
     </body>
