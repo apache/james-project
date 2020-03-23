@@ -130,6 +130,7 @@
                         <item name="Mail Repository Stores" href="/server/config-mailrepositorystore.html" />
                         <item name="Mailbox" href="/server/config-mailbox.html" />
                         <item name="Mailet Container" href="/server/config-mailetcontainer.html" />
+                        <item name="Periodical Health Checks" href="/server/config-healthcheck.html" />
                         <item name="POP3" href="/server/config-pop3.html" />
                         <item name="Quota" href="/server/config-quota.html" />
                         <item name="RabbitMQ" href="/server/config-rabbitmq.html" />
