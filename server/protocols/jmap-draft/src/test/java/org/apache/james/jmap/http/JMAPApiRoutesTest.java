@@ -59,14 +59,14 @@ public class JMAPApiRoutesTest {
     private RequestHandler requestHandler;
     private AuthenticationFilter mockedAuthFilter;
     private UserProvisioner mockedUserProvisionner;
-    private DefaultMailboxesReactiveProvisioner mockedMailboxesProvisionner;
+    private DefaultMailboxesProvisioner mockedMailboxesProvisionner;
 
     @Before
     public void setup() throws Exception {
         requestHandler = mock(RequestHandler.class);
         mockedAuthFilter = mock(AuthenticationFilter.class);
         mockedUserProvisionner = mock(UserProvisioner.class);
-        mockedMailboxesProvisionner = mock(DefaultMailboxesReactiveProvisioner.class);
+        mockedMailboxesProvisionner = mock(DefaultMailboxesProvisioner.class);
 
         JMAPApiRoutes jmapApiRoutes = new JMAPApiRoutes(requestHandler, new RecordingMetricFactory(),
             mockedAuthFilter, mockedUserProvisionner, mockedMailboxesProvisionner);

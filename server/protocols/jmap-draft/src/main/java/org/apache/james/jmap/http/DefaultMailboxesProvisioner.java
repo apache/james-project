@@ -42,17 +42,17 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-class DefaultMailboxesReactiveProvisioner {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMailboxesReactiveProvisioner.class);
+class DefaultMailboxesProvisioner {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMailboxesProvisioner.class);
     private final MailboxManager mailboxManager;
     private final SubscriptionManager subscriptionManager;
     private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting
-    DefaultMailboxesReactiveProvisioner(MailboxManager mailboxManager,
-                                        SubscriptionManager subscriptionManager,
-                                        MetricFactory metricFactory) {
+    DefaultMailboxesProvisioner(MailboxManager mailboxManager,
+                                SubscriptionManager subscriptionManager,
+                                MetricFactory metricFactory) {
         this.mailboxManager = mailboxManager;
         this.subscriptionManager = subscriptionManager;
         this.metricFactory = metricFactory;

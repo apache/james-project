@@ -42,11 +42,11 @@ import org.junit.Test;
 
 import reactor.core.publisher.Mono;
 
-public class DefaultMailboxesReactiveProvisionerThreadTest {
+public class DefaultMailboxesProvisionerThreadTest {
 
     private static final Username USERNAME = Username.of("username");
 
-    private DefaultMailboxesReactiveProvisioner testee;
+    private DefaultMailboxesProvisioner testee;
     private MailboxSession session;
     private MailboxManager mailboxManager;
     private SubscriptionManager subscriptionManager;
@@ -56,7 +56,7 @@ public class DefaultMailboxesReactiveProvisionerThreadTest {
         session = MailboxSessionUtil.create(USERNAME);
         mailboxManager = mock(MailboxManager.class);
         subscriptionManager = mock(SubscriptionManager.class);
-        testee = new DefaultMailboxesReactiveProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory());
+        testee = new DefaultMailboxesProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory());
     }
 
     @Test

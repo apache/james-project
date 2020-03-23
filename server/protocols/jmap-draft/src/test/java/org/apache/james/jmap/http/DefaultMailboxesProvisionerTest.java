@@ -38,10 +38,10 @@ import org.junit.Test;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 
-public class DefaultMailboxesReactiveProvisionerTest {
+public class DefaultMailboxesProvisionerTest {
 
     public static final Username USERNAME = Username.of("username");
-    private DefaultMailboxesReactiveProvisioner testee;
+    private DefaultMailboxesProvisioner testee;
     private MailboxSession session;
     private InMemoryMailboxManager mailboxManager;
     private StoreSubscriptionManager subscriptionManager;
@@ -52,7 +52,7 @@ public class DefaultMailboxesReactiveProvisionerTest {
 
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory());
-        testee = new DefaultMailboxesReactiveProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory());
+        testee = new DefaultMailboxesProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory());
     }
 
     @Test

@@ -60,10 +60,10 @@ public class JMAPApiRoutes implements JMAPRoutes {
     private final MetricFactory metricFactory;
     private final AuthenticationFilter authenticationFilter;
     private final UserProvisioner userProvisioner;
-    private final DefaultMailboxesReactiveProvisioner defaultMailboxesProvisioner;
+    private final DefaultMailboxesProvisioner defaultMailboxesProvisioner;
 
     @Inject
-    public JMAPApiRoutes(RequestHandler requestHandler, MetricFactory metricFactory, AuthenticationFilter authenticationFilter, UserProvisioner userProvisioner, DefaultMailboxesReactiveProvisioner defaultMailboxesProvisioner) {
+    public JMAPApiRoutes(RequestHandler requestHandler, MetricFactory metricFactory, AuthenticationFilter authenticationFilter, UserProvisioner userProvisioner, DefaultMailboxesProvisioner defaultMailboxesProvisioner) {
         this.requestHandler = requestHandler;
         this.metricFactory = metricFactory;
         this.authenticationFilter = authenticationFilter;
