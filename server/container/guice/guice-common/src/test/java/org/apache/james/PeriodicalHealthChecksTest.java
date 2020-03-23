@@ -42,6 +42,8 @@ import org.mockito.Mockito;
 
 public class PeriodicalHealthChecksTest {
 
+    private static final long INITIAL_DELAY = 1;
+    private static final long PERIOD = 1;
     private static final ConditionFactory AWAIT = Awaitility.await()
         .atMost(Duration.TEN_SECONDS)
         .with()
@@ -55,14 +57,14 @@ public class PeriodicalHealthChecksTest {
     void setUp() {
         mockHealthCheck1 = Mockito.mock(EventDeadLettersHealthCheck.class);
         mockHealthCheck2 = Mockito.mock(GuiceLifecycleHealthCheck.class);
-        when(mockHealthCheck1.check()).thenReturn(Result.healthy(new ComponentName("mock1")));
-        when(mockHealthCheck2.check()).thenReturn(Result.healthy(new ComponentName("mock2")));
+        when(mockHealthCheck1.check()).thenReturn(Result.healthy(new ComponentName("mockHealthCheck1")));
+        when(mockHealthCheck2.check()).thenReturn(Result.healthy(new ComponentName("mockHealthCheck2")));
 
         Set<HealthCheck> healthCheckSet = new HashSet<>();
         healthCheckSet.add(mockHealthCheck1);
         healthCheckSet.add(mockHealthCheck2);
 
-        testee = new PeriodicalHealthChecks(healthCheckSet);
+        testee = new PeriodicalHealthChecks(healthCheckSet, new PeriodicalHealthChecksConfiguration(INITIAL_DELAY, PERIOD));
         testee.start();
     }
 

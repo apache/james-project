@@ -27,8 +27,6 @@ import javax.inject.Inject;
 
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.lifecycle.api.Startable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -37,20 +35,20 @@ import reactor.core.scheduler.Schedulers;
 
 public class PeriodicalHealthChecks implements Startable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PeriodicalHealthChecks.class);
-    private static final long INITIAL_DELAY = 1;
-    private static final long PERIOD = 1;
-
     private final Flux<HealthCheck> healthChecks;
+    private final long initialDelay;
+    private final long period;
     private Disposable disposable;
 
     @Inject
-    PeriodicalHealthChecks(Set<HealthCheck> healthChecks) {
+    PeriodicalHealthChecks(Set<HealthCheck> healthChecks, PeriodicalHealthChecksConfiguration config) {
         this.healthChecks = Flux.fromIterable(healthChecks);
+        this.initialDelay = config.getInitialDelay();
+        this.period = config.getPeriod();
     }
 
     public void start() {
-        disposable = Flux.interval(Duration.ofSeconds(INITIAL_DELAY), Duration.ofSeconds(PERIOD))
+        disposable = Flux.interval(Duration.ofSeconds(initialDelay), Duration.ofSeconds(period))
             .flatMap(any ->
                 healthChecks.flatMap(healthCheck -> Mono.just(healthCheck.check())))
             .subscribeOn(Schedulers.elastic())
