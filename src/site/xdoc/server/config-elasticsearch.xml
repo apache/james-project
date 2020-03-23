@@ -186,7 +186,7 @@
 
         Note: You can launch a tika server using this command line:
 
-        <code><pre>docker run --name tika linagora/docker-tikaserver:1.22</pre></code>
+        <code><pre>docker run --name tika linagora/docker-tikaserver:1.24</pre></code>
 
     </section>
 

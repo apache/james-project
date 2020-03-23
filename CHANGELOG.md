@@ -70,7 +70,7 @@ More details about the property is at [java mail doc](https://javaee.github.io/j
  
 ### Third party softwares
  - The distributed James server product (relying on Guice, Cassandra, ElasticSearch, RabbitMQ and optionally Swift) now needs at least RabbitMQ 3.8.
- - Tika prior 1.22 is subject to multiple CVEs. We recommend the upgrade.
+ - Tika prior 1.24 is subject to multiple CVEs. We recommend the upgrade.
 
 ## [3.4.0] - 2019-09-05
 ### Added
