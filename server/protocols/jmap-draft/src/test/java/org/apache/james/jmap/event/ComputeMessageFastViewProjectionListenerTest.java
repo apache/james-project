@@ -26,6 +26,7 @@ import static org.mockito.Mockito.spy;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.Preview;
@@ -102,10 +103,15 @@ class ComputeMessageFastViewProjectionListenerTest {
     @BeforeEach
     void setup() throws Exception {
         eventDeadLetters = new MemoryEventDeadLetters();
+        RetryBackoffConfiguration backoffConfiguration = RetryBackoffConfiguration.builder()
+            .maxRetries(2)
+            .firstBackoff(Duration.ofMillis(1))
+            .jitterFactor(0.5)
+            .build();
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
-            .eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.DEFAULT, eventDeadLetters))
+            .eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), backoffConfiguration, eventDeadLetters))
             .defaultAnnotationLimits()
             .defaultMessageParser()
             .scanningSearchIndex()
