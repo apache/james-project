@@ -98,9 +98,9 @@ public class AuthenticationRoutes implements JMAPRoutes {
     @Override
     public HttpServerRoutes define(HttpServerRoutes builder) {
         return builder
-            .post(AUTHENTICATION, this::post)
-            .get(AUTHENTICATION, this::returnEndPointsResponse)
-            .delete(AUTHENTICATION, this::delete)
+            .post(AUTHENTICATION, JMAPRoutes.corsHeaders(this::post))
+            .get(AUTHENTICATION, JMAPRoutes.corsHeaders(this::returnEndPointsResponse))
+            .delete(AUTHENTICATION, JMAPRoutes.corsHeaders(this::delete))
             .options(AUTHENTICATION, CORS_CONTROL);
     }
 

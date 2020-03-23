@@ -92,10 +92,10 @@ public class DownloadRoutes implements JMAPRoutes {
 
     @Override
     public HttpServerRoutes define(HttpServerRoutes builder) {
-        return builder.post(DOWNLOAD_FROM_ID, this::postFromId)
-            .get(DOWNLOAD_FROM_ID, this::getFromId)
-            .post(DOWNLOAD_FROM_ID_AND_NAME, this::postFromIdAndName)
-            .get(DOWNLOAD_FROM_ID_AND_NAME, this::getFromIdAndName)
+        return builder.post(DOWNLOAD_FROM_ID, JMAPRoutes.corsHeaders(this::postFromId))
+            .get(DOWNLOAD_FROM_ID, JMAPRoutes.corsHeaders(this::getFromId))
+            .post(DOWNLOAD_FROM_ID_AND_NAME, JMAPRoutes.corsHeaders(this::postFromIdAndName))
+            .get(DOWNLOAD_FROM_ID_AND_NAME, JMAPRoutes.corsHeaders(this::getFromIdAndName))
             .options(DOWNLOAD_FROM_ID, CORS_CONTROL)
             .options(DOWNLOAD_FROM_ID_AND_NAME, CORS_CONTROL);
     }

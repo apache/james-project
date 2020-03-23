@@ -81,7 +81,7 @@ public class UploadRoutes implements JMAPRoutes {
 
     @Override
     public HttpServerRoutes define(HttpServerRoutes builder) {
-        return builder.post(UPLOAD, this::post)
+        return builder.post(UPLOAD, JMAPRoutes.corsHeaders(this::post))
             .options(UPLOAD, CORS_CONTROL);
     }
 

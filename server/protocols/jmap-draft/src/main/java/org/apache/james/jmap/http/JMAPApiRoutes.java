@@ -80,7 +80,7 @@ public class JMAPApiRoutes implements JMAPRoutes {
 
     @Override
     public HttpServerRoutes define(HttpServerRoutes builder) {
-        return builder.post(JMAP, this::post)
+        return builder.post(JMAP, JMAPRoutes.corsHeaders(this::post))
             .options(JMAP, CORS_CONTROL);
     }
 
