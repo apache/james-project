@@ -62,14 +62,14 @@ public class UploadRoutes implements JMAPRoutes {
     }
 
     private final MetricFactory metricFactory;
-    private final AuthenticationReactiveFilter authenticationReactiveFilter;
+    private final AuthenticationFilter authenticationFilter;
     private final AttachmentManager attachmentManager;
     private final ObjectMapper objectMapper;
 
     @Inject
-    private UploadRoutes(MetricFactory metricFactory, AuthenticationReactiveFilter authenticationReactiveFilter, AttachmentManager attachmentManager, ObjectMapper objectMapper) {
+    private UploadRoutes(MetricFactory metricFactory, AuthenticationFilter authenticationFilter, AttachmentManager attachmentManager, ObjectMapper objectMapper) {
         this.metricFactory = metricFactory;
-        this.authenticationReactiveFilter = authenticationReactiveFilter;
+        this.authenticationFilter = authenticationFilter;
         this.attachmentManager = attachmentManager;
         this.objectMapper = objectMapper;
     }
@@ -90,7 +90,7 @@ public class UploadRoutes implements JMAPRoutes {
         if (Strings.isNullOrEmpty(contentType)) {
             return response.status(BAD_REQUEST).send();
         } else {
-            return authenticationReactiveFilter.authenticate(request)
+            return authenticationFilter.authenticate(request)
                 .flatMap(session -> post(request, response, contentType, session))
                 .onErrorResume(CancelledUploadException.class, e -> handleCanceledUpload(response, e))
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))

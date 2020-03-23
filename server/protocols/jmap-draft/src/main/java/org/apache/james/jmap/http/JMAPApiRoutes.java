@@ -58,15 +58,15 @@ public class JMAPApiRoutes implements JMAPRoutes {
     private final ObjectMapper objectMapper;
     private final RequestHandler requestHandler;
     private final MetricFactory metricFactory;
-    private final AuthenticationReactiveFilter authenticationReactiveFilter;
+    private final AuthenticationFilter authenticationFilter;
     private final UserProvisioner userProvisioner;
     private final DefaultMailboxesReactiveProvisioner defaultMailboxesProvisioner;
 
     @Inject
-    public JMAPApiRoutes(RequestHandler requestHandler, MetricFactory metricFactory, AuthenticationReactiveFilter authenticationReactiveFilter, UserProvisioner userProvisioner, DefaultMailboxesReactiveProvisioner defaultMailboxesProvisioner) {
+    public JMAPApiRoutes(RequestHandler requestHandler, MetricFactory metricFactory, AuthenticationFilter authenticationFilter, UserProvisioner userProvisioner, DefaultMailboxesReactiveProvisioner defaultMailboxesProvisioner) {
         this.requestHandler = requestHandler;
         this.metricFactory = metricFactory;
-        this.authenticationReactiveFilter = authenticationReactiveFilter;
+        this.authenticationFilter = authenticationFilter;
         this.userProvisioner = userProvisioner;
         this.defaultMailboxesProvisioner = defaultMailboxesProvisioner;
         this.objectMapper = new ObjectMapper();
@@ -85,7 +85,7 @@ public class JMAPApiRoutes implements JMAPRoutes {
     }
 
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response) {
-        return authenticationReactiveFilter.authenticate(request)
+        return authenticationFilter.authenticate(request)
             .flatMap(session -> Flux.merge(
                     userProvisioner.provisionUser(session),
                     defaultMailboxesProvisioner.createMailboxesIfNeeded(session))

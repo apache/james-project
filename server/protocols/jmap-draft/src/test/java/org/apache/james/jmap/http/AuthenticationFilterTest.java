@@ -45,7 +45,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
-public class AuthenticationReactiveFilterTest {
+public class AuthenticationFilterTest {
     private static final String TOKEN = "df991d2a-1c5a-4910-a90f-808b6eda133e";
     private static final String AUTHORIZATION_HEADERS = "Authorization";
     private static final Username USERNAME = Username.of("user@domain.tld");
@@ -56,7 +56,7 @@ public class AuthenticationReactiveFilterTest {
     private HttpServerRequest mockedRequest;
     private HttpHeaders mockedHeaders;
     private AccessTokenRepository accessTokenRepository;
-    private AuthenticationReactiveFilter testee;
+    private AuthenticationFilter testee;
 
     @Before
     public void setup() throws Exception {
@@ -71,7 +71,7 @@ public class AuthenticationReactiveFilterTest {
         when(mockedRequest.requestHeaders())
             .thenReturn(mockedHeaders);
 
-        testee = AuthenticationReactiveFilter.of(new RecordingMetricFactory(), DENY);
+        testee = AuthenticationFilter.of(new RecordingMetricFactory(), DENY);
     }
 
     @Test
@@ -87,7 +87,7 @@ public class AuthenticationReactiveFilterTest {
     public void authenticationStrategiesShouldNotBeEagerlySubScribed() {
         AtomicBoolean called = new AtomicBoolean(false);
 
-        testee = AuthenticationReactiveFilter.of(new RecordingMetricFactory(),
+        testee = AuthenticationFilter.of(new RecordingMetricFactory(),
             ALLOW,
             req -> Mono.fromRunnable(() -> called.set(true)));
         assertThat(called.get()).isFalse();
@@ -120,7 +120,7 @@ public class AuthenticationReactiveFilterTest {
         when(mockedHeaders.get(AUTHORIZATION_HEADERS))
             .thenReturn(TOKEN);
 
-        AuthenticationReactiveFilter authFilter = new AuthenticationReactiveFilter(ImmutableList.of(), new RecordingMetricFactory());
+        AuthenticationFilter authFilter = new AuthenticationFilter(ImmutableList.of(), new RecordingMetricFactory());
         assertThatThrownBy(() -> authFilter.authenticate(mockedRequest).block())
             .isInstanceOf(UnauthorizedException.class);
     }
@@ -133,7 +133,7 @@ public class AuthenticationReactiveFilterTest {
 
         accessTokenRepository.addToken(USERNAME, token).block();
 
-        AuthenticationReactiveFilter authFilter = AuthenticationReactiveFilter.of(new RecordingMetricFactory(), ALLOW);
+        AuthenticationFilter authFilter = AuthenticationFilter.of(new RecordingMetricFactory(), ALLOW);
 
         assertThatCode(() -> authFilter.authenticate(mockedRequest).block())
             .doesNotThrowAnyException();
@@ -147,7 +147,7 @@ public class AuthenticationReactiveFilterTest {
 
         accessTokenRepository.addToken(USERNAME, token).block();
 
-        AuthenticationReactiveFilter authFilter = AuthenticationReactiveFilter.of(new RecordingMetricFactory(), DENY, ALLOW);
+        AuthenticationFilter authFilter = AuthenticationFilter.of(new RecordingMetricFactory(), DENY, ALLOW);
 
         assertThatCode(() -> authFilter.authenticate(mockedRequest).block())
             .doesNotThrowAnyException();

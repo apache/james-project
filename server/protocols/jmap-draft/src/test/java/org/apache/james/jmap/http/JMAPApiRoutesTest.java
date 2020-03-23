@@ -57,14 +57,14 @@ public class JMAPApiRoutesTest {
 
     private DisposableServer server;
     private RequestHandler requestHandler;
-    private AuthenticationReactiveFilter mockedAuthFilter;
+    private AuthenticationFilter mockedAuthFilter;
     private UserProvisioner mockedUserProvisionner;
     private DefaultMailboxesReactiveProvisioner mockedMailboxesProvisionner;
 
     @Before
     public void setup() throws Exception {
         requestHandler = mock(RequestHandler.class);
-        mockedAuthFilter = mock(AuthenticationReactiveFilter.class);
+        mockedAuthFilter = mock(AuthenticationFilter.class);
         mockedUserProvisionner = mock(UserProvisioner.class);
         mockedMailboxesProvisionner = mock(DefaultMailboxesReactiveProvisioner.class);
 
