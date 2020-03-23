@@ -490,6 +490,13 @@ public class DownloadStepdefs {
         assertThat(response.getFirstHeader("Content-Length").getValue()).isEqualTo(String.valueOf(size));
     }
 
+    @Then("^CORS headers are positioned$")
+    public void assertCorsHeader() {
+        assertThat(response.getFirstHeader("Access-Control-Allow-Origin").getValue()).isEqualTo("*");
+        assertThat(response.getFirstHeader("Access-Control-Allow-Methods").getValue()).isEqualTo("GET, POST, DELETE, PUT");
+        assertThat(response.getFirstHeader("Access-Control-Allow-Headers").getValue()).isEqualTo("Content-Type, Authorization, Accept");
+    }
+
     @Then("^the Content-Type is \"([^\"]*)\"$")
     public void assertContentType(String contentType) {
         assertThat(response.getFirstHeader("Content-Type").getValue()).isEqualTo(contentType);

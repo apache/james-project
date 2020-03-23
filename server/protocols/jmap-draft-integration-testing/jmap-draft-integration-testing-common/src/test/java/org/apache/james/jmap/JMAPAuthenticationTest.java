@@ -165,6 +165,20 @@ public abstract class JMAPAuthenticationTest {
     }
 
     @Test
+    public void mustPositionCorsHeaders() throws Exception {
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"username\": \"" + userCredentials.getUsername() + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .header("Access-Control-Allow-Origin", "*")
+            .header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
+            .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
+    }
+
+    @Test
     public void mustReturnJsonResponse() throws Exception {
         given()
             .contentType(ContentType.JSON)

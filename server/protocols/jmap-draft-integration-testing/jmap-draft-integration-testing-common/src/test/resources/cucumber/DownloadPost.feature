@@ -35,3 +35,9 @@ Feature: Alternative authentication mechanism for getting attachment via a POST 
     Given "username@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
     When "username@domain.tld" asks for a token for attachment "2"
     Then the user should receive an attachment access token
+
+  Scenario: Position CORS headers
+    Given "username@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
+    When "username@domain.tld" asks for a token for attachment "2"
+    Then the user should receive an attachment access token
+    And CORS headers are positioned

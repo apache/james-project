@@ -75,6 +75,12 @@ Feature: Download GET
     Then she can read that blob
     And the blob size is 36
 
+  Scenario: Position CORS headers
+    Given "alice@domain.tld" mailbox "INBOX" contains a message "1"
+    When "alice@domain.tld" downloads "1"
+    Then she can read that blob
+    And CORS headers are positioned
+
   Scenario: Deleted message should revoke attachment blob download rights
     Given "alice@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
     And "alice@domain.tld" delete mailbox "INBOX"
