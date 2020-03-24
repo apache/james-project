@@ -194,6 +194,16 @@ public class DownloadStepdefs {
         downLoad(username, attachmentIdOrMessageId);
     }
 
+    @When("^\"([^\"]*)\" downloads \"([^\"]*)\" using query parameter strategy$")
+    public void downloadsUsingQueryParameter(String username, String blobId) throws Throwable {
+        String attachmentIdOrMessageId = Optional.ofNullable(blobIdByAttachmentId.get(blobId))
+            .orElse(Optional.ofNullable(inputToMessageId.get(blobId))
+                .map(MessageId::serialize)
+                .orElse(null));
+        URIBuilder uriBuilder = baseUri(mainStepdefs.jmapServer).setPath("/download/" + attachmentIdOrMessageId);
+        response = queryParameterDownloadRequest(uriBuilder, attachmentIdOrMessageId, username).execute().returnResponse();
+    }
+
     @When("^un-authenticated user downloads \"([^\"]*)\"$")
     public void downloadsUnAuthenticated(String blobId) throws Throwable {
         String attachmentIdOrMessageId = Optional.ofNullable(blobIdByAttachmentId.get(blobId))
@@ -230,6 +240,13 @@ public class DownloadStepdefs {
             request.addHeader("Authorization", accessToken.asString());
         }
         return request;
+    }
+
+    private Request queryParameterDownloadRequest(URIBuilder uriBuilder, String blobId, String username) throws URISyntaxException {
+        AccessToken accessToken = userStepdefs.authenticate(username);
+        AttachmentAccessTokenKey key = new AttachmentAccessTokenKey(username, blobId);
+        uriBuilder.addParameter("access_token", attachmentAccessTokens.get(key).serialize());
+        return Request.Get(uriBuilder.build());
     }
 
     @When("^\"([^\"]*)\" is trusted for attachment \"([^\"]*)\"$")

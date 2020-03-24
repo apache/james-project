@@ -73,7 +73,7 @@ Feature: Download endpoint
   @BasicFeature
   Scenario: A user should have access to the download endpoint when an authentication token is valid
     Given "usera@domain.tld" is trusted for attachment "a1"
-    When "usera@domain.tld" downloads "a1"
+    When "usera@domain.tld" downloads "a1" using query parameter strategy
     Then the user should be authorized
 
   Scenario: An authenticated user should have access to the download endpoint

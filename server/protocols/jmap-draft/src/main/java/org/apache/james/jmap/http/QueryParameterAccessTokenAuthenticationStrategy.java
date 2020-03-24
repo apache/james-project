@@ -20,6 +20,8 @@ package org.apache.james.jmap.http;
 
 import static org.apache.james.jmap.http.DownloadRoutes.BLOB_ID_PATH_PARAM;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -31,6 +33,7 @@ import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -49,7 +52,7 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
 
     @Override
     public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
-        return getAccessToken(httpRequest)
+        return Mono.justOrEmpty(getAccessToken(httpRequest))
             .filter(tokenManager::isValid)
             .map(AttachmentAccessToken::getUsername)
             .map(Username::of)
@@ -57,12 +60,26 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
             .switchIfEmpty(Mono.error(new UnauthorizedException()));
     }
 
-    private Mono<AttachmentAccessToken> getAccessToken(HttpServerRequest httpRequest) {
+    private Optional<AttachmentAccessToken> getAccessToken(HttpServerRequest httpRequest) {
         try {
-            return Mono.justOrEmpty(httpRequest.param(BLOB_ID_PATH_PARAM))
-                .map(blobId -> AttachmentAccessToken.from(httpRequest.param(AUTHENTICATION_PARAMETER), blobId));
+
+            return Optional.ofNullable(httpRequest.param(BLOB_ID_PATH_PARAM))
+                .flatMap(blobId -> queryParam(httpRequest, AUTHENTICATION_PARAMETER)
+                    .map(serializedAttachmentAccessToken -> AttachmentAccessToken.from(serializedAttachmentAccessToken, blobId)));
         } catch (IllegalArgumentException e) {
-            return Mono.empty();
+            return Optional.empty();
         }
+    }
+
+    private Optional<String> queryParam(HttpServerRequest httpRequest, String parameterName) {
+        return queryParam(parameterName, httpRequest.uri());
+    }
+
+    private Optional<String> queryParam(String parameterName, String uri) {
+        return new QueryStringDecoder(uri)
+            .parameters()
+            .get(parameterName)
+            .stream()
+            .findFirst();
     }
 }
