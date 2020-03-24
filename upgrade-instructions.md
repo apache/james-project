@@ -32,9 +32,9 @@ Change list:
  - [Differentiation between domain alias and domain mapping](#differentiation-between-domain-alias-and-domain-mapping)
  - [ProtocolSession storng typing](#protocolsession-storng-typing)
  - [Tune Cassandra time serie tables options](#tune-cassandra-time-serie-tables-options)
- - [LogEnabled removal](#logenabled-removal)
+ - [Log4J2 Adoption](#log4j2-adoption)
 
-### LogEnabled removal
+### Log4J2 Adoption
 
 Date 20/03/2020
 
@@ -46,7 +46,10 @@ Concerned product: Spring
 
 As Log4J 1.x is not compatible with Java 9+ runtime, we adopted Log4J2 as a logging solution for the Spring product.
 
-As a consequence, the deprecated `LogEnabled` API will be removed. We recommend extension developers to obtain their
+As a consequence, the log configuration file for Spring product needs to be updated. See an example 
+[here](server/app/src/main/resources/log4j2.xml).
+
+Also, the deprecated `LogEnabled` API will be removed. We recommend extension developers to obtain their
 Logger instance using the SLF4J `LoggerFactory` class instead.
 
 ### Tune Cassandra time serie tables options

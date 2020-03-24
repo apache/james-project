@@ -1,0 +1,486 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO" monitorInterval="30">
+    <Properties>
+        <Property name="logDir">${sys:app.home}/log</Property>
+        <Property name="logLayoutTomcat">%d{dd-MMM-yyyy HH:mm:ss.SSS} %level [%t] %C.%M:%L - %msg%n</Property>
+        <Property name="logLayout1">%d %-7level %logger{36} - %msg%n</Property>
+        <Property name="logLayout2">%d %-7level [%t] %C.%M:%L - %msg%n</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${logLayoutTomcat}" />
+        </Console>
+        <RollingFile name="SpringFramework" fileName="${logDir}/springframework.log"
+                     filePattern="${logDir}/springframework.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- <OnStartupTriggeringPolicy /> -->
+                <!-- <SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- <TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="openjpa" fileName="${logDir}/openjpa.log"
+                     filePattern="${logDir}/openjpa.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- <OnStartupTriggeringPolicy /> -->
+                <!-- <SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- <TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="James" fileName="${logDir}/james.log"
+                     filePattern="${logDir}/james.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- <OnStartupTriggeringPolicy /> -->
+                <!-- <SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- <TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="TransportProtocols" fileName="${logDir}/james_transport-protocols.log"
+                     filePattern="${logDir}/james_transport-protocols.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- <OnStartupTriggeringPolicy /> -->
+                <!-- <SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- <TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="MAILBOXMANAGER" fileName="${logDir}/james_mailboxmanager.log"
+                     filePattern="${logDir}/james_mailboxmanager.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="IMAPSERVER" fileName="${logDir}/james_imapserver.log"
+                     filePattern="${logDir}/james_imapserver.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="MAILETCONTAINER" fileName="${logDir}/james_mailetcontainer.log"
+                     filePattern="${logDir}/james_mailetcontainer.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="MAILETCONTAINER" fileName="${logDir}/james_mailetcontainer.log"
+                     filePattern="${logDir}/james_mailetcontainer.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="MAILETCONTAINER" fileName="${logDir}/james_mailetcontainer.log"
+                     filePattern="${logDir}/james_mailetcontainer.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="MAILETCONTAINER" fileName="${logDir}/james_mailetcontainer.log"
+                     filePattern="${logDir}/james_mailetcontainer.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="DNSSERVICE" fileName="${logDir}/james_dnsservice.log"
+                     filePattern="${logDir}/james_dnsservice.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="POP3SERVER" fileName="${logDir}/james_pop3server.log"
+                     filePattern="${logDir}/james_pop3server.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="SMTPSERVER" fileName="${logDir}/james_smtpserver.log"
+                     filePattern="${logDir}/james_smtpserver.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="LMTPSERVER" fileName="${logDir}/james_lmtpserver.log"
+                     filePattern="${logDir}/james_lmtpserver.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="MAILREPOSITORYSTORE" fileName="${logDir}/james_mailrepositorystore.log"
+                     filePattern="${logDir}/james_mailrepositorystore.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="USERSREPOSITORY" fileName="${logDir}/james_usersrepository.log"
+                     filePattern="${logDir}/james_usersrepository.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="FETCHMAIL" fileName="${logDir}/james_fetchmail.log"
+                     filePattern="${logDir}/james_fetchmail.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="DOMAINLIST" fileName="${logDir}/james_domainlist.log"
+                     filePattern="${logDir}/james_domainlist.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="VIRTUALUSERTABLE" fileName="${logDir}/james_virtualusertable.log"
+                     filePattern="${logDir}/james_virtualusertable.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+        <RollingFile name="MAILQUEUEFACTORY" fileName="${logDir}/james_mailqueuefactory.log"
+                     filePattern="${logDir}/james_mailqueuefactory.%d{yyyy-MM-dd}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout pattern="${logLayoutTomcat}"
+                           charset="UTF-8" />
+            <Policies>
+                <!-- 				<OnStartupTriggeringPolicy /> -->
+                <!-- 				<SizeBasedTriggeringPolicy size="20 MB" /> -->
+                <!-- 				<TimeBasedTriggeringPolicy /> -->
+            </Policies>
+            <!-- 			<DefaultRolloverStrategy> -->
+            <!-- 				<Delete basePath="${logDir}" maxDepth="2"> -->
+            <!-- 					<IfFileName -->
+            <!-- 						glob="target/log4j2/roll-by-time-and-size/app.*.log.gz" /> -->
+            <!-- 					<IfLastModified age="20d" /> -->
+            <!-- 				</Delete> -->
+            <!-- 			</DefaultRolloverStrategy> -->
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.springframework" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="SpringFramework" level="info" />
+        </Logger>
+        <Logger name="etm.core.monitor.EtmMonitor" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="James" level="info" />
+        </Logger>
+        <Logger name="org.apache" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="James" level="info" />
+        </Logger>
+
+        <Logger name="openjpa" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="openjpa" level="trace" />
+        </Logger>
+        <Logger name="org.apache.openjpa" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="openjpa" level="trace" />
+        </Logger>
+
+        <Logger name="org.apache.james" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="James" level="trace" />
+        </Logger>
+
+        <Logger name="org.apache.james.transport" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="TransportProtocols" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.protocols" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="TransportProtocols" level="trace" />
+        </Logger>
+
+        <Logger name="org.apache.james.mailboxmanager" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="MAILBOXMANAGER" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.imapserver" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="IMAPSERVER" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.mailetcontainer" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="MAILETCONTAINER" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.mailetcontainer" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="MAILETCONTAINER" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.mailetcontainer" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="MAILETCONTAINER" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.mailetcontainer" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="MAILETCONTAINER" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.dnsservice" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="DNSSERVICE" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.pop3server" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="POP3SERVER" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.smtpserver" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="SMTPSERVER" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.lmtpserver" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="LMTPSERVER" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.mailrepositorystore" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="MAILREPOSITORYSTORE" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.usersrepository" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="USERSREPOSITORY" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.fetchmail" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="FETCHMAIL" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.domainlist" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="DOMAINLIST" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.virtualusertable" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="VIRTUALUSERTABLE" level="trace" />
+        </Logger>
+        <Logger name="org.apache.james.mailqueuefactory" additivity="false">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="MAILQUEUEFACTORY" level="trace" />
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="Console" level="info" />
+            <!-- Only events at DIAG level or more specific are sent to the console. -->
+            <!-- <AppenderRef ref="Console" level="diag" /> -->
+            <AppenderRef ref="James" level="trace" />
+            <AppenderRef ref="openjpa" level="trace" />
+        </Root>
+    </Loggers>
+</Configuration>
