@@ -36,7 +36,7 @@ public interface JMAPRoutes {
     JMAPRoute.Action CORS_CONTROL = corsHeaders((req, res) -> res.send());
 
     static JMAPRoute.Action corsHeaders(JMAPRoute.Action action) {
-        return (req, res) -> action.apply(req, res
+        return (req, res) -> action.handleRequest(req, res
             .header("Access-Control-Allow-Origin", "*")
             .header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
             .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept"));

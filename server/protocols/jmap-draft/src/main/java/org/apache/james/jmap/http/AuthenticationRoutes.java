@@ -46,7 +46,6 @@ import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
 import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.JMAPUrls;
-import org.apache.james.jmap.Verb;
 import org.apache.james.jmap.Version;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
@@ -70,6 +69,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.netty.handler.codec.http.HttpMethod;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.server.HttpServerRequest;
@@ -108,10 +108,10 @@ public class AuthenticationRoutes implements JMAPRoutes {
     @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
-            new JMAPRoute(new Endpoint(Verb.POST, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::post)),
-            new JMAPRoute(new Endpoint(Verb.GET, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::returnEndPointsResponse)),
-            new JMAPRoute(new Endpoint(Verb.DELETE, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::delete)),
-            new JMAPRoute(new Endpoint(Verb.OPTIONS, AUTHENTICATION), Version.DRAFT, CORS_CONTROL)
+            new JMAPRoute(new Endpoint(HttpMethod.POST, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::post)),
+            new JMAPRoute(new Endpoint(HttpMethod.GET, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::returnEndPointsResponse)),
+            new JMAPRoute(new Endpoint(HttpMethod.DELETE, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::delete)),
+            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, AUTHENTICATION), Version.DRAFT, CORS_CONTROL)
         );
     }
 

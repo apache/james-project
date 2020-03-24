@@ -19,7 +19,11 @@
 
 package org.apache.james.jmap;
 
-import java.util.function.BiFunction;
+import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT;
+
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.reactivestreams.Publisher;
 
@@ -27,9 +31,11 @@ import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
 public class JMAPRoute {
-    public interface Action extends BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
-
+    public interface Action {
+        Publisher<Void> handleRequest(HttpServerRequest request, HttpServerResponse response);
     }
+
+    private static final String JMAP_VERSION_HEADER = "jmapVersion=";
 
     private final Endpoint endpoint;
     private final Version version;
@@ -51,5 +57,23 @@ public class JMAPRoute {
 
     public Action getAction() {
         return action;
+    }
+
+    public boolean matches(HttpServerRequest request) {
+        return getVersion().equals(extractRequestVersionHeader(request))
+            && getEndpoint().matches(request);
+    }
+
+    private Version extractRequestVersionHeader(HttpServerRequest request) {
+        return Optional.ofNullable(request.requestHeaders().get(ACCEPT))
+                .map(s -> s.split(";"))
+                .map(Arrays::stream)
+                .orElse(Stream.of())
+            .map(value -> value.trim().toLowerCase())
+            .filter(value -> value.startsWith(JMAP_VERSION_HEADER.toLowerCase()))
+            .map(value -> value.substring(JMAP_VERSION_HEADER.length()))
+            .map(Version::of)
+            .findFirst()
+            .orElse(Version.DRAFT);
     }
 }

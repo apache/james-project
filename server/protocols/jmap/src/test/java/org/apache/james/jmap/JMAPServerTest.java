@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -62,12 +63,12 @@ class JMAPServerTest {
     private static final ImmutableSet<JMAPRoutes> NO_ROUTES = ImmutableSet.of();
 
     private static final ImmutableSet<Endpoint> AUTHENTICATION_ENDPOINTS = ImmutableSet.of(
-        new Endpoint(Verb.POST, JMAPUrls.AUTHENTICATION),
-        new Endpoint(Verb.GET, JMAPUrls.AUTHENTICATION)
+        new Endpoint(HttpMethod.POST, JMAPUrls.AUTHENTICATION),
+        new Endpoint(HttpMethod.GET, JMAPUrls.AUTHENTICATION)
     );
     private static final ImmutableSet<Endpoint> JMAP_ENDPOINTS = ImmutableSet.of(
-        new Endpoint(Verb.POST, JMAPUrls.JMAP),
-        new Endpoint(Verb.DELETE, JMAPUrls.JMAP)
+        new Endpoint(HttpMethod.POST, JMAPUrls.JMAP),
+        new Endpoint(HttpMethod.DELETE, JMAPUrls.JMAP)
     );
     private static final ImmutableSet<JMAPRoutes> FAKE_ROUTES = ImmutableSet.of(
         new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, Version.DRAFT),

@@ -34,7 +34,6 @@ import javax.inject.Inject;
 import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
 import org.apache.james.jmap.JMAPRoutes;
-import org.apache.james.jmap.Verb;
 import org.apache.james.jmap.Version;
 import org.apache.james.jmap.draft.exceptions.BadRequestException;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
@@ -53,6 +52,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.netty.handler.codec.http.HttpMethod;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -88,8 +88,8 @@ public class JMAPApiRoutes implements JMAPRoutes {
     @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
-            new JMAPRoute(new Endpoint(Verb.POST, JMAP), Version.DRAFT, JMAPRoutes.corsHeaders(this::post)),
-            new JMAPRoute(new Endpoint(Verb.OPTIONS, JMAP), Version.DRAFT, CORS_CONTROL)
+            new JMAPRoute(new Endpoint(HttpMethod.POST, JMAP), Version.DRAFT, JMAPRoutes.corsHeaders(this::post)),
+            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, JMAP), Version.DRAFT, CORS_CONTROL)
         );
     }
 

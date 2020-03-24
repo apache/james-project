@@ -32,7 +32,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.JMAPRoute;
-import org.apache.james.jmap.Verb;
 import org.apache.james.jmap.draft.methods.ErrorResponse;
 import org.apache.james.jmap.draft.methods.Method;
 import org.apache.james.jmap.draft.methods.RequestHandler;
@@ -48,6 +47,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.netty.handler.codec.http.HttpMethod;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
@@ -76,13 +76,13 @@ public class JMAPApiRoutesTest {
             mockedAuthFilter, mockedUserProvisionner, mockedMailboxesProvisionner);
 
         JMAPRoute postApiRoute = jmapApiRoutes.routes()
-            .filter(jmapRoute -> jmapRoute.getEndpoint().getVerb().equals(Verb.POST))
+            .filter(jmapRoute -> jmapRoute.getEndpoint().getMethod().equals(HttpMethod.POST))
             .findFirst()
             .get();
 
         server = HttpServer.create()
             .port(RANDOM_PORT)
-            .route(routes -> routes.post(postApiRoute.getEndpoint().getPath(), (req, res) -> postApiRoute.getAction().apply(req, res)))
+            .route(routes -> routes.post(postApiRoute.getEndpoint().getPath(), (req, res) -> postApiRoute.getAction().handleRequest(req, res)))
             .bindNow();
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
