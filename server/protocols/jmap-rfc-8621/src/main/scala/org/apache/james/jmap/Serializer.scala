@@ -30,7 +30,6 @@ import play.api.libs.json._
 class Serializer {
   implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
   implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
-  implicit val stateWrites: Writes[State] = state => JsString(state.value)
   implicit val capabilityIdentifierWrites: Writes[CapabilityIdentifier] = identifier => JsString(identifier.value.toString)
   implicit val coreCapabilityWrites: Writes[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]
   implicit val mailCapabilityWrites: Writes[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]

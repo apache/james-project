@@ -24,10 +24,11 @@ import java.net.{URI, URL}
 import org.apache.james.core.Username
 import org.apache.james.jmap.SerializerTest.{SESSION, readResource}
 import org.apache.james.jmap.model.Id.Id
-import org.apache.james.jmap.model._
+import org.apache.james.jmap.model.{State, _}
 import org.scalatestplus.play.PlaySpec
 import play.libs.Json
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 
 import scala.io.Source
@@ -49,7 +50,7 @@ object SerializerTest {
   private val USER_2 = Username.of("user2@james.org")
   private val USER_2_ID: Id = "user2Id"
   private val URL = new URL("http://james.org")
-  private val STATE = State("fda9342jcm")
+  private val STATE : State = "fda9342jcm"
 
   private val MAIL_IDENTIFIER = CapabilityIdentifier(new URI("urn:ietf:params:jmap:mail"))
   private val CONTACT_IDENTIFIER = CapabilityIdentifier(new URI("urn:ietf:params:jmap:contact"))

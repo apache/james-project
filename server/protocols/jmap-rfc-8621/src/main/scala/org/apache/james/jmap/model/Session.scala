@@ -24,7 +24,10 @@ import java.net.URL
 import org.apache.james.core.Username
 import CapabilityIdentifier.JMAP_CORE
 import CapabilityIdentifier.JMAP_MAIL
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.model.Id.Id
+import org.apache.james.jmap.model.State.State
 
 object Account {
   def apply(name: Username,
@@ -42,14 +45,9 @@ final case class Account private(name: Username,
                                  accountCapabilities: Set[_ <: Capability])
 
 object State {
-  def apply(value: String): State = {
-    require(!value.isEmpty, "value cannot be empty")
-
-    new State(value)
-  }
+  type State = String Refined NonEmpty
 }
 
-final case class State private(value: String)
 
 object Session {
   def apply(capabilities: Set[_ <: Capability],

@@ -25,12 +25,13 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.model.SessionTest._
 import org.scalatest.{Matchers, WordSpec}
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 
 object SessionTest {
   private val USERNAME = Username.of("bob@james.org")
   private val URL = new JavaNetURL("http://james.org")
-  private val STATE = State("fda9342jcm")
+  private val STATE : State = "fda9342jcm"
   private val UNSIGNED_INT : UnsignedInt = 1L
   private val CORE_CAPABILITY = CoreCapability(properties = CoreCapabilityProperties(
     maxSizeUpload = UNSIGNED_INT,
@@ -58,16 +59,6 @@ object SessionTest {
 }
 
 class SessionTest extends WordSpec with Matchers {
-
-
-  "State" should {
-
-    "throw when empty value" in {
-      the [IllegalArgumentException] thrownBy {
-        State("")
-      } should have message "requirement failed: value cannot be empty"
-    }
-  }
 
   "apply" should {
 
