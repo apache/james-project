@@ -16,17 +16,24 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  * ***************************************************************/
-package org.apache.james.jmap.rfc.model
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.boolean.And
-import eu.timepit.refined.collection.Size
-import eu.timepit.refined.numeric.Interval
-import eu.timepit.refined.string.MatchesRegex
+package org.apache.james.jmap.model
+
+import eu.timepit.refined.types.string.NonEmptyString
+import org.apache.james.jmap.model.ResponseObject.SessionState
+import play.api.libs.json.{JsResult, Json}
 import be.venneborg.refined.play.RefinedJsonFormats._
 
-object Id {
-  type Id = String Refined And[
-    Size[Interval.Closed[1, 255]],
-    MatchesRegex["^[a-zA-Z0-9-_]*$"]]
+case class ResponseObject(sessionState: SessionState, methodResponses: Seq[Invocation])
+
+object ResponseObject {
+
+  case class SessionState(value: NonEmptyString)
+
+  implicit val sessionStateFormat = Json.valueFormat[SessionState]
+  implicit val responseObjectFormat = Json.format[ResponseObject]
+
+  def deserialize(input: String): JsResult[ResponseObject] = {
+    Json.parse(input).validate[ResponseObject]
+  }
 }

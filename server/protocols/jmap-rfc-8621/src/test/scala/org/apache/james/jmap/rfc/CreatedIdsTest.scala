@@ -18,9 +18,9 @@
  * ***************************************************************/
 package org.apache.james.jmap.rfc
 
-import org.apache.james.jmap.rfc.model.CreatedIds
-import org.apache.james.jmap.rfc.model.CreatedIds.{ClientId, ServerId}
-import org.apache.james.jmap.rfc.model.Id.Id
+import org.apache.james.jmap.model.CreatedIds
+import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
+import org.apache.james.jmap.model.Id.Id
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsError, JsString, JsSuccess, Json}
 import eu.timepit.refined.auto._

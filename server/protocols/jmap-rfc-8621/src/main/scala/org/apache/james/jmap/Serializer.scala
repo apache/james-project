@@ -21,14 +21,15 @@ package org.apache.james.jmap
 
 import java.net.URL
 
+import be.venneborg.refined.play.RefinedJsonFormats._
 import org.apache.james.core.Username
+import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.{Account, CapabilityIdentifier, CoreCapabilityProperties, Id, MailCapabilityProperties, Session, UnsignedInt, _}
 import play.api.libs.json._
 
 class Serializer {
   implicit val unsignedIntWrites: Writes[UnsignedInt] = unsignedInt => JsNumber(unsignedInt.value)
   implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
-  implicit val idWrites: Writes[Id] = id => JsString(id.value)
   implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
   implicit val stateWrites: Writes[State] = state => JsString(state.value)
   implicit val capabilityIdentifierWrites: Writes[CapabilityIdentifier] = identifier => JsString(identifier.value.toString)

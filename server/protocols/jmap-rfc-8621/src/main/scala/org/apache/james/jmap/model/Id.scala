@@ -19,15 +19,15 @@
 
 package org.apache.james.jmap.model
 
-object Id {
-  def apply(value: String): Id = {
-    require(Option(value).isDefined, "value cannot be null")
-    require(!value.isEmpty, "value cannot be empty")
-    require(value.length <= 255, "value length cannot exceed 255 characters")
-    require(value.matches("^[a-zA-Z0-9-_]*$"), "value should contains only 'URL and Filename Safe' base64 alphabet characters, " +
-      "see Section 5 of [@!RFC4648]")
-    new Id(value)
-  }
-}
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.boolean.And
+import eu.timepit.refined.collection.Size
+import eu.timepit.refined.numeric.Interval
+import eu.timepit.refined.string.MatchesRegex
+import be.venneborg.refined.play.RefinedJsonFormats._
 
-final case class Id private(value: String)
+object Id {
+  type Id = String Refined And[
+    Size[Interval.Closed[1, 255]],
+    MatchesRegex["^[a-zA-Z0-9-_]*$"]]
+}

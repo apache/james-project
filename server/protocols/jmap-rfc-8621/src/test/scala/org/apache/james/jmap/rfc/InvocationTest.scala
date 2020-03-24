@@ -18,9 +18,9 @@
  * ***************************************************************/
 package org.apache.james.jmap.rfc
 
-import org.apache.james.jmap.rfc.model.Invocation
-import org.apache.james.jmap.rfc.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.rfc.model.RequestObject.Capability
+import org.apache.james.jmap.model.Invocation
+import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
+import org.apache.james.jmap.model.RequestObject.Capability
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 import eu.timepit.refined.auto._

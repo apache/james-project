@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  * ***************************************************************/
-package org.apache.james.jmap.rfc.model
+package org.apache.james.jmap.model
 
 import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.james.jmap.rfc.model.Invocation.{Arguments, MethodCallId, MethodName}
+import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._

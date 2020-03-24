@@ -16,34 +16,26 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  * ***************************************************************/
-package org.apache.james.jmap.rfc.model
 
-import org.apache.james.jmap.rfc.model.CreatedIds.{ClientId, ServerId}
-import org.apache.james.jmap.rfc.model.Id.Id
+package org.apache.james.jmap.model
+
+import eu.timepit.refined.types.string.NonEmptyString
+import org.apache.james.jmap.model.RequestObject.Capability
 import play.api.libs.json._
 import be.venneborg.refined.play.RefinedJsonFormats._
 
-case class CreatedIds(value: Map[ClientId, ServerId])
+case class RequestObject(using: Seq[Capability], methodCalls: Seq[Invocation], createdIds: Option[CreatedIds] = None)
 
-object CreatedIds {
-  final case class ClientId(value: Id)
-  final case class ServerId(value: Id)
+object RequestObject {
 
-  implicit val clientIdFormat: Format[ClientId] = Json.valueFormat[ClientId]
-  implicit val serverIdFormat: Format[ServerId] = Json.valueFormat[ServerId]
-  implicit val createdIdsFormat: Format[CreatedIds] = Json.valueFormat[CreatedIds]
+  case class Capability(value: NonEmptyString)
 
-  implicit def createdIdsIdWrites(implicit serverIdWriter: Writes[ServerId]): Writes[Map[ClientId, ServerId]] =
-    (ids: Map[ClientId, ServerId]) => {
-      JsObject(ids.map {
-        case (clientId, serverId) => (clientId.value.value, serverIdWriter.writes(serverId))
-      }.toSeq)
-    }
+  implicit val capabilityFormat: Format[Capability] = Json.valueFormat[Capability]
+  implicit val requestObjectRead: Format[RequestObject] = Json.format[RequestObject]
 
-  implicit def createdIdsIdRead(implicit serverIdReader: Reads[ServerId]): Reads[Map[ClientId, ServerId]] =
-    Reads.mapReads[ClientId, ServerId] {
-      clientIdString => Json.fromJson[ClientId](JsString(clientIdString))
-    }
+  def deserialize(input: String): JsResult[RequestObject] = {
+    Json.parse(input).validate[RequestObject]
+  }
 }
 
 

@@ -19,13 +19,13 @@
 
 package org.apache.james.jmap.rfc
 
-import eu.timepit.refined.auto._
-import org.apache.james.jmap.rfc.model.CreatedIds.{ClientId, ServerId}
-import org.apache.james.jmap.rfc.model.Id.Id
-import org.apache.james.jmap.rfc.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.rfc.model.RequestObject.Capability
-import org.apache.james.jmap.rfc.model.{CreatedIds, Invocation, RequestObject}
+import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
+import org.apache.james.jmap.model.Id.Id
+import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
+import org.apache.james.jmap.model.RequestObject.Capability
+import org.apache.james.jmap.model.{CreatedIds, Invocation, RequestObject}
 import org.scalatestplus.play.PlaySpec
+import eu.timepit.refined.auto._
 import play.api.libs.json._
 
 class RequestObjectTest extends PlaySpec {

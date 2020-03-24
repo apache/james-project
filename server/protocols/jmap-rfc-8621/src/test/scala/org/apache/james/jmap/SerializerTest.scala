@@ -23,9 +23,11 @@ import java.net.{URI, URL}
 
 import org.apache.james.core.Username
 import org.apache.james.jmap.SerializerTest.{SESSION, readResource}
+import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model._
 import org.scalatestplus.play.PlaySpec
 import play.libs.Json
+import eu.timepit.refined.auto._
 
 import scala.io.Source
 import scala.util.Using
@@ -42,9 +44,9 @@ object SerializerTest {
   private val MAX_OBJECTS_IN_GET = UnsignedInt(256)
   private val MAX_OBJECTS_IN_SET = UnsignedInt(128)
   private val USER_1 = Username.of("user1@james.org")
-  private val USER_1_ID = Id("user1Id")
+  private val USER_1_ID: Id = "user1Id"
   private val USER_2 = Username.of("user2@james.org")
-  private val USER_2_ID = Id("user2Id")
+  private val USER_2_ID: Id = "user2Id"
   private val URL = new URL("http://james.org")
   private val STATE = State("fda9342jcm")
 

@@ -24,6 +24,7 @@ import java.net.URL
 import org.apache.james.core.Username
 import CapabilityIdentifier.JMAP_CORE
 import CapabilityIdentifier.JMAP_MAIL
+import org.apache.james.jmap.model.Id.Id
 
 object Account {
   def apply(name: Username,

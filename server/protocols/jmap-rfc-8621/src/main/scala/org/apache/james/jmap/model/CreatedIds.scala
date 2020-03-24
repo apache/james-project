@@ -16,24 +16,34 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  * ***************************************************************/
+package org.apache.james.jmap.model
 
-package org.apache.james.jmap.rfc.model
-
-import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.james.jmap.rfc.model.ResponseObject.SessionState
-import play.api.libs.json.{JsResult, Json}
+import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
+import org.apache.james.jmap.model.Id.Id
+import play.api.libs.json._
 import be.venneborg.refined.play.RefinedJsonFormats._
 
-case class ResponseObject(sessionState: SessionState, methodResponses: Seq[Invocation])
+case class CreatedIds(value: Map[ClientId, ServerId])
 
-object ResponseObject {
+object CreatedIds {
+  final case class ClientId(value: Id)
+  final case class ServerId(value: Id)
 
-  case class SessionState(value: NonEmptyString)
+  implicit val clientIdFormat: Format[ClientId] = Json.valueFormat[ClientId]
+  implicit val serverIdFormat: Format[ServerId] = Json.valueFormat[ServerId]
+  implicit val createdIdsFormat: Format[CreatedIds] = Json.valueFormat[CreatedIds]
 
-  implicit val sessionStateFormat = Json.valueFormat[SessionState]
-  implicit val responseObjectFormat = Json.format[ResponseObject]
+  implicit def createdIdsIdWrites(implicit serverIdWriter: Writes[ServerId]): Writes[Map[ClientId, ServerId]] =
+    (ids: Map[ClientId, ServerId]) => {
+      JsObject(ids.map {
+        case (clientId, serverId) => (clientId.value.value, serverIdWriter.writes(serverId))
+      }.toSeq)
+    }
 
-  def deserialize(input: String): JsResult[ResponseObject] = {
-    Json.parse(input).validate[ResponseObject]
-  }
+  implicit def createdIdsIdRead(implicit serverIdReader: Reads[ServerId]): Reads[Map[ClientId, ServerId]] =
+    Reads.mapReads[ClientId, ServerId] {
+      clientIdString => Json.fromJson[ClientId](JsString(clientIdString))
+    }
 }
+
+
