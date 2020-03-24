@@ -18,13 +18,14 @@
  ****************************************************************/
 package org.apache.james.jmap.http;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -45,10 +46,12 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
 public class AuthenticationReactiveFilterTest {
-    private static final boolean AUTHORIZED = true;
     private static final String TOKEN = "df991d2a-1c5a-4910-a90f-808b6eda133e";
     private static final String AUTHORIZATION_HEADERS = "Authorization";
     private static final Username USERNAME = Username.of("user@domain.tld");
+
+    private static final AuthenticationStrategy DENY = httpRequest -> Mono.error(new MailboxSessionCreationException(null));
+    private static final AuthenticationStrategy ALLOW = httpRequest -> Mono.just(mock(MailboxSession.class));
 
     private HttpServerRequest mockedRequest;
     private HttpHeaders mockedHeaders;
@@ -68,9 +71,7 @@ public class AuthenticationReactiveFilterTest {
         when(mockedRequest.requestHeaders())
             .thenReturn(mockedHeaders);
 
-        List<AuthenticationStrategy> fakeAuthenticationStrategies = ImmutableList.of(new FakeAuthenticationStrategy(!AUTHORIZED));
-
-        testee = new AuthenticationReactiveFilter(fakeAuthenticationStrategies, new RecordingMetricFactory());
+        testee = AuthenticationReactiveFilter.of(new RecordingMetricFactory(), DENY);
     }
 
     @Test
@@ -81,7 +82,21 @@ public class AuthenticationReactiveFilterTest {
         assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
             .isInstanceOf(UnauthorizedException.class);
     }
-    
+
+    @Test
+    public void authenticationStrategiesShouldNotBeEagerlySubScribed() {
+        AtomicBoolean called = new AtomicBoolean(false);
+
+        testee = AuthenticationReactiveFilter.of(new RecordingMetricFactory(),
+            ALLOW,
+            req -> Mono.fromRunnable(() -> called.set(true)));
+        assertThat(called.get()).isFalse();
+
+        testee.authenticate(mockedRequest).block();
+
+        assertThat(called.get()).isFalse();
+    }
+
     @Test
     public void filterShouldReturnUnauthorizedOnInvalidAuthorizationHeader() {
         when(mockedHeaders.get(AUTHORIZATION_HEADERS))
@@ -118,7 +133,7 @@ public class AuthenticationReactiveFilterTest {
 
         accessTokenRepository.addToken(USERNAME, token).block();
 
-        AuthenticationReactiveFilter authFilter = new AuthenticationReactiveFilter(ImmutableList.of(new FakeAuthenticationStrategy(AUTHORIZED)), new RecordingMetricFactory());
+        AuthenticationReactiveFilter authFilter = AuthenticationReactiveFilter.of(new RecordingMetricFactory(), ALLOW);
 
         assertThatCode(() -> authFilter.authenticate(mockedRequest).block())
             .doesNotThrowAnyException();
@@ -132,26 +147,9 @@ public class AuthenticationReactiveFilterTest {
 
         accessTokenRepository.addToken(USERNAME, token).block();
 
-        AuthenticationReactiveFilter authFilter = new AuthenticationReactiveFilter(ImmutableList.of(new FakeAuthenticationStrategy(!AUTHORIZED), new FakeAuthenticationStrategy(AUTHORIZED)), new RecordingMetricFactory());
+        AuthenticationReactiveFilter authFilter = AuthenticationReactiveFilter.of(new RecordingMetricFactory(), DENY, ALLOW);
 
         assertThatCode(() -> authFilter.authenticate(mockedRequest).block())
             .doesNotThrowAnyException();
-    }
-
-    private static class FakeAuthenticationStrategy implements AuthenticationStrategy {
-
-        private final boolean isAuthorized;
-
-        private FakeAuthenticationStrategy(boolean isAuthorized) {
-            this.isAuthorized = isAuthorized;
-        }
-
-        @Override
-        public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
-            if (!isAuthorized) {
-                return Mono.error(new MailboxSessionCreationException(null));
-            }
-            return Mono.just(mock(MailboxSession.class));
-        }
     }
 }

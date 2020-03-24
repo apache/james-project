@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -36,6 +37,10 @@ import reactor.netty.http.server.HttpServerRequest;
 
 public class AuthenticationReactiveFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationReactiveFilter.class);
+
+    static AuthenticationReactiveFilter of(MetricFactory metricFactory, AuthenticationStrategy... authenticationStrategies) {
+        return new AuthenticationReactiveFilter(ImmutableList.copyOf(authenticationStrategies), metricFactory);
+    }
 
     private final List<AuthenticationStrategy> authMethods;
     private final MetricFactory metricFactory;
@@ -49,10 +54,10 @@ public class AuthenticationReactiveFilter {
 
     public Mono<MailboxSession> authenticate(HttpServerRequest request) {
         return Mono.from(metricFactory.runPublishingTimerMetric("JMAP-authentication-filter",
-            Flux.fromStream(authMethods.stream())
-                .flatMap(auth -> auth.createMailboxSession(request))
+            Flux.fromIterable(authMethods)
+                .concatMap(auth -> auth.createMailboxSession(request))
                 .onErrorContinue((throwable, nothing) -> LOGGER.error("Error while trying to authenticate with JMAP", throwable))
-                .singleOrEmpty()
+                .next()
                 .switchIfEmpty(Mono.error(new UnauthorizedException()))));
     }
 }
