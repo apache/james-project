@@ -117,6 +117,11 @@ object Rights {
   }
 }
 
+sealed trait RightsApplicability
+case object Applicable extends RightsApplicability
+case object NotApplicable extends RightsApplicability
+case object Unsupported extends RightsApplicability
+
 case class Rights private(rights: Map[Username, Seq[Right]]) {
   def removeEntriesFor(username: Username) = copy(rights = rights - username)
 
@@ -136,18 +141,25 @@ case class Rights private(rights: Map[Username, Seq[Right]]) {
 
   def combine(that: Rights): Rights = Rights(this.rights ++ that.rights)
 
-  def mayReadItems(username: Username): Option[Boolean] = containsRight(username, Right.Read)
+  def mayReadItems(username: Username): RightsApplicability = containsRight(username, Right.Read)
 
-  def mayAddItems(username: Username): Option[Boolean] = containsRight(username, Right.Insert)
+  def mayAddItems(username: Username): RightsApplicability = containsRight(username, Right.Insert)
 
-  def mayRemoveItems(username: Username): Option[Boolean] = containsRight(username, Right.DeleteMessages)
+  def mayRemoveItems(username: Username): RightsApplicability = containsRight(username, Right.DeleteMessages)
 
-  def mayCreateChild(username: Username): Option[Boolean] = Right.UNSUPPORTED
+  def mayCreateChild(username: Username): RightsApplicability = Unsupported
 
-  def mayRename(username: Username): Option[Boolean] = Right.UNSUPPORTED
+  def mayRename(username: Username): RightsApplicability = Unsupported
 
-  def mayDelete(username: Username): Option[Boolean] = Right.UNSUPPORTED
+  def mayDelete(username: Username): RightsApplicability = Unsupported
 
-  private def containsRight(username: Username, right: Right): Option[Boolean] = rights.get(username)
-    .map(_.contains(right))
+  private def containsRight(username: Username, right: Right): RightsApplicability = {
+    val contains = rights.get(username)
+      .map(_.contains(right))
+    contains match {
+      case Some(true) => Applicable
+      case Some(false) => NotApplicable
+      case None => NotApplicable
+    }
+  }
 }

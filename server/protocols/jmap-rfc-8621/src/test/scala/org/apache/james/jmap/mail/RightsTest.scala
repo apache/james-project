@@ -118,56 +118,56 @@ class RightsTest extends WordSpec with MustMatchers {
   }
   "mayAddItems" should  {
     "return empty when no user" in {
-      Rights.EMPTY.mayAddItems(USERNAME) must be(None)
+      Rights.EMPTY.mayAddItems(USERNAME) must be(NotApplicable)
     }
     "return false when no insert right" in {
       Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.DeleteMessages, Right.Read, Right.Seen, Right.Write))
-        .mayAddItems(USERNAME) must be(Some(false))
+        .mayAddItems(USERNAME) must be(NotApplicable)
     }
     "return true when insert right" in {
       Rights.of(USERNAME, Right.Insert)
-        .mayAddItems(USERNAME) must be(Some(true))
+        .mayAddItems(USERNAME) must be(Applicable)
     }
   }
   "mayReadItems" should  {
     "return empty when no user" in {
-      Rights.EMPTY.mayReadItems(USERNAME) must be(None)
+      Rights.EMPTY.mayReadItems(USERNAME) must be(NotApplicable)
     }
     "return false when no read right" in {
       Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.DeleteMessages, Right.Administer, Right.Seen, Right.Write))
-        .mayReadItems(USERNAME) must be(Some(false))
+        .mayReadItems(USERNAME) must be(NotApplicable)
     }
     "return true when read right" in {
       Rights.of(USERNAME, Right.Read)
-        .mayReadItems(USERNAME) must be(Some(true))
+        .mayReadItems(USERNAME) must be(Applicable)
     }
   }
   "mayRemoveItems" should  {
     "return empty when no user" in {
-      Rights.EMPTY.mayRemoveItems(USERNAME) must be(None)
+      Rights.EMPTY.mayRemoveItems(USERNAME) must be(NotApplicable)
     }
     "return false when no delete right" in {
       Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.Read, Right.Administer, Right.Seen, Right.Write))
-        .mayRemoveItems(USERNAME) must be(Some(false))
+        .mayRemoveItems(USERNAME) must be(NotApplicable)
     }
     "return true when delete right" in {
       Rights.of(USERNAME, Right.DeleteMessages)
-        .mayRemoveItems(USERNAME) must be(Some(true))
+        .mayRemoveItems(USERNAME) must be(Applicable)
     }
   }
   "mayRename" should  {
     "return unsupported" in {
-      Rights.EMPTY.mayRename(USERNAME) must be(Right.UNSUPPORTED)
+      Rights.EMPTY.mayRename(USERNAME) must be(Unsupported)
     }
   }
   "mayDelete" should  {
     "return unsupported" in {
-      Rights.EMPTY.mayDelete(USERNAME) must be(Right.UNSUPPORTED)
+      Rights.EMPTY.mayDelete(USERNAME) must be(Unsupported)
     }
   }
   "mayCreateChild" should  {
     "return unsupported" in {
-      Rights.EMPTY.mayCreateChild(USERNAME) must be(Right.UNSUPPORTED)
+      Rights.EMPTY.mayCreateChild(USERNAME) must be(Unsupported)
     }
   }
 }
