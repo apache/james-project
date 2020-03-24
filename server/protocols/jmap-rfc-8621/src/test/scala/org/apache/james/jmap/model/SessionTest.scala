@@ -55,39 +55,12 @@ object SessionTest {
     maxSizeAttachmentsPerEmail = UNSIGNED_INT,
     emailQuerySortOptions = List("flags", "subject"),
     mayCreateTopLevelMailbox = false))
-  private val CAPABILITIES = Set(CORE_CAPABILITY, MAIL_CAPABILITY)
 }
 
 class SessionTest extends WordSpec with Matchers {
 
-  "Account" should {
-    "throw when null name" in {
-      the [IllegalArgumentException] thrownBy {
-        Account(
-          name = null,
-          isPersonal = true,
-          isReadOnly = false,
-          accountCapabilities = CAPABILITIES)
-      } should have message "requirement failed: name cannot be null"
-    }
-
-    "throw when null accountCapabilities" in {
-      the [IllegalArgumentException] thrownBy {
-        Account(
-          name = USERNAME,
-          isPersonal = true,
-          isReadOnly = false,
-          accountCapabilities = null)
-      } should have message "requirement failed: accountCapabilities cannot be null"
-    }
-  }
 
   "State" should {
-    "throw when null value" in {
-      the [IllegalArgumentException] thrownBy {
-        State(null)
-      } should have message "requirement failed: value cannot be null"
-    }
 
     "throw when empty value" in {
       the [IllegalArgumentException] thrownBy {
@@ -97,20 +70,6 @@ class SessionTest extends WordSpec with Matchers {
   }
 
   "apply" should {
-    "throw when null capabilities" in {
-      the [IllegalArgumentException] thrownBy {
-        Session(
-          capabilities = null,
-          accounts = Map(),
-          primaryAccounts = Map(),
-          username = USERNAME,
-          apiUrl = URL,
-          downloadUrl = URL,
-          uploadUrl = URL,
-          eventSourceUrl = URL,
-          state = STATE)
-      } should have message "requirement failed: capabilities cannot be null"
-    }
 
     "throw when missing core capability" in {
       the [IllegalArgumentException] thrownBy {
@@ -155,126 +114,6 @@ class SessionTest extends WordSpec with Matchers {
           eventSourceUrl = URL,
           state = STATE)
       } should have message "requirement failed: capabilities should not be duplicated"
-    }
-
-    "throw when null accounts" in {
-      the [IllegalArgumentException] thrownBy {
-        Session(
-          capabilities = CAPABILITIES,
-          accounts = null,
-          primaryAccounts = Map(),
-          username = USERNAME,
-          apiUrl = URL,
-          downloadUrl = URL,
-          uploadUrl = URL,
-          eventSourceUrl = URL,
-          state = STATE)
-      } should have message "requirement failed: accounts cannot be null"
-    }
-
-    "throw when null primaryAccount" in {
-      the [IllegalArgumentException] thrownBy {
-        Session(
-          capabilities = CAPABILITIES,
-          accounts = Map(),
-          primaryAccounts = null,
-          username = USERNAME,
-          apiUrl = URL,
-          downloadUrl = URL,
-          uploadUrl = URL,
-          eventSourceUrl = URL,
-          state = STATE)
-      } should have message "requirement failed: primaryAccounts cannot be null"
-    }
-
-    "throw when null username" in {
-      the [IllegalArgumentException] thrownBy {
-        Session(
-          capabilities = CAPABILITIES,
-          accounts = Map(),
-          primaryAccounts = Map(),
-          username = null,
-          apiUrl = URL,
-          downloadUrl = URL,
-          uploadUrl = URL,
-          eventSourceUrl = URL,
-          state = STATE)
-      } should have message "requirement failed: username cannot be null"
-    }
-
-    "throw when null apiUrl" in {
-      the [IllegalArgumentException] thrownBy {
-        Session(
-          capabilities = CAPABILITIES,
-          accounts = Map(),
-          primaryAccounts = Map(),
-          username = USERNAME,
-          apiUrl = null,
-          downloadUrl = URL,
-          uploadUrl = URL,
-          eventSourceUrl = URL,
-          state = STATE)
-      } should have message "requirement failed: apiUrl cannot be null"
-    }
-
-    "throw when null downloadUrl" in {
-      the [IllegalArgumentException] thrownBy {
-        Session(
-          capabilities = CAPABILITIES,
-          accounts = Map(),
-          primaryAccounts = Map(),
-          username = USERNAME,
-          apiUrl = URL,
-          downloadUrl = null,
-          uploadUrl = URL,
-          eventSourceUrl = URL,
-          state = STATE)
-      } should have message "requirement failed: downloadUrl cannot be null"
-    }
-
-    "throw when null uploadUrl" in {
-      the [IllegalArgumentException] thrownBy {
-        Session(
-          capabilities = CAPABILITIES,
-          accounts = Map(),
-          primaryAccounts = Map(),
-          username = USERNAME,
-          apiUrl = URL,
-          downloadUrl = URL,
-          uploadUrl = null,
-          eventSourceUrl = URL,
-          state = STATE)
-      } should have message "requirement failed: uploadUrl cannot be null"
-    }
-
-    "throw when null eventSourceUrl" in {
-      the [IllegalArgumentException] thrownBy {
-        Session(
-          capabilities = CAPABILITIES,
-          accounts = Map(),
-          primaryAccounts = Map(),
-          username = USERNAME,
-          apiUrl = URL,
-          downloadUrl = URL,
-          uploadUrl = URL,
-          eventSourceUrl = null,
-          state = STATE)
-      } should have message "requirement failed: eventSourceUrl cannot be null"
-    }
-
-    "throw when null state" in {
-      the [IllegalArgumentException] thrownBy {
-        Session(
-          capabilities = CAPABILITIES,
-          accounts = Map(),
-          primaryAccounts = Map(),
-          username = USERNAME,
-          apiUrl = URL,
-          downloadUrl = URL,
-          uploadUrl = URL,
-          eventSourceUrl = URL,
-          state = null)
-      } should have message "requirement failed: state cannot be null"
     }
   }
 }
