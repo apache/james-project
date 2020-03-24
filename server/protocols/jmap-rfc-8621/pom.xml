@@ -53,11 +53,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>de.cbley</groupId>
-            <artifactId>play-json-refined_${scala.base}</artifactId>
-            <version>0.8.0</version>
-        </dependency>
-        <dependency>
             <groupId>com.typesafe.play</groupId>
             <artifactId>play-json_${scala.base}</artifactId>
         </dependency>

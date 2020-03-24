@@ -18,6 +18,8 @@
  * ***************************************************************/
 package org.apache.james.jmap.rfc
 
+import org.apache.james.jmap.json.Invocation._
+import org.apache.james.jmap.json.RequestObject._
 import org.apache.james.jmap.model.Invocation
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.RequestObject.Capability

@@ -17,24 +17,26 @@
  * under the License.                                           *
  * ***************************************************************/
 
-package org.apache.james.jmap
+package org.apache.james.jmap.json
+
+import org.apache.james.jmap.json.SessionSerializerTest.{SESSION, readResource}
 
 import java.net.{URI, URL}
 
-import org.apache.james.core.Username
-import org.apache.james.jmap.SerializerTest.{SESSION, readResource}
-import org.apache.james.jmap.model.Id.Id
-import org.apache.james.jmap.model.{State, _}
-import org.scalatestplus.play.PlaySpec
-import play.libs.Json
 import eu.timepit.refined.auto._
+
+import org.apache.james.core.Username
+import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
+import org.apache.james.jmap.model._
+import org.scalatestplus.play.PlaySpec
+import play.libs.Json
 
 import scala.io.Source
 import scala.util.Using
 
-object SerializerTest {
+object SessionSerializerTest {
   private val ALGO_1 = "i;ascii-numeric"
   private val ALGO_2 = "i;ascii-casemap"
   private val ALGO_3 = "i;unicode-casemap"
@@ -112,12 +114,12 @@ object SerializerTest {
   }
 }
 
-class SerializerTest extends PlaySpec {
+class SessionSerializerTest extends PlaySpec {
 
   "sessionWrites" should {
     "serialize session" in {
       val jsonString = Json.parse(readResource("/sessionObject.json")).toString
-      new Serializer().serialize(SESSION) must equal(jsonString)
+      new SessionSerializer().serialize(SESSION) must equal(jsonString)
     }
   }
 }

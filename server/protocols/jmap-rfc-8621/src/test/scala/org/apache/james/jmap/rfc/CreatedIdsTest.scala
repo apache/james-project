@@ -18,6 +18,7 @@
  * ***************************************************************/
 package org.apache.james.jmap.rfc
 
+import org.apache.james.jmap.json.CreatedIds._
 import org.apache.james.jmap.model.CreatedIds
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id

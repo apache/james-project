@@ -19,8 +19,10 @@
 
 package org.apache.james.jmap.rfc
 
-import org.apache.james.jmap.model
-import org.apache.james.jmap.model.{Invocation, ResponseObject}
+import org.apache.james.jmap.json.RequestObject._
+import org.apache.james.jmap.json.ResponseObject._
+import org.apache.james.jmap.{json, model}
+import org.apache.james.jmap.model.Invocation
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.RequestObject.Capability
 import org.apache.james.jmap.model.ResponseObject.SessionState
@@ -63,7 +65,7 @@ class ResponseObjectTest extends PlaySpec {
       val methodCallId: MethodCallId = MethodCallId("c1")
       val expectedInvocation: Invocation = Invocation(methodName, argument, methodCallId)
 
-      ResponseObject.deserialize(
+      json.ResponseObject.deserialize(
         """
           |{
           |  "methodResponses": [
@@ -86,7 +88,7 @@ class ResponseObjectTest extends PlaySpec {
       val expectedInvocation2: Invocation = Invocation(MethodName("Core/echo2"),
         Arguments(Json.obj("arg3" -> "arg3data", "arg4" -> "arg4data")), MethodCallId("c2"))
 
-      ResponseObject.deserialize(
+      json.ResponseObject.deserialize(
         """
           |{
           |  "sessionState": "75128aab4b1b",

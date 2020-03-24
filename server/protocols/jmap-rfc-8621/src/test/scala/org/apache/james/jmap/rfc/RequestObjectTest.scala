@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.rfc
 
+import org.apache.james.jmap.json.Invocation._
+import org.apache.james.jmap.json.RequestObject._
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
@@ -70,7 +72,7 @@ class RequestObjectTest extends PlaySpec {
       val methodCallId: MethodCallId = MethodCallId("c1")
       val expectedInvocation: Invocation = Invocation(methodName, argument, methodCallId)
 
-      RequestObject.deserialize(
+      deserialize(
         """
           |{
           |  "using": [ "urn:ietf:params:jmap:core"],
@@ -96,7 +98,7 @@ class RequestObjectTest extends PlaySpec {
         ClientId(id) -> ServerId(id)
       ))
 
-      RequestObject.deserialize(
+      deserialize(
         """
           |{
           |  "using": [ "urn:ietf:params:jmap:core"],
@@ -121,7 +123,7 @@ class RequestObjectTest extends PlaySpec {
       val expectedInvocation2: Invocation = Invocation(MethodName("Core/echo2"),
         Arguments(Json.obj("arg3" -> "arg3data", "arg4" -> "arg4data")), MethodCallId("c2"))
 
-      RequestObject.deserialize(
+      deserialize(
         """
           |{
           |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:core2"],

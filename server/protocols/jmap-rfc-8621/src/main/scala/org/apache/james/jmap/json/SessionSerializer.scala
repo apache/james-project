@@ -17,17 +17,16 @@
  * under the License.                                           *
  * ***************************************************************/
 
-package org.apache.james.jmap
+package org.apache.james.jmap.json
 
 import java.net.URL
 
-import de.cbley.refined.play.json._
 import org.apache.james.core.Username
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.{Account, CapabilityIdentifier, CoreCapabilityProperties, MailCapabilityProperties, Session, _}
 import play.api.libs.json._
 
-class Serializer {
+class SessionSerializer {
   implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
   implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
   implicit val capabilityIdentifierWrites: Writes[CapabilityIdentifier] = identifier => JsString(identifier.value.toString)
@@ -57,11 +56,6 @@ class Serializer {
 
   implicit val accountWrites: Writes[Account] = Json.writes[Account]
   implicit val sessionWrites: Writes[Session] = Json.writes[Session]
-
-  implicit def idMapWrite[Any](implicit vr: Writes[Any]): Writes[Map[Id, Any]] =
-    (m: Map[Id, Any]) => {
-      JsObject(m.map { case (k, v) => (k.value, vr.writes(v)) }.toSeq)
-    }
 
   def serialize(session: Session): String = {
     sessionWrites.writes(session).toString()
