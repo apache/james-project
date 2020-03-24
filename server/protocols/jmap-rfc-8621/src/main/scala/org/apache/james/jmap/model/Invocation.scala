@@ -23,7 +23,7 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodNa
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
-import be.venneborg.refined.play.RefinedJsonFormats._
+import de.cbley.refined.play.json._
 
 case class Invocation(methodName: MethodName, arguments: Arguments, methodCallId: MethodCallId)
 

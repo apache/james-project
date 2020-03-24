@@ -28,6 +28,7 @@ import org.apache.james.jmap.model._
 import org.scalatestplus.play.PlaySpec
 import play.libs.Json
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 
 import scala.io.Source
 import scala.util.Using
@@ -36,13 +37,13 @@ object SerializerTest {
   private val ALGO_1 = "i;ascii-numeric"
   private val ALGO_2 = "i;ascii-casemap"
   private val ALGO_3 = "i;unicode-casemap"
-  private val MAX_SIZE_UPLOAD = UnsignedInt(50000000)
-  private val MAX_CONCURRENT_UPLOAD = UnsignedInt(8)
-  private val MAX_SIZE_REQUEST = UnsignedInt(10000000)
-  private val MAX_CONCURRENT_REQUESTS = UnsignedInt(10000000)
-  private val MAX_CALLS_IN_REQUEST = UnsignedInt(32)
-  private val MAX_OBJECTS_IN_GET = UnsignedInt(256)
-  private val MAX_OBJECTS_IN_SET = UnsignedInt(128)
+  private val MAX_SIZE_UPLOAD: UnsignedInt = 50000000L
+  private val MAX_CONCURRENT_UPLOAD : UnsignedInt= 8L
+  private val MAX_SIZE_REQUEST : UnsignedInt = 10000000L
+  private val MAX_CONCURRENT_REQUESTS : UnsignedInt = 10000000L
+  private val MAX_CALLS_IN_REQUEST : UnsignedInt = 32L
+  private val MAX_OBJECTS_IN_GET : UnsignedInt = 256L
+  private val MAX_OBJECTS_IN_SET : UnsignedInt = 128L
   private val USER_1 = Username.of("user1@james.org")
   private val USER_1_ID: Id = "user1Id"
   private val USER_2 = Username.of("user2@james.org")
@@ -58,10 +59,10 @@ object SerializerTest {
     maxSizeRequest = MAX_SIZE_REQUEST, maxConcurrentRequests = MAX_CONCURRENT_REQUESTS,
     maxCallsInRequest = MAX_CALLS_IN_REQUEST, maxObjectsInGet = MAX_OBJECTS_IN_GET, maxObjectsInSet = MAX_OBJECTS_IN_SET,
     collationAlgorithms = List(ALGO_1, ALGO_2, ALGO_3)))
-  private val MAX_MAILBOX_DEPTH = Some(UnsignedInt(1432))
-  private val MAX_MAILBOXES_PER_EMAIL = Some(UnsignedInt(9359))
-  private val MAX_SIZE_MAILBOX_NAME = UnsignedInt(9000)
-  private val MAX_SIZE_ATTACHMENTS_PER_EMAIL = UnsignedInt(890099)
+  private val MAX_MAILBOX_DEPTH : Option[UnsignedInt] = Some(1432L)
+  private val MAX_MAILBOXES_PER_EMAIL : Option[UnsignedInt] = Some(9359L)
+  private val MAX_SIZE_MAILBOX_NAME : UnsignedInt = 9000L
+  private val MAX_SIZE_ATTACHMENTS_PER_EMAIL : UnsignedInt = 890099L
 
   private val MAIL_CAPABILITY = MailCapability(properties = MailCapabilityProperties(
     maxMailboxDepth = MAX_MAILBOX_DEPTH,

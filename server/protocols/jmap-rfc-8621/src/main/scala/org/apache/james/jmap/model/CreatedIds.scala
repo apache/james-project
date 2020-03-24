@@ -21,8 +21,7 @@ package org.apache.james.jmap.model
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id
 import play.api.libs.json._
-import be.venneborg.refined.play.RefinedJsonFormats._
-
+import de.cbley.refined.play.json._
 case class CreatedIds(value: Map[ClientId, ServerId])
 
 object CreatedIds {

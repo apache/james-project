@@ -22,6 +22,7 @@ package org.apache.james.jmap.model
 import java.net.URI
 
 import org.apache.james.jmap.model.CapabilityIdentifier.{JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 
 final case class CapabilityIdentifier(value: URI) {
   val asString: String = value.toString

@@ -24,6 +24,7 @@ import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.TestId
 import org.scalatest.{MustMatchers, WordSpec}
 
+import eu.timepit.refined.auto._
 import scala.compat.java8.OptionConverters._
 
 class MailboxTest extends WordSpec with MustMatchers {

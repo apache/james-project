@@ -22,7 +22,7 @@ package org.apache.james.jmap.model
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.model.ResponseObject.SessionState
 import play.api.libs.json.{JsResult, Json}
-import be.venneborg.refined.play.RefinedJsonFormats._
+import de.cbley.refined.play.json._
 
 case class ResponseObject(sessionState: SessionState, methodResponses: Seq[Invocation])
 

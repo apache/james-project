@@ -21,7 +21,7 @@ package org.apache.james.jmap.mail
 
 import java.util.Optional
 
-import org.apache.james.jmap.model.UnsignedInt
+import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.mailbox.model.QuotaRoot
 
 object Quotas {

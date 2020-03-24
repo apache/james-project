@@ -24,7 +24,6 @@ import eu.timepit.refined.boolean.And
 import eu.timepit.refined.collection.Size
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.string.MatchesRegex
-import be.venneborg.refined.play.RefinedJsonFormats._
 
 object Id {
   type Id = String Refined And[

@@ -22,7 +22,7 @@ package org.apache.james.jmap.model
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.model.RequestObject.Capability
 import play.api.libs.json._
-import be.venneborg.refined.play.RefinedJsonFormats._
+import de.cbley.refined.play.json._
 
 case class RequestObject(using: Seq[Capability], methodCalls: Seq[Invocation], createdIds: Option[CreatedIds] = None)
 
