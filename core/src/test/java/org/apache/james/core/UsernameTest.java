@@ -166,6 +166,12 @@ class UsernameTest {
     }
 
     @Test
+    void fromUsernameShouldThrowWhenBlank() {
+        assertThatThrownBy(() -> Username.of("  "))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void fromUsernameShouldParseUsernameWithDomain() {
         assertThat(Username.of("aa@bb"))
             .isEqualTo(Username.from("aa", Optional.of("bb")));

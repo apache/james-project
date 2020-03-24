@@ -43,7 +43,6 @@ public class MailboxNamespace {
 
     public static MailboxNamespace delegated(Username owner) {
         Preconditions.checkArgument(owner != null);
-        Preconditions.checkArgument(!owner.asString().trim().isEmpty());
 
         return new MailboxNamespace(Type.Delegated, Optional.of(owner));
     }
