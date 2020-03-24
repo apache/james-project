@@ -103,6 +103,8 @@ class ComputeMessageFastViewProjectionListenerTest {
     @BeforeEach
     void setup() throws Exception {
         eventDeadLetters = new MemoryEventDeadLetters();
+        // Default RetryBackoffConfiguration leads each events to be re-executed for 30s which is too long
+        // Reducing the wait time for the event bus allow a faster test suite execution without harming test correctness
         RetryBackoffConfiguration backoffConfiguration = RetryBackoffConfiguration.builder()
             .maxRetries(2)
             .firstBackoff(Duration.ofMillis(1))
