@@ -27,8 +27,8 @@ import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.user.lib.AbstractUsersRepository;
-import org.apache.james.user.lib.AbstractUsersRepositoryContract;
+import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.apache.james.user.lib.UsersRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class MemoryUsersRepositoryTest {
     private static final String LOCALHOST_ADDRESS = "127.0.0.1";
 
     @Nested
-    class WhenEnableVirtualHosting implements AbstractUsersRepositoryContract.WithVirtualHostingContract {
+    class WhenEnableVirtualHosting implements UsersRepositoryContract.WithVirtualHostingContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
@@ -52,7 +52,7 @@ class MemoryUsersRepositoryTest {
         }
 
         @Override
-        public AbstractUsersRepository testee() {
+        public UsersRepositoryImpl testee() {
             return memoryUsersRepository;
         }
 
@@ -93,7 +93,7 @@ class MemoryUsersRepositoryTest {
     }
 
     @Nested
-    class WhenDisableVirtualHosting implements AbstractUsersRepositoryContract.WithOutVirtualHostingContract {
+    class WhenDisableVirtualHosting implements UsersRepositoryContract.WithOutVirtualHostingContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 
@@ -105,7 +105,7 @@ class MemoryUsersRepositoryTest {
         }
 
         @Override
-        public AbstractUsersRepository testee() {
+        public UsersRepositoryImpl testee() {
             return memoryUsersRepository;
         }
 

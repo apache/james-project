@@ -21,28 +21,33 @@ package org.apache.james.modules.data;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.cassandra.CassandraUsersRepository;
+import org.apache.james.user.cassandra.CassandraUsersDAO;
+import org.apache.james.user.lib.UsersDAO;
+import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class CassandraUsersRepositoryModule extends AbstractModule {
     @Override
     public void configure() {
-        bind(CassandraUsersRepository.class).in(Scopes.SINGLETON);
-        bind(UsersRepository.class).to(CassandraUsersRepository.class);
+        bind(CassandraUsersDAO.class).in(Scopes.SINGLETON);
+        bind(UsersDAO.class).to(CassandraUsersDAO.class);
+        bind(new TypeLiteral<UsersRepositoryImpl<CassandraUsersDAO>>() {}).in(Scopes.SINGLETON);
+        bind(UsersRepository.class).to(new TypeLiteral<UsersRepositoryImpl<CassandraUsersDAO>>() {});
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.MODULE);
     }
 
     @ProvidesIntoSet
-    InitializationOperation configureUsersRepository(ConfigurationProvider configurationProvider, CassandraUsersRepository usersRepository) {
+    InitializationOperation configureUsersRepository(ConfigurationProvider configurationProvider, UsersRepositoryImpl<CassandraUsersDAO> usersRepository) {
         return InitilizationOperationBuilder
-            .forClass(CassandraUsersRepository.class)
+            .forClass(UsersRepositoryImpl.class)
             .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
     }
 }

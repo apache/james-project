@@ -35,8 +35,8 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
-import org.apache.james.user.lib.AbstractUsersRepository;
-import org.apache.james.user.lib.AbstractUsersRepositoryContract;
+import org.apache.james.user.lib.UsersRepositoryContract;
+import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +53,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
     static final Username JAMES_USER_MAIL = Username.of(JAMES_USER.getLocalPart()+ "@" + DOMAIN);
     static final Username UNKNOWN = Username.of("unknown");
     static final String BAD_PASSWORD = "badpassword";
+    public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";
 
     static LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
         .domain(DOMAIN)
@@ -70,7 +71,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
     }
 
     @Nested
-    class WhenEnableVirtualHosting implements AbstractUsersRepositoryContract.WithVirtualHostingReadOnlyContract {
+    class WhenEnableVirtualHosting implements UsersRepositoryContract.WithVirtualHostingReadOnlyContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
@@ -82,7 +83,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Override
-        public AbstractUsersRepository testee() {
+        public UsersRepositoryImpl<ReadOnlyLDAPUsersDAO> testee() {
             return usersRepository;
         }
 
@@ -149,7 +150,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
     }
 
     @Nested
-    class WhenDisableVirtualHosting implements AbstractUsersRepositoryContract.WithOutVirtualHostingReadOnlyContract {
+    class WhenDisableVirtualHosting implements UsersRepositoryContract.WithOutVirtualHostingReadOnlyContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 
@@ -161,7 +162,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Override
-        public AbstractUsersRepository testee() {
+        public UsersRepositoryImpl<ReadOnlyLDAPUsersDAO> testee() {
             return usersRepository;
         }
 
@@ -224,7 +225,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         @Test
         void supportVirtualHostingShouldReturnTrueWhenReportedInConfig() throws Exception {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
-            configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "true");
+            configuration.addProperty(SUPPORTS_VIRTUAL_HOSTING, "true");
 
             ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
             usersLDAPRepository.configure(configuration);
@@ -235,7 +236,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         @Test
         void supportVirtualHostingShouldReturnFalseWhenReportedInConfig() throws Exception {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
-            configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "false");
+            configuration.addProperty(SUPPORTS_VIRTUAL_HOSTING, "false");
 
             ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
             usersLDAPRepository.configure(configuration);
@@ -246,7 +247,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         @Test
         void configureShouldThrowOnNonBooleanValueForSupportsVirtualHosting() {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
-            configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "bad");
+            configuration.addProperty(SUPPORTS_VIRTUAL_HOSTING, "bad");
 
             ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
 

@@ -19,6 +19,7 @@
 
 package org.apache.james.user.lib;
 
+import java.util.Iterator;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -36,37 +37,30 @@ import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.api.model.User;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 
-public abstract class AbstractUsersRepository implements UsersRepository, Configurable {
+public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository, Configurable {
     private static String ILLEGAL_USERNAME_CHARACTERS = "\"(),:; <>@[\\]";
 
     private final DomainList domainList;
+    protected final T usersDAO;
     private boolean virtualHosting;
     private Optional<Username> administratorId;
 
     @Inject
-    protected AbstractUsersRepository(DomainList domainList) {
+    public UsersRepositoryImpl(DomainList domainList, T usersDAO) {
         this.domainList = domainList;
+        this.usersDAO = usersDAO;
     }
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-
-        virtualHosting = configuration.getBoolean("enableVirtualHosting", getDefaultVirtualHostingValue());
+        virtualHosting = configuration.getBoolean("enableVirtualHosting", usersDAO.getDefaultVirtualHostingValue());
         administratorId = Optional.ofNullable(configuration.getString("administratorId"))
             .map(Username::of);
-
-        doConfigure(configuration);
-    }
-
-    protected boolean getDefaultVirtualHostingValue() {
-        return false;
-    }
-
-    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
     }
 
     public void setEnableVirtualHosting(boolean virtualHosting) {
@@ -113,30 +107,55 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
 
     @Override
     public void addUser(Username username, String password) throws UsersRepositoryException {
-
         if (!contains(username)) {
             assertValid(username);
-            doAddUser(username, password);
+            usersDAO.addUser(username, password);
         } else {
             throw new AlreadyExistInUsersRepositoryException("User with username " + username + " already exists!");
         }
+    }
 
+    @Override
+    public User getUserByName(Username name) throws UsersRepositoryException {
+        return usersDAO.getUserByName(name);
+    }
+
+    @Override
+    public void updateUser(User user) throws UsersRepositoryException {
+        assertDomainPartValid(user.getUserName());
+        usersDAO.updateUser(user);
+    }
+
+    @Override
+    public void removeUser(Username name) throws UsersRepositoryException {
+        assertDomainPartValid(name);
+        usersDAO.removeUser(name);
+    }
+
+    @Override
+    public boolean contains(Username name) throws UsersRepositoryException {
+        return usersDAO.contains(name);
+    }
+
+    @Override
+    public boolean test(Username name, String password) throws UsersRepositoryException {
+        return usersDAO.test(name, password);
+    }
+
+    @Override
+    public int countUsers() throws UsersRepositoryException {
+        return usersDAO.countUsers();
+    }
+
+    @Override
+    public Iterator<Username> list() throws UsersRepositoryException {
+        return usersDAO.list();
     }
 
     @Override
     public boolean supportVirtualHosting() {
         return virtualHosting;
     }
-
-    /**
-     * Add the user with the given username and password
-     * 
-     * @param username
-     * @param password
-     * @throws UsersRepositoryException
-     *           If an error occurred
-     */
-    protected abstract void doAddUser(Username username, String password) throws UsersRepositoryException;
 
     @VisibleForTesting void setAdministratorId(Optional<Username> username) {
         this.administratorId = username;

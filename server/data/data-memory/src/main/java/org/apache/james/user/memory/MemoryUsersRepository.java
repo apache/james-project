@@ -19,22 +19,13 @@
 
 package org.apache.james.user.memory;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Optional;
-
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.user.api.model.User;
-import org.apache.james.user.lib.AbstractUsersRepository;
-import org.apache.james.user.lib.model.DefaultUser;
+import org.apache.james.user.lib.UsersRepositoryImpl;
 
-public class MemoryUsersRepository extends AbstractUsersRepository {
+public class MemoryUsersRepository extends UsersRepositoryImpl<MemoryUsersDAO> {
 
     public static MemoryUsersRepository withVirtualHosting(DomainList domainList) {
          MemoryUsersRepository userRepository = new MemoryUsersRepository(domainList);
@@ -47,80 +38,18 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
         userRepository.setEnableVirtualHosting(false);
         return userRepository;
     }
-    
-    private final Map<String, User> userByName;
-    private String algo;
 
     private MemoryUsersRepository(DomainList domainList) {
-        super(domainList);
-        this.userByName = new HashMap<>();
-        this.algo = "MD5";
+        super(domainList, new MemoryUsersDAO());
     }
 
     public void clear() {
-        userByName.clear();
+        usersDAO.clear();
     }
 
     @Override
-    public void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
-        algo = config.getString("algorithm", "MD5");
-        super.doConfigure(config);
-    }
-
-    @Override
-    protected void doAddUser(Username username, String password) {
-        DefaultUser user = new DefaultUser(username, algo);
-        user.setPassword(password);
-        userByName.put(username.asString(), user);
-    }
-
-    @Override
-    public User getUserByName(Username name) throws UsersRepositoryException {
-        return userByName.get(name.asString());
-    }
-
-    @Override
-    public void updateUser(User user) throws UsersRepositoryException {
-        assertDomainPartValid(user.getUserName());
-
-        User existingUser = getUserByName(user.getUserName());
-        if (existingUser == null) {
-            throw new UsersRepositoryException("Please provide an existing user to update");
-        }
-        userByName.put(user.getUserName().asString(), user);
-    }
-
-    @Override
-    public void removeUser(Username name) throws UsersRepositoryException {
-        assertDomainPartValid(name);
-
-        if (userByName.remove(name.asString()) == null) {
-            throw new UsersRepositoryException("unable to remove unknown user " + name.asString());
-        }
-    }
-
-    @Override
-    public boolean contains(Username name) throws UsersRepositoryException {
-        return userByName.containsKey(name.asString());
-    }
-
-    @Override
-    public boolean test(Username name, final String password) throws UsersRepositoryException {
-        return Optional.ofNullable(userByName.get(name.asString()))
-            .map(user -> user.verifyPassword(password))
-            .orElse(false);
-    }
-
-    @Override
-    public int countUsers() throws UsersRepositoryException {
-        return userByName.size();
-    }
-
-    @Override
-    public Iterator<Username> list() throws UsersRepositoryException {
-        return userByName.keySet()
-            .stream()
-            .map(Username::of)
-            .iterator();
+    public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
+        super.configure(config);
+        usersDAO.configure(config);
     }
 }

@@ -48,7 +48,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public interface AbstractUsersRepositoryContract {
+public interface UsersRepositoryContract {
 
     class UserRepositoryExtension implements BeforeEachCallback, ParameterResolver {
 
@@ -144,9 +144,9 @@ public interface AbstractUsersRepositoryContract {
         }
     }
 
-    AbstractUsersRepository testee();
+    UsersRepositoryImpl testee();
 
-    interface ReadOnlyContract extends AbstractUsersRepositoryContract {
+    interface ReadOnlyContract extends UsersRepositoryContract {
         @Test
         default void countUsersShouldReturnZeroWhenEmptyRepository() throws UsersRepositoryException {
             //Given
@@ -208,7 +208,7 @@ public interface AbstractUsersRepositoryContract {
         }
     }
 
-    interface ReadWriteContract extends AbstractUsersRepositoryContract {
+    interface ReadWriteContract extends UsersRepositoryContract {
 
         @Test
         default void countUsersShouldReturnNumberOfUsersWhenNotEmptyRepository(TestSystem testSystem) throws UsersRepositoryException {

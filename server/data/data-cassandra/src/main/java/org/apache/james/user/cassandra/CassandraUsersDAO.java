@@ -39,11 +39,10 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
-import org.apache.james.user.lib.AbstractUsersRepository;
+import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.DefaultUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,10 +52,9 @@ import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
-public class CassandraUsersRepository extends AbstractUsersRepository {
-
+public class CassandraUsersDAO implements UsersDAO {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraUsersDAO.class);
     private static final String DEFAULT_ALGO_VALUE = "SHA1";
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraUsersRepository.class);
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement getUserStatement;
@@ -67,8 +65,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     private final PreparedStatement insertStatement;
 
     @Inject
-    public CassandraUsersRepository(DomainList domainList, Session session) {
-        super(domainList);
+    public CassandraUsersDAO(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
         this.getUserStatement = prepareGetUserStatement(session);
         this.updateUserStatement = prepareUpdateUserStatement(session);
@@ -115,7 +112,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public User getUserByName(Username name) throws UsersRepositoryException {
+    public User getUserByName(Username name) {
         return executor.executeSingleRow(
                 getUserStatement.bind()
                     .setString(NAME, name.asString()))
@@ -126,7 +123,6 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void updateUser(User user) throws UsersRepositoryException {
-        assertDomainPartValid(user.getUserName());
         Preconditions.checkArgument(user instanceof DefaultUser);
         DefaultUser defaultUser = (DefaultUser) user;
         boolean executed = executor.executeReturnApplied(
@@ -144,8 +140,6 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
-        assertDomainPartValid(name);
-
         boolean executed = executor.executeReturnApplied(
             removeUserStatement.bind()
                 .setString(NAME, name.asString()))
@@ -157,12 +151,12 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public boolean contains(Username name) throws UsersRepositoryException {
+    public boolean contains(Username name) {
         return getUserByName(name) != null;
     }
 
     @Override
-    public boolean test(Username name, String password) throws UsersRepositoryException {
+    public boolean test(Username name, String password) {
         return Optional.ofNullable(getUserByName(name))
                 .map(x -> x.verifyPassword(password))
             .orElseGet(() -> {
@@ -179,7 +173,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public Iterator<Username> list() throws UsersRepositoryException {
+    public Iterator<Username> list() {
         return executor.executeRows(listStatement.bind())
             .map(row -> row.getString(NAME))
             .map(Username::of)
@@ -189,12 +183,6 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void addUser(Username username, String password) throws UsersRepositoryException {
-        assertValid(username);
-        doAddUser(username, password);
-    }
-
-    @Override
-    protected void doAddUser(Username username, String password) throws UsersRepositoryException {
         DefaultUser user = new DefaultUser(username, DEFAULT_ALGO_VALUE);
         user.setPassword(password);
         boolean executed = executor.executeReturnApplied(
@@ -211,7 +199,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    protected boolean getDefaultVirtualHostingValue() {
+    public boolean getDefaultVirtualHostingValue() {
         return true;
     }
 }
