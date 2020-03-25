@@ -20,109 +20,68 @@
 package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.model
-import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.model.{Invocation, ResponseObject}
+import org.apache.james.jmap.json.Fixture._
+import org.apache.james.jmap.model.ResponseObject
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 
 class ResponseObjectSerializationTest extends PlaySpec {
-//
-//  "Deserialize SessionState" must {
-//    "succeed with 1 value" in {
-//      val sessionStateJsValue: JsValue = JsString("75128aab4b1b")
-//      Json.fromJson[SessionState](sessionStateJsValue) must be(JsSuccess(SessionState("75128aab4b1b")))
-//    }
-//
-//    "failed with wrong value type" in {
-//      val sessionStateJsValue: JsValue = JsBoolean(true)
-//      Json.fromJson[Capability](sessionStateJsValue) must not be (JsSuccess(SessionState("75128aab4b1b")))
-//    }
-//
-//    "failed with wrong class type" in {
-//      val sessionStateJsValue: JsValue = JsBoolean(true)
-//      Json.fromJson[SessionState](sessionStateJsValue) must not be (JsSuccess(SessionState("75128aab4b1b")))
-//    }
-//  }
-//  // Create an issue
-//
-//  "Serialize SessionState" must {
-//    "succeed " in {
-//      val sessionState: SessionState = SessionState("75128aab4b1b")
-//      val expectedSessionState: JsValue = JsString("75128aab4b1b")
-//      Json.toJson[SessionState](sessionState) must be(expectedSessionState)
-//    }
-//  }
-//
-//  "Deserialize ResponseObject" must {
-//    "succeed " in {
-//      val methodName: MethodName = MethodName("Core/echo")
-//      val argument: Arguments = Arguments(Json.obj("arg1" -> "arg1data", "arg2" -> "arg2data"))
-//      val methodCallId: MethodCallId = MethodCallId("c1")
-//      val expectedInvocation: Invocation = Invocation(methodName, argument, methodCallId)
-//
-//      json.ResponseObject.deserialize(
-//        """
-//          |{
-//          |  "methodResponses": [
-//          |    [ "Core/echo", {
-//          |      "arg1": "arg1data",
-//          |      "arg2": "arg2data"
-//          |    }, "c1" ]
-//          |  ],
-//          |  "sessionState": "75128aab4b1b"
-//          |}
-//          |""".stripMargin) must be(
-//        JsSuccess(ResponseObject(
-//          sessionState = ResponseObject.SessionState("75128aab4b1b"),
-//          methodResponses = Seq(expectedInvocation))))
-//    }
-//
-//    "succeed with many Capability, methodCalls" in {
-//      val expectedInvocation1: Invocation = Invocation(MethodName("Core/echo"),
-//        Arguments(Json.obj("arg1" -> "arg1data", "arg2" -> "arg2data")), MethodCallId("c1"))
-//      val expectedInvocation2: Invocation = Invocation(MethodName("Core/echo2"),
-//        Arguments(Json.obj("arg3" -> "arg3data", "arg4" -> "arg4data")), MethodCallId("c2"))
-//
-//      json.ResponseObject.deserialize(
-//        """
-//          |{
-//          |  "sessionState": "75128aab4b1b",
-//          |  "methodResponses": [
-//          |    [ "Core/echo", {
-//          |      "arg1": "arg1data",
-//          |      "arg2": "arg2data"
-//          |    }, "c1" ],
-//          |    [ "Core/echo2", {
-//          |      "arg3": "arg3data",
-//          |      "arg4": "arg4data"
-//          |    }, "c2" ]
-//          |  ]
-//          |}
-//          |""".stripMargin) must be(
-//        JsSuccess(model.ResponseObject(
-//          sessionState = ResponseObject.SessionState("75128aab4b1b"),
-//          methodResponses = Seq(expectedInvocation1, expectedInvocation2))))
-//    }
-//  }
-//
+  "Deserialize ResponseObject" must {
+    "succeed " in {
+      val expectedResponseObject = ResponseObject(
+        sessionState = "75128aab4b1b",
+        methodResponses = Seq(invocation1))
+
+      new Serializer().deserializeResponseObject(
+        """
+          |{
+          |  "methodResponses": [
+          |    [ "Core/echo1", {
+          |      "arg1": "arg1data",
+          |      "arg2": "arg2data"
+          |    }, "c1" ]
+          |  ],
+          |  "sessionState": "75128aab4b1b"
+          |}
+          |""".stripMargin) must be(JsSuccess(expectedResponseObject))
+    }
+
+    "succeed with many Capability, methodCalls" in {
+      val expectedResponseObject = ResponseObject(
+        sessionState = "75128aab4b1b",
+        methodResponses = Seq(invocation1, invocation2))
+
+      new Serializer().deserializeResponseObject(
+        """
+          |{
+          |  "sessionState": "75128aab4b1b",
+          |  "methodResponses": [
+          |    [ "Core/echo1", {
+          |      "arg1": "arg1data",
+          |      "arg2": "arg2data"
+          |    }, "c1" ],
+          |    [ "Core/echo2", {
+          |      "arg3": "arg3data",
+          |      "arg4": "arg4data"
+          |    }, "c2" ]
+          |  ]
+          |}
+          |""".stripMargin) must be(JsSuccess(expectedResponseObject))
+    }
+  }
+
   "Serialize ResponseObject" must {
     "succeed " in {
-      val methodName: MethodName = MethodName("Core/echo")
-      val argument: Arguments = Arguments(Json.obj("arg1" -> "arg1data", "arg2" -> "arg2data"))
-      val methodCallId: MethodCallId = MethodCallId("c1")
-      val invocation: Invocation = Invocation(methodName, argument, methodCallId)
-
-      val responseObject: ResponseObject = model.ResponseObject(
+      val responseObject: ResponseObject = ResponseObject(
         sessionState = "75128aab4b1b",
-        methodResponses = Seq(invocation))
+        methodResponses = Seq(invocation1))
 
       val expectedJson = Json.prettyPrint(Json.parse(
         """
           |{
           |  "sessionState": "75128aab4b1b",
           |  "methodResponses": [
-          |    [ "Core/echo", {
+          |    [ "Core/echo1", {
           |      "arg1": "arg1data",
           |      "arg2": "arg2data"
           |    }, "c1" ]
