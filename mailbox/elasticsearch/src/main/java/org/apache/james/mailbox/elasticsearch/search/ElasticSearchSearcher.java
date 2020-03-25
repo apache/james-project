@@ -140,7 +140,7 @@ public class ElasticSearchSearcher {
     }
 
     private Optional<DocumentField> retrieveMessageIdField(SearchHit hit) {
-        if (hit.getFields().keySet().contains(JsonMessageConstants.MESSAGE_ID)) {
+        if (hit.getFields().containsKey(JsonMessageConstants.MESSAGE_ID)) {
             return Optional.ofNullable(hit.field(JsonMessageConstants.MESSAGE_ID));
         }
         return Optional.empty();

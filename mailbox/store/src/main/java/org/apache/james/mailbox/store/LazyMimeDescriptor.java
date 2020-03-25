@@ -136,7 +136,7 @@ public class LazyMimeDescriptor implements MimeDescriptor {
 
     @Override
     public Iterator<MimeDescriptor> parts() {
-        return Collections.<MimeDescriptor>emptyList().iterator();
+        return Collections.emptyIterator();
     }
 
     @Override

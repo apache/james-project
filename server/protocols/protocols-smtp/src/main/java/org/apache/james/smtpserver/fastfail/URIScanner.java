@@ -241,9 +241,7 @@ public class URIScanner {
             String host = hostFromUriStr(found);
             if (null != host) {
                 host = host.toLowerCase(Locale.US);
-                if (!set.contains(host)) {
-                    set.add(host);
-                }
+                set.add(host);
             }
         }
 
@@ -259,9 +257,7 @@ public class URIScanner {
             if (null != host) {
 
                 host = host.toLowerCase(Locale.US);
-                if (!set.contains(host)) {
-                    set.add(host);
-                }
+                set.add(host);
             }
         }
         return set;

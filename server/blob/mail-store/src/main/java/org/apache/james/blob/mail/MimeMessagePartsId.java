@@ -64,8 +64,8 @@ public class MimeMessagePartsId implements BlobPartsId {
     public static class Factory implements BlobPartsId.Factory<MimeMessagePartsId> {
         @Override
         public MimeMessagePartsId generate(Map<BlobType, BlobId> map) {
-            Preconditions.checkArgument(map.keySet().contains(HEADER_BLOB_TYPE), "Expecting 'mailHeader' blobId to be specified");
-            Preconditions.checkArgument(map.keySet().contains(BODY_BLOB_TYPE), "Expecting 'mailBody' blobId to be specified");
+            Preconditions.checkArgument(map.containsKey(HEADER_BLOB_TYPE), "Expecting 'mailHeader' blobId to be specified");
+            Preconditions.checkArgument(map.containsKey(BODY_BLOB_TYPE), "Expecting 'mailBody' blobId to be specified");
             Preconditions.checkArgument(map.size() == 2, "blobId other than 'mailHeader' or 'mailBody' are not supported");
 
             return builder()
