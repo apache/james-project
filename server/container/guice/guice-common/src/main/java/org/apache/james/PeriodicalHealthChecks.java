@@ -31,26 +31,28 @@ import org.apache.james.lifecycle.api.Startable;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 public class PeriodicalHealthChecks implements Startable {
 
-    private final Flux<HealthCheck> healthChecks;
-    private final long initialDelay;
-    private final long period;
+    private final Set<HealthCheck> healthChecks;
+    private final Scheduler scheduler;
+    private final Duration period;
     private Disposable disposable;
 
     @Inject
-    PeriodicalHealthChecks(Set<HealthCheck> healthChecks, PeriodicalHealthChecksConfiguration config) {
-        this.healthChecks = Flux.fromIterable(healthChecks);
-        this.initialDelay = config.getInitialDelay();
+    PeriodicalHealthChecks(Set<HealthCheck> healthChecks, Scheduler scheduler, PeriodicalHealthChecksConfiguration config) {
+        this.healthChecks = healthChecks;
+        this.scheduler = scheduler;
         this.period = config.getPeriod();
     }
 
     public void start() {
-        disposable = Flux.interval(Duration.ofSeconds(initialDelay), Duration.ofSeconds(period))
-            .flatMap(any ->
-                healthChecks.flatMap(healthCheck -> Mono.just(healthCheck.check())))
+        disposable = Flux.interval(period, scheduler)
+            .flatMap(any -> Flux.fromIterable(healthChecks)
+                .flatMap(healthCheck ->
+                    Mono.fromCallable(healthCheck::check)))
             .subscribeOn(Schedulers.elastic())
             .subscribe();
     }

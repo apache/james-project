@@ -25,32 +25,28 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.time.Duration;
 
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.mailbox.events.EventDeadLettersHealthCheck;
-import org.awaitility.Awaitility;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.google.common.collect.ImmutableSet;
+
+import reactor.test.scheduler.VirtualTimeScheduler;
+
 public class PeriodicalHealthChecksTest {
 
-    private static final long INITIAL_DELAY = 1;
-    private static final long PERIOD = 1;
-    private static final ConditionFactory AWAIT = Awaitility.await()
-        .atMost(Duration.TEN_SECONDS)
-        .with()
-        .pollInterval(Duration.ONE_SECOND);
-
+    private static final long PERIOD = 10;
+    private static final int EXPECTED_INVOKED_TIME = 10;
     private HealthCheck mockHealthCheck1;
     private HealthCheck mockHealthCheck2;
+    private VirtualTimeScheduler scheduler;
     private PeriodicalHealthChecks testee;
 
     @BeforeEach
@@ -60,11 +56,10 @@ public class PeriodicalHealthChecksTest {
         when(mockHealthCheck1.check()).thenReturn(Result.healthy(new ComponentName("mockHealthCheck1")));
         when(mockHealthCheck2.check()).thenReturn(Result.healthy(new ComponentName("mockHealthCheck2")));
 
-        Set<HealthCheck> healthCheckSet = new HashSet<>();
-        healthCheckSet.add(mockHealthCheck1);
-        healthCheckSet.add(mockHealthCheck2);
-
-        testee = new PeriodicalHealthChecks(healthCheckSet, new PeriodicalHealthChecksConfiguration(INITIAL_DELAY, PERIOD));
+        scheduler = VirtualTimeScheduler.getOrSet();
+        testee = new PeriodicalHealthChecks(ImmutableSet.of(mockHealthCheck1, mockHealthCheck2),
+            scheduler,
+            new PeriodicalHealthChecksConfiguration(Duration.ofMillis(PERIOD)));
         testee.start();
     }
 
@@ -72,22 +67,23 @@ public class PeriodicalHealthChecksTest {
     void tearDown() {
         testee.stop();
     }
-
+    
     @Test
     void startShouldCallHealthCheckAtLeastOnce() {
-        AWAIT.untilAsserted(() -> verify(mockHealthCheck1, atLeast(1)).check());
+        scheduler.advanceTimeBy(Duration.ofMillis(PERIOD));
+        verify(mockHealthCheck1, atLeast(1)).check();
     }
 
     @Test
     void startShouldCallHealthCheckMultipleTimes() {
-        AWAIT.untilAsserted(() -> verify(mockHealthCheck1, times(5)).check());
+        scheduler.advanceTimeBy(Duration.ofMillis(PERIOD * EXPECTED_INVOKED_TIME));
+        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).check();
     }
 
     @Test
     void startShouldCallAllHealthChecks() {
-        AWAIT.untilAsserted(() -> {
-            verify(mockHealthCheck1, atLeast(5)).check();
-            verify(mockHealthCheck2, atLeast(5)).check();
-        });
+        scheduler.advanceTimeBy(Duration.ofMillis(PERIOD * EXPECTED_INVOKED_TIME));
+        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).check();
+        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).check();
     }
 }
