@@ -19,13 +19,11 @@
 
 package org.apache.james.jmap.json
 
-import org.apache.james.jmap.json.SessionSerializerTest.{SESSION, readResource}
-
 import java.net.{URI, URL}
 
 import eu.timepit.refined.auto._
-
 import org.apache.james.core.Username
+import org.apache.james.jmap.json.SerializerTest.{SESSION, readResource}
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
@@ -36,17 +34,17 @@ import play.libs.Json
 import scala.io.Source
 import scala.util.Using
 
-object SessionSerializerTest {
+object SerializerTest {
   private val ALGO_1 = "i;ascii-numeric"
   private val ALGO_2 = "i;ascii-casemap"
   private val ALGO_3 = "i;unicode-casemap"
-  private val MAX_SIZE_UPLOAD: UnsignedInt = 50000000L
-  private val MAX_CONCURRENT_UPLOAD : UnsignedInt= 8L
-  private val MAX_SIZE_REQUEST : UnsignedInt = 10000000L
-  private val MAX_CONCURRENT_REQUESTS : UnsignedInt = 10000000L
-  private val MAX_CALLS_IN_REQUEST : UnsignedInt = 32L
-  private val MAX_OBJECTS_IN_GET : UnsignedInt = 256L
-  private val MAX_OBJECTS_IN_SET : UnsignedInt = 128L
+  private val MAX_SIZE_UPLOAD: MaxSizeUpload = MaxSizeUpload(50000000L)
+  private val MAX_CONCURRENT_UPLOAD : MaxConcurrentUpload = MaxConcurrentUpload(8L)
+  private val MAX_SIZE_REQUEST : MaxSizeRequest = MaxSizeRequest(10000000L)
+  private val MAX_CONCURRENT_REQUESTS : MaxConcurrentRequests = MaxConcurrentRequests(10000000L)
+  private val MAX_CALLS_IN_REQUEST : MaxCallsInRequest = MaxCallsInRequest(32L)
+  private val MAX_OBJECTS_IN_GET : MaxObjectsInGet = MaxObjectsInGet(256L)
+  private val MAX_OBJECTS_IN_SET : MaxObjectsInSet = MaxObjectsInSet(128L)
   private val USER_1 = Username.of("user1@james.org")
   private val USER_1_ID: Id = "user1Id"
   private val USER_2 = Username.of("user2@james.org")
@@ -114,12 +112,13 @@ object SessionSerializerTest {
   }
 }
 
-class SessionSerializerTest extends PlaySpec {
+class SerializerTest extends PlaySpec {
 
   "sessionWrites" should {
     "serialize session" in {
+      // todo rely on milti line strings
       val jsonString = Json.parse(readResource("/sessionObject.json")).toString
-      new SessionSerializer().serialize(SESSION) must equal(jsonString)
+      new Serializer().serialize(SESSION) must equal(jsonString)
     }
   }
 }

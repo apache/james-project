@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  * ***************************************************************/
-package org.apache.james.jmap.rfc
+package org.apache.james.jmap.json
 
+import eu.timepit.refined.auto._
 import org.apache.james.jmap.json.Invocation._
 import org.apache.james.jmap.json.RequestObject._
 import org.apache.james.jmap.model.Invocation
@@ -25,7 +26,6 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodNa
 import org.apache.james.jmap.model.RequestObject.Capability
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
-import eu.timepit.refined.auto._
 
 class InvocationTest extends PlaySpec {
   "Deserialize MethodName" must {

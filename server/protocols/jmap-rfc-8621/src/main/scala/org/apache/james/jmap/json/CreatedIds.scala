@@ -23,20 +23,20 @@ import org.apache.james.jmap.model.CreatedIds
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import play.api.libs.json._
 
-  object CreatedIds {
-    implicit val clientIdFormat: Format[ClientId] = Json.valueFormat[ClientId]
-    implicit val serverIdFormat: Format[ServerId] = Json.valueFormat[ServerId]
-    implicit val createdIdsFormat: Format[CreatedIds] = Json.valueFormat[CreatedIds]
+object CreatedIds {
+  implicit val clientIdFormat: Format[ClientId] = Json.valueFormat[ClientId]
+  implicit val serverIdFormat: Format[ServerId] = Json.valueFormat[ServerId]
+  implicit val createdIdsFormat: Format[CreatedIds] = Json.valueFormat[CreatedIds]
 
-    implicit def createdIdsIdWrites(implicit serverIdWriter: Writes[ServerId]): Writes[Map[ClientId, ServerId]] =
-      (ids: Map[ClientId, ServerId]) => {
-        JsObject(ids.map {
-          case (clientId, serverId) => (clientId.value.value, serverIdWriter.writes(serverId))
-        }.toSeq)
-      }
+  implicit def createdIdsIdWrites(implicit serverIdWriter: Writes[ServerId]): Writes[Map[ClientId, ServerId]] =
+    (ids: Map[ClientId, ServerId]) => {
+      JsObject(ids.map {
+        case (clientId, serverId) => (clientId.value.value, serverIdWriter.writes(serverId))
+      }.toSeq)
+    }
 
-    implicit def createdIdsIdRead(implicit serverIdReader: Reads[ServerId]): Reads[Map[ClientId, ServerId]] =
-      Reads.mapReads[ClientId, ServerId] {
-        clientIdString => Json.fromJson[ClientId](JsString(clientIdString))
-      }
-  }
+  implicit def createdIdsIdRead(implicit serverIdReader: Reads[ServerId]): Reads[Map[ClientId, ServerId]] =
+    Reads.mapReads[ClientId, ServerId] {
+      clientIdString => Json.fromJson[ClientId](JsString(clientIdString))
+    }
+}

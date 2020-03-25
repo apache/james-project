@@ -17,19 +17,18 @@
  * under the License.                                           *
  * **************************************************************/
 
-package org.apache.james.jmap.rfc
+package org.apache.james.jmap.json
 
+import eu.timepit.refined.auto._
 import org.apache.james.jmap.json.RequestObject._
 import org.apache.james.jmap.json.ResponseObject._
-import org.apache.james.jmap.{json, model}
-import org.apache.james.jmap.model.Invocation
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.RequestObject.Capability
 import org.apache.james.jmap.model.ResponseObject.SessionState
-import org.apache.james.jmap.model.ResponseObject
+import org.apache.james.jmap.model.{Invocation, ResponseObject}
+import org.apache.james.jmap.{json, model}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
-import eu.timepit.refined.auto._
 
 class ResponseObjectTest extends PlaySpec {
 
@@ -49,6 +48,7 @@ class ResponseObjectTest extends PlaySpec {
       Json.fromJson[SessionState](sessionStateJsValue) must not be (JsSuccess(SessionState("75128aab4b1b")))
     }
   }
+  // Create an issue
 
   "Serialize SessionState" must {
     "succeed " in {

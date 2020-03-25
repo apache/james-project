@@ -25,6 +25,7 @@ import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 
+// todo refine me
 final case class MailboxName(name: String) {
   require(!name.isEmpty, "'name' is mandatory")
 }

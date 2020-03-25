@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  * ***************************************************************/
-package org.apache.james.jmap.rfc
+package org.apache.james.jmap.json
 
+import eu.timepit.refined.auto._
 import org.apache.james.jmap.json.CreatedIds._
 import org.apache.james.jmap.model.CreatedIds
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsError, JsString, JsSuccess, Json}
-import eu.timepit.refined.auto._
 
 class CreatedIdsTest extends PlaySpec {
   private val id: Id = "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8"

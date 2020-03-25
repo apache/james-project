@@ -21,27 +21,37 @@ package org.apache.james.jmap.model
 
 import java.net.{URL => JavaNetURL}
 
+import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.model.SessionTest._
-import org.scalatest.{Matchers, WordSpec}
-import eu.timepit.refined.auto._
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
+import org.scalatest.{Matchers, WordSpec}
 
 object SessionTest {
   private val USERNAME = Username.of("bob@james.org")
   private val URL = new JavaNetURL("http://james.org")
   private val STATE : State = "fda9342jcm"
   private val UNSIGNED_INT : UnsignedInt = 1L
+
+  private val MAX_SIZE_UPLOAD: MaxSizeUpload = MaxSizeUpload(50000000L)
+  private val MAX_CONCURRENT_UPLOAD : MaxConcurrentUpload = MaxConcurrentUpload(8L)
+  private val MAX_SIZE_REQUEST : MaxSizeRequest = MaxSizeRequest(10000000L)
+  private val MAX_CONCURRENT_REQUESTS : MaxConcurrentRequests = MaxConcurrentRequests(10000000L)
+  private val MAX_CALLS_IN_REQUEST : MaxCallsInRequest = MaxCallsInRequest(32L)
+  private val MAX_OBJECTS_IN_GET : MaxObjectsInGet = MaxObjectsInGet(256L)
+  private val MAX_OBJECTS_IN_SET : MaxObjectsInSet = MaxObjectsInSet(128L)
+
   private val CORE_CAPABILITY = CoreCapability(properties = CoreCapabilityProperties(
-    maxSizeUpload = UNSIGNED_INT,
-    maxCallsInRequest = UNSIGNED_INT,
-    maxConcurrentUpload = UNSIGNED_INT,
-    maxSizeRequest = UNSIGNED_INT,
-    maxConcurrentRequests = UNSIGNED_INT,
-    maxObjectsInGet = UNSIGNED_INT,
-    maxObjectsInSet = UNSIGNED_INT,
+    maxSizeUpload = MAX_SIZE_UPLOAD,
+    maxCallsInRequest = MAX_CALLS_IN_REQUEST,
+    maxConcurrentUpload = MAX_CONCURRENT_UPLOAD,
+    maxSizeRequest = MAX_SIZE_REQUEST,
+    maxConcurrentRequests = MAX_CONCURRENT_REQUESTS,
+    maxObjectsInGet = MAX_OBJECTS_IN_GET,
+    maxObjectsInSet = MAX_OBJECTS_IN_SET,
     collationAlgorithms = List()))
+
   private val MAIL_CAPABILITY = MailCapability(properties = MailCapabilityProperties(
     maxMailboxDepth = Some(UNSIGNED_INT),
     maxMailboxesPerEmail = Some(UNSIGNED_INT),

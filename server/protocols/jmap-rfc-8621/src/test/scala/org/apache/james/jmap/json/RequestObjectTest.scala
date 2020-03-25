@@ -17,8 +17,9 @@
  * under the License.                                           *
  * ***************************************************************/
 
-package org.apache.james.jmap.rfc
+package org.apache.james.jmap.json
 
+import eu.timepit.refined.auto._
 import org.apache.james.jmap.json.Invocation._
 import org.apache.james.jmap.json.RequestObject._
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
@@ -27,7 +28,6 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodNa
 import org.apache.james.jmap.model.RequestObject.Capability
 import org.apache.james.jmap.model.{CreatedIds, Invocation, RequestObject}
 import org.scalatestplus.play.PlaySpec
-import eu.timepit.refined.auto._
 import play.api.libs.json._
 
 class RequestObjectTest extends PlaySpec {

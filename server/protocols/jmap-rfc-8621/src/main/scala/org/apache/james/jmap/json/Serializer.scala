@@ -26,7 +26,16 @@ import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.{Account, CapabilityIdentifier, CoreCapabilityProperties, MailCapabilityProperties, Session, _}
 import play.api.libs.json._
 
-class SessionSerializer {
+class Serializer {
+  implicit val maxSizeUploadWrites: Writes[MaxSizeUpload] = Json.valueWrites[MaxSizeUpload]
+  implicit val maxConcurrentUploadWrites: Writes[MaxConcurrentUpload] = Json.valueWrites[MaxConcurrentUpload]
+  implicit val maxSizeRequestWrites: Writes[MaxSizeRequest] = Json.valueWrites[MaxSizeRequest]
+  implicit val maxConcurrentRequestsWrites: Writes[MaxConcurrentRequests] = Json.valueWrites[MaxConcurrentRequests]
+  implicit val maxCallsInRequestWrites: Writes[MaxCallsInRequest] = Json.valueWrites[MaxCallsInRequest]
+  implicit val maxObjectsInGetWrites: Writes[MaxObjectsInGet] = Json.valueWrites[MaxObjectsInGet]
+  implicit val maxObjectsInSetWrites: Writes[MaxObjectsInSet] = Json.valueWrites[MaxObjectsInSet]
+
+  // todo move all JSON serialization in here
   implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
   implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
   implicit val capabilityIdentifierWrites: Writes[CapabilityIdentifier] = identifier => JsString(identifier.asString)
@@ -57,7 +66,7 @@ class SessionSerializer {
   implicit val accountWrites: Writes[Account] = Json.writes[Account]
   implicit val sessionWrites: Writes[Session] = Json.writes[Session]
 
-  def serialize(session: Session): String = {
-    Json.stringify(Json.toJson(session))
+  def serialize(model: AnyRef): String = {
+    Json.stringify(Json.toJson(model))
   }
 }
