@@ -29,7 +29,7 @@ import play.api.libs.json._
 class SessionSerializer {
   implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
   implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
-  implicit val capabilityIdentifierWrites: Writes[CapabilityIdentifier] = identifier => JsString(identifier.value.toString)
+  implicit val capabilityIdentifierWrites: Writes[CapabilityIdentifier] = identifier => JsString(identifier.asString)
   implicit val coreCapabilityWrites: Writes[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]
   implicit val mailCapabilityWrites: Writes[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
 
@@ -58,6 +58,6 @@ class SessionSerializer {
   implicit val sessionWrites: Writes[Session] = Json.writes[Session]
 
   def serialize(session: Session): String = {
-    sessionWrites.writes(session).toString()
+    Json.stringify(Json.toJson(session))
   }
 }
