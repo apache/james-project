@@ -54,8 +54,7 @@ public class AccessToken {
 
     @Override
     public boolean equals(Object o) {
-        return o != null
-            && o instanceof AccessToken
+        return o instanceof AccessToken
             && Objects.equals(this.token, ((AccessToken)o).token);
     }
 

@@ -75,7 +75,7 @@ public class Inet4Network implements InetNetwork {
 
     @Override
     public boolean equals(Object obj) {
-        return (obj != null) && (obj instanceof InetNetwork) && ((((Inet4Network) obj).network.equals(network)) && (((Inet4Network) obj).netmask.equals(netmask)));
+        return (obj instanceof InetNetwork) && ((((Inet4Network) obj).network.equals(network)) && (((Inet4Network) obj).netmask.equals(netmask)));
     }
 
     private static InetAddress maskIP(InetAddress ip, InetAddress mask) {

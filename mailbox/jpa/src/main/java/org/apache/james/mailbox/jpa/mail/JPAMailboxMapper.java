@@ -78,7 +78,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             }
             if (e instanceof RollbackException) {
                 Throwable t = e.getCause();
-                if (t != null && t instanceof EntityExistsException) {
+                if (t instanceof EntityExistsException) {
                     throw new MailboxExistsException(lastMailboxName);
                 }
             }

@@ -207,7 +207,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
                 super.produceMail(props, msgPrio, mail);
             }
         } catch (JMSException e) {
-            if (!reuse && blobMessage != null && blobMessage instanceof ActiveMQBlobMessage) {
+            if (!reuse && blobMessage instanceof ActiveMQBlobMessage) {
                 ((ActiveMQBlobMessage) blobMessage).deleteFile();
             }
             throw e;

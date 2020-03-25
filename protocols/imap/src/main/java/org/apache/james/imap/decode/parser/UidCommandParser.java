@@ -55,7 +55,7 @@ public class UidCommandParser extends AbstractImapCommandParser {
         String commandName = request.atom();
         ImapCommandParser helperCommand = parserFactory.getParser(commandName);
         // TODO: replace abstract class with interface
-        if (helperCommand == null || !(helperCommand instanceof AbstractUidCommandParser)) {
+        if (!(helperCommand instanceof AbstractUidCommandParser)) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid UID command: '" + commandName + "'");
         }
         LOGGER.debug("Got <command>: UID {}", commandName);

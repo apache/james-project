@@ -73,7 +73,7 @@ public class Inet6Network implements InetNetwork {
 
     @Override
     public boolean equals(Object obj) {
-        return (obj != null) && (obj instanceof InetNetwork) && ((((Inet6Network) obj).network.equals(network)) && (((Inet6Network) obj).netmask.equals(netmask)));
+        return (obj instanceof InetNetwork) && ((((Inet6Network) obj).network.equals(network)) && (((Inet6Network) obj).netmask.equals(netmask)));
     }
 
     private static InetAddress maskIP(InetAddress ip, Integer mask) {

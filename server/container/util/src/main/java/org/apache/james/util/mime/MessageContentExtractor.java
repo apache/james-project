@@ -231,7 +231,7 @@ public class MessageContentExtractor {
 
         @Override
         public boolean equals(Object other) {
-            if (other == null || !(other instanceof MessageContent)) {
+            if (!(other instanceof MessageContent)) {
                 return false;
             }
             MessageContent otherMessageContent = (MessageContent)other;

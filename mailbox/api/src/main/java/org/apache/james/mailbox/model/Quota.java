@@ -137,7 +137,7 @@ public class Quota<T extends QuotaLimitValue<T>, U extends QuotaUsageValue<U, T>
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || ! (o instanceof  Quota)) {
+        if (!(o instanceof Quota)) {
             return false;
         }
         Quota<?, ?> other = (Quota<?, ?>) o;
