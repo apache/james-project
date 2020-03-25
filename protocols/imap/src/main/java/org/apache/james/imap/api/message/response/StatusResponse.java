@@ -161,21 +161,21 @@ public interface StatusResponse extends ImapResponseMessage {
             String source = formatRanges(sourceRanges);
             String target = formatRanges(targetRanges);
 
-            return new ResponseCode("COPYUID", Arrays.asList(new String[] { source, target }), uidValidity.asLong(), false);
+            return new ResponseCode("COPYUID", Arrays.asList(source, target), uidValidity.asLong(), false);
         }
 
         /** RFC4551 <code>Conditional STORE</code> response code */
         public static ResponseCode condStore(IdRange[] failedRanges) {
             String failed = formatRanges(failedRanges);
 
-            return new ResponseCode("MODIFIED", Arrays.asList(new String[] { failed}), 0, false);
+            return new ResponseCode("MODIFIED", Arrays.asList(failed), 0, false);
         }
         
         /** RFC4551 <code>Conditional STORE</code> response code */
         public static ResponseCode condStore(UidRange[] failedRanges) {
             String failed = formatRanges(failedRanges);
 
-            return new ResponseCode("MODIFIED", Arrays.asList(new String[] { failed}), 0, false);
+            return new ResponseCode("MODIFIED", Arrays.asList(failed), 0, false);
         }
         
         private static String formatRanges(IdRange[] ranges) {

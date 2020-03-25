@@ -259,7 +259,7 @@ public abstract class AbstractSign extends GenericMailet {
     protected void initKeyHolder() throws Exception {
         Constructor<?> keyHolderConstructor;
         try {
-            keyHolderConstructor = keyHolderClass.getConstructor(new Class[] {String.class, String.class, String.class, String.class, String.class});
+            keyHolderConstructor = keyHolderClass.getConstructor(String.class, String.class, String.class, String.class, String.class);
         } catch (NoSuchMethodException nsme) {
             throw new MessagingException("The needed constructor does not exist: "
                     + keyHolderClass + "(String, String, String, String, String)");

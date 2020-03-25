@@ -731,7 +731,7 @@ public abstract class AbstractSMTPServerTest {
     public void testNullSender() throws Exception {
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(new ProtocolHandler[0]));
+            server = createServer(createProtocol());
             server.bind();
             
             SMTPClient client = createClient();
