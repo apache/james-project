@@ -46,19 +46,11 @@ class MailboxTest extends WordSpec with MustMatchers {
     }
   }
 
-  "mailbox name" should  {
-    "throw when empty" in {
-      the [IllegalArgumentException] thrownBy {
-        MailboxName("")
-      } must have message "requirement failed: 'name' is mandatory"
-    }
-  }
-
   "mailbox hasRole" should  {
     "return false when None " in {
       Mailbox(
         id = TestId.of(42L),
-        MailboxName("Inbox"),
+        name = "Inbox",
         parentId = None,
         role = None,
         SortOrder.apply(3L),
@@ -84,7 +76,7 @@ class MailboxTest extends WordSpec with MustMatchers {
     "return false when different" in {
       Mailbox(
         id = TestId.of(42L),
-        MailboxName("Inbox"),
+        name = "Inbox",
         parentId = None,
         role = Some(Role.OUTBOX),
         SortOrder.apply(3L),
@@ -110,7 +102,7 @@ class MailboxTest extends WordSpec with MustMatchers {
     "return true when equals" in {
       Mailbox(
         id = TestId.of(42L),
-        MailboxName("Inbox"),
+        name = "Inbox",
         parentId = None,
         role = Some(Role.INBOX),
         SortOrder.apply(3L),
@@ -138,7 +130,7 @@ class MailboxTest extends WordSpec with MustMatchers {
     "return false when None" in {
       Mailbox(
         id = TestId.of(42L),
-        MailboxName("Inbox"),
+        name = "Inbox",
         parentId = None,
         role = None,
         SortOrder.apply(3L),
@@ -164,7 +156,7 @@ class MailboxTest extends WordSpec with MustMatchers {
     "return false when not system" in {
       Mailbox(
         id = TestId.of(42L),
-        MailboxName("Inbox"),
+        name = "Inbox",
         parentId = None,
         Role.from("any").asScala,
         SortOrder.apply(3L),
@@ -189,7 +181,7 @@ class MailboxTest extends WordSpec with MustMatchers {
     "return true when system" in {
       Mailbox(
         id = TestId.of(42L),
-        MailboxName("Inbox"),
+        name = "Inbox",
         parentId = None,
         role = Some(Role.INBOX),
         SortOrder.apply(3L),

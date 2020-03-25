@@ -19,16 +19,14 @@
 
 package org.apache.james.jmap.mail
 
+import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
+import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.core.Username
+import org.apache.james.jmap.mail.Mailbox.MailboxName
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
-
-// todo refine mecount_fake
-final case class MailboxName(name: String) {
-  require(!name.isEmpty, "'name' is mandatory")
-}
 
 case class MayReadItems(value: Boolean) extends AnyVal
 case class MayAddItems(value: Boolean) extends AnyVal
@@ -113,6 +111,10 @@ sealed trait RightsExtension extends MailboxExtension {
 
 sealed trait QuotasExtension extends MailboxExtension {
   def quotas: Quotas
+}
+
+object Mailbox {
+  type MailboxName = String Refined NonEmpty
 }
 
 case class Mailbox(id: MailboxId,
