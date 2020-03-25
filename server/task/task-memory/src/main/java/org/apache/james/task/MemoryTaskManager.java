@@ -30,10 +30,13 @@ import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.reactivestreams.Publisher;
+
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class MemoryTaskManager implements TaskManager {
@@ -54,40 +57,41 @@ public class MemoryTaskManager implements TaskManager {
         }
 
         @Override
-        public void started(TaskId taskId) {
-            updaterFactory.apply(taskId).accept(details -> details.started(hostname));
+        public Publisher<Void> started(TaskId taskId) {
+            return Mono.fromRunnable(() -> updaterFactory.apply(taskId)
+                .accept(details -> details.started(hostname)));
         }
 
         @Override
-        public void completed(TaskId taskId, Task.Result result, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
-            updaterFactory.apply(taskId)
-                .accept(details -> details.completed(additionalInformation));
+        public Publisher<Void> completed(TaskId taskId, Task.Result result, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
+            return Mono.fromRunnable(() -> updaterFactory.apply(taskId)
+                .accept(details -> details.completed(additionalInformation)));
         }
 
         @Override
-        public void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable t) {
-            failed(taskId, additionalInformation);
+        public Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable t) {
+            return failed(taskId, additionalInformation);
         }
 
         @Override
-        public void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t) {
-            failed(taskId, additionalInformation);
+        public Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t) {
+            return failed(taskId, additionalInformation);
          }
 
         @Override
-        public void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
-            updaterFactory.apply(taskId)
-                .accept(details -> details.failed(additionalInformation));
+        public Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
+            return Mono.fromRunnable(() -> updaterFactory.apply(taskId)
+                .accept(details -> details.failed(additionalInformation)));
         }
 
         @Override
-        public void cancelled(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
-            updaterFactory.apply(taskId)
-                .accept(details -> details.cancelEffectively(additionalInformation));
+        public Publisher<Void> cancelled(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
+            return Mono.fromRunnable(() -> updaterFactory.apply(taskId)
+                .accept(details -> details.cancelEffectively(additionalInformation)));
         }
 
         @Override
-        public void updated(TaskId taskId, TaskExecutionDetails.AdditionalInformation additionalInformation) {
+        public Publisher<Void> updated(TaskId taskId, TaskExecutionDetails.AdditionalInformation additionalInformation) {
             //The memory task manager doesn't use polling to update its additionalInformation.
             throw new IllegalStateException();
         }

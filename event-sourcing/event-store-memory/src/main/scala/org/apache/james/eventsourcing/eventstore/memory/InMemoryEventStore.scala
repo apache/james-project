@@ -23,34 +23,44 @@ import java.util.concurrent.atomic.AtomicReference
 import com.google.common.base.Preconditions
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
 import org.apache.james.eventsourcing.{AggregateId, Event}
+import org.reactivestreams.Publisher
+
+import reactor.core.scala.publisher.SMono
 
 class InMemoryEventStore() extends EventStore {
   private val storeRef: AtomicReference[Map[AggregateId, History]] =
     new AtomicReference(Map().withDefault(_ => History.empty))
 
-  override def appendAll(events: List[Event]): Unit = if (events.nonEmpty) doAppendAll(events)
-
-  override def getEventsOfAggregate(aggregateId: AggregateId): History = {
-    Preconditions.checkNotNull(aggregateId)
-    storeRef.get()(aggregateId)
+  override def appendAll(events: Iterable[Event]): Publisher[Void] = {
+    if (events.nonEmpty) {
+      SMono.fromCallable(() => doAppendAll(events)).`then`()
+    } else {
+      SMono.empty
+    }
   }
 
-  private def doAppendAll(events: Seq[Event]): Unit = {
+  override def getEventsOfAggregate(aggregateId: AggregateId): Publisher[History] = {
+    Preconditions.checkNotNull(aggregateId)
+    SMono.fromCallable(() => storeRef.get()(aggregateId))
+  }
+
+  private def doAppendAll(events: Iterable[Event]): Boolean = {
     val aggregateId: AggregateId = getAggregateId(events)
     storeRef.updateAndGet(store => {
       val updatedHistory = History.of(store(aggregateId).getEvents ++ events)
       store.updated(aggregateId, updatedHistory)
     })
+    true
   }
 
-  private def getAggregateId(events: Seq[Event]): AggregateId = {
+  private def getAggregateId(events: Iterable[Event]): AggregateId = {
     Preconditions.checkArgument(events.nonEmpty)
     val aggregateId = events.head.getAggregateId
     Preconditions.checkArgument(belongsToSameAggregate(aggregateId, events))
     aggregateId
   }
 
-  private def belongsToSameAggregate(aggregateId: AggregateId, events: Seq[Event]) =
+  private def belongsToSameAggregate(aggregateId: AggregateId, events: Iterable[Event]) =
     events.forall(_.getAggregateId.equals(aggregateId))
 
 }

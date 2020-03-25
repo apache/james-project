@@ -29,9 +29,13 @@ import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class EventSourcingFilteringManagement implements FilteringManagement {
 
@@ -51,19 +55,16 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
 
     @Override
     public void defineRulesForUser(Username username, List<Rule> rules) {
-        eventSourcingSystem.dispatch(new DefineRulesCommand(username, rules));
+        Mono.from(eventSourcingSystem.dispatch(new DefineRulesCommand(username, rules))).block();
     }
 
     @Override
-    public List<Rule> listRulesForUser(Username username) {
+    public Publisher<Rule> listRulesForUser(Username username) {
         Preconditions.checkNotNull(username);
 
         FilteringAggregateId aggregateId = new FilteringAggregateId(username);
 
-        return FilteringAggregate
-            .load(
-                aggregateId,
-                eventStore.getEventsOfAggregate(aggregateId))
-            .listRules();
+        return Mono.from(eventStore.getEventsOfAggregate(aggregateId))
+            .flatMapMany(history -> Flux.fromIterable(FilteringAggregate.load(aggregateId, history).listRules()));
     }
 }

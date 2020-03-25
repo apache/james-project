@@ -25,6 +25,8 @@ import org.apache.james.core.Domain;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.api.DLPRules;
 
+import reactor.core.publisher.Mono;
+
 public interface DlpRulesLoader {
 
     DlpDomainRules load(Domain domain);
@@ -40,7 +42,7 @@ public interface DlpRulesLoader {
 
         @Override
         public DlpDomainRules load(Domain domain) {
-          return toRules(configurationStore.list(domain));
+          return toRules(Mono.from(configurationStore.list(domain)).block());
         }
 
         private DlpDomainRules toRules(DLPRules items) {

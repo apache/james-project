@@ -22,20 +22,19 @@ import org.apache.james.eventsourcing.{AggregateId, Event}
 
 import scala.annotation.varargs
 import scala.jdk.CollectionConverters._
+import org.reactivestreams.Publisher
 
 trait EventStore {
-  def append(event: Event): Unit = appendAll(List(event))
+  def append(event: Event): Publisher[Void] = appendAll(List(event))
 
   @varargs
-  def appendAll(events: Event*): Unit = appendAll(events.toList)
-
-  def appendAll(events: java.util.List[Event]): Unit = appendAll(events.asScala.toList)
+  def appendAll(events: Event*): Publisher[Void] = appendAll(events.toList)
 
   /**
    * This method should check that no input event has an id already stored and throw otherwise
    * It should also check that all events belong to the same aggregate
    */
-  def appendAll(events: List[Event]): Unit
+  def appendAll(events: Iterable[Event]): Publisher[Void]
 
-  def getEventsOfAggregate(aggregateId: AggregateId): History
+  def getEventsOfAggregate(aggregateId: AggregateId): Publisher[History]
 }

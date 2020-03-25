@@ -21,11 +21,14 @@ package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
 
 import java.util.List;
 
+import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.eventsourcing.javaapi.CommandHandlerJava;
+import org.reactivestreams.Publisher;
 
-class RegisterConfigurationCommandHandler implements CommandHandlerJava<RegisterConfigurationCommand> {
+import reactor.core.publisher.Mono;
+
+class RegisterConfigurationCommandHandler implements CommandHandler<RegisterConfigurationCommand> {
 
     private final EventStore eventStore;
 
@@ -39,9 +42,10 @@ class RegisterConfigurationCommandHandler implements CommandHandlerJava<Register
     }
 
     @Override
-    public List<? extends Event> handleJava(RegisterConfigurationCommand command) {
-        return ConfigurationAggregate
-            .load(command.getAggregateId(), eventStore.getEventsOfAggregate(command.getAggregateId()))
-            .registerConfiguration(command.getConfiguration());
+    public Publisher<List<? extends Event>> handle(RegisterConfigurationCommand command) {
+        return Mono.from(eventStore.getEventsOfAggregate(command.getAggregateId()))
+            .map(history -> ConfigurationAggregate
+                .load(command.getAggregateId(), history)
+                .registerConfiguration(command.getConfiguration()));
     }
 }

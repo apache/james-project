@@ -35,6 +35,8 @@ import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Flux;
+
 public interface FilteringManagementContract {
 
     String BART_SIMPSON_CARTOON = "bart@simpson.cartoon";
@@ -46,7 +48,7 @@ public interface FilteringManagementContract {
 
     @Test
     default void listingRulesForUnknownUserShouldReturnEmptyList(EventStore eventStore) {
-        assertThat(instantiateFilteringManagement(eventStore).listRulesForUser(USERNAME))
+        assertThat(Flux.from(instantiateFilteringManagement(eventStore).listRulesForUser(USERNAME)).toStream())
             .isEmpty();
     }
 
@@ -63,7 +65,7 @@ public interface FilteringManagementContract {
 
         testee.defineRulesForUser(USERNAME, RULE_1, RULE_2);
 
-        assertThat(testee.listRulesForUser(USERNAME))
+        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream())
             .containsExactly(RULE_1, RULE_2);
     }
 
@@ -74,7 +76,7 @@ public interface FilteringManagementContract {
         testee.defineRulesForUser(USERNAME, RULE_1, RULE_2);
         testee.defineRulesForUser(USERNAME, RULE_2, RULE_1);
 
-        assertThat(testee.listRulesForUser(USERNAME))
+        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream())
             .containsExactly(RULE_2, RULE_1);
     }
 
@@ -108,7 +110,7 @@ public interface FilteringManagementContract {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
         testee.defineRulesForUser(USERNAME, RULE_3, RULE_2, RULE_1);
 
-        assertThat(testee.listRulesForUser(USERNAME))
+        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream())
             .containsExactly(RULE_3, RULE_2, RULE_1);
     }
 
@@ -119,7 +121,7 @@ public interface FilteringManagementContract {
         testee.defineRulesForUser(USERNAME, RULE_3, RULE_2, RULE_1);
         testee.clearRulesForUser(USERNAME);
 
-        assertThat(testee.listRulesForUser(USERNAME)).isEmpty();
+        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream()).isEmpty();
     }
 
     @Test
@@ -128,7 +130,7 @@ public interface FilteringManagementContract {
 
         testee.defineRulesForUser(USERNAME, RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1);
 
-        assertThat(testee.listRulesForUser(USERNAME))
+        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream())
             .containsExactly(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1);
     }
 

@@ -21,29 +21,31 @@ package org.apache.james.task;
 import java.io.Closeable;
 import java.util.Optional;
 
+import org.reactivestreams.Publisher;
+
 import reactor.core.publisher.Mono;
 
 public interface TaskManagerWorker extends Closeable {
 
     interface Listener {
-        void started(TaskId taskId);
+        Publisher<Void> started(TaskId taskId);
 
-        void completed(TaskId taskId, Task.Result result, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
+        Publisher<Void> completed(TaskId taskId, Task.Result result, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
 
-        void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable t);
+        Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable t);
 
-        void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t);
+        Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t);
 
-        void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
+        Publisher<Void> failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
 
-        void cancelled(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
+        Publisher<Void> cancelled(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
 
-        void updated(TaskId taskId, TaskExecutionDetails.AdditionalInformation additionalInformation);
+        Publisher<Void> updated(TaskId taskId, TaskExecutionDetails.AdditionalInformation additionalInformation);
     }
 
     Mono<Task.Result> executeTask(TaskWithId taskWithId);
 
     void cancelTask(TaskId taskId);
 
-    void fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable reason);
+    Publisher<Void> fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable reason);
 }

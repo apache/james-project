@@ -27,6 +27,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManagerWorker;
 import org.apache.james.task.TaskWithId;
+import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -39,8 +40,8 @@ class ImmediateWorker implements TaskManagerWorker {
 
     @Override
     public Mono<Task.Result> executeTask(TaskWithId taskWithId) {
-        tasks.add(taskWithId);
-        return Mono.fromCallable(() -> taskWithId.getTask().run())
+        return Mono.fromRunnable(() -> tasks.add(taskWithId))
+            .then(Mono.fromCallable(() -> taskWithId.getTask().run()))
             .doOnNext(result -> results.add(result))
             .subscribeOn(Schedulers.elastic());
     }
@@ -50,8 +51,9 @@ class ImmediateWorker implements TaskManagerWorker {
     }
 
     @Override
-    public void fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable reason) {
-        failedTasks.add(taskId);
+    public Publisher<Void> fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable reason) {
+        return Mono.fromRunnable(() -> failedTasks.add(taskId))
+            .then();
     }
 
     @Override

@@ -30,6 +30,7 @@ import org.apache.james.core.Domain;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Mono;
 
 public interface DLPConfigurationStoreContract {
 
@@ -37,7 +38,7 @@ public interface DLPConfigurationStoreContract {
 
     @Test
     default void listShouldReturnEmptyWhenNone(DLPConfigurationStore dlpConfigurationStore) {
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST))
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block())
             .isEmpty();
     }
 
@@ -45,7 +46,7 @@ public interface DLPConfigurationStoreContract {
     default void listShouldReturnExistingEntries(DLPConfigurationStore dlpConfigurationStore) {
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE_2);
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE, RULE_2);
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block()).containsOnly(RULE, RULE_2);
     }
 
     @Test
@@ -53,7 +54,7 @@ public interface DLPConfigurationStoreContract {
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
         dlpConfigurationStore.store(OTHER_DOMAIN, RULE_2);
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE);
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block()).containsOnly(RULE);
     }
 
     @Test
@@ -62,7 +63,7 @@ public interface DLPConfigurationStoreContract {
 
         dlpConfigurationStore.clear(Domain.LOCALHOST);
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).isEmpty();
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block()).isEmpty();
     }
 
     @Test
@@ -78,7 +79,7 @@ public interface DLPConfigurationStoreContract {
 
         dlpConfigurationStore.clear(Domain.LOCALHOST);
 
-        assertThat(dlpConfigurationStore.list(OTHER_DOMAIN)).containsOnly(RULE_2);
+        assertThat(Mono.from(dlpConfigurationStore.list(OTHER_DOMAIN)).block()).containsOnly(RULE_2);
     }
 
     @Test
@@ -89,7 +90,7 @@ public interface DLPConfigurationStoreContract {
 
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE);
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block()).containsOnly(RULE);
     }
 
     @Test
@@ -97,7 +98,7 @@ public interface DLPConfigurationStoreContract {
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE_2);
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE);
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block()).containsOnly(RULE);
     }
 
     @Test
@@ -105,7 +106,7 @@ public interface DLPConfigurationStoreContract {
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE_2);
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE, RULE_2);
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block()).containsOnly(RULE, RULE_2);
     }
 
     @Test
@@ -119,7 +120,7 @@ public interface DLPConfigurationStoreContract {
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE_UPDATED);
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE_UPDATED);
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block()).containsOnly(RULE_UPDATED);
     }
 
     @Test
@@ -127,7 +128,7 @@ public interface DLPConfigurationStoreContract {
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE);
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block()).containsOnly(RULE);
     }
 
     @Test
@@ -135,6 +136,6 @@ public interface DLPConfigurationStoreContract {
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
         dlpConfigurationStore.store(Domain.LOCALHOST, new DLPRules(ImmutableList.of()));
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).isEmpty();
+        assertThat(Mono.from(dlpConfigurationStore.list(Domain.LOCALHOST)).block()).isEmpty();
     }
 }

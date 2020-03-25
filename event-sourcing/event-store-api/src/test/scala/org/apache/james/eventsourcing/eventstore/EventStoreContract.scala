@@ -22,6 +22,9 @@ import org.apache.james.eventsourcing.{EventId, TestAggregateId, TestEvent}
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
 import org.junit.jupiter.api.Test
 
+import reactor.core.scala.publisher
+import reactor.core.scala.publisher.SMono
+
 object EventStoreContract {
   val AGGREGATE_1 = TestAggregateId(1)
   val AGGREGATE_2 = TestAggregateId(2)
@@ -38,35 +41,35 @@ trait EventStoreContract {
   def appendShouldThrowWhenEventFromSeveralAggregates(testee: EventStore) : Unit = {
     val event1 = TestEvent(EventId.first, EventStoreContract.AGGREGATE_1, "first")
     val event2 = TestEvent(event1.eventId.next, EventStoreContract.AGGREGATE_2, "second")
-    assertThatThrownBy(() => testee.appendAll(event1, event2))
+    assertThatThrownBy(() => SMono(testee.appendAll(event1, event2)).block())
       .isInstanceOf(classOf[IllegalArgumentException])
   }
 
   @Test
   def appendShouldDoNothingOnEmptyEventList(testee: EventStore) : Unit =
-    assertThatCode(() => testee.appendAll())
+    assertThatCode(() => SMono(testee.appendAll()).block())
       .doesNotThrowAnyException()
 
   @Test
   def appendShouldThrowWhenTryingToRewriteHistory(testee: EventStore) : Unit = {
     val event1 = TestEvent(EventId.first, EventStoreContract.AGGREGATE_1, "first")
-    testee.append(event1)
+    SMono(testee.append(event1)).block()
     val event2 = TestEvent(EventId.first, EventStoreContract.AGGREGATE_1, "second")
     assertThatThrownBy(
-      () => testee.append(event2))
+      () => SMono(testee.append(event2)).block())
       .isInstanceOf(classOf[EventStoreFailedException])
   }
 
   @Test
   def getEventsOfAggregateShouldReturnEmptyHistoryWhenUnknown(testee: EventStore) : Unit =
-    assertThat(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1))
+    assertThat(SMono(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1)).block())
       .isEqualTo(History.empty)
 
   @Test
   def getEventsOfAggregateShouldReturnAppendedEvent(testee: EventStore) : Unit = {
     val event = TestEvent(EventId.first, EventStoreContract.AGGREGATE_1, "first")
-    testee.append(event)
-    assertThat(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1))
+    SMono(testee.append(event)).block()
+    assertThat(SMono(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1)).block())
       .isEqualTo(History.of(event))
   }
 
@@ -74,9 +77,9 @@ trait EventStoreContract {
   def getEventsOfAggregateShouldReturnAppendedEvents(testee: EventStore) : Unit = {
     val event1 = TestEvent(EventId.first, EventStoreContract.AGGREGATE_1, "first")
     val event2 = TestEvent(event1.eventId.next, EventStoreContract.AGGREGATE_1, "second")
-    testee.append(event1)
-    testee.append(event2)
-    assertThat(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1))
+    SMono(testee.append(event1)).block()
+    SMono(testee.append(event2)).block()
+    assertThat(SMono(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1)).block())
       .isEqualTo(History.of(event1, event2))
   }
 }

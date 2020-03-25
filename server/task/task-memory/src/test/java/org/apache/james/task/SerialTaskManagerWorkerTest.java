@@ -28,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -56,6 +57,13 @@ class SerialTaskManagerWorkerTest {
     @BeforeEach
     void beforeEach() {
         listener = mock(TaskManagerWorker.Listener.class);
+        when(listener.started(any())).thenReturn(Mono.empty());
+        when(listener.cancelled(any(), any())).thenReturn(Mono.empty());
+        when(listener.completed(any(), any(), any())).thenReturn(Mono.empty());
+        when(listener.updated(any(), any())).thenReturn(Mono.empty());
+        when(listener.failed(any(), any())).thenReturn(Mono.empty());
+        when(listener.failed(any(), any(), any())).thenReturn(Mono.empty());
+        when(listener.failed(any(), any(), any(), any())).thenReturn(Mono.empty());
         worker = new SerialTaskManagerWorker(listener, UPDATE_INFORMATION_POLLING_DURATION);
     }
 

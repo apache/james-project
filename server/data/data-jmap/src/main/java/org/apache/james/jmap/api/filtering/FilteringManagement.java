@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.james.core.Username;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableList;
 
@@ -38,6 +39,6 @@ public interface FilteringManagement {
         defineRulesForUser(username, ImmutableList.of());
     }
 
-    List<Rule> listRulesForUser(Username username);
+    Publisher<Rule> listRulesForUser(Username username);
 
 }

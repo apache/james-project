@@ -50,7 +50,7 @@ class EventStoreDao @Inject() (val session: Session, val jsonEventSerializer: Js
       .where(QueryBuilder.eq(AGGREGATE_ID, bindMarker(AGGREGATE_ID))))
   }
 
-  private[cassandra] def appendAll(events: List[Event]): SMono[Boolean] = {
+  private[cassandra] def appendAll(events: Iterable[Event]): SMono[Boolean] = {
     val batch: BatchStatement = new BatchStatement
     events.foreach((event: Event) => batch.add(insertEvent(event)))
     SMono(cassandraAsyncExecutor.executeReturnApplied(batch))
@@ -74,7 +74,7 @@ class EventStoreDao @Inject() (val session: Session, val jsonEventSerializer: Js
     val listEvents: SMono[List[Event]] = events.collectSeq()
       .map(_.toList)
 
-    listEvents.map(History.of)
+    listEvents.map(History.of(_))
   }
 
   private def toEvent(row: Row): Event = {

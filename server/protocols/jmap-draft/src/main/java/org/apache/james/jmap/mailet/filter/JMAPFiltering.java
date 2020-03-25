@@ -36,6 +36,10 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
+
+import reactor.core.publisher.Flux;
+
 /**
  * Mailet for applying JMAP filtering to incoming email.
  *
@@ -77,7 +81,9 @@ public class JMAPFiltering extends GenericMailet {
     }
 
     private void findFirstApplicableRule(Username username, Mail mail) {
-        List<Rule> filteringRules = filteringManagement.listRulesForUser(username);
+        List<Rule> filteringRules = Flux.from(filteringManagement.listRulesForUser(username))
+            .collect(Guavate.toImmutableList())
+            .block();
         RuleMatcher ruleMatcher = new RuleMatcher(filteringRules);
         Stream<Rule> matchingRules = ruleMatcher.findApplicableRules(mail);
 

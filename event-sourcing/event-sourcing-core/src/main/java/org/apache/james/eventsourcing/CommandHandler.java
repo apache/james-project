@@ -18,10 +18,12 @@
  ****************************************************************/
 package org.apache.james.eventsourcing;
 
-import scala.collection.immutable.List;
+import java.util.List;
+
+import org.reactivestreams.Publisher;
 
 public interface CommandHandler<C extends Command> {
   Class<C> handledClass();
 
-  List<? extends Event> handle(C command);
+  Publisher<List<? extends Event>> handle(C command);
 }

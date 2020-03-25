@@ -37,9 +37,12 @@ import org.apache.james.dlp.eventsourcing.commands.StoreCommandHandler;
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.util.streams.Iterables;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableSet;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class EventSourcingDLPConfigurationStore implements DLPConfigurationStore {
 
@@ -60,29 +63,29 @@ public class EventSourcingDLPConfigurationStore implements DLPConfigurationStore
     }
 
     @Override
-    public DLPRules list(Domain domain) {
+    public Publisher<DLPRules> list(Domain domain) {
 
         DLPAggregateId aggregateId = new DLPAggregateId(domain);
 
-        return DLPDomainConfiguration.load(
-                aggregateId,
-                eventStore.getEventsOfAggregate(aggregateId))
-            .retrieveRules();
+        return Mono.from(eventStore.getEventsOfAggregate(aggregateId))
+            .map(history -> DLPDomainConfiguration.load(aggregateId, history).retrieveRules());
     }
 
     @Override
     public void store(Domain domain, DLPRules rules) {
-        eventSourcingSystem.dispatch(new StoreCommand(domain, rules));
+        Mono.from(eventSourcingSystem.dispatch(new StoreCommand(domain, rules))).block();
     }
 
     @Override
     public void clear(Domain domain) {
-        eventSourcingSystem.dispatch(new ClearCommand(domain));
+        Mono.from(eventSourcingSystem.dispatch(new ClearCommand(domain))).block();
     }
 
     @Override
     public Optional<DLPConfigurationItem> fetch(Domain domain, Id ruleId) {
-        return Iterables.toStream(list(domain))
+        return Mono.from(list(domain))
+                .flatMapMany(rules -> Flux.fromIterable(rules.getItems()))
+                .toStream()
                 .filter((DLPConfigurationItem item) -> item.getId().equals(ruleId))
                 .findFirst();
     }

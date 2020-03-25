@@ -19,6 +19,7 @@
 package org.apache.james.eventsourcing
 
 import org.apache.james.eventsourcing.eventstore.EventStore
+import org.reactivestreams.Publisher
 
 
 object EventSourcingSystem {
@@ -36,5 +37,5 @@ class EventSourcingSystem(handlers: Set[CommandHandler[_ <: Command]],
   private val eventBus = new EventBus(eventStore, subscribers)
   private val commandDispatcher = new CommandDispatcher(eventBus, handlers)
 
-  def dispatch(c: Command): Unit = commandDispatcher.dispatch(c)
+  def dispatch(c: Command): Publisher[Void] = commandDispatcher.dispatch(c)
 }

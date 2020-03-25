@@ -19,7 +19,8 @@
 package org.apache.james.eventsourcing
 
 object Event {
-  def belongsToSameAggregate(events: List[_ <: Event]): Boolean = events
+  def belongsToSameAggregate(events: Iterable[_ <: Event]): Boolean = events
+    .toSeq
     .view
     .map(event => event.getAggregateId)
     .distinct

@@ -23,11 +23,14 @@ import java.util.List;
 
 import org.apache.james.dlp.eventsourcing.aggregates.DLPAggregateId;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPDomainConfiguration;
+import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.eventsourcing.javaapi.CommandHandlerJava;
+import org.reactivestreams.Publisher;
 
-public class ClearCommandHandler implements CommandHandlerJava<ClearCommand> {
+import reactor.core.publisher.Mono;
+
+public class ClearCommandHandler implements CommandHandler<ClearCommand> {
 
     private final EventStore eventStore;
 
@@ -41,12 +44,10 @@ public class ClearCommandHandler implements CommandHandlerJava<ClearCommand> {
     }
 
     @Override
-    public List<? extends Event> handleJava(ClearCommand clearCommand) {
+    public Publisher<List<? extends Event>> handle(ClearCommand clearCommand) {
         DLPAggregateId aggregateId = new DLPAggregateId(clearCommand.getDomain());
 
-        return DLPDomainConfiguration.load(
-                aggregateId,
-                eventStore.getEventsOfAggregate(aggregateId))
-            .clear();
+        return Mono.from(eventStore.getEventsOfAggregate(aggregateId))
+            .map(history -> DLPDomainConfiguration.load(aggregateId, history).clear());
     }
 }

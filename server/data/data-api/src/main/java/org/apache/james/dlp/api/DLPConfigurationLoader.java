@@ -20,7 +20,8 @@
 package org.apache.james.dlp.api;
 
 import org.apache.james.core.Domain;
+import org.reactivestreams.Publisher;
 
 public interface DLPConfigurationLoader {
-    DLPRules list(Domain domain);
+    Publisher<DLPRules> list(Domain domain);
 }

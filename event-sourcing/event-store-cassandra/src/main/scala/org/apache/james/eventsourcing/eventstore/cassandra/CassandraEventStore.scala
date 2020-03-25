@@ -20,25 +20,35 @@ package org.apache.james.eventsourcing.eventstore.cassandra
 
 import com.google.common.base.Preconditions
 import javax.inject.Inject
+
 import org.apache.james.eventsourcing.eventstore.{EventStore, EventStoreFailedException, History}
 import org.apache.james.eventsourcing.{AggregateId, Event}
+import org.reactivestreams.Publisher
+
+import reactor.core.scala.publisher.SMono
 
 class CassandraEventStore @Inject() (eventStoreDao: EventStoreDao) extends EventStore {
-  override def appendAll(events: List[Event]): Unit = {
+  override def appendAll(events: Iterable[Event]): Publisher[Void] = {
     if (events.nonEmpty) {
       doAppendAll(events)
+    } else {
+      SMono.empty
     }
   }
 
-  private def doAppendAll(events: List[Event]): Unit = {
+  private def doAppendAll(events: Iterable[Event]): SMono[Void] = {
     Preconditions.checkArgument(Event.belongsToSameAggregate(events))
-    val success: Boolean = eventStoreDao.appendAll(events).block()
-    if (!success) {
-      throw EventStoreFailedException("Concurrent update to the EventStore detected")
-    }
+    eventStoreDao.appendAll(events)
+      .filter(success => success)
+      .single()
+      .onErrorMap({
+        case _: NoSuchElementException => EventStoreFailedException("Concurrent update to the EventStore detected")
+        case e => e
+      })
+      .`then`(SMono.empty)
   }
 
-  override def getEventsOfAggregate(aggregateId: AggregateId): History = {
-    eventStoreDao.getEventsOfAggregate(aggregateId).block()
+  override def getEventsOfAggregate(aggregateId: AggregateId): SMono[History] = {
+    eventStoreDao.getEventsOfAggregate(aggregateId)
   }
 }

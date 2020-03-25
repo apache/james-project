@@ -80,8 +80,7 @@
         </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-scala-extensions_2.13</artifactId>
-            <version>0.5.0</version>
+            <artifactId>reactor-scala-extensions_${scala.base}</artifactId>
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>

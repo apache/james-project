@@ -19,8 +19,6 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
 
-import java.util.Optional;
-
 import javax.inject.Inject;
 
 import org.apache.james.eventsourcing.AggregateId;
@@ -31,6 +29,8 @@ import org.apache.james.eventsourcing.eventstore.EventStore;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+
+import reactor.core.publisher.Mono;
 
 public class EventsourcingConfigurationManagement {
     static final String CONFIGURATION_AGGREGATE_KEY = "CassandraMailQueueViewConfiguration";
@@ -51,15 +51,16 @@ public class EventsourcingConfigurationManagement {
     }
 
     @VisibleForTesting
-    Optional<CassandraMailQueueViewConfiguration> load() {
-        return ConfigurationAggregate
-            .load(CONFIGURATION_AGGREGATE_ID, eventStore.getEventsOfAggregate(CONFIGURATION_AGGREGATE_ID))
-            .getCurrentConfiguration();
+    Mono<CassandraMailQueueViewConfiguration> load() {
+        return Mono.from(eventStore.getEventsOfAggregate(CONFIGURATION_AGGREGATE_ID))
+            .flatMap(history -> Mono.justOrEmpty(ConfigurationAggregate
+                .load(CONFIGURATION_AGGREGATE_ID, history)
+                .getCurrentConfiguration()));
     }
 
     public void registerConfiguration(CassandraMailQueueViewConfiguration newConfiguration) {
         Preconditions.checkNotNull(newConfiguration);
 
-        eventSourcingSystem.dispatch(new RegisterConfigurationCommand(newConfiguration, CONFIGURATION_AGGREGATE_ID));
+        Mono.from(eventSourcingSystem.dispatch(new RegisterConfigurationCommand(newConfiguration, CONFIGURATION_AGGREGATE_ID))).block();
     }
 }
