@@ -21,7 +21,11 @@ package org.apache.james.jmap.model
 
 import java.net.URI
 
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.model.CapabilityIdentifier.{JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.model.CoreCapabilityProperties.CollationAlgorithm
+import org.apache.james.jmap.model.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 
 final case class CapabilityIdentifier(value: URI) {
@@ -50,7 +54,10 @@ case class MaxConcurrentRequests(value: UnsignedInt)
 case class MaxCallsInRequest(value: UnsignedInt)
 case class MaxObjectsInGet(value: UnsignedInt)
 case class MaxObjectsInSet(value: UnsignedInt)
-case class CollationAlgorithms(value: List[String])
+
+object CoreCapabilityProperties {
+  type CollationAlgorithm = String Refined NonEmpty
+}
 
 final case class CoreCapabilityProperties(maxSizeUpload: MaxSizeUpload,
                                           maxConcurrentUpload: MaxConcurrentUpload,
@@ -59,7 +66,11 @@ final case class CoreCapabilityProperties(maxSizeUpload: MaxSizeUpload,
                                           maxCallsInRequest: MaxCallsInRequest,
                                           maxObjectsInGet: MaxObjectsInGet,
                                           maxObjectsInSet: MaxObjectsInSet,
-                                          collationAlgorithms: CollationAlgorithms) extends CapabilityProperties {
+                                          collationAlgorithms: List[CollationAlgorithm]) extends CapabilityProperties {
+}
+
+object MailCapability {
+  type EmailQuerySortOption = String Refined NonEmpty
 }
 
 final case class MailCapability(identifier: CapabilityIdentifier = JMAP_MAIL,
@@ -69,14 +80,13 @@ case class MaxMailboxesPerEmail(value: Option[UnsignedInt])
 case class MaxMailboxDepth(value: Option[UnsignedInt])
 case class MaxSizeMailboxName(value: UnsignedInt)
 case class MaxSizeAttachmentsPerEmail(value: UnsignedInt)
-case class EmailQuerySortOptions(value: List[String])
 case class MayCreateTopLevelMailbox(value: Boolean)
 
 final case class MailCapabilityProperties(maxMailboxesPerEmail: MaxMailboxesPerEmail,
                                           maxMailboxDepth: MaxMailboxDepth,
                                           maxSizeMailboxName: MaxSizeMailboxName,
                                           maxSizeAttachmentsPerEmail: MaxSizeAttachmentsPerEmail,
-                                          emailQuerySortOptions: EmailQuerySortOptions,
+                                          emailQuerySortOptions: List[EmailQuerySortOption],
                                           mayCreateTopLevelMailbox: MayCreateTopLevelMailbox) extends CapabilityProperties {
 }
 
