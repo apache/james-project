@@ -103,6 +103,17 @@ case class TotalThreads(value: UnsignedInt)
 case class UnreadThreads(value: UnsignedInt)
 case class IsSubscribed(value: Boolean) extends AnyVal
 
+sealed trait MailboxExtension
+
+sealed trait RightsExtension extends MailboxExtension {
+  def rights: Rights
+  def namespace: MailboxNamespace
+}
+
+sealed trait QuotasExtension extends MailboxExtension {
+  def quotas: Quotas
+}
+
 case class Mailbox(id: MailboxId,
                    name: MailboxName,
                    parentId: Option[MailboxId],
@@ -116,7 +127,7 @@ case class Mailbox(id: MailboxId,
                    isSubscribed: IsSubscribed,
                    namespace: MailboxNamespace,
                    rights: Rights,
-                   quotas: Quotas){
+                   quotas: Quotas) extends RightsExtension with QuotasExtension {
   def hasRole(role: Role): Boolean = this.role.contains(role)
 
   val hasSystemRole: Boolean = role.exists(_.isSystemRole)
