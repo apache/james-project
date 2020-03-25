@@ -541,7 +541,7 @@ public class MaildirFolder {
                         }
 
                         MessageUid uid = MessageUid.of(Long.parseLong(line.substring(0, gap)));
-                        String name = line.substring(gap + 1, line.length());
+                        String name = line.substring(gap + 1);
                         for (String recentFile : recentFiles) {
                             if (recentFile.equals(name)) {
                                 recentMessages.put(uid, newMaildirMessageName(MaildirFolder.this, recentFile));
@@ -615,7 +615,7 @@ public class MaildirFolder {
                         throw new MailboxException("Corrupted entry in uid-file " + uidList + " line " + lineNumber);
                     }
                     MessageUid uid = MessageUid.of(Long.parseLong(line.substring(0, gap)));
-                    String name = line.substring(gap + 1, line.length());
+                    String name = line.substring(gap + 1);
                     reverseUidMap.put(stripMetaFromName(name), uid);
                 }
             }
@@ -670,7 +670,7 @@ public class MaildirFolder {
                         if (to != null && uid.compareTo(to) > 0) {
                             break;
                         }
-                        String name = line.substring(gap + 1, line.length());
+                        String name = line.substring(gap + 1);
                         uidMap.put(uid, newMaildirMessageName(MaildirFolder.this, name));
                     }
                 }
@@ -724,7 +724,7 @@ public class MaildirFolder {
         }
         int gap2 = line.indexOf(" ", gap1 + 1);
         lastUid = Optional.of(MessageUid.of(Long.parseLong(line.substring(gap1 + 1, gap2))));
-        messageCount = Integer.parseInt(line.substring(gap2 + 1, line.length()));
+        messageCount = Integer.parseInt(line.substring(gap2 + 1));
     }
     
     /**
@@ -884,7 +884,7 @@ public class MaildirFolder {
                     }
 
                     if (uid.equals(MessageUid.of(Long.parseLong(line.substring(0, line.indexOf(" ")))))) {
-                        deletedMessage = newMaildirMessageName(MaildirFolder.this, line.substring(gap + 1, line.length()));
+                        deletedMessage = newMaildirMessageName(MaildirFolder.this, line.substring(gap + 1));
                         messageCount--;
                     } else {
                         lines.add(line);

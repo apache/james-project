@@ -713,7 +713,7 @@ public abstract class AbstractSign extends GenericMailet {
             int fromIndex = 0;
             int index;
             while ((index = template.indexOf(pattern, fromIndex)) >= 0) {
-                sb.append(template.substring(fromIndex, index));
+                sb.append(template, fromIndex, index);
                 sb.append(actual);
                 fromIndex = index + pattern.length();
             }

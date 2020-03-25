@@ -147,9 +147,9 @@ public class AddFooter extends GenericMailet {
         }
         int insertionIndex = matcher.start(matcher.groupCount() - 1);
         return new StringBuilder()
-                .append(content.substring(0, insertionIndex))
+                .append(content, 0, insertionIndex)
                 .append(getFooterHTML())
-                .append(content.substring(insertionIndex, content.length()))
+                .append(content.substring(insertionIndex))
                 .toString();
     }
 

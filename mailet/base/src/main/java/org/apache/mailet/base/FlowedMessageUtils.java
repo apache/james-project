@@ -251,7 +251,7 @@ public final class FlowedMessageUtils {
                     }
                 }
                 
-                result.append(line.substring(0, j + 1));
+                result.append(line, 0, j + 1);
                 if (j < line.length() - 1) { 
                     if (delSp) {
                         result.append(RFC2646_SPACE);

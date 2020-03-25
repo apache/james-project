@@ -63,7 +63,7 @@ public class IsX509CertificateSubject extends GenericMatcher {
         
         int pos = condition.indexOf(";");
         sourceAttribute = AttributeName.of(condition.substring(0,pos).trim());
-        check = condition.substring(pos + 1, condition.length());
+        check = condition.substring(pos + 1);
     }
     
     @Override

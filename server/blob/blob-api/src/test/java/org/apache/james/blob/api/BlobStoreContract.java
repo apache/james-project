@@ -107,7 +107,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = Mono.from(store.save(defaultBucketName, new String(), storagePolicy)).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, "", storagePolicy)).block();
 
         byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 

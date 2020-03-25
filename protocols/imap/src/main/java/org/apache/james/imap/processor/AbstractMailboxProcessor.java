@@ -360,7 +360,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
      * Joins the elements of a mailboxPath together and returns them as a string
      */
     private String joinMailboxPath(MailboxPath mailboxPath, char delimiter) {
-        StringBuilder sb = new StringBuilder("");
+        StringBuilder sb = new StringBuilder();
         if (mailboxPath.getNamespace() != null && !mailboxPath.getNamespace().equals("")) {
             sb.append(mailboxPath.getNamespace());
         }

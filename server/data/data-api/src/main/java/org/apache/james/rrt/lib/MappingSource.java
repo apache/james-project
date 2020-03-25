@@ -78,7 +78,7 @@ public class MappingSource implements Serializable {
                 return wildCard();
             default:
                 if (mappingSource.startsWith(WILDCARD + "@")) {
-                    return fromDomain(Domain.of(mappingSource.substring(2, mappingSource.length())));
+                    return fromDomain(Domain.of(mappingSource.substring(2)));
                 }
                 return fromUser(Username.of(mappingSource));
         }
