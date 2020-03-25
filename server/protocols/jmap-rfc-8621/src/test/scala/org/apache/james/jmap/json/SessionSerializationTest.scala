@@ -19,11 +19,12 @@
 
 package org.apache.james.jmap.json
 
-import java.net.{URI, URL}
+import java.net.URL
 
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.json.SessionSerializationTest.SESSION
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.MailCapability.EmailQuerySortOption
@@ -54,8 +55,8 @@ object SessionSerializationTest {
   private val URL = new URL("http://james.org")
   private val STATE : State = "fda9342jcm"
 
-  private val MAIL_IDENTIFIER = CapabilityIdentifier(new URI("urn:ietf:params:jmap:mail"))
-  private val CONTACT_IDENTIFIER = CapabilityIdentifier(new URI("urn:ietf:params:jmap:contact"))
+  private val MAIL_IDENTIFIER: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
+  private val CONTACT_IDENTIFIER: CapabilityIdentifier = "urn:ietf:params:jmap:contact"
 
   private val CORE_CAPABILITY = CoreCapability(properties = CoreCapabilityProperties(
     maxSizeUpload = MAX_SIZE_UPLOAD, maxConcurrentUpload = MAX_CONCURRENT_UPLOAD,

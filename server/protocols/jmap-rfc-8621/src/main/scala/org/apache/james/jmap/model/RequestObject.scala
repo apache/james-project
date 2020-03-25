@@ -19,4 +19,6 @@
 
 package org.apache.james.jmap.model
 
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+
 case class RequestObject(using: Seq[CapabilityIdentifier], methodCalls: Seq[Invocation], createdIds: Option[CreatedIds] = None)

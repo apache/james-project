@@ -23,10 +23,11 @@ import java.net.URL
 
 import org.apache.james.core.Username
 import org.apache.james.jmap.model
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.model.{Account, CapabilityIdentifier, Invocation, Session, _}
+import org.apache.james.jmap.model.{Account, Invocation, Session, _}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -62,7 +63,6 @@ class Serializer {
     Json.arr(invocation.methodName, invocation.arguments, invocation.methodCallId)
 
   // RequestObject
-  private implicit val capabilityIdentifierWrites: Format[CapabilityIdentifier] = Json.valueFormat[CapabilityIdentifier]
   private implicit val requestObjectRead: Format[RequestObject] = Json.format[RequestObject]
 
   // ResponseObject
@@ -92,9 +92,9 @@ class Serializer {
     (set: Set[_ <: Capability]) => {
       JsObject(set.map {
         case capability: CoreCapability => (
-          capability.identifier.asString, corePropertiesWriter.writes(capability.properties))
+          capability.identifier.value, corePropertiesWriter.writes(capability.properties))
         case capability: MailCapability => (
-          capability.identifier.asString, mailCapabilityWrites.writes(capability.properties))
+          capability.identifier.value, mailCapabilityWrites.writes(capability.properties))
       }.toSeq)
     }
 
@@ -104,7 +104,7 @@ class Serializer {
     (m: Map[CapabilityIdentifier, Any]) => {
       JsObject(
         m.map {
-          case (identifier, id: Id) => (identifier.asString, idWriter.writes(id))
+          case (identifier, id: Id) => (identifier.value, idWriter.writes(id))
           case _ => throw new RuntimeException("non supported serializer")
         }.toSeq
       )

@@ -19,22 +19,19 @@
 
 package org.apache.james.jmap.model
 
-import java.net.URI
-
 import eu.timepit.refined.api.Refined
+import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
-import org.apache.james.jmap.model.CapabilityIdentifier.{JMAP_CORE, JMAP_MAIL}
+import eu.timepit.refined.string.Uri
+import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.model.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.model.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 
-final case class CapabilityIdentifier(value: URI) {
-  val asString: String = value.toString
-}
-
 object CapabilityIdentifier {
-  val JMAP_CORE = CapabilityIdentifier(new URI("urn:ietf:params:jmap:core"))
-  val JMAP_MAIL = CapabilityIdentifier(new URI("urn:ietf:params:jmap:mail"))
+  type CapabilityIdentifier = String Refined Uri
+  val JMAP_CORE: CapabilityIdentifier = "urn:ietf:params:jmap:core"
+  val JMAP_MAIL: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
 }
 
 sealed trait CapabilityProperties

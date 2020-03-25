@@ -19,10 +19,7 @@
 
 package org.apache.james.jmap.json
 
-import java.net.URI
-
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.model.CapabilityIdentifier
 //import org.apache.james.jmap.json.Invocation._
 //import org.apache.james.jmap.json.RequestObject._
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
@@ -212,7 +209,7 @@ class RequestObjectSerializationTest extends PlaySpec {
         ClientId(id) -> ServerId(id)
       ))
       val requestObject: RequestObject = RequestObject(
-        using = Seq(CapabilityIdentifier(new URI("urn:ietf:params:jmap:core")), CapabilityIdentifier(new URI("urn:ietf:params:jmap:core2"))),
+        using = Seq("urn:ietf:params:jmap:core", "urn:ietf:params:jmap:core2"),
         methodCalls = Seq(invocation),
         Option(createdIds))
 
