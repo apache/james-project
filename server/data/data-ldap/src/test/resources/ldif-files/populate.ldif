@@ -2,6 +2,10 @@ dn: ou=people, dc=james,dc=org
 ou: people
 objectClass: organizationalUnit
 
+dn: ou=empty, dc=james,dc=org
+ou: empty
+objectClass: organizationalUnit
+
 dn: uid=james-user, ou=people, dc=james,dc=org
 objectClass: inetOrgPerson
 uid: james-user

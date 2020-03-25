@@ -133,13 +133,15 @@ class ReadOnlyUsersLDAPRepositoryTest {
             assertThat(usersRepository.contains(usersRepository.getUsername(JAMES_USER_MAIL.asMailAddress()))).isTrue();
         }
 
-        @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case")
+        @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case," +
+            "See @link{ReadOnlyUsersLDAPRepositoryEmptyListTest}")
         @Override
         @Test
         public void listShouldReturnEmptyIteratorWhenEmptyRepository(TestSystem testSystem) {
         }
 
-        @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case")
+        @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case," +
+            "See @link{ReadOnlyUsersLDAPRepositoryEmptyListTest}")
         @Override
         @Test
         public void countUsersShouldReturnZeroWhenEmptyRepository() {
@@ -193,13 +195,15 @@ class ReadOnlyUsersLDAPRepositoryTest {
             assertThat(testee().isAdministrator(testSystem.getAdmin())).isTrue();
         }
 
-        @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case")
+        @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case," +
+            "See @link{ReadOnlyUsersLDAPRepositoryEmptyListTest}")
         @Override
         @Test
         public void listShouldReturnEmptyIteratorWhenEmptyRepository(TestSystem testSystem) {
         }
 
-        @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case")
+        @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case," +
+            "See @link{ReadOnlyUsersLDAPRepositoryEmptyListTest}")
         @Override
         @Test
         public void countUsersShouldReturnZeroWhenEmptyRepository() {
@@ -259,7 +263,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         return ldapRepository;
     }
 
-    private static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration(LdapGenericContainer ldapContainer) {
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration(LdapGenericContainer ldapContainer) {
         PropertyListConfiguration configuration = baseConfiguration(ldapContainer);
         configuration.addProperty("[@userIdAttribute]", "uid");
         configuration.addProperty("[@administratorId]", ADMIN_LOCAL_PART);
