@@ -93,7 +93,7 @@ public class SieveFileRepository implements SieveRepository {
 
     protected static void toFile(File file, String content) throws StorageException {
         // Create a temporary file
-        int bufferSize = content.length() > MAX_BUFF_SIZE ? MAX_BUFF_SIZE : content.length();
+        int bufferSize = Math.min(content.length(), MAX_BUFF_SIZE);
         File tmpFile = null;
 
         try {
