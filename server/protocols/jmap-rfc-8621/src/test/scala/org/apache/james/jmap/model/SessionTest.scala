@@ -41,6 +41,14 @@ object SessionTest {
   private val MAX_CALLS_IN_REQUEST : MaxCallsInRequest = MaxCallsInRequest(32L)
   private val MAX_OBJECTS_IN_GET : MaxObjectsInGet = MaxObjectsInGet(256L)
   private val MAX_OBJECTS_IN_SET : MaxObjectsInSet = MaxObjectsInSet(128L)
+  private val COLLATION_ALGORITHMS : CollationAlgorithms = CollationAlgorithms(List())
+
+  private val MAX_MAILBOX_DEPTH : MaxMailboxDepth = MaxMailboxDepth(Some(1432L))
+  private val MAX_MAILBOXES_PER_EMAIL : MaxMailboxesPerEmail = MaxMailboxesPerEmail(Some(9359L))
+  private val MAX_SIZE_MAILBOX_NAME : MaxSizeMailboxName = MaxSizeMailboxName(9000L)
+  private val MAX_SIZE_ATTACHMENTS_PER_EMAIL : MaxSizeAttachmentsPerEmail = MaxSizeAttachmentsPerEmail(890099L)
+  private val EMAIL_QUERY_SORT_OPTIONS : EmailQuerySortOptions = EmailQuerySortOptions(List())
+  private val MAY_CREATE_TOP_LEVEL_MAILBOX : MayCreateTopLevelMailbox = MayCreateTopLevelMailbox(true)
 
   private val CORE_CAPABILITY = CoreCapability(properties = CoreCapabilityProperties(
     maxSizeUpload = MAX_SIZE_UPLOAD,
@@ -50,22 +58,22 @@ object SessionTest {
     maxConcurrentRequests = MAX_CONCURRENT_REQUESTS,
     maxObjectsInGet = MAX_OBJECTS_IN_GET,
     maxObjectsInSet = MAX_OBJECTS_IN_SET,
-    collationAlgorithms = List()))
+    collationAlgorithms = COLLATION_ALGORITHMS))
 
   private val MAIL_CAPABILITY = MailCapability(properties = MailCapabilityProperties(
-    maxMailboxDepth = Some(UNSIGNED_INT),
-    maxMailboxesPerEmail = Some(UNSIGNED_INT),
-    maxSizeMailboxName = UNSIGNED_INT,
-    maxSizeAttachmentsPerEmail = UNSIGNED_INT,
-    emailQuerySortOptions = List(),
-    mayCreateTopLevelMailbox = true))
+    maxMailboxDepth = MAX_MAILBOX_DEPTH,
+    maxMailboxesPerEmail = MAX_MAILBOXES_PER_EMAIL,
+    maxSizeMailboxName = MAX_SIZE_MAILBOX_NAME,
+    maxSizeAttachmentsPerEmail = MAX_SIZE_ATTACHMENTS_PER_EMAIL,
+    emailQuerySortOptions = EMAIL_QUERY_SORT_OPTIONS,
+    mayCreateTopLevelMailbox = MAY_CREATE_TOP_LEVEL_MAILBOX))
   private val ANOTHER_MAIL_CAPABILITY = MailCapability(properties = MailCapabilityProperties(
-    maxMailboxDepth = Some(UNSIGNED_INT),
-    maxMailboxesPerEmail = Some(UNSIGNED_INT),
-    maxSizeMailboxName = UNSIGNED_INT,
-    maxSizeAttachmentsPerEmail = UNSIGNED_INT,
-    emailQuerySortOptions = List("flags", "subject"),
-    mayCreateTopLevelMailbox = false))
+    maxMailboxDepth = MaxMailboxDepth(Some(UNSIGNED_INT)),
+    maxMailboxesPerEmail = MaxMailboxesPerEmail(Some(UNSIGNED_INT)),
+    maxSizeMailboxName = MaxSizeMailboxName(UNSIGNED_INT),
+    maxSizeAttachmentsPerEmail = MaxSizeAttachmentsPerEmail(UNSIGNED_INT),
+    emailQuerySortOptions = EmailQuerySortOptions(List("flags", "subject")),
+    mayCreateTopLevelMailbox = MayCreateTopLevelMailbox(false)))
 }
 
 class SessionTest extends WordSpec with Matchers {

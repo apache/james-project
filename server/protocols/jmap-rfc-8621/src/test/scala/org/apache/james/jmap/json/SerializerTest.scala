@@ -1,4 +1,4 @@
-/** **************************************************************
+/****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -6,16 +6,16 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- * *
- * http://www.apache.org/licenses/LICENSE-2.0                 *
- * *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
+ ****************************************************************/
 
 package org.apache.james.jmap.json
 
@@ -26,7 +26,6 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.json.SerializerTest.{SESSION, readResource}
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.model._
 import org.scalatestplus.play.PlaySpec
 import play.libs.Json
@@ -45,6 +44,7 @@ object SerializerTest {
   private val MAX_CALLS_IN_REQUEST : MaxCallsInRequest = MaxCallsInRequest(32L)
   private val MAX_OBJECTS_IN_GET : MaxObjectsInGet = MaxObjectsInGet(256L)
   private val MAX_OBJECTS_IN_SET : MaxObjectsInSet = MaxObjectsInSet(128L)
+  private val COLLATION_ALGORITHMS : CollationAlgorithms = CollationAlgorithms(List(ALGO_1, ALGO_2, ALGO_3))
   private val USER_1 = Username.of("user1@james.org")
   private val USER_1_ID: Id = "user1Id"
   private val USER_2 = Username.of("user2@james.org")
@@ -59,19 +59,22 @@ object SerializerTest {
     maxSizeUpload = MAX_SIZE_UPLOAD, maxConcurrentUpload = MAX_CONCURRENT_UPLOAD,
     maxSizeRequest = MAX_SIZE_REQUEST, maxConcurrentRequests = MAX_CONCURRENT_REQUESTS,
     maxCallsInRequest = MAX_CALLS_IN_REQUEST, maxObjectsInGet = MAX_OBJECTS_IN_GET, maxObjectsInSet = MAX_OBJECTS_IN_SET,
-    collationAlgorithms = List(ALGO_1, ALGO_2, ALGO_3)))
-  private val MAX_MAILBOX_DEPTH : Option[UnsignedInt] = Some(1432L)
-  private val MAX_MAILBOXES_PER_EMAIL : Option[UnsignedInt] = Some(9359L)
-  private val MAX_SIZE_MAILBOX_NAME : UnsignedInt = 9000L
-  private val MAX_SIZE_ATTACHMENTS_PER_EMAIL : UnsignedInt = 890099L
+    collationAlgorithms = COLLATION_ALGORITHMS))
+
+  private val MAX_MAILBOX_DEPTH : MaxMailboxDepth = MaxMailboxDepth(Some(1432L))
+  private val MAX_MAILBOXES_PER_EMAIL : MaxMailboxesPerEmail = MaxMailboxesPerEmail(Some(9359L))
+  private val MAX_SIZE_MAILBOX_NAME : MaxSizeMailboxName = MaxSizeMailboxName(9000L)
+  private val MAX_SIZE_ATTACHMENTS_PER_EMAIL : MaxSizeAttachmentsPerEmail = MaxSizeAttachmentsPerEmail(890099L)
+  private val EMAIL_QUERY_SORT_OPTIONS : EmailQuerySortOptions = EmailQuerySortOptions(List())
+  private val MAY_CREATE_TOP_LEVEL_MAILBOX : MayCreateTopLevelMailbox = MayCreateTopLevelMailbox(true)
 
   private val MAIL_CAPABILITY = MailCapability(properties = MailCapabilityProperties(
     maxMailboxDepth = MAX_MAILBOX_DEPTH,
     maxMailboxesPerEmail = MAX_MAILBOXES_PER_EMAIL,
     maxSizeMailboxName = MAX_SIZE_MAILBOX_NAME,
     maxSizeAttachmentsPerEmail = MAX_SIZE_ATTACHMENTS_PER_EMAIL,
-    emailQuerySortOptions = List(),
-    mayCreateTopLevelMailbox = true))
+    emailQuerySortOptions = EMAIL_QUERY_SORT_OPTIONS,
+    mayCreateTopLevelMailbox = MAY_CREATE_TOP_LEVEL_MAILBOX))
 
   private val CAPABILITIES = Set(CORE_CAPABILITY,MAIL_CAPABILITY)
 

@@ -22,7 +22,6 @@ package org.apache.james.jmap.model
 import java.net.URI
 
 import org.apache.james.jmap.model.CapabilityIdentifier.{JMAP_CORE, JMAP_MAIL}
-import org.apache.james.jmap.model.CoreCapabilityProperties.CollationAlgorithms
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 
 final case class CapabilityIdentifier(value: URI) {
@@ -51,10 +50,7 @@ case class MaxConcurrentRequests(value: UnsignedInt)
 case class MaxCallsInRequest(value: UnsignedInt)
 case class MaxObjectsInGet(value: UnsignedInt)
 case class MaxObjectsInSet(value: UnsignedInt)
-
-object CoreCapabilityProperties {
-  type CollationAlgorithms = List[String]
-}
+case class CollationAlgorithms(value: List[String])
 
 final case class CoreCapabilityProperties(maxSizeUpload: MaxSizeUpload,
                                           maxConcurrentUpload: MaxConcurrentUpload,
@@ -69,12 +65,18 @@ final case class CoreCapabilityProperties(maxSizeUpload: MaxSizeUpload,
 final case class MailCapability(identifier: CapabilityIdentifier = JMAP_MAIL,
                                 properties: MailCapabilityProperties) extends Capability
 
-// todo strong types for all arguments
-final case class MailCapabilityProperties(maxMailboxesPerEmail: Option[UnsignedInt],
-                                          maxMailboxDepth: Option[UnsignedInt],
-                                          maxSizeMailboxName: UnsignedInt,
-                                          maxSizeAttachmentsPerEmail: UnsignedInt,
-                                          emailQuerySortOptions: List[String],
-                                          mayCreateTopLevelMailbox: Boolean) extends CapabilityProperties {
+case class MaxMailboxesPerEmail(value: Option[UnsignedInt])
+case class MaxMailboxDepth(value: Option[UnsignedInt])
+case class MaxSizeMailboxName(value: UnsignedInt)
+case class MaxSizeAttachmentsPerEmail(value: UnsignedInt)
+case class EmailQuerySortOptions(value: List[String])
+case class MayCreateTopLevelMailbox(value: Boolean)
+
+final case class MailCapabilityProperties(maxMailboxesPerEmail: MaxMailboxesPerEmail,
+                                          maxMailboxDepth: MaxMailboxDepth,
+                                          maxSizeMailboxName: MaxSizeMailboxName,
+                                          maxSizeAttachmentsPerEmail: MaxSizeAttachmentsPerEmail,
+                                          emailQuerySortOptions: EmailQuerySortOptions,
+                                          mayCreateTopLevelMailbox: MayCreateTopLevelMailbox) extends CapabilityProperties {
 }
 
