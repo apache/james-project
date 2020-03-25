@@ -102,14 +102,14 @@ case class TotalThreads(value: UnsignedInt)
 case class UnreadThreads(value: UnsignedInt)
 case class IsSubscribed(value: Boolean) extends AnyVal
 
-sealed trait MailboxExtension
+sealed trait MailboxExtensionAdditionalFields
 
-sealed trait RightsExtension extends MailboxExtension {
+sealed trait RightsExtension extends MailboxExtensionAdditionalFields {
   def rights: Rights
   def namespace: MailboxNamespace
 }
 
-sealed trait QuotasExtension extends MailboxExtension {
+sealed trait QuotasExtension extends MailboxExtensionAdditionalFields {
   def quotas: Quotas
 }
 
