@@ -22,11 +22,12 @@ package org.apache.james.jmap.json
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.model.ResponseObject
-import org.scalatestplus.play.PlaySpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
 
-class ResponseObjectSerializationTest extends PlaySpec {
-  "Deserialize ResponseObject" must {
+class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
+  "Deserialize ResponseObject" should {
     "succeed " in {
       val expectedResponseObject = ResponseObject(
         sessionState = "75128aab4b1b",
@@ -43,7 +44,7 @@ class ResponseObjectSerializationTest extends PlaySpec {
           |  ],
           |  "sessionState": "75128aab4b1b"
           |}
-          |""".stripMargin) must be(JsSuccess(expectedResponseObject))
+          |""".stripMargin) should be(JsSuccess(expectedResponseObject))
     }
 
     "succeed with many Capability, methodCalls" in {
@@ -66,11 +67,11 @@ class ResponseObjectSerializationTest extends PlaySpec {
           |    }, "c2" ]
           |  ]
           |}
-          |""".stripMargin) must be(JsSuccess(expectedResponseObject))
+          |""".stripMargin) should be(JsSuccess(expectedResponseObject))
     }
   }
 
-  "Serialize ResponseObject" must {
+  "Serialize ResponseObject" should {
     "succeed " in {
       val responseObject: ResponseObject = ResponseObject(
         sessionState = "75128aab4b1b",
@@ -89,7 +90,7 @@ class ResponseObjectSerializationTest extends PlaySpec {
           |}
           |""".stripMargin))
 
-      Json.parse(new Serializer().serialize(responseObject)) must be(Json.parse(expectedJson))
+      Json.parse(new Serializer().serialize(responseObject)) should be(Json.parse(expectedJson))
     }
   }
 }

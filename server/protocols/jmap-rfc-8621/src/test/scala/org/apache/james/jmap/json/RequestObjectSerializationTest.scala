@@ -21,11 +21,12 @@ package org.apache.james.jmap.json
 
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.model.RequestObject
-import org.scalatestplus.play.PlaySpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
 
-class RequestObjectSerializationTest extends PlaySpec {
-  "Deserialize RequestObject" must {
+class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
+  "Deserialize RequestObject" should {
     "succeed when deserialize from JsString without CreatedIds" in {
       val expectedRequestObject = RequestObject(
         using = Seq(coreIdentifier),
@@ -44,7 +45,7 @@ class RequestObjectSerializationTest extends PlaySpec {
             |    }, "c1" ]
             |  ]
             |}
-            |""".stripMargin) must equal(JsSuccess(expectedRequestObject))
+            |""".stripMargin) should equal(JsSuccess(expectedRequestObject))
     }
 
     "succeed when deserialize from JsString with CreatedIds" in {
@@ -66,7 +67,7 @@ class RequestObjectSerializationTest extends PlaySpec {
             |  ],
             |  "createdIds":{"aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8":"aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8"}
             |}
-            |""".stripMargin) must equal(JsSuccess(expectedRequestObject))
+            |""".stripMargin) should equal(JsSuccess(expectedRequestObject))
     }
 
     "succeed with many Capability, methodCalls without CreatedIds" in {
@@ -91,11 +92,11 @@ class RequestObjectSerializationTest extends PlaySpec {
             |    }, "c2" ]
             |  ]
             |}
-            |""".stripMargin) must equal(JsSuccess(expectedRequestObject))
+            |""".stripMargin) should equal(JsSuccess(expectedRequestObject))
     }
   }
 
-  "Serialize RequestObject" must {
+  "Serialize RequestObject" should {
     "succeed when write to string without CreatedIds" in {
       val actualValue = new Serializer().serialize(
         RequestObject(
@@ -116,7 +117,7 @@ class RequestObjectSerializationTest extends PlaySpec {
           |}
           |""".stripMargin))
 
-      Json.parse(actualValue) must equal(Json.parse(expectedValue))
+      Json.parse(actualValue) should equal(Json.parse(expectedValue))
     }
 
     "succeed when write to string with CreatedIds" in {
@@ -140,7 +141,7 @@ class RequestObjectSerializationTest extends PlaySpec {
           |}
           |""".stripMargin))
 
-      Json.parse(actualValue) must equal(Json.parse(expectedValue))
+      Json.parse(actualValue) should equal(Json.parse(expectedValue))
     }
   }
 }

@@ -20,13 +20,14 @@
 package org.apache.james.jmap.mail
 
 import org.apache.james.core.Username
-import org.scalatest.{MustMatchers, WordSpec}
-import org.apache.james.mailbox.model.{MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Rfc4314Rights => JavaRfc4314Rights, Right => JavaRight}
+import org.apache.james.mailbox.model.{MailboxACL => JavaMailboxACL}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 import scala.jdk.CollectionConverters._
 
-class RightsTest extends WordSpec with MustMatchers {
+class RightsTest extends AnyWordSpec with Matchers {
   val NEGATIVE = true
   val USERNAME: Username = Username.of("user")
   val OTHER_USERNAME: Username = Username.of("otherUser")

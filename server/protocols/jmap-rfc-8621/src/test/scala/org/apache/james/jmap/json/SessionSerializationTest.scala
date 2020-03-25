@@ -30,8 +30,9 @@ import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model._
-import org.scalatestplus.play.PlaySpec
-import play.libs.Json
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.Json
 
 import scala.io.Source
 import scala.util.Using
@@ -119,7 +120,7 @@ object SessionSerializationTest {
   }
 }
 
-class SessionSerializationTest extends PlaySpec {
+class SessionSerializationTest extends AnyWordSpec with Matchers {
 
   "sessionWrites" should {
     "serialize session" in {
@@ -204,7 +205,7 @@ class SessionSerializationTest extends PlaySpec {
           |  "eventSourceUrl": "http://james.org",
           |  "state": "fda9342jcm"
           |}""".stripMargin)
-      Json.parse(new Serializer().serialize(SESSION)) must equal(json)
+      Json.parse(new Serializer().serialize(SESSION)) should equal(json)
     }
   }
 }

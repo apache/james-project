@@ -23,11 +23,12 @@ import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.TestId
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 import scala.compat.java8.OptionConverters._
 
-class MailboxTest extends WordSpec with MustMatchers {
+class MailboxTest extends AnyWordSpec with Matchers {
   "sortOrder" should  {
     "be comparable" in {
       SortOrder.apply(4L).compare(SortOrder.apply(3L)) must equal(1L)
