@@ -74,15 +74,15 @@ public class DownloadRoutes implements JMAPRoutes {
     private final BlobManager blobManager;
     private final SimpleTokenFactory simpleTokenFactory;
     private final MetricFactory metricFactory;
-    private final AuthenticationFilter authenticationFilter;
+    private final Authenticator authenticator;
 
     @Inject
     @VisibleForTesting
-    DownloadRoutes(BlobManager blobManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory, AuthenticationFilter authenticationFilter) {
+    DownloadRoutes(BlobManager blobManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory, Authenticator authenticator) {
         this.blobManager = blobManager;
         this.simpleTokenFactory = simpleTokenFactory;
         this.metricFactory = metricFactory;
-        this.authenticationFilter = authenticationFilter;
+        this.authenticator = authenticator;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class DownloadRoutes implements JMAPRoutes {
     }
 
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response, DownloadPath downloadPath) {
-        return authenticationFilter.authenticate(request)
+        return authenticator.authenticate(request)
             .flatMap(session -> Mono.from(metricFactory.runPublishingTimerMetric("JMAP-download-post",
                 respondAttachmentAccessToken(session, downloadPath, response)))
             .onErrorResume(InternalErrorException.class, e -> handleInternalError(response, e))
@@ -140,7 +140,7 @@ public class DownloadRoutes implements JMAPRoutes {
     }
 
     private Mono<Void> get(HttpServerRequest request, HttpServerResponse response, DownloadPath downloadPath) {
-        return authenticationFilter.authenticate(request)
+        return authenticator.authenticate(request)
             .flatMap(session -> Mono.from(metricFactory.runPublishingTimerMetric("JMAP-download-get",
                 download(session, downloadPath, response)))
             .onErrorResume(InternalErrorException.class, e -> handleInternalError(response, e)))

@@ -46,7 +46,7 @@ public class DownloadRoutesTest {
         BlobManager mockedBlobManager = mock(BlobManager.class);
         when(mockedBlobManager.retrieve(any(), eq(mailboxSession)))
             .thenThrow(new MailboxException());
-        AuthenticationFilter mockedAuthFilter = mock(AuthenticationFilter.class);
+        Authenticator mockedAuthFilter = mock(Authenticator.class);
         SimpleTokenFactory nullSimpleTokenFactory = null;
 
         DownloadRoutes testee = new DownloadRoutes(mockedBlobManager, nullSimpleTokenFactory, new RecordingMetricFactory(), mockedAuthFilter);

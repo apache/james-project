@@ -74,10 +74,10 @@ public class AuthenticationRoutes implements JMAPRoutes {
     private final AccessTokenManager accessTokenManager;
     private final SimpleTokenFactory simpleTokenFactory;
     private final MetricFactory metricFactory;
-    private final AuthenticationFilter authenticationFilter;
+    private final Authenticator authenticator;
 
     @Inject
-    public AuthenticationRoutes(UsersRepository usersRepository, SimpleTokenManager simpleTokenManager, AccessTokenManager accessTokenManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory, AuthenticationFilter authenticationFilter) {
+    public AuthenticationRoutes(UsersRepository usersRepository, SimpleTokenManager simpleTokenManager, AccessTokenManager accessTokenManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory, Authenticator authenticator) {
         this.mapper = new MultipleObjectMapperBuilder()
             .registerClass(ContinuationTokenRequest.UNIQUE_JSON_PATH, ContinuationTokenRequest.class)
             .registerClass(AccessTokenRequest.UNIQUE_JSON_PATH, AccessTokenRequest.class)
@@ -87,7 +87,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
         this.accessTokenManager = accessTokenManager;
         this.simpleTokenFactory = simpleTokenFactory;
         this.metricFactory = metricFactory;
-        this.authenticationFilter = authenticationFilter;
+        this.authenticator = authenticator;
     }
 
     @Override
@@ -126,7 +126,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
 
     private Mono<Void> returnEndPointsResponse(HttpServerRequest req, HttpServerResponse resp) {
         try {
-            return authenticationFilter.authenticate(req)
+            return authenticator.authenticate(req)
                 .then(resp.status(OK)
                     .header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
                     .sendString(Mono.just(mapper.writeValueAsString(EndPointsResponse
@@ -149,7 +149,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
     private Mono<Void> delete(HttpServerRequest req, HttpServerResponse resp) {
         String authorizationHeader = req.requestHeaders().get("Authorization");
 
-        return authenticationFilter.authenticate(req)
+        return authenticator.authenticate(req)
             .flatMap(session -> Mono.from(accessTokenManager.revoke(AccessToken.fromString(authorizationHeader)))
                 .then(resp.status(NO_CONTENT).send().then()))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, e))

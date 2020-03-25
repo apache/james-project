@@ -35,11 +35,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
-public class AuthenticationFilter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
+public class Authenticator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Authenticator.class);
 
-    static AuthenticationFilter of(MetricFactory metricFactory, AuthenticationStrategy... authenticationStrategies) {
-        return new AuthenticationFilter(ImmutableList.copyOf(authenticationStrategies), metricFactory);
+    static Authenticator of(MetricFactory metricFactory, AuthenticationStrategy... authenticationStrategies) {
+        return new Authenticator(ImmutableList.copyOf(authenticationStrategies), metricFactory);
     }
 
     private final List<AuthenticationStrategy> authMethods;
@@ -47,7 +47,7 @@ public class AuthenticationFilter {
 
     @Inject
     @VisibleForTesting
-    AuthenticationFilter(List<AuthenticationStrategy> authMethods, MetricFactory metricFactory) {
+    Authenticator(List<AuthenticationStrategy> authMethods, MetricFactory metricFactory) {
         this.authMethods = authMethods;
         this.metricFactory = metricFactory;
     }
