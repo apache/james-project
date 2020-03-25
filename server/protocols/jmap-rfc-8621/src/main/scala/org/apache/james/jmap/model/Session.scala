@@ -21,11 +21,9 @@ package org.apache.james.jmap.model
 
 import java.net.URL
 
-import org.apache.james.core.Username
-import CapabilityIdentifier.JMAP_CORE
-import CapabilityIdentifier.JMAP_MAIL
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
+import org.apache.james.core.Username
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.State.State
 
@@ -48,30 +46,9 @@ object State {
   type State = String Refined NonEmpty
 }
 
+case class Capabilities(coreCapability: CoreCapability, mailCapability: MailCapability)
 
-object Session {
-  def apply(capabilities: Set[_ <: Capability],
-            accounts: Map[Id, Account],
-            primaryAccounts: Map[CapabilityIdentifier, Id],
-            username: Username,
-            apiUrl: URL,
-            downloadUrl: URL,
-            uploadUrl: URL,
-            eventSourceUrl: URL,
-            state: State): Session = {
-    require(capabilities.exists(_.isInstanceOf[CoreCapability]),
-      s"capabilities should contain ${JMAP_CORE.value.toString} capability")
-    require(capabilities.exists(_.isInstanceOf[MailCapability]),
-      s"capabilities should contain ${JMAP_MAIL.value.toString} capability")
-    require(capabilities.map(_.identifier()).size == capabilities.size,
-      "capabilities should not be duplicated")
-
-
-    new Session(capabilities, accounts, primaryAccounts, username, apiUrl, downloadUrl, uploadUrl, eventSourceUrl, state)
-  }
-}
-
-final case class Session private(capabilities: Set[_ <: Capability],
+final case class Session private(capabilities: Capabilities,
                            accounts: Map[Id, Account],
                            primaryAccounts: Map[CapabilityIdentifier, Id],
                            username: Username,

@@ -23,7 +23,7 @@ import java.net.{URI, URL}
 
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
-import org.apache.james.jmap.json.SerializerTest.{SESSION, readResource}
+import org.apache.james.jmap.json.SessionSerializationTest.{SESSION, readResource}
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model._
@@ -33,7 +33,7 @@ import play.libs.Json
 import scala.io.Source
 import scala.util.Using
 
-object SerializerTest {
+object SessionSerializationTest {
   private val ALGO_1 = "i;ascii-numeric"
   private val ALGO_2 = "i;ascii-casemap"
   private val ALGO_3 = "i;unicode-casemap"
@@ -76,7 +76,7 @@ object SerializerTest {
     emailQuerySortOptions = EMAIL_QUERY_SORT_OPTIONS,
     mayCreateTopLevelMailbox = MAY_CREATE_TOP_LEVEL_MAILBOX))
 
-  private val CAPABILITIES = Set(CORE_CAPABILITY,MAIL_CAPABILITY)
+  private val CAPABILITIES = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
   private val ACCOUNT_1 = Account(
     name = USER_1,
@@ -115,11 +115,11 @@ object SerializerTest {
   }
 }
 
-class SerializerTest extends PlaySpec {
+class SessionSerializationTest extends PlaySpec {
 
   "sessionWrites" should {
     "serialize session" in {
-      // todo rely on milti line strings
+      // todo rely on multi line strings
       val jsonString = Json.parse(readResource("/sessionObject.json")).toString
       new Serializer().serialize(SESSION) must equal(jsonString)
     }

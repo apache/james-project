@@ -32,7 +32,7 @@ import org.apache.james.jmap.model.{CreatedIds, Invocation, RequestObject}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 
-class RequestObjectTest extends PlaySpec {
+class RequestObjectSerializationTest extends PlaySpec {
   private val id: Id = "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8"
 //
 //  "Deserialize Capability" must {

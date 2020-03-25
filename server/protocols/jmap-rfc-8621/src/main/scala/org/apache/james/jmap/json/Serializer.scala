@@ -21,43 +21,17 @@ package org.apache.james.jmap.json
 
 import java.net.URL
 
-import eu.timepit.refined.api.{RefType, Validate}
 import org.apache.james.core.Username
 import org.apache.james.jmap.json.Serializer._
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.model.ResponseObject.SessionState
 import org.apache.james.jmap.model.{Account, CapabilityIdentifier, CoreCapabilityProperties, Invocation, MailCapabilityProperties, Session, _}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 object Serializer {
-  // Json package serializer
-  implicit def writeRefined[T, P, F[_, _]](
-                                            implicit writesT: Writes[T],
-                                            reftype: RefType[F]
-                                          ): Writes[F[T, P]] = Writes(value => writesT.writes(reftype.unwrap(value)))
-
-  implicit def readRefined[T, P, F[_, _]](
-                                           implicit readsT: Reads[T],
-                                           reftype: RefType[F],
-                                           validate: Validate[T, P]
-                                         ): Reads[F[T, P]] =
-    Reads(jsValue =>
-      readsT.reads(jsValue).flatMap { valueT =>
-        reftype.refine[P](valueT) match {
-          case Right(valueP) => JsSuccess(valueP)
-          case Left(error)   => JsError(error)
-        }
-      })
-
-  implicit def idMapWrite[Any](implicit vr: Writes[Any]): Writes[Map[Id, Any]] =
-    (m: Map[Id, Any]) => {
-      JsObject(m.map { case (k, v) => (k.value, vr.writes(v)) }.toSeq)
-    }
-
   // CreateIds
   implicit val clientIdFormat: Format[ClientId] = Json.valueFormat[ClientId]
   implicit val serverIdFormat: Format[ServerId] = Json.valueFormat[ServerId]
@@ -92,17 +66,8 @@ object Serializer {
   implicit val capabilityIdentifierWrites: Format[CapabilityIdentifier] = Json.valueFormat[CapabilityIdentifier]
   implicit val requestObjectRead: Format[RequestObject] = Json.format[RequestObject]
 
-  def deserializeRequestObject(input: String): JsResult[RequestObject] = {
-    Json.parse(input).validate[RequestObject]
-  }
-
   // ResponseObject
-  implicit val sessionStateFormat = Json.valueFormat[SessionState]
-  implicit val responseObjectFormat = Json.format[ResponseObject]
-
-  def deserializeResponseObject(input: String): JsResult[ResponseObject] = {
-    Json.parse(input).validate[ResponseObject]
-  }
+  implicit val responseObjectFormat: Format[ResponseObject] = Json.format[ResponseObject]
 
   implicit val maxSizeUploadWrites: Writes[MaxSizeUpload] = Json.valueWrites[MaxSizeUpload]
   implicit val maxConcurrentUploadWrites: Writes[MaxConcurrentUpload] = Json.valueWrites[MaxConcurrentUpload]
@@ -126,16 +91,6 @@ object Serializer {
   implicit val coreCapabilityWrites: Writes[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]
   implicit val mailCapabilityWrites: Writes[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
 
-  implicit def identifierMapWrite[Any](implicit idWriter: Writes[Id]): Writes[Map[CapabilityIdentifier, Any]] =
-    (m: Map[CapabilityIdentifier, Any]) => {
-      JsObject(
-        m.map {
-          case (identifier, id: Id) => (identifier.asString, idWriter.writes(id))
-          case _ => throw new RuntimeException("non supported serializer")
-        }.toSeq
-      )
-    }
-
   implicit def setCapabilityWrites(implicit corePropertiesWriter: Writes[CoreCapabilityProperties],
                                    mailCapabilityWrites: Writes[MailCapabilityProperties]): Writes[Set[_ <: Capability]] =
     (set: Set[_ <: Capability]) => {
@@ -146,6 +101,20 @@ object Serializer {
           capability.identifier.asString, mailCapabilityWrites.writes(capability.properties))
       }.toSeq)
     }
+
+  implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(Set(capabilities.coreCapability, capabilities.mailCapability))
+
+  implicit def identifierMapWrite[Any](implicit idWriter: Writes[Id]): Writes[Map[CapabilityIdentifier, Any]] =
+    (m: Map[CapabilityIdentifier, Any]) => {
+      JsObject(
+        m.map {
+          case (identifier, id: Id) => (identifier.asString, idWriter.writes(id))
+          case _ => throw new RuntimeException("non supported serializer")
+        }.toSeq
+      )
+    }
+
+
 
   implicit val accountWrites: Writes[Account] = Json.writes[Account]
   implicit val sessionWrites: Writes[Session] = Json.writes[Session]
@@ -158,5 +127,17 @@ class Serializer {
 
   def serialize(requestObject: RequestObject): String = {
     Json.stringify(Json.toJson(requestObject))
+  }
+
+  def serialize(responseObject: ResponseObject): String = {
+    Json.stringify(Json.toJson(responseObject))
+  }
+
+  def deserializeRequestObject(input: String): JsResult[RequestObject] = {
+    Json.parse(input).validate[RequestObject]
+  }
+
+  def deserializeResponseObject(input: String): JsResult[ResponseObject] = {
+    Json.parse(input).validate[ResponseObject]
   }
 }

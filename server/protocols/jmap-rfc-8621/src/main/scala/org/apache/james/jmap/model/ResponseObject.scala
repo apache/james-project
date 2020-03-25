@@ -19,13 +19,6 @@
 
 package org.apache.james.jmap.model
 
-import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.james.jmap.model.ResponseObject.SessionState
+import org.apache.james.jmap.model.State.State
 
-case class ResponseObject(sessionState: SessionState, methodResponses: Seq[Invocation])
-
-object ResponseObject {
-
-  case class SessionState(value: NonEmptyString)
-
-}
+case class ResponseObject(sessionState: State, methodResponses: Seq[Invocation])
