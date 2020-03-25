@@ -27,7 +27,7 @@ import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.model.{Account, CapabilityIdentifier, CoreCapabilityProperties, Invocation, MailCapabilityProperties, Session, _}
+import org.apache.james.jmap.model.{Account, CapabilityIdentifier, Invocation, Session, _}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -85,7 +85,6 @@ object Serializer {
   implicit val emailQuerySortOptionsWrites: Writes[EmailQuerySortOptions] = Json.valueWrites[EmailQuerySortOptions]
   implicit val mayCreateTopLevelMailboxWrites: Writes[MayCreateTopLevelMailbox] = Json.valueWrites[MayCreateTopLevelMailbox]
 
-  // todo move all JSON serialization in here
   implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
   implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
   implicit val coreCapabilityWrites: Writes[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]

@@ -23,7 +23,7 @@ import java.net.{URI, URL}
 
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
-import org.apache.james.jmap.json.SessionSerializationTest.{SESSION, readResource}
+import org.apache.james.jmap.json.SessionSerializationTest.SESSION
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model._
@@ -119,9 +119,88 @@ class SessionSerializationTest extends PlaySpec {
 
   "sessionWrites" should {
     "serialize session" in {
-      // todo rely on multi line strings
-      val jsonString = Json.parse(readResource("/sessionObject.json")).toString
-      new Serializer().serialize(SESSION) must equal(jsonString)
+      val json = Json.parse(
+        """{
+          |  "capabilities": {
+          |    "urn:ietf:params:jmap:core": {
+          |      "maxSizeUpload": 50000000,
+          |      "maxConcurrentUpload": 8,
+          |      "maxSizeRequest": 10000000,
+          |      "maxConcurrentRequests": 10000000,
+          |      "maxCallsInRequest": 32,
+          |      "maxObjectsInGet": 256,
+          |      "maxObjectsInSet": 128,
+          |      "collationAlgorithms": [
+          |        "i;ascii-numeric",
+          |        "i;ascii-casemap",
+          |        "i;unicode-casemap"
+          |      ]
+          |    },
+          |    "urn:ietf:params:jmap:mail": {
+          |      "maxMailboxesPerEmail": 9359,
+          |      "maxMailboxDepth": 1432,
+          |      "maxSizeMailboxName": 9000,
+          |      "maxSizeAttachmentsPerEmail": 890099,
+          |      "emailQuerySortOptions": [],
+          |      "mayCreateTopLevelMailbox": true
+          |    }
+          |  },
+          |  "accounts": {
+          |    "user1Id": {
+          |      "name": "user1@james.org",
+          |      "isPersonal": true,
+          |      "isReadOnly": false,
+          |      "accountCapabilities": {
+          |        "urn:ietf:params:jmap:core": {
+          |          "maxSizeUpload": 50000000,
+          |          "maxConcurrentUpload": 8,
+          |          "maxSizeRequest": 10000000,
+          |          "maxConcurrentRequests": 10000000,
+          |          "maxCallsInRequest": 32,
+          |          "maxObjectsInGet": 256,
+          |          "maxObjectsInSet": 128,
+          |          "collationAlgorithms": [
+          |            "i;ascii-numeric",
+          |            "i;ascii-casemap",
+          |            "i;unicode-casemap"
+          |          ]
+          |        }
+          |      }
+          |    },
+          |    "user2Id": {
+          |      "name": "user2@james.org",
+          |      "isPersonal": false,
+          |      "isReadOnly": false,
+          |      "accountCapabilities": {
+          |        "urn:ietf:params:jmap:core": {
+          |          "maxSizeUpload": 50000000,
+          |          "maxConcurrentUpload": 8,
+          |          "maxSizeRequest": 10000000,
+          |          "maxConcurrentRequests": 10000000,
+          |          "maxCallsInRequest": 32,
+          |          "maxObjectsInGet": 256,
+          |          "maxObjectsInSet": 128,
+          |          "collationAlgorithms": [
+          |            "i;ascii-numeric",
+          |            "i;ascii-casemap",
+          |            "i;unicode-casemap"
+          |          ]
+          |        }
+          |      }
+          |    }
+          |  },
+          |  "primaryAccounts": {
+          |    "urn:ietf:params:jmap:mail": "user1Id",
+          |    "urn:ietf:params:jmap:contact": "user2Id"
+          |  },
+          |  "username": "user1@james.org",
+          |  "apiUrl": "http://james.org",
+          |  "downloadUrl": "http://james.org",
+          |  "uploadUrl": "http://james.org",
+          |  "eventSourceUrl": "http://james.org",
+          |  "state": "fda9342jcm"
+          |}""".stripMargin)
+      Json.parse(new Serializer().serialize(SESSION)) must equal(json)
     }
   }
 }
