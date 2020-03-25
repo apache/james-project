@@ -22,11 +22,6 @@ package org.apache.james.jmap.model
 import java.net.URI
 
 import org.scalatest.{Matchers, WordSpec}
-import eu.timepit.refined.auto._
-
-object CapabilityTest {
-  private val UNSIGNED_INT = 1L
-}
 
 class CapabilityTest extends WordSpec with Matchers {
 

@@ -89,7 +89,7 @@ object Serializer {
     Json.arr(invocation.methodName, invocation.arguments, invocation.methodCallId)
 
   // RequestObject
-  implicit val capabilityFormat: Format[model.RequestObject.Capability] = Json.valueFormat[model.RequestObject.Capability]
+  implicit val capabilityIdentifierWrites: Format[CapabilityIdentifier] = Json.valueFormat[CapabilityIdentifier]
   implicit val requestObjectRead: Format[RequestObject] = Json.format[RequestObject]
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = {
@@ -123,7 +123,6 @@ object Serializer {
   // todo move all JSON serialization in here
   implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
   implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
-  implicit val capabilityIdentifierWrites: Writes[CapabilityIdentifier] = identifier => JsString(identifier.asString)
   implicit val coreCapabilityWrites: Writes[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]
   implicit val mailCapabilityWrites: Writes[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
 

@@ -19,15 +19,4 @@
 
 package org.apache.james.jmap.model
 
-import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.james.jmap.model.RequestObject.Capability
-
-case class RequestObject(using: Seq[Capability], methodCalls: Seq[Invocation], createdIds: Option[CreatedIds] = None)
-
-object RequestObject {
-
-  case class Capability(value: NonEmptyString)
-
-}
-
-
+case class RequestObject(using: Seq[CapabilityIdentifier], methodCalls: Seq[Invocation], createdIds: Option[CreatedIds] = None)

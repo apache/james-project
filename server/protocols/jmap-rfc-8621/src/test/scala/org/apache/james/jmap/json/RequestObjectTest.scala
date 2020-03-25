@@ -19,13 +19,15 @@
 
 package org.apache.james.jmap.json
 
+import java.net.URI
+
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.model.CapabilityIdentifier
 //import org.apache.james.jmap.json.Invocation._
 //import org.apache.james.jmap.json.RequestObject._
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.model.RequestObject.Capability
 import org.apache.james.jmap.model.{CreatedIds, Invocation, RequestObject}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
@@ -210,7 +212,7 @@ class RequestObjectTest extends PlaySpec {
         ClientId(id) -> ServerId(id)
       ))
       val requestObject: RequestObject = RequestObject(
-        using = Seq(Capability("urn:ietf:params:jmap:core"), Capability("urn:ietf:params:jmap:core2")),
+        using = Seq(CapabilityIdentifier(new URI("urn:ietf:params:jmap:core")), CapabilityIdentifier(new URI("urn:ietf:params:jmap:core2"))),
         methodCalls = Seq(invocation),
         Option(createdIds))
 
