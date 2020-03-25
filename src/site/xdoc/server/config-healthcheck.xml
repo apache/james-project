@@ -24,7 +24,6 @@
     </properties>
 
     <body>
-
         <section name="PeriodicalHealthChecks Configuration">
 
             <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/healthcheck.properties">healthcheck.properties</a> in GIT to get some examples and hints.</p>
@@ -34,8 +33,6 @@
             </p>
 
             <dl>
-                <dt><strong>healthcheck.initial.delay</strong></dt>
-                <dd>Define the delay time before first health check starts (default: 60)</dd>
                 <dt><strong>healthcheck.period</strong></dt>
                 <dd>Define the period between two periodical health checks (default: 60)</dd>
             </dl>

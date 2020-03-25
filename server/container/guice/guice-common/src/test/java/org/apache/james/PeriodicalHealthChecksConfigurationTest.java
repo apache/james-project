@@ -19,24 +19,24 @@
 
 package org.apache.james;
 
-import static org.apache.james.PeriodicalHealthChecksConfiguration.DEFAULT_HEALTH_CHECK_INITIAL_DELAY;
-import static org.apache.james.PeriodicalHealthChecksConfiguration.DEFAULT_HEALTH_CHECK_PERIOD;
+import static org.apache.james.PeriodicalHealthChecksConfiguration.DEFAULT_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
+
 import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.ex.ConversionException;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class PeriodicalHealthChecksConfigurationTest {
 
+    private static final String HEALTH_CHECK_PERIOD = "healthcheck.period";
+    private static final String PERIOD = "PT5s";
     private static final String EMPTY_STRING = "";
     private static final String RANDOM_STRING = "abcdsfsfs";
-    private static final long NEGATIVE_NUMBER = -1;
-    private static final long INITIAL_DELAY = 10;
-    private static final long PERIOD = 5;
 
     @Test
     void shouldMatchBeanContract() {
@@ -45,120 +45,90 @@ public class PeriodicalHealthChecksConfigurationTest {
     }
 
     @Test
-    void fromShouldThrowWhenInitialDelayIsEmpty() {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, EMPTY_STRING);
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, DEFAULT_HEALTH_CHECK_PERIOD);
+    void builderShouldThrowWhenPeriodIsNull() {
+        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.builder()
+            .period(null)
+            .build())
+            .isInstanceOf(NullPointerException.class);
+    }
 
-        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration. from(configuration))
-            .isInstanceOf(ConversionException.class);
+    @Test
+    void builderShouldThrowWhenPeriodHasIncorrectFormat() {
+        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.builder()
+            .period(Duration.parse(RANDOM_STRING))
+            .build())
+            .isInstanceOf(DateTimeParseException.class);
+    }
+
+    @Test
+    void builderShouldThrowWhenPeriodIsNegative() {
+        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.builder()
+            .period(Duration.parse("-" + PERIOD))
+            .build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void builderShouldThrowWhenPeriodIsZero() {
+        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.builder()
+            .period(Duration.ZERO)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void builderShouldReturnCorrectConfiguration() {
+        PeriodicalHealthChecksConfiguration configuration = PeriodicalHealthChecksConfiguration.builder()
+            .period(Duration.parse(PERIOD))
+            .build();
+
+        assertThat(configuration.getPeriod()).isEqualTo(Duration.parse(PERIOD));
     }
 
     @Test
     void fromShouldThrowWhenPeriodIsEmpty() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, DEFAULT_HEALTH_CHECK_INITIAL_DELAY);
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, EMPTY_STRING);
+        configuration.addProperty(HEALTH_CHECK_PERIOD, EMPTY_STRING);
 
         assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.from(configuration))
-            .isInstanceOf(ConversionException.class);
-    }
-
-    @Test
-    void fromShouldReturnConfigurationWithDefaultValueWhenInitialDelayIsMissing() {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, PERIOD);
-
-        assertThat(PeriodicalHealthChecksConfiguration.from(configuration)).isEqualTo(PeriodicalHealthChecksConfiguration.builder()
-            .initialDelay(DEFAULT_HEALTH_CHECK_INITIAL_DELAY)
-            .period(PERIOD)
-            .build());
+            .isInstanceOf(DateTimeParseException.class);
     }
 
     @Test
     void fromShouldReturnConfigurationWithDefaultValueWhenPeriodIsMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, INITIAL_DELAY);
 
         assertThat(PeriodicalHealthChecksConfiguration.from(configuration)).isEqualTo(PeriodicalHealthChecksConfiguration.builder()
-            .initialDelay(INITIAL_DELAY)
-            .period(DEFAULT_HEALTH_CHECK_PERIOD)
-            .build());
-    }
-
-    @Test
-    void fromShouldReturnConfigurationWithDefaultValueWhenInitialDelayIsNull() {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, null);
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, PERIOD);
-
-        assertThat(PeriodicalHealthChecksConfiguration.from(configuration)).isEqualTo(PeriodicalHealthChecksConfiguration.builder()
-            .initialDelay(DEFAULT_HEALTH_CHECK_INITIAL_DELAY)
-            .period(PERIOD)
+            .period(DEFAULT_CONFIGURATION.getPeriod())
             .build());
     }
 
     @Test
     void fromShouldReturnConfigurationWithDefaultValueWhenPeriodIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, INITIAL_DELAY);
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, null);
+        configuration.addProperty(HEALTH_CHECK_PERIOD, null);
 
         assertThat(PeriodicalHealthChecksConfiguration.from(configuration)).isEqualTo(PeriodicalHealthChecksConfiguration.builder()
-            .initialDelay(INITIAL_DELAY)
-            .period(DEFAULT_HEALTH_CHECK_PERIOD)
+            .period(DEFAULT_CONFIGURATION.getPeriod())
             .build());
     }
 
     @Test
-    void fromShouldThrowWhenInitialDelayIsNotANumber() {
+    void fromShouldThrowWhenPeriodHasIncorrectFormat() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, RANDOM_STRING);
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, PERIOD);
+        configuration.addProperty(HEALTH_CHECK_PERIOD, RANDOM_STRING);
 
         assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.from(configuration))
-            .isInstanceOf(ConversionException.class);
-    }
-
-    @Test
-    void fromShouldThrowWhenInitialDelayIsNegative() {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, NEGATIVE_NUMBER);
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, PERIOD);
-
-        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.from(configuration))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void fromShouldThrowWhenPeriodIsNegative() {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, INITIAL_DELAY);
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, NEGATIVE_NUMBER);
-
-        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.from(configuration))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void fromShouldThrowWhenPeriodIsNotANumber() {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, INITIAL_DELAY);
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, RANDOM_STRING);
-
-        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.from(configuration))
-            .isInstanceOf(ConversionException.class);
+            .isInstanceOf(DateTimeParseException.class);
     }
 
     @Test
     void fromShouldReturnProvidedConfiguration() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_INITIAL_DELAY, INITIAL_DELAY);
-        configuration.addProperty(PeriodicalHealthChecksConfiguration.HEALTH_CHECK_PERIOD, PERIOD);
+        configuration.addProperty(HEALTH_CHECK_PERIOD, PERIOD);
 
         assertThat(PeriodicalHealthChecksConfiguration.from(configuration)).isEqualTo(PeriodicalHealthChecksConfiguration.builder()
-            .initialDelay(INITIAL_DELAY)
-            .period(PERIOD)
+            .period(Duration.parse(PERIOD))
             .build());
     }
 }

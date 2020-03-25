@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import org.apache.commons.configuration2.Configuration;
@@ -28,71 +29,53 @@ import com.google.common.base.Preconditions;
 
 public class PeriodicalHealthChecksConfiguration {
 
-    static final String HEALTH_CHECK_INITIAL_DELAY = "healthcheck.initial.delay";
-    static final String HEALTH_CHECK_PERIOD = "healthcheck.period";
-    static final long DEFAULT_HEALTH_CHECK_INITIAL_DELAY = 60;
-    static final long DEFAULT_HEALTH_CHECK_PERIOD = 60;
-    static final long ZERO = 0;
+    private static final String HEALTH_CHECK_PERIOD = "healthcheck.period";
+    private static final String DEFAULT_HEALTH_CHECK_PERIOD = "PT60s";
     public static final PeriodicalHealthChecksConfiguration DEFAULT_CONFIGURATION = builder()
-        .initialDelay(DEFAULT_HEALTH_CHECK_INITIAL_DELAY)
-        .period(DEFAULT_HEALTH_CHECK_PERIOD)
+        .period(Duration.parse(DEFAULT_HEALTH_CHECK_PERIOD))
         .build();
 
     public interface Builder {
 
         @FunctionalInterface
-        interface RequiredInitialDelay {
-            RequiredPeriod initialDelay(long initialDelay);
-        }
-
-        @FunctionalInterface
         interface RequiredPeriod {
-            ReadyToBuild period(long period);
+            ReadyToBuild period(Duration period);
         }
 
         class ReadyToBuild {
-            private final long initialDelay;
-            private final long period;
+            private final Duration period;
 
-            ReadyToBuild(long initialDelay, long period) {
-                this.initialDelay = initialDelay;
+            ReadyToBuild(Duration period) {
                 this.period = period;
             }
 
             PeriodicalHealthChecksConfiguration build() {
-                Preconditions.checkArgument(initialDelay > ZERO, "'initialDelay' must be positive");
-                Preconditions.checkArgument(period > ZERO, "'period' must be positive");
+                Preconditions.checkArgument(!period.isNegative(), "'period' must be positive");
+                Preconditions.checkArgument(!period.isZero(), "'period' must be greater than zero");
 
-                return new PeriodicalHealthChecksConfiguration(initialDelay, period);
+                return new PeriodicalHealthChecksConfiguration(period);
             }
         }
     }
 
-    public static Builder.RequiredInitialDelay builder() {
-        return initialDelay -> period -> new Builder.ReadyToBuild(initialDelay, period);
+    public static Builder.RequiredPeriod builder() {
+        return period -> new Builder.ReadyToBuild(period);
     }
 
     public static PeriodicalHealthChecksConfiguration from(Configuration configuration) {
         return builder()
-            .initialDelay(configuration.getLong(HEALTH_CHECK_INITIAL_DELAY, DEFAULT_HEALTH_CHECK_INITIAL_DELAY))
-            .period(configuration.getLong(HEALTH_CHECK_PERIOD, DEFAULT_HEALTH_CHECK_PERIOD))
+            .period(Duration.parse(configuration.getString(HEALTH_CHECK_PERIOD, DEFAULT_HEALTH_CHECK_PERIOD)))
             .build();
     }
 
-    private final long initialDelay;
-    private final long period;
+    private final Duration period;
 
     @VisibleForTesting
-    PeriodicalHealthChecksConfiguration(long initialDelay, long period) {
-        this.initialDelay = initialDelay;
+    PeriodicalHealthChecksConfiguration(Duration period) {
         this.period = period;
     }
 
-    public long getInitialDelay() {
-        return initialDelay;
-    }
-
-    public long getPeriod() {
+    public Duration getPeriod() {
         return period;
     }
 
@@ -101,14 +84,13 @@ public class PeriodicalHealthChecksConfiguration {
         if (o instanceof PeriodicalHealthChecksConfiguration) {
             PeriodicalHealthChecksConfiguration that = (PeriodicalHealthChecksConfiguration) o;
 
-            return Objects.equals(this.initialDelay, that.initialDelay)
-                && Objects.equals(this.period, that.period);
+            return Objects.equals(this.period, that.period);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(initialDelay, period);
+        return Objects.hash(period);
     }
 }
