@@ -19,12 +19,11 @@
 
 package org.apache.james.jmap.mail
 
+import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
-
-import eu.timepit.refined.auto._
 
 final case class MailboxName(name: String) {
   require(!name.isEmpty, "'name' is mandatory")
@@ -113,7 +112,7 @@ case class Mailbox(id: MailboxId,
                    unreadEmails: UnreadEmails,
                    totalThreads: TotalThreads,
                    unreadThreads: UnreadThreads,
-                   mailboxRights: MailboxRights,
+                   myRights: MailboxRights,
                    isSubscribed: IsSubscribed,
                    namespace: MailboxNamespace,
                    rights: Rights,

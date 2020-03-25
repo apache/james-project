@@ -19,12 +19,12 @@
 
 package org.apache.james.jmap.mail
 
+import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.TestId
 import org.scalatest.{MustMatchers, WordSpec}
 
-import eu.timepit.refined.auto._
 import scala.compat.java8.OptionConverters._
 
 class MailboxTest extends WordSpec with MustMatchers {
@@ -172,7 +172,7 @@ class MailboxTest extends WordSpec with MustMatchers {
         UnreadEmails(4L),
         TotalThreads(5L),
         UnreadThreads(6L),
-        mailboxRights = MailboxRights(MayReadItems(true),
+        myRights = MailboxRights(MayReadItems(true),
           MayAddItems(true),
           MayRemoveItems(true),
           MaySetSeen(true),
