@@ -36,7 +36,7 @@ object CapabilityIdentifier {
 
 sealed trait CapabilityProperties
 
-sealed trait Capability {
+trait Capability {
   def identifier(): CapabilityIdentifier
   def properties(): CapabilityProperties
 }
