@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.Objects;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.james.util.DurationParser;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -30,9 +31,9 @@ import com.google.common.base.Preconditions;
 public class PeriodicalHealthChecksConfiguration {
 
     private static final String HEALTH_CHECK_PERIOD = "healthcheck.period";
-    private static final String DEFAULT_HEALTH_CHECK_PERIOD = "PT60s";
+    private static final String DEFAULT_HEALTH_CHECK_PERIOD = "60s";
     public static final PeriodicalHealthChecksConfiguration DEFAULT_CONFIGURATION = builder()
-        .period(Duration.parse(DEFAULT_HEALTH_CHECK_PERIOD))
+        .period(DurationParser.parse(DEFAULT_HEALTH_CHECK_PERIOD))
         .build();
 
     public interface Builder {
@@ -59,12 +60,12 @@ public class PeriodicalHealthChecksConfiguration {
     }
 
     public static Builder.RequiredPeriod builder() {
-        return period -> new Builder.ReadyToBuild(period);
+        return Builder.ReadyToBuild::new;
     }
 
     public static PeriodicalHealthChecksConfiguration from(Configuration configuration) {
         return builder()
-            .period(Duration.parse(configuration.getString(HEALTH_CHECK_PERIOD, DEFAULT_HEALTH_CHECK_PERIOD)))
+            .period(DurationParser.parse(configuration.getString(HEALTH_CHECK_PERIOD, DEFAULT_HEALTH_CHECK_PERIOD)))
             .build();
     }
 

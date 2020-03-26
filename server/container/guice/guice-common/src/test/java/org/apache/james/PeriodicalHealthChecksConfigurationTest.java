@@ -24,9 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
-import java.time.format.DateTimeParseException;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.james.util.DurationParser;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -34,7 +34,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 public class PeriodicalHealthChecksConfigurationTest {
 
     private static final String HEALTH_CHECK_PERIOD = "healthcheck.period";
-    private static final String PERIOD = "PT5s";
+    private static final String PERIOD = "5s";
     private static final String EMPTY_STRING = "";
     private static final String RANDOM_STRING = "abcdsfsfs";
 
@@ -55,15 +55,15 @@ public class PeriodicalHealthChecksConfigurationTest {
     @Test
     void builderShouldThrowWhenPeriodHasIncorrectFormat() {
         assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.builder()
-            .period(Duration.parse(RANDOM_STRING))
+            .period(DurationParser.parse(RANDOM_STRING))
             .build())
-            .isInstanceOf(DateTimeParseException.class);
+            .isInstanceOf(NumberFormatException.class);
     }
 
     @Test
     void builderShouldThrowWhenPeriodIsNegative() {
         assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.builder()
-            .period(Duration.parse("-" + PERIOD))
+            .period(DurationParser.parse("-" + PERIOD))
             .build())
             .isInstanceOf(IllegalArgumentException.class);
     }
@@ -79,10 +79,10 @@ public class PeriodicalHealthChecksConfigurationTest {
     @Test
     void builderShouldReturnCorrectConfiguration() {
         PeriodicalHealthChecksConfiguration configuration = PeriodicalHealthChecksConfiguration.builder()
-            .period(Duration.parse(PERIOD))
+            .period(DurationParser.parse(PERIOD))
             .build();
 
-        assertThat(configuration.getPeriod()).isEqualTo(Duration.parse(PERIOD));
+        assertThat(configuration.getPeriod()).isEqualTo(DurationParser.parse(PERIOD));
     }
 
     @Test
@@ -91,7 +91,7 @@ public class PeriodicalHealthChecksConfigurationTest {
         configuration.addProperty(HEALTH_CHECK_PERIOD, EMPTY_STRING);
 
         assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.from(configuration))
-            .isInstanceOf(DateTimeParseException.class);
+            .isInstanceOf(NumberFormatException.class);
     }
 
     @Test
@@ -119,7 +119,7 @@ public class PeriodicalHealthChecksConfigurationTest {
         configuration.addProperty(HEALTH_CHECK_PERIOD, RANDOM_STRING);
 
         assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.from(configuration))
-            .isInstanceOf(DateTimeParseException.class);
+            .isInstanceOf(NumberFormatException.class);
     }
 
     @Test
@@ -128,7 +128,7 @@ public class PeriodicalHealthChecksConfigurationTest {
         configuration.addProperty(HEALTH_CHECK_PERIOD, PERIOD);
 
         assertThat(PeriodicalHealthChecksConfiguration.from(configuration)).isEqualTo(PeriodicalHealthChecksConfiguration.builder()
-            .period(Duration.parse(PERIOD))
+            .period(DurationParser.parse(PERIOD))
             .build());
     }
 }
