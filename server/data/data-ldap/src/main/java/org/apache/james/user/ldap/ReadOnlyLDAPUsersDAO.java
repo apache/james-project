@@ -333,7 +333,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     @Override
     public boolean contains(Username name) throws UsersRepositoryException {
-        return getUserByName(name) != null;
+        return getUserByName(name).isPresent();
     }
 
     @Override
@@ -351,9 +351,9 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     @Override
-    public User getUserByName(Username name) throws UsersRepositoryException {
+    public Optional<User> getUserByName(Username name) throws UsersRepositoryException {
         try {
-          return searchAndBuildUser(name);
+          return Optional.ofNullable(searchAndBuildUser(name));
         } catch (NamingException e) {
             LOGGER.error("Unable to retrieve user from ldap", e);
             throw new UsersRepositoryException("Unable to retrieve user from ldap", e);
@@ -403,12 +403,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     public void removeUser(Username name) throws UsersRepositoryException {
         throw new UsersRepositoryException("This user-repository is read-only. Modifications are not permitted.");
 
-    }
-
-    @Override
-    public boolean test(Username name, String password) throws UsersRepositoryException {
-        User u = getUserByName(name);
-        return u != null && u.verifyPassword(password);
     }
 
     @Override

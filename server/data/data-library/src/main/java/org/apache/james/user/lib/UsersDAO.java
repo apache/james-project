@@ -20,6 +20,7 @@
 package org.apache.james.user.lib;
 
 import java.util.Iterator;
+import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -30,15 +31,13 @@ public interface UsersDAO {
         return false;
     }
 
-    User getUserByName(Username name) throws UsersRepositoryException;
+    Optional<? extends User> getUserByName(Username name) throws UsersRepositoryException;
 
     void updateUser(User user) throws UsersRepositoryException;
 
     void removeUser(Username name) throws UsersRepositoryException;
 
     boolean contains(Username name) throws UsersRepositoryException;
-
-    boolean test(Username name, String password) throws UsersRepositoryException;
 
     int countUsers() throws UsersRepositoryException;
 

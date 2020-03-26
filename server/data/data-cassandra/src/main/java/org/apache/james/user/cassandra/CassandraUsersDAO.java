@@ -44,8 +44,6 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.DefaultUser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
@@ -53,7 +51,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
 public class CassandraUsersDAO implements UsersDAO {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraUsersDAO.class);
     private static final String DEFAULT_ALGO_VALUE = "SHA1";
 
     private final CassandraAsyncExecutor executor;
@@ -112,13 +109,12 @@ public class CassandraUsersDAO implements UsersDAO {
     }
 
     @Override
-    public User getUserByName(Username name) {
+    public Optional<DefaultUser> getUserByName(Username name) {
         return executor.executeSingleRow(
                 getUserStatement.bind()
                     .setString(NAME, name.asString()))
             .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD), row.getString(ALGORITHM)))
-            .blockOptional()
-            .orElse(null);
+            .blockOptional();
     }
 
     @Override
@@ -152,17 +148,7 @@ public class CassandraUsersDAO implements UsersDAO {
 
     @Override
     public boolean contains(Username name) {
-        return getUserByName(name) != null;
-    }
-
-    @Override
-    public boolean test(Username name, String password) {
-        return Optional.ofNullable(getUserByName(name))
-                .map(x -> x.verifyPassword(password))
-            .orElseGet(() -> {
-                LOGGER.info("Could not retrieve user {}. Password is unverified.", name);
-                return false;
-            });
+        return getUserByName(name).isPresent();
     }
 
     @Override

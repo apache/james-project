@@ -22,6 +22,7 @@ package org.apache.james.user.jpa;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -83,13 +84,17 @@ public class JPAUsersDAO implements UsersDAO, Configurable {
      * @since James 1.2.2
      */
     @Override
-    public User getUserByName(Username name) throws UsersRepositoryException {
+    public Optional<User> getUserByName(Username name) throws UsersRepositoryException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
         try {
-            return (JPAUser) entityManager.createNamedQuery("findUserByName").setParameter("name", name.asString()).getSingleResult();
+            JPAUser singleResult = (JPAUser) entityManager
+                .createNamedQuery("findUserByName")
+                .setParameter("name", name.asString())
+                .getSingleResult();
+            return Optional.of(singleResult);
         } catch (NoResultException e) {
-            return null;
+            return Optional.empty();
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to find user", e);
             throw new UsersRepositoryException("Unable to search user", e);
@@ -180,27 +185,6 @@ public class JPAUsersDAO implements UsersDAO, Configurable {
         } finally {
             EntityManagerUtils.safelyClose(entityManager);
         }
-    }
-
-    /**
-     * Test if user with name 'name' has password 'password'.
-     * 
-     * @param name
-     *            the name of the user to be tested
-     * @param password
-     *            the password to be tested
-     * 
-     * @return true if the test is successful, false if the user doesn't exist
-     *         or if the password is incorrect
-     * 
-     * @since James 1.2.2
-     */
-    @Override
-    public boolean test(Username name, String password) throws UsersRepositoryException {
-        final User user = getUserByName(name);
-        final boolean result;
-        result = user != null && user.verifyPassword(password);
-        return result;
     }
 
     /**

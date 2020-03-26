@@ -59,16 +59,14 @@ public class MemoryUsersDAO implements UsersDAO, Configurable {
     }
 
     @Override
-    public User getUserByName(Username name) throws UsersRepositoryException {
-        return userByName.get(name.asString());
+    public Optional<User> getUserByName(Username name) throws UsersRepositoryException {
+        return Optional.ofNullable(userByName.get(name.asString()));
     }
 
     @Override
     public void updateUser(User user) throws UsersRepositoryException {
-        User existingUser = getUserByName(user.getUserName());
-        if (existingUser == null) {
-            throw new UsersRepositoryException("Please provide an existing user to update");
-        }
+        getUserByName(user.getUserName())
+            .orElseThrow(() -> new UsersRepositoryException("Please provide an existing user to update"));
         userByName.put(user.getUserName().asString(), user);
     }
 
@@ -82,13 +80,6 @@ public class MemoryUsersDAO implements UsersDAO, Configurable {
     @Override
     public boolean contains(Username name) {
         return userByName.containsKey(name.asString());
-    }
-
-    @Override
-    public boolean test(Username name, final String password) {
-        return Optional.ofNullable(userByName.get(name.asString()))
-            .map(user -> user.verifyPassword(password))
-            .orElse(false);
     }
 
     @Override

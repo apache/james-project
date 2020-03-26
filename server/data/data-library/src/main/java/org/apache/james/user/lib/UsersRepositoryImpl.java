@@ -38,11 +38,13 @@ import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 
 public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository, Configurable {
+    public static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(UsersRepositoryImpl.class);
     private static String ILLEGAL_USERNAME_CHARACTERS = "\"(),:; <>@[\\]";
 
     private final DomainList domainList;
@@ -117,7 +119,17 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
 
     @Override
     public User getUserByName(Username name) throws UsersRepositoryException {
-        return usersDAO.getUserByName(name);
+        return usersDAO.getUserByName(name).orElse(null);
+    }
+
+    @Override
+    public boolean test(Username name, String password) throws UsersRepositoryException {
+        return usersDAO.getUserByName(name)
+            .map(x -> x.verifyPassword(password))
+            .orElseGet(() -> {
+                LOGGER.info("Could not retrieve user {}. Password is unverified.", name);
+                return false;
+            });
     }
 
     @Override
@@ -135,11 +147,6 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     @Override
     public boolean contains(Username name) throws UsersRepositoryException {
         return usersDAO.contains(name);
-    }
-
-    @Override
-    public boolean test(Username name, String password) throws UsersRepositoryException {
-        return usersDAO.test(name, password);
     }
 
     @Override
