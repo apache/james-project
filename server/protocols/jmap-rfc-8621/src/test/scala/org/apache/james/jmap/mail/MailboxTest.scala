@@ -20,7 +20,6 @@
 package org.apache.james.jmap.mail
 
 import eu.timepit.refined.auto._
-import org.apache.james.core.Username
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.TestId
 import org.scalatest.matchers.must.Matchers
@@ -34,16 +33,6 @@ class MailboxTest extends AnyWordSpec with Matchers {
       SortOrder.apply(4L).compare(SortOrder.apply(3L)) must equal(1L)
       SortOrder.apply(4L).compare(SortOrder.apply(4L)) must equal(0L)
       SortOrder.apply(4L).compare(SortOrder.apply(5L)) must equal(-1L)
-    }
-  }
-
-  "namespace" should  {
-    "return None when personal" in {
-      MailboxNamespace.personal.owner.isEmpty must be(true)
-    }
-    "return owner when delegated" in {
-      val username = Username.of("bob")
-      MailboxNamespace.delegated(username).owner must be(Some(username))
     }
   }
 

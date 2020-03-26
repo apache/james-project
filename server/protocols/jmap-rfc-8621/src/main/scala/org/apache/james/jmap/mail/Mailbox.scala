@@ -54,17 +54,11 @@ object MailboxNamespace {
   def personal = PersonalNamespace
 }
 
-sealed trait MailboxNamespace {
-  def owner: Option[Username]
-}
+sealed trait MailboxNamespace
 
-case object PersonalNamespace extends MailboxNamespace {
-  override def owner: Option[Username] = None
-}
+case object PersonalNamespace extends MailboxNamespace
 
-case class DelegatedNamespace(user: Username) extends MailboxNamespace {
-  override val owner: Option[Username] = Some(user)
-}
+case class DelegatedNamespace(owner: Username) extends MailboxNamespace
 
 object SortOrder {
   private val defaultSortOrders = Map(
@@ -77,7 +71,7 @@ object SortOrder {
       Role.SPAM -> SortOrder(70L),
       Role.TEMPLATES -> SortOrder(80L),
       Role.RESTORED_MESSAGES -> SortOrder(90L))
-    .withDefaultValue( SortOrder(1000L))
+    .withDefaultValue(SortOrder(1000L))
 
   def getSortOrder(role: Role): SortOrder = defaultSortOrders(role)
 }
