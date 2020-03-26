@@ -41,8 +41,8 @@ sealed trait Capability {
   def properties(): CapabilityProperties
 }
 
-final case class CoreCapability(identifier: CapabilityIdentifier = JMAP_CORE,
-                                properties: CoreCapabilityProperties) extends Capability
+final case class CoreCapability(properties: CoreCapabilityProperties,
+                                identifier: CapabilityIdentifier = JMAP_CORE) extends Capability
 
 case class MaxSizeUpload(value: UnsignedInt)
 case class MaxConcurrentUpload(value: UnsignedInt)
@@ -70,8 +70,8 @@ object MailCapability {
   type EmailQuerySortOption = String Refined NonEmpty
 }
 
-final case class MailCapability(identifier: CapabilityIdentifier = JMAP_MAIL,
-                                properties: MailCapabilityProperties) extends Capability
+final case class MailCapability(properties: MailCapabilityProperties,
+                                identifier: CapabilityIdentifier = JMAP_MAIL) extends Capability
 
 case class MaxMailboxesPerEmail(value: Option[UnsignedInt])
 case class MaxMailboxDepth(value: Option[UnsignedInt])
