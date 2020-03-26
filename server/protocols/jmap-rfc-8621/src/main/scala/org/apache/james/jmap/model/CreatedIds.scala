@@ -20,6 +20,7 @@ package org.apache.james.jmap.model
 
 import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id
+
 case class CreatedIds(value: Map[ClientId, ServerId])
 
 object CreatedIds {
