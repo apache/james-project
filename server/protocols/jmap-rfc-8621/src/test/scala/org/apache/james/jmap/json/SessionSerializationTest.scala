@@ -83,15 +83,19 @@ object SessionSerializationTest {
 
   private val CAPABILITIES = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
+  private val IS_PERSONAL : IsPersonal = IsPersonal(true)
+  private val IS_NOT_PERSONAL : IsPersonal = IsPersonal(false)
+  private val IS_NOT_READ_ONLY : IsReadOnly = IsReadOnly(false)
+
   private val ACCOUNT_1 = Account(
     name = USER_1,
-    isPersonal = true,
-    isReadOnly = false,
+    isPersonal = IS_PERSONAL,
+    isReadOnly = IS_NOT_READ_ONLY,
     accountCapabilities = Set(CORE_CAPABILITY))
   private val ACCOUNT_2 = Account(
     name = USER_2,
-    isPersonal = false,
-    isReadOnly = false,
+    isPersonal = IS_NOT_PERSONAL,
+    isReadOnly = IS_NOT_READ_ONLY,
     accountCapabilities = Set(CORE_CAPABILITY))
   private val ACCOUNTS = Map(
     USER_1_ID -> ACCOUNT_1,

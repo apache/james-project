@@ -28,10 +28,13 @@ import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.State.State
 
+case class IsPersonal(value: Boolean)
+case class IsReadOnly(value: Boolean)
+
 object Account {
   def apply(name: Username,
-            isPersonal: Boolean,
-            isReadOnly: Boolean,
+            isPersonal: IsPersonal,
+            isReadOnly: IsReadOnly,
             accountCapabilities: Set[_ <: Capability]): Account = {
 
     new Account(name, isPersonal, isReadOnly, accountCapabilities)
@@ -39,8 +42,8 @@ object Account {
 }
 
 final case class Account private(name: Username,
-                                 isPersonal: Boolean,
-                                 isReadOnly: Boolean,
+                                 isPersonal: IsPersonal,
+                                 isReadOnly: IsReadOnly,
                                  accountCapabilities: Set[_ <: Capability])
 
 object State {
