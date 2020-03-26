@@ -20,5 +20,12 @@
 package org.apache.james.jmap.model
 
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.model.Id.Id
+
+final case class ClientId(value: Id)
+
+final case class ServerId(value: Id)
+
+case class CreatedIds(value: Map[ClientId, ServerId])
 
 case class RequestObject(using: Seq[CapabilityIdentifier], methodCalls: Seq[Invocation], createdIds: Option[CreatedIds] = None)

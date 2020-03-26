@@ -24,7 +24,6 @@ import java.net.URL
 import org.apache.james.core.Username
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.CreatedIds.{ClientId, ServerId}
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
