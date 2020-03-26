@@ -38,9 +38,10 @@ class Serializer {
 
   private implicit def createdIdsIdWrites(implicit serverIdWriter: Writes[ServerId]): Writes[Map[ClientId, ServerId]] =
     (ids: Map[ClientId, ServerId]) => {
-      JsObject(ids.map {
-        case (clientId, serverId) => (clientId.value.value, serverIdWriter.writes(serverId))
-      }.toSeq)
+      ids.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (clientId: ClientId, serverId: ServerId) = kv
+        jsObject.+(clientId.value.value, serverIdWriter.writes(serverId))
+      })
     }
 
   private implicit def createdIdsIdRead(implicit serverIdReader: Reads[ServerId]): Reads[Map[ClientId, ServerId]] =
@@ -89,24 +90,25 @@ class Serializer {
   private implicit def setCapabilityWrites(implicit corePropertiesWriter: Writes[CoreCapabilityProperties],
                                    mailCapabilityWrites: Writes[MailCapabilityProperties]): Writes[Set[_ <: Capability]] =
     (set: Set[_ <: Capability]) => {
-      JsObject(set.map {
-        case capability: CoreCapability => (
-          capability.identifier.value, corePropertiesWriter.writes(capability.properties))
-        case capability: MailCapability => (
-          capability.identifier.value, mailCapabilityWrites.writes(capability.properties))
-      }.toSeq)
+      set.foldLeft(JsObject.empty)((jsObject, capability) => {
+        capability match {
+          case capability: CoreCapability => (
+            jsObject.+(capability.identifier.value, corePropertiesWriter.writes(capability.properties)))
+          case capability: MailCapability => (
+            jsObject.+(capability.identifier.value, mailCapabilityWrites.writes(capability.properties)))
+          case _ => jsObject
+        }
+      })
     }
 
   private implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(Set(capabilities.coreCapability, capabilities.mailCapability))
 
   private implicit def identifierMapWrite[Any](implicit idWriter: Writes[Id]): Writes[Map[CapabilityIdentifier, Any]] =
     (m: Map[CapabilityIdentifier, Any]) => {
-      JsObject(
-        m.map {
-          case (identifier, id: Id) => (identifier.value, idWriter.writes(id))
-          case _ => throw new RuntimeException("non supported serializer")
-        }.toSeq
-      )
+      m.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (identifier: CapabilityIdentifier, id: Id) = kv
+        jsObject.+(identifier.value, idWriter.writes(id))
+      })
     }
 
   private implicit val isPersonalFormat: Format[IsPersonal] = Json.valueFormat[IsPersonal]
