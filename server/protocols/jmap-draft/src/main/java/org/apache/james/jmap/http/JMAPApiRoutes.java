@@ -22,6 +22,9 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE;
 import static org.apache.james.jmap.http.JMAPUrls.JMAP;
+import static org.apache.james.jmap.http.LoggingHelper.jmapAuthContext;
+import static org.apache.james.jmap.http.LoggingHelper.jmapContext;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.io.IOException;
 
@@ -87,15 +90,16 @@ public class JMAPApiRoutes implements JMAPRoutes {
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response) {
         return authenticator.authenticate(request)
             .flatMap(session -> Flux.merge(
-                    userProvisioner.provisionUser(session),
-                    defaultMailboxesProvisioner.createMailboxesIfNeeded(session))
-                .then()
-                .thenReturn(session))
-            .flatMap(session -> Mono.from(metricFactory.runPublishingTimerMetric("JMAP-request",
-                post(request, response, session))))
+                userProvisioner.provisionUser(session),
+                defaultMailboxesProvisioner.createMailboxesIfNeeded(session))
+                .then(Mono.from(metricFactory.runPublishingTimerMetric("JMAP-request",
+                    post(request, response, session))))
+                .subscriberContext(jmapAuthContext(session)))
             .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, e))
+            .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(e -> handleInternalError(response, e))
+            .subscriberContext(jmapContext(request))
             .subscribeOn(Schedulers.elastic());
     }
 

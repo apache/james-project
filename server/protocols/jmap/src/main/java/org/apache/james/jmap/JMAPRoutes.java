@@ -48,7 +48,6 @@ public interface JMAPRoutes {
     Logger logger();
 
     default Mono<Void> handleInternalError(HttpServerResponse response, Throwable e) {
-        logger().error("Internal error", e);
         return response.status(INTERNAL_SERVER_ERROR).send();
     }
 

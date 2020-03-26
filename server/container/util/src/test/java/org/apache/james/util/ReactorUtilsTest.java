@@ -27,11 +27,13 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
@@ -278,6 +280,54 @@ class ReactorUtilsTest {
             List<ByteBuffer> expected = ImmutableList.of(ByteBuffer.wrap(bytes));
 
             assertThat(chunks).isEqualTo(expected);
+        }
+    }
+
+    @Nested
+    class MDCTest {
+        @Test
+        void contextShouldEnhanceMDC() {
+            String value = "value";
+            String key = "key";
+
+            Flux.just(1)
+                .doOnEach(ReactorUtils.log(() -> {
+                    assertThat(MDC.get(key)).isEqualTo(value);
+                }))
+                .subscriberContext(ReactorUtils.context("test", MDCBuilder.of(key, value)))
+                .blockLast();
+        }
+
+        @Test
+        void contextShouldNotOverwritePreviousKeys() {
+            String value1 = "value1";
+            String value2 = "value2";
+            String key = "key";
+
+            Flux.just(1)
+                .doOnEach(ReactorUtils.log(() -> {
+                    assertThat(MDC.get(key)).isEqualTo(value1);
+                }))
+                .subscriberContext(ReactorUtils.context("test", MDCBuilder.of(key, value1)))
+                .subscriberContext(ReactorUtils.context("test", MDCBuilder.of(key, value2)))
+                .blockLast();
+        }
+
+        @Test
+        void contextShouldCombineMDCs() {
+            String value1 = "value1";
+            String value2 = "value2";
+            String key1 = "key1";
+            String key2 = "key2";
+
+            Flux.just(1)
+                .doOnEach(ReactorUtils.log(() -> {
+                    assertThat(MDC.get(key1)).isEqualTo(value1);
+                    assertThat(MDC.get(key2)).isEqualTo(value2);
+                }))
+                .subscriberContext(ReactorUtils.context("test1", MDCBuilder.of(key1, value1)))
+                .subscriberContext(ReactorUtils.context("test2", MDCBuilder.of(key2, value2)))
+                .blockLast();
         }
     }
 }

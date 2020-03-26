@@ -23,6 +23,10 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.apache.james.jmap.HttpConstants.TEXT_PLAIN_CONTENT_TYPE;
 import static org.apache.james.jmap.http.JMAPUrls.DOWNLOAD;
+import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
+import static org.apache.james.jmap.http.LoggingHelper.jmapAuthContext;
+import static org.apache.james.jmap.http.LoggingHelper.jmapContext;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -116,9 +120,13 @@ public class DownloadRoutes implements JMAPRoutes {
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response, DownloadPath downloadPath) {
         return authenticator.authenticate(request)
             .flatMap(session -> Mono.from(metricFactory.runPublishingTimerMetric("JMAP-download-post",
-                respondAttachmentAccessToken(session, downloadPath, response)))
-            .onErrorResume(InternalErrorException.class, e -> handleInternalError(response, e))
-            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, e)))
+                    respondAttachmentAccessToken(session, downloadPath, response)))
+                .subscriberContext(jmapAuthContext(session)))
+            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, e))
+            .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
+            .onErrorResume(e -> handleInternalError(response, e))
+            .subscriberContext(jmapContext(request))
+            .subscriberContext(jmapAction("download-post"))
             .subscribeOn(Schedulers.elastic());
     }
 
@@ -142,9 +150,13 @@ public class DownloadRoutes implements JMAPRoutes {
     private Mono<Void> get(HttpServerRequest request, HttpServerResponse response, DownloadPath downloadPath) {
         return authenticator.authenticate(request)
             .flatMap(session -> Mono.from(metricFactory.runPublishingTimerMetric("JMAP-download-get",
-                download(session, downloadPath, response)))
-            .onErrorResume(InternalErrorException.class, e -> handleInternalError(response, e)))
+                    download(session, downloadPath, response)))
+                .subscriberContext(jmapAuthContext(session)))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, e))
+            .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
+            .onErrorResume(e -> handleInternalError(response, e))
+            .subscriberContext(jmapContext(request))
+            .subscriberContext(jmapAction("download-get"))
             .subscribeOn(Schedulers.elastic());
     }
 

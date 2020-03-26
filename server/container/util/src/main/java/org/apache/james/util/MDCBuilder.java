@@ -98,6 +98,11 @@ public class MDCBuilder {
         return new MDCBuilder();
     }
 
+    public static MDCBuilder of(String key, Object value) {
+        return create()
+            .addContext(key, value);
+    }
+
     private final ImmutableMap.Builder<String, String> contextMap = ImmutableMap.builder();
     private final ImmutableList.Builder<MDCBuilder> nestedBuilder = ImmutableList.builder();
 

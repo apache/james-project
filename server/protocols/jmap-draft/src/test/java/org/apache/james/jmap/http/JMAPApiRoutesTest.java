@@ -24,18 +24,19 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.jmap.http.JMAPUrls.JMAP;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
-import java.util.stream.Stream;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.methods.ErrorResponse;
 import org.apache.james.jmap.draft.methods.Method;
 import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.draft.model.InvocationResponse;
 import org.apache.james.jmap.draft.model.MethodCallId;
-import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -85,8 +86,8 @@ public class JMAPApiRoutesTest {
             .setBasePath(JMAP)
             .build();
 
-        when(mockedAuthFilter.authenticate(any()))
-            .thenReturn(Mono.just(mock(MailboxSession.class)));
+        doReturn(Mono.just(MailboxSessionUtil.create(Username.of("bob"))))
+            .when(mockedAuthFilter).authenticate(any());
         when(mockedUserProvisionner.provisionUser(any()))
             .thenReturn(Mono.empty());
         when(mockedMailboxesProvisionner.createMailboxesIfNeeded(any()))

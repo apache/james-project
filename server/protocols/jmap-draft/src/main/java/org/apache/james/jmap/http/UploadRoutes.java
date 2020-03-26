@@ -23,6 +23,10 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
 import static org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8;
 import static org.apache.james.jmap.http.JMAPUrls.UPLOAD;
+import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
+import static org.apache.james.jmap.http.LoggingHelper.jmapAuthContext;
+import static org.apache.james.jmap.http.LoggingHelper.jmapContext;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -91,11 +95,15 @@ public class UploadRoutes implements JMAPRoutes {
             return response.status(BAD_REQUEST).send();
         } else {
             return authenticator.authenticate(request)
-                .flatMap(session -> post(request, response, contentType, session))
+                .flatMap(session -> post(request, response, contentType, session)
+                    .subscriberContext(jmapAuthContext(session)))
                 .onErrorResume(CancelledUploadException.class, e -> handleCanceledUpload(response, e))
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
                 .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, e))
-                .onErrorResume(InternalErrorException.class, e -> handleInternalError(response, e))
+                .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
+                .onErrorResume(e -> handleInternalError(response, e))
+                .subscriberContext(jmapContext(request))
+                .subscriberContext(jmapAction("upload-get"))
                 .subscribeOn(Schedulers.elastic());
         }
     }

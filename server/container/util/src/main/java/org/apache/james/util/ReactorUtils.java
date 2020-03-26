@@ -18,16 +18,23 @@
  ****************************************************************/
 package org.apache.james.util;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Signal;
+import reactor.util.context.Context;
 
 public class ReactorUtils {
+
+    public static final String MDC_KEY_PREFIX = "MDC-";
+
     public static <T> Mono<T> executeAndEmpty(Runnable runnable) {
         return Mono.fromRunnable(runnable).then(Mono.empty());
     }
@@ -100,4 +107,47 @@ public class ReactorUtils {
     private static int byteToInt(ByteBuffer buffer) {
         return buffer.get() & 0xff;
     }
+
+    public static Consumer<Signal<?>> logOnError(Consumer<Throwable> errorLogStatement) {
+        return signal -> {
+            if (!signal.isOnError()) {
+                return;
+            }
+            try {
+                try (Closeable mdc = retrieveMDCBuilder(signal).build()) {
+                    errorLogStatement.accept(signal.getThrowable());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    public static Consumer<Signal<?>> log(Runnable logStatement) {
+        return signal -> {
+            try (Closeable mdc = retrieveMDCBuilder(signal).build()) {
+                logStatement.run();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    public static Context context(String keySuffix, MDCBuilder mdcBuilder) {
+        return Context.of(mdcKey(keySuffix), mdcBuilder);
+    }
+
+    private static String mdcKey(String value) {
+        return MDC_KEY_PREFIX + value;
+    }
+
+    private static MDCBuilder retrieveMDCBuilder(Signal<?> signal) {
+        return signal.getContext().stream()
+            .filter(entry -> entry.getKey() instanceof String)
+            .filter(entry -> entry.getValue() instanceof MDCBuilder)
+            .filter(entry -> ((String) entry.getKey()).startsWith(MDC_KEY_PREFIX))
+            .map(entry -> (MDCBuilder) entry.getValue())
+            .reduce(MDCBuilder.create(), MDCBuilder::addContext);
+    }
+
 }

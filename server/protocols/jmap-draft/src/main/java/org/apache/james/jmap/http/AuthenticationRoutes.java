@@ -29,6 +29,11 @@ import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 import static org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE;
 import static org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8;
 import static org.apache.james.jmap.http.JMAPUrls.AUTHENTICATION;
+import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
+import static org.apache.james.jmap.http.LoggingHelper.jmapAuthContext;
+import static org.apache.james.jmap.http.LoggingHelper.jmapContext;
+import static org.apache.james.util.ReactorUtils.log;
+import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -118,29 +123,40 @@ public class AuthenticationRoutes implements JMAPRoutes {
                     } else {
                         throw new RuntimeException(objectRequest.getClass() + " " + objectRequest);
                     }
-                })
-                .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
-                .onErrorResume(e -> handleInternalError(response, e))))
+                })))
+            .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
+            .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
+            .onErrorResume(e -> handleInternalError(response, e))
+            .subscriberContext(jmapContext(request))
+            .subscriberContext(jmapAction("auth-post"))
             .subscribeOn(Schedulers.elastic());
     }
 
     private Mono<Void> returnEndPointsResponse(HttpServerRequest req, HttpServerResponse resp) {
-        try {
             return authenticator.authenticate(req)
-                .then(resp.status(OK)
-                    .header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
-                    .sendString(Mono.just(mapper.writeValueAsString(EndPointsResponse
-                        .builder()
-                        .api(JMAPUrls.JMAP)
-                        .eventSource(JMAPUrls.NOT_IMPLEMENTED)
-                        .upload(JMAPUrls.UPLOAD)
-                        .download(JMAPUrls.DOWNLOAD)
-                        .build())))
-                    .then())
+                .flatMap(session -> returnEndPointsResponse(resp)
+                    .subscriberContext(jmapAuthContext(session)))
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(resp, e))
+                .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
                 .onErrorResume(InternalErrorException.class, e -> handleInternalError(resp, e))
                 .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, e))
+                .subscriberContext(jmapContext(req))
+                .subscriberContext(jmapAction("returnEndPoints"))
                 .subscribeOn(Schedulers.elastic());
+    }
+
+    private Mono<Void> returnEndPointsResponse(HttpServerResponse resp) {
+        try {
+            return resp.status(OK)
+                .header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
+                .sendString(Mono.just(mapper.writeValueAsString(EndPointsResponse
+                    .builder()
+                    .api(JMAPUrls.JMAP)
+                    .eventSource(JMAPUrls.NOT_IMPLEMENTED)
+                    .upload(JMAPUrls.UPLOAD)
+                    .download(JMAPUrls.DOWNLOAD)
+                    .build())))
+                .then();
         } catch (JsonProcessingException e) {
             throw new InternalErrorException("Error serializing endpoint response", e);
         }
@@ -151,8 +167,11 @@ public class AuthenticationRoutes implements JMAPRoutes {
 
         return authenticator.authenticate(req)
             .flatMap(session -> Mono.from(accessTokenManager.revoke(AccessToken.fromString(authorizationHeader)))
-                .then(resp.status(NO_CONTENT).send().then()))
+                    .then(resp.status(NO_CONTENT).send().then())
+                .subscriberContext(jmapAuthContext(session)))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, e))
+            .subscriberContext(jmapContext(req))
+            .subscriberContext(jmapAction("auth-delete"))
             .subscribeOn(Schedulers.elastic());
     }
 
@@ -204,8 +223,8 @@ public class AuthenticationRoutes implements JMAPRoutes {
             case EXPIRED:
                 return returnForbiddenAuthentication(resp);
             case INVALID:
-                LOGGER.warn("Use of an invalid ContinuationToken : {}", request.getToken().serialize());
-                return returnUnauthorizedResponse(resp);
+                return returnUnauthorizedResponse(resp)
+                    .doOnEach(log(() -> LOGGER.warn("Use of an invalid ContinuationToken : {}", request.getToken().serialize())));
             case OK:
                 return manageAuthenticationResponse(request, resp);
             default:
@@ -221,8 +240,8 @@ public class AuthenticationRoutes implements JMAPRoutes {
                 if (success) {
                     return returnAccessTokenResponse(resp, username);
                 } else {
-                    LOGGER.info("Authentication failure for {}", username);
-                    return returnUnauthorizedResponse(resp);
+                    return returnUnauthorizedResponse(resp)
+                        .doOnEach(log(() -> LOGGER.info("Authentication failure for {}", username)));
                 }
             });
     }
