@@ -17,6 +17,8 @@
  * under the License.                                           *
  ****************************************************************/
 
+// code copied from https://github.com/avdv/play-json-refined/blob/master/src/main/scala/de.cbley.refined.play.json/package.scala
+
 package org.apache.james.jmap
 
 import eu.timepit.refined.api.{RefType, Validate}
