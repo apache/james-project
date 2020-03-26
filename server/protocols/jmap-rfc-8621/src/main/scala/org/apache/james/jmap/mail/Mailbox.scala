@@ -67,27 +67,17 @@ case class DelegatedNamespace(user: Username) extends MailboxNamespace {
 }
 
 object SortOrder {
-  private val inboxOrder : UnsignedInt = 10L
-  private val archiveOrder : UnsignedInt = 20L
-  private val draftOrder : UnsignedInt = 30L
-  private val outboxOrder : UnsignedInt = 40L
-  private val sentOrder : UnsignedInt = 50L
-  private val trashOrder : UnsignedInt = 60L
-  private val spamOrder : UnsignedInt = 70L
-  private val templatesOrder : UnsignedInt = 80L
-  private val restoredMessageOrder : UnsignedInt = 90L
-  private val defaultOrder : UnsignedInt = 1000L
   private val defaultSortOrders = Map(
-      Role.INBOX -> SortOrder(inboxOrder),
-      Role.ARCHIVE -> SortOrder(archiveOrder),
-      Role.DRAFTS -> SortOrder(draftOrder),
-      Role.OUTBOX -> SortOrder(outboxOrder),
-      Role.SENT -> SortOrder(sentOrder),
-      Role.TRASH -> SortOrder(trashOrder),
-      Role.SPAM -> SortOrder(spamOrder),
-      Role.TEMPLATES -> SortOrder(templatesOrder),
-      Role.RESTORED_MESSAGES -> SortOrder(restoredMessageOrder))
-    .withDefaultValue( SortOrder(defaultOrder))
+      Role.INBOX -> SortOrder(10L),
+      Role.ARCHIVE -> SortOrder(20L),
+      Role.DRAFTS -> SortOrder(30L),
+      Role.OUTBOX -> SortOrder(40L),
+      Role.SENT -> SortOrder(50L),
+      Role.TRASH -> SortOrder(60L),
+      Role.SPAM -> SortOrder(70L),
+      Role.TEMPLATES -> SortOrder(80L),
+      Role.RESTORED_MESSAGES -> SortOrder(90L))
+    .withDefaultValue( SortOrder(1000L))
 
   def getSortOrder(role: Role): SortOrder = defaultSortOrders(role)
 }
