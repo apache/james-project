@@ -115,16 +115,16 @@ class Serializer {
   private implicit val accountWrites: Writes[Account] = Json.writes[Account]
   private implicit val sessionWrites: Writes[Session] = Json.writes[Session]
 
-  def serialize(session: Session): String = {
-    Json.stringify(Json.toJson(session))
+  def serialize(session: Session): JsValue = {
+    Json.toJson(session)
   }
 
-  def serialize(requestObject: RequestObject): String = {
-    Json.stringify(Json.toJson(requestObject))
+  def serialize(requestObject: RequestObject): JsValue = {
+    Json.toJson(requestObject)
   }
 
-  def serialize(responseObject: ResponseObject): String = {
-    Json.stringify(Json.toJson(responseObject))
+  def serialize(responseObject: ResponseObject): JsValue = {
+    Json.toJson(responseObject)
   }
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = {

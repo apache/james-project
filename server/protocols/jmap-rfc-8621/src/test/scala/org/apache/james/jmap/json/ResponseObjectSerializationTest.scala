@@ -90,7 +90,7 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin))
 
-      Json.parse(new Serializer().serialize(responseObject)) should be(Json.parse(expectedJson))
+      new Serializer().serialize(responseObject) should be(Json.parse(expectedJson))
     }
   }
 }

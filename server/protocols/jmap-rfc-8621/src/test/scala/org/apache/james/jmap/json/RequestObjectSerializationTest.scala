@@ -117,7 +117,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin))
 
-      Json.parse(actualValue) should equal(Json.parse(expectedValue))
+      actualValue should equal(Json.parse(expectedValue))
     }
 
     "succeed when write to string with CreatedIds" in {
@@ -141,7 +141,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin))
 
-      Json.parse(actualValue) should equal(Json.parse(expectedValue))
+      actualValue should equal(Json.parse(expectedValue))
     }
   }
 }

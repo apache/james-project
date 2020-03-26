@@ -209,7 +209,7 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
           |  "eventSourceUrl": "http://james.org",
           |  "state": "fda9342jcm"
           |}""".stripMargin)
-      Json.parse(new Serializer().serialize(SESSION)) should equal(json)
+      new Serializer().serialize(SESSION) should equal(json)
     }
   }
 }
