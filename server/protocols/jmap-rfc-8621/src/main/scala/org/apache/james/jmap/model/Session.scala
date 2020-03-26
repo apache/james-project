@@ -49,12 +49,12 @@ object State {
 
 case class Capabilities(coreCapability: CoreCapability, mailCapability: MailCapability)
 
-final case class Session private(capabilities: Capabilities,
-                           accounts: Map[Id, Account],
-                           primaryAccounts: Map[CapabilityIdentifier, Id],
-                           username: Username,
-                           apiUrl: URL,
-                           downloadUrl: URL,
-                           uploadUrl: URL,
-                           eventSourceUrl: URL,
-                           state: State)
+final case class Session(capabilities: Capabilities,
+                         accounts: Map[Id, Account],
+                         primaryAccounts: Map[CapabilityIdentifier, Id],
+                         username: Username,
+                         apiUrl: URL,
+                         downloadUrl: URL,
+                         uploadUrl: URL,
+                         eventSourceUrl: URL,
+                         state: State)
