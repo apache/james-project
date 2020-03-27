@@ -30,6 +30,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.BOB;
 import static org.apache.james.jmap.JMAPTestingConstants.BOB_PASSWORD;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN_ALIAS;
+import static org.apache.james.jmap.JMAPTestingConstants.FIRST_MAILBOX;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.JMAPTestingConstants.NAME;
 import static org.apache.james.jmap.JMAPTestingConstants.SECOND_ARGUMENTS;
@@ -39,6 +40,7 @@ import static org.apache.james.jmap.JmapCommonRequests.getDraftId;
 import static org.apache.james.jmap.JmapCommonRequests.getInboxId;
 import static org.apache.james.jmap.JmapCommonRequests.getMailboxId;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
+import static org.apache.james.jmap.JmapCommonRequests.getSentId;
 import static org.apache.james.jmap.JmapCommonRequests.getSetMessagesUpdateOKResponseAssertions;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,6 +81,7 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.HttpJmapAuthentication;
+import org.apache.james.jmap.JmapCommonRequests;
 import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.MessageIdProbe;
@@ -1045,6 +1048,96 @@ public abstract class SetMessagesMethodTest {
                 hasEntry(equalTo("isAnswered"), equalTo(false))
             )))
             ;
+    }
+
+    @Category(BasicFeature.class)
+    @Test
+    public void sendingAMailShouldLeadToAppropriateMailboxCountersOnOutbox() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME.asString();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+            .post("/jmap");
+
+        calmlyAwait.until(
+            () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, getSentId(accessToken)));
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body("[[\"getMailboxes\", {" +
+                "  \"ids\": [\"" + getOutboxId(accessToken) + "\"], " +
+                "  \"properties\" : [\"unreadMessages\", \"totalMessages\"]}, " +
+                "\"#0\"]]")
+            .log().ifValidationFails()
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(FIRST_MAILBOX + ".totalMessages", equalTo(0))
+            .body(FIRST_MAILBOX + ".unreadMessages", equalTo(0));
+    }
+
+    @Category(BasicFeature.class)
+    @Test
+    public void sendingAMailShouldLeadToAppropriateMailboxCountersOnSent() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME.asString();
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+            .post("/jmap");
+
+        calmlyAwait.until(
+            () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, getSentId(accessToken)));
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body("[[\"getMailboxes\", {" +
+                "  \"ids\": [\"" + getSentId(accessToken) + "\"], " +
+                "  \"properties\" : [\"unreadMessages\", \"totalMessages\"]}, " +
+                "\"#0\"]]")
+            .log().ifValidationFails()
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(FIRST_MAILBOX + ".totalMessages", equalTo(1))
+            .body(FIRST_MAILBOX + ".unreadMessages", equalTo(0));
     }
 
     @Test

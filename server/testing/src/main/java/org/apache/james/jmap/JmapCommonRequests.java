@@ -48,6 +48,10 @@ public class JmapCommonRequests {
         return getMailboxId(accessToken, Role.OUTBOX);
     }
 
+    public static String getSentId(AccessToken accessToken) {
+        return getMailboxId(accessToken, Role.SENT);
+    }
+
     public static String getDraftId(AccessToken accessToken) {
         return getMailboxId(accessToken, Role.DRAFTS);
     }
@@ -89,10 +93,14 @@ public class JmapCommonRequests {
     }
 
     public static boolean isAnyMessageFoundInRecipientsMailbox(AccessToken recipientToken, MailboxId mailboxId) {
+        return isAnyMessageFoundInRecipientsMailbox(recipientToken, mailboxId.serialize());
+    }
+
+    public static boolean isAnyMessageFoundInRecipientsMailbox(AccessToken recipientToken, String serialize) {
         try {
             with()
                 .header("Authorization", recipientToken.asString())
-                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId.serialize() + "\"]}}, \"#0\"]]")
+                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + serialize + "\"]}}, \"#0\"]]")
             .when()
                 .post("/jmap")
             .then()
