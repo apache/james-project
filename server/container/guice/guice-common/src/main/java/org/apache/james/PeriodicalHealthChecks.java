@@ -26,7 +26,10 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.core.healthcheck.Result;
 import org.apache.james.lifecycle.api.Startable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -36,6 +39,7 @@ import reactor.core.scheduler.Schedulers;
 
 public class PeriodicalHealthChecks implements Startable {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(PeriodicalHealthChecks.class);
     private final Set<HealthCheck> healthChecks;
     private final Scheduler scheduler;
     private final Duration period;
@@ -53,8 +57,36 @@ public class PeriodicalHealthChecks implements Startable {
             .flatMap(any -> Flux.fromIterable(healthChecks)
                 .flatMap(healthCheck ->
                     Mono.fromCallable(healthCheck::check)))
+                .flatMap(result ->
+                    Mono.fromRunnable(() -> logResult(result)))
+            .onErrorContinue(this::logError)
             .subscribeOn(Schedulers.elastic())
             .subscribe();
+    }
+
+    private void logResult(Result result) {
+        switch (result.getStatus()) {
+            case HEALTHY:
+                break;
+            case DEGRADED:
+                LOGGER.warn("DEGRADED: {} : {}", result.getComponentName().getName(), result.getCause());
+                break;
+            case UNHEALTHY:
+                if (result.getError().isPresent()) {
+                    LOGGER.error("UNHEALTHY: {} : {} : {}", result.getComponentName().getName(), result.getCause(), result.getError().get());
+                    break;
+                }
+
+                LOGGER.error("UNHEALTHY: {} : {}", result.getComponentName().getName(), result.getCause());
+                break;
+        }
+    }
+
+    private void logError(Throwable error, Object triggeringValue) {
+        if (triggeringValue instanceof Result) {
+            Result result = (Result) triggeringValue;
+            LOGGER.error("HealthCheck error for: {}, Cause: {}", result.getComponentName(), error);
+        }
     }
 
     @PreDestroy
