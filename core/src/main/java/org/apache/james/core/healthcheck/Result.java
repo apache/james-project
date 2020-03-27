@@ -26,25 +26,66 @@ import com.google.common.base.MoreObjects;
 public class Result {
 
     public static Result healthy(ComponentName componentName) {
-        return new Result(componentName, ResultStatus.HEALTHY, Optional.empty());
+        return Builder.builder().componentName(componentName).status(ResultStatus.HEALTHY).build();
     }
 
     public static Result unhealthy(ComponentName componentName, String cause) {
-        return new Result(componentName, ResultStatus.UNHEALTHY, Optional.of(cause));
+        return Builder.builder().componentName(componentName).status(ResultStatus.UNHEALTHY).cause(cause).build();
+    }
+
+    public static Result unhealthy(ComponentName componentName, String cause, Throwable error) {
+        return Builder.builder().componentName(componentName).status(ResultStatus.UNHEALTHY).cause(cause).error(error).build();
     }
 
     public static Result degraded(ComponentName componentName, String cause) {
-        return new Result(componentName, ResultStatus.DEGRADED, Optional.of(cause));
+        return Builder.builder().componentName(componentName).status(ResultStatus.DEGRADED).cause(cause).build();
+    }
+
+    public static class Builder {
+        private ComponentName componentName;
+        private ResultStatus status;
+        private String cause;
+        private Optional<Throwable> error = Optional.empty();
+
+        public Builder componentName(ComponentName componentName) {
+            this.componentName = componentName;
+            return this;
+        }
+
+        public Builder status(ResultStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public Builder cause(String cause) {
+            this.cause = cause;
+            return this;
+        }
+
+        public Builder error(Throwable error) {
+            this.error = Optional.of(error);
+            return this;
+        }
+
+        public Result build() {
+            return new Result(componentName, status, cause, error);
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
     }
 
     private final ComponentName componentName;
     private final ResultStatus status;
-    private final Optional<String> cause;
+    private final String cause;
+    private final Optional<Throwable> error;
 
-    private Result(ComponentName componentName, ResultStatus status, Optional<String> cause) {
+    public Result(ComponentName componentName, ResultStatus status, String cause, Optional<Throwable> error) {
         this.componentName = componentName;
         this.status = status;
         this.cause = cause;
+        this.error = error;
     }
 
     public ComponentName getComponentName() {
@@ -53,6 +94,14 @@ public class Result {
 
     public ResultStatus getStatus() {
         return status;
+    }
+
+    public String getCause() {
+        return cause;
+    }
+
+    public Optional<Throwable> getError() {
+        return error;
     }
 
     public boolean isHealthy() {
@@ -67,10 +116,6 @@ public class Result {
         return status == ResultStatus.UNHEALTHY;
     }
 
-    public Optional<String> getCause() {
-        return cause;
-    }
-
     @Override
     public final boolean equals(Object o) {
         if (o instanceof Result) {
@@ -78,14 +123,14 @@ public class Result {
 
             return Objects.equals(this.componentName, result.componentName)
                 && Objects.equals(this.status, result.status)
-                && Objects.equals(this.cause, result.cause);
+                && Objects.equals(this.error, result.error);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(componentName, status, cause);
+        return Objects.hash(componentName, status, error);
     }
 
     @Override
@@ -93,7 +138,7 @@ public class Result {
         return MoreObjects.toStringHelper(this)
             .add("componentName", componentName)
             .add("status", status)
-            .add("cause", cause)
+            .add("error", error)
             .toString();
     }
 }
