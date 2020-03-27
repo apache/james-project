@@ -29,12 +29,9 @@ import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MessageFastViewProjectionHealthCheck implements HealthCheck {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageFastViewProjectionHealthCheck.class);
     private static final ComponentName COMPONENT_NAME = new ComponentName("MessageFastViewProjection");
     private static final double MAXIMUM_MISS_PERCENTAGE_ACCEPTED = 10;
 
@@ -67,7 +64,6 @@ public class MessageFastViewProjectionHealthCheck implements HealthCheck {
         long totalCount = hitCount + missCount;
         double missCountPercentage = missCount * 100.0d / totalCount;
         if (missCountPercentage > MAXIMUM_MISS_PERCENTAGE_ACCEPTED) {
-            LOGGER.warn("MessageFastViewProjection missCountPercentage exceeded the threshold");
             return Result.degraded(COMPONENT_NAME,
                 String.format("retrieveMissCount percentage %s%% (%d/%d) is higher than the threshold %s%%",
                     missCountPercentage, missCount, totalCount, MAXIMUM_MISS_PERCENTAGE_ACCEPTED));

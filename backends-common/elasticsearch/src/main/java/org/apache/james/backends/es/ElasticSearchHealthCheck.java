@@ -32,14 +32,11 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
 
 public class ElasticSearchHealthCheck implements HealthCheck {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchHealthCheck.class);
     private static final ComponentName COMPONENT_NAME = new ComponentName("ElasticSearch Backend");
 
     private final Set<IndexName> indexNames;
@@ -69,8 +66,7 @@ public class ElasticSearchHealthCheck implements HealthCheck {
 
             return toHealthCheckResult(response);
         } catch (IOException e) {
-            LOGGER.error("Error while contacting cluster", e);
-            return Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster. Check James server logs.");
+            return Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster", e);
         }
     }
 
@@ -81,7 +77,6 @@ public class ElasticSearchHealthCheck implements HealthCheck {
             case YELLOW:
                 return Result.healthy(COMPONENT_NAME);
             case RED:
-                LOGGER.error("ElasticSearchCluster return RED status");
                 return Result.unhealthy(COMPONENT_NAME, response.getClusterName() + " status is RED");
             default:
                 throw new NotImplementedException("Un-handled ElasticSearch cluster status");

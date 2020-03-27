@@ -24,11 +24,8 @@ import javax.inject.Inject;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class EventDeadLettersHealthCheck implements HealthCheck {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventDeadLettersHealthCheck.class);
     private static final ComponentName COMPONENT_NAME = new ComponentName("EventDeadLettersHealthCheck");
 
     private final EventDeadLetters eventDeadLetters;
@@ -49,14 +46,12 @@ public class EventDeadLettersHealthCheck implements HealthCheck {
             boolean containEvents = eventDeadLetters.containEvents().block();
 
             if (containEvents) {
-                LOGGER.warn("EventDeadLetters is not empty");
                 return Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events. This might indicate transient failure on mailbox event processing.");
             }
 
             return Result.healthy(COMPONENT_NAME);
         } catch (Exception e) {
-            LOGGER.error("EventDeadLettersHealthCheck threw an exception", e);
-            return Result.unhealthy(COMPONENT_NAME, e.getMessage());
+            return Result.unhealthy(COMPONENT_NAME, "Error checking EventDeadLettersHealthCheck", e);
         }
     }
 }
