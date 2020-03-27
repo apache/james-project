@@ -111,14 +111,10 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
 
     private Mono<Void> handleOnQueueItem(MailQueueItem queueItem) {
         TimeMetric timeMetric = metricFactory.timer(SPOOL_PROCESSING);
-        try {
-            return Mono.fromCallable(processingActive::incrementAndGet)
-                .flatMap(ignore -> processMail(queueItem))
-                .doOnSuccess(any -> timeMetric.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD))
-                .doOnSuccess(any -> processingActive.decrementAndGet());
-        } catch (Throwable e) {
-            return Mono.error(e);
-        }
+        return Mono.fromCallable(processingActive::incrementAndGet)
+            .flatMap(ignore -> processMail(queueItem))
+            .doOnSuccess(any -> timeMetric.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD))
+            .doOnTerminate(processingActive::decrementAndGet);
     }
 
     private Mono<Void> processMail(MailQueueItem queueItem) {
