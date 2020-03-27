@@ -453,6 +453,9 @@ A dirty read is when data is read between the two writes of the denormalization 
 In order to ensure being offline, stop the traffic on SMTP, JMAP and IMAP ports, for example via re-configuration or 
 firewall rules.
 
+Due to all of those risks, a `I-KNOW-WHAT-I-M-DOING` header should be positioned to `ALL-SERVICES-ARE-OFFLINE` in order 
+to prevent accidental calls.
+
 #### Recomputing mailbox counters
 
 This task is only available on top of Guice Cassandra products.

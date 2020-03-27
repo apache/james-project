@@ -26,12 +26,22 @@ import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesT
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
+import com.google.common.base.Preconditions;
+
 public class SolveMailboxInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
     private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("SolveInconsistencies");
 
     @Inject
     public SolveMailboxInconsistenciesRequestToTask(SolveMailboxInconsistenciesService service) {
         super(REGISTRATION_KEY,
-            request -> new SolveMailboxInconsistenciesTask(service));
+            request -> {
+                Preconditions.checkArgument(request.headers("I-KNOW-WHAT-I-M-DOING")
+                        .equalsIgnoreCase("ALL-SERVICES-ARE-OFFLINE"),
+                    "Due to concurrency risks, a `I-KNOW-WHAT-I-M-DOING` header should be positioned to " +
+                        "`ALL-SERVICES-ARE-OFFLINE` in order to prevent accidental calls. " +
+                        "Check the documentation for details.");
+
+                return new SolveMailboxInconsistenciesTask(service);
+            });
     }
 }
