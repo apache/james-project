@@ -126,7 +126,8 @@ class SessionWithInitializedTablesFactoryTest {
         return () -> new SessionWithInitializedTablesFactory(
                 clusterConfiguration,
                 cluster,
-                MODULE)
+                MODULE,
+                CassandraModule.EMPTY_MODULE)
             .get();
     }
 

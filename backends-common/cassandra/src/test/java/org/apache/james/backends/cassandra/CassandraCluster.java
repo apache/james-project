@@ -61,7 +61,7 @@ public final class CassandraCluster implements AutoCloseable {
             .build();
         this.nonPrivilegedCluster = ClusterFactory.create(configuration);
         this.nonPrivilegedSession = new TestingSession(new SessionWithInitializedTablesFactory(configuration,
-            nonPrivilegedCluster, module).get());
+            nonPrivilegedCluster, module, CassandraModule.EMPTY_MODULE).get());
         this.typesProvider = new CassandraTypesProvider(module, nonPrivilegedSession);
     }
 

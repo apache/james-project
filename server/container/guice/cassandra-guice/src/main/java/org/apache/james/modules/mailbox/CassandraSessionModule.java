@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.init.ResilientClusterProvider;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.backends.cassandra.utils.CassandraHealthCheck;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
@@ -52,6 +53,8 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 public class CassandraSessionModule extends AbstractModule {
 
@@ -65,12 +68,13 @@ public class CassandraSessionModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(CassandraUtils.class).in(Scopes.SINGLETON);
-        bind(Session.class).toProvider(SessionWithInitializedTablesFactory.class);
         bind(Cluster.class).toProvider(ResilientClusterProvider.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraZonedDateTimeModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraSchemaVersionModule.MODULE);
+
+        Multibinder.newSetBinder(binder(), CassandraModule.class, Names.named(InjectionNames.CACHE));
 
         bind(CassandraSchemaVersionManager.class).in(Scopes.SINGLETON);
         bind(CassandraSchemaVersionDAO.class).in(Scopes.SINGLETON);
@@ -85,7 +89,27 @@ public class CassandraSessionModule extends AbstractModule {
 
     @Provides
     @Singleton
+    Session provideSession(SessionWithInitializedTablesFactory sessionFactory) {
+        return sessionFactory.get();
+    }
+
+    @Named(InjectionNames.CACHE)
+    @Provides
+    @Singleton
+    Session provideCacheSession(SessionWithInitializedTablesFactory sessionFactory) {
+        return sessionFactory.getCacheSession();
+    }
+
+    @Provides
+    @Singleton
     CassandraModule composeDataDefinitions(Set<CassandraModule> modules) {
+        return CassandraModule.aggregateModules(modules);
+    }
+
+    @Named(InjectionNames.CACHE)
+    @Provides
+    @Singleton
+    CassandraModule composeCacheDefinitions(@Named(InjectionNames.CACHE) Set<CassandraModule> modules) {
         return CassandraModule.aggregateModules(modules);
     }
 
