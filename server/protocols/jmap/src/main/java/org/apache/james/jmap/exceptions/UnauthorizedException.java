@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.exceptions;
+package org.apache.james.jmap.exceptions;
 
 public class UnauthorizedException extends RuntimeException {
     public UnauthorizedException() {

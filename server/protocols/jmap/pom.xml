@@ -32,6 +32,10 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-core</artifactId>
         </dependency>
         <dependency>
@@ -41,6 +45,10 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

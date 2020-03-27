@@ -31,7 +31,7 @@ import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
-import org.apache.james.jmap.draft.exceptions.UnauthorizedException;
+import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.tests.RecordingMetricFactory;

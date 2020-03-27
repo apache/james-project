@@ -19,12 +19,10 @@
 package org.apache.james.jmap.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.jmap.draft.api.SimpleTokenManager;
-import org.apache.james.jmap.draft.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.junit.Before;
 import org.junit.Test;

@@ -48,12 +48,12 @@ public interface JMAPRoutes {
         return response.status(INTERNAL_SERVER_ERROR).send();
     }
 
-    default Mono<Void> handleBadRequest(HttpServerResponse response, Exception e) {
+    default Mono<Void> handleBadRequest(HttpServerResponse response, Throwable e) {
         logger().warn("Invalid request received.", e);
         return response.status(BAD_REQUEST).send();
     }
 
-    default Mono<Void> handleAuthenticationFailure(HttpServerResponse response, Exception e) {
+    default Mono<Void> handleAuthenticationFailure(HttpServerResponse response, Throwable e) {
         logger().warn("Unauthorized", e);
         return response.status(UNAUTHORIZED).send();
     }
