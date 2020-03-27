@@ -115,20 +115,20 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         CurrentPositionInputStream currentPositionInputStream = new CurrentPositionInputStream(inputStream);
         AttachmentId attachmentId = AttachmentId.random();
         return ownerDAO.addOwner(attachmentId, owner)
-            .flatMap(any -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), currentPositionInputStream, LOW_COST)))
-            .map(blobId -> new DAOAttachment(attachmentId, blobId, contentType, currentPositionInputStream.getPosition()))
+            .then(Mono.from(blobStore.save(blobStore.getDefaultBucketName(), currentPositionInputStream, LOW_COST)))
+                .map(blobId -> new DAOAttachment(attachmentId, blobId, contentType, currentPositionInputStream.getPosition()))
             .flatMap(attachmentDAOV2::storeAttachment)
-            .map(any -> Attachment.builder()
+            .then(Mono.defer(() -> Mono.just(Attachment.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
                 .size(currentPositionInputStream.getPosition())
-                .build());
+                .build())));
     }
 
     @Override
     public List<MessageAttachment> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
         return Flux.fromIterable(parsedAttachments)
-            .flatMap(attachment -> storeAttachmentAsync(attachment, ownerMessageId))
+            .concatMap(attachment -> storeAttachmentAsync(attachment, ownerMessageId))
             .collectList()
             .block();
     }
