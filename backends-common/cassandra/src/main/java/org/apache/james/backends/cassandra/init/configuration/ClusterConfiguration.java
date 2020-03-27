@@ -39,6 +39,7 @@ public class ClusterConfiguration {
         private ImmutableList.Builder<Host> hosts;
         private boolean createKeyspace;
         private Optional<String> keyspace;
+        private Optional<String> cacheKeyspace;
         private Optional<Integer> replicationFactor;
         private Optional<Integer> minDelay;
         private Optional<Integer> maxRetry;
@@ -55,6 +56,7 @@ public class ClusterConfiguration {
             hosts = ImmutableList.builder();
             createKeyspace = false;
             keyspace = Optional.empty();
+            cacheKeyspace = Optional.empty();
             replicationFactor = Optional.empty();
             minDelay = Optional.empty();
             maxRetry = Optional.empty();
@@ -91,6 +93,15 @@ public class ClusterConfiguration {
         public Builder keyspace(Optional<String> keyspace) {
             this.keyspace = keyspace;
             return this;
+        }
+
+        public Builder cacheKeyspace(Optional<String> cacheKeyspace) {
+            this.keyspace = keyspace;
+            return this;
+        }
+
+        public Builder cacheKeyspace(String cacheKeyspace) {
+            return cacheKeyspace(Optional.of(cacheKeyspace));
         }
 
         public Builder keyspace(String keyspace) {
@@ -198,6 +209,7 @@ public class ClusterConfiguration {
                 hosts.build(),
                 createKeyspace,
                 keyspace.orElse(DEFAULT_KEYSPACE),
+                cacheKeyspace.orElse(DEFAULT_CACHE_KEYSPACE),
                 replicationFactor.orElse(DEFAULT_REPLICATION_FACTOR),
                 minDelay.orElse(DEFAULT_CONNECTION_MIN_DELAY),
                 maxRetry.orElse(DEFAULT_CONNECTION_MAX_RETRIES),
@@ -215,6 +227,7 @@ public class ClusterConfiguration {
     private static final String CASSANDRA_NODES = "cassandra.nodes";
     public static final String CASSANDRA_CREATE_KEYSPACE = "cassandra.keyspace.create";
     public static final String CASSANDRA_KEYSPACE = "cassandra.keyspace";
+    public static final String CASSANDRA_CACHE_KEYSPACE = "cassandra.keyspace.cache";
     public static final String CASSANDRA_USER = "cassandra.user";
     public static final String CASSANDRA_PASSWORD = "cassandra.password";
     public static final String CASSANDRA_SSL = "cassandra.ssl";
@@ -225,6 +238,7 @@ public class ClusterConfiguration {
     public static final String CONNECTION_RETRY_MIN_DELAY = "cassandra.retryConnection.minDelay";
 
     private static final String DEFAULT_KEYSPACE = "apache_james";
+    private static final String DEFAULT_CACHE_KEYSPACE = "apache_james_cache";
     private static final int DEFAULT_REPLICATION_FACTOR = 1;
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 10;
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 5000;
@@ -246,6 +260,7 @@ public class ClusterConfiguration {
         ClusterConfiguration.Builder builder = ClusterConfiguration.builder()
             .hosts(listCassandraServers(configuration))
             .keyspace(Optional.ofNullable(configuration.getString(CASSANDRA_KEYSPACE, null)))
+            .cacheKeyspace(Optional.ofNullable(configuration.getString(CASSANDRA_CACHE_KEYSPACE, null)))
             .replicationFactor(Optional.ofNullable(configuration.getInteger(REPLICATION_FACTOR, null)))
             .minDelay(Optional.ofNullable(configuration.getInteger(CONNECTION_RETRY_MIN_DELAY, null)))
             .maxRetry(Optional.ofNullable(configuration.getInteger(CONNECTION_MAX_RETRY, null)))
@@ -304,6 +319,7 @@ public class ClusterConfiguration {
     private final List<Host> hosts;
     private final boolean createKeyspace;
     private final String keyspace;
+    private final String cacheKeyspace;
     private final int replicationFactor;
     private final int minDelay;
     private final int maxRetry;
@@ -316,13 +332,14 @@ public class ClusterConfiguration {
     private final Optional<String> password;
     private final boolean durableWrites;
 
-    public ClusterConfiguration(List<Host> hosts, boolean createKeyspace, String keyspace, int replicationFactor, int minDelay, int maxRetry,
+    public ClusterConfiguration(List<Host> hosts, boolean createKeyspace, String keyspace, String cacheKeyspace, int replicationFactor, int minDelay, int maxRetry,
                                 Optional<QueryLoggerConfiguration> queryLoggerConfiguration, Optional<PoolingOptions> poolingOptions,
                                 int readTimeoutMillis, int connectTimeoutMillis, boolean useSsl, Optional<String> username,
                                 Optional<String> password, boolean durableWrites) {
         this.hosts = hosts;
         this.createKeyspace = createKeyspace;
         this.keyspace = keyspace;
+        this.cacheKeyspace = cacheKeyspace;
         this.replicationFactor = replicationFactor;
         this.minDelay = minDelay;
         this.maxRetry = maxRetry;
@@ -350,6 +367,10 @@ public class ClusterConfiguration {
 
     public String getKeyspace() {
         return keyspace;
+    }
+
+    public String getCacheKeyspace() {
+        return cacheKeyspace;
     }
 
     public int getReplicationFactor() {

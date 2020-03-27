@@ -35,25 +35,37 @@ public class KeyspaceFactory {
     private static final String SYSTEM_SCHEMA = "system_schema";
     private static final String KEYSPACES = "keyspaces";
     private static final String KEYSPACE_NAME = "keyspace_name";
+    private static final int CACHE_REPLICATION_FACTOR = 1;
 
     public static void createKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
         if (clusterConfiguration.shouldCreateKeyspace()) {
             doCreateKeyspace(clusterConfiguration, cluster);
+            doCreateCacheKeyspace(clusterConfiguration, cluster);
         }
     }
 
     private static void doCreateKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
+        createKeyspace(cluster, clusterConfiguration.getKeyspace(),
+            clusterConfiguration.getReplicationFactor(),
+            clusterConfiguration.isDurableWrites());
+    }
+
+    private static void createKeyspace(Cluster cluster, String keyspace, int replicationFactor, boolean durableWrites) {
         try (Session session = cluster.connect()) {
-            if (!keyspaceExist(cluster, clusterConfiguration.getKeyspace())) {
-                session.execute(SchemaBuilder.createKeyspace(clusterConfiguration.getKeyspace())
+            if (!keyspaceExist(cluster, keyspace)) {
+                session.execute(SchemaBuilder.createKeyspace(keyspace)
                     .with()
                     .replication(ImmutableMap.<String, Object>builder()
                         .put("class", "SimpleStrategy")
-                        .put("replication_factor", clusterConfiguration.getReplicationFactor())
+                        .put("replication_factor", replicationFactor)
                         .build())
-                    .durableWrites(clusterConfiguration.isDurableWrites()));
+                    .durableWrites(durableWrites));
             }
         }
+    }
+
+    private static void doCreateCacheKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
+        createKeyspace(cluster, clusterConfiguration.getCacheKeyspace(), CACHE_REPLICATION_FACTOR, clusterConfiguration.isDurableWrites());
     }
 
     @VisibleForTesting
