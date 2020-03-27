@@ -20,7 +20,6 @@ package org.apache.james.mailbox.store.mail;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.List;
 
