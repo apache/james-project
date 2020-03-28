@@ -243,9 +243,9 @@ class CassandraMailboxCounterDAOTest {
     @Test
     void resetCountersShouldNoopWhenZeroAndNoData() {
         MailboxCounters counters = MailboxCounters.builder()
-            .unseen(0)
-            .count(0)
             .mailboxId(MAILBOX_ID)
+            .count(0)
+            .unseen(0)
             .build();
 
         testee.resetCounters(counters).block();
@@ -257,9 +257,9 @@ class CassandraMailboxCounterDAOTest {
     @Test
     void resetCountersShouldNoopWhenZeroAndZeroData() {
         MailboxCounters counters = MailboxCounters.builder()
-            .unseen(0)
-            .count(0)
             .mailboxId(MAILBOX_ID)
+            .count(0)
+            .unseen(0)
             .build();
 
         testee.incrementUnseen(MAILBOX_ID).block();
@@ -274,9 +274,9 @@ class CassandraMailboxCounterDAOTest {
     @Test
     void resetCountersShouldReInitCountWhenNothing() {
         MailboxCounters counters = MailboxCounters.builder()
-            .unseen(45)
-            .count(78)
             .mailboxId(MAILBOX_ID)
+            .count(78)
+            .unseen(45)
             .build();
 
         testee.resetCounters(counters).block();
@@ -288,9 +288,9 @@ class CassandraMailboxCounterDAOTest {
     @Test
     void resetCountersShouldReInitCountWhenData() {
         MailboxCounters counters = MailboxCounters.builder()
-            .unseen(45)
-            .count(78)
             .mailboxId(MAILBOX_ID)
+            .count(78)
+            .unseen(45)
             .build();
 
         testee.incrementCount(MAILBOX_ID).block();
@@ -305,9 +305,9 @@ class CassandraMailboxCounterDAOTest {
     @Test
     void resetCountersShouldBeIdempotent() {
         MailboxCounters counters = MailboxCounters.builder()
-            .unseen(45)
-            .count(78)
             .mailboxId(MAILBOX_ID)
+            .count(78)
+            .unseen(45)
             .build();
 
         testee.resetCounters(counters).block();
@@ -320,9 +320,9 @@ class CassandraMailboxCounterDAOTest {
     @Test
     void resetCountersShouldReInitCountWhenZeroUnseen() {
         MailboxCounters counters = MailboxCounters.builder()
-            .unseen(0)
-            .count(78)
             .mailboxId(MAILBOX_ID)
+            .count(78)
+            .unseen(0)
             .build();
 
         testee.incrementCount(MAILBOX_ID).block();
@@ -337,9 +337,9 @@ class CassandraMailboxCounterDAOTest {
     @Test
     void resetCountersShouldReInitCountWhenZeroCount() {
         MailboxCounters counters = MailboxCounters.builder()
-            .unseen(46)
-            .count(0)
             .mailboxId(MAILBOX_ID)
+            .count(0)
+            .unseen(46)
             .build();
 
         testee.incrementCount(MAILBOX_ID).block();

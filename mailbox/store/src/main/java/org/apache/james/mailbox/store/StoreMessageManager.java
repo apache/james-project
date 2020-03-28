@@ -220,8 +220,8 @@ public class StoreMessageManager implements MessageManager {
         }
         return MailboxCounters.builder()
             .mailboxId(mailbox.getMailboxId())
-            .unseen(0)
             .count(0)
+            .unseen(0)
             .build();
     }
 

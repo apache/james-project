@@ -19,44 +19,50 @@
 
 package org.apache.james.mailbox.model;
 
-import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 
 public class MailboxCounters {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxCounters.class);
 
-    public static class Builder {
-        private Optional<Long> count = Optional.empty();
-        private Optional<Long> unseen = Optional.empty();
-        private Optional<MailboxId> mailboxId = Optional.empty();
-
-        public Builder mailboxId(MailboxId mailboxId) {
-            this.mailboxId = Optional.of(mailboxId);
-            return this;
+    public interface Builder {
+        @FunctionalInterface
+        interface RequireMailboxId {
+            RequireCount mailboxId(MailboxId mailboxId);
         }
 
-        public Builder count(long count) {
-            this.count = Optional.of(count);
-            return this;
+        @FunctionalInterface
+        interface RequireCount {
+            RequireUnseen count(long count);
         }
 
-        public Builder unseen(long unseen) {
-            this.unseen = Optional.of(unseen);
-            return this;
+        @FunctionalInterface
+        interface RequireUnseen {
+            FinalStage unseen(long unseen);
         }
 
-        public MailboxCounters build() {
-            Preconditions.checkState(count.isPresent(), "count is compulsory");
-            Preconditions.checkState(unseen.isPresent(), "unseen is compulsory");
-            Preconditions.checkState(mailboxId.isPresent(), "mailboxId is compulsory");
-            return new MailboxCounters(mailboxId.get(), count.get(), unseen.get());
+        class FinalStage {
+            private final long count;
+            private final long unseen;
+            private final MailboxId mailboxId;
+
+            FinalStage(long count, long unseen, MailboxId mailboxId) {
+                this.count = count;
+                this.unseen = unseen;
+                this.mailboxId = mailboxId;
+            }
+
+            public MailboxCounters build() {
+                return new MailboxCounters(mailboxId, count, unseen);
+            }
         }
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder.RequireMailboxId builder() {
+        return mailboxId -> count -> unseen -> new Builder.FinalStage(count, unseen, mailboxId);
     }
 
     private final MailboxId mailboxId;

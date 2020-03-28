@@ -122,9 +122,9 @@ public class CassandraMailboxCounterDAO {
 
     private MailboxCounters emptyCounters(CassandraId mailboxId) {
         return MailboxCounters.builder()
+            .mailboxId(mailboxId)
             .count(0)
             .unseen(0)
-            .mailboxId(mailboxId)
             .build();
     }
 
