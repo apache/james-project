@@ -20,14 +20,78 @@
 
 package org.apache.james.mailbox.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MailboxCountersTest {
 
+    public static final TestId MAILBOX_ID = TestId.of(36);
+
     @Test
     void mailboxCountersShouldRespectBeanContract() {
         EqualsVerifier.forClass(MailboxCounters.class).verify();
+    }
+
+    @Test
+    void sanitizeShouldCorrectNegativeCount() {
+        assertThat(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(-1)
+                .unseen(0)
+                .build()
+                .sanitize())
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(0)
+                .unseen(0)
+                .build());
+    }
+
+    @Test
+    void sanitizeShouldCorrectNegativeUnseen() {
+        assertThat(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(12)
+                .unseen(-1)
+                .build()
+                .sanitize())
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(12)
+                .unseen(0)
+                .build());
+    }
+
+    @Test
+    void sanitizeShouldCorrectUnseenExceedingCount() {
+        assertThat(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(12)
+                .unseen(36)
+                .build()
+                .sanitize())
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(12)
+                .unseen(12)
+                .build());
+    }
+
+    @Test
+    void sanitizeShouldNoopWhenValid() {
+        assertThat(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(36)
+                .unseen(12)
+                .build()
+                .sanitize())
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
+                .count(36)
+                .unseen(12)
+                .build());
     }
 }

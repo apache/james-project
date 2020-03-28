@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public class MailboxCounters {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxCounters.class);
@@ -61,6 +62,20 @@ public class MailboxCounters {
         }
     }
 
+    public static class Sanitized extends MailboxCounters {
+        static Sanitized of(MailboxId mailboxId, long count, long unseen) {
+            Preconditions.checkArgument(count >= 0, "'count' need to be strictly positive");
+            Preconditions.checkArgument(unseen >= 0, "'count' need to be strictly positive");
+            Preconditions.checkArgument(count >= unseen, "'unseen' cannot exceed 'count'");
+
+            return new Sanitized(mailboxId, count, unseen);
+        }
+
+        private Sanitized(MailboxId mailboxId, long count, long unseen) {
+            super(mailboxId, count, unseen);
+        }
+    }
+
     public static Builder.RequireMailboxId builder() {
         return mailboxId -> count -> unseen -> new Builder.FinalStage(count, unseen, mailboxId);
     }
@@ -85,6 +100,23 @@ public class MailboxCounters {
 
     public long getUnseen() {
         return unseen;
+    }
+
+    public MailboxCounters.Sanitized sanitize() {
+        if (!isValid()) {
+            LOGGER.warn("Invalid mailbox counters for {} : {} / {}", mailboxId, unseen, count);
+        }
+        long sanitizedCount = Math.max(count, 0);
+        long positiveUnseen = Math.max(unseen, 0);
+        long sanitizedUnseen = Math.min(positiveUnseen, sanitizedCount);
+
+        return Sanitized.of(mailboxId, sanitizedCount, sanitizedUnseen);
+    }
+
+    private boolean isValid() {
+        return count >= 0
+            && unseen >= 0
+            && count >= unseen;
     }
 
     @Override
