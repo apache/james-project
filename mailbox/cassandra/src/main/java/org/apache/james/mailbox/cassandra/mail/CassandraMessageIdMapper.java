@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 import javax.mail.Flags;
 
@@ -58,6 +59,7 @@ import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
+    public static final BiFunction<UpdatedFlags, UpdatedFlags, UpdatedFlags> KEEP_FIRST = (a, b) -> a;
 
     private final MailboxMapper mailboxMapper;
     private final CassandraMailboxDAO mailboxDAO;
@@ -212,7 +214,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .filterWhen(mailboxId -> haveMetaData(messageId, mailboxId))
             .concatMap(mailboxId -> flagsUpdateWithRetry(newState, updateMode, mailboxId, messageId))
             .flatMap(this::updateCounts)
-            .collect(Guavate.toImmutableMap(Pair::getLeft, Pair::getRight))
+            .collect(Guavate.toImmutableMap(Pair::getLeft, Pair::getRight, KEEP_FIRST))
             .block();
     }
 
@@ -222,15 +224,14 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     private Mono<Pair<MailboxId, UpdatedFlags>> flagsUpdateWithRetry(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {
-        try {
-            return Mono.defer(() -> tryFlagsUpdate(newState, updateMode, mailboxId, messageId))
-                .single()
-                .retry(cassandraConfiguration.getFlagsUpdateMessageIdMaxRetry())
-                .map(pair -> buildUpdatedFlags(pair.getRight(), pair.getLeft()));
-        } catch (MailboxDeleteDuringUpdateException e) {
-            LOGGER.info("Mailbox {} was deleted during flag update", mailboxId);
-            return Mono.empty();
-        }
+        return Mono.defer(() -> tryFlagsUpdate(newState, updateMode, mailboxId, messageId))
+            .single()
+            .retry(cassandraConfiguration.getFlagsUpdateMessageIdMaxRetry())
+            .map(pair -> buildUpdatedFlags(pair.getRight(), pair.getLeft()))
+            .onErrorResume(MailboxDeleteDuringUpdateException.class, e -> {
+                LOGGER.info("Mailbox {} was deleted during flag update", mailboxId);
+                return Mono.empty();
+            });
     }
 
     private Pair<MailboxId, UpdatedFlags> buildUpdatedFlags(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, Flags oldFlags) {
@@ -261,9 +262,9 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(MailboxId mailboxId, MessageId messageId, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailboxId;
         return imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(cassandraId))
-            .single()
-            .switchIfEmpty(Mono.error(MailboxDeleteDuringUpdateException::new))
-            .flatMap(oldComposedId -> updateFlags(newState, updateMode, cassandraId, oldComposedId));
+            .flatMap(oldComposedId -> updateFlags(newState, updateMode, cassandraId, oldComposedId))
+            .next()
+            .switchIfEmpty(Mono.error(MailboxDeleteDuringUpdateException::new));
     }
 
     private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(Flags newState, MessageManager.FlagsUpdateMode updateMode, CassandraId cassandraId, ComposedMessageIdWithMetaData oldComposedId) {

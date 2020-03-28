@@ -42,6 +42,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -71,7 +72,7 @@ public abstract class MessageIdMapperTest {
     private MailboxMapper mailboxMapper;
     private MessageIdMapper sut;
 
-    private Mailbox benwaInboxMailbox;
+    protected Mailbox benwaInboxMailbox;
     private Mailbox benwaWorkMailbox;
     
     protected SimpleMailboxMessage message1;
@@ -925,6 +926,20 @@ public abstract class MessageIdMapperTest {
 
         assertThat(messageMapper.countMessagesInMailbox(benwaInboxMailbox))
             .isEqualTo(2);
+    }
+
+    @Test
+    void setFlagsShouldUpdateTwoMessagesInTheSameMailboxWithTheSameMessageId() throws Exception {
+        addMessageAndSetModSeq(benwaInboxMailbox, message1);
+        addMessageAndSetModSeq(benwaInboxMailbox, message1);
+
+        sut.setFlags(message1.getMessageId(), ImmutableList.of(message1.getMailboxId()), new Flags(Flag.ANSWERED), FlagsUpdateMode.ADD);
+
+        assertThat(sut.find(ImmutableList.of(message1.getMessageId()), FetchType.Metadata))
+            .extracting(MailboxMessage::createFlags)
+            .containsExactly(
+                new Flags(Flag.ANSWERED),
+                new Flags(Flag.ANSWERED));
     }
 
     @Test
