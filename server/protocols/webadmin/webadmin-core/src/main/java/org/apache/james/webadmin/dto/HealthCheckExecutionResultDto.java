@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.dto;
 
+import java.util.Optional;
+
 import org.apache.james.core.healthcheck.Result;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -46,7 +48,7 @@ public class HealthCheckExecutionResultDto {
         return healthCheckResult.getStatus().getValue();
     }
     
-    public String getCause() {
+    public Optional<String> getCause() {
         return healthCheckResult.getCause();
     }
     

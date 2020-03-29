@@ -26,62 +26,27 @@ import com.google.common.base.MoreObjects;
 public class Result {
 
     public static Result healthy(ComponentName componentName) {
-        return Builder.builder().componentName(componentName).status(ResultStatus.HEALTHY).build();
+        return new Result(componentName, ResultStatus.HEALTHY, Optional.empty(), Optional.empty());
     }
 
     public static Result unhealthy(ComponentName componentName, String cause) {
-        return Builder.builder().componentName(componentName).status(ResultStatus.UNHEALTHY).cause(cause).build();
+        return new Result(componentName, ResultStatus.UNHEALTHY, Optional.of(cause), Optional.empty());
     }
 
     public static Result unhealthy(ComponentName componentName, String cause, Throwable error) {
-        return Builder.builder().componentName(componentName).status(ResultStatus.UNHEALTHY).cause(cause).error(error).build();
+        return new Result(componentName, ResultStatus.UNHEALTHY, Optional.of(cause), Optional.of(error));
     }
 
     public static Result degraded(ComponentName componentName, String cause) {
-        return Builder.builder().componentName(componentName).status(ResultStatus.DEGRADED).cause(cause).build();
-    }
-
-    public static class Builder {
-        private ComponentName componentName;
-        private ResultStatus status;
-        private String cause;
-        private Optional<Throwable> error = Optional.empty();
-
-        public Builder componentName(ComponentName componentName) {
-            this.componentName = componentName;
-            return this;
-        }
-
-        public Builder status(ResultStatus status) {
-            this.status = status;
-            return this;
-        }
-
-        public Builder cause(String cause) {
-            this.cause = cause;
-            return this;
-        }
-
-        public Builder error(Throwable error) {
-            this.error = Optional.of(error);
-            return this;
-        }
-
-        public Result build() {
-            return new Result(componentName, status, cause, error);
-        }
-
-        public static Builder builder() {
-            return new Builder();
-        }
+        return new Result(componentName, ResultStatus.DEGRADED, Optional.of(cause), Optional.empty());
     }
 
     private final ComponentName componentName;
     private final ResultStatus status;
-    private final String cause;
+    private final Optional<String> cause;
     private final Optional<Throwable> error;
 
-    public Result(ComponentName componentName, ResultStatus status, String cause, Optional<Throwable> error) {
+    private Result(ComponentName componentName, ResultStatus status, Optional<String> cause, Optional<Throwable> error) {
         this.componentName = componentName;
         this.status = status;
         this.cause = cause;
@@ -96,7 +61,7 @@ public class Result {
         return status;
     }
 
-    public String getCause() {
+    public Optional<String> getCause() {
         return cause;
     }
 
@@ -123,6 +88,7 @@ public class Result {
 
             return Objects.equals(this.componentName, result.componentName)
                 && Objects.equals(this.status, result.status)
+                && Objects.equals(this.cause, result.cause)
                 && Objects.equals(this.error, result.error);
         }
         return false;
@@ -130,7 +96,7 @@ public class Result {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(componentName, status, error);
+        return Objects.hash(componentName, status, cause, error);
     }
 
     @Override
@@ -138,7 +104,7 @@ public class Result {
         return MoreObjects.toStringHelper(this)
             .add("componentName", componentName)
             .add("status", status)
-            .add("error", error)
+            .add("cause", cause)
             .toString();
     }
 }
