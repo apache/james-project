@@ -59,8 +59,7 @@ public class PeriodicalHealthChecksTest {
         scheduler = VirtualTimeScheduler.getOrSet();
         testee = new PeriodicalHealthChecks(ImmutableSet.of(mockHealthCheck1, mockHealthCheck2),
             scheduler,
-            new PeriodicalHealthChecksConfiguration(Duration.ofMillis(PERIOD)));
-        testee.start();
+            new PeriodicalHealthChecksConfiguration(Duration.ofSeconds(PERIOD)));
     }
 
     @AfterEach
@@ -70,20 +69,36 @@ public class PeriodicalHealthChecksTest {
     
     @Test
     void startShouldCallHealthCheckAtLeastOnce() {
-        scheduler.advanceTimeBy(Duration.ofMillis(PERIOD));
+        testee.start();
+
+        scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD));
         verify(mockHealthCheck1, atLeast(1)).check();
     }
 
     @Test
     void startShouldCallHealthCheckMultipleTimes() {
-        scheduler.advanceTimeBy(Duration.ofMillis(PERIOD * EXPECTED_INVOKED_TIME));
+        testee.start();
+
+        scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD * EXPECTED_INVOKED_TIME));
         verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).check();
     }
 
     @Test
     void startShouldCallAllHealthChecks() {
-        scheduler.advanceTimeBy(Duration.ofMillis(PERIOD * EXPECTED_INVOKED_TIME));
+        testee.start();
+
+        scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD * EXPECTED_INVOKED_TIME));
         verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).check();
+        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).check();
+    }
+
+    @Test
+    void startShouldCallRemainingHealthChecksWhenAHealthCheckThrows() {
+        when(mockHealthCheck1.check()).thenThrow(new RuntimeException());
+
+        testee.start();
+
+        scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD * EXPECTED_INVOKED_TIME));
         verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).check();
     }
 }
