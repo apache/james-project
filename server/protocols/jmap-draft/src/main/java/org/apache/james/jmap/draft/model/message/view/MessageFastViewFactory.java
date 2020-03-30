@@ -140,6 +140,9 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
     }
 
     private Mono<List<MessageResult>> fetch(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) {
+        if (messageIds.isEmpty()) {
+            return Mono.empty();
+        }
         return Mono.fromCallable(() -> messageIdManager.getMessages(messageIds, fetchGroup, mailboxSession))
             .onErrorResume(MailboxException.class, ex -> {
                 LOGGER.error("cannot read messages {}", messageIds, ex);
