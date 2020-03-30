@@ -223,7 +223,7 @@ public class MailboxFactory {
         }
         MailboxPath parent = levels.get(levels.size() - 2);
         return userMailboxesMetadata.map(list -> retrieveParentFromMetadata(parent, list))
-            .orElse(retrieveParentFromBackend(mailboxSession, parent));
+            .orElseGet(Throwing.supplier(() -> retrieveParentFromBackend(mailboxSession, parent)).sneakyThrow());
     }
 
     private Optional<MailboxId> retrieveParentFromBackend(MailboxSession mailboxSession, MailboxPath parent) throws MailboxException {

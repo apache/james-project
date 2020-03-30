@@ -34,6 +34,7 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestProvisionner;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -195,6 +196,35 @@ public class MailboxFactoryTest {
 
         assertThat(retrievedMailbox.getNamespace())
             .isEqualTo(MailboxNamespace.personal());
+    }
+
+    @Test
+    public void buildShouldRelyOnPreloadedMailboxes() throws Exception {
+        MailboxPath inbox = MailboxPath.inbox(user);
+        Optional<MailboxId> inboxId = mailboxManager.createMailbox(inbox, mailboxSession);
+        Optional<MailboxId> otherId = mailboxManager.createMailbox(MailboxPath.forUser(user, "INBOX.child"), mailboxSession);
+
+        InMemoryId preLoadedId = InMemoryId.of(45);
+        Mailbox retrievedMailbox = sut.builder()
+            .id(otherId.get())
+            .session(mailboxSession)
+            .usingPreloadedMailboxesMetadata(Optional.of(ImmutableList.of(new MailboxMetaData(
+                inbox,
+                preLoadedId,
+                DELIMITER,
+                MailboxMetaData.Children.NO_INFERIORS,
+                MailboxMetaData.Selectability.NONE,
+                MailboxACL.EMPTY,
+                MailboxCounters.builder()
+                    .mailboxId(preLoadedId)
+                    .count(0)
+                    .unseen(0)
+                    .build()))))
+            .build()
+            .get();
+
+        assertThat(retrievedMailbox.getParentId())
+            .contains(preLoadedId);
     }
 
     @Test
