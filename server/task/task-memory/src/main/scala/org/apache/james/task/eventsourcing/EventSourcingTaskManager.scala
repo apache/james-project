@@ -25,8 +25,8 @@ import java.util
 import com.google.common.annotations.VisibleForTesting
 import javax.annotation.PreDestroy
 import javax.inject.Inject
-import org.apache.james.eventsourcing.{AggregateId, EventSourcingSystem, Subscriber}
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
+import org.apache.james.eventsourcing.{AggregateId, EventSourcingSystem, Subscriber}
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.task.TaskManager.ReachedTimeoutException
 import org.apache.james.task._
@@ -90,7 +90,6 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
 
   private def listScala: List[TaskExecutionDetails] = executionDetailsProjection
     .list
-    .flatMap(details => executionDetailsProjection.load(details.taskId))
 
   override def cancel(id: TaskId): Unit = {
     val command = RequestCancel(id)
