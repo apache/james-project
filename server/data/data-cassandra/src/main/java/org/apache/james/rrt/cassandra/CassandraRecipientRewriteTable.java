@@ -44,14 +44,17 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     private final CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
     private final CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;
     private final CassandraSchemaVersionDAO cassandraSchemaVersionDAO;
+    private final SchemaVersion initialSchemaVersion;
 
     @Inject
-    public CassandraRecipientRewriteTable(CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO,
-                                          CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO,
-                                          CassandraSchemaVersionDAO cassandraSchemaVersionDAO) {
+    CassandraRecipientRewriteTable(CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO,
+                                   CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO,
+                                   CassandraSchemaVersionDAO cassandraSchemaVersionDAO) {
         this.cassandraRecipientRewriteTableDAO = cassandraRecipientRewriteTableDAO;
         this.cassandraMappingsSourcesDAO = cassandraMappingsSourcesDAO;
         this.cassandraSchemaVersionDAO = cassandraSchemaVersionDAO;
+
+        initialSchemaVersion = retrieveCurrentSchemaVersion();
     }
 
     @Override
@@ -98,14 +101,26 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
         Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
             "Not supported mapping of type %s", mapping.getType());
 
-        SchemaVersion schemaVersion = cassandraSchemaVersionDAO.getCurrentSchemaVersion()
-            .block()
-            .orElse(CassandraSchemaVersionManager.MIN_VERSION);
-
-        if (schemaVersion.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION)) {
+        if (isLegacy()) {
             return super.listSources(mapping);
         }
 
         return cassandraMappingsSourcesDAO.retrieveSources(mapping).toStream();
+    }
+
+    private boolean isLegacy() {
+        return isLegacy(initialSchemaVersion)
+            // If we started with a legacy james then maybe schema version had been updated since then
+            || isLegacy(retrieveCurrentSchemaVersion());
+    }
+
+    private boolean isLegacy(SchemaVersion schemaVersion) {
+        return schemaVersion.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION);
+    }
+
+    private SchemaVersion retrieveCurrentSchemaVersion() {
+        return cassandraSchemaVersionDAO.getCurrentSchemaVersion()
+            .block()
+            .orElse(CassandraSchemaVersionManager.MIN_VERSION);
     }
 }
