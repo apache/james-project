@@ -144,7 +144,7 @@ public class MailboxFactoryTest {
         mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
         MailboxId parentId = mailboxManager.getMailbox(parentMailboxPath, mailboxSession).getId();
 
-        MailboxPath mailboxPath = MailboxPath.forUser(user, "INBOX.mailbox");
+        MailboxPath mailboxPath = parentMailboxPath.child("mailbox", '.');
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
         Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession);
@@ -202,7 +202,7 @@ public class MailboxFactoryTest {
     public void buildShouldRelyOnPreloadedMailboxes() throws Exception {
         MailboxPath inbox = MailboxPath.inbox(user);
         Optional<MailboxId> inboxId = mailboxManager.createMailbox(inbox, mailboxSession);
-        Optional<MailboxId> otherId = mailboxManager.createMailbox(MailboxPath.forUser(user, "INBOX.child"), mailboxSession);
+        Optional<MailboxId> otherId = mailboxManager.createMailbox(inbox.child("child", '.'), mailboxSession);
 
         InMemoryId preLoadedId = InMemoryId.of(45);
         Mailbox retrievedMailbox = sut.builder()

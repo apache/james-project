@@ -61,6 +61,34 @@ class MailboxPathTest {
     }
 
     @Test
+    void childShouldConcatenateChildNameWithParentForlder() {
+        assertThat(MailboxPath.forUser(USER, "folder")
+            .child("toto", '.'))
+            .isEqualTo(MailboxPath.forUser(USER, "folder.toto"));
+    }
+
+    @Test
+    void childShouldThrowWhenNull() {
+        MailboxPath path = MailboxPath.forUser(USER, "folder");
+        assertThatThrownBy(() -> path.child(null, '.'))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void childShouldThrowWhenEmpty() {
+        MailboxPath path = MailboxPath.forUser(USER, "folder");
+        assertThatThrownBy(() -> path.child("", '.'))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void childShouldThrowWhenContainsDelimiter() {
+        MailboxPath path = MailboxPath.forUser(USER, "folder");
+        assertThatThrownBy(() -> path.child("a.b", '.'))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void getHierarchyLevelsShouldReturnPathWhenOneLevel() {
         assertThat(MailboxPath.forUser(USER, "inbox")
             .getHierarchyLevels('.'))

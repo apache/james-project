@@ -32,6 +32,8 @@ import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -106,6 +108,13 @@ public class MailboxPath {
 
     public boolean belongsTo(MailboxSession mailboxSession) {
         return user.equals(mailboxSession.getUser());
+    }
+
+    public MailboxPath child(String childName, char delimiter) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(childName), "'childName' should not be null or empty");
+        Preconditions.checkArgument(!childName.contains(String.valueOf(delimiter)), "'childName' should not contain delimiter");
+
+        return new MailboxPath(namespace, user, name + delimiter + childName);
     }
 
     /**
