@@ -89,8 +89,14 @@ public class UploadRoutes implements JMAPRoutes {
     @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
-            new JMAPRoute(new Endpoint(HttpMethod.POST, UPLOAD), JMAPRoutes.corsHeaders(this::post)),
-            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, UPLOAD), CORS_CONTROL)
+            JMAPRoute.builder()
+                .endpoint(new Endpoint(HttpMethod.POST, UPLOAD))
+                .action(this::post)
+                .corsHeaders(),
+            JMAPRoute.builder()
+                .endpoint(new Endpoint(HttpMethod.OPTIONS, UPLOAD))
+                .action(CORS_CONTROL)
+                .noCorsHeaders()
         );
     }
 

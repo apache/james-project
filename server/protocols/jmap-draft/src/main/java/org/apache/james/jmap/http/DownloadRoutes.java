@@ -100,12 +100,30 @@ public class DownloadRoutes implements JMAPRoutes {
     @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
-            new JMAPRoute(new Endpoint(HttpMethod.POST, DOWNLOAD_FROM_ID), JMAPRoutes.corsHeaders(this::postFromId)),
-            new JMAPRoute(new Endpoint(HttpMethod.GET, DOWNLOAD_FROM_ID), JMAPRoutes.corsHeaders(this::getFromId)),
-            new JMAPRoute(new Endpoint(HttpMethod.POST, DOWNLOAD_FROM_ID_AND_NAME), JMAPRoutes.corsHeaders(this::postFromIdAndName)),
-            new JMAPRoute(new Endpoint(HttpMethod.GET, DOWNLOAD_FROM_ID_AND_NAME), JMAPRoutes.corsHeaders(this::getFromIdAndName)),
-            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, DOWNLOAD_FROM_ID), CORS_CONTROL),
-            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, DOWNLOAD_FROM_ID_AND_NAME), CORS_CONTROL)
+            JMAPRoute.builder()
+                .endpoint(new Endpoint(HttpMethod.POST, DOWNLOAD_FROM_ID))
+                .action(this::postFromId)
+                .corsHeaders(),
+            JMAPRoute.builder()
+                .endpoint(new Endpoint(HttpMethod.GET, DOWNLOAD_FROM_ID))
+                .action(this::getFromId)
+                .corsHeaders(),
+            JMAPRoute.builder()
+                .endpoint(new Endpoint(HttpMethod.POST, DOWNLOAD_FROM_ID_AND_NAME))
+                .action(this::postFromIdAndName)
+                .corsHeaders(),
+            JMAPRoute.builder()
+                .endpoint(new Endpoint(HttpMethod.GET, DOWNLOAD_FROM_ID_AND_NAME))
+                .action(this::getFromIdAndName)
+                .corsHeaders(),
+            JMAPRoute.builder()
+                .endpoint(new Endpoint(HttpMethod.OPTIONS, DOWNLOAD_FROM_ID))
+                .action(CORS_CONTROL)
+                .noCorsHeaders(),
+            JMAPRoute.builder()
+                .endpoint(new Endpoint(HttpMethod.OPTIONS, DOWNLOAD_FROM_ID_AND_NAME))
+                .action(CORS_CONTROL)
+                .noCorsHeaders()
         );
     }
 

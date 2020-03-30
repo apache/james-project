@@ -226,7 +226,10 @@ class JMAPServerTest {
         @Override
         public Stream<JMAPRoute> routes() {
             return endpoints.stream()
-                .map(endpoint -> new JMAPRoute(endpoint, (request, response) -> sendVersionResponse(response)));
+                .map(endpoint -> JMAPRoute.builder()
+                    .endpoint(endpoint)
+                    .action((request, response) -> sendVersionResponse(response))
+                    .noCorsHeaders());
         }
 
         @Override

@@ -29,10 +29,48 @@ public class JMAPRoute {
         Publisher<Void> handleRequest(HttpServerRequest request, HttpServerResponse response);
     }
 
+    public static class Builder {
+        @FunctionalInterface
+        public interface RequireEndpoint {
+            RequireAction endpoint(Endpoint endpoint);
+        }
+
+        @FunctionalInterface
+        public interface RequireAction {
+            ReadyToBuild action(Action action);
+        }
+
+        public static class ReadyToBuild {
+            private final Endpoint endpoint;
+            private final Action action;
+
+            ReadyToBuild(Endpoint endpoint, Action action) {
+                this.endpoint = endpoint;
+                this.action = action;
+            }
+
+            public JMAPRoute corsHeaders() {
+                return build(JMAPRoutes.corsHeaders(action));
+            }
+
+            public JMAPRoute noCorsHeaders() {
+                return build(action);
+            }
+
+            private JMAPRoute build(Action action) {
+                return new JMAPRoute(endpoint, action);
+            }
+        }
+    }
+
+    public static Builder.RequireEndpoint builder() {
+        return endpoint -> action -> new Builder.ReadyToBuild(endpoint, action);
+    }
+
     private final Endpoint endpoint;
     private final Action action;
 
-    public JMAPRoute(Endpoint endpoint, Action action) {
+    private JMAPRoute(Endpoint endpoint, Action action) {
         this.endpoint = endpoint;
         this.action = action;
     }
