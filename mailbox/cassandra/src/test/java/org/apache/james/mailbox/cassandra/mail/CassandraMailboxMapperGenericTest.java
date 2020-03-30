@@ -21,7 +21,9 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -31,10 +33,10 @@ import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraMailboxMapperGenericTest extends MailboxMapperTest {
-
+class CassandraMailboxMapperGenericTest {
     private static final CassandraModule MODULES = CassandraModule.aggregateModules(
         CassandraSchemaVersionModule.MODULE,
         CassandraAclModule.MODULE,
@@ -45,14 +47,34 @@ class CassandraMailboxMapperGenericTest extends MailboxMapperTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULES);
 
-    @Override
-    protected MailboxMapper createMailboxMapper() {
-        return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
-            .getInstance(CassandraMailboxMapper.class);
+    @Nested
+    class V5 extends MailboxMapperTest {
+        @Override
+        protected MailboxMapper createMailboxMapper() {
+            return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
+                .getInstance(CassandraMailboxMapper.class);
+        }
+
+        @Override
+        protected MailboxId generateId() {
+            return CassandraId.timeBased();
+        }
     }
 
-    @Override
-    protected MailboxId generateId() {
-        return CassandraId.timeBased();
+    @Nested
+    class V7 extends MailboxMapperTest {
+        @Override
+        protected MailboxMapper createMailboxMapper() {
+            new CassandraSchemaVersionDAO(cassandraCluster.getCassandraCluster().getConf())
+                .updateVersion(new SchemaVersion(7))
+                .block();
+            return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
+                .getInstance(CassandraMailboxMapper.class);
+        }
+
+        @Override
+        protected MailboxId generateId() {
+            return CassandraId.timeBased();
+        }
     }
 }

@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.SubscriptionManagerContract;
@@ -86,6 +87,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         BlobStore blobStore = null;
         CassandraUidProvider uidProvider = null;
         CassandraModSeqProvider modSeqProvider = null;
+        CassandraSchemaVersionDAO versionDAO = null;
 
         subscriptionManager = new StoreSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
@@ -110,6 +112,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
                 ownerDAO,
                 aclMapper,
                 userMailboxRightsDAO,
+                versionDAO,
                 CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CassandraConfiguration.DEFAULT_CONFIGURATION));
     }

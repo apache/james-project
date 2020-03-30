@@ -35,6 +35,7 @@ import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -104,7 +105,8 @@ class CassandraMailboxMapperTest {
             mailboxPathDAO,
             mailboxPathV2DAO,
             userMailboxRightsDAO,
-            aclMapper);
+            aclMapper,
+            new CassandraSchemaVersionDAO(cassandra.getConf()));
     }
 
     @Nested

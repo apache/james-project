@@ -25,6 +25,9 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -54,31 +57,45 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private static final int MAX_RETRY = 5;
     private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
     private static final Duration MAX_RETRY_BACKOFF = Duration.ofMillis(1000);
+    private static final SchemaVersion MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION = new SchemaVersion(6);
 
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraMailboxPathDAOImpl mailboxPathDAO;
     private final CassandraMailboxPathV2DAO mailboxPathV2DAO;
     private final CassandraACLMapper cassandraACLMapper;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
+    private final boolean needMailboxPathV1Support;
 
     @Inject
-    public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAOImpl mailboxPathDAO, CassandraMailboxPathV2DAO mailboxPathV2DAO, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraACLMapper aclMapper) {
+    public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAOImpl mailboxPathDAO, CassandraMailboxPathV2DAO mailboxPathV2DAO, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraACLMapper aclMapper, CassandraSchemaVersionDAO versionDAO) {
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
         this.mailboxPathV2DAO = mailboxPathV2DAO;
         this.userMailboxRightsDAO = userMailboxRightsDAO;
         this.cassandraACLMapper = aclMapper;
+
+        this.needMailboxPathV1Support = versionDAO.getCurrentSchemaVersion()
+            .block()
+            .orElse(CassandraSchemaVersionManager.MIN_VERSION)
+            .isBefore(MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION);
     }
 
     @Override
     public void delete(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        Flux.merge(
-                mailboxPathDAO.delete(mailbox.generateAssociatedPath()),
-                mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()))
+        deletePath(mailbox)
             .thenEmpty(mailboxDAO.delete(mailboxId)
                 .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF))
             .block();
+    }
+
+    private Flux<Void> deletePath(Mailbox mailbox) {
+        if (needMailboxPathV1Support) {
+            return Flux.merge(
+                mailboxPathDAO.delete(mailbox.generateAssociatedPath()),
+                mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()));
+        }
+        return Flux.from(mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()));
     }
 
     @Override
@@ -137,13 +154,20 @@ public class CassandraMailboxMapper implements MailboxMapper {
         String fixedNamespace = query.getFixedNamespace();
         Username fixedUser = query.getFixedUser();
 
-        return Flux.concat(mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser),
-                mailboxPathDAO.listUserMailboxes(fixedNamespace, fixedUser))
+        return listPaths(fixedNamespace, fixedUser)
             .filter(idAndPath -> query.isPathMatch(idAndPath.getMailboxPath()))
             .distinct(CassandraIdAndPath::getMailboxPath)
             .concatMap(this::retrieveMailbox)
             .collectList()
             .block();
+    }
+
+    private Flux<CassandraIdAndPath> listPaths(String fixedNamespace, Username fixedUser) {
+        if (needMailboxPathV1Support) {
+            return Flux.concat(mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser),
+                mailboxPathDAO.listUserMailboxes(fixedNamespace, fixedUser));
+        }
+        return mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser);
     }
 
     private Mono<Mailbox> retrieveMailbox(CassandraIdAndPath idAndPath) {

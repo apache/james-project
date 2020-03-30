@@ -26,6 +26,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -83,7 +84,8 @@ class MailboxPathV2MigrationTest {
             daoV1,
             daoV2,
             userMailboxRightsDAO,
-            new CassandraACLMapper(cassandra.getConf(), userMailboxRightsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION));
+            new CassandraACLMapper(cassandra.getConf(), userMailboxRightsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION),
+            new CassandraSchemaVersionDAO(cassandra.getConf()));
     }
 
     @Test
