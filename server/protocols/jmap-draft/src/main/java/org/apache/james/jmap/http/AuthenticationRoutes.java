@@ -46,7 +46,6 @@ import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
 import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.JMAPUrls;
-import org.apache.james.jmap.Version;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
@@ -108,10 +107,10 @@ public class AuthenticationRoutes implements JMAPRoutes {
     @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
-            new JMAPRoute(new Endpoint(HttpMethod.POST, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::post)),
-            new JMAPRoute(new Endpoint(HttpMethod.GET, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::returnEndPointsResponse)),
-            new JMAPRoute(new Endpoint(HttpMethod.DELETE, AUTHENTICATION), Version.DRAFT, JMAPRoutes.corsHeaders(this::delete)),
-            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, AUTHENTICATION), Version.DRAFT, CORS_CONTROL)
+            new JMAPRoute(new Endpoint(HttpMethod.POST, AUTHENTICATION), JMAPRoutes.corsHeaders(this::post)),
+            new JMAPRoute(new Endpoint(HttpMethod.GET, AUTHENTICATION), JMAPRoutes.corsHeaders(this::returnEndPointsResponse)),
+            new JMAPRoute(new Endpoint(HttpMethod.DELETE, AUTHENTICATION), JMAPRoutes.corsHeaders(this::delete)),
+            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, AUTHENTICATION), CORS_CONTROL)
         );
     }
 

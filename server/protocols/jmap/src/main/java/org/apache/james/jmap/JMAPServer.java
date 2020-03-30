@@ -40,13 +40,13 @@ public class JMAPServer implements Startable {
     private static final int RANDOM_PORT = 0;
 
     private final JMAPConfiguration configuration;
-    private final Set<JMAPRoutes> jmapRoutes;
+    private final Set<JMAPRoutesHandler> jmapRoutesHandlers;
     private Optional<DisposableServer> server;
 
     @Inject
-    public JMAPServer(JMAPConfiguration configuration, Set<JMAPRoutes> jmapRoutes) {
+    public JMAPServer(JMAPConfiguration configuration, Set<JMAPRoutesHandler> jmapRoutesHandlers) {
         this.configuration = configuration;
-        this.jmapRoutes = jmapRoutes;
+        this.jmapRoutesHandlers = jmapRoutesHandlers;
         this.server = Optional.empty();
     }
 
@@ -74,8 +74,8 @@ public class JMAPServer implements Startable {
 
     private JMAPRoute.Action handleVersionRoute(HttpServerRequest request) {
         try {
-            return jmapRoutes.stream()
-                .flatMap(JMAPRoutes::routes)
+            return jmapRoutesHandlers.stream()
+                .flatMap(jmapRoutesHandler -> jmapRoutesHandler.routes(request))
                 .filter(jmapRoute -> jmapRoute.matches(request))
                 .map(JMAPRoute::getAction)
                 .findFirst()
@@ -84,8 +84,6 @@ public class JMAPServer implements Startable {
             return (req, res) -> res.status(BAD_REQUEST).send();
         }
     }
-
-
 
     @PreDestroy
     public void stop() {

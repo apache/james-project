@@ -60,7 +60,7 @@ class JMAPServerTest {
         .enable()
         .randomPort()
         .build();
-    private static final ImmutableSet<JMAPRoutes> NO_ROUTES = ImmutableSet.of();
+    private static final ImmutableSet<JMAPRoutesHandler> NO_ROUTES_HANDLERS = ImmutableSet.of();
 
     private static final ImmutableSet<Endpoint> AUTHENTICATION_ENDPOINTS = ImmutableSet.of(
         new Endpoint(HttpMethod.POST, JMAPUrls.AUTHENTICATION),
@@ -70,15 +70,21 @@ class JMAPServerTest {
         new Endpoint(HttpMethod.POST, JMAPUrls.JMAP),
         new Endpoint(HttpMethod.DELETE, JMAPUrls.JMAP)
     );
-    private static final ImmutableSet<JMAPRoutes> FAKE_ROUTES = ImmutableSet.of(
-        new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, Version.DRAFT),
-        new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, Version.RFC8621),
-        new FakeJMAPRoutes(JMAP_ENDPOINTS, Version.DRAFT)
+
+    private static final ImmutableSet<JMAPRoutesHandler> FAKE_ROUTES_HANDLERS = ImmutableSet.of(
+        new JMAPRoutesHandler(
+            Version.DRAFT,
+            new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, Version.DRAFT),
+            new FakeJMAPRoutes(JMAP_ENDPOINTS, Version.DRAFT)),
+        new JMAPRoutesHandler(
+            Version.RFC8621,
+            new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, Version.RFC8621))
     );
+
 
     @Test
     void serverShouldAnswerWhenStarted() {
-        JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES);
+        JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES_HANDLERS);
         jmapServer.start();
 
         try {
@@ -96,14 +102,14 @@ class JMAPServerTest {
 
     @Test
     void startShouldNotThrowWhenConfigurationDisabled() {
-        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES);
+        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS);
 
         assertThatCode(jmapServer::start).doesNotThrowAnyException();
     }
 
     @Test
     void stopShouldNotThrowWhenConfigurationDisabled() {
-        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES);
+        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS);
         jmapServer.start();
 
         assertThatCode(jmapServer::stop).doesNotThrowAnyException();
@@ -111,7 +117,7 @@ class JMAPServerTest {
 
     @Test
     void getPortShouldThrowWhenServerIsNotStarted() {
-        JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES);
+        JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES_HANDLERS);
 
         assertThatThrownBy(jmapServer::getPort)
             .isInstanceOf(IllegalStateException.class);
@@ -119,7 +125,7 @@ class JMAPServerTest {
 
     @Test
     void getPortShouldThrowWhenDisabledConfiguration() {
-        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES);
+        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS);
         jmapServer.start();
 
         assertThatThrownBy(jmapServer::getPort)
@@ -132,7 +138,7 @@ class JMAPServerTest {
 
         @BeforeEach
         void setUp() {
-            server = new JMAPServer(TEST_CONFIGURATION, FAKE_ROUTES);
+            server = new JMAPServer(TEST_CONFIGURATION, FAKE_ROUTES_HANDLERS);
             server.start();
 
             RestAssured.requestSpecification = new RequestSpecBuilder()
@@ -220,7 +226,7 @@ class JMAPServerTest {
         @Override
         public Stream<JMAPRoute> routes() {
             return endpoints.stream()
-                .map(endpoint -> new JMAPRoute(endpoint, version, (request, response) -> sendVersionResponse(response)));
+                .map(endpoint -> new JMAPRoute(endpoint, (request, response) -> sendVersionResponse(response)));
         }
 
         @Override

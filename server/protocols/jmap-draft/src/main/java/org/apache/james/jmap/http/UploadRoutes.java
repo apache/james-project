@@ -38,7 +38,6 @@ import javax.inject.Inject;
 import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
 import org.apache.james.jmap.JMAPRoutes;
-import org.apache.james.jmap.Version;
 import org.apache.james.jmap.draft.exceptions.BadRequestException;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
 import org.apache.james.jmap.draft.exceptions.UnauthorizedException;
@@ -90,8 +89,8 @@ public class UploadRoutes implements JMAPRoutes {
     @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
-            new JMAPRoute(new Endpoint(HttpMethod.POST, UPLOAD), Version.DRAFT, JMAPRoutes.corsHeaders(this::post)),
-            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, UPLOAD), Version.DRAFT, CORS_CONTROL)
+            new JMAPRoute(new Endpoint(HttpMethod.POST, UPLOAD), JMAPRoutes.corsHeaders(this::post)),
+            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, UPLOAD), CORS_CONTROL)
         );
     }
 

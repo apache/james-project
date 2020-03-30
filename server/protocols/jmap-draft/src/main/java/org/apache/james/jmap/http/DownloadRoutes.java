@@ -40,7 +40,6 @@ import javax.inject.Inject;
 import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
 import org.apache.james.jmap.JMAPRoutes;
-import org.apache.james.jmap.Version;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
 import org.apache.james.jmap.draft.exceptions.BadRequestException;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
@@ -101,12 +100,12 @@ public class DownloadRoutes implements JMAPRoutes {
     @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
-            new JMAPRoute(new Endpoint(HttpMethod.POST, DOWNLOAD_FROM_ID), Version.DRAFT, JMAPRoutes.corsHeaders(this::postFromId)),
-            new JMAPRoute(new Endpoint(HttpMethod.GET, DOWNLOAD_FROM_ID), Version.DRAFT, JMAPRoutes.corsHeaders(this::getFromId)),
-            new JMAPRoute(new Endpoint(HttpMethod.POST, DOWNLOAD_FROM_ID_AND_NAME), Version.DRAFT, JMAPRoutes.corsHeaders(this::postFromIdAndName)),
-            new JMAPRoute(new Endpoint(HttpMethod.GET, DOWNLOAD_FROM_ID_AND_NAME), Version.DRAFT, JMAPRoutes.corsHeaders(this::getFromIdAndName)),
-            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, DOWNLOAD_FROM_ID), Version.DRAFT, CORS_CONTROL),
-            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, DOWNLOAD_FROM_ID_AND_NAME), Version.DRAFT, CORS_CONTROL)
+            new JMAPRoute(new Endpoint(HttpMethod.POST, DOWNLOAD_FROM_ID), JMAPRoutes.corsHeaders(this::postFromId)),
+            new JMAPRoute(new Endpoint(HttpMethod.GET, DOWNLOAD_FROM_ID), JMAPRoutes.corsHeaders(this::getFromId)),
+            new JMAPRoute(new Endpoint(HttpMethod.POST, DOWNLOAD_FROM_ID_AND_NAME), JMAPRoutes.corsHeaders(this::postFromIdAndName)),
+            new JMAPRoute(new Endpoint(HttpMethod.GET, DOWNLOAD_FROM_ID_AND_NAME), JMAPRoutes.corsHeaders(this::getFromIdAndName)),
+            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, DOWNLOAD_FROM_ID), CORS_CONTROL),
+            new JMAPRoute(new Endpoint(HttpMethod.OPTIONS, DOWNLOAD_FROM_ID_AND_NAME), CORS_CONTROL)
         );
     }
 

@@ -19,12 +19,6 @@
 
 package org.apache.james.jmap;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT;
-
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import org.reactivestreams.Publisher;
 
 import reactor.netty.http.server.HttpServerRequest;
@@ -35,15 +29,11 @@ public class JMAPRoute {
         Publisher<Void> handleRequest(HttpServerRequest request, HttpServerResponse response);
     }
 
-    private static final String JMAP_VERSION_HEADER = "jmapVersion=";
-
     private final Endpoint endpoint;
-    private final Version version;
     private final Action action;
 
-    public JMAPRoute(Endpoint endpoint, Version version, Action action) {
+    public JMAPRoute(Endpoint endpoint, Action action) {
         this.endpoint = endpoint;
-        this.version = version;
         this.action = action;
     }
 
@@ -51,29 +41,11 @@ public class JMAPRoute {
         return endpoint;
     }
 
-    public Version getVersion() {
-        return version;
-    }
-
     public Action getAction() {
         return action;
     }
 
     public boolean matches(HttpServerRequest request) {
-        return getVersion().equals(extractRequestVersionHeader(request))
-            && getEndpoint().matches(request);
-    }
-
-    private Version extractRequestVersionHeader(HttpServerRequest request) {
-        return Optional.ofNullable(request.requestHeaders().get(ACCEPT))
-                .map(s -> s.split(";"))
-                .map(Arrays::stream)
-                .orElse(Stream.of())
-            .map(value -> value.trim().toLowerCase())
-            .filter(value -> value.startsWith(JMAP_VERSION_HEADER.toLowerCase()))
-            .map(value -> value.substring(JMAP_VERSION_HEADER.length()))
-            .map(Version::of)
-            .findFirst()
-            .orElse(Version.DRAFT);
+        return endpoint.matches(request);
     }
 }

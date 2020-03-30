@@ -22,8 +22,9 @@ package org.apache.james.modules.protocols;
 import java.security.Security;
 
 import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.JMAPRoutes;
+import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.JMAPServer;
+import org.apache.james.jmap.Version;
 import org.apache.james.jmap.draft.JMAPModule;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.MessageIdProbe;
@@ -48,12 +49,6 @@ public class JMAPDraftServerModule extends AbstractModule {
         install(new JMAPModule());
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MessageIdProbe.class);
-        Multibinder<JMAPRoutes> routesBinder = Multibinder.newSetBinder(binder(), JMAPRoutes.class);
-
-        routesBinder.addBinding().to(AuthenticationRoutes.class);
-        routesBinder.addBinding().to(JMAPApiRoutes.class);
-        routesBinder.addBinding().to(UploadRoutes.class);
-        routesBinder.addBinding().to(DownloadRoutes.class);
     }
 
     @ProvidesIntoSet
@@ -67,6 +62,18 @@ public class JMAPDraftServerModule extends AbstractModule {
                     registerPEMWithSecurityProvider();
                 }
             });
+    }
+
+    @ProvidesIntoSet
+    JMAPRoutesHandler routesHandler(AuthenticationRoutes authenticationRoutes,
+                                    JMAPApiRoutes jmapApiRoutes,
+                                    UploadRoutes uploadRoutes,
+                                    DownloadRoutes  downloadRoutes) {
+        return new JMAPRoutesHandler(Version.DRAFT,
+            authenticationRoutes,
+            jmapApiRoutes,
+            uploadRoutes,
+            downloadRoutes);
     }
 
     private void registerPEMWithSecurityProvider() {
