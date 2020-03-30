@@ -72,7 +72,7 @@ public class CassandraSchemaVersionDAO {
             .reduce(Math::max)
             .map(SchemaVersion::new)
             .map(Optional::of)
-            .switchIfEmpty(Mono.just(Optional.empty()));
+            .defaultIfEmpty(Optional.empty());
     }
 
     public Mono<Void> updateVersion(SchemaVersion newVersion) {

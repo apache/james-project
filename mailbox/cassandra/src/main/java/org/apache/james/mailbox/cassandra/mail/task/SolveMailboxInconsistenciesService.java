@@ -128,7 +128,7 @@ public class SolveMailboxInconsistenciesService {
                     context.addFixedInconsistency(pathRegistration.getCassandraId());
                 })
                 .map(any -> Result.COMPLETED)
-                .switchIfEmpty(Mono.just(Result.COMPLETED))
+                .defaultIfEmpty(Result.COMPLETED)
                 .onErrorResume(e -> {
                     LOGGER.error("Failed fixing inconsistency for orphan mailboxPath {} - {}",
                         pathRegistration.getCassandraId().serialize(),
@@ -410,7 +410,7 @@ public class SolveMailboxInconsistenciesService {
                 // Path entry references another mailbox.
                 return new ConflictingEntryInconsistency(mailbox, pathRegistration);
             })
-            .switchIfEmpty(Mono.just(new OrphanMailboxDAOEntry(mailbox)));
+            .defaultIfEmpty(new OrphanMailboxDAOEntry(mailbox));
     }
 
     private Mono<Inconsistency> detectInconsistency(CassandraIdAndPath pathRegistration) {
@@ -422,6 +422,6 @@ public class SolveMailboxInconsistenciesService {
                 // Mailbox references another path
                 return new ConflictingEntryInconsistency(mailbox, pathRegistration);
             })
-            .switchIfEmpty(Mono.just(new OrphanMailboxPathDAOEntry(pathRegistration)));
+            .defaultIfEmpty(new OrphanMailboxPathDAOEntry(pathRegistration));
     }
 }

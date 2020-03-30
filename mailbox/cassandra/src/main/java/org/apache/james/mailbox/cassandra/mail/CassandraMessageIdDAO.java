@@ -210,7 +210,7 @@ public class CassandraMessageIdDAO {
         return row
                 .map(this::fromRowToComposedMessageIdWithFlags)
                 .map(Optional::of)
-                .switchIfEmpty(Mono.just(Optional.empty()));
+                .defaultIfEmpty(Optional.empty());
     }
 
     private Mono<Row> selectOneRow(CassandraId mailboxId, MessageUid uid) {

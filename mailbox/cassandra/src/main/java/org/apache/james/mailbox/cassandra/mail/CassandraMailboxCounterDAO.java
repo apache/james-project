@@ -110,7 +110,7 @@ public class CassandraMailboxCounterDAO {
         CassandraId mailboxId = (CassandraId) counters.getMailboxId();
 
         return retrieveMailboxCounters(mailboxId)
-            .switchIfEmpty(Mono.just(emptyCounters(mailboxId)))
+            .defaultIfEmpty(emptyCounters(mailboxId))
             .flatMap(storedCounters -> {
                 if (storedCounters.equals(counters)) {
                     return Mono.empty();

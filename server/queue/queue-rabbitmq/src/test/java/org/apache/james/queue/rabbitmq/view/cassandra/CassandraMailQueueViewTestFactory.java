@@ -66,7 +66,7 @@ public class CassandraMailQueueViewTestFactory {
         BrowseStartDAO browseStartDao = new BrowseStartDAO(session);
         return browseStartDao.findBrowseStart(mailQueueName)
             .map(Optional::ofNullable)
-            .switchIfEmpty(Mono.just(Optional.empty()))
+            .defaultIfEmpty(Optional.empty())
             .block()
             .isPresent();
     }

@@ -155,7 +155,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     private Mono<MessageFastViewPrecomputedProperties> computeProjection(MessageContent messageContent, Supplier<Boolean> hasAttachments) {
         return Mono.justOrEmpty(mainTextContent(messageContent))
             .map(Preview::compute)
-            .switchIfEmpty(Mono.just(Preview.EMPTY))
+            .defaultIfEmpty(Preview.EMPTY)
             .map(extractedPreview -> MessageFastViewPrecomputedProperties.builder()
                 .preview(extractedPreview)
                 .hasAttachment(hasAttachments.get())

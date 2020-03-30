@@ -168,7 +168,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
             .filter(isCreated -> isCreated)
             .flatMap(mailboxHasCreated -> persistMailboxEntity(cassandraMailbox)
                 .thenReturn(true))
-            .switchIfEmpty(Mono.just(false));
+            .defaultIfEmpty(false);
     }
 
     @Override
@@ -196,7 +196,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 .flatMap(mailboxHasCreated -> deletePreviousMailboxPathReference(mailbox.generateAssociatedPath())
                     .then(persistMailboxEntity(cassandraMailbox))
                     .thenReturn(true))
-                .switchIfEmpty(Mono.just(false)))
+                .defaultIfEmpty(false))
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(cassandraId)));
     }
 
