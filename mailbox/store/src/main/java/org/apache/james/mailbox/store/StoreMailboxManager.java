@@ -592,19 +592,11 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MailboxMetaData> search(MailboxQuery mailboxExpression, MailboxSession session) throws MailboxException {
-        return searchMailboxes(mailboxExpression, session, Right.Lookup);
+        return searchMailboxesMetadata(mailboxExpression, session, Right.Lookup);
     }
 
-    private List<MailboxMetaData> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
-        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Stream<Mailbox> baseMailboxes = mailboxMapper
-            .findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session))
-            .stream();
-        Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session);
-        List<Mailbox> mailboxes = Stream.concat(baseMailboxes, delegatedMailboxes)
-            .distinct()
-            .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)))
-            .collect(Guavate.toImmutableList());
+    private List<MailboxMetaData> searchMailboxesMetadata(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
+        List<Mailbox> mailboxes = searchMailboxes(mailboxQuery, session, right);
 
         ImmutableMap<MailboxId, MailboxCounters> counters = getMailboxCounters(mailboxes, session)
             .stream()
@@ -619,6 +611,18 @@ public class StoreMailboxManager implements MailboxManager {
                 mailbox -> toMailboxMetadata(session, mailboxes, mailbox, retrieveCounters(counters, mailbox)))
                 .sneakyThrow())
             .sorted(MailboxMetaData.COMPARATOR)
+            .collect(Guavate.toImmutableList());
+    }
+
+    private List<Mailbox> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Stream<Mailbox> baseMailboxes = mailboxMapper
+            .findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session))
+            .stream();
+        Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session);
+        return Stream.concat(baseMailboxes, delegatedMailboxes)
+            .distinct()
+            .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)))
             .collect(Guavate.toImmutableList());
     }
 
@@ -693,7 +697,7 @@ public class StoreMailboxManager implements MailboxManager {
     private Stream<MailboxId> getAllReadableMailbox(MailboxSession session) throws MailboxException {
         return searchMailboxes(MailboxQuery.builder().matchesAllMailboxNames().build(), session, Right.Read)
             .stream()
-            .map(MailboxMetaData::getId);
+            .map(Mailbox::getMailboxId);
     }
 
     @Override

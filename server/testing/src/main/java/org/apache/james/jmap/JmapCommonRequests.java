@@ -141,10 +141,10 @@ public class JmapCommonRequests {
     }
 
     public static String getLatestMessageId(AccessToken accessToken, Role mailbox) {
-        String inboxId = getMailboxId(accessToken, mailbox);
+        String mailboxId = getMailboxId(accessToken, mailbox);
         return with()
                 .header("Authorization", accessToken.asString())
-                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}, \"sort\":[\"date desc\"]}, \"#0\"]]")
+                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}, \"sort\":[\"date desc\"]}, \"#0\"]]")
                 .post("/jmap")
             .then()
                 .extract()
