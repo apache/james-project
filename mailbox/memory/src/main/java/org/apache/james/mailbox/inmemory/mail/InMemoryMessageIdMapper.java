@@ -23,10 +23,7 @@ import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITE
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.mail.Flags;
 
@@ -47,11 +44,9 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 
 public class InMemoryMessageIdMapper implements MessageIdMapper {
-    private static final BinaryOperator<UpdatedFlags> KEEP_FIRST = (p, q) -> p;
-
     private final MailboxMapper mailboxMapper;
     private final InMemoryMessageMapper messageMapper;
 
@@ -120,17 +115,16 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-    public Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds,
-                                                 Flags newState, FlagsUpdateMode updateMode) throws MailboxException {
+    public Multimap<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds,
+                                                      Flags newState, FlagsUpdateMode updateMode) {
         return find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
             .stream()
             .filter(message -> mailboxIds.contains(message.getMailboxId()))
             .map(updateMessage(newState, updateMode))
             .distinct()
-            .collect(Guavate.toImmutableMap(
+            .collect(Guavate.toImmutableListMultimap(
                 Pair::getKey,
-                Pair::getValue,
-                KEEP_FIRST));
+                Pair::getValue));
     }
 
     private Function<MailboxMessage, Pair<MailboxId, UpdatedFlags>> updateMessage(Flags newState, FlagsUpdateMode updateMode) {

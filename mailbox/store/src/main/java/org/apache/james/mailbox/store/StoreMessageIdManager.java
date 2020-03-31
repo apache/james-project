@@ -74,6 +74,7 @@ import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
@@ -117,9 +118,9 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         assertRightsOnMailboxes(mailboxIds, mailboxSession, Right.Write);
 
-        Map<MailboxId, UpdatedFlags> updatedFlags = messageIdMapper.setFlags(messageId, mailboxIds, newState, replace);
-        for (Map.Entry<MailboxId, UpdatedFlags> entry : updatedFlags.entrySet()) {
-            dispatchFlagsChange(mailboxSession, entry.getKey(), entry.getValue());
+        Multimap<MailboxId, UpdatedFlags> updatedFlags = messageIdMapper.setFlags(messageId, mailboxIds, newState, replace);
+        for (Map.Entry<MailboxId, Collection<UpdatedFlags>> entry : updatedFlags.asMap().entrySet()) {
+            dispatchFlagsChange(mailboxSession, entry.getKey(), ImmutableList.copyOf(entry.getValue()));
         }
     }
 
@@ -322,15 +323,15 @@ public class StoreMessageIdManager implements MessageIdManager {
         }
     }
     
-    private void dispatchFlagsChange(MailboxSession mailboxSession, MailboxId mailboxId, UpdatedFlags updatedFlags) throws MailboxException {
-        if (updatedFlags.flagsChanged()) {
+    private void dispatchFlagsChange(MailboxSession mailboxSession, MailboxId mailboxId, ImmutableList<UpdatedFlags> updatedFlags) throws MailboxException {
+        if (updatedFlags.stream().anyMatch(UpdatedFlags::flagsChanged)) {
             Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
 
             eventBus.dispatch(EventFactory.flagsUpdated()
                 .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailbox)
-                .updatedFlag(updatedFlags)
+                .updatedFlags(updatedFlags)
                 .build(),
                 new MailboxIdRegistrationKey(mailboxId))
                 .block();

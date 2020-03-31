@@ -21,9 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiFunction;
 
 import javax.mail.Flags;
 
@@ -59,7 +57,6 @@ import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
-    public static final BiFunction<UpdatedFlags, UpdatedFlags, UpdatedFlags> KEEP_FIRST = (a, b) -> a;
 
     private final MailboxMapper mailboxMapper;
     private final CassandraMailboxDAO mailboxDAO;
@@ -207,14 +204,14 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-    public Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
+    public Multimap<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
         return Flux.fromIterable(mailboxIds)
             .distinct()
             .map(mailboxId -> (CassandraId) mailboxId)
             .filterWhen(mailboxId -> haveMetaData(messageId, mailboxId))
             .concatMap(mailboxId -> flagsUpdateWithRetry(newState, updateMode, mailboxId, messageId))
             .flatMap(this::updateCounts)
-            .collect(Guavate.toImmutableMap(Pair::getLeft, Pair::getRight, KEEP_FIRST))
+            .collect(Guavate.toImmutableListMultimap(Pair::getLeft, Pair::getRight))
             .block();
     }
 
@@ -223,15 +220,16 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .hasElements();
     }
 
-    private Mono<Pair<MailboxId, UpdatedFlags>> flagsUpdateWithRetry(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {
+    private Flux<Pair<MailboxId, UpdatedFlags>> flagsUpdateWithRetry(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {
         return Mono.defer(() -> tryFlagsUpdate(newState, updateMode, mailboxId, messageId))
             .single()
             .retry(cassandraConfiguration.getFlagsUpdateMessageIdMaxRetry())
-            .map(pair -> buildUpdatedFlags(pair.getRight(), pair.getLeft()))
             .onErrorResume(MailboxDeleteDuringUpdateException.class, e -> {
                 LOGGER.info("Mailbox {} was deleted during flag update", mailboxId);
                 return Mono.empty();
-            });
+            })
+            .flatMapMany(Flux::fromIterable)
+            .map(pair -> buildUpdatedFlags(pair.getRight(), pair.getLeft()));
     }
 
     private Pair<MailboxId, UpdatedFlags> buildUpdatedFlags(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, Flags oldFlags) {
@@ -250,7 +248,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .thenReturn(pair);
     }
 
-    private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> tryFlagsUpdate(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {
+    private Mono<List<Pair<Flags, ComposedMessageIdWithMetaData>>> tryFlagsUpdate(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {
         try {
             return updateFlags(mailboxId, messageId, newState, updateMode);
         } catch (MailboxException e) {
@@ -259,12 +257,12 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         }
     }
 
-    private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(MailboxId mailboxId, MessageId messageId, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
+    private Mono<List<Pair<Flags, ComposedMessageIdWithMetaData>>> updateFlags(MailboxId mailboxId, MessageId messageId, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailboxId;
         return imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(cassandraId))
             .flatMap(oldComposedId -> updateFlags(newState, updateMode, cassandraId, oldComposedId))
-            .next()
-            .switchIfEmpty(Mono.error(MailboxDeleteDuringUpdateException::new));
+            .switchIfEmpty(Mono.error(MailboxDeleteDuringUpdateException::new))
+            .collectList();
     }
 
     private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(Flags newState, MessageManager.FlagsUpdateMode updateMode, CassandraId cassandraId, ComposedMessageIdWithMetaData oldComposedId) {

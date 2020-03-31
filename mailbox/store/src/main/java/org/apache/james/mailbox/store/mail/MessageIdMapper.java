@@ -20,7 +20,6 @@ package org.apache.james.mailbox.store.mail;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import javax.mail.Flags;
 
@@ -54,5 +53,14 @@ public interface MessageIdMapper {
             .forEach(this::delete);
     }
 
-    Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException;
+    /**
+     * Updates the flags of the messages with the given MessageId in the supplied mailboxes
+     *
+     * More one message can be updated when a message is contained several time in the same mailbox with distinct
+     * MessageUid.
+     *
+     * @return Metadata of the update, indexed by mailboxIds.
+     * @throws MailboxException
+     */
+    Multimap<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException;
 }
