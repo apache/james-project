@@ -21,16 +21,12 @@ package org.apache.james.jmap.http
 
 import java.net.URL
 
-import com.google.common.annotations.VisibleForTesting
 import eu.timepit.refined.auto._
-import eu.timepit.refined.refineV
 import org.apache.james.core.Username
-import org.apache.james.jmap.http.SessionSupplier.{CORE_CAPABILITY, MAIL_CAPABILITY}
+import org.apache.james.jmap.http.SessionSupplier.{CORE_CAPABILITY, HARD_CODED_URL_PREFIX, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model._
-import reactor.core.publisher.Mono
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scala.publisher.SMono
 
 object SessionSupplier {
   private val CORE_CAPABILITY = CoreCapability(
@@ -53,56 +49,30 @@ object SessionSupplier {
       emailQuerySortOptions = List("receivedAt", "cc", "from", "to", "subject", "size", "sentAt", "hasKeyword", "uid", "Id"),
       MayCreateTopLevelMailbox(true)
     ))
+
+  private val HARD_CODED_URL_PREFIX = "http://this-url-is-hardcoded.org"
 }
 
 class SessionSupplier {
-  def generate(username: Username): SMono[Session] =
-    SMono.fromPublisher(
-      Mono.zip(
-        accounts(username).asJava(),
-        primaryAccounts(username).asJava()))
-      .map(tuple => generate(username, tuple.getT1, tuple.getT2))
-
-  private def accounts(username: Username): SMono[Map[Id, Account]] =
-    getId(username)
-      .map(id => Map(
-        id -> Account(
-          username,
-          IsPersonal(true),
-          IsReadOnly(false),
-          accountCapabilities = Set(CORE_CAPABILITY, MAIL_CAPABILITY))))
-
-  private def primaryAccounts(username: Username): SMono[Map[CapabilityIdentifier, Id]] =
-    SFlux.just(CORE_CAPABILITY, MAIL_CAPABILITY)
-      .flatMap(capability => getId(username)
-        .map(id => (capability.identifier, id)))
-      .collectMap(getIdentifier, getId)
-  private def getIdentifier(tuple : (CapabilityIdentifier, Id)): CapabilityIdentifier = tuple._1
-  private def getId(tuple : (CapabilityIdentifier, Id)): Id = tuple._2
-
-  private def getId(username: Username): SMono[Id] = {
-    SMono.fromCallable(() => refineId(username))
-      .flatMap {
-        case Left(errorMessage: String) => SMono.raiseError(new IllegalStateException(errorMessage))
-        case Right(id) => SMono.just(id)
-      }
+  def generate(username: Username): SMono[Session] = {
+    accounts(username)
+      .map(account => Session(
+        Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY),
+        List(account),
+        primaryAccounts(account.accountId),
+        username,
+        apiUrl = new URL(s"$HARD_CODED_URL_PREFIX/jmap"),
+        downloadUrl = new URL(s"$HARD_CODED_URL_PREFIX/download"),
+        uploadUrl = new URL(s"$HARD_CODED_URL_PREFIX/upload"),
+        eventSourceUrl = new URL(s"$HARD_CODED_URL_PREFIX/eventSource")))
   }
 
-  private def refineId(username: Username): Either[String, Id] = refineV(usernameHashCode(username))
-  @VisibleForTesting def usernameHashCode(username: Username) = username.asString().hashCode.toOctalString
+  private def accounts(username: Username): SMono[Account] = SMono.defer(() =>
+    Account.from(username, IsPersonal(true), IsReadOnly(false), Set(CORE_CAPABILITY, MAIL_CAPABILITY)) match {
+      case Left(ex: IllegalArgumentException) => SMono.raiseError(ex)
+      case Right(account: Account) => SMono.just(account)
+    })
 
-  private def generate(username: Username,
-                       accounts: Map[Id, Account],
-                       primaryAccounts: Map[CapabilityIdentifier, Id]): Session = {
-    Session(
-      Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY),
-      accounts,
-      primaryAccounts,
-      username,
-      apiUrl = new URL("http://this-url-is-hardcoded.org/jmap"),
-      downloadUrl = new URL("http://this-url-is-hardcoded.org/download"),
-      uploadUrl = new URL("http://this-url-is-hardcoded.org/upload"),
-      eventSourceUrl = new URL("http://this-url-is-hardcoded.org/eventSource"),
-      state = "000001")
-  }
+  private def primaryAccounts(accountId: AccountId): Map[CapabilityIdentifier, AccountId] =
+    Map(CORE_CAPABILITY.identifier -> accountId, MAIL_CAPABILITY.identifier -> accountId)
 }

@@ -46,10 +46,10 @@ object SessionRoutes {
 @Inject
 class SessionRoutes(val authFilter: Authenticator,
                     val sessionSupplier: SessionSupplier = new SessionSupplier(),
-                    val serializer: Serializer = new Serializer) extends JMAPRoutes {
+                    val serializer: Serializer = new Serializer()) extends JMAPRoutes {
 
   val logger: Logger = SessionRoutes.LOGGER
-  val generateSession: BiFunction[HttpServerRequest, HttpServerResponse, Publisher[Void]] =
+  private val generateSession: BiFunction[HttpServerRequest, HttpServerResponse, Publisher[Void]] =
     (request, response) => SMono.fromPublisher(authFilter.authenticate(request))
       .map(_.getUser)
       .flatMap(sessionSupplier.generate)

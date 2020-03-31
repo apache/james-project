@@ -50,9 +50,7 @@ object SessionSerializationTest {
   private val MAX_OBJECTS_IN_SET : MaxObjectsInSet = MaxObjectsInSet(128L)
   private val COLLATION_ALGORITHMS : List[CollationAlgorithm] = List(ALGO_1, ALGO_2, ALGO_3)
   private val USER_1 = Username.of("user1@james.org")
-  private val USER_1_ID: Id = "user1Id"
   private val USER_2 = Username.of("user2@james.org")
-  private val USER_2_ID: Id = "user2Id"
   private val URL = new URL("http://james.org")
   private val STATE : State = "fda9342jcm"
 
@@ -87,28 +85,32 @@ object SessionSerializationTest {
   private val IS_NOT_PERSONAL : IsPersonal = IsPersonal(false)
   private val IS_NOT_READ_ONLY : IsReadOnly = IsReadOnly(false)
 
-  private val ACCOUNT_1 = Account(
+  private val ACCOUNT_1: Account = Account.from(
     name = USER_1,
     isPersonal = IS_PERSONAL,
     isReadOnly = IS_NOT_READ_ONLY,
-    accountCapabilities = Set(CORE_CAPABILITY))
-  private val ACCOUNT_2 = Account(
+    accountCapabilities = Set(CORE_CAPABILITY)) match {
+      case Left(ex: IllegalArgumentException) => throw ex
+      case Right(account: Account) => account
+    }
+
+  private val ACCOUNT_2: Account = Account.from(
     name = USER_2,
     isPersonal = IS_NOT_PERSONAL,
     isReadOnly = IS_NOT_READ_ONLY,
-    accountCapabilities = Set(CORE_CAPABILITY))
-  private val ACCOUNTS = Map(
-    USER_1_ID -> ACCOUNT_1,
-    USER_2_ID -> ACCOUNT_2,
-  )
+    accountCapabilities = Set(CORE_CAPABILITY))  match {
+      case Left(ex: IllegalArgumentException) => throw ex
+      case Right(account: Account) => account
+    }
+
   private val PRIMARY_ACCOUNTS = Map(
-    MAIL_IDENTIFIER -> USER_1_ID,
-    CONTACT_IDENTIFIER -> USER_2_ID
+    MAIL_IDENTIFIER -> ACCOUNT_1.accountId,
+    CONTACT_IDENTIFIER -> ACCOUNT_1.accountId
   )
 
   private val SESSION = Session(
     capabilities = CAPABILITIES,
-    accounts = ACCOUNTS,
+    accounts = List(ACCOUNT_1, ACCOUNT_2),
     primaryAccounts = PRIMARY_ACCOUNTS,
     username = USER_1,
     apiUrl = URL,
@@ -155,7 +157,7 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
           |    }
           |  },
           |  "accounts": {
-          |    "user1Id": {
+          |    "807a5306ccb4527af7790a0f9b48a776514bdbfba064e355461a76bcffbf2c90": {
           |      "name": "user1@james.org",
           |      "isPersonal": true,
           |      "isReadOnly": false,
@@ -176,7 +178,7 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
           |        }
           |      }
           |    },
-          |    "user2Id": {
+          |    "a9b46834e106ff73268a40a34ffba9fcfeee8bdb601939d1a96ef9199dc2695c": {
           |      "name": "user2@james.org",
           |      "isPersonal": false,
           |      "isReadOnly": false,
@@ -199,8 +201,8 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
           |    }
           |  },
           |  "primaryAccounts": {
-          |    "urn:ietf:params:jmap:mail": "user1Id",
-          |    "urn:ietf:params:jmap:contact": "user2Id"
+          |    "urn:ietf:params:jmap:mail": "807a5306ccb4527af7790a0f9b48a776514bdbfba064e355461a76bcffbf2c90",
+          |    "urn:ietf:params:jmap:contact": "807a5306ccb4527af7790a0f9b48a776514bdbfba064e355461a76bcffbf2c90"
           |  },
           |  "username": "user1@james.org",
           |  "apiUrl": "http://james.org",

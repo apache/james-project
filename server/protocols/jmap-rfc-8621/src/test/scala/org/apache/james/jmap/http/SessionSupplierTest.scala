@@ -19,10 +19,8 @@
 
 package org.apache.james.jmap.http
 
-import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.http.SessionSupplierTest.USERNAME
-import org.apache.james.jmap.model.Id.Id
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -45,12 +43,12 @@ class SessionSupplierTest extends AnyWordSpec with Matchers {
       }
 
       "has name" in {
-        accounts.view.mapValues(_.name).values.toList should equal(List(USERNAME))
+        accounts.map(_.name) should equal(List(USERNAME))
       }
 
-      "has id" in {
-        val usernameHashCode: Id = "22267206120"
-        accounts.keys.toList should equal(List(usernameHashCode))
+      "has accountId being hash of username in string" in {
+        accounts.map(_.accountId)
+          .map(_.id.value) should equal(List("0cb33e029628ea603d1b988f0f81b069d89b6c5a093e12b275ecdc626bd7458c"))
       }
     }
   }

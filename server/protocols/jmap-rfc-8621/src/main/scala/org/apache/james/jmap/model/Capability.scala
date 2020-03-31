@@ -30,8 +30,8 @@ import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 
 object CapabilityIdentifier {
   type CapabilityIdentifier = String Refined Uri
-  val JMAP_CORE: CapabilityIdentifier = "urn:ietf:params:jmap:core"
-  val JMAP_MAIL: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
+  private[model] val JMAP_CORE: CapabilityIdentifier = "urn:ietf:params:jmap:core"
+  private[model] val JMAP_MAIL: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
 }
 
 sealed trait CapabilityProperties

@@ -25,9 +25,9 @@ import play.api.libs.json._
 case class Invocation(methodName: MethodName, arguments: Arguments, methodCallId: MethodCallId)
 
 object Invocation {
-  val METHOD_NAME: Int = 0
-  val ARGUMENTS: Int = 1
-  val METHOD_CALL: Int = 2
+  private[jmap] val METHOD_NAME: Int = 0
+  private[jmap] val ARGUMENTS: Int = 1
+  private[jmap] val METHOD_CALL: Int = 2
 
   case class MethodName(value: NonEmptyString)
   case class Arguments(value: JsObject) extends AnyVal

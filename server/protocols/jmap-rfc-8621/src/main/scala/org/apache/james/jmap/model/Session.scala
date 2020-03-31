@@ -20,44 +20,76 @@
 package org.apache.james.jmap.model
 
 import java.net.URL
+import java.nio.charset.StandardCharsets
 
+import com.google.common.hash.Hashing
 import eu.timepit.refined.api.Refined
+import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
+import eu.timepit.refined.refineV
 import org.apache.james.core.Username
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Id.Id
-import org.apache.james.jmap.model.State.State
+import org.apache.james.jmap.model.State.{INSTANCE, State}
 
 case class IsPersonal(value: Boolean)
 case class IsReadOnly(value: Boolean)
 
-object Account {
-  def apply(name: Username,
-            isPersonal: IsPersonal,
-            isReadOnly: IsReadOnly,
-            accountCapabilities: Set[_ <: Capability]): Account = {
+object AccountId {
+  def from(username: Username): Either[IllegalArgumentException, AccountId] = {
+    val sha256String = Hashing.sha256()
+      .hashString(username.asString(), StandardCharsets.UTF_8)
+      .toString
+    val refinedId: Either[String, Id] = refineV(sha256String)
 
-    new Account(name, isPersonal, isReadOnly, accountCapabilities)
+    refinedId match {
+      case Left(errorMessage: String) => Left(new IllegalArgumentException(errorMessage))
+      case Right(id) => Right(AccountId(id))
+    }
   }
 }
 
-final case class Account private(name: Username,
+final case class AccountId(id: Id)
+
+object Account {
+  private[jmap] val NAME = "name";
+  private[jmap] val IS_PERSONAL = "isPersonal"
+  private[jmap] val IS_READ_ONLY = "isReadOnly"
+  private[jmap] val ACCOUNT_CAPABILITIES = "accountCapabilities"
+
+  def from(name: Username,
+           isPersonal: IsPersonal,
+           isReadOnly: IsReadOnly,
+           accountCapabilities: Set[_ <: Capability]): Either[IllegalArgumentException, Account] =
+    AccountId.from(name) match {
+      case Left(ex: IllegalArgumentException) => Left(ex)
+      case Right(accountId) => Right(new Account(accountId, name, isPersonal, isReadOnly, accountCapabilities))
+    }
+
+  def unapplyIgnoreAccountId(account: Account): Some[(Username, IsPersonal, IsReadOnly, Set[_ <: Capability])] =
+    Some(account.name, account.isPersonal, account.isReadOnly, account.accountCapabilities)
+}
+
+final case class Account private(accountId: AccountId,
+                                 name: Username,
                                  isPersonal: IsPersonal,
                                  isReadOnly: IsReadOnly,
                                  accountCapabilities: Set[_ <: Capability])
 
 object State {
+  private[model] val INSTANCE: State = "000001"
+
   type State = String Refined NonEmpty
 }
 
 case class Capabilities(coreCapability: CoreCapability, mailCapability: MailCapability)
 
 final case class Session(capabilities: Capabilities,
-                         accounts: Map[Id, Account],
-                         primaryAccounts: Map[CapabilityIdentifier, Id],
+                         accounts: List[Account],
+                         primaryAccounts: Map[CapabilityIdentifier, AccountId],
                          username: Username,
                          apiUrl: URL,
                          downloadUrl: URL,
                          uploadUrl: URL,
                          eventSourceUrl: URL,
-                         state: State)
+                         state: State = INSTANCE)

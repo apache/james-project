@@ -31,7 +31,6 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.http.SessionRoutesTest.{BOB, TEST_CONFIGURATION}
 import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutes, JMAPServer}
 import org.apache.james.mailbox.MailboxSession
-import org.hamcrest.CoreMatchers.is
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
@@ -120,7 +119,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |    }
                          |  },
                          |  "accounts" : {
-                         |    "25742733157" : {
+                         |    "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401" : {
                          |      "name" : "bob@james.org",
                          |      "isPersonal" : true,
                          |      "isReadOnly" : false,
@@ -147,8 +146,8 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |    }
                          |  },
                          |  "primaryAccounts" : {
-                         |    "urn:ietf:params:jmap:core" : "25742733157",
-                         |    "urn:ietf:params:jmap:mail" : "25742733157"
+                         |    "urn:ietf:params:jmap:core" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
+                         |    "urn:ietf:params:jmap:mail" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401"
                          |  },
                          |  "username" : "bob@james.org",
                          |  "apiUrl" : "http://this-url-is-hardcoded.org/jmap",
@@ -159,36 +158,5 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |}""".stripMargin
 
     Json.parse(sessionJson) should equal(Json.parse(expectedJson))
-  }
-
-  "get" should "return 500 when unexpected Id serialization" in {
-    when(sessionSupplier.usernameHashCode(BOB))
-      .thenReturn("INVALID_JMAP_ID_()*&*$(#*")
-
-    RestAssured.when()
-        .get
-      .then
-        .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
-  }
-
-  "get" should "return empty content type when unexpected Id serialization" in {
-    when(sessionSupplier.usernameHashCode(BOB))
-      .thenReturn("INVALID_JMAP_ID_()*&*$(#*")
-
-    RestAssured.when()
-        .get
-      .then
-        .contentType(is(""))
-  }
-
-  "get" should "return empty body when unexpected Id serialization" in {
-    when(sessionSupplier.usernameHashCode(BOB))
-      .thenReturn("INVALID_JMAP_ID_()*&*$(#*")
-
-    RestAssured.`with`()
-        .get
-      .thenReturn()
-        .getBody
-        .asString() should equal("")
   }
 }

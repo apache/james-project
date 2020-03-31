@@ -24,7 +24,6 @@ import java.net.URL
 import org.apache.james.core.Username
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
 import play.api.libs.functional.syntax._
@@ -103,17 +102,27 @@ class Serializer {
 
   private implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(Set(capabilities.coreCapability, capabilities.mailCapability))
 
-  private implicit def identifierMapWrite[Any](implicit idWriter: Writes[Id]): Writes[Map[CapabilityIdentifier, Any]] =
+  private implicit val accountIdWrites: Format[AccountId] = Json.valueFormat[AccountId]
+  private implicit def identifierMapWrite[Any](implicit idWriter: Writes[AccountId]): Writes[Map[CapabilityIdentifier, Any]] =
     (m: Map[CapabilityIdentifier, Any]) => {
       m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (identifier: CapabilityIdentifier, id: Id) = kv
+        val (identifier: CapabilityIdentifier, id: AccountId) = kv
         jsObject.+(identifier.value, idWriter.writes(id))
       })
     }
 
   private implicit val isPersonalFormat: Format[IsPersonal] = Json.valueFormat[IsPersonal]
   private implicit val isReadOnlyFormat: Format[IsReadOnly] = Json.valueFormat[IsReadOnly]
-  private implicit val accountWrites: Writes[Account] = Json.writes[Account]
+  private implicit val accountWrites: Writes[Account] = (
+      (JsPath \ Account.NAME).write[Username] and
+      (JsPath \ Account.IS_PERSONAL).write[IsPersonal] and
+      (JsPath \ Account.IS_READ_ONLY).write[IsReadOnly] and
+      (JsPath \ Account.ACCOUNT_CAPABILITIES).write[Set[_ <: Capability]]
+    ) (unlift(Account.unapplyIgnoreAccountId))
+
+  private implicit def accountListWrites(implicit accountWrites: Writes[Account]): Writes[List[Account]] =
+    (list: List[Account]) => JsObject(list.map(account => (account.accountId.id.value, accountWrites.writes(account))))
+
   private implicit val sessionWrites: Writes[Session] = Json.writes[Session]
 
   def serialize(session: Session): JsValue = {
