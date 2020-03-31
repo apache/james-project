@@ -74,7 +74,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     private final Flags applicableFlags;
     private boolean applicableFlagsChanged;
 
-    public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MailboxPath path) throws MailboxException {
+    public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MessageManager messageManager) throws MailboxException {
         this.session = session;
         this.sessionId = session.getMailboxSession().getSessionId();
         this.mailboxManager = mailboxManager;
@@ -86,7 +86,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
         uidMsnConverter = new UidMsnConverter();
 
-        MessageManager messageManager = mailboxManager.getMailbox(path, mailboxSession);
         mailboxId = messageManager.getId();
 
         registration = eventBus.register(this, new MailboxIdRegistrationKey(mailboxId));

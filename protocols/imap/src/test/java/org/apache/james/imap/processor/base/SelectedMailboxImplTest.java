@@ -122,7 +122,7 @@ public class SelectedMailboxImplTest {
             mailboxManager,
             eventBus,
             imapSession,
-            mailboxPath);
+            messageManager);
 
         assertThat(selectedMailbox.getLastUid().get()).isEqualTo(EMITTED_EVENT_UID);
     }
@@ -138,7 +138,7 @@ public class SelectedMailboxImplTest {
             mailboxManager,
             eventBus,
             imapSession,
-            mailboxPath);
+            messageManager);
 
         assertThat(successCount.get())
             .as("Get the incremented value in case of successful event processing.")

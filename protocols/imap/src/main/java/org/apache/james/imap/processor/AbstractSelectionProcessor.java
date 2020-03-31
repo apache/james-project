@@ -399,7 +399,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             if (currentMailbox != null) {
                 getStatusResponseFactory().untaggedOk(HumanReadableText.QRESYNC_CLOSED, ResponseCode.closed());
             }
-            session.selected(new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailboxPath));
+            session.selected(new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailbox));
 
             sessionMailbox = session.getSelected();
             

@@ -158,7 +158,7 @@ public class MailboxEventAnalyserTest {
         when(messageManager.getMessages(any(), any(), any()))
             .thenReturn(new SingleMessageResultIterator(messageResult));
 
-        testee = new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, MAILBOX_PATH);
+        testee = new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, messageManager);
     }
 
     @Test
