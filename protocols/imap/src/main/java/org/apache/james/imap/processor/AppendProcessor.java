@@ -126,7 +126,6 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
         try {
             final MailboxSession mailboxSession = session.getMailboxSession();
             final SelectedMailbox selectedMailbox = session.getSelected();
-            final MailboxManager mailboxManager = getMailboxManager();
             final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getMailboxId().equals(mailbox.getId());
             final ComposedMessageId messageId = mailbox.appendMessage(message, datetime, mailboxSession, !isSelectedMailbox, flagsToBeSet);
             if (isSelectedMailbox) {
@@ -134,7 +133,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             }
 
             // get folder UIDVALIDITY
-            UidValidity uidValidity = mailboxManager.getMailbox(mailboxPath, mailboxSession)
+            UidValidity uidValidity = mailbox
                 .getMailboxEntity()
                 .getUidValidity();
 
