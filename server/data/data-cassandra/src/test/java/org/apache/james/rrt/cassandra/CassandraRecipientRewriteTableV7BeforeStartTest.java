@@ -33,7 +33,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 
-public class CassandraRecipientRewriteTableV7Test extends AbstractRecipientRewriteTableTest {
+public class CassandraRecipientRewriteTableV7BeforeStartTest extends AbstractRecipientRewriteTableTest {
     private static final SchemaVersion SCHEMA_VERSION_V7 = new SchemaVersion(7);
 
     private static final CassandraModule MODULE = CassandraModule.aggregateModules(
@@ -64,13 +64,11 @@ public class CassandraRecipientRewriteTableV7Test extends AbstractRecipientRewri
         CassandraSchemaVersionDAO cassandraSchemaVersionDAO = new CassandraSchemaVersionDAO(
             cassandra.getConf());
 
-        CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(
+        cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V7).block();
+
+        return new CassandraRecipientRewriteTable(
             new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
             new CassandraMappingsSourcesDAO(cassandra.getConf()),
             new CassandraSchemaVersionManager(cassandraSchemaVersionDAO));
-
-        cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V7).block();
-
-        return rrt;
     }
 }

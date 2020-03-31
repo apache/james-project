@@ -110,7 +110,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     private boolean isLegacy() {
         return isLegacy(initialSchemaVersion)
             // If we started with a legacy james then maybe schema version had been updated since then
-            || isLegacy(versionManager.computeVersion());
+            && isLegacy(versionManager.computeVersion());
     }
 
     private boolean isLegacy(SchemaVersion schemaVersion) {

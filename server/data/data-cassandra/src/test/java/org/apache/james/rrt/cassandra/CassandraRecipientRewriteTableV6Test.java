@@ -63,14 +63,11 @@ public class CassandraRecipientRewriteTableV6Test extends AbstractRecipientRewri
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() {
         CassandraSchemaVersionDAO cassandraSchemaVersionDAO = new CassandraSchemaVersionDAO(
             cassandra.getConf());
+        cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V6).block();
 
-        CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(
+        return new CassandraRecipientRewriteTable(
             new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
             new CassandraMappingsSourcesDAO(cassandra.getConf()),
             new CassandraSchemaVersionManager(cassandraSchemaVersionDAO));
-
-        cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V6);
-
-        return rrt;
     }
 }
