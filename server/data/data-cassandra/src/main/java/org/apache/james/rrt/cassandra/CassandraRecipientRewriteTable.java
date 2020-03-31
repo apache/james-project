@@ -43,7 +43,6 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     private final CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
     private final CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;
     private final CassandraSchemaVersionManager versionManager;
-    private final SchemaVersion initialSchemaVersion;
 
     @Inject
     CassandraRecipientRewriteTable(CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO,
@@ -52,8 +51,6 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
         this.cassandraRecipientRewriteTableDAO = cassandraRecipientRewriteTableDAO;
         this.cassandraMappingsSourcesDAO = cassandraMappingsSourcesDAO;
         this.versionManager = versionManager;
-
-        initialSchemaVersion = versionManager.computeVersion();
     }
 
     @Override
@@ -100,20 +97,10 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
         Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
             "Not supported mapping of type %s", mapping.getType());
 
-        if (isLegacy()) {
+        if (versionManager.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION)) {
             return super.listSources(mapping);
         }
 
         return cassandraMappingsSourcesDAO.retrieveSources(mapping).toStream();
-    }
-
-    private boolean isLegacy() {
-        return isLegacy(initialSchemaVersion)
-            // If we started with a legacy james then maybe schema version had been updated since then
-            && isLegacy(versionManager.computeVersion());
-    }
-
-    private boolean isLegacy(SchemaVersion schemaVersion) {
-        return schemaVersion.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION);
     }
 }

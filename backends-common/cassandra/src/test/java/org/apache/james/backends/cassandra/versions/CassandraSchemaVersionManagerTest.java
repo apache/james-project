@@ -63,6 +63,54 @@ class CassandraSchemaVersionManagerTest {
     }
 
     @Test
+    void isBeforeShouldReturnTrueWhenBefore() {
+        SchemaVersion currentVersion = minVersion;
+
+        when(schemaVersionDAO.getCurrentSchemaVersion())
+            .thenReturn(Mono.just(Optional.of(currentVersion)));
+
+        CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(
+            schemaVersionDAO,
+            minVersion,
+            maxVersion);
+
+        assertThat(testee.isBefore(maxVersion)).isTrue();
+    }
+
+    @Test
+    void isBeforeShouldReturnFalseWhenEquals() {
+        SchemaVersion currentVersion = maxVersion;
+
+        when(schemaVersionDAO.getCurrentSchemaVersion())
+            .thenReturn(Mono.just(Optional.of(currentVersion)));
+
+        CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(
+            schemaVersionDAO,
+            minVersion,
+            maxVersion);
+
+        assertThat(testee.isBefore(maxVersion)).isFalse();
+    }
+
+    @Test
+    void isBeforeShouldReturnFalseWhenUpdatedToEquals() {
+        SchemaVersion currentVersion = maxVersion;
+
+        when(schemaVersionDAO.getCurrentSchemaVersion())
+            .thenReturn(Mono.just(Optional.of(minVersion)));
+
+        CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(
+            schemaVersionDAO,
+            minVersion,
+            maxVersion);
+
+        when(schemaVersionDAO.getCurrentSchemaVersion())
+            .thenReturn(Mono.just(Optional.of(maxVersion)));
+
+        assertThat(testee.isBefore(maxVersion)).isFalse();
+    }
+
+    @Test
     void computeSchemaStateShouldReturnTooOldWhenVersionIsMoreThanMaxVersion() {
         SchemaVersion currentVersion = maxVersion.next();
 

@@ -41,6 +41,7 @@ public class CassandraSchemaVersionManager {
 
     private final SchemaVersion minVersion;
     private final SchemaVersion maxVersion;
+    private final SchemaVersion initialSchemaVersion;
     private final CassandraSchemaVersionDAO schemaVersionDAO;
 
     public enum SchemaState {
@@ -63,6 +64,14 @@ public class CassandraSchemaVersionManager {
         this.schemaVersionDAO = schemaVersionDAO;
         this.minVersion = minVersion;
         this.maxVersion = maxVersion;
+
+        this.initialSchemaVersion = computeVersion();
+    }
+
+    public boolean isBefore(SchemaVersion minimum) {
+        return initialSchemaVersion.isBefore(minimum)
+            // If we started with a legacy james then maybe schema version had been updated since then
+            && computeVersion().isBefore(minimum);
     }
 
     public SchemaVersion computeVersion() {
