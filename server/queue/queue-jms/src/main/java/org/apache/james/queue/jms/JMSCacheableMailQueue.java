@@ -482,7 +482,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     protected MailQueueItem createMailQueueItem(Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
         Mail mail = createMail(message);
         JMSMailQueueItem jmsMailQueueItem = new JMSMailQueueItem(mail, session, consumer);
-        return mailQueueItemDecoratorFactory.decorate(jmsMailQueueItem);
+        return mailQueueItemDecoratorFactory.decorate(jmsMailQueueItem, queueName);
     }
 
     protected String getMessageSelector() {

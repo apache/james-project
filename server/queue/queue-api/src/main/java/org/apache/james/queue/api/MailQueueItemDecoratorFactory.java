@@ -23,7 +23,7 @@ import org.apache.james.queue.api.MailQueue.MailQueueItem;
 
 public interface MailQueueItemDecoratorFactory {
 
-    MailQueueItemDecorator decorate(MailQueueItem mailQueueItem);
+    MailQueueItemDecorator decorate(MailQueueItem mailQueueItem, MailQueueName name);
 
     abstract class MailQueueItemDecorator implements MailQueueItem {
         protected MailQueueItem mailQueueItem;

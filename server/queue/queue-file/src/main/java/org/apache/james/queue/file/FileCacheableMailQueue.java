@@ -303,7 +303,7 @@ public class FileCacheableMailQueue implements ManageableMailQueue {
                             LifecycleUtil.dispose(mail);
                         }
                     };
-                    return Mono.just(mailQueueItemDecoratorFactory.decorate(fileMailQueueItem));
+                    return Mono.just(mailQueueItemDecoratorFactory.decorate(fileMailQueueItem, queueName));
                 }
                 // TODO: Think about exception handling in detail
             } catch (IOException | ClassNotFoundException | MessagingException e) {

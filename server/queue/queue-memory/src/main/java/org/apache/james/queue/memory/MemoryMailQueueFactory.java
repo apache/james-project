@@ -102,7 +102,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
                 .subscribeOn(Schedulers.elastic())
                 .flatMap(item ->
                     Mono.fromRunnable(() -> inProcessingMailItems.add(item)).thenReturn(item))
-                .map(mailQueueItemDecoratorFactory::decorate);
+                .map(item -> mailQueueItemDecoratorFactory.decorate(item, name));
         }
 
         @Override

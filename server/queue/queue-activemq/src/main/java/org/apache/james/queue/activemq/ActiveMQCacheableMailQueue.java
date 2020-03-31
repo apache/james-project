@@ -229,7 +229,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
     protected MailQueueItem createMailQueueItem(Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
         Mail mail = createMail(message);
         ActiveMQMailQueueItem activeMQMailQueueItem = new ActiveMQMailQueueItem(mail, session, consumer, message);
-        return mailQueueItemDecoratorFactory.decorate(activeMQMailQueueItem);
+        return mailQueueItemDecoratorFactory.decorate(activeMQMailQueueItem, queueName);
     }
 
     @Override

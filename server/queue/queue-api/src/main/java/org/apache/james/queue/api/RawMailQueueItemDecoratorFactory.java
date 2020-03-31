@@ -23,7 +23,7 @@ import org.apache.james.queue.api.MailQueue.MailQueueItem;
 public class RawMailQueueItemDecoratorFactory implements MailQueueItemDecoratorFactory {
 
     @Override
-    public MailQueueItemDecorator decorate(MailQueueItem mailQueueItem) {
+    public MailQueueItemDecorator decorate(MailQueueItem mailQueueItem, MailQueueName name) {
         return new RawMailQueueItem(mailQueueItem);
     }
 

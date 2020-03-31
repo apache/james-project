@@ -142,6 +142,10 @@ public final class MailQueueName {
         return new WorkQueueName(name);
     }
 
+    org.apache.james.queue.api.MailQueueName toModel() {
+        return org.apache.james.queue.api.MailQueueName.of(asString());
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof MailQueueName) {

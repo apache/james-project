@@ -84,7 +84,7 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     @Override
     public Flux<MailQueueItem> deQueue() {
         return dequeuer.deQueue()
-            .map(decoratorFactory::decorate);
+            .map(item -> decoratorFactory.decorate(item, name.toModel()));
     }
 
     @Override
