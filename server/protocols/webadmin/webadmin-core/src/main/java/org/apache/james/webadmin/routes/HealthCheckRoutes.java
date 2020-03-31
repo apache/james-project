@@ -153,7 +153,7 @@ public class HealthCheckRoutes implements PublicRoutes {
         switch (result.getStatus()) {
         case UNHEALTHY:
             if (result.getError().isPresent()) {
-                LOGGER.error("HealthCheck failed for {} : {} : {}",
+                LOGGER.error("HealthCheck failed for {} : {}",
                     result.getComponentName().getName(),
                     result.getCause().orElse(""),
                     result.getError().get());

@@ -78,25 +78,39 @@ public class PeriodicalHealthChecks implements Startable {
             case HEALTHY:
                 break;
             case DEGRADED:
-                LOGGER.warn("DEGRADED: {} : {}", result.getComponentName().getName(), result.getCause());
+                LOGGER.warn("DEGRADED: {} : {}",
+                    result.getComponentName().getName(),
+                    result.getCause().orElse(""));
                 break;
             case UNHEALTHY:
-                if (result.getError().isPresent()) {
-                    LOGGER.error("UNHEALTHY: {} : {} : {}", result.getComponentName().getName(), result.getCause(), result.getError().get());
-                    break;
-                }
-
-                LOGGER.error("UNHEALTHY: {} : {}", result.getComponentName().getName(), result.getCause());
+                logUnhealthy(result);
                 break;
+        }
+    }
+
+    private void logUnhealthy(Result result) {
+        if (result.getError().isPresent()) {
+            LOGGER.error("UNHEALTHY: {} : {}",
+                result.getComponentName().getName(),
+                result.getCause(),
+                result.getError().get());
+        } else {
+            LOGGER.error("UNHEALTHY: {} : {}",
+                result.getComponentName().getName(),
+                result.getCause());
         }
     }
 
     private void logError(Throwable error, Object triggeringValue) {
         if (triggeringValue instanceof Result) {
             Result result = (Result) triggeringValue;
-            LOGGER.error("HealthCheck error for: {}, Cause: {}", result.getComponentName(), error);
+            LOGGER.error("HealthCheck error for: {}, Cause: {}",
+                result.getComponentName(),
+                error);
             return;
         }
-        LOGGER.error("HealthCheck error. Triggering value: {}, Cause: {}", triggeringValue, error);
+        LOGGER.error("HealthCheck error. Triggering value: {}, Cause: {}",
+            triggeringValue,
+            error);
     }
 }
