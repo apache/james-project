@@ -34,7 +34,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 public class PeriodicalHealthChecksConfigurationTest {
 
     private static final String HEALTH_CHECK_PERIOD = "healthcheck.period";
-    private static final String PERIOD = "5s";
+    private static final String PERIOD = "10s";
     private static final String EMPTY_STRING = "";
     private static final String RANDOM_STRING = "abcdsfsfs";
 
@@ -61,17 +61,9 @@ public class PeriodicalHealthChecksConfigurationTest {
     }
 
     @Test
-    void builderShouldThrowWhenPeriodIsNegative() {
+    void builderShouldThrowWhenPeriodIsLessThanMinimalValue() {
         assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.builder()
-            .period(DurationParser.parse("-" + PERIOD))
-            .build())
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void builderShouldThrowWhenPeriodIsZero() {
-        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.builder()
-            .period(Duration.ZERO)
+            .period(Duration.ofSeconds(1))
             .build())
             .isInstanceOf(IllegalArgumentException.class);
     }
@@ -86,16 +78,7 @@ public class PeriodicalHealthChecksConfigurationTest {
     }
 
     @Test
-    void fromShouldThrowWhenPeriodIsEmpty() {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty(HEALTH_CHECK_PERIOD, EMPTY_STRING);
-
-        assertThatThrownBy(() -> PeriodicalHealthChecksConfiguration.from(configuration))
-            .isInstanceOf(NumberFormatException.class);
-    }
-
-    @Test
-    void fromShouldReturnConfigurationWithDefaultValueWhenPeriodIsMissing() {
+    void fromShouldReturnDefaultConfigurationWhenPeriodIsMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
         assertThat(PeriodicalHealthChecksConfiguration.from(configuration)).isEqualTo(PeriodicalHealthChecksConfiguration.builder()
@@ -104,9 +87,19 @@ public class PeriodicalHealthChecksConfigurationTest {
     }
 
     @Test
-    void fromShouldReturnConfigurationWithDefaultValueWhenPeriodIsNull() {
+    void fromShouldReturnDefaultConfigurationWhenPeriodIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty(HEALTH_CHECK_PERIOD, null);
+
+        assertThat(PeriodicalHealthChecksConfiguration.from(configuration)).isEqualTo(PeriodicalHealthChecksConfiguration.builder()
+            .period(DEFAULT_CONFIGURATION.getPeriod())
+            .build());
+    }
+
+    @Test
+    void fromShouldReturnDefaultConfigurationWhenPeriodIsEmpty() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty(HEALTH_CHECK_PERIOD, EMPTY_STRING);
 
         assertThat(PeriodicalHealthChecksConfiguration.from(configuration)).isEqualTo(PeriodicalHealthChecksConfiguration.builder()
             .period(DEFAULT_CONFIGURATION.getPeriod())

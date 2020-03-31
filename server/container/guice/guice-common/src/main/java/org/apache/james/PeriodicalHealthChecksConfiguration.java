@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.Objects;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.util.DurationParser;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -31,9 +32,10 @@ import com.google.common.base.Preconditions;
 public class PeriodicalHealthChecksConfiguration {
 
     private static final String HEALTH_CHECK_PERIOD = "healthcheck.period";
-    private static final String DEFAULT_HEALTH_CHECK_PERIOD = "60s";
+    private static final Duration DEFAULT_HEALTH_CHECK_PERIOD = Duration.ofSeconds(60);
+    private static final Duration MINIMAL_HEALTH_CHECK_PERIOD = Duration.ofSeconds(10);
     public static final PeriodicalHealthChecksConfiguration DEFAULT_CONFIGURATION = builder()
-        .period(DurationParser.parse(DEFAULT_HEALTH_CHECK_PERIOD))
+        .period(DEFAULT_HEALTH_CHECK_PERIOD)
         .build();
 
     public interface Builder {
@@ -51,8 +53,8 @@ public class PeriodicalHealthChecksConfiguration {
             }
 
             PeriodicalHealthChecksConfiguration build() {
-                Preconditions.checkArgument(!period.isNegative(), "'period' must be positive");
-                Preconditions.checkArgument(!period.isZero(), "'period' must be greater than zero");
+                Preconditions.checkArgument(period.compareTo(MINIMAL_HEALTH_CHECK_PERIOD) >= 0,
+                    "'period' must be equal or greater than " + MINIMAL_HEALTH_CHECK_PERIOD.toMillis() + "ms");
 
                 return new PeriodicalHealthChecksConfiguration(period);
             }
@@ -65,7 +67,7 @@ public class PeriodicalHealthChecksConfiguration {
 
     public static PeriodicalHealthChecksConfiguration from(Configuration configuration) {
         return builder()
-            .period(DurationParser.parse(configuration.getString(HEALTH_CHECK_PERIOD, DEFAULT_HEALTH_CHECK_PERIOD)))
+            .period(getDurationFromConfiguration(configuration))
             .build();
     }
 
@@ -93,5 +95,13 @@ public class PeriodicalHealthChecksConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(period);
+    }
+
+    private static Duration getDurationFromConfiguration(Configuration configuration) {
+        if (StringUtils.isEmpty(configuration.getString(HEALTH_CHECK_PERIOD))) {
+           return DEFAULT_HEALTH_CHECK_PERIOD;
+        }
+
+        return DurationParser.parse(configuration.getString(HEALTH_CHECK_PERIOD));
     }
 }
