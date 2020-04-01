@@ -25,24 +25,24 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
-import java.util.Optional;
-
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.cassandra.table.CassandraGlobalMaxQuota;
 
 import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.Select;
 
+import reactor.core.publisher.Mono;
+
 public class CassandraGlobalMaxQuotaDao {
 
-    private final Session session;
+    private final CassandraAsyncExecutor queryExecutor;
     private final PreparedStatement setGlobalMaxStorageStatement;
     private final PreparedStatement setGlobalMaxMessageStatement;
     private final PreparedStatement getGlobalMaxStatement;
@@ -50,7 +50,7 @@ public class CassandraGlobalMaxQuotaDao {
 
     @Inject
     public CassandraGlobalMaxQuotaDao(Session session) {
-        this.session = session;
+        this.queryExecutor = new CassandraAsyncExecutor(session);
         this.getGlobalMaxStatement = session.prepare(getGlobalMaxStatement());
         this.setGlobalMaxMessageStatement = session.prepare(setGlobalMaxMessageStatement());
         this.setGlobalMaxStorageStatement = session.prepare(setGlobalMaxStorageStatement());
@@ -81,39 +81,33 @@ public class CassandraGlobalMaxQuotaDao {
             .where(eq(CassandraGlobalMaxQuota.TYPE, bindMarker(CassandraGlobalMaxQuota.TYPE)));
     }
 
-    public void setGlobalMaxStorage(QuotaSizeLimit globalMaxStorage) {
-        session.execute(setGlobalMaxStorageStatement.bind(QuotaCodec.quotaValueToLong(globalMaxStorage)));
+    Mono<Void> setGlobalMaxStorage(QuotaSizeLimit globalMaxStorage) {
+        return queryExecutor.executeVoid(setGlobalMaxStorageStatement.bind(QuotaCodec.quotaValueToLong(globalMaxStorage)));
     }
 
-    public void setGlobalMaxMessage(QuotaCountLimit globalMaxMessageCount) {
-        session.execute(setGlobalMaxMessageStatement.bind(QuotaCodec.quotaValueToLong(globalMaxMessageCount)));
+    Mono<Void> setGlobalMaxMessage(QuotaCountLimit globalMaxMessageCount) {
+        return queryExecutor.executeVoid(setGlobalMaxMessageStatement.bind(QuotaCodec.quotaValueToLong(globalMaxMessageCount)));
     }
 
-    public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
-        ResultSet resultSet = session.execute(getGlobalMaxStatement.bind()
-            .setString(CassandraGlobalMaxQuota.TYPE, CassandraGlobalMaxQuota.STORAGE));
-        if (resultSet.isExhausted()) {
-            return Optional.empty();
-        }
-        Long maxStorage = resultSet.one().get(CassandraGlobalMaxQuota.VALUE, Long.class);
-        return QuotaCodec.longToQuotaSize(maxStorage);
+    Mono<QuotaSizeLimit> getGlobalMaxStorage() {
+        return queryExecutor.executeSingleRow(getGlobalMaxStatement.bind()
+                .setString(CassandraGlobalMaxQuota.TYPE, CassandraGlobalMaxQuota.STORAGE))
+            .flatMap(row -> Mono.justOrEmpty(row.get(CassandraGlobalMaxQuota.VALUE, Long.class)))
+            .flatMap(maxStorage -> Mono.justOrEmpty(QuotaCodec.longToQuotaSize(maxStorage)));
     }
 
-    public Optional<QuotaCountLimit> getGlobalMaxMessage() {
-        ResultSet resultSet = session.execute(getGlobalMaxStatement.bind()
-            .setString(CassandraGlobalMaxQuota.TYPE, CassandraGlobalMaxQuota.MESSAGE));
-        if (resultSet.isExhausted()) {
-            return Optional.empty();
-        }
-        Long maxMessages = resultSet.one().get(CassandraGlobalMaxQuota.VALUE, Long.class);
-        return QuotaCodec.longToQuotaCount(maxMessages);
+    Mono<QuotaCountLimit> getGlobalMaxMessage() {
+        return queryExecutor.executeSingleRow(getGlobalMaxStatement.bind()
+            .setString(CassandraGlobalMaxQuota.TYPE, CassandraGlobalMaxQuota.MESSAGE))
+            .flatMap(row -> Mono.justOrEmpty(row.get(CassandraGlobalMaxQuota.VALUE, Long.class)))
+            .flatMap(maxMessages -> Mono.justOrEmpty(QuotaCodec.longToQuotaCount(maxMessages)));
     }
 
-    public void removeGlobaltMaxStorage() {
-        session.execute(removeGlobalMaxQuotaStatement.bind(CassandraGlobalMaxQuota.STORAGE));
+    Mono<Void> removeGlobaltMaxStorage() {
+        return queryExecutor.executeVoid(removeGlobalMaxQuotaStatement.bind(CassandraGlobalMaxQuota.STORAGE));
     }
 
-    public void removeGlobalMaxMessage() {
-        session.execute(removeGlobalMaxQuotaStatement.bind(CassandraGlobalMaxQuota.MESSAGE));
+    Mono<Void> removeGlobalMaxMessage() {
+        return queryExecutor.executeVoid(removeGlobalMaxQuotaStatement.bind(CassandraGlobalMaxQuota.MESSAGE));
     }
 }

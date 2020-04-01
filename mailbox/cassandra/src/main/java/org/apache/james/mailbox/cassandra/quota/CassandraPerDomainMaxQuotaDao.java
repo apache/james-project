@@ -25,25 +25,25 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
-import java.util.Optional;
-
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.cassandra.table.CassandraDomainMaxQuota;
 
 import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.Select;
 
+import reactor.core.publisher.Mono;
+
 public class CassandraPerDomainMaxQuotaDao {
 
-    private final Session session;
+    private final CassandraAsyncExecutor queryExecutor;
     private final PreparedStatement setMaxStorageStatement;
     private final PreparedStatement setMaxMessageStatement;
     private final PreparedStatement getMaxStorageStatement;
@@ -53,7 +53,7 @@ public class CassandraPerDomainMaxQuotaDao {
 
     @Inject
     public CassandraPerDomainMaxQuotaDao(Session session) {
-        this.session = session;
+        this.queryExecutor = new CassandraAsyncExecutor(session);
         this.setMaxStorageStatement = session.prepare(setMaxStorageStatement());
         this.setMaxMessageStatement = session.prepare(setMaxMessageStatement());
         this.getMaxStorageStatement = session.prepare(getMaxStorageStatement());
@@ -98,38 +98,31 @@ public class CassandraPerDomainMaxQuotaDao {
             .value(CassandraDomainMaxQuota.STORAGE, bindMarker());
     }
 
-    public void setMaxStorage(Domain domain, QuotaSizeLimit maxStorageQuota) {
-        session.execute(setMaxStorageStatement.bind(domain.asString(), QuotaCodec.quotaValueToLong(maxStorageQuota)));
+    Mono<Void> setMaxStorage(Domain domain, QuotaSizeLimit maxStorageQuota) {
+        return queryExecutor.executeVoid(setMaxStorageStatement.bind(domain.asString(), QuotaCodec.quotaValueToLong(maxStorageQuota)));
     }
 
-    public void setMaxMessage(Domain domain, QuotaCountLimit maxMessageCount) {
-        session.execute(setMaxMessageStatement.bind(domain.asString(), QuotaCodec.quotaValueToLong(maxMessageCount)));
+    Mono<Void> setMaxMessage(Domain domain, QuotaCountLimit maxMessageCount) {
+        return queryExecutor.executeVoid(setMaxMessageStatement.bind(domain.asString(), QuotaCodec.quotaValueToLong(maxMessageCount)));
     }
 
-    public Optional<QuotaSizeLimit> getMaxStorage(Domain domain) {
-        ResultSet resultSet = session.execute(getMaxStorageStatement.bind(domain.asString()));
-        if (resultSet.isExhausted()) {
-            return Optional.empty();
-        }
-        Long maxStorage = resultSet.one().get(CassandraDomainMaxQuota.STORAGE, Long.class);
-        return QuotaCodec.longToQuotaSize(maxStorage);
+    Mono<QuotaSizeLimit> getMaxStorage(Domain domain) {
+        return queryExecutor.executeSingleRow(getMaxStorageStatement.bind(domain.asString()))
+            .flatMap(row -> Mono.justOrEmpty(row.get(CassandraDomainMaxQuota.STORAGE, Long.class)))
+            .flatMap(maxStorage -> Mono.justOrEmpty(QuotaCodec.longToQuotaSize(maxStorage)));
     }
 
-    public Optional<QuotaCountLimit> getMaxMessage(Domain domain) {
-        ResultSet resultSet = session.execute(getMaxMessageStatement.bind(domain.asString()));
-        if (resultSet.isExhausted()) {
-            return Optional.empty();
-        }
-        Long maxMessages = resultSet.one().get(CassandraDomainMaxQuota.MESSAGE_COUNT, Long.class);
-        return QuotaCodec.longToQuotaCount(maxMessages);
+    Mono<QuotaCountLimit> getMaxMessage(Domain domain) {
+        return queryExecutor.executeSingleRow(getMaxMessageStatement.bind(domain.asString()))
+            .flatMap(row -> Mono.justOrEmpty(row.get(CassandraDomainMaxQuota.MESSAGE_COUNT, Long.class)))
+            .flatMap(maxMessages -> Mono.justOrEmpty(QuotaCodec.longToQuotaCount(maxMessages)));
     }
 
-    public void removeMaxMessage(Domain domain) {
-        session.execute(removeMaxMessageStatement.bind(domain.asString()));
+    Mono<Void> removeMaxMessage(Domain domain) {
+        return queryExecutor.executeVoid(removeMaxMessageStatement.bind(domain.asString()));
     }
 
-    public void removeMaxStorage(Domain domain) {
-        session.execute(removeMaxStorageStatement.bind(domain.asString()));
+    Mono<Void> removeMaxStorage(Domain domain) {
+        return queryExecutor.executeVoid(removeMaxStorageStatement.bind(domain.asString()));
     }
-
 }

@@ -21,8 +21,6 @@ package org.apache.james.mailbox.cassandra.quota;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -34,8 +32,10 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
@@ -54,103 +54,113 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public void setMaxStorage(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota) {
-        perUserQuota.setMaxStorage(quotaRoot, maxStorageQuota);
+        perUserQuota.setMaxStorage(quotaRoot, maxStorageQuota).block();
     }
 
     @Override
     public void setMaxMessage(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) {
-        perUserQuota.setMaxMessage(quotaRoot, maxMessageCount);
+        perUserQuota.setMaxMessage(quotaRoot, maxMessageCount).block();
     }
 
     @Override
     public void setDomainMaxMessage(Domain domain, QuotaCountLimit count) {
-        perDomainQuota.setMaxMessage(domain, count);
+        perDomainQuota.setMaxMessage(domain, count).block();
     }
 
     @Override
     public void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) {
-        perDomainQuota.setMaxStorage(domain, size);
+        perDomainQuota.setMaxStorage(domain, size).block();
     }
 
     @Override
     public void removeDomainMaxMessage(Domain domain) {
-        perDomainQuota.removeMaxMessage(domain);
+        perDomainQuota.removeMaxMessage(domain).block();
     }
 
     @Override
     public void removeDomainMaxStorage(Domain domain) {
-        perDomainQuota.removeMaxStorage(domain);
+        perDomainQuota.removeMaxStorage(domain).block();
     }
 
     @Override
     public Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain) {
-        return perDomainQuota.getMaxMessage(domain);
+        return perDomainQuota.getMaxMessage(domain).blockOptional();
     }
 
     @Override
     public Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain) {
-        return perDomainQuota.getMaxStorage(domain);
+        return perDomainQuota.getMaxStorage(domain).blockOptional();
     }
 
     @Override
     public void removeMaxMessage(QuotaRoot quotaRoot) {
-        perUserQuota.removeMaxMessage(quotaRoot);
+        perUserQuota.removeMaxMessage(quotaRoot).block();
     }
 
     @Override
     public void removeMaxStorage(QuotaRoot quotaRoot) {
-        perUserQuota.removeMaxStorage(quotaRoot);
+        perUserQuota.removeMaxStorage(quotaRoot).block();
     }
 
     @Override
     public void setGlobalMaxStorage(QuotaSizeLimit globalMaxStorage) {
-        globalQuota.setGlobalMaxStorage(globalMaxStorage);
+        globalQuota.setGlobalMaxStorage(globalMaxStorage).block();
     }
 
     @Override
     public void removeGlobalMaxStorage() {
-        globalQuota.removeGlobaltMaxStorage();
+        globalQuota.removeGlobaltMaxStorage().block();
     }
 
     @Override
     public void setGlobalMaxMessage(QuotaCountLimit globalMaxMessageCount) {
-        globalQuota.setGlobalMaxMessage(globalMaxMessageCount);
+        globalQuota.setGlobalMaxMessage(globalMaxMessageCount).block();
     }
 
     @Override
     public void removeGlobalMaxMessage() {
-        globalQuota.removeGlobalMaxMessage();
+        globalQuota.removeGlobalMaxMessage().block();
     }
 
     @Override
     public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
-        return globalQuota.getGlobalMaxStorage();
+        return globalQuota.getGlobalMaxStorage().blockOptional();
     }
 
     @Override
     public Optional<QuotaCountLimit> getGlobalMaxMessage() {
-        return globalQuota.getGlobalMaxMessage();
+        return globalQuota.getGlobalMaxMessage().blockOptional();
     }
 
     @Override
     public Map<Quota.Scope, QuotaCountLimit> listMaxMessagesDetails(QuotaRoot quotaRoot) {
-        Function<Domain, Optional<QuotaCountLimit>> domainQuotaSupplier = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
-        return Stream.of(
-                Pair.of(Quota.Scope.User, perUserQuota.getMaxMessage(quotaRoot)),
-                Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),
-                Pair.of(Quota.Scope.Global, globalQuota.getGlobalMaxMessage()))
-            .filter(pair -> pair.getValue().isPresent())
-            .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
+        return Flux.merge(
+                perUserQuota.getMaxMessage(quotaRoot)
+                    .map(limit -> Pair.of(Quota.Scope.User, limit)),
+                Mono.justOrEmpty(quotaRoot.getDomain())
+                    .flatMap(perDomainQuota::getMaxMessage)
+                    .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
+                globalQuota.getGlobalMaxMessage()
+                    .map(limit -> Pair.of(Quota.Scope.Global, limit)))
+            .collect(Guavate.toImmutableMap(
+                Pair::getKey,
+                Pair::getValue))
+            .block();
     }
 
     @Override
     public Map<Quota.Scope, QuotaSizeLimit> listMaxStorageDetails(QuotaRoot quotaRoot) {
-        Function<Domain, Optional<QuotaSizeLimit>> domainQuotaSupplier = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
-        return Stream.of(
-                Pair.of(Quota.Scope.User, perUserQuota.getMaxStorage(quotaRoot)),
-                Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),
-                Pair.of(Quota.Scope.Global, globalQuota.getGlobalMaxStorage()))
-            .filter(pair -> pair.getValue().isPresent())
-            .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
+        return Flux.merge(
+                perUserQuota.getMaxStorage(quotaRoot)
+                    .map(limit -> Pair.of(Quota.Scope.User, limit)),
+                Mono.justOrEmpty(quotaRoot.getDomain())
+                    .flatMap(perDomainQuota::getMaxStorage)
+                    .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
+                globalQuota.getGlobalMaxStorage()
+                    .map(limit -> Pair.of(Quota.Scope.Global, limit)))
+            .collect(Guavate.toImmutableMap(
+                Pair::getKey,
+                Pair::getValue))
+            .block();
     }
 }
