@@ -228,7 +228,8 @@ public class DownloadRoutes implements JMAPRoutes {
             .header(CONTENT_TYPE, blobContentType)
             .status(OK)
             .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
-                .map(Unpooled::wrappedBuffer))
+                .map(Unpooled::wrappedBuffer)
+                .subscribeOn(Schedulers.elastic()))
             .then();
     }
 
