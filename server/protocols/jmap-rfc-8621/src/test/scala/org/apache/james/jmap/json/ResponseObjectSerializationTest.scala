@@ -37,7 +37,7 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
         """
           |{
           |  "methodResponses": [
-          |    [ "Core/echo1", {
+          |    [ "Core/echo", {
           |      "arg1": "arg1data",
           |      "arg2": "arg2data"
           |    }, "c1" ]
@@ -57,11 +57,11 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
           |{
           |  "sessionState": "75128aab4b1b",
           |  "methodResponses": [
-          |    [ "Core/echo1", {
+          |    [ "Core/echo", {
           |      "arg1": "arg1data",
           |      "arg2": "arg2data"
           |    }, "c1" ],
-          |    [ "Core/echo2", {
+          |    [ "Core/echo", {
           |      "arg3": "arg3data",
           |      "arg4": "arg4data"
           |    }, "c2" ]
@@ -82,7 +82,7 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
           |{
           |  "sessionState": "75128aab4b1b",
           |  "methodResponses": [
-          |    [ "Core/echo1", {
+          |    [ "Core/echo", {
           |      "arg1": "arg1data",
           |      "arg2": "arg2data"
           |    }, "c1" ]

@@ -18,52 +18,87 @@
  * ***************************************************************/
 package org.apache.james.jmap.routes
 
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
+import java.util.stream
+import java.util.stream.Stream
+
 import eu.timepit.refined.auto._
+import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
+import io.netty.handler.codec.http.HttpMethod
+import io.netty.handler.codec.http.HttpResponseStatus.OK
+import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
+import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.CoreEcho
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{Invocation, RequestObject, ResponseObject}
-import org.reactivestreams.Publisher
+import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsSuccess, Json}
-import reactor.core.scala.publisher.SMono
+import reactor.core.publisher.Mono
+import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
-object JMAPApiRoutes {
-  private val ECHO_METHOD = new CoreEcho()
-}
+class JMAPApiRoutes extends JMAPRoutes {
+  override def logger(): Logger = LoggerFactory.getLogger(getClass)
 
-class JMAPApiRoutes {
-  private val echoMethod = JMAPApiRoutes.ECHO_METHOD
+  private val coreEcho = new CoreEcho
 
-  def post(httpServerRequest: HttpServerRequest, httpServerResponse: HttpServerResponse): SMono[Void] = {
-    SMono.fromPublisher(extractRequestObject(httpServerRequest))
-      .flatMap(this.process)
-      .doOnError(e => new RuntimeException(e.getMessage))
+  override def routes(): stream.Stream[JMAPRoute] = Stream.of(
+    JMAPRoute.builder
+      .endpoint(new Endpoint(HttpMethod.POST, JMAP))
+      .action(this.post)
+      .corsHeaders,
+    JMAPRoute.builder
+      .endpoint(new Endpoint(HttpMethod.OPTIONS, JMAP))
+      .action(JMAPRoutes.CORS_CONTROL)
+      .corsHeaders())
+
+  private def post(httpServerRequest: HttpServerRequest, httpServerResponse: HttpServerResponse): Mono[Void] =
+    this.requestAsJsonStream(httpServerRequest)
+      .flatMap(requestObject => this.process(requestObject, httpServerResponse))
+      .onErrorResume(throwable => SMono.fromPublisher(handleInternalError(httpServerResponse, throwable)))
+      .subscribeOn(Schedulers.elastic)
+      .asJava()
       .`then`()
-  }
 
-  private def process(requestObject: RequestObject): SMono[ResponseObject] = {
-    SMono.just(
-      requestObject.methodCalls.map((invocation: Invocation) =>
-        invocation.methodName match {
-          case echoMethod.methodName => echoMethod.process(invocation)
-          case _ => SMono.just(new Invocation(
-            MethodName("error"),
-            Arguments(Json.obj("type" -> "Not implemented")),
-            invocation.methodCallId))
-        }
-      )
-    ).flatMap((invocations: Seq[Invocation]) => SMono.just(ResponseObject(ResponseObject.SESSION_STATE, invocations)))
-  }
-
-  private def extractRequestObject(httpServerRequest: HttpServerRequest): Publisher[RequestObject] = {
-    httpServerRequest
+  private def requestAsJsonStream(httpServerRequest: HttpServerRequest): SMono[RequestObject] = {
+    SMono.fromPublisher(httpServerRequest
       .receive()
-      .asInputStream()
-      .flatMap(inputStream => new Serializer().deserializeRequestObject(inputStream) match {
-        case JsSuccess(requestObject, _) => SMono.just(new ResponseObject(ResponseObject.SESSION_STATE, requestObject.methodCalls))
-        case JsError(errors) => SMono.raiseError(new RuntimeException(errors.toString()))
-      })
+      .aggregate()
+      .asInputStream())
+      .flatMap(this.parseRequestObject)
+  }
+
+  private def parseRequestObject(inputStream: InputStream): SMono[RequestObject] =
+    new Serializer().deserializeRequestObject(inputStream) match {
+      case JsSuccess(requestObject, _) => SMono.just(requestObject)
+      case JsError(errors) => SMono.raiseError(new RuntimeException(errors.toString()))
+    }
+
+  private def process(requestObject: RequestObject, httpServerResponse: HttpServerResponse): SMono[Void] =
+    requestObject
+      .methodCalls
+      .map(this.processMethodWithMatchName)
+      .foldLeft(SFlux.empty[Invocation]) { (flux: SFlux[Invocation], mono: SMono[Invocation]) => flux.mergeWith(mono) }
+      .collectSeq()
+      .flatMap((invocations: Seq[Invocation]) =>
+        SMono.fromPublisher(httpServerResponse.status(OK)
+          .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+          .sendString(
+            SMono.fromCallable(() =>
+              new Serializer().serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations)).toString()),
+            StandardCharsets.UTF_8
+          ).`then`())
+      )
+
+  private def processMethodWithMatchName(invocation: Invocation): SMono[Invocation] = invocation.methodName match {
+    case coreEcho.methodName => SMono.fromPublisher(coreEcho.process(invocation))
+    case _ => SMono.just(new Invocation(
+      MethodName("error"),
+      Arguments(Json.obj("type" -> "Not implemented")),
+      invocation.methodCallId))
   }
 }
-

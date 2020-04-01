@@ -39,7 +39,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
             |{
             |  "using": [ "urn:ietf:params:jmap:core"],
             |  "methodCalls": [
-            |    [ "Core/echo1", {
+            |    [ "Core/echo", {
             |      "arg1": "arg1data",
             |      "arg2": "arg2data"
             |    }, "c1" ]
@@ -60,7 +60,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
             |{
             |  "using": [ "urn:ietf:params:jmap:core"],
             |  "methodCalls": [
-            |    [ "Core/echo1", {
+            |    [ "Core/echo", {
             |      "arg1": "arg1data",
             |      "arg2": "arg2data"
             |    }, "c1" ]
@@ -82,11 +82,11 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
             |{
             |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
             |  "methodCalls": [
-            |    [ "Core/echo1", {
+            |    [ "Core/echo", {
             |      "arg1": "arg1data",
             |      "arg2": "arg2data"
             |    }, "c1" ],
-            |    [ "Core/echo2", {
+            |    [ "Core/echo", {
             |      "arg3": "arg3data",
             |      "arg4": "arg4data"
             |    }, "c2" ]
@@ -109,7 +109,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
           |{
           |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
           |  "methodCalls": [
-          |    [ "Core/echo1", {
+          |    [ "Core/echo", {
           |      "arg1": "arg1data",
           |      "arg2": "arg2data"
           |    }, "c1" ]
@@ -132,7 +132,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
           |{
           |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
           |  "methodCalls": [
-          |    [ "Core/echo1", {
+          |    [ "Core/echo", {
           |      "arg1": "arg1data",
           |      "arg2": "arg2data"
           |    }, "c1" ]

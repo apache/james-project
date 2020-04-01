@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.json
 
+import java.io.InputStream
 import java.net.URL
 
 import org.apache.james.core.Username
@@ -138,6 +139,10 @@ class Serializer {
   }
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = {
+    Json.parse(input).validate[RequestObject]
+  }
+
+  def deserializeRequestObject(input: InputStream): JsResult[RequestObject] = {
     Json.parse(input).validate[RequestObject]
   }
 
