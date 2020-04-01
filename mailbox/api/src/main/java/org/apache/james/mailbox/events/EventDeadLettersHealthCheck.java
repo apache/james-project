@@ -25,6 +25,8 @@ import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 
+import reactor.core.publisher.Mono;
+
 public class EventDeadLettersHealthCheck implements HealthCheck {
     private static final ComponentName COMPONENT_NAME = new ComponentName("EventDeadLettersHealthCheck");
 
@@ -41,17 +43,15 @@ public class EventDeadLettersHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Result check() {
-        try {
-            boolean containEvents = eventDeadLetters.containEvents().block();
+    public Mono<Result> checkReactive() {
+        return eventDeadLetters.containEvents()
+            .map(containEvents -> {
+                if (containEvents) {
+                    return Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events. This might indicate transient failure on mailbox event processing.");
+                }
 
-            if (containEvents) {
-                return Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events. This might indicate transient failure on mailbox event processing.");
-            }
-
-            return Result.healthy(COMPONENT_NAME);
-        } catch (Exception e) {
-            return Result.unhealthy(COMPONENT_NAME, "Error checking EventDeadLettersHealthCheck", e);
-        }
+                return Result.healthy(COMPONENT_NAME);
+            })
+            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking EventDeadLettersHealthCheck", e)));
     }
 }

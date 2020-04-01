@@ -27,6 +27,8 @@ import org.apache.james.core.healthcheck.Result;
 
 import com.datastax.driver.core.Session;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Health check for the Cassandra backend.
  *
@@ -36,11 +38,11 @@ public class CassandraHealthCheck implements HealthCheck {
     private static final ComponentName COMPONENT_NAME = new ComponentName("Cassandra backend");
     private static final String SAMPLE_QUERY = "SELECT NOW() FROM system.local";
 
-    private final Session session;
+    private final CassandraAsyncExecutor queryExecutor;
 
     @Inject
     public CassandraHealthCheck(Session session) {
-        this.session = session;
+        this.queryExecutor = new CassandraAsyncExecutor(session);
     }
 
     @Override
@@ -49,14 +51,11 @@ public class CassandraHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Result check() {
-        try {
-            // execute a simple query to check if cassandra is responding
-            // idea from: https://stackoverflow.com/questions/10246287
-            session.execute(SAMPLE_QUERY);
-            return Result.healthy(COMPONENT_NAME);
-        } catch (Exception e) {
-            return Result.unhealthy(COMPONENT_NAME, "Error checking Cassandra backend", e);
-        }
+    public Mono<Result> checkReactive() {
+        // execute a simple query to check if cassandra is responding
+        // idea from: https://stackoverflow.com/questions/10246287
+        return queryExecutor.execute(SAMPLE_QUERY)
+            .map(resultSet -> Result.healthy(COMPONENT_NAME))
+            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking Cassandra backend", e)));
     }
 }
