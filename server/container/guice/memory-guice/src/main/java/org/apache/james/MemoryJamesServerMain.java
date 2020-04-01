@@ -26,7 +26,6 @@ import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
 import org.apache.james.modules.MailboxModule;
-import org.apache.james.modules.PeriodicalHealthChecksModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
@@ -111,7 +110,6 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new MemoryEventStoreModule(),
         new MemoryMailboxModule(),
         new MemoryMailQueueModule(),
-        new PeriodicalHealthChecksModule(),
         new TaskManagerModule());
 
     public static final Module SMTP_ONLY_MODULE = Modules.combine(

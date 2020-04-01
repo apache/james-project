@@ -62,6 +62,7 @@ public class CommonServicesModule extends AbstractModule {
         install(new CleanupTaskModule());
         install(new MimeMessageModule());
         install(new ClockModule());
+        install(new PeriodicalHealthChecksModule());
 
         bind(FileSystem.class).toInstance(fileSystem);
         bind(Configuration.class).toInstance(configuration);
