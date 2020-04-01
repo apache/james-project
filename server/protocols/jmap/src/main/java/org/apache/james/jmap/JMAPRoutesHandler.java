@@ -22,16 +22,18 @@ package org.apache.james.jmap;
 import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicHeaderValueParser;
 
 import com.google.common.collect.ImmutableSet;
 
 import reactor.netty.http.server.HttpServerRequest;
 
 public class JMAPRoutesHandler {
-    String JMAP_VERSION_HEADER = "jmapVersion=";
+    private static String JMAP_VERSION_HEADER = "jmapVersion";
 
     private final Version version;
     private final Set<JMAPRoutes> routes;
@@ -54,15 +56,22 @@ public class JMAPRoutesHandler {
     }
 
     private Version extractRequestVersionHeader(HttpServerRequest request) {
-        return Optional.ofNullable(request.requestHeaders().get(ACCEPT))
-            .map(s -> s.split(";"))
-            .map(Arrays::stream)
-            .orElse(Stream.of())
-            .map(value -> value.trim().toLowerCase())
-            .filter(value -> value.startsWith(JMAP_VERSION_HEADER.toLowerCase()))
-            .map(value -> value.substring(JMAP_VERSION_HEADER.length()))
+        return asVersion(request)
+            .filter(nameValuePair -> nameValuePair.getName().equals(JMAP_VERSION_HEADER))
+            .map(NameValuePair::getValue)
             .map(Version::of)
             .findFirst()
             .orElse(Version.DRAFT);
+    }
+
+    private Stream<NameValuePair> asVersion(HttpServerRequest request) {
+        return request.requestHeaders()
+            .getAll(ACCEPT)
+            .stream()
+            .flatMap(this::extractValueParameters);
+    }
+
+    private Stream<NameValuePair> extractValueParameters(String value) {
+        return Arrays.stream(BasicHeaderValueParser.parseParameters(value, BasicHeaderValueParser.INSTANCE));
     }
 }
