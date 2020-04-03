@@ -58,7 +58,14 @@ public class JMAPRoute {
             }
 
             private JMAPRoute build(Action action) {
-                return new JMAPRoute(endpoint, action);
+                return new JMAPRoute(endpoint, actionWithParameterResolving(action));
+            }
+
+            Action actionWithParameterResolving(Action action) {
+                return (req, res) ->
+                    action.handleRequest(
+                        req.paramsResolver(s -> endpoint.getUriPathTemplate().match(s)),
+                        res);
             }
         }
     }

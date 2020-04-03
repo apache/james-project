@@ -136,4 +136,34 @@ public class UriPathTemplate {
         return m;
     }
 
+    /**
+     * Matches the template against the given {@code uri} returning a map of path
+     * parameters extracted from the uri, keyed by the names in the template. If the
+     * uri does not match, or there are no path parameters, an empty map is returned.
+     *
+     * @param uri The uri to match
+     *
+     * @return the path parameters from the uri. Never {@code null}.
+     */
+    final Map<String, String> match(String uri) {
+        Map<String, String> pathParameters = vars.get(uri);
+        if (null != pathParameters) {
+            return pathParameters;
+        }
+
+        pathParameters = new HashMap<>();
+        Matcher m = matcher(uri);
+        if (m.matches()) {
+            int i = 1;
+            for (String name : pathVariables) {
+                String val = m.group(i++);
+                pathParameters.put(name, val);
+            }
+        }
+        synchronized (vars) {
+            vars.put(uri, pathParameters);
+        }
+
+        return pathParameters;
+    }
 }

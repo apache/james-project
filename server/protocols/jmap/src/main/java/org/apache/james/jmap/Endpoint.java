@@ -48,6 +48,10 @@ public class Endpoint {
             && uriPathTemplate.matches(request.uri());
     }
 
+    UriPathTemplate getUriPathTemplate() {
+        return uriPathTemplate;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof Endpoint) {
