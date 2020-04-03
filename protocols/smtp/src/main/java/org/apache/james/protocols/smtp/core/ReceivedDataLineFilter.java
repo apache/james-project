@@ -20,12 +20,11 @@ package org.apache.james.protocols.smtp.core;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -49,11 +48,8 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
     private static final String SMTP = "SMTP";
     private static final String ESMTPA = "ESMTPA";
     private static final String ESMTP = "ESMTP";
-    
-    private static final ThreadLocal<DateFormat> DATEFORMAT = ThreadLocal.withInitial(() -> {
-        // See RFC822 for the format
-        return new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z (zzz)", Locale.US);
-    });
+
+    private static DateTimeFormatter DATEFORMAT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z (zzz)", Locale.US);
 
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
     private final ProtocolSession.AttachmentKey<Boolean> headersPrefixAdded = ProtocolSession.AttachmentKey.of("HEADERS_PREFIX_ADDED" + COUNTER.incrementAndGet(), Boolean.class);
@@ -129,7 +125,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
         header.add(headerLineBuffer.toString());
         headerLineBuffer = new StringBuilder();
 
-        headerLineBuffer.append(DATEFORMAT.get().format(new Date()));
+        headerLineBuffer.append(DATEFORMAT.format(ZonedDateTime.now()));
 
         header.add(headerLineBuffer.toString());
         
