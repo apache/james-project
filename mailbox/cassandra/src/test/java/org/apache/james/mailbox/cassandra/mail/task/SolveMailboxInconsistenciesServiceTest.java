@@ -28,6 +28,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
@@ -75,7 +76,7 @@ class SolveMailboxInconsistenciesServiceTest {
         mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
         mailboxPathV2DAO = new CassandraMailboxPathV2DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         versionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
-        testee = new SolveMailboxInconsistenciesService(mailboxDAO, mailboxPathV2DAO, versionDAO);
+        testee = new SolveMailboxInconsistenciesService(mailboxDAO, mailboxPathV2DAO, new CassandraSchemaVersionManager(versionDAO));
 
         versionDAO.updateVersion(new SchemaVersion(7)).block();
     }

@@ -25,7 +25,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
@@ -64,20 +63,25 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private final CassandraMailboxPathV2DAO mailboxPathV2DAO;
     private final CassandraACLMapper cassandraACLMapper;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
-    private final boolean needMailboxPathV1Support;
+    private final CassandraSchemaVersionManager versionManager;
 
     @Inject
-    public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAOImpl mailboxPathDAO, CassandraMailboxPathV2DAO mailboxPathV2DAO, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraACLMapper aclMapper, CassandraSchemaVersionDAO versionDAO) {
+    public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO,
+                                  CassandraMailboxPathDAOImpl mailboxPathDAO,
+                                  CassandraMailboxPathV2DAO mailboxPathV2DAO,
+                                  CassandraUserMailboxRightsDAO userMailboxRightsDAO,
+                                  CassandraACLMapper aclMapper,
+                                  CassandraSchemaVersionManager versionManager) {
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
         this.mailboxPathV2DAO = mailboxPathV2DAO;
         this.userMailboxRightsDAO = userMailboxRightsDAO;
         this.cassandraACLMapper = aclMapper;
+        this.versionManager = versionManager;
+    }
 
-        this.needMailboxPathV1Support = versionDAO.getCurrentSchemaVersion()
-            .block()
-            .orElse(CassandraSchemaVersionManager.MIN_VERSION)
-            .isBefore(MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION);
+    private boolean needMailboxPathV1Support() {
+        return versionManager.isBefore(MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION);
     }
 
     @Override
@@ -90,7 +94,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private Flux<Void> deletePath(Mailbox mailbox) {
-        if (needMailboxPathV1Support) {
+        if (needMailboxPathV1Support()) {
             return Flux.merge(
                 mailboxPathDAO.delete(mailbox.generateAssociatedPath()),
                 mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()));
@@ -163,7 +167,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private Flux<CassandraIdAndPath> listPaths(String fixedNamespace, Username fixedUser) {
-        if (needMailboxPathV1Support) {
+        if (needMailboxPathV1Support()) {
             return Flux.concat(mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser),
                 mailboxPathDAO.listUserMailboxes(fixedNamespace, fixedUser));
         }

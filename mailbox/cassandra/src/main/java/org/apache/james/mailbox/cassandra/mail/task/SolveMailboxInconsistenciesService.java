@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.CassandraIdAndPath;
@@ -357,13 +357,13 @@ public class SolveMailboxInconsistenciesService {
 
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraMailboxPathV2DAO mailboxPathV2DAO;
-    private final CassandraSchemaVersionDAO versionDAO;
+    private final CassandraSchemaVersionManager versionManager;
 
     @Inject
-    SolveMailboxInconsistenciesService(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV2DAO mailboxPathV2DAO, CassandraSchemaVersionDAO versionDAO) {
+    SolveMailboxInconsistenciesService(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV2DAO mailboxPathV2DAO, CassandraSchemaVersionManager versionManager) {
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathV2DAO = mailboxPathV2DAO;
-        this.versionDAO = versionDAO;
+        this.versionManager = versionManager;
     }
 
     Mono<Result> fixMailboxInconsistencies(Context context) {
@@ -375,16 +375,14 @@ public class SolveMailboxInconsistenciesService {
     }
 
     private void assertValidVersion() {
-        Optional<SchemaVersion> maybeVersion = versionDAO.getCurrentSchemaVersion().block();
+        SchemaVersion version = versionManager.computeVersion();
 
-        boolean isVersionValid = maybeVersion
-            .map(version -> version.isAfterOrEquals(MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION))
-            .orElse(false);
+        boolean isVersionValid = version.isAfterOrEquals(MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION);
 
         Preconditions.checkState(isVersionValid,
             "Schema version %s is required in order to ensure mailboxPathV2DAO to be correctly populated, got %s",
             MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION.getValue(),
-            maybeVersion.map(SchemaVersion::getValue));
+            version.getValue());
     }
 
     private Flux<Result> processMailboxPathDaoInconsistencies(Context context) {
