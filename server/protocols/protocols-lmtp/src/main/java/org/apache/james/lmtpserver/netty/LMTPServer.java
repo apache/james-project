@@ -86,6 +86,10 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
      */
     public class LMTPConfigurationImpl extends LMTPConfiguration {
 
+        protected LMTPConfigurationImpl() {
+            super("JAMES Protocols Server");
+        }
+        
         @Override
         public String getHelloName() {
             return LMTPServer.this.getHelloName();

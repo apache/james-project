@@ -44,7 +44,14 @@ public class ProtocolConfigurationImpl implements ProtocolConfiguration {
         }
         DEFAULT_HELLO_NAME = hName;
     }
-    
+
+    private ProtocolConfigurationImpl() {
+    }
+
+    protected ProtocolConfigurationImpl(String softwareName) {
+        this.softwareName = softwareName;
+    }
+
     @Override
     public String getHelloName() {
         if (helloName == null) {
@@ -53,26 +60,14 @@ public class ProtocolConfigurationImpl implements ProtocolConfiguration {
         return helloName;
     }
     
-    public void setHelloName(String helloName) {
-        this.helloName = helloName;
-    }
-    
     @Override
     public String getGreeting() {
         return greeting;
-    }
-    
-    public void setGreeting(String greeting) {
-        this.greeting = greeting;
     }
 
     @Override
     public String getSoftwareName() {
         return softwareName;
-    }
-    
-    public void setSoftwareName(String softwareName) {
-        this.softwareName = softwareName;
     }
 
 }

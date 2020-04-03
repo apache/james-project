@@ -23,7 +23,7 @@ public class LMTPConfigurationImpl extends LMTPConfiguration {
     private long maxMessageSize = 0;    
 
     public LMTPConfigurationImpl() {
-        setSoftwareName("JAMES Protocols LMTP Server");
+        super("JAMES Protocols LMTP Server");
     }
     
     @Override

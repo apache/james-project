@@ -26,6 +26,6 @@ import org.apache.james.protocols.api.ProtocolConfigurationImpl;
 public class POP3Configuration extends ProtocolConfigurationImpl {
 
     public POP3Configuration() {
-        setSoftwareName("JAMES Protocols POP3 Server");
+        super("JAMES Protocols POP3 Server");
     }
 }

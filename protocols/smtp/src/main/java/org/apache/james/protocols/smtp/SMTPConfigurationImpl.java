@@ -34,7 +34,7 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
     private boolean enforceHeloEhlo = true;
 
     public SMTPConfigurationImpl() {
-        setSoftwareName("JAMES SMTP Protocols Server");
+        super("JAMES SMTP Protocols Server");
     }
     
     @Override

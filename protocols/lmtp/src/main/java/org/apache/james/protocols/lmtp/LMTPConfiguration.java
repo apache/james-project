@@ -26,7 +26,11 @@ import org.apache.james.protocols.smtp.SMTPConfiguration;
  * A {@link ProtocolConfigurationImpl} which is used in the context of LMTP
  */
 public abstract class LMTPConfiguration extends ProtocolConfigurationImpl implements SMTPConfiguration {
-    
+
+    protected LMTPConfiguration(String softwareName) {
+        super(softwareName);
+    }
+
     @Override
     public boolean isRelayingAllowed(String remoteIP) {
         return false;
