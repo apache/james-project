@@ -23,8 +23,8 @@ import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -93,7 +93,6 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
     /**
      * Returns the Received header for the message.
      */
-    @SuppressWarnings("unchecked")
     protected Collection<Header> headers(SMTPSession session) {
 
         StringBuilder headerLineBuffer = new StringBuilder();
@@ -134,7 +133,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
 
         header.add(headerLineBuffer.toString());
         
-        return Arrays.asList(header);
+        return Collections.singletonList(header);
     
     }
 
