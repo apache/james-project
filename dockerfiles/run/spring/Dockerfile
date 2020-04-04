@@ -17,7 +17,7 @@ EXPOSE 25 110 143 465 587 993 4000
 
 WORKDIR /root
 
-ARG VERSION=3.5.0-SNAPSHOT
+ARG VERSION=3.6.0-SNAPSHOT
 
 # Get data we need to run James : build results and configuration
 ADD "destination/james-server-app-$VERSION-app.zip" "/root/james-server-app-$VERSION-app.zip"
