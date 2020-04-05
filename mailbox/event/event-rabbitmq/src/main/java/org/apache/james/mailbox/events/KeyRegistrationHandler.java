@@ -38,7 +38,6 @@ import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
@@ -126,7 +125,7 @@ class KeyRegistrationHandler {
             .block();
     }
 
-    Registration register(MailboxListener listener, RegistrationKey key) {
+    Registration register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
         LocalListenerRegistry.LocalRegistration registration = localListenerRegistry.addListener(key, listener);
         if (registration.isFirstListener()) {
             registrationBinder.bind(key)
@@ -156,20 +155,19 @@ class KeyRegistrationHandler {
 
         return localListenerRegistry.getLocalMailboxListeners(registrationKey)
             .filter(listener -> !isLocalSynchronousListeners(eventBusId, listener))
-            .flatMap(listener -> Mono.fromRunnable(Throwing.runnable(() -> executeListener(listener, event, registrationKey)))
-                .doOnError(e -> structuredLogger(event, registrationKey)
-                    .log(logger -> logger.error("Exception happens when handling event", e)))
-                .onErrorResume(e -> Mono.empty())
-                .then())
-            .subscribeOn(Schedulers.elastic())
+            .flatMap(listener -> executeListener(listener, event, registrationKey))
             .then();
     }
 
-    private void executeListener(MailboxListener listener, Event event, RegistrationKey key) throws Exception {
-        mailboxListenerExecutor.execute(listener,
-            MDCBuilder.create()
-                .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key),
-            event);
+    private Mono<Void> executeListener(MailboxListener.ReactiveMailboxListener listener, Event event, RegistrationKey key) {
+        MDCBuilder mdcBuilder = MDCBuilder.create()
+            .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key);
+
+        return mailboxListenerExecutor.execute(listener, mdcBuilder, event)
+            .doOnError(e -> structuredLogger(event, key)
+                .log(logger -> logger.error("Exception happens when handling event", e)))
+            .onErrorResume(e -> Mono.empty())
+            .then();
     }
 
     private boolean isLocalSynchronousListeners(EventBusId eventBusId, MailboxListener listener) {

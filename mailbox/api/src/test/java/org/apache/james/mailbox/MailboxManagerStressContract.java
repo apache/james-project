@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -65,11 +66,13 @@ public interface MailboxManagerStressContract<T extends MailboxManager> {
         getManager().startProcessingRequest(session);
         MailboxPath path = MailboxPath.forUser(username, "INBOX");
         MailboxId mailboxId = getManager().createMailbox(path, session).get();
-        retrieveEventBus().register(
-            event -> {
+        retrieveEventBus().register(new MailboxListener() {
+            @Override
+            public void event(Event event) {
                 MessageUid u = ((MailboxListener.Added) event).getUids().iterator().next();
                 uList.add(u);
-            }, new MailboxIdRegistrationKey(mailboxId));
+            }
+        }, new MailboxIdRegistrationKey(mailboxId));
         getManager().endProcessingRequest(session);
         getManager().logout(session);
 

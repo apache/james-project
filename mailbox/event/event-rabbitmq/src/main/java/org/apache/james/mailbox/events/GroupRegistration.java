@@ -35,7 +35,6 @@ import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.util.MDCBuilder;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 
 import reactor.core.Disposable;
@@ -73,7 +72,7 @@ class GroupRegistration implements Registration {
     static final String RETRY_COUNT = "retry-count";
     static final int DEFAULT_RETRY_COUNT = 0;
 
-    private final MailboxListener mailboxListener;
+    private final MailboxListener.ReactiveMailboxListener mailboxListener;
     private final WorkQueueName queueName;
     private final Receiver receiver;
     private final Runnable unregisterGroup;
@@ -87,7 +86,7 @@ class GroupRegistration implements Registration {
     private Optional<Disposable> receiverSubscriber;
 
     GroupRegistration(Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
-                      MailboxListener mailboxListener, Group group, RetryBackoffConfiguration retryBackoff,
+                      MailboxListener.ReactiveMailboxListener mailboxListener, Group group, RetryBackoffConfiguration retryBackoff,
                       EventDeadLetters eventDeadLetters,
                       Runnable unregisterGroup, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventSerializer = eventSerializer;
@@ -142,8 +141,7 @@ class GroupRegistration implements Registration {
         int currentRetryCount = getRetryCount(acknowledgableDelivery);
 
         return delayGenerator.delayIfHaveTo(currentRetryCount)
-            .publishOn(Schedulers.elastic())
-            .flatMap(any -> Mono.fromRunnable(Throwing.runnable(() -> runListener(event))))
+            .flatMap(any -> runListener(event))
             .onErrorResume(throwable -> retryHandler.handleRetry(event, currentRetryCount, throwable))
             .then(Mono.fromRunnable(acknowledgableDelivery::ack));
     }
@@ -152,8 +150,8 @@ class GroupRegistration implements Registration {
         return retryHandler.retryOrStoreToDeadLetter(event, DEFAULT_RETRY_COUNT);
     }
 
-    private void runListener(Event event) throws Exception {
-        mailboxListenerExecutor.execute(
+    private Mono<Void> runListener(Event event) {
+        return mailboxListenerExecutor.execute(
             mailboxListener,
             MDCBuilder.create()
                 .addContext(EventBus.StructuredLoggingFields.GROUP, group),

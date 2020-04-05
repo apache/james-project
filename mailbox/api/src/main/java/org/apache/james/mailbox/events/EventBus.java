@@ -44,9 +44,17 @@ public interface EventBus {
         }
     }
 
-    Registration register(MailboxListener listener, RegistrationKey key);
+    default Registration register(MailboxListener listener, RegistrationKey key) {
+        return register(MailboxListener.wrapReactive(listener), key);
+    }
 
-    Registration register(MailboxListener listener, Group group) throws GroupAlreadyRegistered;
+    Registration register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key);
+
+    Registration register(MailboxListener.ReactiveMailboxListener listener, Group group) throws GroupAlreadyRegistered;
+
+    default Registration register(MailboxListener listener, Group group) throws GroupAlreadyRegistered {
+        return register(MailboxListener.wrapReactive(listener), group);
+    }
 
     Mono<Void> dispatch(Event event, Set<RegistrationKey> key);
 
@@ -57,6 +65,10 @@ public interface EventBus {
     }
 
     default Registration register(MailboxListener.GroupMailboxListener groupMailboxListener) {
+        return register(MailboxListener.wrapReactive(groupMailboxListener));
+    }
+
+    default Registration register(MailboxListener.ReactiveGroupMailboxListener groupMailboxListener) {
         return register(groupMailboxListener, groupMailboxListener.getDefaultGroup());
     }
 }

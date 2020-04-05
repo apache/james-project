@@ -55,6 +55,7 @@ public class DefaultEventModule extends AbstractModule {
         bind(RetryBackoffConfiguration.class).toInstance(RetryBackoffConfiguration.DEFAULT);
 
         Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class);
+        Multibinder.newSetBinder(binder(), MailboxListener.ReactiveGroupMailboxListener.class);
     }
 
     @Provides

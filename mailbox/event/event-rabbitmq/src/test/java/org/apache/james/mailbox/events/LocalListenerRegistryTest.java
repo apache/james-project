@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.events;
 
+import static org.apache.james.mailbox.events.MailboxListener.wrapReactive;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
@@ -56,7 +57,7 @@ class LocalListenerRegistryTest {
         testee.addListener(KEY_1, listener);
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
-            .containsOnly(listener);
+            .containsOnly(wrapReactive(listener));
     }
 
     @Test
@@ -67,7 +68,7 @@ class LocalListenerRegistryTest {
         testee.addListener(KEY_1, listener2);
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
-            .containsOnly(listener1, listener2);
+            .containsOnly(wrapReactive(listener1), wrapReactive(listener2));
     }
 
     @Test
@@ -80,7 +81,7 @@ class LocalListenerRegistryTest {
         registration.unregister();
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
-            .containsOnly(listener1);
+            .containsOnly(wrapReactive(listener1));
     }
 
     @Test
@@ -136,7 +137,7 @@ class LocalListenerRegistryTest {
                 .runSuccessfullyWithin(ONE_SECOND);
 
             assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
-                .containsOnly(listener);
+                .containsOnly(wrapReactive(listener));
         }
 
         @Test
@@ -155,7 +156,7 @@ class LocalListenerRegistryTest {
                 .runSuccessfullyWithin(ONE_SECOND);
 
             assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
-                .containsOnly(listener1, listener2, listener3);
+                .containsOnly(wrapReactive(listener1), wrapReactive(listener2), wrapReactive(listener3));
         }
 
         @Test
@@ -241,7 +242,7 @@ class LocalListenerRegistryTest {
             testee.addListener(KEY_1, listener4);
             LocalListenerRegistry.LocalRegistration registration5 = testee.addListener(KEY_1, listener5);
 
-            Mono<List<MailboxListener>> listeners = testee.getLocalMailboxListeners(KEY_1)
+            Mono<List<MailboxListener.ReactiveMailboxListener>> listeners = testee.getLocalMailboxListeners(KEY_1)
                 .publishOn(Schedulers.elastic())
                 .delayElements(Duration.ofMillis(100))
                 .collectList();

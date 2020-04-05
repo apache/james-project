@@ -106,24 +106,20 @@ public class EventDispatcher {
             .flatMap(key -> localListenerRegistry.getLocalMailboxListeners(key)
                 .map(listener -> Tuples.of(key, listener)))
             .filter(pair -> pair.getT2().getExecutionMode() == MailboxListener.ExecutionMode.SYNCHRONOUS)
-            .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1()).subscribeOn(Schedulers.elastic()))
+            .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1())).subscribeOn(Schedulers.elastic())
             .then();
     }
 
-    private Mono<Void> executeListener(Event event, MailboxListener mailboxListener, RegistrationKey registrationKey) {
-        return Mono.from(sink -> {
-            try {
-                mailboxListenerExecutor.execute(mailboxListener,
+    private Mono<Void> executeListener(Event event, MailboxListener.ReactiveMailboxListener mailboxListener, RegistrationKey registrationKey) {
+        return mailboxListenerExecutor.execute(mailboxListener,
                     MDCBuilder.create()
                         .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, registrationKey),
-                    event);
-            } catch (Exception e) {
+                    event)
+            .onErrorResume(e -> {
                 structuredLogger(event, ImmutableSet.of(registrationKey))
                     .log(logger -> logger.error("Exception happens when dispatching event", e));
-            }
-            sink.onComplete();
-        });
-
+                return Mono.empty();
+            });
     }
 
     private StructuredLogger structuredLogger(Event event, Set<RegistrationKey> keys) {

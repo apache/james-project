@@ -121,13 +121,13 @@ public class RabbitMQEventBus implements EventBus, Startable {
     }
 
     @Override
-    public Registration register(MailboxListener listener, RegistrationKey key) {
+    public Registration register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
         return keyRegistrationHandler.register(listener, key);
     }
 
     @Override
-    public Registration register(MailboxListener listener, Group group) {
+    public Registration register(MailboxListener.ReactiveMailboxListener listener, Group group) {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
         return groupRegistrationHandler.register(listener, group);
     }

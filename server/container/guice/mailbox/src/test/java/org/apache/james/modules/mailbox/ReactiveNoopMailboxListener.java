@@ -18,12 +18,36 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
+import org.reactivestreams.Publisher;
 
-public interface MailboxListenersLoader {
-    Pair<Group, MailboxListener.ReactiveMailboxListener> createListener(ListenerConfiguration configuration);
+import reactor.core.publisher.Mono;
 
-    void register(Pair<Group, MailboxListener.ReactiveMailboxListener> listener);
+public class ReactiveNoopMailboxListener implements MailboxListener.ReactiveGroupMailboxListener {
+    public static class NoopMailboxListenerGroup extends Group {
+
+    }
+
+    static final Group GROUP = new NoopMailboxListenerGroup();
+
+    @Override
+    public Group getDefaultGroup() {
+        return GROUP;
+    }
+
+    @Override
+    public Publisher<Void> reactiveEvent(Event event) {
+        return Mono.empty();
+    }
+
+    @Override
+    public boolean isHandling(Event event) {
+        return true;
+    }
+
+    @Override
+    public void event(Event event) {
+    }
 }

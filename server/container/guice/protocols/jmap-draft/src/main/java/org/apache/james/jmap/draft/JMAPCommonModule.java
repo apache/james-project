@@ -93,7 +93,7 @@ public class JMAPCommonModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
 
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
+        Multibinder.newSetBinder(binder(), MailboxListener.ReactiveGroupMailboxListener.class)
             .addBinding()
             .to(ComputeMessageFastViewProjectionListener.class);
 

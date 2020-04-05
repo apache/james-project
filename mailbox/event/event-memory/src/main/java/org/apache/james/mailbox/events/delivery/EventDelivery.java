@@ -126,5 +126,9 @@ public interface EventDelivery {
         Mono<Void> handle(Event event);
     }
 
-    Mono<Void> deliver(MailboxListener listener, Event event, DeliveryOption option);
+    Mono<Void> deliver(MailboxListener.ReactiveMailboxListener listener, Event event, DeliveryOption option);
+
+    default Mono<Void> deliver(MailboxListener listener, Event event, DeliveryOption option) {
+        return deliver(MailboxListener.wrapReactive(listener), event, option);
+    }
 }

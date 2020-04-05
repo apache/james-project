@@ -55,17 +55,17 @@ class LocalListenerRegistry {
         }
     }
 
-    private final ConcurrentHashMap<RegistrationKey, ImmutableSet<MailboxListener>> listenersByKey;
+    private final ConcurrentHashMap<RegistrationKey, ImmutableSet<MailboxListener.ReactiveMailboxListener>> listenersByKey;
 
     LocalListenerRegistry() {
         this.listenersByKey = new ConcurrentHashMap<>();
     }
 
-    LocalRegistration addListener(RegistrationKey registrationKey, MailboxListener listener) {
+    LocalRegistration addListener(RegistrationKey registrationKey, MailboxListener.ReactiveMailboxListener listener) {
         AtomicBoolean firstListener = new AtomicBoolean(false);
         listenersByKey.compute(registrationKey, (key, listeners) ->
             Optional.ofNullable(listeners)
-                .map(set -> ImmutableSet.<MailboxListener>builder().addAll(set).add(listener).build())
+                .map(set -> ImmutableSet.<MailboxListener.ReactiveMailboxListener>builder().addAll(set).add(listener).build())
                 .orElseGet(() -> {
                     firstListener.set(true);
                     return ImmutableSet.of(listener);
@@ -74,12 +74,16 @@ class LocalListenerRegistry {
         return new LocalRegistration(firstListener.get(), () -> removeListener(registrationKey, listener));
     }
 
-    private RemovalStatus removeListener(RegistrationKey registrationKey, MailboxListener listener) {
+    LocalRegistration addListener(RegistrationKey registrationKey, MailboxListener listener) {
+        return addListener(registrationKey, MailboxListener.wrapReactive(listener));
+    }
+
+    private RemovalStatus removeListener(RegistrationKey registrationKey, MailboxListener.ReactiveMailboxListener listener) {
         AtomicBoolean lastListenerRemoved = new AtomicBoolean(false);
         listenersByKey.compute(registrationKey, (key, listeners) -> {
             boolean listenersContainRequested = Optional.ofNullable(listeners).orElse(ImmutableSet.of()).contains(listener);
             if (listenersContainRequested) {
-                ImmutableSet<MailboxListener> remainingListeners = removeListenerFromSet(listener, listeners);
+                ImmutableSet<MailboxListener.ReactiveMailboxListener> remainingListeners = removeListenerFromSet(listener, listeners);
                 if (remainingListeners.isEmpty()) {
                     lastListenerRemoved.set(true);
                     return null;
@@ -91,15 +95,15 @@ class LocalListenerRegistry {
         return lastListenerRemoved::get;
     }
 
-    private ImmutableSet<MailboxListener> removeListenerFromSet(MailboxListener listener, ImmutableSet<MailboxListener> listeners) {
-        ImmutableSet<MailboxListener> remainingListeners = listeners.stream().filter(not(listener::equals)).collect(Guavate.toImmutableSet());
+    private ImmutableSet<MailboxListener.ReactiveMailboxListener> removeListenerFromSet(MailboxListener listener, ImmutableSet<MailboxListener.ReactiveMailboxListener> listeners) {
+        ImmutableSet<MailboxListener.ReactiveMailboxListener> remainingListeners = listeners.stream().filter(not(listener::equals)).collect(Guavate.toImmutableSet());
         if (remainingListeners.isEmpty()) {
             return ImmutableSet.of();
         }
         return remainingListeners;
     }
 
-    Flux<MailboxListener> getLocalMailboxListeners(RegistrationKey registrationKey) {
+    Flux<MailboxListener.ReactiveMailboxListener> getLocalMailboxListeners(RegistrationKey registrationKey) {
         return Flux.fromIterable(listenersByKey.getOrDefault(registrationKey, ImmutableSet.of()));
     }
 }

@@ -58,7 +58,7 @@ class GroupRegistrationHandler {
         groupRegistrations.values().forEach(GroupRegistration::unregister);
     }
 
-    Registration register(MailboxListener listener, Group group) {
+    Registration register(MailboxListener.ReactiveMailboxListener listener, Group group) {
         return groupRegistrations
             .compute(group, (groupToRegister, oldGroupRegistration) -> {
                 if (oldGroupRegistration != null) {
@@ -69,7 +69,7 @@ class GroupRegistrationHandler {
             .start();
     }
 
-    private GroupRegistration newGroupRegistration(MailboxListener listener, Group group) {
+    private GroupRegistration newGroupRegistration(MailboxListener.ReactiveMailboxListener listener, Group group) {
         return new GroupRegistration(
             sender,
             receiverProvider,

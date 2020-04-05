@@ -30,6 +30,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
+
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
@@ -38,6 +40,7 @@ import org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHa
 import org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.BackoffRetryer;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.assertj.core.api.SoftAssertions;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -232,7 +235,11 @@ class InVmEventDeliveryTest {
 
             inVmEventDelivery.deliver(listener, EVENT,
                 DeliveryOption.of(
-                    BackoffRetryer.of(RetryBackoffConfiguration.DEFAULT, listener),
+                    BackoffRetryer.of(RetryBackoffConfiguration.builder()
+                            .maxRetries(8)
+                            .firstBackoff(Duration.ofMillis(1))
+                            .jitterFactor(0.2)
+                            .build(), listener),
                     PermanentFailureHandler.StoreToDeadLetters.of(GROUP_A, deadLetter)))
                 .block();
 
