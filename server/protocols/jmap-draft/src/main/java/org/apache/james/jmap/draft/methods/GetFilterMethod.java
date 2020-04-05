@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import java.util.stream.Stream;
+import static org.apache.james.util.ReactorUtils.context;
 
 import javax.inject.Inject;
 
@@ -67,7 +67,7 @@ public class GetFilterMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Flux<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
         Preconditions.checkNotNull(methodCallId);
         Preconditions.checkNotNull(mailboxSession);
@@ -75,26 +75,21 @@ public class GetFilterMethod implements Method {
 
         GetFilterRequest filterRequest = (GetFilterRequest) request;
 
-
-        return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "GET_FILTER")
-            .wrapArround(
-                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-                    () -> process(methodCallId, mailboxSession, filterRequest)))
-            .get();
+        return Flux.from(metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+            () -> process(methodCallId, mailboxSession, filterRequest)
+                .subscriberContext(context("GET_FILTER", MDCBuilder.of(MDCBuilder.ACTION, "GET_FILTER")))));
     }
 
-    private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetFilterRequest request) {
-        try {
-            return retrieveFilter(methodCallId, mailboxSession.getUser());
-        } catch (Exception e) {
-            LOGGER.warn("Failed to retrieve filter");
+    private Mono<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetFilterRequest request) {
+        return retrieveFilter(methodCallId, mailboxSession.getUser())
+            .onErrorResume(e -> {
+                LOGGER.warn("Failed to retrieve filter", e);
 
-            return Stream.of(unKnownError(methodCallId));
-        }
+                return Mono.just(unKnownError(methodCallId));
+            });
     }
 
-    private Stream<JmapResponse> retrieveFilter(MethodCallId methodCallId, Username username) {
+    private Mono<JmapResponse> retrieveFilter(MethodCallId methodCallId, Username username) {
         return Flux.from(filteringManagement.listRulesForUser(username))
             .collect(Guavate.toImmutableList())
             .map(rules -> GetFilterResponse.builder()
@@ -104,9 +99,7 @@ public class GetFilterMethod implements Method {
                 .methodCallId(methodCallId)
                 .response(getFilterResponse)
                 .responseName(RESPONSE_NAME)
-                .build())
-            .flatMapMany(Mono::just)
-            .toStream();
+                .build());
     }
 
     private JmapResponse unKnownError(MethodCallId methodCallId) {

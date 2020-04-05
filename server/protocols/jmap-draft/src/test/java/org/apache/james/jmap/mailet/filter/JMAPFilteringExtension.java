@@ -53,6 +53,8 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 public class JMAPFilteringExtension implements BeforeEachCallback, ParameterResolver {
     private static final DomainList NO_DOMAIN_LIST = null;
 
@@ -114,7 +116,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
                     .build())
                 .collect(ImmutableList.toImmutableList());
 
-            testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME, rules);
+            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME, rules)).block();
         }
 
         public FakeMail asMail(MimeMessageBuilder mimeMessageBuilder) throws MessagingException {

@@ -80,6 +80,8 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 @ExtendWith(JMAPFilteringExtension.class)
 class JMAPFilteringTest {
 
@@ -692,7 +694,7 @@ class JMAPFilteringTest {
             MailboxId mailbox2Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_2");
             MailboxId mailbox3Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
 
-            testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -710,7 +712,7 @@ class JMAPFilteringTest {
                     .name("rule 3")
                     .condition(Rule.Condition.of(TO, EXACTLY_EQUALS, USER_3_ADDRESS))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox3Id.serialize())))
-                    .build());
+                    .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
                     .addFrom(USER_2_ADDRESS)
@@ -729,7 +731,7 @@ class JMAPFilteringTest {
             MailboxId mailbox2Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_2");
             MailboxId mailbox3Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
 
-            testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -738,7 +740,7 @@ class JMAPFilteringTest {
                         mailbox3Id.serialize(),
                         mailbox2Id.serialize(),
                         mailbox1Id.serialize()))))
-                    .build());
+                    .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
                     .setSubject(UNSCRAMBLED_SUBJECT));
@@ -753,7 +755,7 @@ class JMAPFilteringTest {
         void rulesWithEmptyMailboxIdsShouldBeSkept(JMAPFilteringTestSystem testSystem) throws Exception {
             MailboxId mailbox1Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_1");
 
-            testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -766,7 +768,7 @@ class JMAPFilteringTest {
                     .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of(
                         mailbox1Id.serialize()))))
-                    .build());
+                    .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
                     .setSubject(UNSCRAMBLED_SUBJECT));
@@ -822,13 +824,13 @@ class JMAPFilteringTest {
         @Test
         void serviceShouldNotThrowWhenUnknownMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
-            testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
                     .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
-                    .build());
+                    .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
                 .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
@@ -840,13 +842,13 @@ class JMAPFilteringTest {
         @Test
         void mailDirectiveShouldNotBeSetWhenUnknownMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
-            testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
                     .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
-                    .build());
+                    .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
                 .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
@@ -860,7 +862,7 @@ class JMAPFilteringTest {
         @Test
         void rulesWithInvalidMailboxIdsShouldBeSkept(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
-            testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -873,7 +875,7 @@ class JMAPFilteringTest {
                     .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
                         testSystem.getRecipient1MailboxId().serialize())))
-                    .build());
+                    .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
                 .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
@@ -888,7 +890,7 @@ class JMAPFilteringTest {
         void rulesWithMultipleMailboxIdsShouldFallbackWhenInvalidFirstMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
 
-            testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -896,7 +898,7 @@ class JMAPFilteringTest {
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
                         unknownMailboxId,
                         testSystem.getRecipient1MailboxId().serialize())))
-                    .build());
+                    .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
                 .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));

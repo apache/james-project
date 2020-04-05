@@ -19,11 +19,13 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
+import static org.apache.james.util.ReactorUtils.context;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -38,12 +40,17 @@ import org.apache.james.jmap.draft.model.SetFilterResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class SetFilterMethod implements Method {
 
@@ -102,7 +109,7 @@ public class SetFilterMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Flux<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
         Preconditions.checkNotNull(methodCallId);
         Preconditions.checkNotNull(mailboxSession);
@@ -111,52 +118,50 @@ public class SetFilterMethod implements Method {
 
         SetFilterRequest setFilterRequest = (SetFilterRequest) request;
 
-        return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "SET_FILTER")
-            .addContext("update", setFilterRequest.getSingleton())
-            .wrapArround(
-                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-                    () -> process(methodCallId, mailboxSession, setFilterRequest)))
-            .get();
+        return Flux.from(metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+            () -> process(methodCallId, mailboxSession, setFilterRequest)
+                .subscriberContext(jmapAction("SET_FILTER"))
+                .subscriberContext(context("SET_FILTER", MDCBuilder.of("update", setFilterRequest.getSingleton())))));
     }
 
-    private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, SetFilterRequest request) {
+    private Mono<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, SetFilterRequest request) {
         try {
-            return updateFilter(methodCallId, request, mailboxSession.getUser());
+            return updateFilter(methodCallId, request, mailboxSession.getUser())
+                .doOnEach(ReactorUtils.logOnError(e -> LOGGER.warn("Failed setting Rules", e)))
+                .onErrorResume(e -> Mono.just(unKnownError(methodCallId)));
         } catch (MultipleMailboxIdException e) {
             LOGGER.debug("Rule targeting several mailboxes", e);
-            return Stream.of(multipleMailboxesError(methodCallId, e));
+            return Mono.just(multipleMailboxesError(methodCallId, e));
         }  catch (DuplicatedRuleException e) {
             LOGGER.debug("Duplicated rules", e);
-            return Stream.of(duplicatedIdsError(methodCallId, e));
-        } catch (Exception e) {
+            return Mono.just(duplicatedIdsError(methodCallId, e));
+        }  catch (Exception e) {
             LOGGER.warn("Failed setting Rules", e);
-            return Stream.of(unKnownError(methodCallId));
+            return Mono.just(unKnownError(methodCallId));
         }
     }
 
-    private Stream<JmapResponse> updateFilter(MethodCallId methodCallId, SetFilterRequest request, Username username) throws DuplicatedRuleException, MultipleMailboxIdException {
+    private Mono<JmapResponse> updateFilter(MethodCallId methodCallId, SetFilterRequest request, Username username) throws DuplicatedRuleException, MultipleMailboxIdException {
         ImmutableList<Rule> rules = request.getSingleton().stream()
             .map(JmapRuleDTO::toRule)
-            .collect(ImmutableList.toImmutableList());
+            .collect(Guavate.toImmutableList());
 
         ensureNoDuplicatedRules(rules);
         ensureNoMultipleMailboxesRules(rules);
 
-        filteringManagement.defineRulesForUser(username, rules);
-
-        return Stream.of(JmapResponse.builder()
-            .methodCallId(methodCallId)
-            .responseName(RESPONSE_NAME)
-            .response(SetFilterResponse.updated())
-            .build());
+        return Mono.from(filteringManagement.defineRulesForUser(username, rules))
+            .thenReturn(JmapResponse.builder()
+                .methodCallId(methodCallId)
+                .responseName(RESPONSE_NAME)
+                .response(SetFilterResponse.updated())
+                .build());
     }
 
     private void ensureNoMultipleMailboxesRules(ImmutableList<Rule> rules) throws MultipleMailboxIdException {
         ImmutableList<Rule.Id> idWithMultipleMailboxes = rules.stream()
             .filter(rule -> rule.getAction().getAppendInMailboxes().getMailboxIds().size() > 1)
             .map(Rule::getId)
-            .collect(ImmutableList.toImmutableList());
+            .collect(Guavate.toImmutableList());
 
         if (!idWithMultipleMailboxes.isEmpty()) {
             throw new MultipleMailboxIdException(idWithMultipleMailboxes);

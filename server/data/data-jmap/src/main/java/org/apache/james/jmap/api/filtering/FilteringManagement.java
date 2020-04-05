@@ -29,14 +29,14 @@ import com.google.common.collect.ImmutableList;
 
 public interface FilteringManagement {
 
-    void defineRulesForUser(Username username, List<Rule> rules);
+    Publisher<Void> defineRulesForUser(Username username, List<Rule> rules);
 
-    default void defineRulesForUser(Username username, Rule... rules) {
-        defineRulesForUser(username, Arrays.asList(rules));
+    default Publisher<Void> defineRulesForUser(Username username, Rule... rules) {
+        return defineRulesForUser(username, Arrays.asList(rules));
     }
 
-    default void clearRulesForUser(Username username) {
-        defineRulesForUser(username, ImmutableList.of());
+    default Publisher<Void> clearRulesForUser(Username username) {
+        return defineRulesForUser(username, ImmutableList.of());
     }
 
     Publisher<Rule> listRulesForUser(Username username);
