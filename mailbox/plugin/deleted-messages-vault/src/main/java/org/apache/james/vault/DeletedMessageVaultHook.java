@@ -35,6 +35,7 @@ import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -154,18 +155,19 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
             .flatMap(groupFlux -> groupFlux.reduce(DeletedMessageMailboxContext::combine));
     }
 
-    private Publisher<DeletedMessageMailboxContext> addOwnerToMetadata(GroupedFlux<MailboxId, MetadataWithMailboxId> groupedFlux) throws MailboxException {
-        Username owner = retrieveMailboxUser(groupedFlux.key());
-        return groupedFlux.map(metadata -> new DeletedMessageMailboxContext(metadata.getMessageMetaData().getMessageId(), owner, ImmutableList.of(metadata.getMailboxId())));
+    private Flux<DeletedMessageMailboxContext> addOwnerToMetadata(GroupedFlux<MailboxId, MetadataWithMailboxId> groupedFlux) throws MailboxException {
+        return retrieveMailboxUser(groupedFlux.key())
+            .flatMapMany(owner -> groupedFlux.map(metadata ->
+                new DeletedMessageMailboxContext(metadata.getMessageMetaData().getMessageId(), owner, ImmutableList.of(metadata.getMailboxId()))));
     }
 
     private Pair<MessageId, Username> toMessageIdUserPair(DeletedMessageMailboxContext deletedMessageMetadata) {
         return Pair.of(deletedMessageMetadata.getMessageId(), deletedMessageMetadata.getOwner());
     }
 
-    private Username retrieveMailboxUser(MailboxId mailboxId) throws MailboxException {
+    private Mono<Username> retrieveMailboxUser(MailboxId mailboxId) throws MailboxException {
         return mapperFactory.getMailboxMapper(session)
-            .findMailboxById(mailboxId)
-            .getUser();
+            .findMailboxByIdReactive(mailboxId)
+            .map(Mailbox::getUser);
     }
 }

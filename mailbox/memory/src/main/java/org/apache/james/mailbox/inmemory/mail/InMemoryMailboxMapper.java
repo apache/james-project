@@ -40,10 +40,10 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class InMemoryMailboxMapper implements MailboxMapper {
@@ -84,12 +84,10 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
-        return mailboxesByPath.values()
-            .stream()
+    public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
+        return Flux.fromIterable(mailboxesByPath.values())
             .filter(query::matches)
-            .map(Mailbox::new)
-            .collect(Guavate.toImmutableList());
+            .map(Mailbox::new);
     }
 
     @Override
@@ -166,11 +164,9 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) throws MailboxException {
-        return mailboxesByPath.values()
-            .stream()
-            .filter(mailbox -> hasRightOn(mailbox, userName, right))
-            .collect(Guavate.toImmutableList());
+    public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
+        return Flux.fromIterable(mailboxesByPath.values())
+            .filter(mailbox -> hasRightOn(mailbox, userName, right));
     }
 
     private Boolean hasRightOn(Mailbox mailbox, Username userName, Right right) {

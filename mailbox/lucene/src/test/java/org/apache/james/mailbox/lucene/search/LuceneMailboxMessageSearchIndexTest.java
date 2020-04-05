@@ -310,7 +310,8 @@ class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains("My Body"));
 
-        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), query, LIMIT);
+        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), query, LIMIT)
+            .collectList().block();
 
         assertThat(result).containsOnly(id1, id2);
     }
@@ -323,7 +324,8 @@ class LuceneMailboxMessageSearchIndexTest {
         List<MessageId> result = index.search(session,
                 ImmutableList.of(mailbox.getMailboxId(), mailbox3.getMailboxId()),
                 query,
-                LIMIT);
+                LIMIT)
+            .collectList().block();
 
         assertThat(result).containsOnly(id1);
     }
@@ -333,7 +335,8 @@ class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
 
-        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), query, LIMIT);
+        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), query, LIMIT)
+            .collectList().block();
 
         // The query is not limited to one mailbox and we have 5 indexed messages
         assertThat(result).hasSize(5);
@@ -345,7 +348,8 @@ class LuceneMailboxMessageSearchIndexTest {
         query.andCriteria(SearchQuery.all());
 
         int limit = 1;
-        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), query, limit);
+        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), query, limit)
+            .collectList().block();
 
         assertThat(result).hasSize(limit);
     }

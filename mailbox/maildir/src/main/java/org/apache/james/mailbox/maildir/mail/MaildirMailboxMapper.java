@@ -51,9 +51,7 @@ import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableList;
-
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MaildirMailboxMapper extends NonTransactionalMapper implements MailboxMapper {
@@ -128,7 +126,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
     
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
+    public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
         String pathLike = MailboxExpressionBackwardCompatibility.getPathLike(query);
         final Pattern searchPattern = Pattern.compile("[" + MaildirStore.maildirDelimiter + "]"
                 + pathLike.replace(".", "\\.").replace(MaildirStore.WILDCARD, ".*"));
@@ -147,9 +145,8 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             Mailbox mailbox = maildirStore.loadMailbox(session, root, query.getFixedNamespace(), query.getFixedUser(), "");
             mailboxList.add(0, mailbox);
         }
-        return mailboxList.stream()
-            .filter(query::matches)
-            .collect(Guavate.toImmutableList());
+        return Flux.fromIterable(mailboxList)
+            .filter(query::matches);
     }
 
     @Override
@@ -159,7 +156,8 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             .userAndNamespaceFrom(mailbox.generateAssociatedPath())
             .expression(new PrefixedWildcard(mailbox.getName() + delimiter))
             .build()
-            .asUserBound());
+            .asUserBound())
+            .collectList().block();
         return mailboxes.size() > 0;
     }
 
@@ -333,7 +331,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) throws MailboxException {
-        return ImmutableList.of();
+    public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
+        return Flux.empty();
     }
 }

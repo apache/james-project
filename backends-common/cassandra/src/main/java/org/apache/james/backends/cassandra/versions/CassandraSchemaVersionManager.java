@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Mono;
+
 public class CassandraSchemaVersionManager {
     public static final SchemaVersion MIN_VERSION = new SchemaVersion(5);
     public static final SchemaVersion MAX_VERSION = new SchemaVersion(7);
@@ -65,24 +67,26 @@ public class CassandraSchemaVersionManager {
         this.minVersion = minVersion;
         this.maxVersion = maxVersion;
 
-        this.initialSchemaVersion = computeVersion();
+        this.initialSchemaVersion = computeVersion().block();
     }
 
-    public boolean isBefore(SchemaVersion minimum) {
-        return initialSchemaVersion.isBefore(minimum)
+    public Mono<Boolean> isBefore(SchemaVersion minimum) {
+        if (initialSchemaVersion.isBefore(minimum)) {
             // If we started with a legacy james then maybe schema version had been updated since then
-            && computeVersion().isBefore(minimum);
+            return computeVersion()
+                .map(computedVersion -> computedVersion.isBefore(minimum));
+        }
+        return Mono.just(false);
     }
 
-    public SchemaVersion computeVersion() {
+    public Mono<SchemaVersion> computeVersion() {
         return schemaVersionDAO
             .getCurrentSchemaVersion()
-            .block()
-            .orElseGet(() -> {
+            .map(maybeVersion -> maybeVersion.orElseGet(() -> {
                 LOGGER.warn("No schema version information found on Cassandra, we assume schema is at version {}",
                     CassandraSchemaVersionManager.DEFAULT_VERSION);
                 return DEFAULT_VERSION;
-            });
+            }));
     }
 
     public SchemaVersion getMinimumSupportedVersion() {
@@ -94,7 +98,7 @@ public class CassandraSchemaVersionManager {
     }
 
     public SchemaState computeSchemaState() {
-        SchemaVersion version = computeVersion();
+        SchemaVersion version = computeVersion().block();
         if (version.isBefore(minVersion)) {
             return TOO_OLD;
         } else if (version.isBefore(maxVersion)) {

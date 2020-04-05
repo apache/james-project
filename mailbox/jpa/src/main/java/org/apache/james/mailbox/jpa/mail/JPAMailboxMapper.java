@@ -48,8 +48,8 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -186,15 +186,13 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
+    public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
         try {
             String pathLike = MailboxExpressionBackwardCompatibility.getPathLike(query);
-            return findMailboxWithPathLikeTypedQuery(query.getFixedNamespace(), query.getFixedUser(), pathLike)
-                .getResultList()
-                .stream()
+            return Flux.fromIterable(findMailboxWithPathLikeTypedQuery(query.getFixedNamespace(), query.getFixedUser(), pathLike)
+                .getResultList())
                 .map(JPAMailbox::toMailbox)
-                .filter(query::matches)
-                .collect(Guavate.toImmutableList());
+                .filter(query::matches);
         } catch (PersistenceException e) {
             throw new MailboxException("Search of mailbox " + query + " failed", e);
         }
@@ -250,7 +248,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) throws MailboxException {
-        return ImmutableList.of();
+    public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
+        return Flux.empty();
     }
 }

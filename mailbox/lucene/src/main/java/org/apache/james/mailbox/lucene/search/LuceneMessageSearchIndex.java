@@ -123,6 +123,8 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+
 /**
  * Lucene based {@link ListeningMessageSearchIndex} which offers message searching via a Lucene index
  */
@@ -461,18 +463,18 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public List<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
+    public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         if (mailboxIds.isEmpty()) {
-            return ImmutableList.of();
+            return Flux.empty();
         }
 
-        return searchMultimap(mailboxIds, searchQuery)
+        return Flux.fromIterable(searchMultimap(mailboxIds, searchQuery)
             .stream()
             .map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
             .limit(Long.valueOf(limit).intValue())
-            .collect(Guavate.toImmutableList());
+            .collect(Guavate.toImmutableList()));
     }
     
     private List<SearchResult> searchMultimap(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {

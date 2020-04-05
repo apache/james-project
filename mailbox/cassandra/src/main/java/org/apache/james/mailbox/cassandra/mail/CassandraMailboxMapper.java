@@ -20,9 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -82,7 +80,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         this.versionManager = versionManager;
     }
 
-    private boolean needMailboxPathV1Support() {
+    private Mono<Boolean> needMailboxPathV1Support() {
         return versionManager.isBefore(MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION);
     }
 
@@ -96,12 +94,15 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private Flux<Void> deletePath(Mailbox mailbox) {
-        if (needMailboxPathV1Support()) {
-            return Flux.merge(
-                mailboxPathDAO.delete(mailbox.generateAssociatedPath()),
-                mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()));
-        }
-        return Flux.from(mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()));
+        return needMailboxPathV1Support()
+            .flatMapMany(needSupport -> {
+                if (needSupport) {
+                    return Flux.merge(
+                        mailboxPathDAO.delete(mailbox.generateAssociatedPath()),
+                        mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()));
+                }
+                return Flux.from(mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()));
+            });
     }
 
     @Override
@@ -144,11 +145,9 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public Stream<Mailbox> findMailboxesById(Collection<MailboxId> mailboxIds) {
-        return Flux.fromIterable(mailboxIds)
-            .map(CassandraId.class::cast)
-            .concatMap(this::retrieveMailbox)
-            .toStream();
+    public Mono<Mailbox> findMailboxByIdReactive(MailboxId id) {
+        CassandraId mailboxId = (CassandraId) id;
+        return retrieveMailbox(mailboxId);
     }
 
     private Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
@@ -164,24 +163,25 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
+    public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
         String fixedNamespace = query.getFixedNamespace();
         Username fixedUser = query.getFixedUser();
 
         return listPaths(fixedNamespace, fixedUser)
             .filter(idAndPath -> query.isPathMatch(idAndPath.getMailboxPath()))
             .distinct(CassandraIdAndPath::getMailboxPath)
-            .concatMap(this::retrieveMailbox)
-            .collectList()
-            .block();
+            .concatMap(this::retrieveMailbox);
     }
 
     private Flux<CassandraIdAndPath> listPaths(String fixedNamespace, Username fixedUser) {
-        if (needMailboxPathV1Support()) {
-            return Flux.concat(mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser),
-                mailboxPathDAO.listUserMailboxes(fixedNamespace, fixedUser));
-        }
-        return mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser);
+        return needMailboxPathV1Support()
+            .flatMapMany(needSupport -> {
+                if (needSupport) {
+                    return Flux.concat(mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser),
+                        mailboxPathDAO.listUserMailboxes(fixedNamespace, fixedUser));
+                }
+                return mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser);
+            });
     }
 
     private Mono<Mailbox> retrieveMailbox(CassandraIdAndPath idAndPath) {
@@ -302,12 +302,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
+    public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
         return userMailboxRightsDAO.listRightsForUser(userName)
             .filter(mailboxId -> mailboxId.getRight().contains(right))
             .map(Pair::getLeft)
-            .flatMap(this::retrieveMailbox)
-            .collectList()
-            .block();
+            .flatMap(this::retrieveMailbox);
     }
 }

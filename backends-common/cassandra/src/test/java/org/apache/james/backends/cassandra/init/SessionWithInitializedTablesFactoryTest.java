@@ -83,39 +83,39 @@ class SessionWithInitializedTablesFactoryTest {
 
     @Test
     void createSessionShouldSetTheLatestSchemaVersionWhenCreatingTypesAndTables() {
-        assertThat(versionManager(testee.get()).computeVersion())
+        assertThat(versionManager(testee.get()).computeVersion().block())
                 .isEqualTo(MAX_VERSION);
     }
 
     @Test
     void createSessionShouldKeepTheSetSchemaVersionWhenTypesAndTablesHaveNotChanged() {
         Session session = testee.get();
-        assertThat(versionManager(session).computeVersion())
+        assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MAX_VERSION);
 
         new CassandraTableManager(MODULE, session).clearAllTables();
         versionManagerDAO(session).updateVersion(MIN_VERSION);
-        assertThat(versionManager(session).computeVersion())
+        assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
 
-        assertThat(versionManager(testee.get()).computeVersion())
+        assertThat(versionManager(testee.get()).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
     }
 
     @Test
     void createSessionShouldKeepTheSetSchemaVersionWhenTypesAndTablesHavePartiallyChanged() {
         Session session = testee.get();
-        assertThat(versionManager(session).computeVersion())
+        assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MAX_VERSION);
 
         new CassandraTableManager(MODULE, session).clearAllTables();
         versionManagerDAO(session).updateVersion(MIN_VERSION);
-        assertThat(versionManager(session).computeVersion())
+        assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
         session.execute(SchemaBuilder.dropTable(TABLE_NAME));
         session.execute(SchemaBuilder.dropType(TYPE_NAME));
 
-        assertThat(versionManager(testee.get()).computeVersion())
+        assertThat(versionManager(testee.get()).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
     }
 

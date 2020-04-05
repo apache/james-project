@@ -93,6 +93,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -536,7 +537,7 @@ public class StoreMailboxManager implements MailboxManager {
             .build()
             .asUserBound();
         locker.executeWithLock(from, (LockAwareExecution<Void>) () -> {
-            List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(query);
+            List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(query).collectList().block();
             for (Mailbox sub : subMailboxes) {
                 String subOriginalName = sub.getName();
                 String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
@@ -596,7 +597,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private List<MailboxMetaData> searchMailboxesMetadata(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
-        List<Mailbox> mailboxes = searchMailboxes(mailboxQuery, session, right);
+        List<Mailbox> mailboxes = searchMailboxes(mailboxQuery, session, right).collectList().block();
 
         ImmutableMap<MailboxId, MailboxCounters> counters = getMailboxCounters(mailboxes, session)
             .stream()
@@ -614,16 +615,13 @@ public class StoreMailboxManager implements MailboxManager {
             .collect(Guavate.toImmutableList());
     }
 
-    private List<Mailbox> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
+    private Flux<Mailbox> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Stream<Mailbox> baseMailboxes = mailboxMapper
-            .findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session))
-            .stream();
-        Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session);
-        return Stream.concat(baseMailboxes, delegatedMailboxes)
+        Flux<Mailbox> baseMailboxes = mailboxMapper.findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session));
+        Flux<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session);
+        return Flux.merge(baseMailboxes, delegatedMailboxes)
             .distinct()
-            .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)))
-            .collect(Guavate.toImmutableList());
+            .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)));
     }
 
     static MailboxQuery.UserBound toSingleUserQuery(MailboxQuery mailboxQuery, MailboxSession mailboxSession) {
@@ -644,12 +642,12 @@ public class StoreMailboxManager implements MailboxManager {
             .build());
     }
 
-    private Stream<Mailbox> getDelegatedMailboxes(MailboxMapper mailboxMapper, MailboxQuery mailboxQuery,
-                                                  Right right, MailboxSession session) throws MailboxException {
+    private Flux<Mailbox> getDelegatedMailboxes(MailboxMapper mailboxMapper, MailboxQuery mailboxQuery,
+                                                Right right, MailboxSession session) {
         if (mailboxQuery.isPrivateMailboxes(session)) {
-            return Stream.of();
+            return Flux.empty();
         }
-        return mailboxMapper.findNonPersonalMailboxes(session.getUser(), right).stream();
+        return mailboxMapper.findNonPersonalMailboxes(session.getUser(), right);
     }
 
     private MailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox, MailboxCounters counters) throws UnsupportedRightException {
@@ -677,32 +675,31 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public List<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException {
-        ImmutableSet<MailboxId> wantedMailboxesId =
-            getInMailboxes(expression.getInMailboxes(), session)
-                .filter(id -> !expression.getNotInMailboxes().contains(id))
-                .collect(Guavate.toImmutableSet());
-
-        return index.search(session, wantedMailboxesId, expression.getSearchQuery(), limit);
+    public Flux<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException {
+        return getInMailboxes(expression.getInMailboxes(), session)
+            .filter(id -> !expression.getNotInMailboxes().contains(id))
+            .collect(Guavate.toImmutableSet())
+            .flatMapMany(Throwing.function(ids -> index.search(session, ids, expression.getSearchQuery(), limit)));
     }
 
-    private Stream<MailboxId> getInMailboxes(ImmutableSet<MailboxId> inMailboxes, MailboxSession session) throws MailboxException {
-        if (inMailboxes.isEmpty()) {
+
+    private Flux<MailboxId> getInMailboxes(ImmutableSet<MailboxId> inMailboxes, MailboxSession session) throws MailboxException {
+       if (inMailboxes.isEmpty()) {
             return getAllReadableMailbox(session);
         } else {
             return filterReadable(inMailboxes, session);
         }
     }
 
-    private Stream<MailboxId> getAllReadableMailbox(MailboxSession session) throws MailboxException {
+    private Flux<MailboxId> getAllReadableMailbox(MailboxSession session) throws MailboxException {
         return searchMailboxes(MailboxQuery.builder().matchesAllMailboxNames().build(), session, Right.Read)
-            .stream()
             .map(Mailbox::getMailboxId);
     }
 
-    private Stream<MailboxId> filterReadable(ImmutableSet<MailboxId> inMailboxes, MailboxSession session) throws MailboxException {
-        return mailboxSessionMapperFactory.getMailboxMapper(session)
-            .findMailboxesById(inMailboxes)
+    private Flux<MailboxId> filterReadable(ImmutableSet<MailboxId> inMailboxes, MailboxSession session) throws MailboxException {
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        return Flux.fromIterable(inMailboxes)
+            .concatMap(mailboxMapper::findMailboxByIdReactive)
             .filter(Throwing.<Mailbox>predicate(mailbox -> storeRightManager.hasRight(mailbox, Right.Read, session)).sneakyThrow())
             .map(Mailbox::getMailboxId);
     }

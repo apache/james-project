@@ -375,7 +375,7 @@ public class SolveMailboxInconsistenciesService {
     }
 
     private void assertValidVersion() {
-        SchemaVersion version = versionManager.computeVersion();
+        SchemaVersion version = versionManager.computeVersion().block();
 
         boolean isVersionValid = version.isAfterOrEquals(MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION);
 

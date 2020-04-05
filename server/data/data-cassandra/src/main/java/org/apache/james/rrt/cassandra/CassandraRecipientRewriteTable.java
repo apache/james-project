@@ -97,7 +97,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
         Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
             "Not supported mapping of type %s", mapping.getType());
 
-        if (versionManager.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION)) {
+        if (versionManager.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION).block()) {
             return super.listSources(mapping);
         }
 

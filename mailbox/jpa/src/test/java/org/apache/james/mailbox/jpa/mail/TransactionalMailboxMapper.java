@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class TransactionalMailboxMapper implements MailboxMapper {
@@ -81,7 +82,7 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
+    public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
         return wrapped.findMailboxWithPathLike(query);
     }
 
@@ -106,7 +107,7 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) throws MailboxException {
+    public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
         return wrapped.findNonPersonalMailboxes(userName, right);
     }
 

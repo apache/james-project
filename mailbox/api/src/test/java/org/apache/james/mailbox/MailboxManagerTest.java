@@ -94,6 +94,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -1208,7 +1209,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .build();
 
 
-            assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsOnly(cacahueteMessageId, pirouetteMessageId);
         }
 
@@ -1237,7 +1239,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .from(new SearchQuery())
                 .build();
 
-            assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsOnly(messageId);
         }
 
@@ -1264,7 +1267,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .from(new SearchQuery())
                 .build();
 
-            assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .isEmpty();
         }
 
@@ -1284,7 +1288,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .from(new SearchQuery())
                 .build();
 
-            assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .isEmpty();
         }
 
@@ -1305,7 +1310,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .inMailboxes(otherMailboxId)
                 .build();
 
-            assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .isEmpty();
         }
 
@@ -1325,7 +1331,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .notInMailboxes(otherMailboxId)
                 .build();
 
-            assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .isEmpty();
         }
 
@@ -1346,7 +1353,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .notInMailboxes(otherMailboxId)
                 .build();
 
-            assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .isEmpty();
         }
 
@@ -1375,7 +1383,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .inMailboxes(searchedMailboxId)
                 .build();
 
-            assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsExactly(messageId);
         }
 
@@ -1850,9 +1859,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .inMailboxes(otherMailboxId)
                 .build();
 
-            assertThat(mailboxManager.search(inboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(inboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .isEmpty();
-            assertThat(mailboxManager.search(otherMailboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(otherMailboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsExactly(messageId1, messageId2);
         }
 
@@ -1889,9 +1900,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .inMailboxes(otherMailboxId)
                 .build();
 
-            assertThat(mailboxManager.search(inboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(inboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsExactly(messageId2);
-            assertThat(mailboxManager.search(otherMailboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(otherMailboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsExactly(composedMessageId1.getMessageId());
         }
 
@@ -1979,9 +1992,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .inMailboxes(otherMailboxId)
                 .build();
 
-            assertThat(mailboxManager.search(inboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(inboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsExactly(messageId1, messageId2);
-            assertThat(mailboxManager.search(otherMailboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(otherMailboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsExactly(messageId1, messageId2);
         }
 
@@ -2019,9 +2034,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .inMailboxes(otherMailboxId)
                 .build();
 
-            assertThat(mailboxManager.search(inboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(inboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsExactly(messageId1, messageId2);
-            assertThat(mailboxManager.search(otherMailboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            assertThat(Flux.from(mailboxManager.search(otherMailboxQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
                 .containsExactly(messageId1);
         }
 

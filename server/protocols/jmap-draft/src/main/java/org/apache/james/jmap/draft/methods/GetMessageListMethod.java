@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static org.apache.james.util.ReactorUtils.context;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -39,7 +41,6 @@ import org.apache.james.jmap.draft.utils.FilterToSearchQuery;
 import org.apache.james.jmap.draft.utils.SortConverter;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
@@ -47,9 +48,14 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class GetMessageListMethod implements Method {
 
@@ -89,11 +95,18 @@ public class GetMessageListMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Flux<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMessageListRequest);
 
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
 
+        return metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+            () -> process(methodCallId, mailboxSession, messageListRequest)
+                .subscriberContext(context("GET_MESSAGE_LIST", mdc(messageListRequest))))
+            .subscribeOn(Schedulers.elastic());
+    }
+
+    private MDCBuilder mdc(GetMessageListRequest messageListRequest) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "GET_MESSAGE_LIST")
             .addContext("accountId", messageListRequest.getAccountId())
@@ -105,38 +118,30 @@ public class GetMessageListMethod implements Method {
             .addContext("filters", messageListRequest.getFilter())
             .addContext("sorts", messageListRequest.getSort())
             .addContext("isFetchMessage", messageListRequest.isFetchMessages())
-            .addContext("isCollapseThread", messageListRequest.isCollapseThreads())
-            .wrapArround(
-                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-                    () -> process(methodCallId, mailboxSession, messageListRequest)))
-            .get();
+            .addContext("isCollapseThread", messageListRequest.isCollapseThreads());
     }
 
-    private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetMessageListRequest messageListRequest) {
-        GetMessageListResponse messageListResponse = getMessageListResponse(messageListRequest, mailboxSession);
-        Stream<JmapResponse> jmapResponse = Stream.of(JmapResponse.builder().methodCallId(methodCallId)
-            .response(messageListResponse)
-            .responseName(RESPONSE_NAME)
-            .build());
-        return Stream.concat(jmapResponse,
-            processGetMessages(messageListRequest, messageListResponse, methodCallId, mailboxSession));
+    private Flux<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetMessageListRequest messageListRequest) {
+        return getMessageListResponse(messageListRequest, mailboxSession)
+                .flatMapMany(messageListResponse -> Flux.concat(
+                    Mono.just(JmapResponse.builder().methodCallId(methodCallId)
+                        .response(messageListResponse)
+                        .responseName(RESPONSE_NAME)
+                        .build()),
+                    processGetMessages(messageListRequest, messageListResponse, methodCallId, mailboxSession)));
     }
 
-    private GetMessageListResponse getMessageListResponse(GetMessageListRequest messageListRequest, MailboxSession mailboxSession) {
-        GetMessageListResponse.Builder builder = GetMessageListResponse.builder();
-        try {
-            MultimailboxesSearchQuery searchQuery = convertToSearchQuery(messageListRequest);
-            Long postionValue = messageListRequest.getPosition().map(Number::asLong).orElse(DEFAULT_POSITION);
-            mailboxManager.search(searchQuery,
-                mailboxSession,
-                postionValue + messageListRequest.getLimit().map(Number::asLong).orElse(maximumLimit))
-                .stream()
-                .skip(postionValue)
-                .forEach(builder::messageId);
-            return builder.build();
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
+    private Mono<GetMessageListResponse> getMessageListResponse(GetMessageListRequest messageListRequest, MailboxSession mailboxSession) {
+        Mono<MultimailboxesSearchQuery> searchQuery = Mono.fromCallable(() -> convertToSearchQuery(messageListRequest))
+            .subscribeOn(Schedulers.parallel());
+        Long positionValue = messageListRequest.getPosition().map(Number::asLong).orElse(DEFAULT_POSITION);
+        long limit = positionValue + messageListRequest.getLimit().map(Number::asLong).orElse(maximumLimit);
+
+        return searchQuery
+            .flatMapMany(Throwing.function(query -> mailboxManager.search(query, mailboxSession, limit)))
+            .skip(positionValue)
+            .reduce(GetMessageListResponse.builder(), GetMessageListResponse.Builder::messageId)
+            .map(GetMessageListResponse.Builder::build);
     }
 
     private MultimailboxesSearchQuery convertToSearchQuery(GetMessageListRequest messageListRequest) {
@@ -174,15 +179,15 @@ public class GetMessageListMethod implements Method {
                 });
     }
     
-    private Stream<JmapResponse> processGetMessages(GetMessageListRequest messageListRequest, GetMessageListResponse messageListResponse, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    private Flux<JmapResponse> processGetMessages(GetMessageListRequest messageListRequest, GetMessageListResponse messageListResponse, MethodCallId methodCallId, MailboxSession mailboxSession) {
         if (shouldChainToGetMessages(messageListRequest)) {
             GetMessagesRequest getMessagesRequest = GetMessagesRequest.builder()
                     .ids(messageListResponse.getMessageIds())
                     .properties(messageListRequest.getFetchMessageProperties())
                     .build();
-            return getMessagesMethod.processToStream(getMessagesRequest, methodCallId, mailboxSession);
+            return getMessagesMethod.process(getMessagesRequest, methodCallId, mailboxSession);
         }
-        return Stream.empty();
+        return Flux.empty();
     }
 
     private boolean shouldChainToGetMessages(GetMessageListRequest messageListRequest) {

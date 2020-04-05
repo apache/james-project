@@ -53,6 +53,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterables;
 
+import reactor.core.publisher.Flux;
+
 /**
  * This mailet handles MDN messages and define a header X-JAMES-MDN-JMAP-MESSAGE-ID referencing
  * the original message (by its Jmap Id) asking for the recipient to send an MDN.
@@ -107,7 +109,7 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
             MultimailboxesSearchQuery searchByRFC822MessageId = MultimailboxesSearchQuery
                 .from(new SearchQuery(SearchQuery.mimeMessageID(messageId)))
                 .build();
-            return mailboxManager.search(searchByRFC822MessageId, session, limit).stream().findFirst();
+            return Flux.from(mailboxManager.search(searchByRFC822MessageId, session, limit)).toStream().findFirst();
         } catch (MailboxException | UsersRepositoryException e) {
             LOGGER.error("unable to find message with Message-Id: " + messageId, e);
         }

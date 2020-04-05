@@ -38,6 +38,8 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
+import reactor.core.publisher.Flux;
+
 public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
     private static class FakeMessageSearchIndexGroup extends Group {
 
@@ -80,7 +82,7 @@ public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public List<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
+    public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) {
         throw new NotImplementedException("not implemented");
     }
 

@@ -251,7 +251,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param session
      *            the context for this call, not null
      */
-    List<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException;
+    Publisher<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException;
 
     /**
      * Does the given mailbox exist?

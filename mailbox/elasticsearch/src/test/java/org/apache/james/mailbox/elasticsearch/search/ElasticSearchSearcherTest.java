@@ -154,7 +154,8 @@ class ElasticSearchSearcherTest {
             .stream()
             .map(ComposedMessageId::getMessageId)
             .collect(Guavate.toImmutableList());
-        assertThat(storeMailboxManager.search(multimailboxesSearchQuery, session, numberOfMailboxes + 1))
+        assertThat(storeMailboxManager.search(multimailboxesSearchQuery, session, numberOfMailboxes + 1)
+            .collectList().block())
             .containsExactlyInAnyOrderElementsOf(expectedMessageIds);
     }
 

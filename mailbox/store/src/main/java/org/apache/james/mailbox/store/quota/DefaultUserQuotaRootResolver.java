@@ -118,6 +118,7 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
                 .user(Username.of(user))
                 .matchesAllMailboxNames()
                 .build()
-                .asUserBound());
+                .asUserBound())
+            .collectList().block();
     }
 }

@@ -248,7 +248,8 @@ public abstract class AbstractMessageSearchIndexTest {
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            LIMIT);
+            LIMIT)
+            .collectList().block();
 
         assertThat(result)
             .hasSize(12)
@@ -280,7 +281,8 @@ public abstract class AbstractMessageSearchIndexTest {
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            LIMIT);
+            LIMIT)
+            .collectList().block();
 
         assertThat(result)
             .containsOnly(m1.getMessageId(),
@@ -316,7 +318,8 @@ public abstract class AbstractMessageSearchIndexTest {
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox2.getMailboxId(), mailbox.getMailboxId()),
             searchQuery,
-            limit);
+            limit)
+            .collectList().block();
 
         assertThat(result)
             .hasSize(limit);
@@ -329,7 +332,8 @@ public abstract class AbstractMessageSearchIndexTest {
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(),
             searchQuery,
-            LIMIT);
+            LIMIT)
+            .collectList().block();
 
         assertThat(result)
             .isEmpty();
@@ -353,7 +357,8 @@ public abstract class AbstractMessageSearchIndexTest {
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox2.getMailboxId(), mailbox.getMailboxId()),
             searchQuery,
-            limit);
+            limit)
+            .collectList().block();
 
         assertThat(result)
                 .hasSize(limit);
@@ -549,7 +554,8 @@ public abstract class AbstractMessageSearchIndexTest {
             session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            LIMIT);
+            LIMIT)
+            .collectList().block();
 
         assertThat(actual).containsOnly(mOther.getMessageId(), m6.getMessageId());
     }
@@ -558,7 +564,8 @@ public abstract class AbstractMessageSearchIndexTest {
     void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInOneMailbox() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
 
-        List<MessageId> actual = messageSearchIndex.search(session, ImmutableList.of(mailbox.getMailboxId()), searchQuery, LIMIT);
+        List<MessageId> actual = messageSearchIndex.search(session, ImmutableList.of(mailbox.getMailboxId()), searchQuery, LIMIT)
+            .collectList().block();
 
         assertThat(actual).containsOnly(m6.getMessageId());
     }
@@ -571,7 +578,8 @@ public abstract class AbstractMessageSearchIndexTest {
             session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            LIMIT);
+            LIMIT)
+            .collectList().block();
 
         assertThat(actual).containsOnly(mOther.getMessageId(), m8.getMessageId());
     }
@@ -584,7 +592,8 @@ public abstract class AbstractMessageSearchIndexTest {
             session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            LIMIT);
+            LIMIT)
+            .collectList().block();
 
         assertThat(actual).containsOnly(mOther.getMessageId(), m6.getMessageId());
     }
@@ -598,7 +607,8 @@ public abstract class AbstractMessageSearchIndexTest {
             session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            limit);
+            limit)
+            .collectList().block();
         // Two messages matches this query : mOther and m6
 
         assertThat(actual).hasSize(1);
@@ -614,7 +624,8 @@ public abstract class AbstractMessageSearchIndexTest {
             session,
             ImmutableList.of(otherMailbox.getMailboxId()),
             searchQuery,
-            limit);
+            limit)
+            .collectList().block();
 
         assertThat(actual).contains(m10.getMessageId());
     }
@@ -1408,7 +1419,8 @@ public abstract class AbstractMessageSearchIndexTest {
             session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            LIMIT);
+            LIMIT)
+            .collectList().block();
 
         assertThat(actual).containsOnly(m1.getMessageId(), m2.getMessageId(), m3.getMessageId(), m4.getMessageId(), m5.getMessageId(),
             m6.getMessageId(), m7.getMessageId(), m8.getMessageId(), m9.getMessageId(), mOther.getMessageId(), mailWithAttachment.getMessageId(), mailWithInlinedAttachment.getMessageId());

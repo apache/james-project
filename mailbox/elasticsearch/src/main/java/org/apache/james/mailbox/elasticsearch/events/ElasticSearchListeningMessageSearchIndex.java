@@ -62,6 +62,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
@@ -118,11 +119,11 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
     
     @Override
-    public List<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) {
+    public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
 
         if (mailboxIds.isEmpty()) {
-            return ImmutableList.of();
+            return Flux.empty();
         }
 
         return searcher.search(mailboxIds, searchQuery, Optional.empty())
@@ -130,9 +131,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             .map(SearchResult::getMessageId)
             .flatMap(Mono::justOrEmpty)
             .distinct()
-            .take(limit)
-            .collect(Guavate.toImmutableList())
-            .block();
+            .take(limit);
     }
 
     @Override

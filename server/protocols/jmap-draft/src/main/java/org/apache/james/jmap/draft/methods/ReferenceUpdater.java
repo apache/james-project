@@ -49,6 +49,8 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Iterables;
 
+import reactor.core.publisher.Flux;
+
 public class ReferenceUpdater {
     public static final String X_FORWARDED_ID_HEADER = "X-Forwarded-Message-Id";
     public static final Flags FORWARDED_FLAG = new Flags("$Forwarded");
@@ -90,7 +92,8 @@ public class ReferenceUpdater {
         MultimailboxesSearchQuery searchByRFC822MessageId = MultimailboxesSearchQuery
             .from(new SearchQuery(SearchQuery.mimeMessageID(messageId)))
             .build();
-        List<MessageId> references = mailboxManager.search(searchByRFC822MessageId, session, limit);
+        List<MessageId> references = Flux.from(mailboxManager.search(searchByRFC822MessageId, session, limit))
+            .collectList().block();
         try {
             MessageId reference = Iterables.getOnlyElement(references);
             List<MailboxId> mailboxIds = messageIdManager.getMessage(reference, FetchGroup.MINIMAL, session).stream()

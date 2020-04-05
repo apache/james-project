@@ -53,9 +53,10 @@ import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
 
 /**
  * {@link MessageSearchIndex} which just fetch {@link MailboxMessage}'s from the {@link MessageMapper} and use {@link MessageSearcher}
@@ -108,10 +109,10 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     @Override
     public Stream<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return searchResults(session, ImmutableList.of(mailbox).stream(), query)
-            .stream()
+        return searchResults(session, Flux.just(mailbox), query)
             .filter(searchResult -> searchResult.getMailboxId().equals(mailbox.getMailboxId()))
-            .map(SearchResult::getMessageUid);
+            .map(SearchResult::getMessageUid)
+            .toStream();
     }
 
     private List<SearchResult> searchResults(MailboxSession session, Mailbox mailbox, SearchQuery query) throws MailboxException {
@@ -142,19 +143,17 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
 
     @Override
-    public List<MessageId> search(MailboxSession session, final Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
-        MailboxMapper mailboxManager = mailboxMapperFactory.getMailboxMapper(session);
+    public Flux<MessageId> search(MailboxSession session, final Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
+        MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(session);
 
-        Stream<Mailbox> filteredMailboxes = mailboxIds
-            .stream()
-            .map(Throwing.function(mailboxManager::findMailboxById).sneakyThrow());
+        Flux<Mailbox> filteredMailboxes = Flux.fromIterable(mailboxIds)
+            .concatMap(Throwing.function(mailboxMapper::findMailboxByIdReactive).sneakyThrow());
 
         return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery), limit);
     }
 
-    private List<SearchResult> searchResults(MailboxSession session, Stream<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
-        return mailboxes.flatMap(mailbox -> getSearchResultStream(session, query, mailbox))
-            .collect(Guavate.toImmutableList());
+    private Flux<SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
+        return mailboxes.concatMap(mailbox -> Flux.fromStream(getSearchResultStream(session, query, mailbox)));
     }
 
     private Stream<? extends SearchResult> getSearchResultStream(MailboxSession session, SearchQuery query, Mailbox mailbox) {
@@ -165,12 +164,10 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         }
     }
 
-    private List<MessageId> getAsMessageIds(List<SearchResult> temp, long limit) {
-        return temp.stream()
-            .map(searchResult -> searchResult.getMessageId().get())
+    private Flux<MessageId> getAsMessageIds(Flux<SearchResult> temp, long limit) {
+        return temp.map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
-            .limit(Long.valueOf(limit).intValue())
-            .collect(Guavate.toImmutableList());
+            .take(Long.valueOf(limit).intValue());
     }
 
 }

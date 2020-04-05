@@ -74,7 +74,7 @@ class CassandraSchemaVersionManagerTest {
             minVersion,
             maxVersion);
 
-        assertThat(testee.isBefore(maxVersion)).isTrue();
+        assertThat(testee.isBefore(maxVersion).block()).isTrue();
     }
 
     @Test
@@ -89,7 +89,7 @@ class CassandraSchemaVersionManagerTest {
             minVersion,
             maxVersion);
 
-        assertThat(testee.isBefore(maxVersion)).isFalse();
+        assertThat(testee.isBefore(maxVersion).block()).isFalse();
     }
 
     @Test
@@ -107,7 +107,7 @@ class CassandraSchemaVersionManagerTest {
         when(schemaVersionDAO.getCurrentSchemaVersion())
             .thenReturn(Mono.just(Optional.of(maxVersion)));
 
-        assertThat(testee.isBefore(maxVersion)).isFalse();
+        assertThat(testee.isBefore(maxVersion).block()).isFalse();
     }
 
     @Test

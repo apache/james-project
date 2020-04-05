@@ -69,7 +69,7 @@ public class CassandraSchemaVersionStartUpCheck implements StartUpCheck {
     private CheckResult checkUpgradeAbleState() {
         String upgradeVersionMessage =
             String.format("Current schema version is %d. Recommended version is %d",
-                versionManager.computeVersion().getValue(),
+                versionManager.computeVersion().block().getValue(),
                 versionManager.getMaximumSupportedVersion().getValue());
         LOGGER.warn(upgradeVersionMessage);
         return CheckResult.builder()
@@ -93,7 +93,7 @@ public class CassandraSchemaVersionStartUpCheck implements StartUpCheck {
         String versionExceedMaximumSupportedMessage =
             String.format("Current schema version is %d whereas the maximum supported version is %d. " +
                 "Recommended version is %d.",
-                versionManager.computeVersion().getValue(),
+                versionManager.computeVersion().block().getValue(),
                 versionManager.getMaximumSupportedVersion().getValue(),
                 versionManager.getMaximumSupportedVersion().getValue());
         LOGGER.error(versionExceedMaximumSupportedMessage);
@@ -108,7 +108,7 @@ public class CassandraSchemaVersionStartUpCheck implements StartUpCheck {
         String versionToOldMessage =
             String.format("Current schema version is %d whereas minimum required version is %d. " +
                 "Recommended version is %d",
-                versionManager.computeVersion().getValue(),
+                versionManager.computeVersion().block().getValue(),
                 versionManager.getMinimumSupportedVersion().getValue(),
                 versionManager.getMaximumSupportedVersion().getValue());
         LOGGER.error(versionToOldMessage);

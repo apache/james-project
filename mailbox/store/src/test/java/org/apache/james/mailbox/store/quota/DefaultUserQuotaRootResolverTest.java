@@ -42,7 +42,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.Lists;
+import reactor.core.publisher.Flux;
 
 class DefaultUserQuotaRootResolverTest {
 
@@ -92,7 +92,7 @@ class DefaultUserQuotaRootResolverTest {
     void retrieveAssociatedMailboxesShouldWork() throws Exception {
         MailboxMapper mockedMapper = mock(MailboxMapper.class);
         when(mockedFactory.getMailboxMapper(MAILBOX_SESSION)).thenReturn(mockedMapper);
-        when(mockedMapper.findMailboxWithPathLike(any())).thenReturn(Lists.newArrayList(MAILBOX, MAILBOX_2));
+        when(mockedMapper.findMailboxWithPathLike(any())).thenReturn(Flux.just(MAILBOX, MAILBOX_2));
 
         assertThat(testee.retrieveAssociatedMailboxes(QUOTA_ROOT, MAILBOX_SESSION)).containsOnly(MAILBOX, MAILBOX_2);
     }

@@ -193,7 +193,8 @@ public abstract class MailboxMapperTest {
             .build()
             .asUserBound();
 
-        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxQuery);
+        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxQuery)
+            .collectList().block();
 
         assertMailboxes(mailboxes).containOnly(bobInboxMailbox);
     }
@@ -216,7 +217,8 @@ public abstract class MailboxMapperTest {
             .build()
             .asUserBound();
 
-        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxQuery);
+        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxQuery)
+            .collectList().block();
 
         assertMailboxes(mailboxes).containOnly(benwaWorkMailbox, benwaWorkDoneMailbox, benwaWorkTodoMailbox);
     }
@@ -230,7 +232,8 @@ public abstract class MailboxMapperTest {
             .build()
             .asUserBound();
 
-        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxQuery);
+        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxQuery)
+            .collectList().block();
 
         assertMailboxes(mailboxes).containOnly(benwaInboxMailbox);
     }
@@ -244,7 +247,8 @@ public abstract class MailboxMapperTest {
             .build()
             .asUserBound();
 
-        assertThat(mailboxMapper.findMailboxWithPathLike(mailboxQuery)).isEmpty();
+        assertThat(mailboxMapper.findMailboxWithPathLike(mailboxQuery)
+            .collectList().block()).isEmpty();
     }
 
     @Test
@@ -252,38 +256,6 @@ public abstract class MailboxMapperTest {
         createAll();
         Mailbox actual = mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId());
         assertThat(actual).isEqualTo(benwaInboxMailbox);
-    }
-
-    @Test
-    void findMailboxesByIdShouldReturnEmptyWhenNoIdSupplied() throws MailboxException {
-        createAll();
-
-        Stream<Mailbox> mailboxes = mailboxMapper.findMailboxesById(ImmutableList.of());
-
-        assertThat(mailboxes).isEmpty();
-    }
-
-    @Test
-    void findMailboxesByIdShouldReturnMailboxOfSuppliedId() throws MailboxException {
-        createAll();
-
-        Stream<Mailbox> mailboxes = mailboxMapper.findMailboxesById(ImmutableList.of(
-            benwaInboxMailbox.getMailboxId(),
-            benwaWorkMailbox.getMailboxId()));
-
-        assertThat(mailboxes).containsOnly(benwaWorkMailbox, benwaInboxMailbox);
-    }
-
-    @Test
-    void findMailboxesByIdShouldFilterOutNonExistingMailbox() throws MailboxException {
-        createAll();
-        mailboxMapper.delete(benwaWorkMailbox);
-
-        Stream<Mailbox> mailboxes = mailboxMapper.findMailboxesById(ImmutableList.of(
-            benwaInboxMailbox.getMailboxId(),
-            benwaWorkMailbox.getMailboxId()));
-
-        assertThat(mailboxes).containsOnly(benwaInboxMailbox);
     }
     
     @Test

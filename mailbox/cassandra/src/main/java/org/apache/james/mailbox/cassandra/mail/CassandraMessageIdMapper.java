@@ -32,6 +32,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
@@ -48,6 +49,7 @@ import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Multimap;
 
@@ -129,20 +131,31 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     @Override
     public void save(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
-        mailboxMapper.findMailboxById(mailboxId);
-
-        messageDAO.save(mailboxMessage)
+        unbox(() -> mailboxMapper.findMailboxByIdReactive(mailboxId)
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxId)))
+            .then(messageDAO.save(mailboxMessage))
             .thenEmpty(saveMessageMetadata(mailboxMessage, mailboxId))
-            .block();
+            .block());
     }
 
     @Override
     public void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
-        mailboxMapper.findMailboxById(mailboxId);
+        unbox(() -> mailboxMapper.findMailboxByIdReactive(mailboxId)
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxId)))
+            .then(saveMessageMetadata(mailboxMessage, mailboxId))
+            .block());
+    }
 
-        saveMessageMetadata(mailboxMessage, mailboxId)
-            .block();
+    private void unbox(ThrowingRunnable runnable) throws MailboxNotFoundException {
+        try {
+            runnable.run();
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof MailboxNotFoundException) {
+                throw (MailboxNotFoundException) e.getCause();
+            }
+            throw e;
+        }
     }
 
     private Mono<Void> saveMessageMetadata(MailboxMessage mailboxMessage, CassandraId mailboxId) {
