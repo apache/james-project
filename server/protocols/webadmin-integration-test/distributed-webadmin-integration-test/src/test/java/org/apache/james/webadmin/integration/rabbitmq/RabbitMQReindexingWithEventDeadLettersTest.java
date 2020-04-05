@@ -73,11 +73,11 @@ class RabbitMQReindexingWithEventDeadLettersTest {
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
         .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
-        .atMost(Duration.ONE_MINUTE)
+        .atMost(Duration.FIVE_MINUTES)
         .await();
 
     private static final DockerElasticSearchExtension dockerElasticSearch =
-        new DockerElasticSearchExtension().withRequestTimeout(java.time.Duration.ofSeconds(1));
+        new DockerElasticSearchExtension().withRequestTimeout(java.time.Duration.ofSeconds(5));
 
     private static final JamesServerBuilder.ServerProvider CONFIGURATION_BUILDER = configuration -> GuiceJamesServer
         .forConfiguration(configuration)
