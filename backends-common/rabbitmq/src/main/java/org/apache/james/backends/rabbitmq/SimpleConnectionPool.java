@@ -88,4 +88,17 @@ public class SimpleConnectionPool implements AutoCloseable {
             return false;
         }
     }
+
+    public Optional<RabbitMQServerVersion> version() {
+        try {
+            return getOpenConnection()
+                .map(Connection::getServerProperties)
+                .flatMap(serverProperties -> Mono.justOrEmpty(serverProperties.get("version")))
+                .map(Object::toString)
+                .map(RabbitMQServerVersion::of)
+                .blockOptional(Duration.ofSeconds(1));
+        } catch (Throwable t) {
+            return Optional.empty();
+        }
+    }
 }

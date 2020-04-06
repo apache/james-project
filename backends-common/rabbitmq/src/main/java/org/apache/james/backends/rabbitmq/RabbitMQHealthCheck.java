@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.rabbitmq;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.healthcheck.ComponentName;
@@ -26,6 +28,7 @@ import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 
 public class RabbitMQHealthCheck implements HealthCheck {
+    private static final RabbitMQServerVersion MINIMAL_VERSION = RabbitMQServerVersion.of("3.8.1");
     private static final ComponentName COMPONENT_NAME = new ComponentName("RabbitMQ backend");
 
     private final SimpleConnectionPool connectionPool;
@@ -46,6 +49,18 @@ public class RabbitMQHealthCheck implements HealthCheck {
     public Result check() {
         try {
             if (connectionPool.tryConnection() && rabbitChannelPoolImpl.tryChannel()) {
+                Optional<RabbitMQServerVersion> version = connectionPool.version();
+                boolean isCompatible = version
+                    .map(fetchedVersion -> fetchedVersion.isAtLeast(MINIMAL_VERSION))
+                    .orElse(false);
+                if (!isCompatible) {
+                    String versionCompatibilityError = String.format(
+                        "RabbitMQ version(%s) is not compatible with the required one(%s)",
+                        version.map(RabbitMQServerVersion::asString).orElse("no versions fetched"),
+                        MINIMAL_VERSION.asString());
+                    return Result.unhealthy(COMPONENT_NAME, versionCompatibilityError);
+                }
+
                 return Result.healthy(COMPONENT_NAME);
             } else {
                 return Result.unhealthy(COMPONENT_NAME, "The created connection was not opened");
