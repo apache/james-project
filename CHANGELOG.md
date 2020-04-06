@@ -71,7 +71,7 @@ More details about the property is at [java mail doc](https://javaee.github.io/j
  - JAMES-3122 LogEnabled API in Spring product had been removed for Log4J2 adoption for Java 9+ runtime compatibility. 
  
 ### Third party softwares
- - The distributed James server product (relying on Guice, Cassandra, ElasticSearch, RabbitMQ and optionally Swift) now needs at least RabbitMQ 3.8.
+ - The distributed James server product (relying on Guice, Cassandra, ElasticSearch, RabbitMQ and optionally Swift) now needs at least RabbitMQ 3.8.1.
  - Tika prior 1.24 is subject to multiple CVEs. We recommend the upgrade.
 
 ## [3.4.0] - 2019-09-05

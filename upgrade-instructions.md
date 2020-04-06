@@ -270,7 +270,15 @@ The distributed James project (relying on Guice, Cassandra, ElasticSearch, Rabbi
 
 In order to enforce task sequential processing at the cluster level, we rely on a single active consumer, which is a feature introduced in RabbitMQ 3.8.
 
-Users of distributed James product thus need to upgrade their RabbitMQ server to be at least version 3.8.
+Users of distributed James product thus need to upgrade their RabbitMQ server to be at least version 3.8.1.
+
+#### Upgrade procedure
+
+Ensure [no task is running or scheduled](http://james.apache.org/server/manage-webadmin.html#Listing_tasks).
+
+ - Stop James nodes
+ - drop `taskManagerWorkQueue` queue in RabbitMQ
+ - Start new James nodes
 
 #### Enforce usernames to be lower cased
 
