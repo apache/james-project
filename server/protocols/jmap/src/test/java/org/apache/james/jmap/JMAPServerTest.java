@@ -81,10 +81,15 @@ class JMAPServerTest {
             new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, Version.RFC8621))
     );
 
+    private static final ImmutableSet<Version> SUPPORTED_VERSIONS = ImmutableSet.of(
+        Version.DRAFT,
+        Version.RFC8621
+    );
 
     @Test
     void serverShouldAnswerWhenStarted() {
-        JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES_HANDLERS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
         jmapServer.start();
 
         try {
@@ -102,14 +107,16 @@ class JMAPServerTest {
 
     @Test
     void startShouldNotThrowWhenConfigurationDisabled() {
-        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
 
         assertThatCode(jmapServer::start).doesNotThrowAnyException();
     }
 
     @Test
     void stopShouldNotThrowWhenConfigurationDisabled() {
-        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
         jmapServer.start();
 
         assertThatCode(jmapServer::stop).doesNotThrowAnyException();
@@ -117,7 +124,8 @@ class JMAPServerTest {
 
     @Test
     void getPortShouldThrowWhenServerIsNotStarted() {
-        JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES_HANDLERS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
 
         assertThatThrownBy(jmapServer::getPort)
             .isInstanceOf(IllegalStateException.class);
@@ -125,7 +133,8 @@ class JMAPServerTest {
 
     @Test
     void getPortShouldThrowWhenDisabledConfiguration() {
-        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
         jmapServer.start();
 
         assertThatThrownBy(jmapServer::getPort)
@@ -138,7 +147,8 @@ class JMAPServerTest {
 
         @BeforeEach
         void setUp() {
-            server = new JMAPServer(TEST_CONFIGURATION, FAKE_ROUTES_HANDLERS);
+            VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+            server = new JMAPServer(TEST_CONFIGURATION, FAKE_ROUTES_HANDLERS, versionParser);
             server.start();
 
             RestAssured.requestSpecification = new RequestSpecBuilder()

@@ -31,6 +31,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPServer;
+import org.apache.james.jmap.Version;
 import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.draft.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
@@ -105,6 +106,9 @@ public class JMAPModule extends AbstractModule {
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class).addBinding().to(PropagateLookupRightListener.class);
+
+        Multibinder<Version> supportedVersions = Multibinder.newSetBinder(binder(), Version.class);
+        supportedVersions.addBinding().toInstance(Version.DRAFT);
     }
 
     @Provides

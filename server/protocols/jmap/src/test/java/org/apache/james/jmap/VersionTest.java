@@ -19,9 +19,6 @@
 
 package org.apache.james.jmap;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -31,34 +28,5 @@ class VersionTest {
     void shouldRespectBeanContract() {
         EqualsVerifier.forClass(Version.class)
             .verify();
-    }
-
-    @Test
-    void ofShouldReturnCorrectValue() {
-        String version = "rfc-8621";
-
-        assertThat(Version.of(version)).isEqualTo(Version.RFC8621);
-    }
-
-    @Test
-    void ofShouldThrowWhenVersionNotKnown() {
-        String version = "unknown";
-
-        assertThatThrownBy(() -> Version.of(version))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void ofShouldThrowWhenVersionIsNull() {
-        assertThatThrownBy(() -> Version.of(null))
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void ofShouldThrowWhenVersionIsEmpty() {
-        String version = "";
-
-        assertThatThrownBy(() -> Version.of(version))
-            .isInstanceOf(IllegalArgumentException.class);
     }
 }

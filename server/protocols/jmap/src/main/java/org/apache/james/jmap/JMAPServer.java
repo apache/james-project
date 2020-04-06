@@ -41,12 +41,14 @@ public class JMAPServer implements Startable {
 
     private final JMAPConfiguration configuration;
     private final Set<JMAPRoutesHandler> jmapRoutesHandlers;
+    private final VersionParser versionParser;
     private Optional<DisposableServer> server;
 
     @Inject
-    public JMAPServer(JMAPConfiguration configuration, Set<JMAPRoutesHandler> jmapRoutesHandlers) {
+    public JMAPServer(JMAPConfiguration configuration, Set<JMAPRoutesHandler> jmapRoutesHandlers, VersionParser versionParser) {
         this.configuration = configuration;
         this.jmapRoutesHandlers = jmapRoutesHandlers;
+        this.versionParser = versionParser;
         this.server = Optional.empty();
     }
 
@@ -75,7 +77,7 @@ public class JMAPServer implements Startable {
     private JMAPRoute.Action handleVersionRoute(HttpServerRequest request) {
         try {
             return jmapRoutesHandlers.stream()
-                .flatMap(jmapRoutesHandler -> jmapRoutesHandler.routes(request))
+                .flatMap(jmapRoutesHandler -> jmapRoutesHandler.routes(versionParser.parseRequestVersionHeader(request)))
                 .filter(jmapRoute -> jmapRoute.matches(request))
                 .map(JMAPRoute::getAction)
                 .findFirst()
