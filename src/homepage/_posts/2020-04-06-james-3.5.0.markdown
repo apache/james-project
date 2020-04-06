@@ -79,5 +79,18 @@ More details about the property is at [java mail doc](https://javaee.github.io/j
 
 Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
 
+Furthermore, recent work of the Apache James project did lead to a James product that leverage a distributed mail server,
+leveraging storage technologies like [Cassandra], [ElasticSearch], [RabbitMQ], and [objectStorage (S3/Swift)].
+
+Feedback on this product, announced as a beta since 3.5.0 is welcome.
+
+This product can be executed via [docker-compose] or you can follow it's [standard installation guide]
+
 [tracker]: https://issues.apache.org/jira/browse/JAMES
 [download]: http://james.apache.org/download.cgi#Apache_James_Server
+[Cassandra]: https://cassandra.apache.org/
+[ElasticSearch]: https://www.elastic.co/elasticsearch/
+[RabbitMQ]: https://www.rabbitmq.com/
+[objectStorage (S3/Swift)]: https://wiki.openstack.org/wiki/Swift
+[docker-compose]: https://github.com/apache/james-project/blob/master/dockerfiles/run/docker-compose.yml
+[standard installation guide]: /server/install/guice-cassandra-rabbitmq-swift.html
