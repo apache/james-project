@@ -37,7 +37,6 @@
 
     <modules>
         <module>all</module>
-        <module>antlib</module>
         <module>app</module>
         <module>core</module>
         <module>impl/imap-mailbox</module>
