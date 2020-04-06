@@ -33,7 +33,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class CassandraSchemaVersionManager {
-    public static final SchemaVersion MIN_VERSION = new SchemaVersion(2);
+    public static final SchemaVersion MIN_VERSION = new SchemaVersion(5);
     public static final SchemaVersion MAX_VERSION = new SchemaVersion(7);
     public static final SchemaVersion DEFAULT_VERSION = MIN_VERSION;
 

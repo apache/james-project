@@ -48,15 +48,13 @@ import reactor.core.publisher.Mono;
 public class CassandraAttachmentMapper implements AttachmentMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAttachmentMapper.class);
 
-    private final CassandraAttachmentDAO attachmentDAO;
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
     private final BlobStore blobStore;
     private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
     private final CassandraAttachmentOwnerDAO ownerDAO;
 
     @Inject
-    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2, BlobStore blobStore, CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraAttachmentOwnerDAO ownerDAO) {
-        this.attachmentDAO = attachmentDAO;
+    public CassandraAttachmentMapper(CassandraAttachmentDAOV2 attachmentDAOV2, BlobStore blobStore, CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraAttachmentOwnerDAO ownerDAO) {
         this.attachmentDAOV2 = attachmentDAOV2;
         this.blobStore = blobStore;
         this.attachmentMessageIdDAO = attachmentMessageIdDAO;
@@ -101,12 +99,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private Mono<Attachment> getAttachmentInternal(AttachmentId id) {
         return attachmentDAOV2.getAttachment(id)
-            .flatMap(this::retrievePayload)
-            .switchIfEmpty(fallbackToV1(id));
-    }
-
-    private Mono<Attachment> fallbackToV1(AttachmentId attachmentId) {
-        return attachmentDAO.getAttachment(attachmentId);
+            .flatMap(this::retrievePayload);
     }
 
     @Override
