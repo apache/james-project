@@ -88,7 +88,7 @@ class SolveMailboxInconsistenciesServiceTest {
 
         assertThatThrownBy(() -> testee.fixMailboxInconsistencies(new Context()).block())
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Schema version 6 is required in order to ensure mailboxPathV2DAO to be correctly populated, got Optional[5]");
+            .hasMessage("Schema version 6 is required in order to ensure mailboxPathV2DAO to be correctly populated, got 5");
     }
 
     @Test
@@ -97,7 +97,7 @@ class SolveMailboxInconsistenciesServiceTest {
 
         assertThatThrownBy(() -> testee.fixMailboxInconsistencies(new Context()).block())
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Schema version 6 is required in order to ensure mailboxPathV2DAO to be correctly populated, got Optional.empty");
+            .hasMessage("Schema version 6 is required in order to ensure mailboxPathV2DAO to be correctly populated, got 2");
     }
 
     @Test
