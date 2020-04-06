@@ -1,0 +1,19 @@
+{
+  "name": "MailboxListener Plugin",
+  "id": "mailboxListener",
+  "instrumentation": [
+    {
+      "className": "org.apache.james.mailbox.events.MailboxListener",
+      "methodName": "event",
+      "methodParameterTypes": [
+        ".."
+      ],
+      "captureKind": "transaction",
+      "transactionType": "MailboxListener",
+      "transactionNameTemplate": "MailboxListener : {{this.class.name}}",
+      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "mailboxListener"
+    }
+  ]
+}

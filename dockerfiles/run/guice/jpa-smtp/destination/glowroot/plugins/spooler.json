@@ -14,6 +14,32 @@
       "alreadyInTransactionBehavior": "capture-trace-entry",
       "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
       "timerName": "mailetProcessor"
+    },
+    {
+      "className": "org.apache.mailet.Mailet",
+      "methodName": "service",
+      "methodParameterTypes": [
+        ".."
+      ],
+      "captureKind": "transaction",
+      "transactionType": "Mailet",
+      "transactionNameTemplate": "Mailet : {{this.class.name}}",
+      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "mailet"
+    },
+    {
+      "className": "org.apache.mailet.Matcher",
+      "methodName": "match",
+      "methodParameterTypes": [
+        ".."
+      ],
+      "captureKind": "transaction",
+      "transactionType": "Matcher",
+      "transactionNameTemplate": "Mailet processor : {{this.class.name}}",
+      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "matcher"
     }
   ]
 }

@@ -1,0 +1,19 @@
+{
+  "name": "JMAP Plugin",
+  "id": "jmap",
+  "instrumentation": [
+    {
+      "className": "org.apache.james.jmap.draft.methods.Method",
+      "methodName": "processToStream",
+      "methodParameterTypes": [
+        ".."
+      ],
+      "captureKind": "transaction",
+      "transactionType": "JMAP",
+      "transactionNameTemplate": "JMAP method : {{this.class.name}}",
+      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "jmapMethod"
+    }
+  ]
+}
