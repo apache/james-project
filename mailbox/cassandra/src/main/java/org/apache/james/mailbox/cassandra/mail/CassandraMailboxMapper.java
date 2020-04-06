@@ -20,7 +20,9 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -139,6 +141,14 @@ public class CassandraMailboxMapper implements MailboxMapper {
         return retrieveMailbox(mailboxId)
             .blockOptional()
             .orElseThrow(() -> new MailboxNotFoundException(id));
+    }
+
+    @Override
+    public Stream<Mailbox> findMailboxesById(Collection<MailboxId> mailboxIds) {
+        return Flux.fromIterable(mailboxIds)
+            .map(CassandraId.class::cast)
+            .concatMap(this::retrieveMailbox)
+            .toStream();
     }
 
     private Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {

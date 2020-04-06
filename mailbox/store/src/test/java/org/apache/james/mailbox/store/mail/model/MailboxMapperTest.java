@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -40,6 +41,8 @@ import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Generic purpose tests for your implementation MailboxMapper.
@@ -249,6 +252,38 @@ public abstract class MailboxMapperTest {
         createAll();
         Mailbox actual = mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId());
         assertThat(actual).isEqualTo(benwaInboxMailbox);
+    }
+
+    @Test
+    void findMailboxesByIdShouldReturnEmptyWhenNoIdSupplied() throws MailboxException {
+        createAll();
+
+        Stream<Mailbox> mailboxes = mailboxMapper.findMailboxesById(ImmutableList.of());
+
+        assertThat(mailboxes).isEmpty();
+    }
+
+    @Test
+    void findMailboxesByIdShouldReturnMailboxOfSuppliedId() throws MailboxException {
+        createAll();
+
+        Stream<Mailbox> mailboxes = mailboxMapper.findMailboxesById(ImmutableList.of(
+            benwaInboxMailbox.getMailboxId(),
+            benwaWorkMailbox.getMailboxId()));
+
+        assertThat(mailboxes).containsOnly(benwaWorkMailbox, benwaInboxMailbox);
+    }
+
+    @Test
+    void findMailboxesByIdShouldFilterOutNonExistingMailbox() throws MailboxException {
+        createAll();
+        mailboxMapper.delete(benwaWorkMailbox);
+
+        Stream<Mailbox> mailboxes = mailboxMapper.findMailboxesById(ImmutableList.of(
+            benwaInboxMailbox.getMailboxId(),
+            benwaWorkMailbox.getMailboxId()));
+
+        assertThat(mailboxes).containsOnly(benwaInboxMailbox);
     }
     
     @Test

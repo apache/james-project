@@ -18,7 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -32,6 +34,8 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.transaction.Mapper;
+
+import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
 
@@ -82,6 +86,17 @@ public interface MailboxMapper extends Mapper {
      */
     Mailbox findMailboxById(MailboxId mailboxId)
             throws MailboxException, MailboxNotFoundException;
+
+    default Stream<Mailbox> findMailboxesById(Collection<MailboxId> mailboxIds) throws MailboxException {
+        return mailboxIds.stream()
+            .flatMap(Throwing.<MailboxId, Stream<Mailbox>>function(id -> {
+                try {
+                    return Stream.of(findMailboxById(id));
+                } catch (MailboxNotFoundException e) {
+                    return Stream.empty();
+                }
+            }).sneakyThrow());
+    }
 
     /**
      * Return a List of {@link Mailbox} for the given userName and matching the right
