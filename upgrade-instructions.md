@@ -12,27 +12,10 @@ software documentation. Do not follow this guide blindly!
 
 Note: this section is in progress. It will be updated during all the development process until the release.
 
-Changes to apply between 3.4.x and 3.5.x will be reported here.
+Changes to apply between 3.5.x and 3.6.x will be reported here.
 
 Change list:
 
- - [LinShare blob export mechanism should rely on delegation](#LinShare blob export mechanism should rely on delegation)
- - [RabbitMQ minimal version](#rabbitmq-minimal-version)
- - [Enforce usernames to be lower cased](#enforce-usernames-to-be-lower-cased)
- - [Cassandra keyspace creation configuration](#cassandra-keyspace-creation-configuration)
- - [UsersFileRepository](#usersfilerepository)
- - [ElasticSearch performance enhancements](#elasticsearch-performance-enhancements)
- - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
- - [Health checks routes return code changes](#health-checks-routes-return-code-changes)
- - [User mailboxes reIndexing endpoint change](#user-mailboxes-reindexing-endpoint-change)
- - [Hybrid blobStore replaces Union blobStore](#hybrid-blobstore-replaces-union-blobstore)
- - [New forbidden set of characters in Usernames local part](#new-forbidden-set-of-characters-in-usernames-local-part)
- - [UidValidity and maildir](#uid-validity-and-maildir)
- - [UidValidity and JPA or Cassandra](#uid-validity-and-jpa-or-cassandra)
- - [Differentiation between domain alias and domain mapping](#differentiation-between-domain-alias-and-domain-mapping)
- - [ProtocolSession storng typing](#protocolsession-storng-typing)
- - [Tune Cassandra time serie tables options](#tune-cassandra-time-serie-tables-options)
- - [Log4J2 Adoption](#log4j2-adoption)
  - [Drop Cassandra schema version prior version 5](#drop-cassandra-schema-version-prior-version-5)
  - [mailqueue.size.metricsEnabled now defaults to false](#mailqueuesizemetricsenabled-now-defaults-to-false)
  - [LDAP users repository connection pool now defaults to false](#ldap-users-repository-connection-pool-now-defaults-to-false)
@@ -56,7 +39,7 @@ JIRA: https://issues.apache.org/jira/browse/JAMES-2760
 
 Concerned product: Distributed James
 
-`mailqueue.size.metricsEnabled` is now false by default. If you previously used it, please be aware that it can have 
+`mailqueue.size.metricsEnabled` is now false by default. If you previously used it, please be aware that it can have
 some important performance penalty, and set it explicitly to `true` if you still need it.
 
 ### Drop Cassandra schema version prior version 5
@@ -72,11 +55,36 @@ In an effort to simplify the code base, we dropped support for Cassandra schema 
 Installation running older schema version than version 5 needs to rely on release 3.5.0 to upgrade to schema version 7,
 before upgrading to an eventual newer version.
 
+
+## 3.5.0 version
+
+Changes to apply between 3.4.0 and 3.5.0 are reported here.
+
+Change list:
+
+ - [LinShare blob export mechanism should rely on delegation](#LinShare blob export mechanism should rely on delegation)
+ - [RabbitMQ minimal version](#rabbitmq-minimal-version)
+ - [Enforce usernames to be lower cased](#enforce-usernames-to-be-lower-cased)
+ - [Cassandra keyspace creation configuration](#cassandra-keyspace-creation-configuration)
+ - [UsersFileRepository](#usersfilerepository)
+ - [ElasticSearch performance enhancements](#elasticsearch-performance-enhancements)
+ - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
+ - [Health checks routes return code changes](#health-checks-routes-return-code-changes)
+ - [User mailboxes reIndexing endpoint change](#user-mailboxes-reindexing-endpoint-change)
+ - [Hybrid blobStore replaces Union blobStore](#hybrid-blobstore-replaces-union-blobstore)
+ - [New forbidden set of characters in Usernames local part](#new-forbidden-set-of-characters-in-usernames-local-part)
+ - [UidValidity and maildir](#uid-validity-and-maildir)
+ - [UidValidity and JPA or Cassandra](#uid-validity-and-jpa-or-cassandra)
+ - [Differentiation between domain alias and domain mapping](#differentiation-between-domain-alias-and-domain-mapping)
+ - [ProtocolSession storng typing](#protocolsession-storng-typing)
+ - [Tune Cassandra time serie tables options](#tune-cassandra-time-serie-tables-options)
+ - [Log4J2 Adoption](#log4j2-adoption)
+
 ### Log4J2 Adoption
 
 Date 20/03/2020
 
-SHA-1 XXX
+SHA-1 7682112258dc2e0b7322bfcf9cb44c1d287af422
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3122
 
@@ -94,7 +102,7 @@ Logger instance using the SLF4J `LoggerFactory` class instead.
 
 Date 18/03/2020
 
-SHA-1 XXX
+SHA-1 bd6074cb689517061ecef9ddca3ab7a88d133cda
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3121
 
@@ -133,7 +141,7 @@ ALTER TABLE james_keyspace.deletedMailsV2 WITH read_repair_chance = 0.0;
 ALTER TABLE james_keyspace.enqueuedMailsV3 WITH read_repair_chance = 0.0;
 ```
 
-### ProtocolSession storng typing
+### ProtocolSession strong typing
 
 Date 19/03/2020
 
@@ -154,7 +162,7 @@ should be use now to remove elements.
 
 Date 10/03/2020
 
-SHA-1 XXX
+SHA-1 81139cd94211358ca6a31b75b56c11b20e894ee4
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3112
 
@@ -175,7 +183,7 @@ considered as domain mappings and might need to be deleted and re-created.
 
 Date 26/02/2020
 
-SHA-1 XXX
+SHA-1 930fd38717b67f753b96f8b0595e80af7903298a
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3074
 
@@ -192,7 +200,7 @@ While this sanitizing is transparent to the end user and the admin, it might lea
 
 Date 26/02/2020
 
-SHA-1 XXX
+SHA-1 837299290848cdc11a90c2e73c4af549a0f1106f
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3074
 
@@ -207,7 +215,7 @@ While this sanitizing is transparent to the end user and the admin, it might lea
 
 Date 04/02/2020
 
-SHA-1 XXX
+SHA-1 4ebddfc107f7f47c29ff1d25dd045f314ff28672
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-2950
 
@@ -218,7 +226,7 @@ However, the read of Usernames already existing with some of those characters is
 ### LinShare blob export mechanism should rely on delegation
 Date 12/02/2020
 
-SHA-1 XXX
+SHA-1 2422d3ef92a6c74e9da233039613d38fd833e632
 
 Concerned products: Guice server, experimental LinShare blob export feature.
 
@@ -239,7 +247,7 @@ blob.export.linshare.technical.account.password
 
 Date 6/01/2020
 
-SHA-1 XXX
+SHA-1 b44bc7d93901773ad442a341cb1ba2d94848c449
 
 Concerned products: Guice distributed James server
 
