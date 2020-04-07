@@ -271,8 +271,6 @@ public class CassandraMessageMapper implements MessageMapper {
         return block(addUidAndModseq(message, mailboxId)
             .flatMap(Throwing.function(messageWithUidAndModSeq -> save(mailbox, messageWithUidAndModSeq)
                 .thenReturn(messageWithUidAndModSeq)))
-            .flatMap(messageWithUidAndModSeq -> indexTableHandler.updateIndexOnAdd(message, mailboxId)
-                .thenReturn(messageWithUidAndModSeq))
             .map(MailboxMessage::metaData));
     }
 
@@ -393,8 +391,6 @@ public class CassandraMessageMapper implements MessageMapper {
         return block(addUidAndModseq(message, mailboxId)
             .flatMap(messageWithUidAndModseq -> insertIds(messageWithUidAndModseq, mailboxId)
                 .thenReturn(messageWithUidAndModseq))
-            .flatMap(messageWithUidAndModseq -> indexTableHandler.updateIndexOnAdd(message, mailboxId)
-                .thenReturn(messageWithUidAndModseq))
             .map(MailboxMessage::metaData));
     }
 
@@ -411,8 +407,11 @@ public class CassandraMessageMapper implements MessageMapper {
                 .modSeq(message.getModSeq())
                 .build();
         return imapUidDAO.insert(composedMessageIdWithMetaData)
-            .then(messageIdDAO.insert(composedMessageIdWithMetaData)
-                .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF));
+            .then(Flux.merge(
+                messageIdDAO.insert(composedMessageIdWithMetaData)
+                    .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF),
+                indexTableHandler.updateIndexOnAdd(message, mailboxId))
+            .then());
     }
 
 

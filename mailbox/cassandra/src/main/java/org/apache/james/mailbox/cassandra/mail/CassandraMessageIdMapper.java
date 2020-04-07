@@ -130,12 +130,9 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     public void save(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
         mailboxMapper.findMailboxById(mailboxId);
-        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = createMetadataFor(mailboxMessage);
+
         messageDAO.save(mailboxMessage)
-            .thenEmpty(imapUidDAO.insert(composedMessageIdWithMetaData))
-            .thenEmpty(messageIdDAO.insert(composedMessageIdWithMetaData)
-                .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF))
-            .thenEmpty(indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
+            .thenEmpty(saveMessageMetadata(mailboxMessage, mailboxId))
             .block();
     }
 
@@ -143,12 +140,19 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     public void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
         mailboxMapper.findMailboxById(mailboxId);
-        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = createMetadataFor(mailboxMessage);
-        Flux.merge(
-                imapUidDAO.insert(composedMessageIdWithMetaData),
-                messageIdDAO.insert(composedMessageIdWithMetaData))
-            .thenEmpty(indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
+
+        saveMessageMetadata(mailboxMessage, mailboxId)
             .block();
+    }
+
+    private Mono<Void> saveMessageMetadata(MailboxMessage mailboxMessage, CassandraId mailboxId) {
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = createMetadataFor(mailboxMessage);
+        return imapUidDAO.insert(composedMessageIdWithMetaData)
+            .thenEmpty(Flux.merge(
+                messageIdDAO.insert(composedMessageIdWithMetaData)
+                    .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF),
+                indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
+            .then());
     }
 
     private ComposedMessageIdWithMetaData createMetadataFor(MailboxMessage mailboxMessage) {
