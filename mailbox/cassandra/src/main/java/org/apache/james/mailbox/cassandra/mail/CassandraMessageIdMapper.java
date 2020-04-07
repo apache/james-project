@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -57,6 +58,10 @@ import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
+
+    private static final int MAX_RETRY = 5;
+    private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
+    private static final Duration MAX_RETRY_BACKOFF = Duration.ofMillis(1000);
 
     private final MailboxMapper mailboxMapper;
     private final CassandraMailboxDAO mailboxDAO;
@@ -128,7 +133,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = createMetadataFor(mailboxMessage);
         messageDAO.save(mailboxMessage)
             .thenEmpty(imapUidDAO.insert(composedMessageIdWithMetaData))
-            .thenEmpty(messageIdDAO.insert(composedMessageIdWithMetaData))
+            .thenEmpty(messageIdDAO.insert(composedMessageIdWithMetaData)
+                .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF))
             .thenEmpty(indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
             .block();
     }

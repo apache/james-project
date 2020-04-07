@@ -204,5 +204,20 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                     .hasSize(1);
             }));
         }
+
+        @Test
+        void addShouldRetryMessageDenormalization(CassandraCluster cassandra) throws Exception {
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .times(5)
+                    .whenQueryStartsWith("INSERT INTO messageIdTable (mailboxId,uid,modSeq,messageId,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
+
+            message1.setUid(mapperProvider.generateMessageUid());
+            message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+            sut.save(message1);
+
+            assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Metadata))
+                .hasSize(1);
+        }
     }
 }
