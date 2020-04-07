@@ -405,10 +405,8 @@ public class CassandraMessageMapper implements MessageMapper {
                 .flags(message.createFlags())
                 .modSeq(message.getModSeq())
                 .build();
-        return Flux.merge(
-                messageIdDAO.insert(composedMessageIdWithMetaData),
-                imapUidDAO.insert(composedMessageIdWithMetaData))
-            .then();
+        return imapUidDAO.insert(composedMessageIdWithMetaData)
+            .then(messageIdDAO.insert(composedMessageIdWithMetaData));
     }
 
 

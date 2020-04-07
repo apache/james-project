@@ -77,18 +77,18 @@ public abstract class MessageMapperTest {
     private static final Username BENWA = Username.of("benwa");
 
     private MapperProvider mapperProvider;
-    private MessageMapper messageMapper;
+    protected MessageMapper messageMapper;
     private MailboxMapper mailboxMapper;
 
-    private Mailbox benwaInboxMailbox;
-    private Mailbox benwaWorkMailbox;
-    
-    private MailboxMessage message1;
-    private MailboxMessage message2;
-    private MailboxMessage message3;
-    private MailboxMessage message4;
-    private MailboxMessage message5;
-    private MailboxMessage message6;
+    protected Mailbox benwaInboxMailbox;
+    protected Mailbox benwaWorkMailbox;
+
+    protected MailboxMessage message1;
+    protected MailboxMessage message2;
+    protected MailboxMessage message3;
+    protected MailboxMessage message4;
+    protected MailboxMessage message5;
+    protected MailboxMessage message6;
 
     protected abstract MapperProvider createMapperProvider();
 
@@ -1203,8 +1203,8 @@ public abstract class MessageMapperTest {
     private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
         return mailboxMapper.create(mailboxPath, UID_VALIDITY);
     }
-    
-    private void saveMessages() throws MailboxException {
+
+    protected void saveMessages() throws MailboxException {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
         messageMapper.add(benwaInboxMailbox, message2);

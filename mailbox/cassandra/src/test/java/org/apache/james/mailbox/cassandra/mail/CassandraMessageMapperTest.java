@@ -19,10 +19,24 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+
+import java.util.Optional;
+
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.github.fge.lambdas.Throwing;
 
 class CassandraMessageMapperTest extends MessageMapperTest {
     @RegisterExtension
@@ -31,5 +45,124 @@ class CassandraMessageMapperTest extends MessageMapperTest {
     @Override
     protected MapperProvider createMapperProvider() {
         return new CassandraMapperProvider(cassandraCluster.getCassandraCluster());
+    }
+
+    @Nested
+    class FailureTesting {
+        @Test
+        void retrieveMessagesShouldNotReturnMessagesWhenFailToPersistInMessageDAO(CassandraCluster cassandra) {
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("INSERT INTO messageV2 (messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,properties,textualLineCount,attachments)"));
+
+            try {
+                messageMapper.add(benwaInboxMailbox, message1);
+            } catch (Exception e) {
+                // ignoring expected error
+            }
+
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                    .toIterable()
+                    .isEmpty();
+                softly.assertThat(messageIdDAO.retrieveMessages((CassandraId) benwaInboxMailbox.getMailboxId(), MessageRange.all()).collectList().block())
+                    .isEmpty();
+            }));
+        }
+
+        @Test
+        void retrieveMessagesShouldNotReturnMessagesWhenFailsToPersistBlobParts(CassandraCluster cassandra) {
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("INSERT INTO blobParts (id,chunkNumber,data) VALUES (:id,:chunkNumber,:data);"));
+
+            try {
+                messageMapper.add(benwaInboxMailbox, message1);
+            } catch (Exception e) {
+                // ignoring expected error
+            }
+
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                    .toIterable()
+                    .isEmpty();
+                softly.assertThat(messageIdDAO.retrieveMessages((CassandraId) benwaInboxMailbox.getMailboxId(), MessageRange.all()).collectList().block())
+                    .isEmpty();
+            }));
+        }
+
+        @Test
+        void retrieveMessagesShouldNotReturnMessagesWhenFailsToPersistBlobs(CassandraCluster cassandra) {
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("INSERT INTO blobs (id,position) VALUES (:id,:position);"));
+
+            try {
+                messageMapper.add(benwaInboxMailbox, message1);
+            } catch (Exception e) {
+                // ignoring expected error
+            }
+
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                    .toIterable()
+                    .isEmpty();
+                softly.assertThat(messageIdDAO.retrieveMessages((CassandraId) benwaInboxMailbox.getMailboxId(), MessageRange.all()).collectList().block())
+                    .isEmpty();
+            }));
+        }
+
+        @Test
+        void retrieveMessagesShouldNotReturnMessagesWhenFailsToPersistInImapUidTable(CassandraCluster cassandra) {
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("INSERT INTO imapUidTable (messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
+
+            try {
+                messageMapper.add(benwaInboxMailbox, message1);
+            } catch (Exception e) {
+                // ignoring expected error
+            }
+
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                    .toIterable()
+                    .isEmpty();
+                softly.assertThat(messageIdDAO.retrieveMessages((CassandraId) benwaInboxMailbox.getMailboxId(), MessageRange.all()).collectList().block())
+                    .isEmpty();
+            }));
+        }
+
+        @Test
+        void addShouldPersistInTableOfTruthWhenMessageIdTableWritesFails(CassandraCluster cassandra) {
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("INSERT INTO messageIdTable (mailboxId,uid,modSeq,messageId,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
+
+            try {
+                messageMapper.add(benwaInboxMailbox, message1);
+            } catch (Exception e) {
+                // ignoring expected error
+            }
+
+            CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+
+            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                    .toIterable()
+                    .isEmpty();
+                softly.assertThat(imapUidDAO.retrieve((CassandraMessageId) message1.getMessageId(), Optional.empty()).collectList().block())
+                    .hasSize(1);
+            }));
+        }
     }
 }
