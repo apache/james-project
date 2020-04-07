@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
@@ -163,6 +164,20 @@ class CassandraMessageMapperTest extends MessageMapperTest {
                 softly.assertThat(imapUidDAO.retrieve((CassandraMessageId) message1.getMessageId(), Optional.empty()).collectList().block())
                     .hasSize(1);
             }));
+        }
+
+        @Test
+        void addShouldRetryMessageDenormalization(CassandraCluster cassandra) throws Exception {
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .times(5)
+                    .whenQueryStartsWith("INSERT INTO messageIdTable (mailboxId,uid,modSeq,messageId,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
+
+            messageMapper.add(benwaInboxMailbox, message1);
+
+            assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                .toIterable()
+                .hasSize(1);
         }
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -65,6 +66,10 @@ import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageMapper implements MessageMapper {
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
+
+    private static final int MAX_RETRY = 5;
+    private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
+    private static final Duration MAX_RETRY_BACKOFF = Duration.ofMillis(1000);
 
     private final CassandraModSeqProvider modSeqProvider;
     private final CassandraUidProvider uidProvider;
@@ -406,7 +411,8 @@ public class CassandraMessageMapper implements MessageMapper {
                 .modSeq(message.getModSeq())
                 .build();
         return imapUidDAO.insert(composedMessageIdWithMetaData)
-            .then(messageIdDAO.insert(composedMessageIdWithMetaData));
+            .then(messageIdDAO.insert(composedMessageIdWithMetaData)
+                .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF));
     }
 
 
