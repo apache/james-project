@@ -44,7 +44,7 @@ import reactor.util.function.Tuples;
 
 public class CassandraBlobStore implements BlobStore {
 
-    public static final boolean LAZY_RESSOURCE_CLEANUP = false;
+    public static final boolean LAZY_RESOURCE_CLEANUP = false;
     public static final int FILE_THRESHOLD = 10000;
     private final HashBlobId.Factory blobIdFactory;
     private final BucketName defaultBucketName;
@@ -91,7 +91,7 @@ public class CassandraBlobStore implements BlobStore {
             () -> new FileBackedOutputStream(FILE_THRESHOLD),
             fileBackedOutputStream -> saveAndGenerateBlobId(bucketName, hashingInputStream, fileBackedOutputStream),
             Throwing.consumer(FileBackedOutputStream::reset).sneakyThrow(),
-            LAZY_RESSOURCE_CLEANUP);
+            LAZY_RESOURCE_CLEANUP);
     }
 
     private Mono<BlobId> saveAndGenerateBlobId(BucketName bucketName, HashingInputStream hashingInputStream, FileBackedOutputStream fileBackedOutputStream) {

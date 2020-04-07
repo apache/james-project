@@ -17,42 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.cassandra;
+package org.apache.james.blob.cassandra.cache;
 
-public interface BlobTables {
+import static com.datastax.driver.core.schemabuilder.TableOptions.CompactionOptions.TimeWindowCompactionStrategyOptions.CompactionWindowUnit.HOURS;
 
-    interface DefaultBucketBlobTable {
-        String TABLE_NAME = "blobs";
-        String ID = "id";
-        String NUMBER_OF_CHUNK = "position";
-    }
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.blob.cassandra.BlobTables;
 
-    interface DefaultBucketBlobParts {
-        String TABLE_NAME = "blobParts";
-        String ID = "id";
-        String CHUNK_NUMBER = "chunkNumber";
-        String DATA = "data";
-    }
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
-    interface BucketBlobTable {
-        String TABLE_NAME = "blobsInBucket";
-        String BUCKET = "bucket";
-        String ID = "id";
-        String NUMBER_OF_CHUNK = "position";
-    }
+public interface CassandraDumbBlobCacheModule {
 
-    interface BucketBlobParts {
-        String TABLE_NAME = "blobPartsInBucket";
-        String BUCKET = "bucket";
-        String ID = "id";
-        String CHUNK_NUMBER = "chunkNumber";
-        String DATA = "data";
-    }
+    double NO_READ_REPAIR = 0d;
 
-    interface DumbBlobCache {
-        String TABLE_NAME = "blob_cache";
-        String ID = "id";
-        String DATA = "data";
-        String TTL_FOR_ROW = "ttl";
-    }
+    CassandraModule MODULE = CassandraModule
+        .builder()
+        .table(BlobTables.DumbBlobCache.TABLE_NAME)
+        .options(options -> options
+            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()
+                .compactionWindowSize(1)
+                .compactionWindowUnit(HOURS))
+            .readRepairChance(NO_READ_REPAIR))
+        .comment("Write through cache for small blobs stored in a slower blob store implementation.")
+        .statement(statement -> statement
+            .addPartitionKey(BlobTables.DumbBlobCache.ID, DataType.text())
+            .addColumn(BlobTables.DumbBlobCache.DATA, DataType.blob()))
+        .build();
 }

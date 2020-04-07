@@ -16,43 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.blob.cassandra.cache;
 
-package org.apache.james.blob.cassandra;
+import org.apache.james.blob.api.BlobId;
+import org.reactivestreams.Publisher;
 
-public interface BlobTables {
+public interface DumbBlobStoreCache {
+    Publisher<Void> cache(BlobId blobId, byte[] data);
 
-    interface DefaultBucketBlobTable {
-        String TABLE_NAME = "blobs";
-        String ID = "id";
-        String NUMBER_OF_CHUNK = "position";
-    }
+    Publisher<byte[]> read(BlobId blobId);
 
-    interface DefaultBucketBlobParts {
-        String TABLE_NAME = "blobParts";
-        String ID = "id";
-        String CHUNK_NUMBER = "chunkNumber";
-        String DATA = "data";
-    }
-
-    interface BucketBlobTable {
-        String TABLE_NAME = "blobsInBucket";
-        String BUCKET = "bucket";
-        String ID = "id";
-        String NUMBER_OF_CHUNK = "position";
-    }
-
-    interface BucketBlobParts {
-        String TABLE_NAME = "blobPartsInBucket";
-        String BUCKET = "bucket";
-        String ID = "id";
-        String CHUNK_NUMBER = "chunkNumber";
-        String DATA = "data";
-    }
-
-    interface DumbBlobCache {
-        String TABLE_NAME = "blob_cache";
-        String ID = "id";
-        String DATA = "data";
-        String TTL_FOR_ROW = "ttl";
-    }
+    Publisher<Void> remove(BlobId blobId);
 }
