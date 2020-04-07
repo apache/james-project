@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -42,7 +41,6 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -71,7 +69,7 @@ public abstract class MessageIdMapperTest {
 
     private MessageMapper messageMapper;
     private MailboxMapper mailboxMapper;
-    private MessageIdMapper sut;
+    protected MessageIdMapper sut;
 
     protected Mailbox benwaInboxMailbox;
     private Mailbox benwaWorkMailbox;
@@ -81,7 +79,7 @@ public abstract class MessageIdMapperTest {
     protected SimpleMailboxMessage message3;
     protected SimpleMailboxMessage message4;
 
-    private MapperProvider mapperProvider;
+    protected MapperProvider mapperProvider;
 
     protected abstract MapperProvider provideMapper();
 

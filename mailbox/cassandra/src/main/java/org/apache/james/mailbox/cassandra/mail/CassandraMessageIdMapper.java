@@ -127,9 +127,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         mailboxMapper.findMailboxById(mailboxId);
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = createMetadataFor(mailboxMessage);
         messageDAO.save(mailboxMessage)
-            .thenMany(Flux.merge(
-                imapUidDAO.insert(composedMessageIdWithMetaData),
-                messageIdDAO.insert(composedMessageIdWithMetaData)))
+            .thenEmpty(imapUidDAO.insert(composedMessageIdWithMetaData))
+            .thenEmpty(messageIdDAO.insert(composedMessageIdWithMetaData))
             .thenEmpty(indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
             .block();
     }
