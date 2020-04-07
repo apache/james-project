@@ -100,11 +100,6 @@ public class AuthenticationRoutes implements JMAPRoutes {
     }
 
     @Override
-    public Logger logger() {
-        return LOGGER;
-    }
-
-    @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
             JMAPRoute.builder()
@@ -141,7 +136,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
                         throw new RuntimeException(objectRequest.getClass() + " " + objectRequest);
                     }
                 })))
-            .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
+            .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(e -> handleInternalError(response, e))
             .subscriberContext(jmapContext(request))
@@ -153,10 +148,10 @@ public class AuthenticationRoutes implements JMAPRoutes {
             return authenticator.authenticate(req)
                 .flatMap(session -> returnEndPointsResponse(resp)
                     .subscriberContext(jmapAuthContext(session)))
-                .onErrorResume(BadRequestException.class, e -> handleBadRequest(resp, e))
+                .onErrorResume(BadRequestException.class, e -> handleBadRequest(resp, LOGGER, e))
                 .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
                 .onErrorResume(InternalErrorException.class, e -> handleInternalError(resp, e))
-                .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, e))
+                .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, LOGGER, e))
                 .subscriberContext(jmapContext(req))
                 .subscriberContext(jmapAction("returnEndPoints"))
                 .subscribeOn(Schedulers.elastic());
@@ -186,7 +181,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
             .flatMap(session -> Mono.from(accessTokenManager.revoke(AccessToken.fromString(authorizationHeader)))
                     .then(resp.status(NO_CONTENT).send().then())
                 .subscriberContext(jmapAuthContext(session)))
-            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, e))
+            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, LOGGER, e))
             .subscriberContext(jmapContext(req))
             .subscriberContext(jmapAction("auth-delete"))
             .subscribeOn(Schedulers.elastic());

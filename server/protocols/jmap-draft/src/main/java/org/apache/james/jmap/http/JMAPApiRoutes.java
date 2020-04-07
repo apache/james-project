@@ -80,11 +80,6 @@ public class JMAPApiRoutes implements JMAPRoutes {
     }
 
     @Override
-    public Logger logger() {
-        return LOGGER;
-    }
-
-    @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
             JMAPRoute.builder()
@@ -106,8 +101,8 @@ public class JMAPApiRoutes implements JMAPRoutes {
                 .then(Mono.from(metricFactory.runPublishingTimerMetric("JMAP-request",
                     post(request, response, session))))
                 .subscriberContext(jmapAuthContext(session)))
-            .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
-            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, e))
+            .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, LOGGER, e))
+            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(e -> handleInternalError(response, e))
             .subscriberContext(jmapContext(request))

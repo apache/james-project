@@ -93,11 +93,6 @@ public class DownloadRoutes implements JMAPRoutes {
     }
 
     @Override
-    public Logger logger() {
-        return LOGGER;
-    }
-
-    @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
             JMAPRoute.builder()
@@ -145,7 +140,7 @@ public class DownloadRoutes implements JMAPRoutes {
             .flatMap(session -> Mono.from(metricFactory.runPublishingTimerMetric("JMAP-download-post",
                     respondAttachmentAccessToken(session, downloadPath, response)))
                 .subscriberContext(jmapAuthContext(session)))
-            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, e))
+            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(e -> handleInternalError(response, e))
             .subscriberContext(jmapContext(request))
@@ -175,7 +170,7 @@ public class DownloadRoutes implements JMAPRoutes {
             .flatMap(session -> Mono.from(metricFactory.runPublishingTimerMetric("JMAP-download-get",
                     download(session, downloadPath, response)))
                 .subscriberContext(jmapAuthContext(session)))
-            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, e))
+            .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(e -> handleInternalError(response, e))
             .subscriberContext(jmapContext(request))

@@ -61,10 +61,8 @@ object Account {
            isPersonal: IsPersonal,
            isReadOnly: IsReadOnly,
            accountCapabilities: Set[_ <: Capability]): Either[IllegalArgumentException, Account] =
-    AccountId.from(name) match {
-      case Left(ex: IllegalArgumentException) => Left(ex)
-      case Right(accountId) => Right(new Account(accountId, name, isPersonal, isReadOnly, accountCapabilities))
-    }
+    AccountId.from(name)
+      .map(Account(_, name, isPersonal, isReadOnly, accountCapabilities))
 
   def unapplyIgnoreAccountId(account: Account): Some[(Username, IsPersonal, IsReadOnly, Set[_ <: Capability])] =
     Some(account.name, account.isPersonal, account.isReadOnly, account.accountCapabilities)

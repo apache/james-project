@@ -89,19 +89,13 @@ object SessionSerializationTest {
     name = USER_1,
     isPersonal = IS_PERSONAL,
     isReadOnly = IS_NOT_READ_ONLY,
-    accountCapabilities = Set(CORE_CAPABILITY)) match {
-      case Left(ex: IllegalArgumentException) => throw ex
-      case Right(account: Account) => account
-    }
+    accountCapabilities = Set(CORE_CAPABILITY)).toOption.get
 
   private val ACCOUNT_2: Account = Account.from(
     name = USER_2,
     isPersonal = IS_NOT_PERSONAL,
     isReadOnly = IS_NOT_READ_ONLY,
-    accountCapabilities = Set(CORE_CAPABILITY))  match {
-      case Left(ex: IllegalArgumentException) => throw ex
-      case Right(account: Account) => account
-    }
+    accountCapabilities = Set(CORE_CAPABILITY)).toOption.get
 
   private val PRIMARY_ACCOUNTS = Map(
     MAIL_IDENTIFIER -> ACCOUNT_1.accountId,

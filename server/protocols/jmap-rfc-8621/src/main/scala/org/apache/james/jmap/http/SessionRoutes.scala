@@ -27,7 +27,7 @@ import javax.inject.Inject
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8
 import org.apache.james.jmap.JMAPRoutes
 import org.apache.james.jmap.exceptions.UnauthorizedException
-import org.apache.james.jmap.http.SessionRoutes.JMAP_SESSION
+import org.apache.james.jmap.http.SessionRoutes.{JMAP_SESSION, LOGGER}
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.model.Session
 import org.reactivestreams.Publisher
@@ -48,7 +48,6 @@ class SessionRoutes(val authFilter: Authenticator,
                     val sessionSupplier: SessionSupplier = new SessionSupplier(),
                     val serializer: Serializer = new Serializer()) extends JMAPRoutes {
 
-  val logger: Logger = SessionRoutes.LOGGER
   private val generateSession: BiFunction[HttpServerRequest, HttpServerResponse, Publisher[Void]] =
     (request, response) => SMono.fromPublisher(authFilter.authenticate(request))
       .map(_.getUser)
@@ -69,7 +68,7 @@ class SessionRoutes(val authFilter: Authenticator,
 
   def errorHandling(throwable: Throwable, response: HttpServerResponse): Mono[Void] =
     throwable match {
-      case _: UnauthorizedException => handleAuthenticationFailure(response, throwable)
+      case _: UnauthorizedException => handleAuthenticationFailure(response, LOGGER, throwable)
       case _ => handleInternalError(response, throwable)
     }
 }

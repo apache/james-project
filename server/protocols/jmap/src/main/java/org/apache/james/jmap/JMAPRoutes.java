@@ -42,19 +42,17 @@ public interface JMAPRoutes {
             .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept"));
     }
 
-    Logger logger();
-
     default Mono<Void> handleInternalError(HttpServerResponse response, Throwable e) {
         return response.status(INTERNAL_SERVER_ERROR).send();
     }
 
-    default Mono<Void> handleBadRequest(HttpServerResponse response, Throwable e) {
-        logger().warn("Invalid request received.", e);
+    default Mono<Void> handleBadRequest(HttpServerResponse response, Logger logger, Throwable e) {
+        logger.warn("Invalid request received.", e);
         return response.status(BAD_REQUEST).send();
     }
 
-    default Mono<Void> handleAuthenticationFailure(HttpServerResponse response, Throwable e) {
-        logger().warn("Unauthorized", e);
+    default Mono<Void> handleAuthenticationFailure(HttpServerResponse response, Logger logger, Throwable e) {
+        logger.warn("Unauthorized", e);
         return response.status(UNAUTHORIZED).send();
     }
 }

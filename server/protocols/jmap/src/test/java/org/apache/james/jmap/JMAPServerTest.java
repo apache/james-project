@@ -242,11 +242,6 @@ class JMAPServerTest {
                     .noCorsHeaders());
         }
 
-        @Override
-        public Logger logger() {
-            return LOGGER;
-        }
-
         private Mono<Void> sendVersionResponse(HttpServerResponse response) {
             return response.status(HttpResponseStatus.OK)
                 .header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)

@@ -82,11 +82,6 @@ public class UploadRoutes implements JMAPRoutes {
     }
 
     @Override
-    public Logger logger() {
-        return LOGGER;
-    }
-
-    @Override
     public Stream<JMAPRoute> routes() {
         return Stream.of(
             JMAPRoute.builder()
@@ -110,7 +105,7 @@ public class UploadRoutes implements JMAPRoutes {
                     .subscriberContext(jmapAuthContext(session)))
                 .onErrorResume(CancelledUploadException.class, e -> handleCanceledUpload(response, e))
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
-                .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, e))
+                .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
                 .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
                 .onErrorResume(e -> handleInternalError(response, e))
                 .subscriberContext(jmapContext(request))
