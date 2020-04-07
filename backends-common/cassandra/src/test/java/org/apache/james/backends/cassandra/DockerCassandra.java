@@ -22,6 +22,7 @@ package org.apache.james.backends.cassandra;
 import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.KeyspaceFactory;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,18 +58,16 @@ public class DockerCassandra {
             this.cassandra = cassandra;
         }
 
-        public void initializeKeyspace(String keyspace) {
-            ClusterConfiguration configuration = configurationBuilder(keyspace).build();
-
-            try (Cluster privilegedCluster = ClusterFactory.create(configuration)) {
+        public void initializeKeyspace(KeyspaceConfiguration configuration) {
+            try (Cluster privilegedCluster = ClusterFactory.create(cassandra.superUserConfigurationBuilder().build())) {
                 provisionNonPrivilegedUser(privilegedCluster);
                 KeyspaceFactory.createKeyspace(configuration, privilegedCluster);
-                grantPermissionToTestingUser(privilegedCluster, keyspace);
+                grantPermissionToTestingUser(privilegedCluster, configuration.getKeyspace());
             }
         }
 
         public void dropKeyspace(String keyspace) {
-            try (Cluster cluster = ClusterFactory.create(configurationBuilder(keyspace).build())) {
+            try (Cluster cluster = ClusterFactory.create(cassandra.superUserConfigurationBuilder().build())) {
                 try (Session cassandraSession = cluster.newSession()) {
                     boolean applied = cassandraSession.execute(
                         SchemaBuilder.dropKeyspace(keyspace)
@@ -79,13 +78,6 @@ public class DockerCassandra {
                         throw new IllegalStateException("cannot drop keyspace '" + keyspace + "'");
                     }
                 }
-            }
-
-        }
-
-        public boolean keyspaceExist(String keyspace) {
-            try (Cluster cluster = ClusterFactory.create(configurationBuilder(keyspace).build())) {
-                return KeyspaceFactory.keyspaceExist(cluster, keyspace);
             }
         }
 
@@ -104,33 +96,19 @@ public class DockerCassandra {
                 session.execute("GRANT DROP ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
             }
         }
-
-        private ClusterConfiguration.Builder configurationBuilder(String keyspace) {
-            return ClusterConfiguration.builder()
-                .host(cassandra.getHost())
-                .username(CASSANDRA_SUPER_USER)
-                .password(CASSANDRA_SUPER_USER_PASSWORD)
-                .keyspace(keyspace)
-                .createKeyspace()
-                .disableDurableWrites()
-                .replicationFactor(1)
-                .maxRetry(RELAXED_RETRIES);
-        }
     }
 
     public static ClusterConfiguration.Builder configurationBuilder(Host... hosts) {
         return ClusterConfiguration.builder()
             .hosts(hosts)
-            .keyspace(KEYSPACE)
             .username(CASSANDRA_TESTING_USER)
             .password(CASSANDRA_TESTING_PASSWORD)
-            .disableDurableWrites()
-            .replicationFactor(1)
             .maxRetry(RELAXED_RETRIES);
     }
 
     private static final Logger logger = LoggerFactory.getLogger(DockerCassandra.class);
-    private static final String KEYSPACE = "testing";
+    public static final String KEYSPACE = "testing";
+    public static final String CACHE_KEYSPACE = "testing_cache";
     private static final int RELAXED_RETRIES = 2;
 
     public static final String CASSANDRA_TESTING_USER = "james_testing";
@@ -186,7 +164,8 @@ public class DockerCassandra {
     public void start() {
         if (!cassandraContainer.isRunning()) {
             cassandraContainer.start();
-            administrator().initializeKeyspace(KEYSPACE);
+            administrator().initializeKeyspace(mainKeyspaceConfiguration());
+            administrator().initializeKeyspace(cacheKeyspaceConfiguration());
         }
     }
 
@@ -239,8 +218,26 @@ public class DockerCassandra {
         return configurationBuilder(getHost());
     }
 
-    public ClusterConfiguration.Builder configurationBuilderForSuperUser() {
-        return administrator()
-            .configurationBuilder(KEYSPACE);
+    public ClusterConfiguration.Builder superUserConfigurationBuilder() {
+        return ClusterConfiguration.builder()
+            .host(getHost())
+            .username(CassandraResourcesManager.CASSANDRA_SUPER_USER)
+            .password(CassandraResourcesManager.CASSANDRA_SUPER_USER_PASSWORD)
+            .createKeyspace()
+            .maxRetry(RELAXED_RETRIES);
+    }
+
+    public static KeyspaceConfiguration mainKeyspaceConfiguration() {
+        return KeyspaceConfiguration.builder()
+            .keyspace(KEYSPACE)
+            .replicationFactor(1)
+            .disableDurableWrites();
+    }
+
+    public static KeyspaceConfiguration cacheKeyspaceConfiguration() {
+        return KeyspaceConfiguration.builder()
+            .keyspace(CACHE_KEYSPACE)
+            .replicationFactor(1)
+            .disableDurableWrites();
     }
 }

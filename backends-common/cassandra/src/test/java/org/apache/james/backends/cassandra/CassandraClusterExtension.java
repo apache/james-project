@@ -20,6 +20,7 @@
 package org.apache.james.backends.cassandra;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -46,6 +47,18 @@ public class CassandraClusterExtension implements BeforeAllCallback, BeforeEachC
             cassandraExtension.beforeAll(extensionContext);
             start();
         }
+    }
+
+    public ClusterConfiguration.Builder clusterConfiguration() {
+        return cassandraExtension.clusterConfiguration();
+    }
+
+    public void pause() {
+        cassandraExtension.getDockerCassandra().getContainer().pause();
+    }
+
+    public void unpause() {
+        cassandraExtension.getDockerCassandra().getContainer().unpause();
     }
 
     private void start() {

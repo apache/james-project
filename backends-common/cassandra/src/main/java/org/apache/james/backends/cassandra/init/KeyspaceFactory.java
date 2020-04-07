@@ -22,7 +22,7 @@ package org.apache.james.backends.cassandra.init;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
-import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
@@ -31,41 +31,22 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 public class KeyspaceFactory {
-
     private static final String SYSTEM_SCHEMA = "system_schema";
     private static final String KEYSPACES = "keyspaces";
     private static final String KEYSPACE_NAME = "keyspace_name";
-    private static final int CACHE_REPLICATION_FACTOR = 1;
 
-    public static void createKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
-        if (clusterConfiguration.shouldCreateKeyspace()) {
-            doCreateKeyspace(clusterConfiguration, cluster);
-            doCreateCacheKeyspace(clusterConfiguration, cluster);
-        }
-    }
-
-    private static void doCreateKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
-        createKeyspace(cluster, clusterConfiguration.getKeyspace(),
-            clusterConfiguration.getReplicationFactor(),
-            clusterConfiguration.isDurableWrites());
-    }
-
-    private static void createKeyspace(Cluster cluster, String keyspace, int replicationFactor, boolean durableWrites) {
+    public static void createKeyspace(KeyspaceConfiguration configuration, Cluster cluster) {
         try (Session session = cluster.connect()) {
-            if (!keyspaceExist(cluster, keyspace)) {
-                session.execute(SchemaBuilder.createKeyspace(keyspace)
+            if (!keyspaceExist(cluster, configuration.getKeyspace())) {
+                session.execute(SchemaBuilder.createKeyspace(configuration.getKeyspace())
                     .with()
                     .replication(ImmutableMap.<String, Object>builder()
                         .put("class", "SimpleStrategy")
-                        .put("replication_factor", replicationFactor)
+                        .put("replication_factor", configuration.getReplicationFactor())
                         .build())
-                    .durableWrites(durableWrites));
+                    .durableWrites(configuration.isDurableWrites()));
             }
         }
-    }
-
-    private static void doCreateCacheKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
-        createKeyspace(cluster, clusterConfiguration.getCacheKeyspace(), CACHE_REPLICATION_FACTOR, clusterConfiguration.isDurableWrites());
     }
 
     @VisibleForTesting

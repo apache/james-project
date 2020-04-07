@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.cassandra.init;
 
+import static org.apache.james.backends.cassandra.init.KeyspaceFactory.keyspaceExist;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.Callable;
@@ -64,7 +66,7 @@ public class ResilientClusterProvider implements Provider<Cluster> {
         return () -> {
             Cluster cluster = ClusterFactory.create(configuration);
             try {
-                KeyspaceFactory.createKeyspace(configuration, cluster);
+                keyspaceExist(cluster, "any"); // plays a sample query to ensure we can contact the cluster
                 return cluster;
             } catch (Exception e) {
                 cluster.close();

@@ -25,11 +25,13 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
+import org.apache.james.backends.cassandra.init.KeyspaceFactory;
 import org.apache.james.backends.cassandra.init.ResilientClusterProvider;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
+import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraHealthCheck;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
@@ -37,6 +39,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManage
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.lifecycle.api.StartUpCheck;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.util.Host;
@@ -49,6 +52,7 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
@@ -70,6 +74,14 @@ public class CassandraSessionModule extends AbstractModule {
         bind(CassandraUtils.class).in(Scopes.SINGLETON);
         bind(Cluster.class).toProvider(ResilientClusterProvider.class);
 
+        bind(InitializedCluster.class).in(Scopes.SINGLETON);
+        bind(MainSessionWithInitializedTablesFactory.class).in(Scopes.SINGLETON);
+        bind(CacheSessionWithInitializedTablesFactory.class).in(Scopes.SINGLETON);
+
+        bind(Session.class).toProvider(MainSessionWithInitializedTablesFactory.class);
+        bind(Session.class).annotatedWith(Names.named(InjectionNames.CACHE))
+            .toProvider(CacheSessionWithInitializedTablesFactory.class);
+
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraZonedDateTimeModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraSchemaVersionModule.MODULE);
@@ -85,19 +97,6 @@ public class CassandraSessionModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(CassandraProbe.class);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(CassandraHealthCheck.class);
-    }
-
-    @Provides
-    @Singleton
-    Session provideSession(SessionWithInitializedTablesFactory sessionFactory) {
-        return sessionFactory.get();
-    }
-
-    @Named(InjectionNames.CACHE)
-    @Provides
-    @Singleton
-    Session provideCacheSession(SessionWithInitializedTablesFactory sessionFactory) {
-        return sessionFactory.getCacheSession();
     }
 
     @Provides
@@ -155,6 +154,62 @@ public class CassandraSessionModule extends AbstractModule {
             return ClusterConfiguration.builder()
                 .host(Host.from(LOCALHOST, CASSANDRA_PORT))
                 .build();
+        }
+    }
+
+    @Provides
+    @Singleton
+    KeyspacesConfiguration provideKeyspacesConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            return KeyspacesConfiguration.from(propertiesProvider.getConfiguration(CASSANDRA_FILE_NAME));
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Could not locate cassandra configuration file. Using default keyspaces configuration instead");
+            return KeyspacesConfiguration.builder().build();
+        }
+    }
+
+    @Provides
+    @Singleton
+    KeyspaceConfiguration provideMainKeyspaceConfiguration(KeyspacesConfiguration keyspacesConfiguration) {
+        return keyspacesConfiguration.mainKeyspaceConfiguration();
+    }
+
+    @Named(InjectionNames.CACHE)
+    @Provides
+    @Singleton
+    KeyspaceConfiguration provideCacheKeyspaceConfiguration(KeyspacesConfiguration keyspacesConfiguration) {
+        return keyspacesConfiguration.cacheKeyspaceConfiguration();
+    }
+
+    private static class MainSessionWithInitializedTablesFactory extends SessionWithInitializedTablesFactory {
+        @Inject
+        public MainSessionWithInitializedTablesFactory(KeyspaceConfiguration keyspaceConfiguration,
+                                                       InitializedCluster cluster,
+                                                       CassandraModule module) {
+            super(keyspaceConfiguration, cluster.cluster, module);
+        }
+    }
+
+    private static class CacheSessionWithInitializedTablesFactory extends SessionWithInitializedTablesFactory {
+        @Inject
+        public CacheSessionWithInitializedTablesFactory(@Named(InjectionNames.CACHE) KeyspaceConfiguration keyspaceConfiguration,
+                                                        InitializedCluster cluster,
+                                                        @Named(InjectionNames.CACHE) CassandraModule module) {
+            super(keyspaceConfiguration, cluster.cluster, module);
+        }
+    }
+
+    private static class InitializedCluster implements Startable {
+        private final Cluster cluster;
+
+        @Inject
+        private InitializedCluster(Cluster cluster, ClusterConfiguration clusterConfiguration, KeyspacesConfiguration keyspacesConfiguration) {
+            this.cluster = cluster;
+
+            if (clusterConfiguration.shouldCreateKeyspace()) {
+                KeyspaceFactory.createKeyspace(keyspacesConfiguration.mainKeyspaceConfiguration(), cluster);
+                KeyspaceFactory.createKeyspace(keyspacesConfiguration.cacheKeyspaceConfiguration(), cluster);
+            }
         }
     }
 }

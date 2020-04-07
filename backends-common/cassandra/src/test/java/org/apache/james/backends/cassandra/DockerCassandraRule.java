@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.cassandra;
 
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.util.Host;
 import org.junit.rules.ExternalResource;
 import org.testcontainers.containers.GenericContainer;
@@ -71,6 +72,10 @@ public class DockerCassandraRule extends ExternalResource {
 
     public void unpause() {
         DockerCassandraSingleton.singleton.unpause();
+    }
+
+    ClusterConfiguration.Builder clusterConfiguration() {
+        return DockerCassandraSingleton.singleton.configurationBuilder();
     }
 
 }

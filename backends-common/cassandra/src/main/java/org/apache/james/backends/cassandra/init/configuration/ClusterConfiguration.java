@@ -38,9 +38,6 @@ public class ClusterConfiguration {
     public static class Builder {
         private ImmutableList.Builder<Host> hosts;
         private boolean createKeyspace;
-        private Optional<String> keyspace;
-        private Optional<String> cacheKeyspace;
-        private Optional<Integer> replicationFactor;
         private Optional<Integer> minDelay;
         private Optional<Integer> maxRetry;
         private Optional<QueryLoggerConfiguration> queryLoggerConfiguration;
@@ -48,16 +45,12 @@ public class ClusterConfiguration {
         private Optional<Integer> readTimeoutMillis;
         private Optional<Integer> connectTimeoutMillis;
         private Optional<Boolean> useSsl;
-        private Optional<Boolean> durableWrites;
         private Optional<String> username;
         private Optional<String> password;
 
         public Builder() {
             hosts = ImmutableList.builder();
             createKeyspace = false;
-            keyspace = Optional.empty();
-            cacheKeyspace = Optional.empty();
-            replicationFactor = Optional.empty();
             minDelay = Optional.empty();
             maxRetry = Optional.empty();
             queryLoggerConfiguration = Optional.empty();
@@ -67,7 +60,6 @@ public class ClusterConfiguration {
             username = Optional.empty();
             password = Optional.empty();
             useSsl = Optional.empty();
-            durableWrites = Optional.empty();
         }
 
         public Builder host(Host host) {
@@ -88,33 +80,6 @@ public class ClusterConfiguration {
         public Builder createKeyspace() {
             this.createKeyspace = true;
             return this;
-        }
-
-        public Builder keyspace(Optional<String> keyspace) {
-            this.keyspace = keyspace;
-            return this;
-        }
-
-        public Builder cacheKeyspace(Optional<String> cacheKeyspace) {
-            this.keyspace = keyspace;
-            return this;
-        }
-
-        public Builder cacheKeyspace(String cacheKeyspace) {
-            return cacheKeyspace(Optional.of(cacheKeyspace));
-        }
-
-        public Builder keyspace(String keyspace) {
-            return keyspace(Optional.of(keyspace));
-        }
-
-        public Builder replicationFactor(Optional<Integer> replicationFactor) {
-            this.replicationFactor = replicationFactor;
-            return this;
-        }
-
-        public Builder replicationFactor(int replicationFactor) {
-            return replicationFactor(Optional.of(replicationFactor));
         }
 
         public Builder minDelay(Optional<Integer> minDelay) {
@@ -198,19 +163,10 @@ public class ClusterConfiguration {
             return connectTimeoutMillis(Optional.of(connectTimeoutMillis));
         }
 
-        public Builder disableDurableWrites() {
-            this.durableWrites = Optional.of(false);
-
-            return this;
-        }
-
         public ClusterConfiguration build() {
             return new ClusterConfiguration(
                 hosts.build(),
                 createKeyspace,
-                keyspace.orElse(DEFAULT_KEYSPACE),
-                cacheKeyspace.orElse(DEFAULT_CACHE_KEYSPACE),
-                replicationFactor.orElse(DEFAULT_REPLICATION_FACTOR),
                 minDelay.orElse(DEFAULT_CONNECTION_MIN_DELAY),
                 maxRetry.orElse(DEFAULT_CONNECTION_MAX_RETRIES),
                 queryLoggerConfiguration,
@@ -219,27 +175,20 @@ public class ClusterConfiguration {
                 connectTimeoutMillis.orElse(DEFAULT_CONNECT_TIMEOUT_MILLIS),
                 useSsl.orElse(false),
                 username,
-                password,
-                durableWrites.orElse(true));
+                password);
         }
     }
 
     private static final String CASSANDRA_NODES = "cassandra.nodes";
     public static final String CASSANDRA_CREATE_KEYSPACE = "cassandra.keyspace.create";
-    public static final String CASSANDRA_KEYSPACE = "cassandra.keyspace";
-    public static final String CASSANDRA_CACHE_KEYSPACE = "cassandra.keyspace.cache";
     public static final String CASSANDRA_USER = "cassandra.user";
     public static final String CASSANDRA_PASSWORD = "cassandra.password";
     public static final String CASSANDRA_SSL = "cassandra.ssl";
-    public static final String REPLICATION_FACTOR = "cassandra.replication.factor";
     public static final String READ_TIMEOUT_MILLIS = "cassandra.readTimeoutMillis";
     public static final String CONNECT_TIMEOUT_MILLIS = "cassandra.connectTimeoutMillis";
     public static final String CONNECTION_MAX_RETRY = "cassandra.retryConnection.maxRetries";
     public static final String CONNECTION_RETRY_MIN_DELAY = "cassandra.retryConnection.minDelay";
 
-    private static final String DEFAULT_KEYSPACE = "apache_james";
-    private static final String DEFAULT_CACHE_KEYSPACE = "apache_james_cache";
-    private static final int DEFAULT_REPLICATION_FACTOR = 1;
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 10;
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 5000;
     private static final int DEFAULT_READ_TIMEOUT_MILLIS = 5000;
@@ -259,9 +208,6 @@ public class ClusterConfiguration {
 
         ClusterConfiguration.Builder builder = ClusterConfiguration.builder()
             .hosts(listCassandraServers(configuration))
-            .keyspace(Optional.ofNullable(configuration.getString(CASSANDRA_KEYSPACE, null)))
-            .cacheKeyspace(Optional.ofNullable(configuration.getString(CASSANDRA_CACHE_KEYSPACE, null)))
-            .replicationFactor(Optional.ofNullable(configuration.getInteger(REPLICATION_FACTOR, null)))
             .minDelay(Optional.ofNullable(configuration.getInteger(CONNECTION_RETRY_MIN_DELAY, null)))
             .maxRetry(Optional.ofNullable(configuration.getInteger(CONNECTION_MAX_RETRY, null)))
             .queryLoggerConfiguration(QueryLoggerConfiguration.from(configuration))
@@ -318,9 +264,6 @@ public class ClusterConfiguration {
 
     private final List<Host> hosts;
     private final boolean createKeyspace;
-    private final String keyspace;
-    private final String cacheKeyspace;
-    private final int replicationFactor;
     private final int minDelay;
     private final int maxRetry;
     private final Optional<QueryLoggerConfiguration> queryLoggerConfiguration;
@@ -330,17 +273,13 @@ public class ClusterConfiguration {
     private final boolean useSsl;
     private final Optional<String> username;
     private final Optional<String> password;
-    private final boolean durableWrites;
 
-    public ClusterConfiguration(List<Host> hosts, boolean createKeyspace, String keyspace, String cacheKeyspace, int replicationFactor, int minDelay, int maxRetry,
+    public ClusterConfiguration(List<Host> hosts, boolean createKeyspace, int minDelay, int maxRetry,
                                 Optional<QueryLoggerConfiguration> queryLoggerConfiguration, Optional<PoolingOptions> poolingOptions,
                                 int readTimeoutMillis, int connectTimeoutMillis, boolean useSsl, Optional<String> username,
-                                Optional<String> password, boolean durableWrites) {
+                                Optional<String> password) {
         this.hosts = hosts;
         this.createKeyspace = createKeyspace;
-        this.keyspace = keyspace;
-        this.cacheKeyspace = cacheKeyspace;
-        this.replicationFactor = replicationFactor;
         this.minDelay = minDelay;
         this.maxRetry = maxRetry;
         this.queryLoggerConfiguration = queryLoggerConfiguration;
@@ -350,11 +289,6 @@ public class ClusterConfiguration {
         this.useSsl = useSsl;
         this.username = username;
         this.password = password;
-        this.durableWrites = durableWrites;
-    }
-
-    public boolean isDurableWrites() {
-        return durableWrites;
     }
 
     public List<Host> getHosts() {
@@ -363,18 +297,6 @@ public class ClusterConfiguration {
 
     public boolean shouldCreateKeyspace() {
         return createKeyspace;
-    }
-
-    public String getKeyspace() {
-        return keyspace;
-    }
-
-    public String getCacheKeyspace() {
-        return cacheKeyspace;
-    }
-
-    public int getReplicationFactor() {
-        return replicationFactor;
     }
 
     public int getMinDelay() {
@@ -422,8 +344,6 @@ public class ClusterConfiguration {
                 && Objects.equals(this.maxRetry, that.maxRetry)
                 && Objects.equals(this.hosts, that.hosts)
                 && Objects.equals(this.createKeyspace, that.createKeyspace)
-                && Objects.equals(this.keyspace, that.keyspace)
-                && Objects.equals(this.replicationFactor, that.replicationFactor)
                 && Objects.equals(this.queryLoggerConfiguration, that.queryLoggerConfiguration)
                 && Objects.equals(this.poolingOptions, that.poolingOptions)
                 && Objects.equals(this.readTimeoutMillis, that.readTimeoutMillis)
@@ -437,7 +357,7 @@ public class ClusterConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(hosts, createKeyspace, keyspace, replicationFactor, minDelay, maxRetry, queryLoggerConfiguration, poolingOptions,
+        return Objects.hash(hosts, createKeyspace, minDelay, maxRetry, queryLoggerConfiguration, poolingOptions,
             readTimeoutMillis, connectTimeoutMillis, username, useSsl, password);
     }
 }

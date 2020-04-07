@@ -22,17 +22,24 @@ package org.apache.james.server;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.utils.GuiceProbe;
 
 public class CassandraProbe implements GuiceProbe {
     private final ClusterConfiguration clusterConfiguration;
+    private final KeyspaceConfiguration mainKeyspaceConfiguration;
 
     @Inject
-    public CassandraProbe(ClusterConfiguration configuration) {
+    public CassandraProbe(ClusterConfiguration configuration, KeyspaceConfiguration mainKeyspaceConfiguration) {
         this.clusterConfiguration = configuration;
+        this.mainKeyspaceConfiguration = mainKeyspaceConfiguration;
     }
 
     public ClusterConfiguration getConfiguration() {
         return clusterConfiguration;
+    }
+
+    public KeyspaceConfiguration getMainKeyspaceConfiguration() {
+        return mainKeyspaceConfiguration;
     }
 }

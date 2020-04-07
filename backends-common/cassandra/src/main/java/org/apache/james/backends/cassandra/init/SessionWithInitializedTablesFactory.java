@@ -23,15 +23,13 @@ import java.util.stream.Stream;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
+import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 
@@ -41,19 +39,14 @@ import com.datastax.driver.core.Session;
 @Singleton
 public class SessionWithInitializedTablesFactory implements Provider<Session> {
     private final CassandraModule module;
-    private final CassandraModule cacheModule;
     private final Session session;
-    private final Session cacheSession;
 
     @Inject
-    public SessionWithInitializedTablesFactory(ClusterConfiguration clusterConfiguration,
+    public SessionWithInitializedTablesFactory(KeyspaceConfiguration keyspaceConfiguration,
                                                Cluster cluster,
-                                               CassandraModule module,
-                                               @Named(InjectionNames.CACHE) CassandraModule cacheModule) {
+                                               CassandraModule module) {
         this.module = module;
-        this.cacheModule = cacheModule;
-        this.session = createSession(cluster, clusterConfiguration.getKeyspace());
-        this.cacheSession = createCacheSession(cluster, clusterConfiguration.getKeyspace());
+        this.session = createSession(cluster, keyspaceConfiguration.getKeyspace());
     }
 
     private Session createSession(Cluster cluster, String keyspace) {
@@ -64,17 +57,6 @@ public class SessionWithInitializedTablesFactory implements Provider<Session> {
                     .updateVersion(CassandraSchemaVersionManager.MAX_VERSION)
                     .block();
             }
-            return session;
-        } catch (Exception e) {
-            session.close();
-            throw e;
-        }
-    }
-
-    private Session createCacheSession(Cluster cluster, String keyspace) {
-        Session session = cluster.connect(keyspace);
-        try {
-            allOperationsAreFullyPerformed(session, cacheModule);
             return session;
         } catch (Exception e) {
             session.close();
@@ -100,10 +82,6 @@ public class SessionWithInitializedTablesFactory implements Provider<Session> {
     @Override
     public Session get() {
         return session;
-    }
-
-    public Session getCacheSession() {
-        return cacheSession;
     }
 
     @PreDestroy

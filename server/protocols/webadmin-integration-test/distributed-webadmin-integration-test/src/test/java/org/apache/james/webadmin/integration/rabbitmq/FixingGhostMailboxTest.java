@@ -151,9 +151,10 @@ class FixingGhostMailboxTest {
             .addUser(BOB, BOB_SECRET);
         accessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(ALICE), ALICE_SECRET);
 
-        ClusterConfiguration cassandraConfiguration = server.getProbe(CassandraProbe.class).getConfiguration();
+        CassandraProbe probe = server.getProbe(CassandraProbe.class);
+        ClusterConfiguration cassandraConfiguration = probe.getConfiguration();
         try (Cluster cluster = ClusterFactory.create(cassandraConfiguration)) {
-            try (Session session = cluster.connect(cassandraConfiguration.getKeyspace())) {
+            try (Session session = cluster.connect(probe.getMainKeyspaceConfiguration().getKeyspace())) {
                 simulateGhostMailboxBug(session);
             }
         }

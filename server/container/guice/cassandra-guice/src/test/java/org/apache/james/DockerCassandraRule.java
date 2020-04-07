@@ -21,6 +21,7 @@ package org.apache.james;
 
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.modules.mailbox.KeyspacesConfiguration;
 import org.apache.james.server.CassandraTruncateTableTask;
 import org.apache.james.util.Host;
 import org.junit.runner.Description;
@@ -46,11 +47,18 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        return Modules.combine((binder) -> binder.bind(ClusterConfiguration.class)
+        return Modules.combine(binder -> binder.bind(ClusterConfiguration.class)
             .toInstance(DockerCassandra.configurationBuilder(cassandraContainer.getHost())
                 .maxRetry(20)
                 .minDelay(5000)
                 .build()),
+            binder -> binder.bind(KeyspacesConfiguration.class)
+                .toInstance(KeyspacesConfiguration.builder()
+                    .keyspace(DockerCassandra.KEYSPACE)
+                    .cacheKeyspace(DockerCassandra.CACHE_KEYSPACE)
+                    .replicationFactor(1)
+                    .disableDurableWrites()
+                    .build()),
             binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
                 .addBinding()
                 .to(CassandraTruncateTableTask.class));

@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.cassandra;
 
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.util.Host;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -35,6 +36,11 @@ public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCall
 
     public DockerCassandraExtension() {
         cassandraContainer = new DockerCassandraRule();
+    }
+
+
+    ClusterConfiguration.Builder clusterConfiguration() {
+        return cassandraContainer.clusterConfiguration();
     }
 
     @Override
