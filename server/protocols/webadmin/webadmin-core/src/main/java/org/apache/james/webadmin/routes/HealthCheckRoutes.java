@@ -101,7 +101,7 @@ public class HealthCheckRoutes implements PublicRoutes {
         response.status(getCorrespondingStatusCode(status));
         return new HeathCheckAggregationExecutionResultDto(status, mapResultToDto(results));
     }
-    
+
     @GET
     @Path("/checks/{" + PARAM_COMPONENT_NAME + "}")
     @ApiOperation(value = "Perform the component's health check")
@@ -153,27 +153,33 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     private void logFailedCheck(Result result) {
         switch (result.getStatus()) {
-        case UNHEALTHY:
-            if (result.getError().isPresent()) {
-                LOGGER.error("HealthCheck failed for {} : {}",
-                    result.getComponentName().getName(),
-                    result.getCause().orElse(""),
-                    result.getError().get());
+            case UNHEALTHY:
+                if (result.getError().isPresent()) {
+                    LOGGER.error("HealthCheck failed for {} : {}",
+                        result.getComponentName().getName(),
+                        result.getCause().orElse(""),
+                        result.getError().get());
+                } else {
+                    LOGGER.error("HealthCheck failed for {} : {}",
+                        result.getComponentName().getName(),
+                        result.getCause().orElse(""));
+                }
                 break;
-            }
-
-            LOGGER.error("HealthCheck failed for {} : {}",
-                    result.getComponentName().getName(),
-                    result.getCause().orElse(""));
-            break;
-        case DEGRADED:
-            LOGGER.warn("HealthCheck is unstable for {} : {}",
-                    result.getComponentName().getName(),
-                    result.getCause().orElse(""));
-            break;
-        case HEALTHY:
-            // Here only to fix a warning, such cases are already filtered
-            break;
+            case DEGRADED:
+                if (result.getError().isPresent()) {
+                    LOGGER.warn("HealthCheck is unstable for {} : {}",
+                        result.getComponentName().getName(),
+                        result.getCause().orElse(""),
+                        result.getError().get());
+                } else {
+                    LOGGER.warn("HealthCheck is unstable for {} : {}",
+                        result.getComponentName().getName(),
+                        result.getCause().orElse(""));
+                }
+                break;
+            case HEALTHY:
+                // Here only to fix a warning, such cases are already filtered
+                break;
         }
     }
 
@@ -203,5 +209,4 @@ public class HealthCheckRoutes implements PublicRoutes {
             .type(ErrorResponder.ErrorType.NOT_FOUND)
             .haltError();
     }
-        
 }

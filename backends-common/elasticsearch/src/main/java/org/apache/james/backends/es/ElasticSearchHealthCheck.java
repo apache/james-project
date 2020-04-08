@@ -36,7 +36,6 @@ import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 
-
 public class ElasticSearchHealthCheck implements HealthCheck {
     private static final ComponentName COMPONENT_NAME = new ComponentName("ElasticSearch Backend");
 

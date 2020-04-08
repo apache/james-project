@@ -91,12 +91,12 @@ public class PeriodicalHealthChecks implements Startable {
         if (result.getError().isPresent()) {
             LOGGER.error("UNHEALTHY: {} : {}",
                 result.getComponentName().getName(),
-                result.getCause(),
+                result.getCause().orElse(""),
                 result.getError().get());
         } else {
             LOGGER.error("UNHEALTHY: {} : {}",
                 result.getComponentName().getName(),
-                result.getCause());
+                result.getCause().orElse(""));
         }
     }
 
@@ -108,7 +108,7 @@ public class PeriodicalHealthChecks implements Startable {
                 error);
             return;
         }
-        LOGGER.error("HealthCheck error. Triggering value: {}, Cause: {}",
+        LOGGER.error("HealthCheck error. Triggering value: {}, Cause: ",
             triggeringValue,
             error);
     }
