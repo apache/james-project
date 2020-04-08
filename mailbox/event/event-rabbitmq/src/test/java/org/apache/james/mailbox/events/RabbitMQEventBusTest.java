@@ -76,6 +76,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
@@ -714,6 +715,69 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
         }
 
+    }
+
+    @Nested
+    class ErrorDispatchingTest {
+
+        @AfterEach
+        void tearDown() {
+            rabbitMQExtension.getRabbitMQ().unpause();
+        }
+
+        @Test
+        void dispatchShouldNotSendToGroupListenerWhenError() {
+            EventCollector eventCollector = eventCollector();
+            eventBus().register(eventCollector, GROUP_A);
+
+            rabbitMQExtension.getRabbitMQ().pause();
+
+            try {
+                eventBus().dispatch(EVENT, NO_KEYS).block();
+            } catch (Exception e) {
+                // ignore
+            }
+
+            getSpeedProfile().longWaitCondition()
+                .untilAsserted(() -> assertThat(eventCollector.getEvents()).isEmpty());
+        }
+
+        @Test
+        void dispatchShouldNotPersistEventWhenDispatchingNoKeyGetError() {
+            EventCollector eventCollector = eventCollector();
+            eventBus().register(eventCollector, GROUP_A);
+
+            rabbitMQExtension.getRabbitMQ().pause();
+
+            try {
+                eventBus().dispatch(EVENT, NO_KEYS).block();
+            } catch (Exception e) {
+                // ignore
+            }
+
+            getSpeedProfile().longWaitCondition()
+                .untilAsserted(() ->
+                    assertThat(deadLetter().containEvents().block()).isFalse());
+        }
+
+        @Test
+        void dispatchShouldNotPersistEventWhenDispatchingWithKeysGetError() {
+            EventCollector eventCollector = eventCollector();
+            eventBus().register(eventCollector, GROUP_A);
+            eventBus().register(eventCollector, KEY_1);
+
+            rabbitMQExtension.getRabbitMQ().pause();
+
+            try {
+                eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
+            } catch (Exception e) {
+                // ignore
+            }
+
+            getSpeedProfile().longWaitCondition()
+                .untilAsserted(() ->
+                    assertThat(deadLetter().containEvents().block()).isFalse());
+        }
     }
 
     private void assertThatListenerReceiveOneEvent(MailboxListener listener) {
