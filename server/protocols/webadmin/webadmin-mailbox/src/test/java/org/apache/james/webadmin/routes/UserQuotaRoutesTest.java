@@ -36,7 +36,9 @@ import java.util.Map;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -44,6 +46,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
@@ -845,10 +848,11 @@ class UserQuotaRoutesTest {
             MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
             UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
             InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
+            QuotaOperation quotaIncrease = new QuotaOperation(userQuotaRootResolver.forUser(BOB), QuotaCountUsage.count(20), QuotaSizeUsage.size(40));
 
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSizeLimit.size(80));
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCountLimit.count(100));
-            currentQuotaManager.increase(userQuotaRootResolver.forUser(BOB), 20, 40);
+            currentQuotaManager.increase(quotaIncrease);
 
             JsonPath jsonPath =
                 when()
@@ -873,10 +877,11 @@ class UserQuotaRoutesTest {
             MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
             UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
             InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
+            QuotaOperation quotaIncrease = new QuotaOperation(userQuotaRootResolver.forUser(BOB), QuotaCountUsage.count(20), QuotaSizeUsage.size(40));
 
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSizeLimit.unlimited());
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCountLimit.unlimited());
-            currentQuotaManager.increase(userQuotaRootResolver.forUser(BOB), 20, 40);
+            currentQuotaManager.increase(quotaIncrease);
 
             JsonPath jsonPath =
                 when()

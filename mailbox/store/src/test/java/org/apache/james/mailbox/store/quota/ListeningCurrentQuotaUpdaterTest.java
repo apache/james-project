@@ -45,6 +45,7 @@ import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -64,6 +65,7 @@ class ListeningCurrentQuotaUpdaterTest {
     static final String BENWA = "benwa";
     static final Username USERNAME_BENWA = Username.of(BENWA);
     static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot(BENWA, Optional.empty());
+    static final QuotaOperation QUOTA = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(2), QuotaSizeUsage.size(2 * SIZE));
 
     StoreCurrentQuotaManager mockedCurrentQuotaManager;
     QuotaRootResolver mockedQuotaRootResolver;
@@ -97,7 +99,7 @@ class ListeningCurrentQuotaUpdaterTest {
 
         testee.event(added);
 
-        verify(mockedCurrentQuotaManager).increase(QUOTA_ROOT, 2, 2 * SIZE);
+        verify(mockedCurrentQuotaManager).increase(QUOTA);
     }
 
     @Test
@@ -112,7 +114,7 @@ class ListeningCurrentQuotaUpdaterTest {
 
         testee.event(expunged);
 
-        verify(mockedCurrentQuotaManager).decrease(QUOTA_ROOT, 2, 2 * SIZE);
+        verify(mockedCurrentQuotaManager).decrease(QUOTA);
     }
     
     @Test
@@ -125,7 +127,7 @@ class ListeningCurrentQuotaUpdaterTest {
 
         testee.event(expunged);
 
-        verify(mockedCurrentQuotaManager, never()).decrease(QUOTA_ROOT, 0, 0);
+        verify(mockedCurrentQuotaManager, never()).decrease(any());
     }
 
     @Test
@@ -138,7 +140,7 @@ class ListeningCurrentQuotaUpdaterTest {
 
         testee.event(added);
 
-        verify(mockedCurrentQuotaManager, never()).increase(QUOTA_ROOT, 0, 0);
+        verify(mockedCurrentQuotaManager, never()).increase(any());
     }
 
     @Test
@@ -153,7 +155,7 @@ class ListeningCurrentQuotaUpdaterTest {
 
         testee.event(deletion);
 
-        verify(mockedCurrentQuotaManager).decrease(QUOTA_ROOT, 10, 5);
+        verify(mockedCurrentQuotaManager).decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(5)));
     }
 
     @Test

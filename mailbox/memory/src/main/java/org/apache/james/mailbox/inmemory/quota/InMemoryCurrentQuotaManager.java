@@ -29,12 +29,12 @@ import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator.CurrentQuotas;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -54,15 +54,13 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public void increase(QuotaRoot quotaRoot, long count, long size) throws MailboxException {
-        checkArguments(count, size);
-        doIncrease(quotaRoot, count, size);
+    public void increase(QuotaOperation quotaOperation) throws MailboxException {
+        updateQuota(quotaOperation.quotaRoot(), quotaOperation.count().asLong(), quotaOperation.size().asLong());
     }
 
     @Override
-    public void decrease(QuotaRoot quotaRoot, long count, long size) throws MailboxException {
-        checkArguments(count, size);
-        doIncrease(quotaRoot, -count, -size);
+    public void decrease(QuotaOperation quotaOperation) throws MailboxException {
+        updateQuota(quotaOperation.quotaRoot(), -(quotaOperation.count().asLong()), -(quotaOperation.size().asLong()));
     }
 
     @Override
@@ -83,7 +81,7 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
         }
     }
 
-    private void doIncrease(QuotaRoot quotaRoot, long count, long size) throws MailboxException {
+    private void updateQuota(QuotaRoot quotaRoot, long count, long size) throws MailboxException {
         try {
             Entry entry = quotaCache.get(quotaRoot);
             entry.getCount().addAndGet(count);
@@ -91,12 +89,6 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
         } catch (ExecutionException e) {
             throw new MailboxException("Exception caught", e);
         }
-
-    }
-
-    private void checkArguments(long count, long size) {
-        Preconditions.checkArgument(count > 0, "Count should be positive");
-        Preconditions.checkArgument(size > 0, "Size should be positive");
     }
 
     static class Entry {

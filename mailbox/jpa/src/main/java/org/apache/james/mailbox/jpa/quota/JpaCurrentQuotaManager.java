@@ -28,12 +28,10 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
+import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
-
-import com.google.common.base.Preconditions;
 
 public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
 
@@ -66,34 +64,32 @@ public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public void increase(QuotaRoot quotaRoot, long count, long size) {
-        Preconditions.checkArgument(count > 0, "Counts should be positive");
-        Preconditions.checkArgument(size > 0, "Size should be positive");
-
+    public void increase(QuotaOperation quotaOperation) {
         transactionRunner.run(
             entityManager -> {
+                QuotaRoot quotaRoot = quotaOperation.quotaRoot();
+
                 JpaCurrentQuota jpaCurrentQuota = Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
                     .orElse(new JpaCurrentQuota(quotaRoot.getValue(), NO_MESSAGES, NO_STORED_BYTES));
 
                 entityManager.merge(new JpaCurrentQuota(quotaRoot.getValue(),
-                    jpaCurrentQuota.getMessageCount().asLong() + count,
-                    jpaCurrentQuota.getSize().asLong() + size));
+                    jpaCurrentQuota.getMessageCount().asLong() + quotaOperation.count().asLong(),
+                    jpaCurrentQuota.getSize().asLong() + quotaOperation.size().asLong()));
             });
     }
 
     @Override
-    public void decrease(QuotaRoot quotaRoot, long count, long size) throws MailboxException {
-        Preconditions.checkArgument(count > 0, "Counts should be positive");
-        Preconditions.checkArgument(size > 0, "Counts should be positive");
-
+    public void decrease(QuotaOperation quotaOperation) {
         transactionRunner.run(
             entityManager -> {
+                QuotaRoot quotaRoot = quotaOperation.quotaRoot();
+
                 JpaCurrentQuota jpaCurrentQuota = Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
                     .orElse(new JpaCurrentQuota(quotaRoot.getValue(), NO_MESSAGES, NO_STORED_BYTES));
 
                 entityManager.merge(new JpaCurrentQuota(quotaRoot.getValue(),
-                    jpaCurrentQuota.getMessageCount().asLong() - count,
-                    jpaCurrentQuota.getSize().asLong() - size));
+                    jpaCurrentQuota.getMessageCount().asLong() - quotaOperation.count().asLong(),
+                    jpaCurrentQuota.getSize().asLong() - quotaOperation.size().asLong()));
             });
     }
 

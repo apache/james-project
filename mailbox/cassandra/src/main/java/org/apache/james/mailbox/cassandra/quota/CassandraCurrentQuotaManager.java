@@ -31,14 +31,13 @@ import javax.inject.Inject;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import com.google.common.base.Preconditions;
 
 public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
 
@@ -68,19 +67,21 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public void increase(QuotaRoot quotaRoot, long count, long size) throws MailboxException {
-        checkArguments(count, size);
-        session.execute(increaseStatement.bind(count, size, quotaRoot.getValue()));
+    public void increase(QuotaOperation quotaOperation) {
+        session.execute(increaseStatement.bind(quotaOperation.count().asLong(),
+            quotaOperation.size().asLong(),
+            quotaOperation.quotaRoot().getValue()));
     }
 
     @Override
-    public void decrease(QuotaRoot quotaRoot, long count, long size) throws MailboxException {
-        checkArguments(count, size);
-        session.execute(decreaseStatement.bind(count, size, quotaRoot.getValue()));
+    public void decrease(QuotaOperation quotaOperation) {
+        session.execute(decreaseStatement.bind(quotaOperation.count().asLong(),
+            quotaOperation.size().asLong(),
+            quotaOperation.quotaRoot().getValue()));
     }
 
     @Override
-    public QuotaCountUsage getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException {
+    public QuotaCountUsage getCurrentMessageCount(QuotaRoot quotaRoot) {
         ResultSet resultSet = session.execute(getCurrentMessageCountStatement.bind(quotaRoot.getValue()));
         if (resultSet.isExhausted()) {
             return QuotaCountUsage.count(0L);
@@ -89,16 +90,11 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public QuotaSizeUsage getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException {
+    public QuotaSizeUsage getCurrentStorage(QuotaRoot quotaRoot) {
         ResultSet resultSet = session.execute(getCurrentStorageStatement.bind(quotaRoot.getValue()));
         if (resultSet.isExhausted()) {
             return QuotaSizeUsage.size(0L);
         }
         return QuotaSizeUsage.size(resultSet.one().getLong(CassandraCurrentQuota.STORAGE));
-    }
-
-    private void checkArguments(long count, long size) {
-        Preconditions.checkArgument(count > 0, "Count should be positive");
-        Preconditions.checkArgument(size > 0, "Size should be positive");
     }
 }

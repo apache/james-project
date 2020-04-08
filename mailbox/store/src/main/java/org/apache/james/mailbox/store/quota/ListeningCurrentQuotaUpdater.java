@@ -19,20 +19,25 @@
 package org.apache.james.mailbox.store.quota;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.RegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.EventFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableSet;
 
 public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailboxListener, QuotaUpdater {
@@ -82,43 +87,50 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
             }
     }
 
-    private void handleExpungedEvent(Expunged expunged, QuotaRoot quotaRoot) throws MailboxException {
-        long expungedSize = totalSize(expunged);
-        long expungedCount = (long) expunged.getUids().size();
-        // Expunge event can contain no data (expunge performed while no messages marked \Deleted)
-        if (expungedCount != 0 && expungedSize != 0) {
-            currentQuotaManager.decrease(quotaRoot, expungedCount, expungedSize);
-        }
-        eventBus.dispatch(
-            EventFactory.quotaUpdated()
-                .randomEventId()
-                .user(expunged.getUsername())
-                .quotaRoot(quotaRoot)
-                .quotaCount(quotaManager.getMessageQuota(quotaRoot))
-                .quotaSize(quotaManager.getStorageQuota(quotaRoot))
-                .instant(Instant.now())
-                .build(),
-            NO_REGISTRATION_KEYS)
-            .block();
+    private void handleExpungedEvent(Expunged expunged, QuotaRoot quotaRoot) {
+        computeQuotaOperation(expunged, quotaRoot).ifPresent(Throwing.<QuotaOperation>consumer(quotaOperation -> {
+            currentQuotaManager.decrease(quotaOperation);
+
+            eventBus.dispatch(
+                EventFactory.quotaUpdated()
+                    .randomEventId()
+                    .user(expunged.getUsername())
+                    .quotaRoot(quotaRoot)
+                    .quotaCount(quotaManager.getMessageQuota(quotaRoot))
+                    .quotaSize(quotaManager.getStorageQuota(quotaRoot))
+                    .instant(Instant.now())
+                    .build(),
+                NO_REGISTRATION_KEYS)
+                .block();
+        }).sneakyThrow());
     }
 
-    private void handleAddedEvent(Added added, QuotaRoot quotaRoot) throws MailboxException {
-        long addedSize = totalSize(added);
-        long addedCount = (long) added.getUids().size();
-        if (addedCount != 0 && addedSize != 0) {
-            currentQuotaManager.increase(quotaRoot, addedCount, addedSize);
+    private void handleAddedEvent(Added added, QuotaRoot quotaRoot) {
+        computeQuotaOperation(added, quotaRoot).ifPresent(Throwing.<QuotaOperation>consumer(quotaOperation -> {
+            currentQuotaManager.increase(quotaOperation);
+
+            eventBus.dispatch(
+                EventFactory.quotaUpdated()
+                    .randomEventId()
+                    .user(added.getUsername())
+                    .quotaRoot(quotaRoot)
+                    .quotaCount(quotaManager.getMessageQuota(quotaRoot))
+                    .quotaSize(quotaManager.getStorageQuota(quotaRoot))
+                    .instant(Instant.now())
+                    .build(),
+                NO_REGISTRATION_KEYS)
+                .block();
+        }).sneakyThrow());
+    }
+
+    private Optional<QuotaOperation> computeQuotaOperation(MetaDataHoldingEvent metaDataHoldingEvent, QuotaRoot quotaRoot) {
+        long size = totalSize(metaDataHoldingEvent);
+        long count = Integer.toUnsignedLong(metaDataHoldingEvent.getUids().size());
+
+        if (count != 0 && size != 0) {
+            return Optional.of(new QuotaOperation(quotaRoot, QuotaCountUsage.count(count), QuotaSizeUsage.size(size)));
         }
-        eventBus.dispatch(
-            EventFactory.quotaUpdated()
-                .randomEventId()
-                .user(added.getUsername())
-                .quotaRoot(quotaRoot)
-                .quotaCount(quotaManager.getMessageQuota(quotaRoot))
-                .quotaSize(quotaManager.getStorageQuota(quotaRoot))
-                .instant(Instant.now())
-                .build(),
-            NO_REGISTRATION_KEYS)
-            .block();
+        return Optional.empty();
     }
 
     private long totalSize(MetaDataHoldingEvent metaDataHoldingEvent) {
@@ -131,9 +143,9 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
     private void handleMailboxDeletionEvent(MailboxDeletion mailboxDeletionEvent) throws MailboxException {
         boolean mailboxContainedMessages = mailboxDeletionEvent.getDeletedMessageCount().asLong() > 0;
         if (mailboxContainedMessages) {
-            currentQuotaManager.decrease(mailboxDeletionEvent.getQuotaRoot(),
-                mailboxDeletionEvent.getDeletedMessageCount().asLong(),
-                mailboxDeletionEvent.getTotalDeletedSize().asLong());
+            currentQuotaManager.decrease(new QuotaOperation(mailboxDeletionEvent.getQuotaRoot(),
+                mailboxDeletionEvent.getDeletedMessageCount(),
+                mailboxDeletionEvent.getTotalDeletedSize()));
         }
     }
 
