@@ -138,28 +138,22 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         return RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(connectionMono));
     }
 
-    public Mono<Connection> getConnectionMono() {
-        return connectionMono;
-    }
-
     @Override
     public Mono<? extends Channel> getChannelMono() {
-        return Mono.fromCallable(this::borrow);
+        return borrow();
     }
 
-    private Channel borrow() {
-        Channel channel = tryBorrowFromPool();
-        borrowedChannels.add(channel);
-        return channel;
-    }
-
-    private Channel tryBorrowFromPool() {
-        return Mono.fromCallable(this::borrowFromPool)
+    private Mono<Channel> borrow() {
+        return tryBorrowFromPool()
             .doOnError(throwable -> LOGGER.warn("Cannot borrow channel", throwable))
             .retryBackoff(MAX_BORROW_RETRIES, MIN_BORROW_DELAY, FOREVER, Schedulers.elastic())
             .onErrorMap(this::propagateException)
             .subscribeOn(Schedulers.elastic())
-            .block();
+            .doOnNext(borrowedChannels::add);
+    }
+
+    private Mono<Channel> tryBorrowFromPool() {
+        return Mono.fromCallable(this::borrowFromPool);
     }
 
     private Throwable propagateException(Throwable throwable) {
@@ -223,7 +217,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     public boolean tryChannel() {
         Channel channel = null;
         try {
-            channel = borrow();
+            channel = borrow().block();
             return channel.isOpen();
         } catch (Throwable t) {
             return false;
