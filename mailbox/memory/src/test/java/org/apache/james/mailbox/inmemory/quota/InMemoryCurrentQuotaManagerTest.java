@@ -31,12 +31,16 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
+import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator.CurrentQuotas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class InMemoryCurrentQuotaManagerTest {
 
     static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
+    static final CurrentQuotas CURRENT_QUOTAS = new CurrentQuotas(
+        QuotaCountUsage.count(18),
+        QuotaSizeUsage.size(512));
 
     InMemoryCurrentQuotaManager testee;
     CurrentQuotaCalculator mockedCurrentQuotaCalculator;
@@ -50,7 +54,7 @@ class InMemoryCurrentQuotaManagerTest {
     @Test
     void getCurrentMessageCountShouldReturnRecalculateMessageCountWhenEntryIsNotInitialized() throws Exception {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
+            .thenReturn(CURRENT_QUOTAS);
 
         assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCountUsage.count(18));
     }
@@ -58,7 +62,7 @@ class InMemoryCurrentQuotaManagerTest {
     @Test
     void getCurrentStorageShouldReturnRecalculateSizeWhenEntryIsNotInitialized() throws Exception {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
+            .thenReturn(CURRENT_QUOTAS);
 
         assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSizeUsage.size(512));
     }
@@ -66,7 +70,7 @@ class InMemoryCurrentQuotaManagerTest {
     @Test
     void getCurrentStorageShouldReRetrieveStoredQuotasWhenCalculateOnUnknownQuotaIsTrue() throws Exception {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
+            .thenReturn(CURRENT_QUOTAS);
 
         testee.increase(QUOTA_ROOT, 10, 100);
 

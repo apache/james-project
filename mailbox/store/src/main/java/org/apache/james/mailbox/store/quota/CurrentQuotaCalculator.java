@@ -26,6 +26,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -60,23 +62,23 @@ public class CurrentQuotaCalculator {
                 messagesSizes +=  messages.next().getFullContentOctets();
             }
         }
-        return new CurrentQuotas(messageCount, messagesSizes);
+        return new CurrentQuotas(QuotaCountUsage.count(messageCount), QuotaSizeUsage.size(messagesSizes));
     }
 
     public static class CurrentQuotas {
-        private final long count;
-        private final long size;
+        private final QuotaCountUsage count;
+        private final QuotaSizeUsage size;
 
-        public CurrentQuotas(long count, long size) {
+        public CurrentQuotas(QuotaCountUsage count, QuotaSizeUsage size) {
             this.count = count;
             this.size = size;
         }
 
-        public long getCount() {
+        public QuotaCountUsage count() {
             return count;
         }
 
-        public long getSize() {
+        public QuotaSizeUsage size() {
             return size;
         }
     }

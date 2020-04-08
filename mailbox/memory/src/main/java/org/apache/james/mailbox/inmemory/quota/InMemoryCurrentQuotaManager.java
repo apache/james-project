@@ -31,6 +31,7 @@ import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
+import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator.CurrentQuotas;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
 import com.google.common.base.Preconditions;
@@ -102,9 +103,9 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
         private final AtomicLong count;
         private final AtomicLong size;
 
-        public Entry(CurrentQuotaCalculator.CurrentQuotas currentQuotas) {
-            this.count = new AtomicLong(currentQuotas.getCount());
-            this.size = new AtomicLong(currentQuotas.getSize());
+        public Entry(CurrentQuotas currentQuotas) {
+            this.count = new AtomicLong(currentQuotas.count().asLong());
+            this.size = new AtomicLong(currentQuotas.size().asLong());
         }
 
         public AtomicLong getCount() {
