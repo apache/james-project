@@ -22,13 +22,14 @@ package org.apache.james.webadmin.integration.rabbitmq;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.ONE_MINUTE;
-import static org.awaitility.Duration.TEN_SECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,10 +44,13 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
+import org.apache.james.backends.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.core.Username;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.EventDispatcher.DispatchingFailureGroup;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxId;
@@ -83,7 +87,9 @@ import io.restassured.http.ContentType;
 @Tag(BasicFeature.TAG)
 class RabbitMQEventDeadLettersIntegrationTest {
     public static class RetryEventsListenerGroup extends Group {
+    }
 
+    public static class RetryEventsListenerGroup2 extends Group {
     }
 
     public static class RetryEventsListener implements MailboxListener.GroupMailboxListener {
@@ -139,42 +145,73 @@ class RabbitMQEventDeadLettersIntegrationTest {
         }
     }
 
+    public static class RetryEventsListener2 extends RetryEventsListener {
+        static final Group GROUP = new RetryEventsListenerGroup2();
+
+        @Override
+        public Group getDefaultGroup() {
+            return GROUP;
+        }
+    }
+
     public static class RetryEventsListenerExtension implements GuiceModuleTestExtension {
         private RetryEventsListener retryEventsListener;
+        private RetryEventsListener2 retryEventsListener2;
 
         @Override
         public void beforeEach(ExtensionContext extensionContext) throws Exception {
             retryEventsListener = new RetryEventsListener();
+            retryEventsListener2 = new RetryEventsListener2();
         }
 
         @Override
         public Module getModule() {
-            return binder -> Multibinder.newSetBinder(binder, MailboxListener.GroupMailboxListener.class)
-                .addBinding()
-                .toInstance(retryEventsListener);
+            return binder -> {
+                Multibinder<MailboxListener.GroupMailboxListener> setBinder = Multibinder.newSetBinder(binder, MailboxListener.GroupMailboxListener.class);
+                setBinder.addBinding().toInstance(retryEventsListener);
+                setBinder.addBinding().toInstance(retryEventsListener2);
+            };
         }
 
         @Override
         public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-            return parameterContext.getParameter().getType() == RetryEventsListener.class;
+            Class<?> paramType = parameterContext.getParameter().getType();
+            return paramType == RetryEventsListener.class
+                || paramType == RetryEventsListener2.class;
         }
 
         @Override
         public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-            return retryEventsListener;
+            Class<?> paramType = parameterContext.getParameter().getType();
+            if (paramType == RetryEventsListener.class) {
+                return retryEventsListener;
+            } else if (paramType == RetryEventsListener2.class) {
+                return retryEventsListener2;
+            }
+
+            throw new IllegalArgumentException("unsupported type");
         }
     }
-    
+
+    private static RabbitMQExtension RABBIT_MQ_EXTENSION = new RabbitMQExtension();
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new AwsS3BlobStoreExtension())
-        .extension(new RabbitMQExtension())
+        .extension(RABBIT_MQ_EXTENSION)
         .extension(new RetryEventsListenerExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(new WebadminIntegrationTestModule()))
+            .overrideWith(new WebadminIntegrationTestModule())
+            .overrideWith(binder -> {
+                try {
+                    binder.bind(RabbitMQConnectionFactory.class)
+                        .toInstance(RABBIT_MQ_EXTENSION.dockerRabbitMQ().createRabbitConnectionFactory());
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            }))
         .build();
 
     //This value is duplicated from default configuration to ensure we keep the same behavior over time
@@ -186,6 +223,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
     private static final String BOB_PASSWORD = "bobPassword";
     private static final String EVENTS_ACTION = "reDeliver";
     private static final String GROUP_ID = new RetryEventsListenerGroup().asString();
+    private static final String DISPATCHING_FAILURE_GROUP_ID = DispatchingFailureGroup.INSTANCE.getClass().getName();
     private static final MailboxPath BOB_INBOX_PATH = MailboxPath.inbox(Username.of(BOB));
 
     private Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
@@ -581,5 +619,48 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + newFailedInsertionId)
         .then()
             .statusCode(HttpStatus.OK_200);
+    }
+
+    @Test
+    void failedDispatchingShouldBeRedeliveredToAllListeners(RetryEventsListener listener1,
+                                                            RetryEventsListener2 listener2,
+                                                            DockerRabbitMQ dockerRabbitMQ) {
+        dockerRabbitMQ.pause();
+        try {
+            generateInitialEvent();
+        } catch (Exception e) {
+            // ignore
+        }
+        dockerRabbitMQ.unpause();
+
+        waitForFailedDispatching();
+        waitForReDeliver(DISPATCHING_FAILURE_GROUP_ID);
+
+        awaitAtMostTenSeconds.untilAsserted(() ->
+            assertThat(listener1.getSuccessfulEvents())
+                .hasSameSizeAs(listener2.getSuccessfulEvents())
+                .hasSize(1));
+    }
+
+    private void waitForReDeliver(String groupId) {
+        String taskId = with()
+            .queryParam("action", EVENTS_ACTION)
+        .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + groupId)
+            .jsonPath()
+            .get("taskId");
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+    }
+
+    private void waitForFailedDispatching() {
+        calmlyAwait.untilAsserted(() ->
+            given()
+                .basePath(EventDeadLettersRoutes.BASE_PATH + "/groups/" + DISPATCHING_FAILURE_GROUP_ID)
+                .get()
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body(".", hasSize(1)));
     }
 }
