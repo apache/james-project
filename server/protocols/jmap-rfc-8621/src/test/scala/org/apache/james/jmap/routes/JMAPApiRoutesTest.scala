@@ -56,6 +56,16 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   private val RESPONSE_OBJECT: String = new Serializer().serialize(responseObject1).toString()
   private val RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD: String = new Serializer().serialize(responseObjectWithUnsupportedMethod).toString()
 
+  private val test: String = """
+                               |{
+                               |  "using": [ "urn:ietf:params:jmap:core"],
+                               |  "methodCalls": {
+                               |      "arg1": "arg1data",
+                               |      "arg2": "arg2data"
+                               |    }
+                               |}
+                               |""".stripMargin
+
   var jmapServer: JMAPServer = _
 
   before {
@@ -148,5 +158,16 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .post
       .then
         .statusCode(HttpStatus.SC_NOT_FOUND)
+  }
+
+  "RFC-8621 version, POST, with wrong requestObject body" should "return 400 status" in {
+    RestAssured
+      .`given`()
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(test)
+      .when()
+        .post
+      .then
+        .statusCode(HttpStatus.SC_BAD_REQUEST)
   }
 }

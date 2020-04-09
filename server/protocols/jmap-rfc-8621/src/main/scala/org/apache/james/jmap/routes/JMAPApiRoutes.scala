@@ -27,6 +27,7 @@ import eu.timepit.refined.auto._
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.OK
+import org.apache.http.HttpStatus.SC_BAD_REQUEST
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.json.Serializer
@@ -42,8 +43,6 @@ import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
 class JMAPApiRoutes extends JMAPRoutes {
-  override def logger(): Logger = LoggerFactory.getLogger(getClass)
-
   private val coreEcho = new CoreEcho
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
@@ -59,7 +58,7 @@ class JMAPApiRoutes extends JMAPRoutes {
   private def post(httpServerRequest: HttpServerRequest, httpServerResponse: HttpServerResponse): Mono[Void] =
     this.requestAsJsonStream(httpServerRequest)
       .flatMap(requestObject => this.process(requestObject, httpServerResponse))
-      .onErrorResume(throwable => SMono.fromPublisher(handleInternalError(httpServerResponse, throwable)))
+      .onErrorResume(throwable => handleError(throwable, httpServerResponse))
       .subscribeOn(Schedulers.elastic)
       .asJava()
       .`then`()
@@ -75,7 +74,7 @@ class JMAPApiRoutes extends JMAPRoutes {
   private def parseRequestObject(inputStream: InputStream): SMono[RequestObject] =
     new Serializer().deserializeRequestObject(inputStream) match {
       case JsSuccess(requestObject, _) => SMono.just(requestObject)
-      case JsError(errors) => SMono.raiseError(new RuntimeException(errors.toString()))
+      case JsError(_) => SMono.raiseError(new IllegalArgumentException("Invalid RequestObject"))
     }
 
   private def process(requestObject: RequestObject, httpServerResponse: HttpServerResponse): SMono[Void] =
@@ -100,5 +99,16 @@ class JMAPApiRoutes extends JMAPRoutes {
       MethodName("error"),
       Arguments(Json.obj("type" -> "Not implemented")),
       invocation.methodCallId))
+  }
+
+  private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = {
+    if (throwable.isInstanceOf[IllegalArgumentException]) {
+      return SMono.fromPublisher(httpServerResponse.status(SC_BAD_REQUEST)
+        .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+        .sendString(SMono.fromCallable(() => throwable.getMessage), StandardCharsets.UTF_8)
+        .`then`())
+    }
+
+    SMono.fromPublisher(handleInternalError(httpServerResponse, throwable))
   }
 }
