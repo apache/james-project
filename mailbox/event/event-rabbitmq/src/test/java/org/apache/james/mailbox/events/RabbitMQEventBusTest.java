@@ -791,6 +791,74 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             assertThat(dispatchingFailureEvents()).containsExactly(EVENT, EVENT_2);
         }
 
+        @Test
+        void dispatchShouldPersistEventsWhenDispatchingTheSameEventGetErrorMultipleTimes() {
+            EventCollector eventCollector = eventCollector();
+            eventBus().register(eventCollector, GROUP_A);
+
+            rabbitMQExtension.getRabbitMQ().pause();
+            doQuietly(() -> eventBus().dispatch(EVENT, NO_KEYS).block());
+            doQuietly(() -> eventBus().dispatch(EVENT, NO_KEYS).block());
+
+            assertThat(dispatchingFailureEvents()).containsExactly(EVENT, EVENT);
+        }
+
+        @Test
+        void reDeliverShouldDeliverToAllGroupsWhenDispatchingFailure() {
+            EventCollector eventCollector = eventCollector();
+            eventBus().register(eventCollector, GROUP_A);
+
+            EventCollector eventCollector2 = eventCollector();
+            eventBus().register(eventCollector2, GROUP_B);
+
+            rabbitMQExtension.getRabbitMQ().pause();
+            doQuietly(() -> eventBus().dispatch(EVENT, NO_KEYS).block());
+            rabbitMQExtension.getRabbitMQ().unpause();
+            dispatchingFailureEvents()
+                .forEach(event -> eventBus().reDeliver(DispatchingFailureGroup.INSTANCE, event).block());
+
+            getSpeedProfile().shortWaitCondition()
+                .untilAsserted(() -> assertThat(eventCollector.getEvents())
+                    .hasSameElementsAs(eventCollector2.getEvents())
+                    .containsExactly(EVENT));
+        }
+
+        @Test
+        void reDeliverShouldAddEventInDeadLetterWhenGettingError() {
+            EventCollector eventCollector = eventCollector();
+            eventBus().register(eventCollector, GROUP_A);
+
+            rabbitMQExtension.getRabbitMQ().pause();
+            doQuietly(() -> eventBus().dispatch(EVENT, NO_KEYS).block());
+            getSpeedProfile().longWaitCondition()
+                .until(() -> deadLetter().containEvents().block());
+
+            doQuietly(() -> eventBus().reDeliver(DispatchingFailureGroup.INSTANCE, EVENT).block());
+            rabbitMQExtension.getRabbitMQ().unpause();
+
+            getSpeedProfile().shortWaitCondition()
+                .untilAsserted(() -> assertThat(dispatchingFailureEvents())
+                    .containsExactly(EVENT, EVENT));
+        }
+
+        @Test
+        void reDeliverShouldNotStoreEventInAnotherGroupWhenGettingError() {
+            EventCollector eventCollector = eventCollector();
+            eventBus().register(eventCollector, GROUP_A);
+
+            rabbitMQExtension.getRabbitMQ().pause();
+            doQuietly(() -> eventBus().dispatch(EVENT, NO_KEYS).block());
+            getSpeedProfile().longWaitCondition()
+                .until(() -> deadLetter().containEvents().block());
+
+            doQuietly(() -> eventBus().reDeliver(DispatchingFailureGroup.INSTANCE, EVENT).block());
+            rabbitMQExtension.getRabbitMQ().unpause();
+
+            getSpeedProfile().shortWaitCondition()
+                .untilAsserted(() -> assertThat(deadLetter().groupsWithFailedEvents().toStream())
+                    .hasOnlyElementsOfType(DispatchingFailureGroup.class));
+        }
+
         private Stream<Event> dispatchingFailureEvents() {
             return deadLetter().failedIds(DispatchingFailureGroup.INSTANCE)
                 .flatMap(insertionId -> deadLetter().failedEvent(DispatchingFailureGroup.INSTANCE, insertionId))
