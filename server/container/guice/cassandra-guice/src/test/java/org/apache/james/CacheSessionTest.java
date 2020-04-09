@@ -21,14 +21,13 @@ package org.apache.james;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.lifecycle.api.StartUpCheck;
-import org.apache.james.modules.ConfigurationProbe;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.mailbox.CassandraCacheSessionModule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -79,7 +78,7 @@ class CacheSessionTest {
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE, new CassandraCacheSessionModule())
             .overrideWith(TestJMAPServerModule.limitToTenMessages()))
         .overrideServerModule(binder -> Multibinder.newSetBinder(binder, CassandraModule.class, Names.named(InjectionNames.CACHE))
             .addBinding()

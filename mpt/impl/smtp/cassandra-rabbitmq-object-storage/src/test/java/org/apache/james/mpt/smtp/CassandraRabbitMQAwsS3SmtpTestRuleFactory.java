@@ -29,6 +29,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.modules.TestAwsS3BlobStoreModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
+import org.apache.james.modules.mailbox.KeyspacesConfiguration;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
@@ -64,6 +65,13 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
             .overrideWith(
                 new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON),
                 new TestAwsS3BlobStoreModule(awsS3TestRule),
+                binder -> binder.bind(KeyspacesConfiguration.class)
+                    .toInstance(KeyspacesConfiguration.builder()
+                        .keyspace(DockerCassandra.KEYSPACE)
+                        .cacheKeyspace(DockerCassandra.CACHE_KEYSPACE)
+                        .replicationFactor(1)
+                        .disableDurableWrites()
+                        .build()),
                 binder -> binder.bind(ClusterConfiguration.class).toInstance(
                     DockerCassandra.configurationBuilder(cassandraHost)
                         .build()),

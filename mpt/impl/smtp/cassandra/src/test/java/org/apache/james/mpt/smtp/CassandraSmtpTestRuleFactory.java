@@ -24,6 +24,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.modules.mailbox.KeyspacesConfiguration;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -54,6 +55,13 @@ public final class CassandraSmtpTestRuleFactory {
             .overrideWith(
                 binder -> binder.bind(ClusterConfiguration.class).toInstance(
                     DockerCassandra.configurationBuilder(cassandraHost)
+                        .build()),
+                binder -> binder.bind(KeyspacesConfiguration.class)
+                    .toInstance(KeyspacesConfiguration.builder()
+                        .keyspace(DockerCassandra.KEYSPACE)
+                        .cacheKeyspace(DockerCassandra.CACHE_KEYSPACE)
+                        .replicationFactor(1)
+                        .disableDurableWrites()
                         .build()),
                 binder -> binder.bind(DNSService.class).toInstance(dnsService));
     }

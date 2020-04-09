@@ -30,7 +30,6 @@ import org.apache.james.backends.cassandra.init.ResilientClusterProvider;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraHealthCheck;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
@@ -39,7 +38,6 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManage
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.lifecycle.api.StartUpCheck;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.util.Host;
@@ -57,8 +55,6 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 
 public class CassandraSessionModule extends AbstractModule {
 
@@ -75,18 +71,12 @@ public class CassandraSessionModule extends AbstractModule {
         bind(Cluster.class).toProvider(ResilientClusterProvider.class);
 
         bind(InitializedCluster.class).in(Scopes.SINGLETON);
-        bind(MainSessionWithInitializedTablesFactory.class).in(Scopes.SINGLETON);
-        bind(CacheSessionWithInitializedTablesFactory.class).in(Scopes.SINGLETON);
 
-        bind(Session.class).toProvider(MainSessionWithInitializedTablesFactory.class);
-        bind(Session.class).annotatedWith(Names.named(InjectionNames.CACHE))
-            .toProvider(CacheSessionWithInitializedTablesFactory.class);
+        bind(Session.class).toProvider(SessionWithInitializedTablesFactory.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraZonedDateTimeModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraSchemaVersionModule.MODULE);
-
-        Multibinder.newSetBinder(binder(), CassandraModule.class, Names.named(InjectionNames.CACHE));
 
         bind(CassandraSchemaVersionManager.class).in(Scopes.SINGLETON);
         bind(CassandraSchemaVersionDAO.class).in(Scopes.SINGLETON);
@@ -99,16 +89,17 @@ public class CassandraSessionModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(CassandraHealthCheck.class);
     }
 
+    @Singleton
+    @Provides
+    SessionWithInitializedTablesFactory provideSessionFactory(KeyspaceConfiguration keyspaceConfiguration,
+                                               InitializedCluster cluster,
+                                               CassandraModule module) {
+        return new SessionWithInitializedTablesFactory(keyspaceConfiguration, cluster.cluster, module);
+    }
+
     @Provides
     @Singleton
     CassandraModule composeDataDefinitions(Set<CassandraModule> modules) {
-        return CassandraModule.aggregateModules(modules);
-    }
-
-    @Named(InjectionNames.CACHE)
-    @Provides
-    @Singleton
-    CassandraModule composeCacheDefinitions(@Named(InjectionNames.CACHE) Set<CassandraModule> modules) {
         return CassandraModule.aggregateModules(modules);
     }
 
@@ -174,32 +165,7 @@ public class CassandraSessionModule extends AbstractModule {
         return keyspacesConfiguration.mainKeyspaceConfiguration();
     }
 
-    @Named(InjectionNames.CACHE)
-    @Provides
-    @Singleton
-    KeyspaceConfiguration provideCacheKeyspaceConfiguration(KeyspacesConfiguration keyspacesConfiguration) {
-        return keyspacesConfiguration.cacheKeyspaceConfiguration();
-    }
-
-    private static class MainSessionWithInitializedTablesFactory extends SessionWithInitializedTablesFactory {
-        @Inject
-        public MainSessionWithInitializedTablesFactory(KeyspaceConfiguration keyspaceConfiguration,
-                                                       InitializedCluster cluster,
-                                                       CassandraModule module) {
-            super(keyspaceConfiguration, cluster.cluster, module);
-        }
-    }
-
-    private static class CacheSessionWithInitializedTablesFactory extends SessionWithInitializedTablesFactory {
-        @Inject
-        public CacheSessionWithInitializedTablesFactory(@Named(InjectionNames.CACHE) KeyspaceConfiguration keyspaceConfiguration,
-                                                        InitializedCluster cluster,
-                                                        @Named(InjectionNames.CACHE) CassandraModule module) {
-            super(keyspaceConfiguration, cluster.cluster, module);
-        }
-    }
-
-    private static class InitializedCluster implements Startable {
+    static class InitializedCluster {
         private final Cluster cluster;
 
         @Inject
@@ -208,7 +174,6 @@ public class CassandraSessionModule extends AbstractModule {
 
             if (clusterConfiguration.shouldCreateKeyspace()) {
                 KeyspaceFactory.createKeyspace(keyspacesConfiguration.mainKeyspaceConfiguration(), cluster);
-                KeyspaceFactory.createKeyspace(keyspacesConfiguration.cacheKeyspaceConfiguration(), cluster);
             }
         }
     }
