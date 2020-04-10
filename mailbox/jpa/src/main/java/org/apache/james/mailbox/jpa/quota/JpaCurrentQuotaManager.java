@@ -107,6 +107,20 @@ public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
                 }));
     }
 
+    @Override
+    public Mono<Void> resetCurrentQuotas(QuotaOperation quotaOperation) {
+        return Mono.fromCallable(() -> getCurrentQuotas(quotaOperation.quotaRoot()))
+            .flatMap(storedQuotas -> Mono.fromRunnable(() ->
+                transactionRunner.run(
+                    entityManager -> {
+                        if (!storedQuotas.equals(CurrentQuotas.from(quotaOperation))) {
+                            entityManager.merge(new JpaCurrentQuota(quotaOperation.quotaRoot().getValue(),
+                                quotaOperation.count().asLong(),
+                                quotaOperation.size().asLong()));
+                        }
+                    })));
+    }
+
     private JpaCurrentQuota retrieveUserQuota(EntityManager entityManager, QuotaRoot quotaRoot) {
         return entityManager.find(JpaCurrentQuota.class, quotaRoot.getValue());
     }

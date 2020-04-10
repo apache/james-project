@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.quota;
 
+import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 
@@ -29,5 +30,16 @@ public interface StoreCurrentQuotaManager extends CurrentQuotaManager {
     Mono<Void> increase(QuotaOperation quotaOperation);
 
     Mono<Void> decrease(QuotaOperation quotaOperation);
+
+    default Mono<Void> resetCurrentQuotas(QuotaOperation quotaOperation) {
+        return Mono.from(getCurrentQuotas(quotaOperation.quotaRoot()))
+            .flatMap(storedQuotas -> {
+                if (!storedQuotas.equals(CurrentQuotas.from(quotaOperation))) {
+                    return decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size()))
+                        .then(increase(quotaOperation));
+                }
+                return Mono.empty();
+            });
+    }
 
 }

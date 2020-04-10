@@ -32,6 +32,10 @@ public class CurrentQuotas {
         return new CurrentQuotas(QuotaCountUsage.count(0L), QuotaSizeUsage.size(0L));
     }
 
+    public static CurrentQuotas from(QuotaOperation quotaOperation) {
+        return new CurrentQuotas(quotaOperation.count(), quotaOperation.size());
+    }
+
     public CurrentQuotas(QuotaCountUsage count, QuotaSizeUsage size) {
         this.count = count;
         this.size = size;

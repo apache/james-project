@@ -39,6 +39,7 @@ import reactor.core.publisher.Mono;
 public abstract class StoreCurrentQuotaManagerTest {
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
     private static final CurrentQuotas CURRENT_QUOTAS = new CurrentQuotas(QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
+    private static final QuotaOperation RESET_QUOTA_OPERATION = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
     
     protected abstract StoreCurrentQuotaManager provideTestee();
     
@@ -50,12 +51,12 @@ public abstract class StoreCurrentQuotaManagerTest {
     }
 
     @Test
-    void getCurrentStorageShouldReturnZeroByDefault() throws Exception {
+    void getCurrentStorageShouldReturnZeroByDefault() {
         assertThat(Mono.from(testee.getCurrentStorage(QUOTA_ROOT)).block()).isEqualTo(QuotaSizeUsage.size(0));
     }
 
     @Test
-    void getCurrentMessageCountShouldReturnZeroByDefault() throws Exception {
+    void getCurrentMessageCountShouldReturnZeroByDefault() {
         assertThat(Mono.from(testee.getCurrentMessageCount(QUOTA_ROOT)).block()).isEqualTo(QuotaCountUsage.count(0));
     }
 
@@ -65,7 +66,7 @@ public abstract class StoreCurrentQuotaManagerTest {
     }
 
     @Test
-    void increaseShouldWork() throws Exception {
+    void increaseShouldWork() {
         testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100))).block();
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
@@ -76,7 +77,7 @@ public abstract class StoreCurrentQuotaManagerTest {
     }
 
     @Test
-    void decreaseShouldWork() throws Exception {
+    void decreaseShouldWork() {
         testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200))).block();
 
         testee.decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100))).block();
@@ -89,7 +90,7 @@ public abstract class StoreCurrentQuotaManagerTest {
     }
 
     @Test
-    void decreaseShouldNotFailWhenItLeadsToNegativeValues() throws Exception {
+    void decreaseShouldNotFailWhenItLeadsToNegativeValues() {
         testee.decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100))).block();
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
@@ -98,5 +99,44 @@ public abstract class StoreCurrentQuotaManagerTest {
             softly.assertThat(Mono.from(testee.getCurrentMessageCount(QUOTA_ROOT)).block()).isEqualTo(QuotaCountUsage.count(-10));
             softly.assertThat(Mono.from(testee.getCurrentStorage(QUOTA_ROOT)).block()).isEqualTo(QuotaSizeUsage.size(-100));
         }));
+    }
+
+    @Test
+    void resetCurrentQuotasShouldNoopWhenZeroAndNoData() {
+        QuotaOperation quotaOperation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(0), QuotaSizeUsage.size(0));
+
+        testee.resetCurrentQuotas(quotaOperation).block();
+
+        assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
+            .isEqualTo(CurrentQuotas.emptyQuotas());
+    }
+
+    @Test
+    void resetCurrentQuotasShouldReInitQuotasWhenNothing() {
+        testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
+
+        assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
+            .isEqualTo(CURRENT_QUOTAS);
+    }
+
+    @Test
+    void resetCurrentQuotasShouldReInitQuotasWhenData() {
+        testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200))).block();
+
+        testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
+
+        assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
+            .isEqualTo(CURRENT_QUOTAS);
+    }
+
+    @Test
+    void resetCurrentQuotasShouldBeIdempotent() {
+        testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200))).block();
+
+        testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
+        testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
+
+        assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
+            .isEqualTo(CURRENT_QUOTAS);
     }
 }

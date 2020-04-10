@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.model;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
@@ -39,9 +40,9 @@ class QuotaOperationTest {
     }
 
     @Test
-    void shouldThrowWhenCountIsZero() {
-        assertThatThrownBy(() -> new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(0), QuotaSizeUsage.size(5)))
-            .isInstanceOf(IllegalArgumentException.class);
+    void shouldNotThrowWhenCountIsZero() {
+        assertThatCode(() -> new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(0), QuotaSizeUsage.size(5)))
+            .doesNotThrowAnyException();
     }
 
     @Test
@@ -51,9 +52,9 @@ class QuotaOperationTest {
     }
 
     @Test
-    void shouldThrowWhenSizeIsZero() {
-        assertThatThrownBy(() -> new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(5), QuotaSizeUsage.size(0)))
-            .isInstanceOf(IllegalArgumentException.class);
+    void shouldNotThrowWhenSizeIsZero() {
+        assertThatCode(() -> new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(5), QuotaSizeUsage.size(0)))
+            .doesNotThrowAnyException();
     }
 
     @Test
