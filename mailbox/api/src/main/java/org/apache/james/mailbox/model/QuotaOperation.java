@@ -31,6 +31,10 @@ public class QuotaOperation {
     private final QuotaCountUsage count;
     private final QuotaSizeUsage size;
 
+    public static QuotaOperation from(QuotaRoot quotaRoot, CurrentQuotas currentQuotas) {
+        return new QuotaOperation(quotaRoot, currentQuotas.count(), currentQuotas.size());
+    }
+
     public QuotaOperation(QuotaRoot quotaRoot, QuotaCountUsage count, QuotaSizeUsage size) {
         Preconditions.checkArgument(count.asLong() >= 0, "Count should be positive");
         Preconditions.checkArgument(size.asLong() >= 0, "Size should be positive");

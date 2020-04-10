@@ -306,7 +306,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
             InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
             DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory);
-            InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(new CurrentQuotaCalculator(mailboxSessionMapperFactory, quotaRootResolver), sessionProvider);
+            CurrentQuotaCalculator currentQuotaCalculator = new CurrentQuotaCalculator(mailboxSessionMapperFactory, quotaRootResolver);
+            InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(currentQuotaCalculator, sessionProvider);
             QuotaManager quotaManager = this.quotaManager.get().apply(new BaseQuotaComponentsStage(maxQuotaManager, currentQuotaManager));
             ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
             QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, quotaManager, quotaRootResolver);
@@ -342,7 +343,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
             StoreBlobManager blobManager = new StoreBlobManager(attachmentManager, messageIdManager, messageIdFactory);
 
-            return new InMemoryIntegrationResources(manager, storeRightManager, messageIdFactory, currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager, messageIdManager, index, eventBus, blobManager);
+            return new InMemoryIntegrationResources(manager, storeRightManager, messageIdFactory, currentQuotaCalculator, currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager, messageIdManager, index, eventBus, blobManager);
         }
 
         private PreDeletionHooks createHooks(MailboxManagerPreInstanciationStage preInstanciationStage) {
@@ -417,6 +418,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     private final InMemoryMailboxManager mailboxManager;
     private final StoreRightManager storeRightManager;
     private final MessageId.Factory messageIdFactory;
+    private final CurrentQuotaCalculator currentQuotaCalculator;
     private final InMemoryCurrentQuotaManager currentQuotaManager;
     private final DefaultUserQuotaRootResolver defaultUserQuotaRootResolver;
     private final InMemoryPerUserMaxQuotaManager maxQuotaManager;
@@ -426,10 +428,11 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     private final EventBus eventBus;
     private final StoreBlobManager blobManager;
 
-    InMemoryIntegrationResources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager, QuotaManager quotaManager, StoreMessageIdManager storeMessageIdManager, MessageSearchIndex searchIndex, EventBus eventBus, StoreBlobManager blobManager) {
+    InMemoryIntegrationResources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, CurrentQuotaCalculator currentQuotaCalculator, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager, QuotaManager quotaManager, StoreMessageIdManager storeMessageIdManager, MessageSearchIndex searchIndex, EventBus eventBus, StoreBlobManager blobManager) {
         this.mailboxManager = mailboxManager;
         this.storeRightManager = storeRightManager;
         this.messageIdFactory = messageIdFactory;
+        this.currentQuotaCalculator = currentQuotaCalculator;
         this.currentQuotaManager = currentQuotaManager;
         this.defaultUserQuotaRootResolver = defaultUserQuotaRootResolver;
         this.maxQuotaManager = maxQuotaManager;
@@ -446,6 +449,10 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
     public InMemoryMailboxManager getMailboxManager() {
         return mailboxManager;
+    }
+
+    public CurrentQuotaCalculator getCurrentQuotaCalculator() {
+        return currentQuotaCalculator;
     }
 
     public InMemoryCurrentQuotaManager getCurrentQuotaManager() {

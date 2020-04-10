@@ -26,6 +26,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.incr;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.MESSAGE_COUNT;
+import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.QUOTA_ROOT;
 import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.STORAGE;
 import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.TABLE_NAME;
 
@@ -60,20 +61,20 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
         this.increaseStatement = session.prepare(update(TABLE_NAME)
             .with(incr(MESSAGE_COUNT, bindMarker()))
             .and(incr(STORAGE, bindMarker()))
-            .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
+            .where(eq(QUOTA_ROOT, bindMarker())));
         this.decreaseStatement = session.prepare(update(TABLE_NAME)
             .with(decr(MESSAGE_COUNT, bindMarker()))
             .and(decr(STORAGE, bindMarker()))
-            .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
+            .where(eq(QUOTA_ROOT, bindMarker())));
         this.getCurrentMessageCountStatement = session.prepare(select(MESSAGE_COUNT)
             .from(TABLE_NAME)
-            .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
+            .where(eq(QUOTA_ROOT, bindMarker())));
         this.getCurrentStorageStatement = session.prepare(select(STORAGE)
             .from(TABLE_NAME)
-            .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
+            .where(eq(QUOTA_ROOT, bindMarker())));
         this.getCurrentQuotasStatement = session.prepare(select(MESSAGE_COUNT, STORAGE)
             .from(TABLE_NAME)
-            .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
+            .where(eq(QUOTA_ROOT, bindMarker())));
     }
 
     @Override

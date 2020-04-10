@@ -24,6 +24,8 @@ import java.util.Objects;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 
+import com.google.common.base.MoreObjects;
+
 public class CurrentQuotas {
     private final QuotaCountUsage count;
     private final QuotaSizeUsage size;
@@ -75,5 +77,13 @@ public class CurrentQuotas {
     @Override
     public final int hashCode() {
         return Objects.hash(count, size);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("count", count)
+            .add("size", size)
+            .toString();
     }
 }

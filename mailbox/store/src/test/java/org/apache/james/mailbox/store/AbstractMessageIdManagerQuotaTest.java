@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,14 +60,14 @@ public abstract class AbstractMessageIdManagerQuotaTest {
 
     protected abstract MaxQuotaManager createMaxQuotaManager();
     
-    protected abstract CurrentQuotaManager createCurrentQuotaManager();
+    protected abstract StoreCurrentQuotaManager createCurrentQuotaManager();
     
-    protected abstract QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, CurrentQuotaManager currentQuotaManager);
+    protected abstract QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, StoreCurrentQuotaManager currentQuotaManager);
 
     @BeforeEach
     void setUp() throws Exception {
         maxQuotaManager = createMaxQuotaManager();
-        CurrentQuotaManager currentQuotaManager = createCurrentQuotaManager();
+        StoreCurrentQuotaManager currentQuotaManager = createCurrentQuotaManager();
         QuotaManager quotaManager = createQuotaManager(maxQuotaManager, currentQuotaManager);
 
         session = MailboxSessionUtil.create(ALICE);
