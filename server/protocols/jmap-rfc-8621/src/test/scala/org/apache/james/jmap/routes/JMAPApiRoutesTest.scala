@@ -32,7 +32,7 @@ import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.model.RequestObject
-import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version}
+import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version, VersionParser}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -41,8 +41,8 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
 
   private val TEST_CONFIGURATION: JMAPConfiguration = JMAPConfiguration.builder().enable().randomPort().build()
   private val ACCEPT_JMAP_VERSION_HEADER = "application/json; jmapVersion="
-  private val ACCEPT_DRAFT_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.DRAFT.getVersion
-  private val ACCEPT_RFC8621_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.RFC8621.getVersion
+  private val ACCEPT_DRAFT_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.DRAFT.asString()
+  private val ACCEPT_RFC8621_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.RFC8621.asString()
 
   private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes()
   private val ROUTES_HANDLER: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, JMAP_API_ROUTE))
@@ -56,20 +56,24 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   private val RESPONSE_OBJECT: String = new Serializer().serialize(responseObject1).toString()
   private val RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD: String = new Serializer().serialize(responseObjectWithUnsupportedMethod).toString()
 
-  private val test: String = """
-                               |{
-                               |  "using": [ "urn:ietf:params:jmap:core"],
-                               |  "methodCalls": {
-                               |      "arg1": "arg1data",
-                               |      "arg2": "arg2data"
-                               |    }
-                               |}
-                               |""".stripMargin
+  private val SUPPORTED_VERSIONS = ImmutableSet.of(Version.DRAFT, Version.RFC8621)
+
+  private val WRONG_OBJECT_REQUEST: String =
+    """
+      |{
+      |  "using": [ "urn:ietf:params:jmap:core"],
+      |  "methodCalls": {
+      |      "arg1": "arg1data",
+      |      "arg2": "arg2data"
+      |    }
+      |}
+      |""".stripMargin
 
   var jmapServer: JMAPServer = _
 
   before {
-    jmapServer = new JMAPServer(TEST_CONFIGURATION, ROUTES_HANDLER)
+    val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS)
+    jmapServer = new JMAPServer(TEST_CONFIGURATION, ROUTES_HANDLER, versionParser)
     jmapServer.start()
 
     RestAssured.requestSpecification = new RequestSpecBuilder()
@@ -164,7 +168,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     RestAssured
       .`given`()
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(test)
+        .body(WRONG_OBJECT_REQUEST)
       .when()
         .post
       .then
