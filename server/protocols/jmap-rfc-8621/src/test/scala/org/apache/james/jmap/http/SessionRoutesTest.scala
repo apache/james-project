@@ -21,6 +21,7 @@ package org.apache.james.jmap.http
 
 import java.nio.charset.StandardCharsets
 
+import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import io.restassured.config.EncoderConfig.encoderConfig
@@ -29,7 +30,7 @@ import io.restassured.http.ContentType
 import org.apache.http.HttpStatus
 import org.apache.james.core.Username
 import org.apache.james.jmap.http.SessionRoutesTest.{BOB, TEST_CONFIGURATION}
-import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutes, JMAPServer}
+import org.apache.james.jmap._
 import org.apache.james.mailbox.MailboxSession
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
@@ -50,7 +51,6 @@ object SessionRoutesTest {
 class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
 
   var jmapServer: JMAPServer = _
-  var sessionSupplier: SessionSupplier = _
 
   before {
     val mockedSession = mock(classOf[MailboxSession])
@@ -61,18 +61,18 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     when(mockedAuthFilter.authenticate(any()))
       .thenReturn(Mono.just(mockedSession))
 
-    sessionSupplier = spy(new SessionSupplier())
-    val jmapRoutes: Set[JMAPRoutes] = Set(new SessionRoutes(
-      sessionSupplier = sessionSupplier,
-      authFilter = mockedAuthFilter))
+    val sessionRoutes = new SessionRoutes(
+      sessionSupplier = new SessionSupplier(),
+      authenticator = mockedAuthFilter)
     jmapServer = new JMAPServer(
       TEST_CONFIGURATION,
-      jmapRoutes.asJava)
+      Set(new JMAPRoutesHandler(Version.RFC8621, sessionRoutes)).asJava,
+      new VersionParser(Set(Version.RFC8621).asJava))
     jmapServer.start()
 
     RestAssured.requestSpecification = new RequestSpecBuilder()
       .setContentType(ContentType.JSON)
-      .setAccept(ContentType.JSON)
+      .addHeader(ACCEPT.toString, s"application/json; jmapVersion=${Version.RFC8621.asString}")
       .setConfig(newConfig.encoderConfig(encoderConfig.defaultContentCharset(StandardCharsets.UTF_8)))
       .setPort(jmapServer.getPort.getValue)
       .setBasePath(SessionRoutesTest.JMAP_SESSION)

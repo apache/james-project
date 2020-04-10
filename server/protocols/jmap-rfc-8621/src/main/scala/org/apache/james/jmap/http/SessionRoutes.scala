@@ -19,24 +19,26 @@
 
 package org.apache.james.jmap.http
 
-import java.util.function.BiFunction
+import java.util.stream.Stream
 
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
+import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.OK
 import javax.inject.Inject
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8
-import org.apache.james.jmap.JMAPRoutes
+import org.apache.james.jmap.JMAPRoutes.CORS_CONTROL
+import org.apache.james.jmap.JMAPUrls.AUTHENTICATION
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.SessionRoutes.{JMAP_SESSION, LOGGER}
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.model.Session
-import org.reactivestreams.Publisher
-import org.slf4j.{Logger, LoggerFactory}
+import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
+import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
-import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse, HttpServerRoutes}
+import reactor.netty.http.server.HttpServerResponse
 
 object SessionRoutes {
   private val JMAP_SESSION = "/jmap/session"
@@ -44,23 +46,31 @@ object SessionRoutes {
 }
 
 @Inject
-class SessionRoutes(val authFilter: Authenticator,
+class SessionRoutes(val authenticator: Authenticator,
                     val sessionSupplier: SessionSupplier = new SessionSupplier(),
                     val serializer: Serializer = new Serializer()) extends JMAPRoutes {
 
-  private val generateSession: BiFunction[HttpServerRequest, HttpServerResponse, Publisher[Void]] =
-    (request, response) => SMono.fromPublisher(authFilter.authenticate(request))
+  private val generateSession: JMAPRoute.Action =
+    (request, response) => SMono.fromPublisher(authenticator.authenticate(request))
       .map(_.getUser)
       .flatMap(sessionSupplier.generate)
       .flatMap(session => sendRespond(session, response))
       .onErrorResume(throwable => SMono.fromPublisher(errorHandling(throwable, response)))
       .subscribeOn(Schedulers.elastic())
+      .asJava()
 
-  override def define(builder: HttpServerRoutes): HttpServerRoutes = {
-    builder.get(JMAP_SESSION, generateSession)
-  }
+  override def routes: Stream[JMAPRoute] =
+    Stream.of(
+      JMAPRoute.builder()
+        .endpoint(new Endpoint(HttpMethod.GET, JMAP_SESSION))
+        .action(generateSession)
+        .corsHeaders,
+      JMAPRoute.builder()
+        .endpoint(new Endpoint(HttpMethod.OPTIONS, AUTHENTICATION))
+        .action(CORS_CONTROL)
+        .noCorsHeaders)
 
-  private def sendRespond(session: Session, resp: HttpServerResponse): SMono[Void] =
+  private def sendRespond(session: Session, resp: HttpServerResponse) =
     SMono.fromPublisher(resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
       .status(OK)
       .sendString(SMono.fromCallable(() => Json.stringify(serializer.serialize(session))))
