@@ -30,6 +30,7 @@ import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -64,35 +65,4 @@ public class CurrentQuotaCalculator {
         }
         return new CurrentQuotas(QuotaCountUsage.count(messageCount), QuotaSizeUsage.size(messagesSizes));
     }
-
-    public static class CurrentQuotas {
-        private final QuotaCountUsage count;
-        private final QuotaSizeUsage size;
-
-        public CurrentQuotas(QuotaCountUsage count, QuotaSizeUsage size) {
-            this.count = count;
-            this.size = size;
-        }
-
-        public QuotaCountUsage count() {
-            return count;
-        }
-
-        public QuotaSizeUsage size() {
-            return size;
-        }
-
-        public CurrentQuotas increase(CurrentQuotas updateQuotas) {
-            return new CurrentQuotas(
-                QuotaCountUsage.count(this.count.asLong() + updateQuotas.count.asLong()),
-                QuotaSizeUsage.size(this.size.asLong() + updateQuotas.size.asLong()));
-        }
-
-        public CurrentQuotas decrease(CurrentQuotas updateQuotas) {
-            return new CurrentQuotas(
-                QuotaCountUsage.count(this.count.asLong() - updateQuotas.count.asLong()),
-                QuotaSizeUsage.size(this.size.asLong() - updateQuotas.size.asLong()));
-        }
-    }
-
 }
