@@ -28,6 +28,10 @@ public class CurrentQuotas {
     private final QuotaCountUsage count;
     private final QuotaSizeUsage size;
 
+    public static CurrentQuotas emptyQuotas() {
+        return new CurrentQuotas(QuotaCountUsage.count(0L), QuotaSizeUsage.size(0L));
+    }
+
     public CurrentQuotas(QuotaCountUsage count, QuotaSizeUsage size) {
         this.count = count;
         this.size = size;

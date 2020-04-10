@@ -21,6 +21,7 @@ package org.apache.james.mailbox.quota;
 
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.reactivestreams.Publisher;
 
@@ -33,4 +34,5 @@ public interface CurrentQuotaManager {
 
     Publisher<QuotaSizeUsage> getCurrentStorage(QuotaRoot quotaRoot);
 
+    Publisher<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot);
 }

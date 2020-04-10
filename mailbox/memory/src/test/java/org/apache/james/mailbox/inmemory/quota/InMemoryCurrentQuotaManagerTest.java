@@ -78,4 +78,23 @@ class InMemoryCurrentQuotaManagerTest {
         assertThat(testee.getCurrentMessageCount(QUOTA_ROOT).block()).isEqualTo(QuotaCountUsage.count(28));
         assertThat(testee.getCurrentStorage(QUOTA_ROOT).block()).isEqualTo(QuotaSizeUsage.size(612));
     }
+
+    @Test
+    void getCurrentQuotasShouldReturnRecalculateSizeWhenEntryIsNotInitialized() throws Exception {
+        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
+            .thenReturn(CURRENT_QUOTAS);
+
+        assertThat(testee.getCurrentQuotas(QUOTA_ROOT).block()).isEqualTo(CURRENT_QUOTAS);
+    }
+
+    @Test
+    void getCurrentQuotasShouldReRetrieveStoredQuotasWhenCalculateOnUnknownQuotaIsTrue() throws Exception {
+        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
+            .thenReturn(CURRENT_QUOTAS);
+
+        QuotaOperation quotaOperation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
+        testee.increase(quotaOperation).block();
+
+        assertThat(testee.getCurrentQuotas(QUOTA_ROOT).block()).isEqualTo(new CurrentQuotas(QuotaCountUsage.count(28), QuotaSizeUsage.size(612)));
+    }
 }

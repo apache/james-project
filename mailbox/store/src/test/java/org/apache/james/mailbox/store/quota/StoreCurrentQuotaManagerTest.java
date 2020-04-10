@@ -25,15 +25,20 @@ import java.util.Optional;
 
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
 
 public abstract class StoreCurrentQuotaManagerTest {
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
+    private static final CurrentQuotas CURRENT_QUOTAS = new CurrentQuotas(QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
     
     protected abstract StoreCurrentQuotaManager provideTestee();
     
@@ -50,11 +55,24 @@ public abstract class StoreCurrentQuotaManagerTest {
     }
 
     @Test
+    void getCurrentMessageCountShouldReturnZeroByDefault() throws Exception {
+        assertThat(Mono.from(testee.getCurrentMessageCount(QUOTA_ROOT)).block()).isEqualTo(QuotaCountUsage.count(0));
+    }
+
+    @Test
+    void getCurrentQuotasShouldReturnZeroByDefault() {
+        assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block()).isEqualTo(CurrentQuotas.emptyQuotas());
+    }
+
+    @Test
     void increaseShouldWork() throws Exception {
         testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100))).block();
 
-        assertThat(Mono.from(testee.getCurrentMessageCount(QUOTA_ROOT)).block()).isEqualTo(QuotaCountUsage.count(10));
-        assertThat(Mono.from(testee.getCurrentStorage(QUOTA_ROOT)).block()).isEqualTo(QuotaSizeUsage.size(100));
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block()).isEqualTo(CURRENT_QUOTAS);
+            softly.assertThat(Mono.from(testee.getCurrentMessageCount(QUOTA_ROOT)).block()).isEqualTo(QuotaCountUsage.count(10));
+            softly.assertThat(Mono.from(testee.getCurrentStorage(QUOTA_ROOT)).block()).isEqualTo(QuotaSizeUsage.size(100));
+        }));
     }
 
     @Test
@@ -63,15 +81,22 @@ public abstract class StoreCurrentQuotaManagerTest {
 
         testee.decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100))).block();
 
-        assertThat(Mono.from(testee.getCurrentMessageCount(QUOTA_ROOT)).block()).isEqualTo(QuotaCountUsage.count(10));
-        assertThat(Mono.from(testee.getCurrentStorage(QUOTA_ROOT)).block()).isEqualTo(QuotaSizeUsage.size(100));
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block()).isEqualTo(CURRENT_QUOTAS);
+            softly.assertThat(Mono.from(testee.getCurrentMessageCount(QUOTA_ROOT)).block()).isEqualTo(QuotaCountUsage.count(10));
+            softly.assertThat(Mono.from(testee.getCurrentStorage(QUOTA_ROOT)).block()).isEqualTo(QuotaSizeUsage.size(100));
+        }));
     }
 
     @Test
     void decreaseShouldNotFailWhenItLeadsToNegativeValues() throws Exception {
         testee.decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100))).block();
 
-        assertThat(Mono.from(testee.getCurrentMessageCount(QUOTA_ROOT)).block()).isEqualTo(QuotaCountUsage.count(-10));
-        assertThat(Mono.from(testee.getCurrentStorage(QUOTA_ROOT)).block()).isEqualTo(QuotaSizeUsage.size(-100));
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
+                .isEqualTo(new CurrentQuotas(QuotaCountUsage.count(-10), QuotaSizeUsage.size(-100)));
+            softly.assertThat(Mono.from(testee.getCurrentMessageCount(QUOTA_ROOT)).block()).isEqualTo(QuotaCountUsage.count(-10));
+            softly.assertThat(Mono.from(testee.getCurrentStorage(QUOTA_ROOT)).block()).isEqualTo(QuotaSizeUsage.size(-100));
+        }));
     }
 }

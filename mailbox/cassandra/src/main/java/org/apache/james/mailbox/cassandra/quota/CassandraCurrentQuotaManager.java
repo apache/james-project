@@ -25,6 +25,9 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.incr;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.MESSAGE_COUNT;
+import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.STORAGE;
+import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.TABLE_NAME;
 
 import javax.inject.Inject;
 
@@ -32,6 +35,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
+import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
@@ -48,23 +52,27 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
     private final PreparedStatement decreaseStatement;
     private final PreparedStatement getCurrentMessageCountStatement;
     private final PreparedStatement getCurrentStorageStatement;
+    private final PreparedStatement getCurrentQuotasStatement;
 
     @Inject
     public CassandraCurrentQuotaManager(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.increaseStatement = session.prepare(update(CassandraCurrentQuota.TABLE_NAME)
-            .with(incr(CassandraCurrentQuota.MESSAGE_COUNT, bindMarker()))
-            .and(incr(CassandraCurrentQuota.STORAGE, bindMarker()))
+        this.increaseStatement = session.prepare(update(TABLE_NAME)
+            .with(incr(MESSAGE_COUNT, bindMarker()))
+            .and(incr(STORAGE, bindMarker()))
             .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
-        this.decreaseStatement = session.prepare(update(CassandraCurrentQuota.TABLE_NAME)
-            .with(decr(CassandraCurrentQuota.MESSAGE_COUNT, bindMarker()))
-            .and(decr(CassandraCurrentQuota.STORAGE, bindMarker()))
+        this.decreaseStatement = session.prepare(update(TABLE_NAME)
+            .with(decr(MESSAGE_COUNT, bindMarker()))
+            .and(decr(STORAGE, bindMarker()))
             .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
-        this.getCurrentMessageCountStatement = session.prepare(select(CassandraCurrentQuota.MESSAGE_COUNT)
-            .from(CassandraCurrentQuota.TABLE_NAME)
+        this.getCurrentMessageCountStatement = session.prepare(select(MESSAGE_COUNT)
+            .from(TABLE_NAME)
             .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
-        this.getCurrentStorageStatement = session.prepare(select(CassandraCurrentQuota.STORAGE)
-            .from(CassandraCurrentQuota.TABLE_NAME)
+        this.getCurrentStorageStatement = session.prepare(select(STORAGE)
+            .from(TABLE_NAME)
+            .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
+        this.getCurrentQuotasStatement = session.prepare(select(MESSAGE_COUNT, STORAGE)
+            .from(TABLE_NAME)
             .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
     }
 
@@ -94,5 +102,14 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
         return cassandraAsyncExecutor.executeSingleRow(getCurrentStorageStatement.bind(quotaRoot.getValue()))
             .map(row -> QuotaSizeUsage.size(row.getLong(CassandraCurrentQuota.STORAGE)))
             .defaultIfEmpty(QuotaSizeUsage.size(0L));
+    }
+
+    @Override
+    public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
+        return cassandraAsyncExecutor.executeSingleRow(getCurrentQuotasStatement.bind(quotaRoot.getValue()))
+            .map(row -> new CurrentQuotas(
+                QuotaCountUsage.count(row.getLong(MESSAGE_COUNT)),
+                QuotaSizeUsage.size(row.getLong(STORAGE))))
+            .defaultIfEmpty(CurrentQuotas.emptyQuotas());
     }
 }

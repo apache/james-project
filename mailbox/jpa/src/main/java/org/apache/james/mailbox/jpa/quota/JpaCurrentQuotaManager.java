@@ -29,6 +29,7 @@ import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
+import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
@@ -65,6 +66,13 @@ public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
         return Mono.fromCallable(() -> Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
             .map(JpaCurrentQuota::getSize)
             .orElse(QuotaSizeUsage.size(NO_STORED_BYTES)));
+    }
+
+    public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        return Mono.fromCallable(() ->  Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
+            .map(jpaCurrentQuota -> new CurrentQuotas(jpaCurrentQuota.getMessageCount(), jpaCurrentQuota.getSize()))
+            .orElse(CurrentQuotas.emptyQuotas()));
     }
 
     @Override

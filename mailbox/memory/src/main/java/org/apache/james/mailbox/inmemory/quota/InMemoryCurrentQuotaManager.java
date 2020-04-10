@@ -77,6 +77,12 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
             .onErrorMap(this::wrapAsMailboxException);
     }
 
+    @Override
+    public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
+        return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get())
+            .onErrorMap(this::wrapAsMailboxException);
+    }
+
     private Mono<Void> updateQuota(QuotaRoot quotaRoot, UnaryOperator<CurrentQuotas> quotaFunction) {
         return Mono.fromCallable(() -> quotaCache.get(quotaRoot).updateAndGet(quotaFunction))
             .onErrorMap(this::wrapAsMailboxException)
