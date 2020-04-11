@@ -113,6 +113,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
             .switchIfEmpty(fromPreviousTable(path));
     }
 
+    @Override
+    public Mono<Boolean> pathExists(MailboxPath mailboxName) {
+        return mailboxPathV2DAO.retrieveId(mailboxName)
+            .switchIfEmpty(mailboxPathDAO.retrieveId(mailboxName))
+            .hasElement();
+    }
+
     private Mono<Mailbox> fromPreviousTable(MailboxPath path) {
         return mailboxPathDAO.retrieveId(path)
             .map(CassandraIdAndPath::getCassandraId)

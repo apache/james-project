@@ -64,6 +64,10 @@ public interface MailboxMapper extends Mapper {
      */
     Mono<Mailbox> findMailboxByPath(MailboxPath mailboxName);
 
+    default Mono<Boolean> pathExists(MailboxPath mailboxName) {
+        return findMailboxByPath(mailboxName).hasElement();
+    }
+
     default Mailbox findMailboxByPathBlocking(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
         try {
             return findMailboxByPath(mailboxPath)

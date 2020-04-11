@@ -722,8 +722,8 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public Mono<Boolean> mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        return mapper.findMailboxByPath(mailboxPath)
-            .hasElement();
+
+        return mapper.pathExists(mailboxPath);
     }
 
     /**
