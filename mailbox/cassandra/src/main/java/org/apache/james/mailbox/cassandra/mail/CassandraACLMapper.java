@@ -158,10 +158,10 @@ public class CassandraACLMapper {
     }
 
     private Mono<MailboxACL> insertACL(CassandraId cassandraId, MailboxACL acl) {
-        return Mono.defer(() -> executor.executeReturnApplied(
+        return executor.executeReturnApplied(
             conditionalInsertStatement.bind()
                     .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
-                    .setString(CassandraACLTable.ACL, convertAclToJson(acl))))
+                    .setString(CassandraACLTable.ACL, convertAclToJson(acl)))
             .filter(FunctionalUtils.identityPredicate())
             .map(any -> acl);
     }
