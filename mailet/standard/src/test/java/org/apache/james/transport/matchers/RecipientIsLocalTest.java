@@ -20,6 +20,7 @@
 package org.apache.james.transport.matchers;
 
 import static  org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +31,7 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 public class RecipientIsLocalTest {
 
@@ -59,24 +61,21 @@ public class RecipientIsLocalTest {
 
     @Test
     public void matchShouldNotReturnNonExistingAddress() throws Exception {
-        when(mailetContext.isLocalEmail(mailAddress1)).thenReturn(false);
-        when(mailetContext.isLocalEmail(mailAddress2)).thenReturn(false);
+        when(mailetContext.localRecipients(any())).thenReturn(ImmutableList.of());
 
         assertThat(testee.match(mail)).isEmpty();
     }
 
     @Test
     public void matchShouldNotReturnNonExistingAddressIfSomeRecipientsExists() throws Exception {
-        when(mailetContext.isLocalEmail(mailAddress1)).thenReturn(true);
-        when(mailetContext.isLocalEmail(mailAddress2)).thenReturn(false);
+        when(mailetContext.localRecipients(any())).thenReturn(ImmutableList.of(mailAddress1));
 
         assertThat(testee.match(mail)).containsOnly(mailAddress1);
     }
 
     @Test
     public void matchShouldHandleTwoValidAddress() throws Exception {
-        when(mailetContext.isLocalEmail(mailAddress1)).thenReturn(true);
-        when(mailetContext.isLocalEmail(mailAddress2)).thenReturn(true);
+        when(mailetContext.localRecipients(any())).thenReturn(ImmutableList.of(mailAddress1, mailAddress2));
 
         assertThat(testee.match(mail)).containsOnly(mailAddress1, mailAddress2);
     }

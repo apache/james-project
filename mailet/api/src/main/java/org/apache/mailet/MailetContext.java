@@ -32,6 +32,8 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 
+import com.github.steveash.guavate.Guavate;
+
 /**
  * Defines a set of methods that can be used to interact with the mailet
  * container. For example, it can be used to send a new message, to deliver
@@ -265,6 +267,12 @@ public interface MailetContext {
      * @since Mailet API 2.4
      */
     boolean isLocalEmail(MailAddress mailAddress);
+
+    default Collection<MailAddress> localRecipients(Collection<MailAddress> recipients) {
+        return recipients.stream()
+            .filter(this::isLocalEmail)
+            .collect(Guavate.toImmutableList());
+    }
 
     /**
      * Returns the hostnames that are specified as mail handlers for

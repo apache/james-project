@@ -225,6 +225,37 @@ public class JamesMailetContextTest {
     }
 
     @Test
+    public void localRecipientsShouldReturnAddressWhenUserExists() throws Exception {
+        domainList.addDomain(DOMAIN_COM);
+        usersRepository.addUser(USERMAIL, PASSWORD);
+
+        assertThat(testee.localRecipients(ImmutableList.of(mailAddress))).containsOnly(mailAddress);
+    }
+
+    @Test
+    public void localRecipientsShouldReturnOnlyExistingUsers() throws Exception {
+        domainList.addDomain(DOMAIN_COM);
+        usersRepository.addUser(USERMAIL, PASSWORD);
+
+        assertThat(testee.localRecipients(
+            ImmutableList.of(mailAddress,
+                MailAddressFixture.RECIPIENT2)))
+            .containsOnly(mailAddress);
+    }
+
+    @Test
+    public void localRecipientsShouldNotReturnAddressWhenUserDoNotExists() throws Exception {
+        domainList.addDomain(DOMAIN_COM);
+
+        assertThat(testee.localRecipients(ImmutableList.of(mailAddress))).isEmpty();
+    }
+
+    @Test
+    public void localRecipientsShouldNotReturnAddressWhenDomainDoNotExists() throws Exception {
+        assertThat(testee.localRecipients(ImmutableList.of(mailAddress))).isEmpty();
+    }
+
+    @Test
     public void isLocalEmailShouldBeFalseWhenMailIsNull() {
         assertThat(testee.isLocalEmail(null)).isFalse();
     }

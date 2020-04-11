@@ -21,20 +21,21 @@
 
 package org.apache.james.transport.matchers;
 
+import java.util.Collection;
+
+import javax.mail.MessagingException;
+
 import org.apache.james.core.MailAddress;
-import org.apache.mailet.MailetContext;
-import org.apache.mailet.base.GenericRecipientMatcher;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * Matches mail where the recipient is local.
  * @version 1.0.0, 24/04/1999
  */
-public class RecipientIsLocal extends GenericRecipientMatcher {
-
+public class RecipientIsLocal extends GenericMatcher {
     @Override
-    public boolean matchRecipient(MailAddress recipient) {
-        MailetContext mailetContext = getMailetContext();
-        //This might change after startup
-        return mailetContext.isLocalEmail(recipient);
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        return getMailetContext().localRecipients(mail.getRecipients());
     }
 }

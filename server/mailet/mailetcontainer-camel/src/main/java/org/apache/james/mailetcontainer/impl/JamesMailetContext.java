@@ -240,6 +240,11 @@ public class JamesMailetContext implements MailetContext, Configurable, Disposab
     }
 
     @Override
+    public Collection<MailAddress> localRecipients(Collection<MailAddress> recipients) {
+        return localResources.localEmails(recipients);
+    }
+
+    @Override
     public MailAddress getPostmaster() {
         return postmaster;
     }

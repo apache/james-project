@@ -19,7 +19,10 @@
 
 package org.apache.james.mailetcontainer.impl;
 
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.internet.ParseException;
@@ -36,6 +39,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 
 class LocalResources {
     private static final EnumSet<Mapping.Type> ALIAS_TYPES = EnumSet.of(Mapping.Type.Alias, Mapping.Type.DomainAlias);
@@ -78,16 +82,43 @@ class LocalResources {
             if (!isLocalServer(mailAddress.getDomain())) {
                 return false;
             }
-            try {
-                return isLocaluser(mailAddress)
-                    || isLocalAlias(mailAddress);
-            } catch (UsersRepositoryException e) {
-                throw new RuntimeException("Unable to retrieve users", e);
-            } catch (RecipientRewriteTable.ErrorMappingException | RecipientRewriteTableException e) {
-                throw new RuntimeException("Unable to retrieve RRTs", e);
-            }
+            return belongsToALocalUser(mailAddress);
         }
         return false;
+    }
+
+    private boolean belongsToALocalUser(MailAddress mailAddress) {
+        try {
+            return isLocaluser(mailAddress)
+                || isLocalAlias(mailAddress);
+        } catch (UsersRepositoryException e) {
+            throw new RuntimeException("Unable to retrieve users", e);
+        } catch (RecipientRewriteTable.ErrorMappingException | RecipientRewriteTableException e) {
+            throw new RuntimeException("Unable to retrieve RRTs", e);
+        }
+    }
+
+    Collection<MailAddress> localEmails(Collection<MailAddress> mailAddresses) {
+        return addressByDomains(mailAddresses)
+            .flatMap(this::hasLocalDomain)
+            .filter(this::belongsToALocalUser)
+            .collect(Guavate.toImmutableList());
+    }
+
+    private Stream<MailAddress> hasLocalDomain(Map.Entry<Domain, Collection<MailAddress>> entry) {
+        if (isLocalServer(entry.getKey())) {
+            return entry.getValue().stream();
+        }
+        return Stream.empty();
+    }
+
+    private Stream<Map.Entry<Domain, Collection<MailAddress>>> addressByDomains(Collection<MailAddress> mailAddresses) {
+        return mailAddresses.stream()
+            .collect(Guavate.toImmutableListMultimap(
+                MailAddress::getDomain))
+            .asMap()
+            .entrySet()
+            .stream();
     }
 
     private boolean isLocaluser(MailAddress mailAddress) throws UsersRepositoryException {

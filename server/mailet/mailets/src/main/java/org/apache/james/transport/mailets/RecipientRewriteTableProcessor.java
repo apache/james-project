@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 
@@ -47,9 +48,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class RecipientRewriteTableProcessor {
@@ -179,15 +182,36 @@ public class RecipientRewriteTableProcessor {
     @VisibleForTesting
     List<MailAddress> handleMappings(Mappings mappings, Mail mail, MailAddress recipient) {
         boolean isLocal = true;
-        Map<Boolean, List<MailAddress>> mailAddressSplit = mappings.asStream()
-            .map(mapping -> mapping.appendDomainIfNone(defaultDomainSupplier))
-            .map(Mapping::asMailAddress)
-            .flatMap(OptionalUtils::toStream)
-            .collect(Collectors.partitioningBy(mailAddress -> mailetContext.isLocalServer(mailAddress.getDomain())));
+        Map<Boolean, List<MailAddress>> mailAddressSplit = splitRemoteMailAddresses(mappings);
 
         forwardToRemoteAddress(mail, recipient, mailAddressSplit.get(!isLocal));
 
         return mailAddressSplit.get(isLocal);
+    }
+
+    private ImmutableMap<Boolean, List<MailAddress>> splitRemoteMailAddresses(Mappings mappings) {
+        return mailAddressesPerDomain(mappings)
+            .collect(Collectors.partitioningBy(entry -> mailetContext.isLocalServer(entry.getKey())))
+            .entrySet()
+            .stream()
+            .collect(Guavate.toImmutableMap(
+                Map.Entry::getKey,
+                entry -> entry.getValue()
+                    .stream()
+                    .flatMap(domainEntry -> domainEntry.getValue().stream())
+                    .collect(Guavate.toImmutableList())));
+    }
+
+    private Stream<Map.Entry<Domain, Collection<MailAddress>>> mailAddressesPerDomain(Mappings mappings) {
+        return mappings.asStream()
+            .map(mapping -> mapping.appendDomainIfNone(defaultDomainSupplier))
+            .map(Mapping::asMailAddress)
+            .flatMap(OptionalUtils::toStream)
+            .collect(Guavate.toImmutableListMultimap(
+                MailAddress::getDomain))
+            .asMap()
+            .entrySet()
+            .stream();
     }
 
     private void forwardToRemoteAddress(Mail mail, MailAddress recipient, Collection<MailAddress> remoteRecipients) {
