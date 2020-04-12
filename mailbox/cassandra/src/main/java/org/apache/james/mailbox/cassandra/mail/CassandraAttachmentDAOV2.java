@@ -142,7 +142,7 @@ public class CassandraAttachmentDAOV2 {
     private PreparedStatement prepareDelete(Session session) {
         return session.prepare(
             QueryBuilder.delete().from(TABLE_NAME)
-                .where(eq(ID, bindMarker(ID))));
+                .where(eq(ID_AS_UUID, bindMarker(ID_AS_UUID))));
     }
 
     private PreparedStatement prepareInsert(Session session) {
