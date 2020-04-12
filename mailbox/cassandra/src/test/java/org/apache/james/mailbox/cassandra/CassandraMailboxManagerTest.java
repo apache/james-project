@@ -24,8 +24,11 @@ import static org.mockito.Mockito.mock;
 import java.util.Collection;
 import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.core.Username;
@@ -34,17 +37,20 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -65,6 +71,7 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 import com.github.fge.lambdas.Throwing;
 
 public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMailboxManager> {
+    public static final Username BOB = Username.of("Bob");
     @RegisterExtension
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(MailboxAggregateModule.MODULE_WITH_QUOTA);
 
@@ -516,6 +523,70 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
                     .doesNotContain(cassandraMessageId);
             });
+        }
+
+        @Test
+        void deleteMailboxShouldCleanupACL(CassandraCluster cassandraCluster) throws Exception {
+            mailboxManager.setRights(inboxId, new MailboxACL(
+                Pair.of(MailboxACL.EntryKey.createUserEntryKey(BOB), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read))), session);
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                CassandraId id = (CassandraId) this.inboxId;
+
+                softly.assertThat(aclMapper(cassandraCluster).getACL(id).blockOptional()).isEmpty();
+
+                softly.assertThat(rightsDAO(cassandraCluster).listRightsForUser(BOB).collectList().block()).isEmpty();
+            });
+        }
+
+        @Test
+        void deleteMailboxShouldCleanupACLWhenRightDeleteFails(CassandraCluster cassandraCluster) throws Exception {
+            mailboxManager.setRights(inboxId, new MailboxACL(
+                Pair.of(MailboxACL.EntryKey.createUserEntryKey(BOB), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read))), session);
+
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM UserMailboxACL WHERE userName=:userName AND mailboxid=:mailboxid;"));
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                CassandraId id = (CassandraId) this.inboxId;
+
+                softly.assertThat(aclMapper(cassandraCluster).getACL(id).blockOptional()).isEmpty();
+
+                softly.assertThat(rightsDAO(cassandraCluster).listRightsForUser(BOB).collectList().block()).isEmpty();
+            });
+        }
+
+        @Test
+        void deleteMailboxShouldCleanupACLWhenACLDeleteFails(CassandraCluster cassandraCluster) throws Exception {
+            mailboxManager.setRights(inboxId, new MailboxACL(
+                Pair.of(MailboxACL.EntryKey.createUserEntryKey(BOB), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read))), session);
+
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM acl WHERE id=:id IF EXISTS;"));
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                CassandraId id = (CassandraId) this.inboxId;
+
+                softly.assertThat(aclMapper(cassandraCluster).getACL(id).blockOptional()).isEmpty();
+
+                softly.assertThat(rightsDAO(cassandraCluster).listRightsForUser(BOB).collectList().block()).isEmpty();
+            });
+        }
+
+        private CassandraACLMapper aclMapper(CassandraCluster cassandraCluster) {
+            return new CassandraACLMapper(cassandraCluster.getConf(), rightsDAO(cassandraCluster), CassandraConfiguration.DEFAULT_CONFIGURATION);
+        }
+
+        private CassandraUserMailboxRightsDAO rightsDAO(CassandraCluster cassandraCluster) {
+            return new CassandraUserMailboxRightsDAO(cassandraCluster.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         }
 
         private CassandraAttachmentMessageIdDAO attachmentMessageIdDAO(CassandraCluster cassandraCluster) {

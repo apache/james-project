@@ -25,20 +25,24 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
 import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -53,24 +57,28 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
 
     }
 
-    @Inject
-    public DeleteMessageListener(CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
-                                 CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
-                                 CassandraAttachmentMessageIdDAO attachmentMessageIdDAO) {
-        this.imapUidDAO = imapUidDAO;
-        this.messageIdDAO = messageIdDAO;
-        this.messageDAO = messageDAO;
-        this.attachmentDAO = attachmentDAO;
-        this.ownerDAO = ownerDAO;
-        this.attachmentMessageIdDAO = attachmentMessageIdDAO;
-    }
-
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageDAO messageDAO;
     private final CassandraAttachmentDAOV2 attachmentDAO;
     private final CassandraAttachmentOwnerDAO ownerDAO;
     private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
+    private final CassandraACLMapper aclMapper;
+    private final CassandraUserMailboxRightsDAO rightsDAO;
+
+    @Inject
+    public DeleteMessageListener(CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
+                                 CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
+                                 CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraACLMapper aclMapper, CassandraUserMailboxRightsDAO rightsDAO) {
+        this.imapUidDAO = imapUidDAO;
+        this.messageIdDAO = messageIdDAO;
+        this.messageDAO = messageDAO;
+        this.attachmentDAO = attachmentDAO;
+        this.ownerDAO = ownerDAO;
+        this.attachmentMessageIdDAO = attachmentMessageIdDAO;
+        this.aclMapper = aclMapper;
+        this.rightsDAO = rightsDAO;
+    }
 
     @Override
     public Group getDefaultGroup() {
@@ -105,9 +113,15 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
                 .concatMap(metadata -> handleDeletion((CassandraMessageId) metadata.getMessageId(), mailboxId)
                     .then(imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId))
                     .then(messageIdDAO.delete(mailboxId, metadata.getUid())))
-                .then()
+                .then(deleteAcl(mailboxId))
                 .block();
         }
+    }
+
+    private Mono<Void> deleteAcl(CassandraId mailboxId) {
+        return aclMapper.getACL(mailboxId)
+            .flatMap(acl -> rightsDAO.update(mailboxId, ACLDiff.computeDiff(acl, MailboxACL.EMPTY)))
+            .then(aclMapper.delete(mailboxId));
     }
 
     private Mono<Void> handleDeletion(CassandraMessageId messageId) {
