@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.List;
 import java.util.UUID;
@@ -73,6 +74,25 @@ class CassandraDeletedMessageDAOTest {
                 .block();
 
         assertThat(result).containsExactly(UID_1, UID_2);
+    }
+
+    @Test
+    void retrieveDeletedMessageShouldNotReturnDeletedEntries() {
+        testee.addDeleted(MAILBOX_ID, UID_1).block();
+        testee.addDeleted(MAILBOX_ID, UID_2).block();
+
+        testee.removeAll(MAILBOX_ID).block();
+
+        List<MessageUid> result = testee.retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
+                .collectList()
+                .block();
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void removeAllShouldNotThrowWhenEmpty() {
+        assertThatCode(() -> testee.removeAll(MAILBOX_ID).block()).doesNotThrowAnyException();
     }
 
     @Test

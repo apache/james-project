@@ -53,6 +53,7 @@ public class CassandraDeletedMessageDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement addStatement;
     private final PreparedStatement deleteStatement;
+    private final PreparedStatement deleteAllStatement;
 
     private final PreparedStatement selectAllUidStatement;
     private final PreparedStatement selectOneUidStatement;
@@ -65,6 +66,7 @@ public class CassandraDeletedMessageDAO {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAddStatement(session);
         this.deleteStatement = prepareDeleteStatement(session);
+        this.deleteAllStatement = prepareDeleteAllStatement(session);
         this.selectAllUidStatement = prepareAllUidStatement(session);
         this.selectOneUidStatement = prepareOneUidStatement(session);
         this.selectBetweenUidStatement = prepareBetweenUidStatement(session);
@@ -112,6 +114,12 @@ public class CassandraDeletedMessageDAO {
             .and(eq(UID, bindMarker(UID))));
     }
 
+    private PreparedStatement prepareDeleteAllStatement(Session session) {
+        return session.prepare(delete()
+            .from(TABLE_NAME)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    }
+
     private PreparedStatement prepareAddStatement(Session session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
@@ -129,6 +137,11 @@ public class CassandraDeletedMessageDAO {
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUUID(MAILBOX_ID, cassandraId.asUuid())
             .setLong(UID, uid.asLong()));
+    }
+
+    public Mono<Void> removeAll(CassandraId cassandraId) {
+        return cassandraAsyncExecutor.executeVoid(deleteAllStatement.bind()
+            .setUUID(MAILBOX_ID, cassandraId.asUuid()));
     }
 
     public Flux<MessageUid> retrieveDeletedMessage(CassandraId cassandraId, MessageRange range) {
