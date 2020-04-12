@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.Optional;
 
@@ -57,6 +58,12 @@ class CassandraAttachmentDAOV2Test {
     }
 
     @Test
+    void deleteShouldNotThrowWhenDoesNotExist() {
+        assertThatCode(() -> testee.delete(ATTACHMENT_ID).block())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     void getAttachmentShouldReturnAttachmentWhenStored() {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID)
@@ -70,5 +77,23 @@ class CassandraAttachmentDAOV2Test {
         Optional<DAOAttachment> actual = testee.getAttachment(ATTACHMENT_ID).blockOptional();
 
         assertThat(actual).contains(daoAttachment);
+    }
+
+    @Test
+    void getAttachmentShouldNotReturnDeletedAttachments() {
+        Attachment attachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID)
+            .type("application/json")
+            .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+        BlobId blobId = BLOB_ID_FACTORY.from("blobId");
+        DAOAttachment daoAttachment = CassandraAttachmentDAOV2.from(attachment, blobId);
+        testee.storeAttachment(daoAttachment).block();
+
+        testee.delete(ATTACHMENT_ID).block();
+
+        Optional<DAOAttachment> actual = testee.getAttachment(ATTACHMENT_ID).blockOptional();
+
+        assertThat(actual).isEmpty();
     }
 }

@@ -45,6 +45,7 @@ import org.apache.james.mailbox.model.ContentType;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
@@ -125,6 +126,7 @@ public class CassandraAttachmentDAOV2 {
     private final BlobId.Factory blobIdFactory;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
+    private final PreparedStatement deleteStatement;
     private final PreparedStatement selectStatement;
 
     @Inject
@@ -134,6 +136,13 @@ public class CassandraAttachmentDAOV2 {
 
         this.selectStatement = prepareSelect(session);
         this.insertStatement = prepareInsert(session);
+        this.deleteStatement = prepareDelete(session);
+    }
+
+    private PreparedStatement prepareDelete(Session session) {
+        return session.prepare(
+            QueryBuilder.delete().from(TABLE_NAME)
+                .where(eq(ID, bindMarker(ID))));
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -171,4 +180,9 @@ public class CassandraAttachmentDAOV2 {
                 .setString(BLOB_ID, attachment.getBlobId().asString()));
     }
 
+    public Mono<Void> delete(AttachmentId attachmentId) {
+        return cassandraAsyncExecutor.executeVoid(
+            deleteStatement.bind()
+                .setUUID(ID_AS_UUID, attachmentId.asUUID()));
+    }
 }
