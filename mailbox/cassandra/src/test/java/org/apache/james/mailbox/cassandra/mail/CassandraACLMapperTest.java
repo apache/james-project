@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -85,6 +86,25 @@ class CassandraACLMapperTest {
     @Test
     void retrieveACLWhenNoACLStoredShouldReturnEmptyACL() {
         assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block()).isEqualTo(MailboxACL.EMPTY);
+    }
+
+    @Test
+    void deleteShouldRemoveACL() throws Exception {
+        MailboxACL.EntryKey key = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
+        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
+
+        cassandraACLMapper.updateACL(MAILBOX_ID,
+            MailboxACL.command().key(key).rights(rights).asAddition());
+
+        cassandraACLMapper.delete(MAILBOX_ID).block();
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block()).isEqualTo(MailboxACL.EMPTY);
+    }
+
+    @Test
+    void deleteShouldNotThrowWhenDoesNotExist() {
+        assertThatCode(() -> cassandraACLMapper.delete(MAILBOX_ID).block())
+            .doesNotThrowAnyException();
     }
 
     @Test

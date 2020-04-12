@@ -49,6 +49,7 @@ import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import reactor.core.publisher.Mono;
@@ -64,6 +65,7 @@ public class CassandraACLMapper {
     private final PreparedStatement conditionalInsertStatement;
     private final PreparedStatement conditionalUpdateStatement;
     private final PreparedStatement readStatement;
+    private final PreparedStatement deleteStatement;
 
     @Inject
     public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration) {
@@ -72,7 +74,15 @@ public class CassandraACLMapper {
         this.conditionalInsertStatement = prepareConditionalInsert(session);
         this.conditionalUpdateStatement = prepareConditionalUpdate(session);
         this.readStatement = prepareReadStatement(session);
+        this.deleteStatement = prepareDelete(session);
         this.userMailboxRightsDAO = userMailboxRightsDAO;
+    }
+
+    private PreparedStatement prepareDelete(Session session) {
+        return session.prepare(
+            QueryBuilder.delete().from(CassandraACLTable.TABLE_NAME)
+                .where(eq(CassandraACLTable.ID, bindMarker(CassandraACLTable.ID)))
+                .ifExists());
     }
 
     private PreparedStatement prepareConditionalInsert(Session session) {
@@ -155,6 +165,12 @@ public class CassandraACLMapper {
                 .setLong(OLD_VERSION, aclWithVersion.version))
             .filter(FunctionalUtils.identityPredicate())
             .map(any -> aclWithVersion.mailboxACL);
+    }
+
+    public Mono<Void> delete(CassandraId cassandraId) {
+        return executor.executeVoid(
+            deleteStatement.bind()
+                .setUUID(CassandraACLTable.ID, cassandraId.asUuid()));
     }
 
     private Mono<MailboxACL> insertACL(CassandraId cassandraId, MailboxACL acl) {
