@@ -161,22 +161,17 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int max) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        return retrieveMessageIds(mailboxId, messageRange)
-            .flatMap(ids -> retrieveMessages(ids, ftype, Limit.from(max)))
+        return Limit.from(max).applyOnFlux(
+            messageIdDAO.retrieveMessages(mailboxId, messageRange)
+                .flatMap(id -> retrieveMessage(id, ftype), cassandraConfiguration.getMessageReadChunkSize()))
             .map(MailboxMessage.class::cast)
             .sort(Comparator.comparing(MailboxMessage::getUid))
             .toIterable()
             .iterator();
     }
 
-    private Flux<List<ComposedMessageIdWithMetaData>> retrieveMessageIds(CassandraId mailboxId, MessageRange messageRange) {
-        return messageIdDAO.retrieveMessages(mailboxId, messageRange)
-            .window(cassandraConfiguration.getMessageReadChunkSize())
-            .flatMap(flux -> flux.collect(Guavate.toImmutableList()));
-    }
-
-    private Flux<MailboxMessage> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
-        return messageDAO.retrieveMessages(messageIds, fetchType, limit)
+    private Mono<MailboxMessage> retrieveMessage(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
+        return messageDAO.retrieveMessage(messageId, fetchType)
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType));
     }
 

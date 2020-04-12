@@ -74,7 +74,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.util.streams.Limit;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
@@ -93,7 +92,6 @@ import com.google.common.primitives.Bytes;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 
 public class CassandraMessageDAO {
@@ -239,12 +237,6 @@ public class CassandraMessageDAO {
     public Mono<MessageRepresentation> retrieveMessage(ComposedMessageIdWithMetaData id, FetchType fetchType) {
         return retrieveRow(id, fetchType)
                 .flatMap(resultSet -> message(resultSet, id, fetchType));
-    }
-
-    public Flux<MessageRepresentation> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
-        return Flux.fromStream(limit.applyOnStream(messageIds.stream().distinct()))
-            .publishOn(Schedulers.elastic())
-            .flatMap(id -> retrieveMessage(id, fetchType), configuration.getMessageReadChunkSize());
     }
 
     private Mono<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {

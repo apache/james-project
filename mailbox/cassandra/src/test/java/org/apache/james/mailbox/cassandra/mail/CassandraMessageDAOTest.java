@@ -53,7 +53,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.util.streams.Limit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -63,7 +62,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class CassandraMessageDAOTest {
     private static final int BODY_START = 16;
@@ -86,7 +85,7 @@ class CassandraMessageDAOTest {
 
     private SimpleMailboxMessage message;
     private CassandraMessageId messageId;
-    private List<ComposedMessageIdWithMetaData> messageIds;
+    private ComposedMessageIdWithMetaData messageIdWithMetadata;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -97,11 +96,11 @@ class CassandraMessageDAOTest {
         testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobStore, blobIdFactory,
             new CassandraMessageId.Factory());
 
-        messageIds = ImmutableList.of(ComposedMessageIdWithMetaData.builder()
+        messageIdWithMetadata = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))
                 .flags(new Flags())
                 .modSeq(ModSeq.of(1))
-                .build());
+                .build();
     }
 
     @Test
@@ -111,7 +110,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Metadata, Limit.unlimited()));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Metadata));
 
         assertThat(attachmentRepresentation.getPropertyBuilder().getTextualLineCount())
             .isEqualTo(0L);
@@ -127,7 +126,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Metadata, Limit.unlimited()));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Metadata));
 
         assertThat(attachmentRepresentation.getPropertyBuilder().getTextualLineCount()).isEqualTo(textualLineCount);
     }
@@ -139,7 +138,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Full, Limit.unlimited()));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Full));
 
         assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT);
@@ -152,7 +151,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Limit.unlimited()));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Body));
 
         byte[] expected = Bytes.concat(
             new byte[BODY_START],
@@ -168,7 +167,7 @@ class CassandraMessageDAOTest {
         testee.save(message).block();
 
         MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Headers, Limit.unlimited()));
+            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Headers));
 
         assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT.substring(0, BODY_START));
@@ -189,9 +188,8 @@ class CassandraMessageDAOTest {
             .build();
     }
 
-    private MessageRepresentation toMessage(Flux<MessageRepresentation> read) {
-        return read.toStream()
-            .findAny()
+    private MessageRepresentation toMessage(Mono<MessageRepresentation> read) {
+        return read.blockOptional()
             .orElseThrow(() -> new IllegalStateException("Collection is not supposed to be empty"));
     }
 
