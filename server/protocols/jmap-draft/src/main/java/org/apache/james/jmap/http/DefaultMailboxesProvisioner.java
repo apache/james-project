@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.http;
 
+import static org.apache.james.util.FunctionalUtils.negate;
+
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -80,7 +82,7 @@ class DefaultMailboxesProvisioner {
     private Mono<Boolean> mailboxDoesntExist(MailboxPath mailboxPath, MailboxSession session) {
         try {
             return Mono.from(mailboxManager.mailboxExists(mailboxPath, session))
-                .map(x -> !x);
+                .map(negate());
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }

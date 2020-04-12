@@ -26,6 +26,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.ENQUEUE_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.QUEUE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.TABLE_NAME;
+import static org.apache.james.util.FunctionalUtils.negate;
 
 import javax.inject.Inject;
 
@@ -79,6 +80,6 @@ public class DeletedMailsDAO {
 
     Mono<Boolean> isStillEnqueued(MailQueueName mailQueueName, EnqueueId enqueueId) {
         return isDeleted(mailQueueName, enqueueId)
-            .map(b -> !b);
+            .map(negate());
     }
 }

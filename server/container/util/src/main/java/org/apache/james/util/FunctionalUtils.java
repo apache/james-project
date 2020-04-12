@@ -19,6 +19,7 @@
 package org.apache.james.util;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -35,6 +36,10 @@ public class FunctionalUtils {
             runnable.run();
             return argument;
         };
+    }
+
+    public static Function<Boolean, Boolean> negate() {
+        return b -> !b;
     }
 
     public static Predicate<Boolean> identityPredicate() {

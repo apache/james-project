@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
+import static org.apache.james.util.FunctionalUtils.negate;
+
 import javax.inject.Inject;
 
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -125,6 +127,6 @@ public class CassandraMailQueueView implements MailQueueView {
     @Override
     public Mono<Boolean> isPresent(EnqueueId id) {
         return cassandraMailQueueMailDelete.isDeleted(id, mailQueueName)
-                .map(bool -> !bool);
+                .map(negate());
     }
 }
