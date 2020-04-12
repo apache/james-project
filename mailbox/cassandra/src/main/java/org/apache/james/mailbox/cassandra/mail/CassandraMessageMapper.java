@@ -29,6 +29,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
@@ -172,7 +173,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private Mono<MailboxMessage> retrieveMessage(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
         return messageDAO.retrieveMessage(messageId, fetchType)
-            .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType));
+            .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(Pair.of(messageId, messageRepresentation), fetchType));
     }
 
     @Override
@@ -213,8 +214,8 @@ public class CassandraMessageMapper implements MessageMapper {
     private Mono<SimpleMailboxMessage> expungeOne(CassandraId mailboxId, MessageUid messageUid) {
         return retrieveComposedId(mailboxId, messageUid)
             .flatMap(idWithMetadata -> deleteUsingMailboxId(idWithMetadata).thenReturn(idWithMetadata))
-            .flatMap(idWithMetadata -> messageDAO.retrieveMessage(idWithMetadata, FetchType.Metadata))
-            .map(pair -> pair.toMailboxMessage(ImmutableList.of()));
+            .flatMap(idWithMetadata -> messageDAO.retrieveMessage(idWithMetadata, FetchType.Metadata)
+                .map(pair -> pair.toMailboxMessage(idWithMetadata, ImmutableList.of())));
     }
 
     private Mono<ComposedMessageIdWithMetaData> retrieveComposedId(CassandraId mailboxId, MessageUid uid) {

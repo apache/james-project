@@ -21,7 +21,9 @@ package org.apache.james.mailbox.cassandra.mail;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -41,9 +43,10 @@ public class AttachmentLoader {
         this.attachmentMapper = attachmentMapper;
     }
 
-    public Mono<MailboxMessage> addAttachmentToMessage(MessageRepresentation messageRepresentation, MessageMapper.FetchType fetchType) {
-        return loadAttachments(messageRepresentation.getAttachments().stream(), fetchType)
-            .map(messageRepresentation::toMailboxMessage);
+    public Mono<MailboxMessage> addAttachmentToMessage(Pair<ComposedMessageIdWithMetaData, MessageRepresentation> messageRepresentation,
+                                                       MessageMapper.FetchType fetchType) {
+        return loadAttachments(messageRepresentation.getRight().getAttachments().stream(), fetchType)
+            .map(attachments -> messageRepresentation.getRight().toMailboxMessage(messageRepresentation.getLeft(), attachments));
     }
 
     private Mono<List<MessageAttachmentMetadata>> loadAttachments(Stream<MessageAttachmentRepresentation> messageAttachmentRepresentations, MessageMapper.FetchType fetchType) {

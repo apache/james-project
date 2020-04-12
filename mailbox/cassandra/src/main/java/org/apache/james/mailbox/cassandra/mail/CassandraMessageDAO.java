@@ -64,7 +64,6 @@ import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Properti
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
@@ -227,23 +226,24 @@ public class CassandraMessageDAO {
     }
 
     public Mono<MessageRepresentation> retrieveMessage(ComposedMessageIdWithMetaData id, FetchType fetchType) {
-        return retrieveRow(id, fetchType)
-                .flatMap(resultSet -> message(resultSet, id, fetchType));
+        CassandraMessageId cassandraMessageId = (CassandraMessageId) id.getComposedMessageId().getMessageId();
+        return retrieveMessage(fetchType, cassandraMessageId);
     }
 
-    private Mono<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
-        CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId.getComposedMessageId().getMessageId();
+    private Mono<MessageRepresentation> retrieveMessage(FetchType fetchType, CassandraMessageId cassandraMessageId) {
+        return retrieveRow(cassandraMessageId, fetchType)
+                .flatMap(resultSet -> message(resultSet, cassandraMessageId, fetchType));
+    }
 
+    private Mono<ResultSet> retrieveRow(CassandraMessageId messageId, FetchType fetchType) {
         return cassandraAsyncExecutor.execute(retrieveSelect(fetchType)
             .bind()
-            .setUUID(MESSAGE_ID, cassandraMessageId.get())
+            .setUUID(MESSAGE_ID, messageId.get())
             .setConsistencyLevel(QUORUM));
     }
 
     private Mono<MessageRepresentation>
-    message(ResultSet rows,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
-        ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
-
+    message(ResultSet rows, CassandraMessageId cassandraMessageId, FetchType fetchType) {
         if (rows.isExhausted()) {
             return Mono.empty();
         }
@@ -251,16 +251,12 @@ public class CassandraMessageDAO {
         Row row = rows.one();
         return buildContentRetriever(fetchType, row).map(content ->
             new MessageRepresentation(
-                messageId.getMessageId(),
+                cassandraMessageId,
                 row.getTimestamp(INTERNAL_DATE),
                 row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),
                 new SharedByteArrayInputStream(content),
-                messageIdWithMetaData.getFlags(),
                 getPropertyBuilder(row),
-                messageId.getMailboxId(),
-                messageId.getUid(),
-                messageIdWithMetaData.getModSeq(),
                 hasAttachment(row),
                 getAttachments(row).collect(Guavate.toImmutableList())));
     }
