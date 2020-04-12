@@ -45,6 +45,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -611,6 +612,38 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             assertThat(applicableFlagDAO(cassandraCluster).retrieveApplicableFlag((CassandraId) inboxId).blockOptional())
                 .isEmpty();
+        }
+
+        @Test
+        void deleteMailboxShouldCleanUpFirstUnseenWhenFail(CassandraCluster cassandraCluster) throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .withFlags(new Flags())
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            assertThat(firstUnseenDAO(cassandraCluster).retrieveFirstUnread((CassandraId) inboxId).blockOptional())
+                .isEmpty();
+        }
+
+        @Test
+        void deleteMailboxShouldCleanUpFirstUnseen(CassandraCluster cassandraCluster) throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .withFlags(new Flags())
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM firstUnseen WHERE mailboxId=:mailboxId;"));
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            assertThat(firstUnseenDAO(cassandraCluster).retrieveFirstUnread((CassandraId) inboxId).blockOptional())
+                .isEmpty();
+        }
+
+        private CassandraFirstUnseenDAO firstUnseenDAO(CassandraCluster cassandraCluster) {
+            return new CassandraFirstUnseenDAO(cassandraCluster.getConf());
         }
 
         private CassandraApplicableFlagDAO applicableFlagDAO(CassandraCluster cassandraCluster) {

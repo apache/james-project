@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -57,6 +58,32 @@ class CassandraFirstUnseenDAOTest {
 
         assertThat(testee.retrieveFirstUnread(MAILBOX_ID).block())
             .isEqualByComparingTo(UID_1);
+    }
+
+    @Test
+    void addUnreadShouldNotReturnRemovedEntries() {
+        testee.addUnread(MAILBOX_ID, UID_1).block();
+
+        testee.removeAll(MAILBOX_ID).block();
+
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).blockOptional())
+            .isEmpty();
+    }
+
+    @Test
+    void removeAllShouldDeleteAllUidEntries() {
+        testee.addUnread(MAILBOX_ID, UID_1).block();
+        testee.addUnread(MAILBOX_ID, UID_2).block();
+
+        testee.removeAll(MAILBOX_ID).block();
+
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).blockOptional())
+            .isEmpty();
+    }
+
+    @Test
+    void removeAllShouldNotThrowWhenAbsent() {
+        assertThatCode(() -> testee.removeAll(MAILBOX_ID).block()).doesNotThrowAnyException();
     }
 
     @Test

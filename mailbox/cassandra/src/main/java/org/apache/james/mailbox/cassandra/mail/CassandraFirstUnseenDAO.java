@@ -44,6 +44,7 @@ public class CassandraFirstUnseenDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement addStatement;
     private final PreparedStatement deleteStatement;
+    private final PreparedStatement deleteAllStatement;
     private final PreparedStatement readStatement;
 
     @Inject
@@ -51,6 +52,7 @@ public class CassandraFirstUnseenDAO {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAddStatement(session);
         this.deleteStatement = prepareDeleteStatement(session);
+        this.deleteAllStatement = prepareDeleteAllStatement(session);
         this.readStatement = prepareReadStatement(session);
     }
 
@@ -67,6 +69,12 @@ public class CassandraFirstUnseenDAO {
             .from(TABLE_NAME)
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
             .and(eq(UID, bindMarker(UID))));
+    }
+
+    private PreparedStatement prepareDeleteAllStatement(Session session) {
+        return session.prepare(delete()
+            .from(TABLE_NAME)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
     private PreparedStatement prepareAddStatement(Session session) {
@@ -86,6 +94,11 @@ public class CassandraFirstUnseenDAO {
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUUID(MAILBOX_ID, cassandraId.asUuid())
             .setLong(UID, uid.asLong()));
+    }
+
+    public Mono<Void> removeAll(CassandraId cassandraId) {
+        return cassandraAsyncExecutor.executeVoid(deleteAllStatement.bind()
+            .setUUID(MAILBOX_ID, cassandraId.asUuid()));
     }
 
     public Mono<MessageUid> retrieveFirstUnread(CassandraId cassandraId) {
