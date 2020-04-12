@@ -39,6 +39,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 import com.datastax.driver.core.querybuilder.Update.Assignments;
 
@@ -48,17 +49,31 @@ public class CassandraApplicableFlagDAO {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement select;
+    private final PreparedStatement delete;
 
     @Inject
     public CassandraApplicableFlagDAO(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.select = prepareSelect(session);
+        this.delete = prepareDelete(session);
     }
 
     private PreparedStatement prepareSelect(Session session) {
         return session.prepare(select(FIELDS)
             .from(TABLE_NAME)
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    }
+
+    private PreparedStatement prepareDelete(Session session) {
+        return session.prepare(QueryBuilder.delete()
+            .from(TABLE_NAME)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    }
+
+    public Mono<Void> delete(CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeVoid(
+            delete.bind()
+                .setUUID(MAILBOX_ID, mailboxId.asUuid()));
     }
 
     public Mono<Flags> retrieveApplicableFlag(CassandraId mailboxId) {

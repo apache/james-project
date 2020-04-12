@@ -19,10 +19,13 @@
 package org.apache.james.mailbox.cassandra;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.util.Collection;
 import java.util.Optional;
+
+import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -38,6 +41,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
+import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
@@ -579,6 +583,38 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
                 softly.assertThat(rightsDAO(cassandraCluster).listRightsForUser(BOB).collectList().block()).isEmpty();
             });
+        }
+
+        @Test
+        void deleteMailboxShouldCleanUpApplicableFlags(CassandraCluster cassandraCluster) throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .withFlags(new Flags("custom"))
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            assertThat(applicableFlagDAO(cassandraCluster).retrieveApplicableFlag((CassandraId) inboxId).blockOptional())
+                .isEmpty();
+        }
+
+        @Test
+        void deleteMailboxShouldCleanUpApplicableFlagsAfterAFailure(CassandraCluster cassandraCluster) throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .withFlags(new Flags("custom"))
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM applicableFlag WHERE mailboxId=:mailboxId;"));
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            assertThat(applicableFlagDAO(cassandraCluster).retrieveApplicableFlag((CassandraId) inboxId).blockOptional())
+                .isEmpty();
+        }
+
+        private CassandraApplicableFlagDAO applicableFlagDAO(CassandraCluster cassandraCluster) {
+            return new CassandraApplicableFlagDAO(cassandraCluster.getConf());
         }
 
         private CassandraACLMapper aclMapper(CassandraCluster cassandraCluster) {

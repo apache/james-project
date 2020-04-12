@@ -204,6 +204,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     }
 
     public DeleteMessageListener deleteMessageListener() {
-        return new DeleteMessageListener(imapUidDAO, messageIdDAO, messageDAO, attachmentDAOV2, ownerDAO, attachmentMessageIdDAO, aclMapper, userMailboxRightsDAO);
+        return new DeleteMessageListener(imapUidDAO, messageIdDAO, messageDAO, attachmentDAOV2, ownerDAO,
+            attachmentMessageIdDAO, aclMapper, userMailboxRightsDAO, applicableFlagDAO);
     }
 }

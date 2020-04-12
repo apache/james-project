@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import javax.mail.Flags;
 
@@ -70,6 +71,21 @@ class CassandraApplicableFlagDAOTest {
 
         assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
             .isEqualTo(new Flags(USER_FLAG));
+    }
+
+    @Test
+    void retrieveApplicableFlagShouldReturnEmptyWhenDeleted() {
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
+
+        testee.delete(CASSANDRA_ID).block();
+
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).blockOptional())
+            .isEmpty();
+    }
+    @Test
+    void deleteShouldNotThrowWhenEmpty() {
+        assertThatCode(() -> testee.delete(CASSANDRA_ID).block())
+            .doesNotThrowAnyException();
     }
 
     @Test

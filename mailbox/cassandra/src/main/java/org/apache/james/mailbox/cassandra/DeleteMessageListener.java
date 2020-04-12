@@ -29,6 +29,7 @@ import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
+import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
@@ -65,11 +66,12 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
     private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
     private final CassandraACLMapper aclMapper;
     private final CassandraUserMailboxRightsDAO rightsDAO;
+    private final CassandraApplicableFlagDAO applicableFlagDAO;
 
     @Inject
     public DeleteMessageListener(CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
                                  CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
-                                 CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraACLMapper aclMapper, CassandraUserMailboxRightsDAO rightsDAO) {
+                                 CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraACLMapper aclMapper, CassandraUserMailboxRightsDAO rightsDAO, CassandraApplicableFlagDAO applicableFlagDAO) {
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAO = messageDAO;
@@ -78,6 +80,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
         this.attachmentMessageIdDAO = attachmentMessageIdDAO;
         this.aclMapper = aclMapper;
         this.rightsDAO = rightsDAO;
+        this.applicableFlagDAO = applicableFlagDAO;
     }
 
     @Override
@@ -114,6 +117,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
                     .then(imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId))
                     .then(messageIdDAO.delete(mailboxId, metadata.getUid())))
                 .then(deleteAcl(mailboxId))
+                .then(applicableFlagDAO.delete(mailboxId))
                 .block();
         }
     }
