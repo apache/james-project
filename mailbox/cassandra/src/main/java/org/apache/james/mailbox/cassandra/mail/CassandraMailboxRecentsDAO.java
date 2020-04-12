@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
@@ -36,6 +35,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
@@ -46,6 +46,7 @@ public class CassandraMailboxRecentsDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement readStatement;
     private final PreparedStatement deleteStatement;
+    private final PreparedStatement deleteAllStatement;
     private final PreparedStatement addStatement;
     private CassandraUtils cassandraUtils;
 
@@ -54,6 +55,7 @@ public class CassandraMailboxRecentsDAO {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         readStatement = createReadStatement(session);
         deleteStatement = createDeleteStatement(session);
+        deleteAllStatement = createDeleteAllStatement(session);
         addStatement = createAddStatement(session);
         this.cassandraUtils = cassandraUtils;
     }
@@ -72,10 +74,17 @@ public class CassandraMailboxRecentsDAO {
 
     private PreparedStatement createDeleteStatement(Session session) {
         return session.prepare(
-            delete()
+            QueryBuilder.delete()
                 .from(CassandraMailboxRecentsTable.TABLE_NAME)
                 .where(eq(CassandraMailboxRecentsTable.MAILBOX_ID, bindMarker(CassandraMailboxRecentsTable.MAILBOX_ID)))
                 .and(eq(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bindMarker(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID))));
+    }
+
+    private PreparedStatement createDeleteAllStatement(Session session) {
+        return session.prepare(
+            QueryBuilder.delete()
+                .from(CassandraMailboxRecentsTable.TABLE_NAME)
+                .where(eq(CassandraMailboxRecentsTable.MAILBOX_ID, bindMarker(CassandraMailboxRecentsTable.MAILBOX_ID))));
     }
 
     private PreparedStatement createAddStatement(Session session) {
@@ -101,6 +110,11 @@ public class CassandraMailboxRecentsDAO {
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
             .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, messageUid.asLong()));
+    }
+
+    public Mono<Void> delete(CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeVoid(deleteAllStatement.bind()
+            .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid()));
     }
 
     public Mono<Void> addToRecent(CassandraId mailboxId, MessageUid messageUid) {

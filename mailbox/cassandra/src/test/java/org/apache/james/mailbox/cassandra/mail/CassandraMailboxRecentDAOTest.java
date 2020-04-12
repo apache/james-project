@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.stream.IntStream;
 
@@ -75,6 +76,24 @@ class CassandraMailboxRecentDAOTest {
             .collectList()
             .block())
             .isEmpty();
+    }
+
+    @Test
+    void getRecentMessageUidsInMailboxShouldNotReturnDeletedItems() {
+        testee.addToRecent(CASSANDRA_ID, UID1).block();
+        testee.addToRecent(CASSANDRA_ID, UID2).block();
+
+        testee.delete(CASSANDRA_ID).block();
+
+        assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID)
+            .collectList()
+            .block())
+            .isEmpty();
+    }
+
+    @Test
+    void deleteShouldNotThrowWhenNothing() {
+        assertThatCode(() -> testee.delete(CASSANDRA_ID).block()).doesNotThrowAnyException();
     }
 
     @Test

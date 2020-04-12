@@ -48,6 +48,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -699,6 +700,37 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
             assertThat(countersDAO(cassandraCluster).retrieveMailboxCounters((CassandraId) inboxId)
                 .blockOptional())
+                .isEmpty();
+        }
+
+        @Test
+        void deleteMailboxShouldCleanUpRecent(CassandraCluster cassandraCluster) throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .withFlags(new Flags(Flags.Flag.RECENT))
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            assertThat(new CassandraMailboxRecentsDAO(cassandraCluster.getConf()).getRecentMessageUidsInMailbox((CassandraId) inboxId)
+                .collectList().block())
+                .isEmpty();
+        }
+
+        @Test
+        void deleteMailboxShouldCleanUpRecentWhenFailure(CassandraCluster cassandraCluster) throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .withFlags(new Flags(Flags.Flag.RECENT))
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM mailboxRecents WHERE mailboxId=:mailboxId;"));
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            assertThat(new CassandraMailboxRecentsDAO(cassandraCluster.getConf()).getRecentMessageUidsInMailbox((CassandraId) inboxId)
+                .collectList().block())
                 .isEmpty();
         }
 
