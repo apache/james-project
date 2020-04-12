@@ -38,6 +38,7 @@ import org.apache.james.mailbox.model.MessageId;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
@@ -48,6 +49,7 @@ public class CassandraAttachmentMessageIdDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
     private final PreparedStatement selectStatement;
+    private final PreparedStatement deleteStatement;
     private final MessageId.Factory messageIdFactory;
 
     @Inject
@@ -57,6 +59,7 @@ public class CassandraAttachmentMessageIdDAO {
 
         this.selectStatement = prepareSelect(session);
         this.insertStatement = prepareInsert(session);
+        this.deleteStatement = prepareDelete(session);
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -65,6 +68,14 @@ public class CassandraAttachmentMessageIdDAO {
                 .value(ATTACHMENT_ID_AS_UUID, bindMarker(ATTACHMENT_ID_AS_UUID))
                 .value(ATTACHMENT_ID, bindMarker(ATTACHMENT_ID))
                 .value(MESSAGE_ID, bindMarker(MESSAGE_ID)));
+    }
+
+    private PreparedStatement prepareDelete(Session session) {
+        return session.prepare(
+            QueryBuilder.delete()
+                .from(TABLE_NAME)
+                .where(eq(ATTACHMENT_ID_AS_UUID, bindMarker(ATTACHMENT_ID_AS_UUID)))
+                .and(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -90,6 +101,13 @@ public class CassandraAttachmentMessageIdDAO {
             insertStatement.bind()
                 .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID())
                 .setString(ATTACHMENT_ID, attachmentId.getId())
+                .setString(MESSAGE_ID, ownerMessageId.serialize()));
+    }
+
+    public Mono<Void> delete(AttachmentId attachmentId, MessageId ownerMessageId) {
+        return cassandraAsyncExecutor.executeVoid(
+            deleteStatement.bind()
+                .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID())
                 .setString(MESSAGE_ID, ownerMessageId.serialize()));
     }
 }

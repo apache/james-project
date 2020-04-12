@@ -114,7 +114,8 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
         return Mono.just(messageId)
             .filterWhen(this::isReferenced)
             .flatMap(id -> readMessage(id)
-                .flatMap(this::deleteUnreferencedAttachments)
+                .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
+                .flatMap(this::deleteAttachmentMessageIds)
                 .then(messageDAO.delete(messageId)));
     }
 
@@ -127,6 +128,12 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
             .filterWhen(attachment -> ownerDAO.retrieveOwners(attachment.getAttachmentId()).hasElements().map(negate()))
             .filterWhen(attachment -> hasOtherMessagesReferences(message, attachment))
             .concatMap(attachment -> attachmentDAO.delete(attachment.getAttachmentId()))
+            .then();
+    }
+
+    private Mono<Void> deleteAttachmentMessageIds(MessageRepresentation message) {
+        return Flux.fromIterable(message.getAttachments())
+            .concatMap(attachment -> attachmentMessageIdDAO.delete(attachment.getAttachmentId(), message.getMessageId()))
             .then();
     }
 
