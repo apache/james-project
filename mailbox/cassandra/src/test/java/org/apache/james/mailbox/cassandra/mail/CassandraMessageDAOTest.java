@@ -19,14 +19,12 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -43,9 +41,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO.MessageIdAttachmentIds;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -58,10 +54,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Mono;
 
 class CassandraMessageDAOTest {
@@ -191,153 +185,5 @@ class CassandraMessageDAOTest {
     private MessageRepresentation toMessage(Mono<MessageRepresentation> read) {
         return read.blockOptional()
             .orElseThrow(() -> new IllegalStateException("Collection is not supposed to be empty"));
-    }
-
-    @Test
-    void retrieveAllMessageIdAttachmentIdsShouldReturnEmptyWhenNone() {
-        Stream<MessageIdAttachmentIds> actual = testee.retrieveAllMessageIdAttachmentIds().toStream();
-        
-        assertThat(actual).isEmpty();
-    }
-
-    @Test
-    void retrieveAllMessageIdAttachmentIdsShouldReturnOneWhenStored() throws Exception {
-        //Given
-        MessageAttachment attachment = MessageAttachment.builder()
-            .attachment(Attachment.builder()
-                .bytes("content".getBytes(StandardCharsets.UTF_8))
-                .type("type")
-                .build())
-            .build();
-        SimpleMailboxMessage message1 = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachment));
-        testee.save(message1).block();
-        MessageIdAttachmentIds expected = new MessageIdAttachmentIds(messageId, ImmutableSet.of(attachment.getAttachmentId()));
-        
-        //When
-        Stream<MessageIdAttachmentIds> actual = testee.retrieveAllMessageIdAttachmentIds().toStream();
-        
-        //Then
-        assertThat(actual).containsOnly(expected);
-    }
-
-    @Test
-    void retrieveAllMessageIdAttachmentIdsShouldReturnOneWhenStoredWithTwoAttachments() throws Exception {
-        //Given
-        MessageAttachment attachment1 = MessageAttachment.builder()
-            .attachment(Attachment.builder()
-                .bytes("content".getBytes(StandardCharsets.UTF_8))
-                .type("type")
-                .build())
-            .build();
-        MessageAttachment attachment2 = MessageAttachment.builder()
-            .attachment(Attachment.builder()
-                .bytes("other content".getBytes(StandardCharsets.UTF_8))
-                .type("type")
-                .build())
-            .build();
-        SimpleMailboxMessage message1 = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachment1, attachment2));
-        testee.save(message1).block();
-        MessageIdAttachmentIds expected = new MessageIdAttachmentIds(messageId, ImmutableSet.of(attachment1.getAttachmentId(), attachment2.getAttachmentId()));
-        
-        //When
-        Stream<MessageIdAttachmentIds> actual = testee.retrieveAllMessageIdAttachmentIds().toStream();
-        
-        //Then
-        assertThat(actual).containsOnly(expected);
-    }
-    
-    @Test
-    void retrieveAllMessageIdAttachmentIdsShouldReturnAllWhenStoredWithAttachment() throws Exception {
-        //Given
-        MessageId messageId1 = messageIdFactory.generate();
-        MessageId messageId2 = messageIdFactory.generate();
-        MessageAttachment attachment1 = MessageAttachment.builder()
-            .attachment(Attachment.builder()
-                .bytes("content".getBytes(StandardCharsets.UTF_8))
-                .type("type")
-                .build())
-            .build();
-        MessageAttachment attachment2 = MessageAttachment.builder()
-            .attachment(Attachment.builder()
-                .bytes("other content".getBytes(StandardCharsets.UTF_8))
-                .type("type")
-                .build())
-            .build();
-        SimpleMailboxMessage message1 = createMessage(messageId1, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachment1));
-        SimpleMailboxMessage message2 = createMessage(messageId2, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachment2));
-        testee.save(message1).block();
-        testee.save(message2).block();
-        MessageIdAttachmentIds expected1 = new MessageIdAttachmentIds(messageId1, ImmutableSet.of(attachment1.getAttachmentId()));
-        MessageIdAttachmentIds expected2 = new MessageIdAttachmentIds(messageId2, ImmutableSet.of(attachment2.getAttachmentId()));
-        
-        //When
-        Stream<MessageIdAttachmentIds> actual = testee.retrieveAllMessageIdAttachmentIds().toStream();
-        
-        //Then
-        assertThat(actual).containsOnly(expected1, expected2);
-    }
-    
-    @Test
-    void retrieveAllMessageIdAttachmentIdsShouldReturnEmtpyWhenStoredWithoutAttachment() throws Exception {
-        //Given
-        SimpleMailboxMessage message1 = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
-        testee.save(message1).block();
-        
-        //When
-        Stream<MessageIdAttachmentIds> actual = testee.retrieveAllMessageIdAttachmentIds().toStream();
-        
-        //Then
-        assertThat(actual).isEmpty();
-    }
-    
-    @Test
-    void retrieveAllMessageIdAttachmentIdsShouldFilterMessagesWithoutAttachment() throws Exception {
-        //Given
-        MessageId messageId1 = messageIdFactory.generate();
-        MessageId messageId2 = messageIdFactory.generate();
-        MessageId messageId3 = messageIdFactory.generate();
-        MessageAttachment attachmentFor1 = MessageAttachment.builder()
-            .attachment(Attachment.builder()
-                .bytes("content".getBytes(StandardCharsets.UTF_8))
-                .type("type")
-                .build())
-            .build();
-        MessageAttachment attachmentFor3 = MessageAttachment.builder()
-            .attachment(Attachment.builder()
-                .bytes("other content".getBytes(StandardCharsets.UTF_8))
-                .type("type")
-                .build())
-            .build();
-        SimpleMailboxMessage message1 = createMessage(messageId1, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachmentFor1));
-        SimpleMailboxMessage message2 = createMessage(messageId2, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
-        SimpleMailboxMessage message3 = createMessage(messageId3, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachmentFor3));
-        testee.save(message1).block();
-        testee.save(message2).block();
-        testee.save(message3).block();
-        
-        //When
-        Stream<MessageIdAttachmentIds> actual = testee.retrieveAllMessageIdAttachmentIds().toStream();
-        
-        //Then
-        assertThat(actual).extracting(MessageIdAttachmentIds::getMessageId)
-            .containsOnly(messageId1, messageId3);
-    }
-
-    @Test
-    void messageIdAttachmentIdsShouldMatchBeanContract() {
-        EqualsVerifier.forClass(MessageIdAttachmentIds.class)
-            .verify();
-    }
-
-    @Test
-    void messageIdAttachmentIdsShouldThrowOnNullMessageId() {
-        assertThatThrownBy(() -> new MessageIdAttachmentIds(null, ImmutableSet.of()))
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void messageIdAttachmentIdsShouldThrowOnNullAttachmentIds() {
-        assertThatThrownBy(() -> new MessageIdAttachmentIds(messageIdFactory.generate(), null))
-            .isInstanceOf(NullPointerException.class);
     }
 }

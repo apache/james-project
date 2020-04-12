@@ -44,9 +44,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.T
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,7 +67,6 @@ import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -84,13 +81,9 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
@@ -173,8 +166,7 @@ public class CassandraMessageDAO {
 
     public Mono<Void> save(MailboxMessage message) throws MailboxException {
         return saveContent(message)
-            .flatMap(pair -> cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)))
-            .then();
+            .flatMap(pair -> cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)));
     }
 
     private Mono<Tuple2<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
@@ -361,68 +353,5 @@ public class CassandraMessageDAO {
 
     private Mono<byte[]> getFieldContent(String field, Row row) {
         return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.from(row.getString(field))));
-    }
-
-    public Flux<MessageIdAttachmentIds> retrieveAllMessageIdAttachmentIds() {
-        return cassandraAsyncExecutor.executeRows(
-            selectAllMessagesWithAttachment.bind()
-                .setReadTimeoutMillis(configuration.getMessageAttachmentIdsReadTimeout()))
-            .map(this::fromRow)
-            .filter(MessageIdAttachmentIds::hasAttachment);
-    }
-
-    private MessageIdAttachmentIds fromRow(Row row) {
-        MessageId messageId = messageIdFactory.of(row.getUUID(MESSAGE_ID));
-        Set<AttachmentId> attachmentIds = attachmentByIds(row.getList(ATTACHMENTS, UDTValue.class))
-            .map(MessageAttachmentRepresentation::getAttachmentId)
-            .collect(Guavate.toImmutableSet());
-        return new MessageIdAttachmentIds(messageId, attachmentIds);
-    }
-
-    public static class MessageIdAttachmentIds {
-        private final MessageId messageId;
-        private final Set<AttachmentId> attachmentIds;
-        
-        public MessageIdAttachmentIds(MessageId messageId, Set<AttachmentId> attachmentIds) {
-            Preconditions.checkNotNull(messageId);
-            Preconditions.checkNotNull(attachmentIds);
-            this.messageId = messageId;
-            this.attachmentIds = ImmutableSet.copyOf(attachmentIds);
-        }
-        
-        public MessageId getMessageId() {
-            return messageId;
-        }
-        
-        public Set<AttachmentId> getAttachmentId() {
-            return attachmentIds;
-        }
-
-        public boolean hasAttachment() {
-            return ! attachmentIds.isEmpty();
-        }
-        
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof MessageIdAttachmentIds) {
-                MessageIdAttachmentIds other = (MessageIdAttachmentIds) o;
-                return Objects.equals(messageId, other.messageId)
-                    && Objects.equals(attachmentIds, other.attachmentIds);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(messageId, attachmentIds);
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                .add("messageId", messageId)
-                .add("attachmentIds", attachmentIds)
-                .toString();
-        }
     }
 }
