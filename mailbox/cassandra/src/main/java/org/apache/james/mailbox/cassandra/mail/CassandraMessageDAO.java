@@ -237,11 +237,15 @@ public class CassandraMessageDAO {
             .collect(Guavate.toImmutableList());
     }
 
+    public Mono<MessageResult> retrieveMessage(ComposedMessageIdWithMetaData id, FetchType fetchType) {
+        return retrieveRow(id, fetchType)
+                .flatMap(resultSet -> message(resultSet, id, fetchType));
+    }
+
     public Flux<MessageResult> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
         return Flux.fromStream(limit.applyOnStream(messageIds.stream().distinct()))
             .publishOn(Schedulers.elastic())
-            .flatMap(id -> retrieveRow(id, fetchType)
-                .flatMap(resultSet -> message(resultSet, id, fetchType)), configuration.getMessageReadChunkSize());
+            .flatMap(id -> retrieveMessage(id, fetchType), configuration.getMessageReadChunkSize());
     }
 
     private Mono<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
