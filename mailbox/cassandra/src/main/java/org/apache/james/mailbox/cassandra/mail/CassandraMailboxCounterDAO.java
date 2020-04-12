@@ -41,6 +41,7 @@ import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Assignment;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 import reactor.core.publisher.Mono;
 
@@ -56,6 +57,7 @@ public class CassandraMailboxCounterDAO {
     private final PreparedStatement decrementMessageCountStatement;
     private final PreparedStatement incrementUnseenAndCountStatement;
     private final PreparedStatement decrementUnseenAndCountStatement;
+    private final PreparedStatement deleteStatement;
 
     @Inject
     public CassandraMailboxCounterDAO(Session session) {
@@ -81,6 +83,8 @@ public class CassandraMailboxCounterDAO {
             .with(decr(COUNT))
             .and(decr(UNSEEN))
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+        deleteStatement = session.prepare(QueryBuilder.delete().from(TABLE_NAME)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
     private PreparedStatement createReadStatement(Session session) {
@@ -95,6 +99,10 @@ public class CassandraMailboxCounterDAO {
             update(TABLE_NAME)
                 .with(operation)
                 .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    }
+
+    public Mono<Void> delete(CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, deleteStatement));
     }
 
     public Mono<MailboxCounters> retrieveMailboxCounters(CassandraId mailboxId) {

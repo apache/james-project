@@ -47,6 +47,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -671,6 +672,38 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             assertThat(deletedMessageDAO(cassandraCluster).retrieveDeletedMessage((CassandraId) inboxId, MessageRange.all())
                 .collectList().block())
                 .isEmpty();
+        }
+
+        @Test
+        void deleteMailboxShouldCleanUpMailboxCounters(CassandraCluster cassandraCluster) throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            assertThat(countersDAO(cassandraCluster).retrieveMailboxCounters((CassandraId) inboxId)
+                .blockOptional())
+                .isEmpty();
+        }
+
+        @Test
+        void deleteMailboxShouldCleanUpMailboxCountersWhenFailure(CassandraCluster cassandraCluster) throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM mailboxCounters WHERE mailboxId=:mailboxId;"));
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            assertThat(countersDAO(cassandraCluster).retrieveMailboxCounters((CassandraId) inboxId)
+                .blockOptional())
+                .isEmpty();
+        }
+
+        private CassandraMailboxCounterDAO countersDAO(CassandraCluster cassandraCluster) {
+            return new CassandraMailboxCounterDAO(cassandraCluster.getConf());
         }
 
         private CassandraDeletedMessageDAO deletedMessageDAO(CassandraCluster cassandraCluster) {

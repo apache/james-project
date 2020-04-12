@@ -35,6 +35,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -71,13 +72,14 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
     private final CassandraApplicableFlagDAO applicableFlagDAO;
     private final CassandraFirstUnseenDAO firstUnseenDAO;
     private final CassandraDeletedMessageDAO deletedMessageDAO;
+    private final CassandraMailboxCounterDAO counterDAO;
 
     @Inject
     public DeleteMessageListener(CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
                                  CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
                                  CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraACLMapper aclMapper,
                                  CassandraUserMailboxRightsDAO rightsDAO, CassandraApplicableFlagDAO applicableFlagDAO,
-                                 CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO) {
+                                 CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO, CassandraMailboxCounterDAO counterDAO) {
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAO = messageDAO;
@@ -89,6 +91,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
         this.applicableFlagDAO = applicableFlagDAO;
         this.firstUnseenDAO = firstUnseenDAO;
         this.deletedMessageDAO = deletedMessageDAO;
+        this.counterDAO = counterDAO;
     }
 
     @Override
@@ -128,6 +131,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
                 .then(applicableFlagDAO.delete(mailboxId))
                 .then(firstUnseenDAO.removeAll(mailboxId))
                 .then(deletedMessageDAO.removeAll(mailboxId))
+                .then(counterDAO.delete(mailboxId))
                 .block();
         }
     }

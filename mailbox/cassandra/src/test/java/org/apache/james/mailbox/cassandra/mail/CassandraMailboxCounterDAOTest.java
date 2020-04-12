@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -140,6 +141,22 @@ class CassandraMailboxCounterDAOTest {
                 .count(1L)
                 .unseen(1L)
                 .build());
+    }
+
+    @Test
+    void retrieveMailboxCounterShouldNotReturnDeletedItems() {
+        testee.incrementCount(MAILBOX_ID).block();
+        testee.incrementUnseen(MAILBOX_ID).block();
+
+        testee.delete(MAILBOX_ID).block();
+
+        assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).blockOptional())
+            .isEmpty();
+    }
+
+    @Test
+    void deleteShouldNotThrowWhenNoData() {
+        assertThatCode(() -> testee.delete(MAILBOX_ID).block()).doesNotThrowAnyException();
     }
 
     @Test
