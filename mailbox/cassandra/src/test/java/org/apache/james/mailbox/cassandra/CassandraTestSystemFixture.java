@@ -80,6 +80,7 @@ public class CassandraTestSystemFixture {
             eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
 
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
+        eventBus.register(mapperFactory.deleteMessageListener());
 
         return cassandraMailboxManager;
     }

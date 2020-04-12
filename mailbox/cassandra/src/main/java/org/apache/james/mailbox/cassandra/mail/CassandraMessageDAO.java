@@ -227,10 +227,10 @@ public class CassandraMessageDAO {
 
     public Mono<MessageRepresentation> retrieveMessage(ComposedMessageIdWithMetaData id, FetchType fetchType) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) id.getComposedMessageId().getMessageId();
-        return retrieveMessage(fetchType, cassandraMessageId);
+        return retrieveMessage(cassandraMessageId, fetchType);
     }
 
-    private Mono<MessageRepresentation> retrieveMessage(FetchType fetchType, CassandraMessageId cassandraMessageId) {
+    public Mono<MessageRepresentation> retrieveMessage(CassandraMessageId cassandraMessageId, FetchType fetchType) {
         return retrieveRow(cassandraMessageId, fetchType)
                 .flatMap(resultSet -> message(resultSet, cassandraMessageId, fetchType));
     }

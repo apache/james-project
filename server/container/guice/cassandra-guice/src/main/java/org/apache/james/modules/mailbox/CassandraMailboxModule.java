@@ -38,6 +38,7 @@ import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
+import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -192,9 +193,9 @@ public class CassandraMailboxModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(CassandraMailboxManagerDefinition.class);
 
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
-            .addBinding()
-            .to(MailboxAnnotationListener.class);
+        Multibinder<MailboxListener.GroupMailboxListener> mailboxListeners = Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class);
+        mailboxListeners.addBinding().to(MailboxAnnotationListener.class);
+        mailboxListeners.addBinding().to(DeleteMessageListener.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
     }

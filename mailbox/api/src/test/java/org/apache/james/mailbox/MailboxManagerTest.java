@@ -111,9 +111,9 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     public static final Username USER_2 = Username.of("USER_2");
     private static final int DEFAULT_MAXIMUM_LIMIT = 256;
 
-    private T mailboxManager;
+    protected T mailboxManager;
     private MailboxSession session;
-    private Message.Builder message;
+    protected Message.Builder message;
 
     private PreDeletionHook preDeletionHook1;
     private PreDeletionHook preDeletionHook2;
