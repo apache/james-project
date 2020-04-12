@@ -35,7 +35,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
-public class MessageWithoutAttachment {
+public class MessageRepresentation {
     private final MessageId messageId;
     private final Date internalDate;
     private final Long size;
@@ -47,10 +47,11 @@ public class MessageWithoutAttachment {
     private final MessageUid messageUid;
     private final ModSeq modSeq;
     private final boolean hasAttachment;
+    private final List<MessageAttachmentRepresentation> attachments;
 
-    public MessageWithoutAttachment(MessageId messageId, Date internalDate, Long size, Integer bodySize, SharedByteArrayInputStream content,
-                                    Flags flags, PropertyBuilder propertyBuilder, MailboxId mailboxId, MessageUid messageUid, ModSeq modSeq,
-                                    boolean hasAttachment) {
+    public MessageRepresentation(MessageId messageId, Date internalDate, Long size, Integer bodySize, SharedByteArrayInputStream content,
+                                 Flags flags, PropertyBuilder propertyBuilder, MailboxId mailboxId, MessageUid messageUid, ModSeq modSeq,
+                                 boolean hasAttachment, List<MessageAttachmentRepresentation> attachments) {
         this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
@@ -62,6 +63,7 @@ public class MessageWithoutAttachment {
         this.messageUid = messageUid;
         this.modSeq = modSeq;
         this.hasAttachment = hasAttachment;
+        this.attachments = attachments;
     }
 
     public SimpleMailboxMessage toMailboxMessage(List<MessageAttachment> attachments) {
@@ -99,5 +101,9 @@ public class MessageWithoutAttachment {
 
     public PropertyBuilder getPropertyBuilder() {
         return propertyBuilder;
+    }
+
+    public List<MessageAttachmentRepresentation> getAttachments() {
+        return attachments;
     }
 }

@@ -96,8 +96,6 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .publishOn(Schedulers.elastic())
             .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty()), cassandraConfiguration.getMessageReadChunkSize())
             .flatMap(composedMessageId -> messageDAO.retrieveMessage(composedMessageId, fetchType), cassandraConfiguration.getMessageReadChunkSize())
-            .filter(CassandraMessageDAO.MessageResult::isFound)
-            .map(CassandraMessageDAO.MessageResult::message)
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType), cassandraConfiguration.getMessageReadChunkSize())
             .groupBy(MailboxMessage::getMailboxId)
             .flatMap(this::keepMessageIfMailboxExists)

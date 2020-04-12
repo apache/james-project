@@ -54,7 +54,6 @@ import javax.inject.Inject;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -237,12 +236,12 @@ public class CassandraMessageDAO {
             .collect(Guavate.toImmutableList());
     }
 
-    public Mono<MessageResult> retrieveMessage(ComposedMessageIdWithMetaData id, FetchType fetchType) {
+    public Mono<MessageRepresentation> retrieveMessage(ComposedMessageIdWithMetaData id, FetchType fetchType) {
         return retrieveRow(id, fetchType)
                 .flatMap(resultSet -> message(resultSet, id, fetchType));
     }
 
-    public Flux<MessageResult> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
+    public Flux<MessageRepresentation> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
         return Flux.fromStream(limit.applyOnStream(messageIds.stream().distinct()))
             .publishOn(Schedulers.elastic())
             .flatMap(id -> retrieveMessage(id, fetchType), configuration.getMessageReadChunkSize());
@@ -257,31 +256,29 @@ public class CassandraMessageDAO {
             .setConsistencyLevel(QUORUM));
     }
 
-    private Mono<MessageResult>
+    private Mono<MessageRepresentation>
     message(ResultSet rows,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
         ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
 
         if (rows.isExhausted()) {
-            return Mono.just(notFound(messageIdWithMetaData));
+            return Mono.empty();
         }
 
         Row row = rows.one();
-        return buildContentRetriever(fetchType, row).map(content -> {
-            MessageWithoutAttachment messageWithoutAttachment =
-                new MessageWithoutAttachment(
-                    messageId.getMessageId(),
-                    row.getTimestamp(INTERNAL_DATE),
-                    row.getLong(FULL_CONTENT_OCTETS),
-                    row.getInt(BODY_START_OCTET),
-                    new SharedByteArrayInputStream(content),
-                    messageIdWithMetaData.getFlags(),
-                    getPropertyBuilder(row),
-                    messageId.getMailboxId(),
-                    messageId.getUid(),
-                    messageIdWithMetaData.getModSeq(),
-                    hasAttachment(row));
-            return found(Pair.of(messageWithoutAttachment, getAttachments(row)));
-        });
+        return buildContentRetriever(fetchType, row).map(content ->
+            new MessageRepresentation(
+                messageId.getMessageId(),
+                row.getTimestamp(INTERNAL_DATE),
+                row.getLong(FULL_CONTENT_OCTETS),
+                row.getInt(BODY_START_OCTET),
+                new SharedByteArrayInputStream(content),
+                messageIdWithMetaData.getFlags(),
+                getPropertyBuilder(row),
+                messageId.getMailboxId(),
+                messageId.getUid(),
+                messageIdWithMetaData.getModSeq(),
+                hasAttachment(row),
+                getAttachments(row).collect(Guavate.toImmutableList())));
     }
 
     private PropertyBuilder getPropertyBuilder(Row row) {
@@ -372,36 +369,6 @@ public class CassandraMessageDAO {
 
     private Mono<byte[]> getFieldContent(String field, Row row) {
         return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.from(row.getString(field))));
-    }
-
-    public static MessageResult notFound(ComposedMessageIdWithMetaData id) {
-        return new MessageResult(id, Optional.empty());
-    }
-
-    public static MessageResult found(Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message) {
-        return new MessageResult(message.getLeft().getMetadata(), Optional.of(message));
-    }
-
-    public static class MessageResult {
-        private final ComposedMessageIdWithMetaData metaData;
-        private final Optional<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> message;
-
-        public MessageResult(ComposedMessageIdWithMetaData metaData, Optional<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> message) {
-            this.metaData = metaData;
-            this.message = message;
-        }
-
-        public ComposedMessageIdWithMetaData getMetadata() {
-            return metaData;
-        }
-
-        public boolean isFound() {
-            return message.isPresent();
-        }
-
-        public Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message() {
-            return message.get();
-        }
     }
 
     public Flux<MessageIdAttachmentIds> retrieveAllMessageIdAttachmentIds() {

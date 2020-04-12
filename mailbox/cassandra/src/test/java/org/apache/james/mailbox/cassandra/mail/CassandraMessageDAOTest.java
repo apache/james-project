@@ -32,7 +32,6 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -111,7 +110,7 @@ class CassandraMessageDAOTest {
 
         testee.save(message).block();
 
-        MessageWithoutAttachment attachmentRepresentation =
+        MessageRepresentation attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Metadata, Limit.unlimited()));
 
         assertThat(attachmentRepresentation.getPropertyBuilder().getTextualLineCount())
@@ -127,7 +126,7 @@ class CassandraMessageDAOTest {
 
         testee.save(message).block();
 
-        MessageWithoutAttachment attachmentRepresentation =
+        MessageRepresentation attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Metadata, Limit.unlimited()));
 
         assertThat(attachmentRepresentation.getPropertyBuilder().getTextualLineCount()).isEqualTo(textualLineCount);
@@ -139,7 +138,7 @@ class CassandraMessageDAOTest {
 
         testee.save(message).block();
 
-        MessageWithoutAttachment attachmentRepresentation =
+        MessageRepresentation attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Full, Limit.unlimited()));
 
         assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
@@ -152,7 +151,7 @@ class CassandraMessageDAOTest {
 
         testee.save(message).block();
 
-        MessageWithoutAttachment attachmentRepresentation =
+        MessageRepresentation attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Limit.unlimited()));
 
         byte[] expected = Bytes.concat(
@@ -168,7 +167,7 @@ class CassandraMessageDAOTest {
 
         testee.save(message).block();
 
-        MessageWithoutAttachment attachmentRepresentation =
+        MessageRepresentation attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Headers, Limit.unlimited()));
 
         assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
@@ -190,10 +189,8 @@ class CassandraMessageDAOTest {
             .build();
     }
 
-    private MessageWithoutAttachment toMessage(Flux<CassandraMessageDAO.MessageResult> read) {
+    private MessageRepresentation toMessage(Flux<MessageRepresentation> read) {
         return read.toStream()
-            .map(CassandraMessageDAO.MessageResult::message)
-            .map(Pair::getLeft)
             .findAny()
             .orElseThrow(() -> new IllegalStateException("Collection is not supposed to be empty"));
     }
