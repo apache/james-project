@@ -102,9 +102,9 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
 
             messageIdDAO.retrieveMessages(mailboxId, MessageRange.all())
                 .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-                .concatMap(metadata -> imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId)
-                    .then(messageIdDAO.delete(mailboxId, metadata.getUid()))
-                    .then(handleDeletion((CassandraMessageId) metadata.getMessageId())))
+                .concatMap(metadata -> handleDeletion((CassandraMessageId) metadata.getMessageId(), mailboxId)
+                    .then(imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId))
+                    .then(messageIdDAO.delete(mailboxId, metadata.getUid())))
                 .then()
                 .block();
         }
@@ -113,6 +113,15 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
     private Mono<Void> handleDeletion(CassandraMessageId messageId) {
         return Mono.just(messageId)
             .filterWhen(this::isReferenced)
+            .flatMap(id -> readMessage(id)
+                .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
+                .flatMap(this::deleteAttachmentMessageIds)
+                .then(messageDAO.delete(messageId)));
+    }
+
+    private Mono<Void> handleDeletion(CassandraMessageId messageId, CassandraId excludedId) {
+        return Mono.just(messageId)
+            .filterWhen(id -> isReferenced(id, excludedId))
             .flatMap(id -> readMessage(id)
                 .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
                 .flatMap(this::deleteAttachmentMessageIds)
@@ -146,6 +155,13 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
 
     private Mono<Boolean> isReferenced(CassandraMessageId id) {
         return imapUidDAO.retrieve(id, ALL_MAILBOXES)
+            .hasElements()
+            .map(negate());
+    }
+
+    private Mono<Boolean> isReferenced(CassandraMessageId id, CassandraId excludedId) {
+        return imapUidDAO.retrieve(id, ALL_MAILBOXES)
+            .filter(metadata -> !metadata.getComposedMessageId().getMailboxId().equals(excludedId))
             .hasElements()
             .map(negate());
     }
