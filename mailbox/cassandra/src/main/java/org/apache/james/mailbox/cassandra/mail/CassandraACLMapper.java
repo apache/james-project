@@ -112,8 +112,7 @@ public class CassandraACLMapper {
 
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {
         return getStoredACLRow(cassandraId)
-            .map(row -> getAcl(cassandraId, row))
-            .defaultIfEmpty(MailboxACL.EMPTY);
+            .map(row -> getAcl(cassandraId, row));
     }
 
     private MailboxACL getAcl(CassandraId cassandraId, Row row) {

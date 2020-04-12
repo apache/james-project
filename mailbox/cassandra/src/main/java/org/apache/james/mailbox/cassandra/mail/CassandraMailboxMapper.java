@@ -159,10 +159,15 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
-        Mono<MailboxACL> acl = cassandraACLMapper.getACL(mailboxId);
+        Mono<MailboxACL> acl = retrieveAcl(mailboxId);
         Mono<Mailbox> simpleMailbox = mailboxDAO.retrieveMailbox(mailboxId);
 
         return acl.zipWith(simpleMailbox, this::addAcl);
+    }
+
+    private Mono<MailboxACL> retrieveAcl(CassandraId mailboxId) {
+        return cassandraACLMapper.getACL(mailboxId)
+            .defaultIfEmpty(MailboxACL.EMPTY);
     }
 
     private Mailbox addAcl(MailboxACL acl, Mailbox mailbox) {
@@ -302,7 +307,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     private Mono<Mailbox> toMailboxWithAcl(Mailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return cassandraACLMapper.getACL(cassandraId)
+        return retrieveAcl(cassandraId)
             .map(acl -> {
                 mailbox.setACL(acl);
                 return mailbox;

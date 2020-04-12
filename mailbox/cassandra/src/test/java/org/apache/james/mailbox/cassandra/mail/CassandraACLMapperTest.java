@@ -85,7 +85,7 @@ class CassandraACLMapperTest {
 
     @Test
     void retrieveACLWhenNoACLStoredShouldReturnEmptyACL() {
-        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block()).isEqualTo(MailboxACL.EMPTY);
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).blockOptional()).isEmpty();
     }
 
     @Test
@@ -98,7 +98,7 @@ class CassandraACLMapperTest {
 
         cassandraACLMapper.delete(MAILBOX_ID).block();
 
-        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block()).isEqualTo(MailboxACL.EMPTY);
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).blockOptional()).isEmpty();
     }
 
     @Test

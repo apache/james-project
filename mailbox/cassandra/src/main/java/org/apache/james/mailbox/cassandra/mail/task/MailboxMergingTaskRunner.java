@@ -89,8 +89,12 @@ public class MailboxMergingTaskRunner {
 
     private void mergeRights(CassandraId oldMailboxId, CassandraId newMailboxId) {
         try {
-            MailboxACL oldAcl = cassandraACLMapper.getACL(oldMailboxId).block();
-            MailboxACL newAcl = cassandraACLMapper.getACL(newMailboxId).block();
+            MailboxACL oldAcl = cassandraACLMapper.getACL(oldMailboxId)
+                .defaultIfEmpty(MailboxACL.EMPTY)
+                .block();
+            MailboxACL newAcl = cassandraACLMapper.getACL(newMailboxId)
+                .defaultIfEmpty(MailboxACL.EMPTY)
+                .block();
             MailboxACL finalAcl = newAcl.union(oldAcl);
 
             cassandraACLMapper.setACL(newMailboxId, finalAcl);
