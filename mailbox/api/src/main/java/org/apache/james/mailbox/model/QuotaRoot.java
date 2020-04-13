@@ -73,4 +73,9 @@ public class QuotaRoot {
                 .add("domain", domain)
                 .toString();
     }
+
+    public String asString() {
+        return domain.map(domainValue -> value + "@" + domainValue.asString())
+            .orElse(value);
+    }
 }
