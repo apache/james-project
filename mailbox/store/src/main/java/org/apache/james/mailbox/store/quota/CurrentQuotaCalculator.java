@@ -81,6 +81,18 @@ public class CurrentQuotaCalculator {
         public QuotaSizeUsage size() {
             return size;
         }
+
+        public CurrentQuotas increase(CurrentQuotas updateQuotas) {
+            return new CurrentQuotas(
+                QuotaCountUsage.count(this.count.asLong() + updateQuotas.count.asLong()),
+                QuotaSizeUsage.size(this.size.asLong() + updateQuotas.size.asLong()));
+        }
+
+        public CurrentQuotas decrease(CurrentQuotas updateQuotas) {
+            return new CurrentQuotas(
+                QuotaCountUsage.count(this.count.asLong() - updateQuotas.count.asLong()),
+                QuotaSizeUsage.size(this.size.asLong() - updateQuotas.size.asLong()));
+        }
     }
 
 }

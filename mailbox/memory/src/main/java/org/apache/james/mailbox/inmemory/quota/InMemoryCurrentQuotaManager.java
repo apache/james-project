@@ -20,7 +20,8 @@
 package org.apache.james.mailbox.inmemory.quota;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.UnaryOperator;
 
 import javax.inject.Inject;
 
@@ -41,32 +42,32 @@ import com.google.common.cache.LoadingCache;
 
 public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
 
-    private final LoadingCache<QuotaRoot, Entry> quotaCache;
+    private final LoadingCache<QuotaRoot, AtomicReference<CurrentQuotas>> quotaCache;
 
     @Inject
     public InMemoryCurrentQuotaManager(CurrentQuotaCalculator quotaCalculator, SessionProvider sessionProvider) {
-        this.quotaCache = CacheBuilder.newBuilder().build(new CacheLoader<QuotaRoot, Entry>() {
+        this.quotaCache = CacheBuilder.newBuilder().build(new CacheLoader<QuotaRoot, AtomicReference<CurrentQuotas>>() {
             @Override
-            public Entry load(QuotaRoot quotaRoot) throws Exception {
-                return new Entry(quotaCalculator.recalculateCurrentQuotas(quotaRoot, sessionProvider.createSystemSession(Username.of(quotaRoot.getValue()))));
+            public AtomicReference<CurrentQuotas> load(QuotaRoot quotaRoot) throws Exception {
+                return new AtomicReference<>(quotaCalculator.recalculateCurrentQuotas(quotaRoot, sessionProvider.createSystemSession(Username.of(quotaRoot.getValue()))));
             }
         });
     }
 
     @Override
     public void increase(QuotaOperation quotaOperation) throws MailboxException {
-        updateQuota(quotaOperation.quotaRoot(), quotaOperation.count().asLong(), quotaOperation.size().asLong());
+        updateQuota(quotaOperation.quotaRoot(), quota -> quota.increase(new CurrentQuotas(quotaOperation.count(), quotaOperation.size())));
     }
 
     @Override
     public void decrease(QuotaOperation quotaOperation) throws MailboxException {
-        updateQuota(quotaOperation.quotaRoot(), -(quotaOperation.count().asLong()), -(quotaOperation.size().asLong()));
+        updateQuota(quotaOperation.quotaRoot(), quota -> quota.decrease(new CurrentQuotas(quotaOperation.count(), quotaOperation.size())));
     }
 
     @Override
     public QuotaCountUsage getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException {
         try {
-            return QuotaCountUsage.count(quotaCache.get(quotaRoot).getCount().get());
+            return quotaCache.get(quotaRoot).get().count();
         } catch (ExecutionException e) {
             throw new MailboxException("Exception caught", e);
         }
@@ -75,37 +76,17 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
     @Override
     public QuotaSizeUsage getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException {
         try {
-            return QuotaSizeUsage.size(quotaCache.get(quotaRoot).getSize().get());
+            return quotaCache.get(quotaRoot).get().size();
         } catch (ExecutionException e) {
             throw new MailboxException("Exception caught", e);
         }
     }
 
-    private void updateQuota(QuotaRoot quotaRoot, long count, long size) throws MailboxException {
+    private void updateQuota(QuotaRoot quotaRoot, UnaryOperator<CurrentQuotas> quotaFunction) throws MailboxException {
         try {
-            Entry entry = quotaCache.get(quotaRoot);
-            entry.getCount().addAndGet(count);
-            entry.getSize().addAndGet(size);
+            quotaCache.get(quotaRoot).updateAndGet(quotaFunction);
         } catch (ExecutionException e) {
             throw new MailboxException("Exception caught", e);
-        }
-    }
-
-    static class Entry {
-        private final AtomicLong count;
-        private final AtomicLong size;
-
-        public Entry(CurrentQuotas currentQuotas) {
-            this.count = new AtomicLong(currentQuotas.count().asLong());
-            this.size = new AtomicLong(currentQuotas.size().asLong());
-        }
-
-        public AtomicLong getCount() {
-            return count;
-        }
-
-        public AtomicLong getSize() {
-            return size;
         }
     }
 }
