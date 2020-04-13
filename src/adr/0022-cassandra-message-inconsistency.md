@@ -60,7 +60,7 @@ The message is UNSEEN in IMAP
 Adopt `imapUidTable` as a source of truth. Because `messageId` allows tracking changes to messages accross mailboxes 
 upon copy and moves. Furthermore, that is the table on which conditional flags updates are performed.
 
-All writes will be performed to `messageIdTable` then performed on `imapUidTable` if successful.
+All writes will be performed to `imapUidTable` then performed on `messageIdTable` if successful.
 
 We thus need to modify CassandraMessageMapper 'add' + 'copy' to first write to the source of truth (`imapUidTable`)
 
