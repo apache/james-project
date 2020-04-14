@@ -54,7 +54,7 @@ public interface BucketDumbBlobStoreContract {
     default void deleteBucketShouldDeleteExistingBucketWithItsData() {
         DumbBlobStore store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         Mono.from(store.deleteBucket(TEST_BUCKET_NAME)).block();
 
         assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).read())
@@ -118,7 +118,7 @@ public interface BucketDumbBlobStoreContract {
     default void readStreamShouldThrowWhenBucketDoesNotExist() {
         DumbBlobStore store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         assertThatThrownBy(() -> store.read(CUSTOM_BUCKET_NAME, TEST_BLOB_ID).read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
@@ -127,7 +127,7 @@ public interface BucketDumbBlobStoreContract {
     default void readBytesShouldThrowWhenBucketDoesNotExistWithBigData() {
         DumbBlobStore store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
         assertThatThrownBy(() -> Mono.from(store.readBytes(CUSTOM_BUCKET_NAME, TEST_BLOB_ID)).block())
             .isInstanceOf(ObjectNotFoundException.class);

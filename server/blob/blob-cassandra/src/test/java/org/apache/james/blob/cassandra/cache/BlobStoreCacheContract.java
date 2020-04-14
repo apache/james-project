@@ -33,11 +33,11 @@ import com.google.common.base.Strings;
 
 import reactor.core.publisher.Mono;
 
-public interface DumbBlobStoreCacheContract {
+public interface BlobStoreCacheContract {
 
     byte[] EIGHT_KILOBYTES = Strings.repeat("01234567\n", 1024).getBytes(StandardCharsets.UTF_8);
 
-    DumbBlobStoreCache testee();
+    BlobStoreCache testee();
 
     BlobId.Factory blobIdFactory();
 
@@ -64,7 +64,6 @@ public interface DumbBlobStoreCacheContract {
     default void shouldReturnEmptyWhenReadWithTimeOut() {
         BlobId blobId = blobIdFactory().randomId();
         Mono.from(testee().cache(blobId, EIGHT_KILOBYTES)).block();
-
     }
 
     @Test

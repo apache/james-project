@@ -28,9 +28,9 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
 import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.ID;
-import static org.apache.james.blob.cassandra.BlobTables.DumbBlobCache.DATA;
-import static org.apache.james.blob.cassandra.BlobTables.DumbBlobCache.TABLE_NAME;
-import static org.apache.james.blob.cassandra.BlobTables.DumbBlobCache.TTL_FOR_ROW;
+import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.DATA;
+import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.TABLE_NAME;
+import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.TTL_FOR_ROW;
 
 import java.nio.ByteBuffer;
 
@@ -46,7 +46,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraDumbBlobStoreCache implements DumbBlobStoreCache {
+public class CassandraBlobStoreCache implements BlobStoreCache {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
@@ -58,7 +58,7 @@ public class CassandraDumbBlobStoreCache implements DumbBlobStoreCache {
 
     @Inject
     @VisibleForTesting
-    CassandraDumbBlobStoreCache(Session session, CassandraCacheConfiguration cacheConfiguration) {
+    CassandraBlobStoreCache(Session session, CassandraCacheConfiguration cacheConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insertStatement = prepareInsert(session);
         this.selectStatement = prepareSelect(session);

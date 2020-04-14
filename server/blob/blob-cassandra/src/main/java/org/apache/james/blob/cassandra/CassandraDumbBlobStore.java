@@ -21,6 +21,7 @@ package org.apache.james.blob.cassandra;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -38,7 +39,9 @@ import org.apache.james.blob.cassandra.utils.DataChunker;
 import org.apache.james.util.ReactorUtils;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Flux;
@@ -56,10 +59,11 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     private final BucketName defaultBucket;
 
     @Inject
+    @VisibleForTesting
     public CassandraDumbBlobStore(CassandraDefaultBucketDAO defaultBucketDAO,
-                           CassandraBucketDAO bucketDAO,
-                           CassandraConfiguration cassandraConfiguration,
-                           @Named(DEFAULT_BUCKET) BucketName defaultBucket) {
+                                  CassandraBucketDAO bucketDAO,
+                                  CassandraConfiguration cassandraConfiguration,
+                                  @Named(DEFAULT_BUCKET) BucketName defaultBucket) {
         this.defaultBucketDAO = defaultBucketDAO;
         this.bucketDAO = bucketDAO;
         this.configuration = cassandraConfiguration;

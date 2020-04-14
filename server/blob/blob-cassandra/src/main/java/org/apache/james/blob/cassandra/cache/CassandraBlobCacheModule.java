@@ -20,20 +20,22 @@
 package org.apache.james.blob.cassandra.cache;
 
 import static com.datastax.driver.core.schemabuilder.TableOptions.CompactionOptions.TimeWindowCompactionStrategyOptions.CompactionWindowUnit.HOURS;
+import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.DATA;
+import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.ID;
+import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.TABLE_NAME;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.cassandra.BlobTables;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
-public interface CassandraDumbBlobCacheModule {
+public interface CassandraBlobCacheModule {
 
     double NO_READ_REPAIR = 0d;
 
     CassandraModule MODULE = CassandraModule
         .builder()
-        .table(BlobTables.DumbBlobCache.TABLE_NAME)
+        .table(TABLE_NAME)
         .options(options -> options
             .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()
                 .compactionWindowSize(1)
@@ -41,7 +43,7 @@ public interface CassandraDumbBlobCacheModule {
             .readRepairChance(NO_READ_REPAIR))
         .comment("Write through cache for small blobs stored in a slower blob store implementation.")
         .statement(statement -> statement
-            .addPartitionKey(BlobTables.DumbBlobCache.ID, DataType.text())
-            .addColumn(BlobTables.DumbBlobCache.DATA, DataType.blob()))
+            .addPartitionKey(ID, DataType.text())
+            .addColumn(DATA, DataType.blob()))
         .build();
 }

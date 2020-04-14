@@ -21,7 +21,7 @@ package org.apache.james.blob.cassandra.cache;
 import org.apache.james.blob.api.BlobId;
 import org.reactivestreams.Publisher;
 
-public interface DumbBlobStoreCache {
+public interface BlobStoreCache {
     Publisher<Void> cache(BlobId blobId, byte[] data);
 
     Publisher<byte[]> read(BlobId blobId);

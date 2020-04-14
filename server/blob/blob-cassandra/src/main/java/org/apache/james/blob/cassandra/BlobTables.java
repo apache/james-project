@@ -49,7 +49,7 @@ public interface BlobTables {
         String DATA = "data";
     }
 
-    interface DumbBlobCache {
+    interface BlobStoreCache {
         String TABLE_NAME = "blob_cache";
         String ID = "id";
         String DATA = "data";

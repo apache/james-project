@@ -19,7 +19,6 @@
 
 package org.apache.james.blob.cassandra;
 
-import static com.datastax.driver.core.schemabuilder.TableOptions.CompactionOptions.TimeWindowCompactionStrategyOptions.CompactionWindowUnit.HOURS;
 import static org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobParts.DATA;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -29,7 +28,6 @@ import org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobParts;
 import org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobTable;
 
 import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraBlobModule {
     CassandraModule MODULE = CassandraModule
@@ -66,18 +64,6 @@ public interface CassandraBlobModule {
             .addPartitionKey(BucketBlobParts.BUCKET, DataType.text())
             .addPartitionKey(BucketBlobParts.ID, DataType.text())
             .addClusteringColumn(BucketBlobTable.NUMBER_OF_CHUNK, DataType.cint()))
-
-        .table(BlobTables.DumbBlobCache.TABLE_NAME)
-        .options(options -> options
-            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()
-                .compactionWindowSize(1)
-                .compactionWindowUnit(HOURS))
-            .readRepairChance(0.0))
-        .comment("Write through cache for small blobs stored in a slower blob store implementation which is object storage" +
-            "Messages` headers and bodies are stored as blobparts.")
-        .statement(statement -> statement
-            .addPartitionKey(BlobTables.DumbBlobCache.ID, DataType.text())
-            .addColumn(BlobTables.DumbBlobCache.DATA, DataType.blob()))
 
         .build();
 }
