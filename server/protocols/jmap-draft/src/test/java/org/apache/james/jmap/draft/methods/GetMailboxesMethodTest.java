@@ -57,6 +57,8 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+
 public class GetMailboxesMethodTest {
 
     private static final Username USERNAME = Username.of("username@domain.tld");
@@ -106,6 +108,8 @@ public class GetMailboxesMethodTest {
             .thenReturn(ImmutableList.of(new MailboxPath("namespace", Username.of("user"), "name")));
         when(mockedMailboxManager.getMailbox(any(MailboxPath.class), any()))
             .thenThrow(new MailboxException());
+        when(mockedMailboxManager.searchReactive(any(), any()))
+            .thenReturn(Flux.empty());
         GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, quotaRootResolver, quotaManager, mailboxFactory, new DefaultMetricFactory());
 
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()

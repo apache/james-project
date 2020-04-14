@@ -596,6 +596,15 @@ public class StoreMailboxManager implements MailboxManager {
             .block();
     }
 
+    @Override
+    public Flux<MailboxMetaData> searchReactive(MailboxQuery expression, MailboxSession session) {
+        try {
+            return searchMailboxesMetadata(expression, session, Right.Lookup);
+        } catch (MailboxException e) {
+            return Flux.error(e);
+        }
+    }
+
     private Flux<MailboxMetaData> searchMailboxesMetadata(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
         Mono<List<Mailbox>> mailboxesMono = searchMailboxes(mailboxQuery, session, right).collectList();
         MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
@@ -603,11 +612,22 @@ public class StoreMailboxManager implements MailboxManager {
         return mailboxesMono
             .flatMapMany(mailboxes -> Flux.fromIterable(mailboxes)
                 .filter(mailboxQuery::matches)
-                .flatMap(mailbox -> messageMapper.getMailboxCountersReactive(mailbox)
+                .flatMap(mailbox -> retrieveCounters(messageMapper, mailbox, session)
                     .map(Throwing.<MailboxCounters, MailboxMetaData>function(
                         counters -> toMailboxMetadata(session, mailboxes, mailbox, counters))
                         .sneakyThrow())))
             .sort(MailboxMetaData.COMPARATOR);
+    }
+
+    private Mono<MailboxCounters> retrieveCounters(MessageMapper messageMapper, Mailbox mailbox, MailboxSession session) {
+        return messageMapper.getMailboxCountersReactive(mailbox)
+            .filter(Throwing.<MailboxCounters>predicate(counter -> storeRightManager.hasRight(mailbox, Right.Read, session)).sneakyThrow())
+            .switchIfEmpty(Mono.just(MailboxCounters
+                .builder()
+                .mailboxId(mailbox.getMailboxId())
+                .count(0)
+                .unseen(0)
+                .build()));
     }
 
     private Flux<Mailbox> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {

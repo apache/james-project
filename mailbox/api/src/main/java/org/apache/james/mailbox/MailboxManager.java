@@ -36,6 +36,8 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.reactivestreams.Publisher;
 
+import reactor.core.publisher.Flux;
+
 /**
  * <p>
  * Central MailboxManager which creates, lists, provides, renames and deletes
@@ -242,6 +244,8 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *            the context for this call, not null
      */
     List<MailboxMetaData> search(MailboxQuery expression, MailboxSession session) throws MailboxException;
+
+    Flux<MailboxMetaData> searchReactive(MailboxQuery expression, MailboxSession session);
 
     /**
      * Searches for messages matching the given query.
