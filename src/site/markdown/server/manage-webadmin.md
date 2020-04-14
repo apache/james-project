@@ -974,6 +974,7 @@ Response codes:
  - [Updating the quota size for a user](#Updating_the_quota_size_for_a_user)
  - [Deleting the quota size for a user](#Deleting_the_quota_size_for_a_user)
  - [Searching user by quota ratio](#Searching_user_by_quota_ratio)
+ - [Recomputing current quotas for users](#Recomputing_current_quotas_for_users)
 
 ### Getting the quota for a user
 
@@ -1226,6 +1227,34 @@ Response codes:
 
  - 200: List of users had successfully been returned.
  - 400: Validation issues with parameters
+ 
+### Recomputing current quotas for users
+
+This task is available on top of Cassandra & JPA products.
+
+```
+curl -XPOST /quota/users?task=RecomputeCurrentQuotas
+```
+
+Will recompute current quotas (count and size) for all users stored in James.
+
+James maintains per quota a projection for current quota count and size. As with any projection, it can 
+go out of sync, leading to inconsistent results being returned to the client.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+The scheduled task will have the following type `recompute-current-quotas` and the following `additionalInformation`:
+
+```
+{
+  "type":"recompute-current-quotas",
+  "processedQuotaRoots": 3,
+  "failedQuotaRoots": ["#private&bob@localhost"]
+}
+```
+
+**WARNING**: this task do not take into account concurrent modifications upon a single current quota recomputation. 
+Rerunning the task will *eventually* provide the consistent result.
 
 ## Administrating quotas by domains
 
