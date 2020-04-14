@@ -43,7 +43,6 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -125,23 +124,6 @@ public abstract class MessageMapperTest {
     void mailboxContainingMessagesShouldHaveTheGoodMessageCount() throws MailboxException {
         saveMessages();
         assertThat(messageMapper.countMessagesInMailbox(benwaInboxMailbox)).isEqualTo(5);
-    }
-
-    @Test
-    void getMailboxCountersShouldReturnStoredValue() throws MailboxException {
-        saveMessages();
-        assertThat(messageMapper.getMailboxCounters(ImmutableList.of(benwaInboxMailbox, benwaWorkMailbox)))
-            .containsExactlyInAnyOrder(
-                MailboxCounters.builder()
-                    .mailboxId(benwaInboxMailbox.getMailboxId())
-                    .count(5)
-                    .unseen(5)
-                    .build(),
-                MailboxCounters.builder()
-                    .mailboxId(benwaWorkMailbox.getMailboxId())
-                    .count(1)
-                    .unseen(1)
-                    .build());
     }
 
     @Test

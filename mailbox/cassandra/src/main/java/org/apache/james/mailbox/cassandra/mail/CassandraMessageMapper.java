@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -62,7 +61,6 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageMapper implements MessageMapper {
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
@@ -123,10 +121,11 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public MailboxCounters getMailboxCounters(Mailbox mailbox) {
-        return getMailboxCountersAsMono(mailbox).block();
+        return getMailboxCountersReactive(mailbox).block();
     }
 
-    private Mono<MailboxCounters> getMailboxCountersAsMono(Mailbox mailbox) {
+    @Override
+    public Mono<MailboxCounters> getMailboxCountersReactive(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return mailboxCounterDAO.retrieveMailboxCounters(mailboxId)
             .defaultIfEmpty(MailboxCounters.builder()
@@ -134,15 +133,6 @@ public class CassandraMessageMapper implements MessageMapper {
                 .count(0)
                 .unseen(0)
                 .build());
-    }
-
-    @Override
-    public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) {
-        return Flux.fromIterable(mailboxes)
-            .publishOn(Schedulers.elastic())
-            .concatMap(this::getMailboxCountersAsMono)
-            .toStream()
-            .collect(Guavate.toImmutableList());
     }
 
     @Override

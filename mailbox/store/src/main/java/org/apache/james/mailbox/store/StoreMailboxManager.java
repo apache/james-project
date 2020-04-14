@@ -22,7 +22,6 @@ package org.apache.james.mailbox.store;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -87,7 +86,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -593,26 +591,23 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MailboxMetaData> search(MailboxQuery mailboxExpression, MailboxSession session) throws MailboxException {
-        return searchMailboxesMetadata(mailboxExpression, session, Right.Lookup);
+        return searchMailboxesMetadata(mailboxExpression, session, Right.Lookup)
+            .collect(Guavate.toImmutableList())
+            .block();
     }
 
-    private List<MailboxMetaData> searchMailboxesMetadata(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
-        List<Mailbox> mailboxes = searchMailboxes(mailboxQuery, session, right).collectList().block();
+    private Flux<MailboxMetaData> searchMailboxesMetadata(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
+        Mono<List<Mailbox>> mailboxesMono = searchMailboxes(mailboxQuery, session, right).collectList();
+        MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
 
-        ImmutableMap<MailboxId, MailboxCounters> counters = getMailboxCounters(mailboxes, session)
-            .stream()
-            .collect(Guavate.toImmutableMap(
-                MailboxCounters::getMailboxId,
-                Functions.identity()));
-
-        return mailboxes
-            .stream()
-            .filter(mailboxQuery::matches)
-            .map(Throwing.<Mailbox, MailboxMetaData>function(
-                mailbox -> toMailboxMetadata(session, mailboxes, mailbox, retrieveCounters(counters, mailbox)))
-                .sneakyThrow())
-            .sorted(MailboxMetaData.COMPARATOR)
-            .collect(Guavate.toImmutableList());
+        return mailboxesMono
+            .flatMapMany(mailboxes -> Flux.fromIterable(mailboxes)
+                .filter(mailboxQuery::matches)
+                .flatMap(mailbox -> messageMapper.getMailboxCountersReactive(mailbox)
+                    .map(Throwing.<MailboxCounters, MailboxMetaData>function(
+                        counters -> toMailboxMetadata(session, mailboxes, mailbox, counters))
+                        .sneakyThrow())))
+            .sort(MailboxMetaData.COMPARATOR);
     }
 
     private Flux<Mailbox> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
@@ -822,12 +817,5 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPathBlocking(mailboxPath);
         return mapper.hasChildren(mailbox, session.getPathDelimiter());
-    }
-
-    private List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes, MailboxSession session) throws MailboxException {
-        MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
-        return messageMapper.getMailboxCounters(mailboxes.stream()
-            .filter(Throwing.<Mailbox>predicate(mailbox -> storeRightManager.hasRight(mailbox, Right.Read, session)).sneakyThrow())
-            .collect(Guavate.toImmutableList()));
     }
 }
