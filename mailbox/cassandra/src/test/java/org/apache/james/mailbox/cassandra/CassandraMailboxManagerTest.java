@@ -550,7 +550,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         }
 
         @Test
-        void deleteMailboxShouldCleanupACLWhenRightDeleteFails(CassandraCluster cassandraCluster) throws Exception {
+        void deleteMailboxShouldCleanupACLWhenRightsDeleteFails(CassandraCluster cassandraCluster) throws Exception {
             mailboxManager.setRights(inboxId, new MailboxACL(
                 Pair.of(MailboxACL.EntryKey.createUserEntryKey(BOB), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read))), session);
 
@@ -654,7 +654,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             assertThat(deletedMessageDAO(cassandraCluster).retrieveDeletedMessage((CassandraId) inboxId, MessageRange.all())
-                .collectList().block())
+                    .collectList()
+                    .block())
                 .isEmpty();
         }
 
@@ -671,7 +672,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             assertThat(deletedMessageDAO(cassandraCluster).retrieveDeletedMessage((CassandraId) inboxId, MessageRange.all())
-                .collectList().block())
+                    .collectList()
+                    .block())
                 .isEmpty();
         }
 
@@ -683,7 +685,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             assertThat(countersDAO(cassandraCluster).retrieveMailboxCounters((CassandraId) inboxId)
-                .blockOptional())
+                    .blockOptional())
                 .isEmpty();
         }
 
@@ -699,7 +701,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             assertThat(countersDAO(cassandraCluster).retrieveMailboxCounters((CassandraId) inboxId)
-                .blockOptional())
+                    .blockOptional())
                 .isEmpty();
         }
 
@@ -712,7 +714,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             assertThat(new CassandraMailboxRecentsDAO(cassandraCluster.getConf()).getRecentMessageUidsInMailbox((CassandraId) inboxId)
-                .collectList().block())
+                    .collectList()
+                    .block())
                 .isEmpty();
         }
 
@@ -730,7 +733,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             assertThat(new CassandraMailboxRecentsDAO(cassandraCluster.getConf()).getRecentMessageUidsInMailbox((CassandraId) inboxId)
-                .collectList().block())
+                    .collectList()
+                    .block())
                 .isEmpty();
         }
 

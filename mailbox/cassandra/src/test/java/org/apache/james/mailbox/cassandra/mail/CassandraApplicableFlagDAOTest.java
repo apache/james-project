@@ -74,7 +74,7 @@ class CassandraApplicableFlagDAOTest {
     }
 
     @Test
-    void retrieveApplicableFlagShouldReturnEmptyWhenDeleted() {
+    void retrieveApplicableFlagsShouldReturnEmptyWhenDeleted() {
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
 
         testee.delete(CASSANDRA_ID).block();

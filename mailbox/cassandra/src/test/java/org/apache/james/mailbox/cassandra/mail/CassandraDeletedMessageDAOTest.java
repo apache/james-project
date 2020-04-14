@@ -84,8 +84,8 @@ class CassandraDeletedMessageDAOTest {
         testee.removeAll(MAILBOX_ID).block();
 
         List<MessageUid> result = testee.retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
-                .collectList()
-                .block();
+            .collectList()
+            .block();
 
         assertThat(result).isEmpty();
     }
