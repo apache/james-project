@@ -368,7 +368,7 @@ public class SolveMailboxInconsistenciesService {
 
     Mono<Result> fixMailboxInconsistencies(Context context) {
         assertValidVersion();
-        return Flux.merge(
+        return Flux.concat(
                 processMailboxDaoInconsistencies(context),
                 processMailboxPathDaoInconsistencies(context))
             .reduce(Result.COMPLETED, Task::combine);

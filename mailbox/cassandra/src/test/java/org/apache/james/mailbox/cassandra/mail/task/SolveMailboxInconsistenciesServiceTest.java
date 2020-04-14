@@ -202,6 +202,7 @@ class SolveMailboxInconsistenciesServiceTest {
         assertThat(context.snapshot())
             .isEqualTo(Context.builder()
                 .processedMailboxEntries(1)
+                .processedMailboxPathEntries(1)
                 .addFixedInconsistencies(MAILBOX.getMailboxId())
                 .build()
                 .snapshot());
@@ -253,7 +254,7 @@ class SolveMailboxInconsistenciesServiceTest {
         assertThat(context.snapshot())
             .isEqualTo(Context.builder()
                 .processedMailboxEntries(1)
-                .processedMailboxPathEntries(1)
+                .processedMailboxPathEntries(2)
                 .addFixedInconsistencies(CASSANDRA_ID_1)
                 .addConflictingEntry(ConflictingEntry.builder()
                     .mailboxDaoEntry(MAILBOX)
