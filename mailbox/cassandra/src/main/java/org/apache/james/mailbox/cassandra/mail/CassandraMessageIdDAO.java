@@ -149,7 +149,7 @@ public class CassandraMessageIdDAO {
     }
 
     private PreparedStatement prepareList(Session session) {
-        return session.prepare(select(new String[] {MESSAGE_ID, MAILBOX_ID, IMAP_UID})
+        return session.prepare(select(FIELDS)
             .from(TABLE_NAME));
     }
 
