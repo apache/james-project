@@ -39,6 +39,9 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+
 /**
  * Maps {@link MailboxMessage} in a {@link org.apache.james.mailbox.MessageManager}. A {@link MessageMapper} has a lifecycle from the start of a request
  * to the end of the request.
@@ -70,7 +73,11 @@ public interface MessageMapper extends Mapper {
 
     MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException;
 
-    List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) throws MailboxException;
+    default List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) throws MailboxException {
+        return mailboxes.stream()
+            .map(Throwing.<Mailbox, MailboxCounters>function(this::getMailboxCounters).sneakyThrow())
+            .collect(Guavate.toImmutableList());
+    }
 
     /**
      * Delete the given {@link MailboxMessage}

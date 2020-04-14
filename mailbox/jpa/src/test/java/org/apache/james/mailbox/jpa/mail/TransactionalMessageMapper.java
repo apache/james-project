@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -152,10 +151,5 @@ public class TransactionalMessageMapper implements MessageMapper {
     @Override
     public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
         return messageMapper.getApplicableFlag(mailbox);
-    }
-
-    @Override
-    public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) throws MailboxException {
-        return messageMapper.getMailboxCounters(mailboxes);
     }
 }

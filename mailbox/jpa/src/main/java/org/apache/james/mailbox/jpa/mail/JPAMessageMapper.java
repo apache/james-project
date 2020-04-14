@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.mail;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -150,13 +149,6 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
         } catch (PersistenceException e) {
             throw new MailboxException("Count of useen messages failed in mailbox " + mailboxId, e);
         }
-    }
-
-    @Override
-    public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) throws MailboxException {
-        return mailboxes.stream()
-            .map(Throwing.<Mailbox, MailboxCounters>function(this::getMailboxCounters).sneakyThrow())
-            .collect(Guavate.toImmutableList());
     }
 
     @Override

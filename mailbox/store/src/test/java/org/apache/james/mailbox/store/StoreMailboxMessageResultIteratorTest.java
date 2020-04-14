@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -78,11 +77,6 @@ class StoreMailboxMessageResultIteratorTest {
 
         @Override
         public MailboxCounters getMailboxCounters(Mailbox mailbox) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) {
             throw new UnsupportedOperationException();
         }
 
