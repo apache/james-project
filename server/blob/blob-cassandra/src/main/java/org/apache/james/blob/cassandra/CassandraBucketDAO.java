@@ -46,7 +46,7 @@ import com.google.common.annotations.VisibleForTesting;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-class CassandraBucketDAO {
+public class CassandraBucketDAO {
     private final BlobId.Factory blobIdFactory;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insert;
@@ -59,7 +59,7 @@ class CassandraBucketDAO {
 
     @Inject
     @VisibleForTesting
-    CassandraBucketDAO(BlobId.Factory blobIdFactory, Session session) {
+    public CassandraBucketDAO(BlobId.Factory blobIdFactory, Session session) {
         this.blobIdFactory = blobIdFactory;
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insert = prepareInsert(session);
@@ -168,7 +168,7 @@ class CassandraBucketDAO {
                 .setString(BucketBlobParts.ID, blobId.asString()));
     }
 
-    Flux<Pair<BucketName, BlobId>> listAll() {
+    public Flux<Pair<BucketName, BlobId>> listAll() {
         return cassandraAsyncExecutor.executeRows(listAll.bind())
             .map(row -> Pair.of(BucketName.of(row.getString(BUCKET)), blobIdFactory.from(row.getString(ID))));
     }

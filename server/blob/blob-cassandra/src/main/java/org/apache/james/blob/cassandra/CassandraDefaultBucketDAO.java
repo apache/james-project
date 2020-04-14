@@ -53,7 +53,7 @@ public class CassandraDefaultBucketDAO {
 
     @Inject
     @VisibleForTesting
-    CassandraDefaultBucketDAO(Session session) {
+    public CassandraDefaultBucketDAO(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);

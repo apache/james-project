@@ -20,6 +20,7 @@
 package org.apache.james.blob.api;
 
 import static org.apache.james.blob.api.DumbBlobStoreFixture.CUSTOM_BUCKET_NAME;
+import static org.apache.james.blob.api.DumbBlobStoreFixture.ELEVEN_KILOBYTES;
 import static org.apache.james.blob.api.DumbBlobStoreFixture.OTHER_TEST_BLOB_ID;
 import static org.apache.james.blob.api.DumbBlobStoreFixture.SHORT_BYTEARRAY;
 import static org.apache.james.blob.api.DumbBlobStoreFixture.SHORT_STRING;
@@ -53,7 +54,7 @@ public interface BucketDumbBlobStoreContract {
     default void deleteBucketShouldDeleteExistingBucketWithItsData() {
         DumbBlobStore store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
         Mono.from(store.deleteBucket(TEST_BUCKET_NAME)).block();
 
         assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).read())
@@ -117,16 +118,16 @@ public interface BucketDumbBlobStoreContract {
     default void readStreamShouldThrowWhenBucketDoesNotExist() {
         DumbBlobStore store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
         assertThatThrownBy(() -> store.read(CUSTOM_BUCKET_NAME, TEST_BLOB_ID).read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
     @Test
-    default void readBytesShouldThrowWhenBucketDoesNotExist() {
+    default void readBytesShouldThrowWhenBucketDoesNotExistWithBigData() {
         DumbBlobStore store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
 
         assertThatThrownBy(() -> Mono.from(store.readBytes(CUSTOM_BUCKET_NAME, TEST_BLOB_ID)).block())
             .isInstanceOf(ObjectNotFoundException.class);

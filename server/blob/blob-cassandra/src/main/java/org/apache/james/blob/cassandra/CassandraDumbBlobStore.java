@@ -56,7 +56,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     private final BucketName defaultBucket;
 
     @Inject
-    CassandraDumbBlobStore(CassandraDefaultBucketDAO defaultBucketDAO,
+    public CassandraDumbBlobStore(CassandraDefaultBucketDAO defaultBucketDAO,
                            CassandraBucketDAO bucketDAO,
                            CassandraConfiguration cassandraConfiguration,
                            @Named(DEFAULT_BUCKET) BucketName defaultBucket) {
