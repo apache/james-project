@@ -81,6 +81,7 @@ public class CassandraMessageIdDAO {
     private final PreparedStatement selectUidGte;
     private final PreparedStatement selectUidRange;
     private final PreparedStatement update;
+    private final PreparedStatement listStatement;
 
     @Inject
     public CassandraMessageIdDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
@@ -93,6 +94,7 @@ public class CassandraMessageIdDAO {
         this.selectAllUids = prepareSelectAllUids(session);
         this.selectUidGte = prepareSelectUidGte(session);
         this.selectUidRange = prepareSelectUidRange(session);
+        this.listStatement = prepareList(session);
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -144,6 +146,11 @@ public class CassandraMessageIdDAO {
         return session.prepare(select(FIELDS)
                 .from(TABLE_NAME)
                 .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    }
+
+    private PreparedStatement prepareList(Session session) {
+        return session.prepare(select(new String[] {MESSAGE_ID, MAILBOX_ID, IMAP_UID})
+            .from(TABLE_NAME));
     }
 
     private PreparedStatement prepareSelectUidGte(Session session) {
@@ -221,6 +228,11 @@ public class CassandraMessageIdDAO {
 
     public Flux<ComposedMessageIdWithMetaData> retrieveMessages(CassandraId mailboxId, MessageRange set) {
         return retrieveRows(mailboxId, set)
+            .map(this::fromRowToComposedMessageIdWithFlags);
+    }
+
+    public Flux<ComposedMessageIdWithMetaData> retrieveAllMessages() {
+        return cassandraAsyncExecutor.executeRows(listStatement.bind())
             .map(this::fromRowToComposedMessageIdWithFlags);
     }
 

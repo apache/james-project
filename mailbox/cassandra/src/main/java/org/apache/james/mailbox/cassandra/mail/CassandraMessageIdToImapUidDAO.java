@@ -77,6 +77,7 @@ public class CassandraMessageIdToImapUidDAO {
     private final PreparedStatement update;
     private final PreparedStatement selectAll;
     private final PreparedStatement select;
+    private final PreparedStatement listStatement;
 
     @Inject
     public CassandraMessageIdToImapUidDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
@@ -87,6 +88,7 @@ public class CassandraMessageIdToImapUidDAO {
         this.update = prepareUpdate(session);
         this.selectAll = prepareSelectAll(session);
         this.select = prepareSelect(session);
+        this.listStatement = prepareList(session);
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -134,6 +136,10 @@ public class CassandraMessageIdToImapUidDAO {
         return session.prepare(select(FIELDS)
                 .from(TABLE_NAME)
                 .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+    }
+
+    private PreparedStatement prepareList(Session session) {
+        return session.prepare(select(new String[] {MESSAGE_ID, MAILBOX_ID, IMAP_UID}).from(TABLE_NAME));
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -191,6 +197,11 @@ public class CassandraMessageIdToImapUidDAO {
                     selectStatement(messageId, mailboxId)
                     .setConsistencyLevel(ConsistencyLevel.SERIAL))
                 .map(this::toComposedMessageIdWithMetadata);
+    }
+
+    public Flux<ComposedMessageIdWithMetaData> retrieveAllMessages() {
+        return cassandraAsyncExecutor.executeRows(listStatement.bind())
+            .map(row -> toComposedMessageIdWithMetadata(row));
     }
 
     private ComposedMessageIdWithMetaData toComposedMessageIdWithMetadata(Row row) {
