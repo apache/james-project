@@ -46,6 +46,6 @@ public class SearchKeyTest {
     public void modSeqSearchKeyShouldBeOfTypeModSeq() {
         SearchKey searchKey = SearchKey.buildModSeq(36);
 
-        assertThat(searchKey.getType()).isEqualTo(SearchKey.TYPE_MODSEQ);
+        assertThat(searchKey.getType()).isEqualTo(SearchKey.Type.TYPE_MODSEQ);
     }
 }

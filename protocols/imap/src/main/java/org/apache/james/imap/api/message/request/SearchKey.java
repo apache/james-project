@@ -19,6 +19,47 @@
 
 package org.apache.james.imap.api.message.request;
 
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_ALL;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_AND;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_ANSWERED;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_BCC;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_BEFORE;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_BODY;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_CC;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_DELETED;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_DRAFT;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_FLAGGED;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_FROM;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_HEADER;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_KEYWORD;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_LARGER;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_MODSEQ;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_NEW;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_NOT;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_OLD;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_OLDER;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_ON;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_OR;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_RECENT;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SEEN;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SENTBEFORE;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SENTON;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SENTSINCE;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SEQUENCE_SET;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SINCE;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SMALLER;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SUBJECT;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_TEXT;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_TO;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_UID;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_UNANSWERED;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_UNDELETED;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_UNDRAFT;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_UNFLAGGED;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_UNKEYWORD;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_UNSEEN;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_YOUNGER;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,93 +77,48 @@ import com.google.common.collect.ImmutableList;
  */
 public final class SearchKey {
 
-    // NUMBERS
-
-    public static final int TYPE_SEQUENCE_SET = 1;
-    public static final int TYPE_UID = 2;
-
-    // NO PARAMETERS
-    public static final int TYPE_ALL = 3;
-
-    public static final int TYPE_ANSWERED = 4;
-
-    public static final int TYPE_DELETED = 5;
-
-    public static final int TYPE_DRAFT = 6;
-
-    public static final int TYPE_FLAGGED = 7;
-
-    public static final int TYPE_NEW = 8;
-
-    public static final int TYPE_OLD = 9;
-
-    public static final int TYPE_RECENT = 10;
-
-    public static final int TYPE_SEEN = 11;
-
-    public static final int TYPE_UNANSWERED = 12;
-
-    public static final int TYPE_UNDELETED = 13;
-
-    public static final int TYPE_UNDRAFT = 14;
-
-    public static final int TYPE_UNFLAGGED = 15;
-
-    public static final int TYPE_UNSEEN = 16;
-
-    // ONE VALUE
-    public static final int TYPE_BCC = 17;
-
-    public static final int TYPE_BODY = 18;
-
-    public static final int TYPE_CC = 19;
-
-    public static final int TYPE_FROM = 20;
-
-    public static final int TYPE_KEYWORD = 21;
-
-    public static final int TYPE_SUBJECT = 22;
-
-    public static final int TYPE_TEXT = 23;
-
-    public static final int TYPE_TO = 24;
-
-    public static final int TYPE_UNKEYWORD = 25;
-
-    // ONE DATE
-    public static final int TYPE_BEFORE = 26;
-
-    public static final int TYPE_ON = 27;
-
-    public static final int TYPE_SENTBEFORE = 28;
-
-    public static final int TYPE_SENTON = 29;
-
-    public static final int TYPE_SENTSINCE = 30;
-
-    public static final int TYPE_SINCE = 31;
-
-    // FIELD VALUE
-    public static final int TYPE_HEADER = 32;
-
-    // ONE NUMBER
-    public static final int TYPE_LARGER = 33;
-
-    public static final int TYPE_SMALLER = 34;
-
-    // NOT
-    public static final int TYPE_NOT = 35;
-
-    // OR
-    public static final int TYPE_OR = 36;
-
-    // AND
-    public static final int TYPE_AND = 37;
-
-    public static final int TYPE_YOUNGER = 38;
-    public static final int TYPE_OLDER = 39;
-
-    public static final int TYPE_MODSEQ = 40;
+    public enum Type {
+        TYPE_SEQUENCE_SET,
+        TYPE_UID,
+        TYPE_ALL,
+        TYPE_ANSWERED,
+        TYPE_DELETED,
+        TYPE_DRAFT,
+        TYPE_FLAGGED,
+        TYPE_NEW,
+        TYPE_OLD,
+        TYPE_RECENT,
+        TYPE_SEEN,
+        TYPE_UNANSWERED,
+        TYPE_UNDELETED,
+        TYPE_UNDRAFT,
+        TYPE_UNFLAGGED,
+        TYPE_UNSEEN,
+        TYPE_BCC,
+        TYPE_BODY,
+        TYPE_CC,
+        TYPE_FROM,
+        TYPE_KEYWORD,
+        TYPE_SUBJECT,
+        TYPE_TEXT,
+        TYPE_TO,
+        TYPE_UNKEYWORD,
+        TYPE_BEFORE,
+        TYPE_ON,
+        TYPE_SENTBEFORE,
+        TYPE_SENTON,
+        TYPE_SENTSINCE,
+        TYPE_SINCE,
+        TYPE_HEADER,
+        TYPE_LARGER,
+        TYPE_SMALLER,
+        TYPE_NOT,
+        TYPE_OR,
+        TYPE_AND,
+        TYPE_YOUNGER,
+        TYPE_OLDER,
+        TYPE_MODSEQ
+    }
 
     private static final SearchKey UNSEEN = new SearchKey(TYPE_UNSEEN, null, null, 0, null, null, null, null, -1, -1);
 
@@ -334,7 +330,7 @@ public final class SearchKey {
         return new SearchKey(TYPE_MODSEQ, null, null, 0, null, null, null, null, -1, modSeq);
     }
     
-    private final int type;
+    private final Type type;
 
     private final DayMonthYear date;
 
@@ -354,7 +350,7 @@ public final class SearchKey {
 
     private final long modSeq;
     
-    private SearchKey(int type, DayMonthYear date, List<SearchKey> keys, long number, String name, String value, UidRange[] uids, IdRange[] sequence, long seconds, long modSeq) {
+    private SearchKey(Type type, DayMonthYear date, List<SearchKey> keys, long number, String name, String value, UidRange[] uids, IdRange[] sequence, long seconds, long modSeq) {
         this.type = type;
         this.date = date;
         this.keys = keys;
@@ -370,9 +366,8 @@ public final class SearchKey {
     /**
      * Gets a date value to be search upon.
      * 
-     * @return the date when: {@link #TYPE_BEFORE}, {@link #TYPE_ON},
-     *         {@link #TYPE_SENTBEFORE}, {@link #TYPE_SENTON},
-     *         {@link #TYPE_SENTSINCE}, {@link #TYPE_SINCE}; otherwise null
+     * @return the date when: TYPE_BEFORE, TYPE_ON,
+     *         TYPE_SENTBEFORE, TYPE_SENTON, TYPE_SENTSINCE, TYPE_SINCE, otherwise null
      */
     public DayMonthYear getDate() {
         return date;
@@ -390,7 +385,7 @@ public final class SearchKey {
     /**
      * Gets sequence numbers.
      * 
-     * @return msn when {@link #TYPE_SEQUENCE_SET}, uids when {@link #TYPE_UID},
+     * @return msn when TYPE_SEQUENCE_SET, uids when TYPE_UID,
      *         null otherwise
      */
     public IdRange[] getSequenceNumbers() {
@@ -404,7 +399,7 @@ public final class SearchKey {
     /**
      * Gets the field name.
      * 
-     * @return the field name when {@link #TYPE_HEADER}, null otherwise
+     * @return the field name when TYPE_HEADER, null otherwise
      */
     public String getName() {
         return name;
@@ -413,7 +408,7 @@ public final class SearchKey {
     /**
      * Gets the size searched for.
      * 
-     * @return the size when {@link #TYPE_LARGER} or {@link #TYPE_SMALLER},
+     * @return the size when TYPE_LARGER or TYPE_SMALLER,
      *         otherwise 0
      */
     public long getSize() {
@@ -424,7 +419,7 @@ public final class SearchKey {
      * Gets key two.
      * 
      * @return <code>List</code> of <code>SearchKey</code>'s when
-     *         {@link #TYPE_OR}, {@link #TYPE_AND} or {@link #TYPE_NOT}
+     *         TYPE_OR, TYPE_AND or TYPE_NOT
      *         otherwise null
      */
     public List<SearchKey> getKeys() {
@@ -436,7 +431,7 @@ public final class SearchKey {
      * 
      * @return the type
      */
-    public int getType() {
+    public Type getType() {
         return type;
     }
 
@@ -452,7 +447,7 @@ public final class SearchKey {
     /**
      * Gets the size searched for.
      * 
-     * @return the size when {@link #TYPE_MODSEQ}
+     * @return the size when TYPE_MODSEQ
      *         otherwise -1
      */
     public long getModSeq() {
