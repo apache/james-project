@@ -35,6 +35,7 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -44,7 +45,6 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SearchResUtil;
-import org.apache.james.imap.utils.FastByteArrayOutputStream;
 import org.apache.james.mailbox.MessageUid;
 
 /**
@@ -369,22 +369,22 @@ public abstract class ImapRequestLineReader {
         if (charset == null) {
             return consumeLiteral(US_ASCII);
         } else {
-            try (FastByteArrayOutputStream out = new FastByteArrayOutputStream();
-                 InputStream in = consumeLiteral(false)) {
-                IOUtils.copy(in, out, 2048);
-                byte[] bytes = out.toByteArray();
-                ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            ImmutablePair<Integer, InputStream> literal = consumeLiteral(false);
+            try (InputStream in = literal.right) {
+                Integer size = literal.left;
+                byte[] data = IOUtils.readFully(in, size);
+                ByteBuffer buffer = ByteBuffer.wrap(data);
                 return decode(charset, buffer);
             } catch (IOException e) {
                 throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
             }
-            // ignore on close
-            // ignore on close
-
         }
     }
 
-    public InputStream consumeLiteral(boolean extraCRLF) throws DecodingException {
+    /**
+     * @return the literal data and its expected size
+     */
+    public ImmutablePair<Integer, InputStream> consumeLiteral(boolean extraCRLF) throws DecodingException {
         // The 1st character must be '{'
         consumeChar('{');
 
@@ -415,8 +415,8 @@ public abstract class ImapRequestLineReader {
             commandContinuationRequest();
         }
 
-        final int size = Integer.parseInt(digits.toString());
-        return read(size, extraCRLF);
+        int size = Integer.parseInt(digits.toString());
+        return ImmutablePair.of(size, read(size, extraCRLF));
     }
 
     private String decode(Charset charset, ByteBuffer buffer) throws DecodingException {

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import java.io.InputStream;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -81,6 +82,7 @@ public class AppendCommandParser extends AbstractImapCommandParser {
         LocalDateTime datetime = parseDateTime(request);
         request.nextWordChar();
 
-        return new AppendRequest(mailboxName, flags, Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant()), request.consumeLiteral(true), tag);
+        InputStream literal = request.consumeLiteral(true).right;
+        return new AppendRequest(mailboxName, flags, Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant()), literal, tag);
     }
 }
