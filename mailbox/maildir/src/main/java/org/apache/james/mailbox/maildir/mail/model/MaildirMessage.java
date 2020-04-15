@@ -38,7 +38,6 @@ import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
-import org.apache.james.mailbox.store.streaming.LimitingFileInputStream;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
 import org.apache.james.mime4j.message.MaximalBodyDescriptor;
@@ -46,6 +45,8 @@ import org.apache.james.mime4j.stream.EntityState;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
+
+import com.google.common.io.ByteStreams;
 
 public class MaildirMessage implements Message {
 
@@ -263,7 +264,8 @@ public class MaildirMessage implements Message {
         if (limit < 0) {
             limit = 0;
         }
-        return new LimitingFileInputStream(messageName.getFile(), limit);
+
+        return ByteStreams.limit(new FileInputStream(messageName.getFile()), limit);
     }
 
     @Override
