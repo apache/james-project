@@ -24,8 +24,9 @@ import java.io.InputStream;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.utils.EolInputStream;
-import org.apache.james.imap.utils.FixedLengthInputStream;
 import org.jboss.netty.channel.Channel;
+
+import com.google.common.io.ByteStreams;
 
 public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLineReader {
 
@@ -86,11 +87,11 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
         // Unset the next char.
         nextSeen = false;
         nextChar = 0;
-        FixedLengthInputStream fin = new FixedLengthInputStream(this.in, size);
+        InputStream limited = ByteStreams.limit(this.in, size);
         if (extraCRLF) {
-            return new EolInputStream(this, fin);
+            return new EolInputStream(this, limited);
         } else {
-            return fin;
+            return limited;
         }
         
     }

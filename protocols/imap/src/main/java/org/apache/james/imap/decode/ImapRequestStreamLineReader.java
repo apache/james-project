@@ -25,7 +25,8 @@ import java.io.OutputStream;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.utils.EolInputStream;
-import org.apache.james.imap.utils.FixedLengthInputStream;
+
+import com.google.common.io.ByteStreams;
 
 /**
  * {@link ImapRequestLineReader} which use normal IO Streaming
@@ -44,7 +45,7 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader {
      * Reads the next character in the current line. This method will continue
      * to return the same character until the {@link #consume()} method is
      * called.
-     * 
+     *
      * @return The next character TODO: character encoding is variable and
      *         cannot be determine at the token level; this char is not accurate
      *         reported; should be an octet
@@ -77,11 +78,11 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader {
         // Unset the next char.
         nextSeen = false;
         nextChar = 0;
-        FixedLengthInputStream in = new FixedLengthInputStream(input, size);
+        InputStream limited = ByteStreams.limit(input, size);
         if (extraCRLF) {
-            return new EolInputStream(this, in);
+            return new EolInputStream(this, limited);
         } else {
-            return in;
+            return limited;
         }
     }
 
