@@ -35,7 +35,6 @@ import org.awaitility.Duration;
 public final class ExternalSession implements Session {
 
     private static final byte[] CRLF = { '\r', '\n' };
-    public static final int FIVE_SECONDS = 5000;
 
     private final SocketChannel socket;
 
@@ -175,7 +174,7 @@ public final class ExternalSession implements Session {
 
     @Override
     public void await() throws Exception {
-        Thread.sleep(FIVE_SECONDS);
+        TimeUnit.SECONDS.sleep(5);
     }
 
     /**
