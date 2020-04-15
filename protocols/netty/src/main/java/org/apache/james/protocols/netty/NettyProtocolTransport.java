@@ -28,7 +28,6 @@ import java.nio.channels.FileChannel;
 import javax.net.ssl.SSLEngine;
 
 import org.apache.james.protocols.api.AbstractProtocolTransport;
-import org.apache.james.protocols.api.CombinedInputStream;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -126,26 +125,8 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
                     channel.write(new ChunkedStream(new ExceptionInputStream(e)));
                 }
                 return;
-
-            } else if (in instanceof CombinedInputStream) {
-                for (InputStream pIn : (CombinedInputStream) in) {
-                    if (pIn instanceof FileInputStream) {
-                        FileChannel fChannel = ((FileInputStream) in).getChannel();
-                        try {
-                            channel.write(new DefaultFileRegion(fChannel, 0, fChannel.size(), true));
-                            return;
-
-                        } catch (IOException e) {
-                            // We handle this later
-                            channel.write(new ChunkedStream(new ExceptionInputStream(e)));
-                        }
-                    } else {
-                        channel.write(new ChunkedStream(in));
-                    }
-                }
-                return;
             }
-        } 
+        }
         channel.write(new ChunkedStream(in));
     }
 
