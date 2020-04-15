@@ -109,7 +109,8 @@ public class CassandraMessageIdToImapUidDAO {
                 .value(RECENT, bindMarker(RECENT))
                 .value(SEEN, bindMarker(SEEN))
                 .value(USER, bindMarker(USER))
-                .value(USER_FLAGS, bindMarker(USER_FLAGS)));
+                .value(USER_FLAGS, bindMarker(USER_FLAGS))
+                .ifNotExists());
     }
 
     private PreparedStatement prepareUpdate(Session session) {
