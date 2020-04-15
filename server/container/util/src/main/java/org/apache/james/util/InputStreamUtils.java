@@ -21,14 +21,14 @@ package org.apache.james.util;
 
 import java.io.InputStream;
 import java.io.SequenceInputStream;
-import java.util.Arrays;
-import java.util.stream.Stream;
+import java.util.Collections;
+
+import com.google.common.collect.Lists;
 
 public class InputStreamUtils {
     public static InputStream concat(InputStream inputStream, InputStream... additionalInputStreams) {
-        Stream<InputStream> inputStreams = Stream.concat(Stream.of(inputStream), Arrays.stream(additionalInputStreams));
-
-        return inputStreams.reduce(SequenceInputStream::new)
-            .get();
+        return new SequenceInputStream(
+            Collections.enumeration(
+                Lists.asList(inputStream, additionalInputStreams)));
     }
 }
