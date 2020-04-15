@@ -133,8 +133,8 @@ public interface MessageViewFactory<T extends MessageView> {
         static <T extends MessageView> Flux<T> toMessageViews(Flux<MessageResult> messageResults, FromMessageResult<T> converter) {
             return messageResults
                 .groupBy(MessageResult::getMessageId)
-                .filterWhen(Flux::hasElements)
                 .flatMap(Flux::collectList)
+                .filter(list -> !list.isEmpty())
                 .flatMap(toMessageViews(converter));
         }
 

@@ -91,7 +91,6 @@ public class CassandraTestSystemFixture {
             mailboxManager,
             mapperFactory,
             eventBus,
-            new CassandraMessageId.Factory(),
             quotaManager,
             new DefaultUserQuotaRootResolver(mailboxManager.getSessionProvider(), mapperFactory),
             preDeletionHooks);

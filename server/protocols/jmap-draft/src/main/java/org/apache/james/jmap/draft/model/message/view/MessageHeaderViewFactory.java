@@ -55,7 +55,7 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
 
     @Override
     public Flux<MessageHeaderView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) {
-        Flux<MessageResult> messages = messageIdManager.getMessagesReactive(messageIds, FetchGroup.HEADERS, mailboxSession);
+        Flux<MessageResult> messages = Flux.from(messageIdManager.getMessagesReactive(messageIds, FetchGroup.HEADERS, mailboxSession));
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 

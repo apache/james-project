@@ -137,7 +137,7 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
         if (messageIds.isEmpty()) {
             return Flux.empty();
         }
-        return messageIdManager.getMessagesReactive(messageIds, fetchGroup, mailboxSession)
+        return Flux.from(messageIdManager.getMessagesReactive(messageIds, fetchGroup, mailboxSession))
             .onErrorResume(MailboxException.class, ex -> {
                 LOGGER.error("cannot read messages {}", messageIds, ex);
                 return Flux.empty();

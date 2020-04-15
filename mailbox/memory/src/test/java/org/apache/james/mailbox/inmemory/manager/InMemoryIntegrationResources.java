@@ -317,7 +317,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             MailboxManagerPreInstanciationStage preInstanciationStage = new MailboxManagerPreInstanciationStage(mailboxSessionMapperFactory, sessionProvider);
             PreDeletionHooks hooks = createHooks(preInstanciationStage);
             StoreMessageIdManager messageIdManager = new StoreMessageIdManager(storeRightManager, mailboxSessionMapperFactory,
-                eventBus, messageIdFactory, quotaManager, quotaRootResolver, hooks);
+                eventBus, quotaManager, quotaRootResolver, hooks);
 
             StoreAttachmentManager attachmentManager = new StoreAttachmentManager(mailboxSessionMapperFactory, messageIdManager);
             MailboxManagerSearchIndexStage searchIndexStage = new MailboxManagerSearchIndexStage(mailboxSessionMapperFactory, sessionProvider, attachmentManager);

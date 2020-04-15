@@ -111,7 +111,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
         QuotaComponents quotaComponents = new QuotaComponents(perUserMaxQuotaManager, quotaManager, quotaRootResolver);
 
-        StoreMessageIdManager messageIdManager = new StoreMessageIdManager(storeRightManager, mapperFactory, eventBus, messageIdFactory, quotaManager, quotaRootResolver, PreDeletionHooks.NO_PRE_DELETION_HOOK);
+        StoreMessageIdManager messageIdManager = new StoreMessageIdManager(storeRightManager, mapperFactory, eventBus, quotaManager, quotaRootResolver, PreDeletionHooks.NO_PRE_DELETION_HOOK);
         StoreAttachmentManager attachmentManager = new StoreAttachmentManager(mapperFactory, messageIdManager);
 
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentManager);

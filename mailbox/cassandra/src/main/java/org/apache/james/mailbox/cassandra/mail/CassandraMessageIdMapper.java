@@ -92,15 +92,19 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public List<MailboxMessage> find(Collection<MessageId> messageIds, FetchType fetchType) {
+        return findReactive(messageIds, fetchType)
+            .collectList()
+            .block();
+    }
+
+    @Override
+    public Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, FetchType fetchType) {
         return Flux.fromStream(messageIds.stream())
-            .publishOn(Schedulers.elastic())
             .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty()), cassandraConfiguration.getMessageReadChunkSize())
             .flatMap(composedMessageId -> messageDAO.retrieveMessage(composedMessageId, fetchType), cassandraConfiguration.getMessageReadChunkSize())
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType), cassandraConfiguration.getMessageReadChunkSize())
             .groupBy(MailboxMessage::getMailboxId)
-            .flatMap(this::keepMessageIfMailboxExists)
-            .collectList()
-            .block();
+            .flatMap(this::keepMessageIfMailboxExists);
     }
 
     private Flux<MailboxMessage> keepMessageIfMailboxExists(GroupedFlux<MailboxId, MailboxMessage> groupedFlux) {

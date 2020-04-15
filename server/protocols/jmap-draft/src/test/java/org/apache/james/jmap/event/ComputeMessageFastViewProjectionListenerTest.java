@@ -21,6 +21,7 @@ package org.apache.james.jmap.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 
@@ -65,6 +66,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class ComputeMessageFastViewProjectionListenerTest {
@@ -266,9 +268,8 @@ class ComputeMessageFastViewProjectionListenerTest {
 
     @Test
     void shouldStoreEventInDeadLettersWhenGetMessagesException() throws Exception {
-        doThrow(new MailboxException())
-            .when(messageIdManager)
-            .getMessages(any(), any(), any());
+        doReturn(Flux.error(new MailboxException("mock exception")))
+            .when(messageIdManager).getMessagesReactive(any(), any(), any());
 
         inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()

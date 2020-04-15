@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -94,19 +95,17 @@ public class StoreMessageIdManager implements MessageIdManager {
     private final RightManager rightManager;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final EventBus eventBus;
-    private final MessageId.Factory messageIdFactory;
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
     private final PreDeletionHooks preDeletionHooks;
 
     @Inject
     public StoreMessageIdManager(RightManager rightManager, MailboxSessionMapperFactory mailboxSessionMapperFactory,
-                                 EventBus eventBus, MessageId.Factory messageIdFactory,
-                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, PreDeletionHooks preDeletionHooks) {
+                                 EventBus eventBus, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
+                                 PreDeletionHooks preDeletionHooks) {
         this.rightManager = rightManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.eventBus = eventBus;
-        this.messageIdFactory = messageIdFactory;
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
         this.preDeletionHooks = preDeletionHooks;
@@ -138,18 +137,26 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     @Override
-    public List<MessageResult> getMessages(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
-        MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
+    public List<MessageResult> getMessages(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) {
+        return getMessagesReactive(messageIds, fetchGroup, mailboxSession)
+            .collectList()
+            .block();
+    }
 
-        MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
-        List<MailboxMessage> messageList = messageIdMapper.find(messageIds, fetchType);
+    @Override
+    public Flux<MessageResult> getMessagesReactive(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) {
+        try {
+            MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        ImmutableSet<MailboxId> allowedMailboxIds = getAllowedMailboxIds(mailboxSession, messageList, Right.Read);
-
-        return messageList.stream()
-            .filter(inMailboxes(allowedMailboxIds))
-            .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
+            return messageIdMapper.findReactive(messageIds, fetchType)
+                .groupBy(MailboxMessage::getMailboxId)
+                .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()))
+                .flatMap(Function.identity())
+                .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow());
+        } catch (MailboxException e) {
+            return Flux.error(e);
+        }
     }
 
     private ImmutableSet<MailboxId> getAllowedMailboxIds(MailboxSession mailboxSession, List<MailboxMessage> messageList, Right... rights) {
@@ -424,6 +431,12 @@ public class StoreMessageIdManager implements MessageIdManager {
     private Predicate<MailboxId> hasRightsOnMailbox(MailboxSession session, Right... rights) {
         return Throwing.predicate((MailboxId mailboxId) -> rightManager.myRights(mailboxId, session).contains(rights))
             .fallbackTo(any -> false);
+    }
+
+    private Function<MailboxId, Mono<Boolean>> hasRightsOnMailboxReactive(MailboxSession session, Right... rights) {
+        return mailboxId -> Mono.from(rightManager.myRightsReactive(mailboxId, session))
+            .map(myRights -> myRights.contains(rights))
+            .onErrorResume(any -> Mono.just(false));
     }
 
     private void assertRightsOnMailboxes(Collection<MailboxId> mailboxIds, MailboxSession mailboxSession, Right... rights) throws MailboxNotFoundException {

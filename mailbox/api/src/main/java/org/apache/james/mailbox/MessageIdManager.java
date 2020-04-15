@@ -32,6 +32,7 @@ import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableList;
 
@@ -45,7 +46,7 @@ public interface MessageIdManager {
 
     List<MessageResult> getMessages(Collection<MessageId> messageIds, FetchGroup minimal, MailboxSession mailboxSession) throws MailboxException;
 
-    default Flux<MessageResult> getMessagesReactive(Collection<MessageId> messageIds, FetchGroup minimal, MailboxSession mailboxSession) {
+    default Publisher<MessageResult> getMessagesReactive(Collection<MessageId> messageIds, FetchGroup minimal, MailboxSession mailboxSession) {
         try {
             return Flux.fromIterable(getMessages(messageIds, minimal, mailboxSession));
         } catch (MailboxException e) {

@@ -773,6 +773,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Mono<Rfc4314Rights> myRightsReactive(MailboxId mailboxId, MailboxSession session) {
+        return storeRightManager.myRightsReactive(mailboxId, session);
+    }
+
+    @Override
     public Rfc4314Rights[] listRights(MailboxPath mailboxPath, MailboxACL.EntryKey key, MailboxSession session) throws MailboxException {
         return storeRightManager.listRights(mailboxPath, key, session);
     }

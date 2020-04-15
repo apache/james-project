@@ -34,9 +34,15 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.collect.Multimap;
 
+import reactor.core.publisher.Flux;
+
 public interface MessageIdMapper {
 
     List<MailboxMessage> find(Collection<MessageId> messageIds, FetchType fetchType);
+
+    default Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, FetchType fetchType) {
+        return Flux.fromIterable(find(messageIds, fetchType));
+    }
 
     List<MailboxId> findMailboxes(MessageId messageId);
 

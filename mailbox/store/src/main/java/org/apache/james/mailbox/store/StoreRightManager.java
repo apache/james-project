@@ -53,6 +53,8 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Mono;
+
 public class StoreRightManager implements RightManager {
     public static final boolean GROUP_FOLDER = true;
 
@@ -98,6 +100,17 @@ public class StoreRightManager implements RightManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxById(mailboxId);
         return myRights(mailbox, session);
+    }
+
+    @Override
+    public Mono<Rfc4314Rights> myRightsReactive(MailboxId mailboxId, MailboxSession session) {
+        try {
+            MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+            return mapper.findMailboxByIdReactive(mailboxId)
+                .map(Throwing.function(mailbox -> myRights(mailbox, session)));
+        } catch (MailboxException e) {
+            return Mono.error(e);
+        }
     }
 
     public Rfc4314Rights myRights(Mailbox mailbox, MailboxSession session) throws UnsupportedRightException {

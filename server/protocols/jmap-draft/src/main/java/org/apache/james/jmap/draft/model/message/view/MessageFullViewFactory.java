@@ -88,7 +88,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
 
     @Override
     public Flux<MessageFullView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) {
-        Flux<MessageResult> messages = messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession);
+        Flux<MessageResult> messages = Flux.from(messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession));
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 

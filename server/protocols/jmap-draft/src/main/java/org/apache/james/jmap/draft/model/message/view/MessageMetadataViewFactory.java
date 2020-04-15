@@ -51,7 +51,7 @@ public class MessageMetadataViewFactory implements MessageViewFactory<MessageMet
 
     @Override
     public Flux<MessageMetadataView> fromMessageIds(List<MessageId> messageIds, MailboxSession session) {
-        Flux<MessageResult> messages = messageIdManager.getMessagesReactive(messageIds, FetchGroup.MINIMAL, session);
+        Flux<MessageResult> messages = Flux.from(messageIdManager.getMessagesReactive(messageIds, FetchGroup.MINIMAL, session));
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 
