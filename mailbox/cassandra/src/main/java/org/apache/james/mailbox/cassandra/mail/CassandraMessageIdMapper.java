@@ -20,7 +20,6 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -99,7 +98,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType), cassandraConfiguration.getMessageReadChunkSize())
             .groupBy(MailboxMessage::getMailboxId)
             .flatMap(this::keepMessageIfMailboxExists)
-            .collectSortedList(Comparator.comparing(MailboxMessage::getUid))
+            .collectList()
             .block();
     }
 
