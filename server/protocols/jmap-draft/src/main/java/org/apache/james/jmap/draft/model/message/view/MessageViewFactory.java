@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.utils.KeywordsCombiner;
@@ -50,6 +49,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimaps;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public interface MessageViewFactory<T extends MessageView> {
 
     Logger LOGGER = LoggerFactory.getLogger(MessageViewFactory.class);
@@ -58,7 +60,7 @@ public interface MessageViewFactory<T extends MessageView> {
     Keywords.KeywordsFactory KEYWORDS_FACTORY = Keywords.lenientFactory();
     String JMAP_MULTIVALUED_FIELD_DELIMITER = "\n";
 
-    List<T> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException;
+    Flux<T> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession);
 
     class Helpers {
         interface FromMessageResult<T extends MessageView> {
@@ -117,26 +119,23 @@ public interface MessageViewFactory<T extends MessageView> {
                 .collect(Guavate.toImmutableMap(Map.Entry::getKey, bodyConcatenator));
         }
 
-        static <T extends MessageView>  Function<Collection<MessageResult>, Stream<T>> toMessageViews(FromMessageResult<T> converter) {
+        static <T extends MessageView>  Function<Collection<MessageResult>, Mono<T>> toMessageViews(FromMessageResult<T> converter) {
             return messageResults -> {
                 try {
-                    return Stream.of(converter.fromMessageResults(messageResults));
+                    return Mono.just(converter.fromMessageResults(messageResults));
                 } catch (Exception e) {
                     LOGGER.error("Can not convert MessageResults to Message for {}", messageResults.iterator().next().getMessageId().serialize(), e);
-                    return Stream.of();
+                    return Mono.empty();
                 }
             };
         }
 
-        static <T extends MessageView> List<T> toMessageViews(List<MessageResult> messageResults, FromMessageResult<T> converter) {
-            return messageResults.stream()
-                .collect(Guavate.toImmutableListMultimap(MessageResult::getMessageId))
-                .asMap()
-                .values()
-                .stream()
-                .filter(collection -> !collection.isEmpty())
-                .flatMap(toMessageViews(converter))
-                .collect(Guavate.toImmutableList());
+        static <T extends MessageView> Flux<T> toMessageViews(Flux<MessageResult> messageResults, FromMessageResult<T> converter) {
+            return messageResults
+                .groupBy(MessageResult::getMessageId)
+                .filterWhen(Flux::hasElements)
+                .flatMap(Flux::collectList)
+                .flatMap(toMessageViews(converter));
         }
 
         static Instant getDateFromHeaderOrInternalDateOtherwise(Message mimeMessage, MessageResult message) {

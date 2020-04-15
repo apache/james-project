@@ -61,6 +61,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -86,8 +87,8 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     }
 
     @Override
-    public List<MessageFullView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
-        List<MessageResult> messages = messageIdManager.getMessages(messageIds, FetchGroup.FULL_CONTENT, mailboxSession);
+    public Flux<MessageFullView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) {
+        Flux<MessageResult> messages = messageIdManager.getMessagesReactive(messageIds, FetchGroup.FULL_CONTENT, mailboxSession);
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 

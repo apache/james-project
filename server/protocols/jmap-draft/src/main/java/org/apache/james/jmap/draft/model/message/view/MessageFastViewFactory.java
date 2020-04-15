@@ -46,13 +46,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class MessageFastViewFactory implements MessageViewFactory<MessageFastView> {
 
@@ -118,13 +116,10 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
     }
 
     @Override
-    public List<MessageFastView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) {
+    public Flux<MessageFastView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) {
         ImmutableSet<MessageId> messageIdSet = ImmutableSet.copyOf(messageIds);
         return Mono.from(fastViewProjection.retrieve(messageIds))
-            .flatMapMany(fastProjections -> gatherMessageViews(messageIdSet, mailboxSession, fastProjections))
-            .collectList()
-            .subscribeOn(Schedulers.elastic())
-            .block();
+            .flatMapMany(fastProjections -> gatherMessageViews(messageIdSet, mailboxSession, fastProjections));
     }
 
     private Flux<MessageFastView> gatherMessageViews(Set<MessageId> messageIds, MailboxSession mailboxSession,
@@ -132,21 +127,20 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
         Set<MessageId> withProjectionEntry = fastProjections.keySet();
         Set<MessageId> withoutProjectionEntry = Sets.difference(messageIds, withProjectionEntry);
         return Flux.merge(
-                fetch(withProjectionEntry, FetchGroup.HEADERS, mailboxSession)
-                    .map(messageResults -> Helpers.toMessageViews(messageResults, new FromMessageResultAndPreview(blobManager, fastProjections))),
-                fetch(withoutProjectionEntry, FetchGroup.FULL_CONTENT, mailboxSession)
-                    .map(messageResults -> Helpers.toMessageViews(messageResults, messageFullViewFactory::fromMessageResults)))
-            .flatMap(Flux::fromIterable);
+            Helpers.toMessageViews(fetch(withProjectionEntry, FetchGroup.HEADERS, mailboxSession),
+                new FromMessageResultAndPreview(blobManager, fastProjections)),
+            Helpers.toMessageViews(fetch(withoutProjectionEntry, FetchGroup.FULL_CONTENT, mailboxSession),
+                messageFullViewFactory::fromMessageResults));
     }
 
-    private Mono<List<MessageResult>> fetch(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) {
+    private Flux<MessageResult> fetch(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) {
         if (messageIds.isEmpty()) {
-            return Mono.empty();
+            return Flux.empty();
         }
-        return Mono.fromCallable(() -> messageIdManager.getMessages(messageIds, fetchGroup, mailboxSession))
+        return messageIdManager.getMessagesReactive(messageIds, fetchGroup, mailboxSession)
             .onErrorResume(MailboxException.class, ex -> {
                 LOGGER.error("cannot read messages {}", messageIds, ex);
-                return Mono.just(ImmutableList.of());
+                return Flux.empty();
             });
     }
 }

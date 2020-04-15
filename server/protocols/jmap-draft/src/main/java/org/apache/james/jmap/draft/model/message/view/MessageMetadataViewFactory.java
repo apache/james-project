@@ -28,13 +28,14 @@ import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import reactor.core.publisher.Flux;
 
 public class MessageMetadataViewFactory implements MessageViewFactory<MessageMetadataView> {
 
@@ -49,8 +50,8 @@ public class MessageMetadataViewFactory implements MessageViewFactory<MessageMet
     }
 
     @Override
-    public List<MessageMetadataView> fromMessageIds(List<MessageId> messageIds, MailboxSession session) throws MailboxException {
-        List<MessageResult> messages = messageIdManager.getMessages(messageIds, FetchGroup.MINIMAL, session);
+    public Flux<MessageMetadataView> fromMessageIds(List<MessageId> messageIds, MailboxSession session) {
+        Flux<MessageResult> messages = messageIdManager.getMessagesReactive(messageIds, FetchGroup.MINIMAL, session);
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 

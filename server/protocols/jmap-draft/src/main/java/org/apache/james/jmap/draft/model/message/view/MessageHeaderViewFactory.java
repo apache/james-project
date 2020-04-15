@@ -40,6 +40,8 @@ import org.apache.james.mime4j.dom.Message;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
+import reactor.core.publisher.Flux;
+
 public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeaderView> {
     private final BlobManager blobManager;
     private final MessageIdManager messageIdManager;
@@ -52,8 +54,8 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
     }
 
     @Override
-    public List<MessageHeaderView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
-        List<MessageResult> messages = messageIdManager.getMessages(messageIds, FetchGroup.HEADERS, mailboxSession);
+    public Flux<MessageHeaderView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) {
+        Flux<MessageResult> messages = messageIdManager.getMessagesReactive(messageIds, FetchGroup.HEADERS, mailboxSession);
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 

@@ -35,6 +35,8 @@ import org.apache.james.mailbox.model.MessageResult;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+
 public interface MessageIdManager {
 
     Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, final MailboxSession mailboxSession) throws MailboxException;
@@ -42,6 +44,14 @@ public interface MessageIdManager {
     void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 
     List<MessageResult> getMessages(Collection<MessageId> messageIds, FetchGroup minimal, MailboxSession mailboxSession) throws MailboxException;
+
+    default Flux<MessageResult> getMessagesReactive(Collection<MessageId> messageIds, FetchGroup minimal, MailboxSession mailboxSession) {
+        try {
+            return Flux.fromIterable(getMessages(messageIds, minimal, mailboxSession));
+        } catch (MailboxException e) {
+            return Flux.error(e);
+        }
+    }
 
     DeleteResult delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 
