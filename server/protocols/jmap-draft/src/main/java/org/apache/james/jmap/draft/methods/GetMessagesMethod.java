@@ -53,20 +53,14 @@ public class GetMessagesMethod implements Method {
 
     public static final String HEADERS_FILTER = "headersFilter";
     private static final String ISSUER = "GetMessagesMethod";
-    private static final Logger LOGGER = LoggerFactory.getLogger(GetMessagesMethod.class);
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
     private final MetaMessageViewFactory messageViewFactory;
-    private final MessageIdManager messageIdManager;
     private final MetricFactory metricFactory;
 
     @Inject
-    @VisibleForTesting GetMessagesMethod(
-            MetaMessageViewFactory messageViewFactory,
-            MessageIdManager messageIdManager,
-            MetricFactory metricFactory) {
+    @VisibleForTesting GetMessagesMethod(MetaMessageViewFactory messageViewFactory, MetricFactory metricFactory) {
         this.messageViewFactory = messageViewFactory;
-        this.messageIdManager = messageIdManager;
         this.metricFactory = metricFactory;
     }
     

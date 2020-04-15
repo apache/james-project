@@ -134,7 +134,7 @@ public class GetMessagesMethodTest {
             new MessageHeaderViewFactory(blobManager, messageIdManager),
             messageMetadataViewFactory,
             messageFastViewFactory);
-        testee = new GetMessagesMethod(metaMessageViewFactory, messageIdManager, new DefaultMetricFactory());
+        testee = new GetMessagesMethod(metaMessageViewFactory, new DefaultMetricFactory());
 
         messageContent1 = org.apache.james.mime4j.dom.Message.Builder.of()
             .setSubject("message 1 subject")
