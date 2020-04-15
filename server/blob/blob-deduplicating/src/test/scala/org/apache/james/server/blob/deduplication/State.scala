@@ -19,6 +19,14 @@
 
 package org.apache.james.server.blob.deduplication
 
+import org.apache.james.blob.api.BlobId
+
+case class GenerationAwareBlobId(generation: Generation, hash: String) extends BlobId {
+  override def asString(): String = s"${generation.asString}_$hash"
+}
+
+case class PartitionedEvents(stillReferencedBlobIds: Set[BlobId], notReferencedBlobIds: Set[BlobId])
+
 /**
  * Used to iteratively build a StabilizedState
  */
@@ -44,3 +52,32 @@ object Interpreter {
   def apply(events: Seq[Event]): State =
     events.foldLeft(State.initial)((state, event) => state(event))
 }
+
+object Oracle {
+  /*
+  Implement an oracle that implements BlobStore with a Ref Count reference tracking
+   */
+  def partitionBlobs(events: Seq[Event]): PartitionedEvents = {
+    val (referencingEvents, dereferencingEvents) = events.partition {
+      case _: Reference => true
+      case _: Dereference => false
+    }
+
+    val referencedBlobsCount = referencingEvents.groupBy(_.blob).view.mapValues(_.size).toMap
+    val dereferencedBlobsCount = dereferencingEvents.groupBy(_.blob).view.mapValues(_.size).toMap
+
+    val stillReferencedBlobIds = referencedBlobsCount.foldLeft(Set[BlobId]())((acc, kv) => {
+      val (blobId, referencesCount) = kv
+      val dereferencesCount  = dereferencedBlobsCount.getOrElse(blobId, 0)
+
+      if(referencesCount > dereferencesCount)
+        acc + blobId
+      else
+        acc
+    })
+
+    lazy val notReferencedBlobIds = dereferencedBlobsCount.keySet -- stillReferencedBlobIds
+    PartitionedEvents(stillReferencedBlobIds, notReferencedBlobIds)
+  }
+}
+

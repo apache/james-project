@@ -42,6 +42,8 @@ sealed abstract class Generation extends Comparable[Generation] {
   def <=(that: Generation): Boolean = compareTo(that) <= 0
   def >(that: Generation): Boolean = compareTo(that) > 0
   def >=(that: Generation): Boolean = compareTo(that) >= 0
+
+  def asString: String
 }
 
 object Generation {
@@ -76,6 +78,7 @@ case class ValidGeneration(id: Long) extends Generation {
     case that: ValidGeneration => id.compareTo(that.id)
   }
 
+  override def asString: String = id.toString
 }
 
 /**
@@ -90,6 +93,8 @@ case object NonExistingGeneration extends Generation {
     case NonExistingGeneration => 0
     case _: ValidGeneration => -1
   }
+
+  override def asString: String = "non_existing"
 }
 
 /**
@@ -97,6 +102,7 @@ case object NonExistingGeneration extends Generation {
  */
 case class Iteration(id: Long, processedGenerations: Set[Generation], lastGeneration: Generation) {
   def next(generations: Set[Generation], lastGeneration: Generation): Iteration = Iteration(id + 1, generations, lastGeneration)
+  def asString = id.toString
 }
 
 object Iteration {
@@ -129,7 +135,7 @@ object Events {
 
 }
 
-case class Report(iteration: Iteration, blobsToDelete: Set[(Generation, BlobId)])
+case class GCIterationReport(iteration: Iteration, blobsToDelete: Set[(Generation, BlobId)])
 
 /**
  * Accessors to the References/Dereferences made by generations
@@ -173,7 +179,7 @@ case class StabilizedState(references: Map[Generation, Seq[Reference]], derefere
 
 object GC {
   val temporization: Long = 2
-  def plan(state: StabilizedState, lastIteration: Iteration, targetedGeneration: Generation): Report = {
+  def plan(state: StabilizedState, lastIteration: Iteration, targetedGeneration: Generation): GCIterationReport = {
     val processedGenerations = lastIteration.lastGeneration.collectibles(targetedGeneration)
     val blobsToDelete = state.dereferences
       .filter { case (generation, _) => processedGenerations.contains(generation) }
@@ -182,6 +188,6 @@ object GC {
       .filter(dereference => state.referencesAt(processedGenerations.max).isNotReferenced(dereference.reference.blobId))
       .map(dereference => (dereference.reference.generation, dereference.reference.blobId))
 
-    Report(lastIteration.next(processedGenerations, targetedGeneration.previous(temporization)), blobsToDelete)
+    GCIterationReport(lastIteration.next(processedGenerations, targetedGeneration.previous(temporization)), blobsToDelete)
   }
 }

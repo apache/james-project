@@ -1,0 +1,63 @@
+{
+  "states" : [ {
+    "related-action" : "init",
+    "reference-generations" : [ "0" ],
+    "garbage-collection-iterations" : [ "0" ],
+    "blobs" : [ ],
+    "references" : [ ],
+    "deletions" : [ ]
+  }, {
+    "related-action" : "save(blob = 0_myHash, reference = message1)",
+    "reference-generations" : [ "0" ],
+    "garbage-collection-iterations" : [ "0" ],
+    "blobs" : [ {
+      "id" : "0_myHash",
+      "reference-generation" : "0"
+    } ],
+    "references" : [ {
+      "id" : "message1",
+      "blob" : "0_myHash",
+      "reference-generation" : "0"
+    } ],
+    "deletions" : [ ]
+  }, {
+    "related-action" : "garbageCollect",
+    "reference-generations" : [ "0" ],
+    "garbage-collection-iterations" : [ "0", "1" ],
+    "blobs" : [ {
+      "id" : "0_myHash",
+      "reference-generation" : "0"
+    } ],
+    "references" : [ {
+      "id" : "message1",
+      "blob" : "0_myHash",
+      "reference-generation" : "0"
+    } ],
+    "deletions" : [ ]
+  }, {
+    "related-action" : "delete(reference = message1)",
+    "reference-generations" : [ "0", "1" ],
+    "garbage-collection-iterations" : [ "0", "1" ],
+    "blobs" : [ {
+      "id" : "0_myHash",
+      "reference-generation" : "0"
+    } ],
+    "references" : [ {
+      "id" : "message1",
+      "blob" : "0_myHash",
+      "reference-generation" : "0"
+    } ],
+    "deletions" : [ {
+      "blob" : "0_myHash",
+      "reference-generation" : "1",
+      "garbage-collection-iterations" : "1"
+    } ]
+  }, {
+    "related-action" : "garbageCollect",
+    "reference-generations" : [ "0", "1" ],
+    "garbage-collection-iterations" : [ "0", "1", "2" ],
+    "blobs" : [ ],
+    "references" : [ ],
+    "deletions" : [ ]
+  } ]
+}

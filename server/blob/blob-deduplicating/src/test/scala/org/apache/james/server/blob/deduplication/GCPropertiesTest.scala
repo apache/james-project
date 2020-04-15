@@ -21,15 +21,10 @@ package org.apache.james.server.blob.deduplication
 import java.nio.charset.StandardCharsets
 
 import com.google.common.hash
-import org.apache.james.blob.api.BlobId
 import org.apache.james.server.blob.deduplication.Generators.{OnePassGCTestParameters, TestParameters}
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Test.Parameters
 import org.scalacheck.{Arbitrary, Gen, Properties, Shrink}
-
-case class GenerationAwareBlobId(generation: Generation, hash: String) extends BlobId {
-  override def asString(): String = s"${generation}_$hash"
-}
 
 object Generators {
 
@@ -171,7 +166,7 @@ object GCPropertiesTest extends Properties("GC") {
   property("2.1. GC should not delete data being referenced by a pending process or still referenced") = forAll {
     testParameters: Generators.TestParameters => {
 
-      val partitionedBlobsId = partitionBlobs(testParameters.events)
+      val partitionedBlobsId =  Oracle.partitionBlobs(testParameters.events)
       testParameters.generationsToCollect.foldLeft(true)((acc, e) => {
         val plannedDeletions = GC.plan(Interpreter(testParameters.events).stabilize(), Iteration.initial, e).blobsToDelete.map(_._2)
         acc && partitionedBlobsId.stillReferencedBlobIds.intersect(plannedDeletions).isEmpty
@@ -189,40 +184,11 @@ object GCPropertiesTest extends Properties("GC") {
         val relevantEvents: Event => Boolean = event => event.generation <= testParameters.generationToCollect.previous(GC.temporization)
         val plannedDeletions = plan.blobsToDelete.map(_._2)
 
-        val partitionedBlobsId = partitionBlobs(testParameters.events.filter(relevantEvents))
+        val partitionedBlobsId = Oracle.partitionBlobs(testParameters.events.filter(relevantEvents))
         plannedDeletions.size >= partitionedBlobsId.notReferencedBlobIds.size * 0.9
       }
     }
   }
-
-  /*
-  Implement an oracle that implements BlobStore with a Ref Count reference tracking
-   */
-  def partitionBlobs(events: Seq[Event]): PartitionedEvents = {
-    val (referencingEvents, dereferencingEvents) = events.partition {
-      case _: Reference => true
-      case _: Dereference => false
-    }
-
-    val referencedBlobsCount = referencingEvents.groupBy(_.blob).view.mapValues(_.size).toMap
-    val dereferencedBlobsCount = dereferencingEvents.groupBy(_.blob).view.mapValues(_.size).toMap
-
-    val stillReferencedBlobIds = referencedBlobsCount.foldLeft(Set[BlobId]())((acc, kv) => {
-      val (blobId, referencesCount) = kv
-      val dereferencesCount  = dereferencedBlobsCount.getOrElse(blobId, 0)
-
-      if(referencesCount > dereferencesCount)
-        acc + blobId
-      else
-        acc
-    })
-
-    lazy val notReferencedBlobIds = dereferencedBlobsCount.keySet -- stillReferencedBlobIds
-    PartitionedEvents(stillReferencedBlobIds, notReferencedBlobIds)
-  }
-
-  case class PartitionedEvents(stillReferencedBlobIds: Set[BlobId], notReferencedBlobIds: Set[BlobId])
-
 }
 
 
