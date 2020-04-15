@@ -26,9 +26,10 @@ import org.apache.james.mailbox.model.Content;
 
 /**
  * Just an Empty {@link Content}
- *
  */
 public class EmptyContent implements Content {
+
+    private static final byte[] EMPTY_ARRAY = new byte[0];
 
     /**
      * Return 0 as this {@link Content} is empty
@@ -40,7 +41,7 @@ public class EmptyContent implements Content {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        return new ByteArrayInputStream("".getBytes());
+        return new ByteArrayInputStream(EMPTY_ARRAY);
     }
 
 }
