@@ -26,7 +26,6 @@ import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Header;
 
@@ -36,18 +35,17 @@ import org.apache.james.mailbox.model.Header;
  */
 public class FullByteContent implements Content {
 
-
     private final List<Header> headers;
     private final byte[] body;
     private final long size;
     
-    public FullByteContent(byte[] body, List<Header> headers) throws MailboxException {
+    public FullByteContent(byte[] body, List<Header> headers) {
         this.headers = headers;
         this.body = body;
-        this.size = caculateSize();
+        this.size = computeSize();
     }
     
-    protected long caculateSize() throws MailboxException {
+    protected long computeSize() {
         long result = body.length;
         result += 2;
         for (Header header : headers) {
