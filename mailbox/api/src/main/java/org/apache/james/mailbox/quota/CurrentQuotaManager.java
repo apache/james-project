@@ -21,16 +21,16 @@ package org.apache.james.mailbox.quota;
 
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.reactivestreams.Publisher;
 
 /**
  * This interface allows us to get the current value associated to a quota value
  */
 public interface CurrentQuotaManager {
 
-    QuotaCountUsage getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException;
+    Publisher<QuotaCountUsage> getCurrentMessageCount(QuotaRoot quotaRoot);
 
-    QuotaSizeUsage getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException;
+    Publisher<QuotaSizeUsage> getCurrentStorage(QuotaRoot quotaRoot);
 
 }

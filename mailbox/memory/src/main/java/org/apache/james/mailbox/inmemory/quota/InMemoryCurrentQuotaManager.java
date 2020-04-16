@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.inmemory.quota;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
@@ -40,6 +39,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import reactor.core.publisher.Mono;
+
 public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
 
     private final LoadingCache<QuotaRoot, AtomicReference<CurrentQuotas>> quotaCache;
@@ -55,38 +56,34 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public void increase(QuotaOperation quotaOperation) throws MailboxException {
-        updateQuota(quotaOperation.quotaRoot(), quota -> quota.increase(new CurrentQuotas(quotaOperation.count(), quotaOperation.size())));
+    public Mono<Void> increase(QuotaOperation quotaOperation) {
+        return updateQuota(quotaOperation.quotaRoot(), quota -> quota.increase(new CurrentQuotas(quotaOperation.count(), quotaOperation.size())));
     }
 
     @Override
-    public void decrease(QuotaOperation quotaOperation) throws MailboxException {
-        updateQuota(quotaOperation.quotaRoot(), quota -> quota.decrease(new CurrentQuotas(quotaOperation.count(), quotaOperation.size())));
+    public Mono<Void> decrease(QuotaOperation quotaOperation) {
+        return updateQuota(quotaOperation.quotaRoot(), quota -> quota.decrease(new CurrentQuotas(quotaOperation.count(), quotaOperation.size())));
     }
 
     @Override
-    public QuotaCountUsage getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException {
-        try {
-            return quotaCache.get(quotaRoot).get().count();
-        } catch (ExecutionException e) {
-            throw new MailboxException("Exception caught", e);
-        }
+    public Mono<QuotaCountUsage> getCurrentMessageCount(QuotaRoot quotaRoot) {
+        return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get().count())
+            .onErrorMap(this::wrapAsMailboxException);
     }
 
     @Override
-    public QuotaSizeUsage getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException {
-        try {
-            return quotaCache.get(quotaRoot).get().size();
-        } catch (ExecutionException e) {
-            throw new MailboxException("Exception caught", e);
-        }
+    public Mono<QuotaSizeUsage> getCurrentStorage(QuotaRoot quotaRoot) {
+        return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get().size())
+            .onErrorMap(this::wrapAsMailboxException);
     }
 
-    private void updateQuota(QuotaRoot quotaRoot, UnaryOperator<CurrentQuotas> quotaFunction) throws MailboxException {
-        try {
-            quotaCache.get(quotaRoot).updateAndGet(quotaFunction);
-        } catch (ExecutionException e) {
-            throw new MailboxException("Exception caught", e);
-        }
+    private Mono<Void> updateQuota(QuotaRoot quotaRoot, UnaryOperator<CurrentQuotas> quotaFunction) {
+        return Mono.fromCallable(() -> quotaCache.get(quotaRoot).updateAndGet(quotaFunction))
+            .onErrorMap(this::wrapAsMailboxException)
+            .then();
+    }
+
+    private Throwable wrapAsMailboxException(Throwable throwable) {
+        return new MailboxException("Exception caught", throwable);
     }
 }

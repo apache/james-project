@@ -96,6 +96,7 @@ class ListeningCurrentQuotaUpdaterTest {
         when(added.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
         when(added.getUsername()).thenReturn(USERNAME_BENWA);
         when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID))).thenReturn(QUOTA_ROOT);
+        when(mockedCurrentQuotaManager.increase(QUOTA)).thenAnswer(any -> Mono.empty());
 
         testee.event(added);
 
@@ -111,6 +112,7 @@ class ListeningCurrentQuotaUpdaterTest {
         when(expunged.getMailboxId()).thenReturn(MAILBOX_ID);
         when(expunged.getUsername()).thenReturn(USERNAME_BENWA);
         when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID))).thenReturn(QUOTA_ROOT);
+        when(mockedCurrentQuotaManager.decrease(QUOTA)).thenAnswer(any -> Mono.empty());
 
         testee.event(expunged);
 
@@ -145,6 +147,8 @@ class ListeningCurrentQuotaUpdaterTest {
 
     @Test
     void mailboxDeletionEventShouldDecreaseCurrentQuotaValues() throws Exception {
+        QuotaOperation operation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(5));
+
         MailboxListener.MailboxDeletion deletion = mock(MailboxListener.MailboxDeletion.class);
         when(deletion.getQuotaRoot()).thenReturn(QUOTA_ROOT);
         when(deletion.getDeletedMessageCount()).thenReturn(QuotaCountUsage.count(10));
@@ -152,10 +156,11 @@ class ListeningCurrentQuotaUpdaterTest {
         when(deletion.getMailboxId()).thenReturn(MAILBOX_ID);
         when(deletion.getUsername()).thenReturn(USERNAME_BENWA);
         when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID))).thenReturn(QUOTA_ROOT);
+        when(mockedCurrentQuotaManager.decrease(operation)).thenAnswer(any -> Mono.empty());
 
         testee.event(deletion);
 
-        verify(mockedCurrentQuotaManager).decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(5)));
+        verify(mockedCurrentQuotaManager).decrease(operation);
     }
 
     @Test

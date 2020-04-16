@@ -35,6 +35,8 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Default implementation for the Quota Manager.
  *
@@ -54,7 +56,7 @@ public class StoreQuotaManager implements QuotaManager {
     public Quota<QuotaCountLimit, QuotaCountUsage> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
         Map<Scope, QuotaCountLimit> maxMessageDetails = maxQuotaManager.listMaxMessagesDetails(quotaRoot);
         return Quota.<QuotaCountLimit, QuotaCountUsage>builder()
-            .used(currentQuotaManager.getCurrentMessageCount(quotaRoot))
+            .used(Mono.from(currentQuotaManager.getCurrentMessageCount(quotaRoot)).block())
             .computedLimit(maxQuotaManager.getMaxMessage(maxMessageDetails).orElse(QuotaCountLimit.unlimited()))
             .limitsByScope(maxMessageDetails)
             .build();
@@ -65,7 +67,7 @@ public class StoreQuotaManager implements QuotaManager {
     public Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
         Map<Scope, QuotaSizeLimit> maxStorageDetails = maxQuotaManager.listMaxStorageDetails(quotaRoot);
         return Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
-            .used(currentQuotaManager.getCurrentStorage(quotaRoot))
+            .used(Mono.from(currentQuotaManager.getCurrentStorage(quotaRoot)).block())
             .computedLimit(maxQuotaManager.getMaxStorage(maxStorageDetails).orElse(QuotaSizeLimit.unlimited()))
             .limitsByScope(maxStorageDetails)
             .build();

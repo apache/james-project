@@ -852,7 +852,7 @@ class UserQuotaRoutesTest {
 
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSizeLimit.size(80));
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCountLimit.count(100));
-            currentQuotaManager.increase(quotaIncrease);
+            currentQuotaManager.increase(quotaIncrease).block();
 
             JsonPath jsonPath =
                 when()
@@ -881,7 +881,7 @@ class UserQuotaRoutesTest {
 
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSizeLimit.unlimited());
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCountLimit.unlimited());
-            currentQuotaManager.increase(quotaIncrease);
+            currentQuotaManager.increase(quotaIncrease).block();
 
             JsonPath jsonPath =
                 when()

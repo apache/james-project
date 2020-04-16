@@ -38,6 +38,8 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Mono;
+
 class StoreQuotaManagerTest {
 
     StoreQuotaManager testee;
@@ -57,7 +59,9 @@ class StoreQuotaManagerTest {
     @Test
     void getMessageQuotaShouldWorkWithNumericValues() throws Exception {
         when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCountLimit.count(360L)));
-        when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCountUsage.count(36L));
+        when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenAnswer(any ->
+            Mono.fromCallable(() -> QuotaCountUsage.count(36L)));
+
         assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
             Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(36)).computedLimit(QuotaCountLimit.count(360)).build());
     }
@@ -66,7 +70,9 @@ class StoreQuotaManagerTest {
     @Test
     void getStorageQuotaShouldWorkWithNumericValues() throws Exception {
         when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSizeLimit.size(360L)));
-        when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSizeUsage.size(36L));
+        when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenAnswer(any ->
+            Mono.fromCallable(() -> QuotaSizeUsage.size(36L)));
+
         assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
             Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(36)).computedLimit(QuotaSizeLimit.size(360)).build());
     }
@@ -75,7 +81,8 @@ class StoreQuotaManagerTest {
     @Test
     void getStorageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
         when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSizeLimit.unlimited()));
-        when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSizeUsage.size(36L));
+        when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenAnswer(any ->
+            Mono.fromCallable(() -> QuotaSizeUsage.size(36L)));
 
         assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
             Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(36)).computedLimit(QuotaSizeLimit.unlimited()).build());
@@ -85,7 +92,8 @@ class StoreQuotaManagerTest {
     @Test
     void getMessageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
         when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCountLimit.unlimited()));
-        when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCountUsage.count(36L));
+        when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenAnswer(any ->
+            Mono.fromCallable(() -> QuotaCountUsage.count(36L)));
 
         assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
             Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(36)).computedLimit(QuotaCountLimit.unlimited()).build());

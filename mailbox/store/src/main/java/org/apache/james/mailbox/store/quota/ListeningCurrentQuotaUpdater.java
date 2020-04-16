@@ -40,6 +40,8 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Mono;
+
 public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailboxListener, QuotaUpdater {
     public static class ListeningCurrentQuotaUpdaterGroup extends Group {
 
@@ -89,36 +91,34 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
 
     private void handleExpungedEvent(Expunged expunged, QuotaRoot quotaRoot) {
         computeQuotaOperation(expunged, quotaRoot).ifPresent(Throwing.<QuotaOperation>consumer(quotaOperation -> {
-            currentQuotaManager.decrease(quotaOperation);
-
-            eventBus.dispatch(
-                EventFactory.quotaUpdated()
-                    .randomEventId()
-                    .user(expunged.getUsername())
-                    .quotaRoot(quotaRoot)
-                    .quotaCount(quotaManager.getMessageQuota(quotaRoot))
-                    .quotaSize(quotaManager.getStorageQuota(quotaRoot))
-                    .instant(Instant.now())
-                    .build(),
-                NO_REGISTRATION_KEYS)
+            currentQuotaManager.decrease(quotaOperation)
+                .then(Mono.defer(Throwing.supplier(() -> eventBus.dispatch(
+                    EventFactory.quotaUpdated()
+                        .randomEventId()
+                        .user(expunged.getUsername())
+                        .quotaRoot(quotaRoot)
+                        .quotaCount(quotaManager.getMessageQuota(quotaRoot))
+                        .quotaSize(quotaManager.getStorageQuota(quotaRoot))
+                        .instant(Instant.now())
+                        .build(),
+                    NO_REGISTRATION_KEYS)).sneakyThrow()))
                 .block();
         }).sneakyThrow());
     }
 
     private void handleAddedEvent(Added added, QuotaRoot quotaRoot) {
         computeQuotaOperation(added, quotaRoot).ifPresent(Throwing.<QuotaOperation>consumer(quotaOperation -> {
-            currentQuotaManager.increase(quotaOperation);
-
-            eventBus.dispatch(
-                EventFactory.quotaUpdated()
-                    .randomEventId()
-                    .user(added.getUsername())
-                    .quotaRoot(quotaRoot)
-                    .quotaCount(quotaManager.getMessageQuota(quotaRoot))
-                    .quotaSize(quotaManager.getStorageQuota(quotaRoot))
-                    .instant(Instant.now())
-                    .build(),
-                NO_REGISTRATION_KEYS)
+            currentQuotaManager.increase(quotaOperation)
+                .then(Mono.defer(Throwing.supplier(() -> eventBus.dispatch(
+                    EventFactory.quotaUpdated()
+                        .randomEventId()
+                        .user(added.getUsername())
+                        .quotaRoot(quotaRoot)
+                        .quotaCount(quotaManager.getMessageQuota(quotaRoot))
+                        .quotaSize(quotaManager.getStorageQuota(quotaRoot))
+                        .instant(Instant.now())
+                        .build(),
+                    NO_REGISTRATION_KEYS)).sneakyThrow()))
                 .block();
         }).sneakyThrow());
     }
@@ -144,8 +144,9 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
         boolean mailboxContainedMessages = mailboxDeletionEvent.getDeletedMessageCount().asLong() > 0;
         if (mailboxContainedMessages) {
             currentQuotaManager.decrease(new QuotaOperation(mailboxDeletionEvent.getQuotaRoot(),
-                mailboxDeletionEvent.getDeletedMessageCount(),
-                mailboxDeletionEvent.getTotalDeletedSize()));
+                    mailboxDeletionEvent.getDeletedMessageCount(),
+                    mailboxDeletionEvent.getTotalDeletedSize()))
+                .block();
         }
     }
 
