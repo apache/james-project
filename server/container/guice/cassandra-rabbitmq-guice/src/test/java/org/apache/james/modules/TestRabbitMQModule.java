@@ -39,6 +39,13 @@ import com.google.inject.Provides;
 import com.google.inject.multibindings.Multibinder;
 
 public class TestRabbitMQModule extends AbstractModule {
+    private static final int MAX_THREE_RETRIES = 3;
+    private static final int MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS = 100;
+    private static final int CONNECTION_TIMEOUT_OF_ONE_SECOND = 1000;
+    private static final int CHANNEL_RPC_TIMEOUT_OF_ONE_SECOND = 1000;
+    private static final int HANDSHAKE_TIMEOUT_OF_ONE_SECOND = 1000;
+    private static final int SHUTDOWN_TIMEOUT_OF_ONE_SECOND = 1000;
+    private static final int NETWORK_RECOVERY_INTERVAL_OF_ONE_SECOND = 1000;
 
     private final DockerRabbitMQ rabbitMQ;
 
@@ -67,6 +74,13 @@ public class TestRabbitMQModule extends AbstractModule {
             .amqpUri(rabbitMQ.amqpUri())
             .managementUri(rabbitMQ.managementUri())
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .maxRetries(MAX_THREE_RETRIES)
+            .minDelayInMs(MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS)
+            .connectionTimeoutInMs(CONNECTION_TIMEOUT_OF_ONE_SECOND)
+            .channelRpcTimeoutInMs(CHANNEL_RPC_TIMEOUT_OF_ONE_SECOND)
+            .handshakeTimeoutInMs(HANDSHAKE_TIMEOUT_OF_ONE_SECOND)
+            .shutdownTimeoutInMs(SHUTDOWN_TIMEOUT_OF_ONE_SECOND)
+            .networkRecoveryIntervalInMs(NETWORK_RECOVERY_INTERVAL_OF_ONE_SECOND)
             .build();
     }
 

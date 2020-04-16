@@ -29,7 +29,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +44,6 @@ import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backends.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.core.Username;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -203,15 +201,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         .extension(new RetryEventsListenerExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(new WebadminIntegrationTestModule())
-            .overrideWith(binder -> {
-                try {
-                    binder.bind(RabbitMQConnectionFactory.class)
-                        .toInstance(RABBIT_MQ_EXTENSION.dockerRabbitMQ().createRabbitConnectionFactory());
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            }))
+            .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 
     //This value is duplicated from default configuration to ensure we keep the same behavior over time
