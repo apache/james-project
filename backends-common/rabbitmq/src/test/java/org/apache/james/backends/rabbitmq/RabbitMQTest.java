@@ -31,6 +31,7 @@ import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
 import static org.apache.james.backends.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
 import static org.apache.james.backends.rabbitmq.RabbitMQFixture.ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.RabbitMQFixture.WORK_QUEUE;
+import static org.apache.james.backends.rabbitmq.RabbitMQFixture.WORK_QUEUE_2;
 import static org.apache.james.backends.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -66,6 +67,8 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Delivery;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 class RabbitMQTest {
 
@@ -426,6 +429,49 @@ class RabbitMQTest {
                     .hasSize(1)
                     .first()
                     .isEqualTo(firstRegisteredConsumer);
+            }
+
+            @Test
+            void bindingSourceShouldMatchBeanContract() {
+                EqualsVerifier.forClass(RabbitMQManagementAPI.BindingSource.class)
+                    .verify();
+            }
+
+            @Test
+            void listBindingsShouldReturnEmptyWhenNone() throws Exception {
+                assertThat(rabbitMQExtension.managementAPI()
+                        .listBindings("/", EXCHANGE_NAME)
+                        .stream()
+                        .map(RabbitMQManagementAPI.BindingSource::getDestination))
+                    .isEmpty();
+            }
+
+            @Test
+            void listBindingsShouldAllowRetrievingDestination() throws Exception {
+                channel1.exchangeDeclare(EXCHANGE_NAME, "direct", DURABLE);
+                channel1.queueDeclare(WORK_QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, Constants.WITH_SINGLE_ACTIVE_CONSUMER);
+                channel1.queueBind(WORK_QUEUE, EXCHANGE_NAME, ROUTING_KEY);
+
+                assertThat(rabbitMQExtension.managementAPI()
+                        .listBindings("/", EXCHANGE_NAME)
+                        .stream()
+                        .map(RabbitMQManagementAPI.BindingSource::getDestination))
+                    .containsExactly(WORK_QUEUE);
+            }
+
+            @Test
+            void listBindingsShouldAllowRetrievingDestinations() throws Exception {
+                channel1.exchangeDeclare(EXCHANGE_NAME, "direct", DURABLE);
+                channel1.queueDeclare(WORK_QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, Constants.WITH_SINGLE_ACTIVE_CONSUMER);
+                channel1.queueDeclare(WORK_QUEUE_2, DURABLE, !EXCLUSIVE, !AUTO_DELETE, Constants.WITH_SINGLE_ACTIVE_CONSUMER);
+                channel1.queueBind(WORK_QUEUE, EXCHANGE_NAME, ROUTING_KEY);
+                channel1.queueBind(WORK_QUEUE_2, EXCHANGE_NAME, ROUTING_KEY);
+
+                assertThat(rabbitMQExtension.managementAPI()
+                        .listBindings("/", EXCHANGE_NAME)
+                        .stream()
+                        .map(RabbitMQManagementAPI.BindingSource::getDestination))
+                    .containsExactly(WORK_QUEUE, WORK_QUEUE_2);
             }
 
             @Test

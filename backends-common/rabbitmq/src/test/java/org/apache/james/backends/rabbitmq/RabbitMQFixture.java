@@ -32,6 +32,7 @@ public interface RabbitMQFixture {
     String EXCHANGE_NAME = "exchangeName";
     String ROUTING_KEY = "routingKey";
     String WORK_QUEUE = "workQueue";
+    String WORK_QUEUE_2 = "workQueue2";
 
     String DEFAULT_USER = "guest";
     String DEFAULT_PASSWORD_STRING = "guest";

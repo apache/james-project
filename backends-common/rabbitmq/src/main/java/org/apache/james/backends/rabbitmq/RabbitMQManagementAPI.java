@@ -22,6 +22,7 @@ package org.apache.james.backends.rabbitmq;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -227,6 +228,81 @@ public interface RabbitMQManagementAPI {
         }
     }
 
+    class BindingSource {
+        private final String source;
+        private final String vhost;
+        private final String destination;
+        private final String destinationType;
+        private final String routingKey;
+        private final Map<String, String> arguments;
+        private final String propertiesKey;
+
+        public BindingSource(@JsonProperty("source") String source,
+                             @JsonProperty("vhost") String vhost,
+                             @JsonProperty("destination") String destination,
+                             @JsonProperty("destination_type") String destinationType,
+                             @JsonProperty("routing_key") String routingKey,
+                             @JsonProperty("arguments") Map<String, String> arguments,
+                             @JsonProperty("properties_key") String propertiesKey) {
+            this.source = source;
+            this.vhost = vhost;
+            this.destination = destination;
+            this.destinationType = destinationType;
+            this.routingKey = routingKey;
+            this.arguments = arguments;
+            this.propertiesKey = propertiesKey;
+        }
+
+        public String getSource() {
+            return source;
+        }
+
+        public String getVhost() {
+            return vhost;
+        }
+
+        public String getDestination() {
+            return destination;
+        }
+
+        public String getDestinationType() {
+            return destinationType;
+        }
+
+        public String getRoutingKey() {
+            return routingKey;
+        }
+
+        public Map<String, String> getArguments() {
+            return arguments;
+        }
+
+        public String getPropertiesKey() {
+            return propertiesKey;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof BindingSource) {
+                BindingSource that = (BindingSource) o;
+
+                return Objects.equals(this.source, that.source)
+                    && Objects.equals(this.vhost, that.vhost)
+                    && Objects.equals(this.destination, that.destination)
+                    && Objects.equals(this.destinationType, that.destinationType)
+                    && Objects.equals(this.routingKey, that.routingKey)
+                    && Objects.equals(this.arguments, that.arguments)
+                    && Objects.equals(this.propertiesKey, that.propertiesKey);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(source, vhost, destination, destinationType, routingKey, arguments, propertiesKey);
+        }
+    }
+
     static RabbitMQManagementAPI from(RabbitMQConfiguration configuration) {
         RabbitMQConfiguration.ManagementCredentials credentials = configuration.getManagementCredentials();
         return Feign.builder()
@@ -255,6 +331,9 @@ public interface RabbitMQManagementAPI {
 
     @RequestLine(value = "DELETE /api/queues/{vhost}/{name}", decodeSlash = false)
     void deleteQueue(@Param("vhost") String vhost, @Param("name") String name);
+
+    @RequestLine(value = "GET /api/exchanges/{vhost}/{name}/bindings/source", decodeSlash = false)
+    List<BindingSource> listBindings(@Param("vhost") String vhost, @Param("name") String name);
 
     @RequestLine("GET /api/exchanges")
     List<Exchange> listExchanges();
