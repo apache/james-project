@@ -123,12 +123,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
         if (event instanceof Expunged) {
             Expunged expunged = (Expunged) event;
 
-            Flux.fromIterable(expunged.getExpunged()
-                .values())
-                .map(MessageMetaData::getMessageId)
-                .map(CassandraMessageId.class::cast)
-                .concatMap(this::handleDeletion)
-                .then()
+            handleMessageDeletion(expunged)
                 .block();
         }
         if (event instanceof MailboxDeletion) {
@@ -136,19 +131,32 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
 
             CassandraId mailboxId = (CassandraId) mailboxDeletion.getMailboxId();
 
-            messageIdDAO.retrieveMessages(mailboxId, MessageRange.all())
-                .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-                .concatMap(metadata -> handleDeletion((CassandraMessageId) metadata.getMessageId(), mailboxId)
-                    .then(imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId))
-                    .then(messageIdDAO.delete(mailboxId, metadata.getUid())))
-                .then(deleteAcl(mailboxId))
-                .then(applicableFlagDAO.delete(mailboxId))
-                .then(firstUnseenDAO.removeAll(mailboxId))
-                .then(deletedMessageDAO.removeAll(mailboxId))
-                .then(counterDAO.delete(mailboxId))
-                .then(recentsDAO.delete(mailboxId))
+            handleMailboxDeletion(mailboxId)
                 .block();
         }
+    }
+
+    private Mono<Void> handleMailboxDeletion(CassandraId mailboxId) {
+        return messageIdDAO.retrieveMessages(mailboxId, MessageRange.all())
+            .map(ComposedMessageIdWithMetaData::getComposedMessageId)
+            .concatMap(metadata -> handleMessageDeletionAsPartOfMailboxDeletion((CassandraMessageId) metadata.getMessageId(), mailboxId)
+                .then(imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId))
+                .then(messageIdDAO.delete(mailboxId, metadata.getUid())))
+            .then(deleteAcl(mailboxId))
+            .then(applicableFlagDAO.delete(mailboxId))
+            .then(firstUnseenDAO.removeAll(mailboxId))
+            .then(deletedMessageDAO.removeAll(mailboxId))
+            .then(counterDAO.delete(mailboxId))
+            .then(recentsDAO.delete(mailboxId));
+    }
+
+    private Mono<Void> handleMessageDeletion(Expunged expunged) {
+        return Flux.fromIterable(expunged.getExpunged()
+            .values())
+            .map(MessageMetaData::getMessageId)
+            .map(CassandraMessageId.class::cast)
+            .concatMap(this::handleMessageDeletion)
+            .then();
     }
 
     private Mono<Void> deleteAcl(CassandraId mailboxId) {
@@ -157,7 +165,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
             .then(aclMapper.delete(mailboxId));
     }
 
-    private Mono<Void> handleDeletion(CassandraMessageId messageId) {
+    private Mono<Void> handleMessageDeletion(CassandraMessageId messageId) {
         return Mono.just(messageId)
             .filterWhen(this::isReferenced)
             .flatMap(id -> readMessage(id)
@@ -166,7 +174,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
                 .then(messageDAO.delete(messageId)));
     }
 
-    private Mono<Void> handleDeletion(CassandraMessageId messageId, CassandraId excludedId) {
+    private Mono<Void> handleMessageDeletionAsPartOfMailboxDeletion(CassandraMessageId messageId, CassandraId excludedId) {
         return Mono.just(messageId)
             .filterWhen(id -> isReferenced(id, excludedId))
             .flatMap(id -> readMessage(id)
