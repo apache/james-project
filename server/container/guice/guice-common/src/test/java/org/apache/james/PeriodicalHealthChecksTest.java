@@ -38,6 +38,7 @@ import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Mono;
 import reactor.test.scheduler.VirtualTimeScheduler;
 
 public class PeriodicalHealthChecksTest {
@@ -53,8 +54,8 @@ public class PeriodicalHealthChecksTest {
     void setUp() {
         mockHealthCheck1 = Mockito.mock(EventDeadLettersHealthCheck.class);
         mockHealthCheck2 = Mockito.mock(GuiceLifecycleHealthCheck.class);
-        when(mockHealthCheck1.check()).thenReturn(Result.healthy(new ComponentName("mockHealthCheck1")));
-        when(mockHealthCheck2.check()).thenReturn(Result.healthy(new ComponentName("mockHealthCheck2")));
+        when(mockHealthCheck1.checkReactive()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck1"))));
+        when(mockHealthCheck2.checkReactive()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck2"))));
 
         scheduler = VirtualTimeScheduler.getOrSet();
         testee = new PeriodicalHealthChecks(ImmutableSet.of(mockHealthCheck1, mockHealthCheck2),
@@ -72,7 +73,7 @@ public class PeriodicalHealthChecksTest {
         testee.start();
 
         scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD));
-        verify(mockHealthCheck1, atLeast(1)).check();
+        verify(mockHealthCheck1, atLeast(1)).checkReactive();
     }
 
     @Test
@@ -80,7 +81,7 @@ public class PeriodicalHealthChecksTest {
         testee.start();
 
         scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD * EXPECTED_INVOKED_TIME));
-        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).check();
+        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).checkReactive();
     }
 
     @Test
@@ -88,8 +89,8 @@ public class PeriodicalHealthChecksTest {
         testee.start();
 
         scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD * EXPECTED_INVOKED_TIME));
-        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).check();
-        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).check();
+        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).checkReactive();
+        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).checkReactive();
     }
 
     @Test
@@ -99,6 +100,6 @@ public class PeriodicalHealthChecksTest {
         testee.start();
 
         scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD * EXPECTED_INVOKED_TIME));
-        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).check();
+        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).checkReactive();
     }
 }
