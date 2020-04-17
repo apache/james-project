@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.storedscripts.DeleteStoredScriptRequest;
 import org.elasticsearch.action.admin.cluster.storedscripts.DeleteStoredScriptResponse;
 import org.elasticsearch.action.admin.cluster.storedscripts.GetStoredScriptRequest;
@@ -45,7 +47,6 @@ import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
-import org.elasticsearch.client.ClusterClient;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
@@ -74,10 +75,6 @@ public class ReactorElasticSearchClient implements AutoCloseable {
 
     public Mono<ClearScrollResponse> clearScroll(ClearScrollRequest clearScrollRequest, RequestOptions options) {
         return toReactor(listener -> client.clearScrollAsync(clearScrollRequest, options, listener));
-    }
-
-    public ClusterClient cluster() {
-        return client.cluster();
     }
 
     public DeleteResponse delete(DeleteRequest deleteRequest, RequestOptions options) throws IOException {
@@ -139,6 +136,11 @@ public class ReactorElasticSearchClient implements AutoCloseable {
 
     public Mono<SearchResponse> search(SearchRequest searchRequest, RequestOptions options) {
         return toReactor(listener -> client.searchAsync(searchRequest, options, listener));
+    }
+
+    public Mono<ClusterHealthResponse> health(ClusterHealthRequest request) {
+        return toReactor(listener -> client.cluster()
+            .healthAsync(request, RequestOptions.DEFAULT, listener));
     }
 
     public Mono<SearchTemplateResponse> searchTemplate(SearchTemplateRequest searchTemplateRequest, RequestOptions options) {

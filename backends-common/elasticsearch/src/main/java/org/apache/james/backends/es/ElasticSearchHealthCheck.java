@@ -30,10 +30,11 @@ import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import reactor.core.publisher.Mono;
 
 
 public class ElasticSearchHealthCheck implements HealthCheck {
@@ -54,20 +55,16 @@ public class ElasticSearchHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Result check() {
+    public Mono<Result> checkReactive() {
         String[] indices = indexNames.stream()
             .map(IndexName::getValue)
             .toArray(String[]::new);
         ClusterHealthRequest request = Requests.clusterHealthRequest(indices);
 
-        try {
-            ClusterHealthResponse response = client.cluster()
-                .health(request, RequestOptions.DEFAULT);
-
-            return toHealthCheckResult(response);
-        } catch (IOException e) {
-            return Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster", e);
-        }
+        return client.health(request)
+            .map(this::toHealthCheckResult)
+            .onErrorResume(IOException.class, e -> Mono.just(
+                Result.unhealthy(COMPONENT_NAME, "Error while contacting cluster", e)));
     }
 
     @VisibleForTesting
