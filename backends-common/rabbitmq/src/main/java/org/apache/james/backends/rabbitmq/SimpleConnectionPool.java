@@ -79,26 +79,20 @@ public class SimpleConnectionPool implements AutoCloseable {
         }
     }
 
-    public boolean tryConnection() {
-        try {
-            return getOpenConnection()
-                .blockOptional(Duration.ofSeconds(1))
-                .isPresent();
-        } catch (Throwable t) {
-            return false;
-        }
+    public Mono<Boolean> tryConnection() {
+        return getOpenConnection()
+            .timeout(Duration.ofSeconds(1))
+            .hasElement()
+            .onErrorResume(any -> Mono.just(false));
     }
 
-    public Optional<RabbitMQServerVersion> version() {
-        try {
-            return getOpenConnection()
-                .map(Connection::getServerProperties)
-                .flatMap(serverProperties -> Mono.justOrEmpty(serverProperties.get("version")))
-                .map(Object::toString)
-                .map(RabbitMQServerVersion::of)
-                .blockOptional(Duration.ofSeconds(1));
-        } catch (Throwable t) {
-            return Optional.empty();
-        }
+    public Mono<RabbitMQServerVersion> version() {
+        return getOpenConnection()
+            .map(Connection::getServerProperties)
+            .flatMap(serverProperties -> Mono.justOrEmpty(serverProperties.get("version")))
+            .map(Object::toString)
+            .map(RabbitMQServerVersion::of)
+            .timeout(Duration.ofSeconds(1))
+            .onErrorResume(any -> Mono.empty());
     }
 }

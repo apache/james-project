@@ -214,18 +214,16 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         pool.close();
     }
 
-    public boolean tryChannel() {
-        Channel channel = null;
-        try {
-            channel = borrow().block();
-            return channel.isOpen();
-        } catch (Throwable t) {
-            return false;
-        } finally {
-            if (channel != null) {
-                borrowedChannels.remove(channel);
-                pool.returnObject(channel);
-            }
-        }
+    public Mono<Boolean> tryChannel() {
+        return Mono.usingWhen(borrow(),
+            channel -> Mono.just(channel.isOpen()),
+            channel -> {
+                if (channel != null) {
+                    borrowedChannels.remove(channel);
+                    pool.returnObject(channel);
+                }
+                return Mono.empty();
+            })
+            .onErrorResume(any -> Mono.just(false));
     }
 }
