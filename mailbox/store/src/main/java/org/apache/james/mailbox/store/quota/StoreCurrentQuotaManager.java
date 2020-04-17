@@ -26,20 +26,14 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import reactor.core.publisher.Mono;
 
 public interface StoreCurrentQuotaManager extends CurrentQuotaManager {
-
-    Mono<Void> increase(QuotaOperation quotaOperation);
-
-    Mono<Void> decrease(QuotaOperation quotaOperation);
-
     default Mono<Void> resetCurrentQuotas(QuotaOperation quotaOperation) {
         return Mono.from(getCurrentQuotas(quotaOperation.quotaRoot()))
             .flatMap(storedQuotas -> {
                 if (!storedQuotas.equals(CurrentQuotas.from(quotaOperation))) {
-                    return decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size()))
-                        .then(increase(quotaOperation));
+                    return Mono.from(decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size())))
+                        .then(Mono.from(increase(quotaOperation)));
                 }
                 return Mono.empty();
             });
     }
-
 }

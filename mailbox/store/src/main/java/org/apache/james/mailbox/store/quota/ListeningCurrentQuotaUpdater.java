@@ -91,7 +91,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
 
     private void handleExpungedEvent(Expunged expunged, QuotaRoot quotaRoot) {
         computeQuotaOperation(expunged, quotaRoot).ifPresent(Throwing.<QuotaOperation>consumer(quotaOperation -> {
-            currentQuotaManager.decrease(quotaOperation)
+            Mono.from(currentQuotaManager.decrease(quotaOperation))
                 .then(Mono.defer(Throwing.supplier(() -> eventBus.dispatch(
                     EventFactory.quotaUpdated()
                         .randomEventId()
@@ -108,7 +108,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
 
     private void handleAddedEvent(Added added, QuotaRoot quotaRoot) {
         computeQuotaOperation(added, quotaRoot).ifPresent(Throwing.<QuotaOperation>consumer(quotaOperation -> {
-            currentQuotaManager.increase(quotaOperation)
+            Mono.from(currentQuotaManager.increase(quotaOperation))
                 .then(Mono.defer(Throwing.supplier(() -> eventBus.dispatch(
                     EventFactory.quotaUpdated()
                         .randomEventId()
@@ -143,9 +143,9 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
     private void handleMailboxDeletionEvent(MailboxDeletion mailboxDeletionEvent) throws MailboxException {
         boolean mailboxContainedMessages = mailboxDeletionEvent.getDeletedMessageCount().asLong() > 0;
         if (mailboxContainedMessages) {
-            currentQuotaManager.decrease(new QuotaOperation(mailboxDeletionEvent.getQuotaRoot(),
+            Mono.from(currentQuotaManager.decrease(new QuotaOperation(mailboxDeletionEvent.getQuotaRoot(),
                     mailboxDeletionEvent.getDeletedMessageCount(),
-                    mailboxDeletionEvent.getTotalDeletedSize()))
+                    mailboxDeletionEvent.getTotalDeletedSize())))
                 .block();
         }
     }

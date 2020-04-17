@@ -67,7 +67,7 @@ public abstract class StoreCurrentQuotaManagerTest {
 
     @Test
     void increaseShouldWork() {
-        testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100))).block();
+        Mono.from(testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100)))).block();
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             softly.assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block()).isEqualTo(CURRENT_QUOTAS);
@@ -78,9 +78,9 @@ public abstract class StoreCurrentQuotaManagerTest {
 
     @Test
     void decreaseShouldWork() {
-        testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200))).block();
+        Mono.from(testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200)))).block();
 
-        testee.decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100))).block();
+        Mono.from(testee.decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100)))).block();
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             softly.assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block()).isEqualTo(CURRENT_QUOTAS);
@@ -91,7 +91,7 @@ public abstract class StoreCurrentQuotaManagerTest {
 
     @Test
     void decreaseShouldNotFailWhenItLeadsToNegativeValues() {
-        testee.decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100))).block();
+        Mono.from(testee.decrease(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100)))).block();
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             softly.assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
@@ -121,7 +121,7 @@ public abstract class StoreCurrentQuotaManagerTest {
 
     @Test
     void resetCurrentQuotasShouldReInitQuotasWhenData() {
-        testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200))).block();
+        Mono.from(testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200)))).block();
 
         testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
 
@@ -131,7 +131,7 @@ public abstract class StoreCurrentQuotaManagerTest {
 
     @Test
     void resetCurrentQuotasShouldBeIdempotent() {
-        testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200))).block();
+        Mono.from(testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200)))).block();
 
         testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
         testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();

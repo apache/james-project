@@ -26,10 +26,10 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.mail.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.store.mail.task.RecomputeCurrentQuotasServiceContract;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +72,7 @@ class MemoryRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasS
     }
 
     @Override
-    public StoreCurrentQuotaManager currentQuotaManager() {
+    public CurrentQuotaManager currentQuotaManager() {
         return resources.getCurrentQuotaManager();
     }
 

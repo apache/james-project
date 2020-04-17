@@ -34,6 +34,7 @@ import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.CassandraTestSystemFixture;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.task.RecomputeCurrentQuotasService;
@@ -104,7 +105,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
     }
 
     @Override
-    public StoreCurrentQuotaManager currentQuotaManager() {
+    public CurrentQuotaManager currentQuotaManager() {
         return currentQuotaManager;
     }
 

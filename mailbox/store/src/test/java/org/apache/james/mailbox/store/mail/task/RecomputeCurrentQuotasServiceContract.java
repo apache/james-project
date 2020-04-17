@@ -34,9 +34,9 @@ import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.mail.task.RecomputeCurrentQuotasService.Context;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
@@ -55,7 +55,7 @@ public interface RecomputeCurrentQuotasServiceContract {
     UsersRepository usersRepository();
     SessionProvider sessionProvider();
     MailboxManager mailboxManager();
-    StoreCurrentQuotaManager currentQuotaManager();
+    CurrentQuotaManager currentQuotaManager();
     UserQuotaRootResolver userQuotaRootResolver();
     RecomputeCurrentQuotasService testee();
 
@@ -126,7 +126,7 @@ public interface RecomputeCurrentQuotasServiceContract {
         QuotaRoot quotaRoot = userQuotaRootResolver().forUser(USER_1);
 
         QuotaOperation operation = new QuotaOperation(quotaRoot, QuotaCountUsage.count(3L), QuotaSizeUsage.size(390L));
-        currentQuotaManager().increase(operation).block();
+        Mono.from(currentQuotaManager().increase(operation)).block();
 
         testee().recomputeCurrentQuotas(new Context()).block();
 
@@ -184,7 +184,7 @@ public interface RecomputeCurrentQuotasServiceContract {
         QuotaRoot quotaRoot = userQuotaRootResolver().forUser(USER_1);
 
         QuotaOperation operation = new QuotaOperation(quotaRoot, QuotaCountUsage.count(3L), QuotaSizeUsage.size(390L));
-        currentQuotaManager().increase(operation).block();
+        Mono.from(currentQuotaManager().increase(operation)).block();
 
         Context context = new Context();
         testee().recomputeCurrentQuotas(context).block();

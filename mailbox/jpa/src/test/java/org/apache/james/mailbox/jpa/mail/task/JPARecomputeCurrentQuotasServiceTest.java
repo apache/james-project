@@ -32,6 +32,7 @@ import org.apache.james.mailbox.jpa.JpaMailboxManagerProvider;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.task.RecomputeCurrentQuotasService;
@@ -112,7 +113,7 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
     }
 
     @Override
-    public StoreCurrentQuotaManager currentQuotaManager() {
+    public CurrentQuotaManager currentQuotaManager() {
         return currentQuotaManager;
     }
 
