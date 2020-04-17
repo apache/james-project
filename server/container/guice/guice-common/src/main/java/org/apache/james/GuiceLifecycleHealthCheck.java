@@ -25,6 +25,8 @@ import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 
+import reactor.core.publisher.Mono;
+
 public class GuiceLifecycleHealthCheck implements HealthCheck {
     private final IsStartedProbe probe;
 
@@ -39,11 +41,11 @@ public class GuiceLifecycleHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Result check() {
+    public Mono<Result> checkReactive() {
         if (probe.isStarted()) {
-            return Result.healthy(componentName());
+            return Mono.just(Result.healthy(componentName()));
         } else {
-            return Result.unhealthy(componentName(), "James server is not started.");
+            return Mono.just(Result.unhealthy(componentName(), "James server is not started."));
         }
     }
 }
