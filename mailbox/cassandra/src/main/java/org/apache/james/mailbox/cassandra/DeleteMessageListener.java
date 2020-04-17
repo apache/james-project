@@ -55,6 +55,17 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * This listener cleans Cassandra metadata up. It retrieves dandling unreferenced metadata after the delete operation
+ * had been conducted out. Then it deletes the lower levels first so that upon failures undeleted metadata can still be
+ * reached.
+ *
+ * This cleanup is not needed for strict correctness from a MailboxManager point of view thus it could be carried out
+ * asynchronously, via mailbox listeners so that it can be retried.
+ *
+ * Mailbox listener failures lead to eventBus retrying their execution, it ensures the result of the deletion to be
+ * idempotent.
+ */
 public class DeleteMessageListener implements MailboxListener.GroupMailboxListener {
     private static final Optional<CassandraId> ALL_MAILBOXES = Optional.empty();
 
