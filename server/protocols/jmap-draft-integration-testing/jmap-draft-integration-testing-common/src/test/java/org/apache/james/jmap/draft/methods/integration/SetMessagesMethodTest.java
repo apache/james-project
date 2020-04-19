@@ -153,6 +153,7 @@ public abstract class SetMessagesMethodTest {
     private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
     private static final int BIG_MESSAGE_SIZE = 20 * 1024 * 1024;
     public static final String OCTET_CONTENT_TYPE = "application/octet-stream";
+    public static final String OCTET_CONTENT_TYPE_UTF8 = "application/octet-stream; charset=UTF-8";
 
     private AccessToken bobAccessToken;
 
@@ -4016,12 +4017,81 @@ public abstract class SetMessagesMethodTest {
                 createdPath + ".attachments[0].inlinedWithCid", createdPath + ".attachments[1].inlinedWithCid")
             .inPath(createdPath + ".attachments")
             .isEqualTo("[{" +
-                "  \"type\":\"application/octet-stream\"," +
+                "  \"type\":\"application/octet-stream; charset=UTF-8\"," +
                 "  \"size\":" + bytes1.length() + "," +
                 "  \"cid\":null," +
                 "  \"isInline\":false" +
                 "}, {" +
-                "  \"type\":\"application/octet-stream\"," +
+                "  \"type\":\"application/octet-stream; charset=UTF-8\"," +
+                "  \"size\":" + bytes2.length() + "," +
+                "  \"cid\":\"123456789\"," +
+                "  \"isInline\":true" +
+                "}]");
+    }
+
+    @Test
+    public void setMessagesShouldPreserveCharsetOfAttachment() throws Exception {
+        String bytes1 = "attachment";
+        String bytes2 = "attachment2";
+        AttachmentMetadata uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE_UTF8, bytes1.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE_UTF8, bytes2.getBytes(StandardCharsets.UTF_8));
+
+        String messageCreationId = "creationId";
+        String fromAddress = USERNAME.asString();
+        String outboxId = getOutboxId(accessToken);
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Message with two attachments\"," +
+            "        \"textBody\": \"Test body\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+            "        \"attachments\": [" +
+            "               {\"blobId\" : \"" + uploadedAttachment1.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment1.getType() + "\", " +
+            "               \"size\" : " + uploadedAttachment1.getSize() + "}," +
+            "               {\"blobId\" : \"" + uploadedAttachment2.getAttachmentId().getId() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment2.getType() + "\", " +
+            "               \"size\" : " + uploadedAttachment2.getSize() + ", " +
+            "               \"cid\" : \"123456789\", " +
+            "               \"isInline\" : true }" +
+            "           ]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String createdPath = ARGUMENTS + ".created[\"" + messageCreationId + "\"]";
+
+        String json = given()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(createdPath + ".attachments", hasSize(2))
+            .extract().asString();
+
+        assertThatJson(json)
+            .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER, Option.IGNORING_EXTRA_FIELDS))
+            .whenIgnoringPaths(createdPath + ".attachments[0].blobId", createdPath + ".attachments[1].blobId",
+                createdPath + ".attachments[0].inlinedWithCid", createdPath + ".attachments[1].inlinedWithCid")
+            .inPath(createdPath + ".attachments")
+            .isEqualTo("[{" +
+                "  \"type\":\"application/octet-stream; charset=UTF-8\"," +
+                "  \"size\":" + bytes1.length() + "," +
+                "  \"cid\":null," +
+                "  \"isInline\":false" +
+                "}, {" +
+                "  \"type\":\"application/octet-stream; charset=UTF-8\"," +
                 "  \"size\":" + bytes2.length() + "," +
                 "  \"cid\":\"123456789\"," +
                 "  \"isInline\":true" +
@@ -4302,7 +4372,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".type", equalTo(OCTET_CONTENT_TYPE))
+            .body(firstAttachment + ".type", equalTo(OCTET_CONTENT_TYPE_UTF8))
             .body(firstAttachment + ".size", equalTo(rawBytes.length))
             .body(firstAttachment + ".cid", equalTo("123456789"))
             .body(firstAttachment + ".isInline", equalTo(true))
@@ -4375,7 +4445,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".type", equalTo(OCTET_CONTENT_TYPE))
+            .body(firstAttachment + ".type", equalTo(OCTET_CONTENT_TYPE_UTF8))
             .body(firstAttachment + ".size", equalTo(rawBytes.length))
             .body(firstAttachment + ".cid", equalTo("123456789"))
             .body(firstAttachment + ".isInline", equalTo(true))
@@ -4472,7 +4542,7 @@ public abstract class SetMessagesMethodTest {
             .body(firstMessage + ".textBody", equalTo("Test body, plain text version"))
             .body(firstMessage + ".htmlBody", equalTo("Test <b>body</b>, HTML version"))
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".type", equalTo("text/html"))
+            .body(firstAttachment + ".type", equalTo("text/html; charset=UTF-8"))
             .body(firstAttachment + ".size", equalTo(text.length()))
             .extract()
             .jsonPath()
@@ -4547,7 +4617,7 @@ public abstract class SetMessagesMethodTest {
             .body(firstMessage + ".textBody", equalTo("Test body, plain text version"))
             .body(firstMessage + ".htmlBody", isEmptyOrNullString())
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".type", equalTo("text/html"))
+            .body(firstAttachment + ".type", equalTo("text/html; charset=UTF-8"))
             .body(firstAttachment + ".size", equalTo((int) uploadedAttachment.getSize()))
             .extract()
             .jsonPath()
@@ -4632,7 +4702,7 @@ public abstract class SetMessagesMethodTest {
             .body(firstMessage + ".textBody", isEmptyOrNullString())
             .body(firstMessage + ".htmlBody", isEmptyOrNullString())
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".type", equalTo("text/plain"))
+            .body(firstAttachment + ".type", equalTo("text/plain; charset=UTF-8"))
             .body(firstAttachment + ".size", equalTo((int) uploadedAttachment.getSize()))
             .extract()
             .jsonPath()
@@ -5374,7 +5444,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             .body(createdPath + ".attachments", hasSize(1))
-            .body(singleAttachment + ".type", equalTo("text/html"))
+            .body(singleAttachment + ".type", equalTo("text/html; charset=UTF-8"))
             .body(singleAttachment + ".size", equalTo((int) uploadedAttachment.getSize()));
     }
 
@@ -5493,9 +5563,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnAttachmentsWhenMessageHasInlinedAttachmentButNoCid() throws Exception {
         String bytes = "attachment";
-        AttachmentMetadata uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE, bytes.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE_UTF8, bytes.getBytes(StandardCharsets.UTF_8));
         String bytes2 = "attachment2";
-        AttachmentMetadata uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE, bytes2.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE_UTF8, bytes2.getBytes(StandardCharsets.UTF_8));
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -5545,11 +5615,11 @@ public abstract class SetMessagesMethodTest {
             .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER, Option.IGNORING_EXTRA_FIELDS))
             .inPath(createdPath + ".attachments")
             .isEqualTo("[{" +
-                "  \"type\":\"application/octet-stream\"," +
+                "  \"type\":\"application/octet-stream; charset=UTF-8\"," +
                 "  \"size\":" + bytes2.length() + "," +
                 "  \"isInline\":false" +
                 "}, {" +
-                "  \"type\":\"application/octet-stream\"," +
+                "  \"type\":\"application/octet-stream; charset=UTF-8\"," +
                 "  \"size\":" + bytes.length() + "," +
                 "  \"isInline\":false" + // See JAMES-2258 inline should be false in case of no Content-ID for inlined attachment
                 // Stored attachment will not be considered as having an inlined attachment.
@@ -5684,7 +5754,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(message + ".attachments", hasSize(1))
-            .body(firstAttachment + ".type", equalTo("text/calendar"))
+            .body(firstAttachment + ".type", equalTo("text/calendar; charset=UTF-8"))
             .body(firstAttachment + ".blobId", not(isEmptyOrNullString()));
     }
 

@@ -646,6 +646,54 @@ class MIMEMessageConverterTest {
         }
 
         @Test
+        void convertToMimeShouldPreservePartCharset() throws Exception {
+            // Given
+            MIMEMessageConverter sut = new MIMEMessageConverter(attachmentContentLoader);
+
+            CreationMessage testMessage = CreationMessage.builder()
+                .mailboxId("dead-bada55")
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
+
+            String expectedCID = "cid";
+            String expectedMimeType = "text/calendar; charset=\"iso-8859-1\"";
+            String text = "123456";
+            TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
+            AttachmentId blodId = AttachmentId.from("blodId");
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
+                .attachment(AttachmentMetadata.builder()
+                    .attachmentId(blodId)
+                    .size(text.getBytes().length)
+                    .type(expectedMimeType)
+                    .build())
+                .cid(Cid.from(expectedCID))
+                .isInline(true)
+                .build();
+            when(attachmentContentLoader.load(attachment.getAttachment(), session))
+                .thenReturn(new ByteArrayInputStream(text.getBytes()));
+
+            // When
+            Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session);
+            Multipart typedResult = (Multipart)result.getBody();
+
+            assertThat(typedResult.getBodyParts())
+                .hasSize(1)
+                .extracting(entity -> (Multipart) entity.getBody())
+                .flatExtracting(Multipart::getBodyParts)
+                .anySatisfy(part -> {
+                    assertThat(part.getBody()).isEqualToComparingOnlyGivenFields(expectedBody, "content");
+                    assertThat(part.getDispositionType()).isEqualTo("inline");
+                    assertThat(part.getMimeType()).isEqualTo("text/calendar");
+                    assertThat(part.getCharset()).isEqualTo("iso-8859-1");
+                    assertThat(part.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
+                    assertThat(part.getContentTransferEncoding()).isEqualTo("base64");
+                });
+        }
+
+        @Test
         void convertToMimeShouldAddAttachmentAndMultipartAlternativeWhenOneAttachementAndTextAndHtmlBody() throws Exception {
             // Given
             MIMEMessageConverter sut = new MIMEMessageConverter(attachmentContentLoader);

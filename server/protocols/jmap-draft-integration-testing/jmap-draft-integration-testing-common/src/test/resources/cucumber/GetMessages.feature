@@ -445,8 +445,8 @@ Feature: GetMessages method
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
-    |key      | value                        |
-    |type     |"text/calendar"               |
-    |size     |1096                          |
-    |name     |"event.ics"                   |
-    |isInline |false                         |
+    |key      | value                         |
+    |type     |"text/calendar; charset=UTF-8" |
+    |size     |1096                           |
+    |name     |"event.ics"                    |
+    |isInline |false                          |

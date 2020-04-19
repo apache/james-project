@@ -69,7 +69,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.io.ByteStreams;
 import com.google.common.net.MediaType;
 
@@ -329,23 +328,20 @@ public class MIMEMessageConverter {
     }
 
     private ContentTypeField contentTypeField(MessageAttachmentMetadata att) {
-        Builder<String, String> parameters = ImmutableMap.builder();
-        if (att.getName().isPresent()) {
-            parameters.put("name", encode(att.getName().get()));
-        }
         String type = att.getAttachment().getType();
-        if (type.contains(FIELD_PARAMETERS_SEPARATOR)) {
-            return Fields.contentType(contentTypeWithoutParameters(type), parameters.build());
+        ContentTypeField typeAsField = Fields.contentType(type);
+        if (att.getName().isPresent()) {
+            return Fields.contentType(typeAsField.getMimeType(),
+                ImmutableMap.<String, String>builder()
+                    .putAll(typeAsField.getParameters())
+                    .put("name", encode(att.getName().get()))
+                    .build());
         }
-        return Fields.contentType(type, parameters.build());
+        return typeAsField;
     }
 
     private String encode(String name) {
         return EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN);
-    }
-
-    private String contentTypeWithoutParameters(String type) {
-        return Splitter.on(FIELD_PARAMETERS_SEPARATOR).splitToList(type).get(0);
     }
 
     private ContentDispositionField contentDispositionField(boolean isInline) {
