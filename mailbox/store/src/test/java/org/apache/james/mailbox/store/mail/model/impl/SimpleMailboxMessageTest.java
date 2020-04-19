@@ -35,9 +35,9 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -176,8 +176,8 @@ class SimpleMailboxMessageTest {
         PropertyBuilder propertyBuilder = new PropertyBuilder();
         ModSeq modseq = ModSeq.of(145);
         MessageUid uid = MessageUid.of(45);
-        MessageAttachment messageAttachment = MessageAttachment.builder()
-            .attachment(Attachment.builder()
+        MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
+            .attachment(AttachmentMetadata.builder()
                 .attachmentId(AttachmentId.from("1"))
                 .type("type")
                 .size(485)

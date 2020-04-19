@@ -66,7 +66,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
@@ -432,7 +432,7 @@ public class StoreMessageManager implements MessageManager {
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
             return locker.executeWithLock(getMailboxPath(), () -> {
-                Pair<MessageMetaData, Optional<List<MessageAttachment>>> data = messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, mailboxSession);
+                Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> data = messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, mailboxSession);
 
                 Mailbox mailbox = getMailboxEntity();
 

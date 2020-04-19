@@ -29,8 +29,8 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,7 +58,7 @@ class CassandraAttachmentDAOV2Test {
 
     @Test
     void getAttachmentShouldReturnAttachmentWhenStored() {
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
             .size(4)

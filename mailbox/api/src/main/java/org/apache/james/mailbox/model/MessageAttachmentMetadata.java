@@ -26,7 +26,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-public class MessageAttachment {
+public class MessageAttachmentMetadata {
 
     public static Builder builder() {
         return new Builder();
@@ -34,7 +34,7 @@ public class MessageAttachment {
 
     public static class Builder {
 
-        private Attachment attachment;
+        private AttachmentMetadata attachment;
         private Optional<String> name;
         private Optional<Cid> cid;
         private Optional<Boolean> isInline = Optional.empty();
@@ -44,7 +44,7 @@ public class MessageAttachment {
             cid = Optional.empty();
         }
 
-        public Builder attachment(Attachment attachment) {
+        public Builder attachment(AttachmentMetadata attachment) {
             Preconditions.checkArgument(attachment != null);
             this.attachment = attachment;
             return this;
@@ -77,30 +77,30 @@ public class MessageAttachment {
             return this;
         }
 
-        public MessageAttachment build() {
+        public MessageAttachmentMetadata build() {
             Preconditions.checkState(attachment != null, "'attachment' is mandatory");
-            return new MessageAttachment(attachment, name, cid, isInline.orElse(false));
+            return new MessageAttachmentMetadata(attachment, name, cid, isInline.orElse(false));
         }
     }
 
-    public static boolean hasNonInlinedAttachment(List<MessageAttachment> attachments) {
+    public static boolean hasNonInlinedAttachment(List<MessageAttachmentMetadata> attachments) {
         return attachments.stream()
             .anyMatch(messageAttachment -> !messageAttachment.isInlinedWithCid());
     }
 
-    private final Attachment attachment;
+    private final AttachmentMetadata attachment;
     private final Optional<String> name;
     private final Optional<Cid> cid;
     private final boolean isInline;
 
-    public MessageAttachment(Attachment attachment, Optional<String> name, Optional<Cid> cid, boolean isInline) {
+    public MessageAttachmentMetadata(AttachmentMetadata attachment, Optional<String> name, Optional<Cid> cid, boolean isInline) {
         this.attachment = attachment;
         this.name = name;
         this.cid = cid;
         this.isInline = isInline;
     }
 
-    public Attachment getAttachment() {
+    public AttachmentMetadata getAttachment() {
         return attachment;
     }
 
@@ -126,8 +126,8 @@ public class MessageAttachment {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof MessageAttachment) {
-            MessageAttachment other = (MessageAttachment) obj;
+        if (obj instanceof MessageAttachmentMetadata) {
+            MessageAttachmentMetadata other = (MessageAttachmentMetadata) obj;
             return Objects.equal(attachment, other.attachment)
                 && Objects.equal(name, other.name)
                 && Objects.equal(cid, other.cid)

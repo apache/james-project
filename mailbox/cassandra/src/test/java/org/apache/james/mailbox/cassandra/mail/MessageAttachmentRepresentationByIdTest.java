@@ -26,7 +26,7 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.junit.jupiter.api.Test;
 
 
@@ -34,13 +34,13 @@ class MessageAttachmentRepresentationByIdTest {
 
     @Test
     void buildShouldThrowWhenAttachmentIsNotGiven() {
-        assertThatThrownBy(() -> MessageAttachment.builder().build())
+        assertThatThrownBy(() -> MessageAttachmentMetadata.builder().build())
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void builderShouldThrowWhenAttachmentIsNull() {
-        assertThatThrownBy(() -> MessageAttachment.builder().attachment(null))
+        assertThatThrownBy(() -> MessageAttachmentMetadata.builder().attachment(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

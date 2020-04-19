@@ -29,8 +29,8 @@ import java.util.List;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -75,7 +75,7 @@ public abstract class AttachmentMapperTest {
         String content = "content";
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
 
-        Attachment stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
+        AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
 
         SoftAssertions.assertSoftly(solftly -> {
             solftly.assertThat(stored.getSize()).isEqualTo(bytes.length);
@@ -88,9 +88,9 @@ public abstract class AttachmentMapperTest {
         String content = "content";
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
 
-        Attachment stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
+        AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
 
-        Attachment attachment = attachmentMapper.getAttachment(stored.getAttachmentId());
+        AttachmentMetadata attachment = attachmentMapper.getAttachment(stored.getAttachmentId());
 
         SoftAssertions.assertSoftly(solftly -> {
             solftly.assertThat(attachment.getAttachmentId()).isEqualTo(stored.getAttachmentId());
@@ -104,7 +104,7 @@ public abstract class AttachmentMapperTest {
         String content = "content";
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
 
-        Attachment stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
+        AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
 
         assertThat(attachmentMapper.loadAttachmentContent(stored.getAttachmentId()))
             .hasSameContentAs(new ByteArrayInputStream(bytes));
@@ -118,7 +118,7 @@ public abstract class AttachmentMapperTest {
 
     @Test
     void getAttachmentsShouldReturnEmptyListWhenNonReferencedAttachmentId() {
-        List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(UNKNOWN_ATTACHMENT_ID));
+        List<AttachmentMetadata> attachments = attachmentMapper.getAttachments(ImmutableList.of(UNKNOWN_ATTACHMENT_ID));
 
         assertThat(attachments).isEmpty();
     }
@@ -128,10 +128,10 @@ public abstract class AttachmentMapperTest {
         //Given
         String content1 = "content";
         byte[] bytes1 = "payload".getBytes(StandardCharsets.UTF_8);
-        Attachment stored1 = Mono.from(attachmentMapper.storeAttachmentForOwner(content1, new ByteArrayInputStream(bytes1), OWNER)).block();
+        AttachmentMetadata stored1 = Mono.from(attachmentMapper.storeAttachmentForOwner(content1, new ByteArrayInputStream(bytes1), OWNER)).block();
         String content2 = "content";
         byte[] bytes2 = "payload".getBytes(StandardCharsets.UTF_8);
-        Attachment stored2 = Mono.from(attachmentMapper.storeAttachmentForOwner(content2, new ByteArrayInputStream(bytes2), OWNER)).block();
+        AttachmentMetadata stored2 = Mono.from(attachmentMapper.storeAttachmentForOwner(content2, new ByteArrayInputStream(bytes2), OWNER)).block();
 
         assertThat(attachmentMapper.getAttachments(ImmutableList.of(stored1.getAttachmentId(), stored2.getAttachmentId())))
             .contains(stored1, stored2);
@@ -148,7 +148,7 @@ public abstract class AttachmentMapperTest {
     void getOwnerMessageIdsShouldReturnEmptyWhenStoredWithoutMessageId() throws Exception {
         String content = "content";
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
-        Attachment stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
+        AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
 
         assertThat(attachmentMapper.getRelatedMessageIds(stored.getAttachmentId())).isEmpty();
     }
@@ -192,7 +192,7 @@ public abstract class AttachmentMapperTest {
     void getOwnersShouldBeRetrievedWhenExplicitlySpecified() throws Exception {
         String content = "content";
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
-        Attachment stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
+        AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
 
         Collection<Username> actualOwners = attachmentMapper.getOwners(stored.getAttachmentId());
 
@@ -203,10 +203,10 @@ public abstract class AttachmentMapperTest {
     void getOwnersShouldNotReturnUnrelatedOwners() throws Exception {
         String content = "content";
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
-        Attachment stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
+        AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
         String content2 = "content";
         byte[] bytes2 = "payload".getBytes(StandardCharsets.UTF_8);
-        Attachment stored2 = Mono.from(attachmentMapper.storeAttachmentForOwner(content2, new ByteArrayInputStream(bytes2), ADDITIONAL_OWNER)).block();
+        AttachmentMetadata stored2 = Mono.from(attachmentMapper.storeAttachmentForOwner(content2, new ByteArrayInputStream(bytes2), ADDITIONAL_OWNER)).block();
 
         Collection<Username> actualOwners = attachmentMapper.getOwners(stored.getAttachmentId());
 

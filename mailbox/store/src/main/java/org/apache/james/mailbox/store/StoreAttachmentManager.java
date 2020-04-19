@@ -32,8 +32,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.reactivestreams.Publisher;
@@ -60,7 +60,7 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
-    public Attachment getAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException, AttachmentNotFoundException {
+    public AttachmentMetadata getAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException, AttachmentNotFoundException {
         if (!userHasAccessToAttachment(attachmentId, mailboxSession)) {
             throw new AttachmentNotFoundException(attachmentId.getId());
         }
@@ -68,7 +68,7 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
-    public List<Attachment> getAttachments(List<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException {
+    public List<AttachmentMetadata> getAttachments(List<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException {
         List<AttachmentId> accessibleAttachmentIds = attachmentIds.stream()
             .filter(attachmentId -> userHasAccessToAttachment(attachmentId, mailboxSession))
             .collect(Guavate.toImmutableList());
@@ -77,7 +77,7 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
-    public Publisher<Attachment> storeAttachment(String contentType, InputStream attachmentContent, MailboxSession mailboxSession) {
+    public Publisher<AttachmentMetadata> storeAttachment(String contentType, InputStream attachmentContent, MailboxSession mailboxSession) {
         return attachmentMapperFactory.getAttachmentMapper(mailboxSession)
             .storeAttachmentForOwner(contentType, attachmentContent, mailboxSession.getUser());
     }

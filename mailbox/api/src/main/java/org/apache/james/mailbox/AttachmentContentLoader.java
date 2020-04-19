@@ -23,10 +23,10 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 
 public interface AttachmentContentLoader {
 
-    InputStream load(Attachment attachment, MailboxSession mailboxSession) throws IOException, AttachmentNotFoundException;
+    InputStream load(AttachmentMetadata attachment, MailboxSession mailboxSession) throws IOException, AttachmentNotFoundException;
 
 }

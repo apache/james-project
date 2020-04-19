@@ -45,7 +45,7 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.util.OptionalUtils;
@@ -78,7 +78,7 @@ public class MessageAppender {
                                                         List<MailboxId> targetMailboxes,
                                                         MailboxSession session) throws MailboxException {
         Preconditions.checkArgument(!targetMailboxes.isEmpty());
-        ImmutableList<MessageAttachment> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
+        ImmutableList<MessageAttachmentMetadata> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
         byte[] messageContent = mimeMessageConverter.convert(createdEntry, messageAttachments, session);
         SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
         Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
@@ -147,17 +147,17 @@ public class MessageAppender {
         return message.getKeywords().asFlags();
     }
 
-    private ImmutableList<MessageAttachment> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {
-        ThrowingFunction<Attachment, Optional<MessageAttachment>> toMessageAttachment = att -> messageAttachment(session, att);
+    private ImmutableList<MessageAttachmentMetadata> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {
+        ThrowingFunction<Attachment, Optional<MessageAttachmentMetadata>> toMessageAttachment = att -> messageAttachment(session, att);
         return attachments.stream()
             .map(Throwing.function(toMessageAttachment).sneakyThrow())
             .flatMap(OptionalUtils::toStream)
             .collect(Guavate.toImmutableList());
     }
 
-    private Optional<MessageAttachment> messageAttachment(MailboxSession session, Attachment attachment) throws MailboxException {
+    private Optional<MessageAttachmentMetadata> messageAttachment(MailboxSession session, Attachment attachment) throws MailboxException {
         try {
-            return Optional.of(MessageAttachment.builder()
+            return Optional.of(MessageAttachmentMetadata.builder()
                 .attachment(attachmentManager.getAttachment(AttachmentId.from(attachment.getBlobId().getRawValue()), session))
                 .name(attachment.getName().orElse(null))
                 .cid(attachment.getCid().map(Cid::from).orElse(null))

@@ -38,8 +38,8 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.BlobNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Blob;
 import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.Content;
@@ -80,7 +80,7 @@ class StoreBlobManagerTest {
     @Test
     void retrieveShouldReturnBlobWhenAttachment() throws Exception {
         when(attachmentManager.getAttachment(ATTACHMENT_ID, session))
-            .thenReturn(Attachment.builder()
+            .thenReturn(AttachmentMetadata.builder()
                 .attachmentId(ATTACHMENT_ID)
                 .size(BYTES.length)
                 .type(CONTENT_TYPE)

@@ -24,38 +24,38 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-class AttachmentTest {
+class AttachmentMetadataTest {
     @Test
     void builderShouldThrowWhenAttachmentIdIsNull() {
-        assertThatThrownBy(() -> Attachment.builder()
+        assertThatThrownBy(() -> AttachmentMetadata.builder()
                 .attachmentId(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void builderShouldThrowWhenTypeIsNull() {
-        assertThatThrownBy(() -> Attachment.builder()
+        assertThatThrownBy(() -> AttachmentMetadata.builder()
                 .type(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void builderShouldThrowWhenTypeIsEmpty() {
-        assertThatThrownBy(() -> Attachment.builder()
+        assertThatThrownBy(() -> AttachmentMetadata.builder()
                 .type(""))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void buildShouldThrowWhenAttachmentIdIsNotProvided() {
-        assertThatThrownBy(() -> Attachment.builder()
+        assertThatThrownBy(() -> AttachmentMetadata.builder()
                 .build())
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void buildShouldThrowWhenSizeIsNotProvided() {
-        assertThatThrownBy(() -> Attachment.builder()
+        assertThatThrownBy(() -> AttachmentMetadata.builder()
                 .attachmentId(AttachmentId.random())
                 .type("TYPE")
                 .build())
@@ -64,7 +64,7 @@ class AttachmentTest {
 
     @Test
     void buildShouldThrowWhenTypeIsNotProvided() {
-        assertThatThrownBy(() -> Attachment.builder()
+        assertThatThrownBy(() -> AttachmentMetadata.builder()
                 .attachmentId(AttachmentId.random())
                 .size(36)
                 .build())
@@ -73,7 +73,7 @@ class AttachmentTest {
 
     @Test
     void sizeShouldThrowOnNegativeValue() {
-        assertThatThrownBy(() -> Attachment.builder()
+        assertThatThrownBy(() -> AttachmentMetadata.builder()
                 .attachmentId(AttachmentId.random())
                 .size(-3))
             .isInstanceOf(IllegalArgumentException.class);

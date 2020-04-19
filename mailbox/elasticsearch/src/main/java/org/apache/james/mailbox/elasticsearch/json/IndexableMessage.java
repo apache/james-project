@@ -32,7 +32,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
@@ -104,7 +104,7 @@ public class IndexableMessage {
             Optional<String> bodyText = parsingResult.locateFirstTextBody();
             Optional<String> bodyHtml = parsingResult.locateFirstHtmlBody();
 
-            boolean hasAttachment = MessageAttachment.hasNonInlinedAttachment(message.getAttachments());
+            boolean hasAttachment = MessageAttachmentMetadata.hasNonInlinedAttachment(message.getAttachments());
             List<MimePart> attachments = setFlattenedAttachments(parsingResult, indexAttachments);
 
             HeaderCollection headerCollection = parsingResult.getHeaderCollection();

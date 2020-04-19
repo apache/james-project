@@ -24,11 +24,11 @@ import java.io.InputStream;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 
 public class MaildirAttachmentContentLoader implements AttachmentContentLoader {
     @Override
-    public InputStream load(Attachment attachment, MailboxSession mailboxSession) {
+    public InputStream load(AttachmentMetadata attachment, MailboxSession mailboxSession) {
         throw new NotImplementedException("Maildir doesn't support loading attachment separately from Message");
     }
 }

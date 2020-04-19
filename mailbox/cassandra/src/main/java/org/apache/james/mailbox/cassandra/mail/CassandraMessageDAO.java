@@ -66,7 +66,7 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -204,7 +204,7 @@ public class CassandraMessageDAO {
             .collect(Guavate.toImmutableList());
     }
 
-    private UDTValue toUDT(MessageAttachment messageAttachment) {
+    private UDTValue toUDT(MessageAttachmentMetadata messageAttachment) {
         UDTValue result = typesProvider.getDefinedUserType(ATTACHMENTS)
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())

@@ -30,7 +30,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -66,7 +66,7 @@ public class MessageRepresentation {
         this.attachments = attachments;
     }
 
-    public SimpleMailboxMessage toMailboxMessage(List<MessageAttachment> attachments) {
+    public SimpleMailboxMessage toMailboxMessage(List<MessageAttachmentMetadata> attachments) {
         return SimpleMailboxMessage.builder()
             .messageId(messageId)
             .mailboxId(mailboxId)

@@ -30,7 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.ParsedAttachment;
@@ -51,7 +51,7 @@ public interface MessageStorer {
      *
      * Otherwize an empty optional will be returned on the right side of the pair.
      */
-    Pair<MessageMetaData, Optional<List<MessageAttachment>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException;
+    Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException;
 
     /**
      * MessageStorer parsing, storing and returning AttachmentMetadata
@@ -80,19 +80,19 @@ public interface MessageStorer {
         }
 
         @Override
-        public Pair<MessageMetaData, Optional<List<MessageAttachment>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException {
+        public Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
 
             return mapperFactory.getMessageMapper(session).execute(() -> {
-                List<MessageAttachment> attachments = storeAttachments(messageId, content, session);
+                List<MessageAttachmentMetadata> attachments = storeAttachments(messageId, content, session);
                 MailboxMessage message = messageFactory.createMessage(messageId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
                 MessageMetaData metadata = messageMapper.add(mailbox, message);
                 return Pair.of(metadata, Optional.of(attachments));
             });
         }
 
-        private List<MessageAttachment> storeAttachments(MessageId messageId, SharedInputStream messageContent, MailboxSession session) throws MailboxException {
+        private List<MessageAttachmentMetadata> storeAttachments(MessageId messageId, SharedInputStream messageContent, MailboxSession session) throws MailboxException {
             List<ParsedAttachment> attachments = extractAttachments(messageContent);
             return attachmentMapperFactory.getAttachmentMapper(session)
                 .storeAttachmentsForMessage(attachments, messageId);
@@ -125,7 +125,7 @@ public interface MessageStorer {
         }
 
         @Override
-        public Pair<MessageMetaData, Optional<List<MessageAttachment>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException {
+        public Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
 

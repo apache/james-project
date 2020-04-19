@@ -25,7 +25,7 @@ import java.util.List;
 
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 
 public abstract class DelegatingMailboxMessage implements MailboxMessage {
@@ -116,7 +116,7 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     }
 
     @Override
-    public List<MessageAttachment> getAttachments() {
+    public List<MessageAttachmentMetadata> getAttachments() {
         return message.getAttachments();
     }
 

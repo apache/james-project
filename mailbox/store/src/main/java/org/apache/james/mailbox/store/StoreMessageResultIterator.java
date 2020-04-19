@@ -37,7 +37,7 @@ import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
@@ -293,7 +293,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         }
 
         @Override
-        public List<MessageAttachment> getLoadedAttachments() throws MailboxException {
+        public List<MessageAttachmentMetadata> getLoadedAttachments() throws MailboxException {
             throw exception;
         }
 

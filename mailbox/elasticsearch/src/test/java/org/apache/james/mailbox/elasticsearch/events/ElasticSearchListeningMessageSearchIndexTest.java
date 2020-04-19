@@ -55,11 +55,11 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.manager.ManagerTestProvisionner;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.TestId;
@@ -113,8 +113,8 @@ class ElasticSearchListeningMessageSearchIndexTest {
         .uid(MESSAGE_UID_2)
         .build();
 
-    static final MessageAttachment MESSAGE_ATTACHMENT = MessageAttachment.builder()
-        .attachment(Attachment.builder()
+    static final MessageAttachmentMetadata MESSAGE_ATTACHMENT = MessageAttachmentMetadata.builder()
+        .attachment(AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from("1"))
             .type("type")
             .size(523)

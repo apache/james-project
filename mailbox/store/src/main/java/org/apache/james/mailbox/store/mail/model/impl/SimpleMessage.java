@@ -25,7 +25,7 @@ import java.util.List;
 
 import javax.mail.internet.SharedInputStream;
 
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -41,10 +41,10 @@ public class SimpleMessage implements Message {
     private final long size;
     private final Long textualLineCount;
     private final List<Property> properties;
-    private final List<MessageAttachment> attachments;
+    private final List<MessageAttachmentMetadata> attachments;
     private final boolean hasAttachments;
 
-    public SimpleMessage(MessageId messageId, SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<MessageAttachment> attachments, boolean hasAttachments) {
+    public SimpleMessage(MessageId messageId, SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<MessageAttachmentMetadata> attachments, boolean hasAttachments) {
         this.messageId = messageId;
         this.subType = subType;
         this.mediaType = mediaType;
@@ -123,7 +123,7 @@ public class SimpleMessage implements Message {
     }
 
     @Override
-    public List<MessageAttachment> getAttachments() {
+    public List<MessageAttachmentMetadata> getAttachments() {
         return attachments;
     }
 

@@ -66,7 +66,6 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -91,8 +90,8 @@ import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -2097,7 +2096,7 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME.asString();
         String bytes = "attachment";
-        Attachment uploadedAttachment = uploadAttachment(OCTET_CONTENT_TYPE, bytes.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment = uploadAttachment(OCTET_CONTENT_TYPE, bytes.getBytes(StandardCharsets.UTF_8));
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\"," +
@@ -3964,8 +3963,8 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldReturnAttachmentsWhenMessageHasAttachment() throws Exception {
         String bytes1 = "attachment";
         String bytes2 = "attachment2";
-        Attachment uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE, bytes1.getBytes(StandardCharsets.UTF_8));
-        Attachment uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE, bytes2.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE, bytes1.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE, bytes2.getBytes(StandardCharsets.UTF_8));
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -4034,9 +4033,9 @@ public abstract class SetMessagesMethodTest {
         String bytes1 = "attachment";
         String bytes2 = "attachment2";
         String bytes3 = "attachment3";
-        Attachment uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE, bytes1.getBytes(StandardCharsets.UTF_8));
-        Attachment uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE, bytes2.getBytes(StandardCharsets.UTF_8));
-        Attachment uploadedAttachment3 = uploadAttachment(OCTET_CONTENT_TYPE, bytes3.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE, bytes1.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE, bytes2.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment3 = uploadAttachment(OCTET_CONTENT_TYPE, bytes3.getBytes(StandardCharsets.UTF_8));
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -4111,9 +4110,9 @@ public abstract class SetMessagesMethodTest {
         String bytes1 = "attachment";
         String bytes2 = "attachment2";
         String bytes3 = "attachment3";
-        Attachment uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE, bytes1.getBytes(StandardCharsets.UTF_8));
-        Attachment uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE, bytes2.getBytes(StandardCharsets.UTF_8));
-        Attachment uploadedAttachment3 = uploadAttachment(OCTET_CONTENT_TYPE, bytes3.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE, bytes1.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE, bytes2.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment3 = uploadAttachment(OCTET_CONTENT_TYPE, bytes3.getBytes(StandardCharsets.UTF_8));
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -4201,7 +4200,7 @@ public abstract class SetMessagesMethodTest {
             .body(thirdAttachment + ".name", equalTo("进化还是不.png"));
     }
 
-    private Attachment uploadAttachment(String contentType, byte[] content) {
+    private AttachmentMetadata uploadAttachment(String contentType, byte[] content) {
         JsonPath json = with()
             .header("Authorization", accessToken.asString())
             .contentType(contentType)
@@ -4212,14 +4211,14 @@ public abstract class SetMessagesMethodTest {
             .body()
             .jsonPath();
 
-        return Attachment.builder()
+        return AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from(json.getString("blobId")))
             .size(json.getLong("size"))
             .type(json.getString("type"))
             .build();
     }
 
-    private Attachment uploadTextAttachment(String contentType, String content) {
+    private AttachmentMetadata uploadTextAttachment(String contentType, String content) {
         JsonPath json = with()
             .header("Authorization", accessToken.asString())
             .contentType(contentType)
@@ -4230,7 +4229,7 @@ public abstract class SetMessagesMethodTest {
             .body()
             .jsonPath();
 
-        return Attachment.builder()
+        return AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from(json.getString("blobId")))
             .size(json.getLong("size"))
             .type(json.getString("type"))
@@ -4246,7 +4245,7 @@ public abstract class SetMessagesMethodTest {
             50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,
             100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127};
 
-        Attachment uploadedAttachment = uploadAttachment(OCTET_CONTENT_TYPE, rawBytes);
+        AttachmentMetadata uploadedAttachment = uploadAttachment(OCTET_CONTENT_TYPE, rawBytes);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -4318,7 +4317,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void attachmentsShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesTextAttachment() throws Exception {
         byte[] rawBytes = ByteStreams.toByteArray(new ZeroedInputStream(_1MB));
-        Attachment uploadedAttachment = uploadAttachment(OCTET_CONTENT_TYPE, rawBytes);
+        AttachmentMetadata uploadedAttachment = uploadAttachment(OCTET_CONTENT_TYPE, rawBytes);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -4412,7 +4411,7 @@ public abstract class SetMessagesMethodTest {
             "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
             "</html>";
         String contentType = "text/html; charset=UTF-8";
-        Attachment uploadedAttachment = uploadTextAttachment(contentType, text);
+        AttachmentMetadata uploadedAttachment = uploadTextAttachment(contentType, text);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -4488,7 +4487,7 @@ public abstract class SetMessagesMethodTest {
             "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
             "</html>";
         String contentType = "text/html; charset=UTF-8";
-        Attachment uploadedAttachment = uploadTextAttachment(contentType, text);
+        AttachmentMetadata uploadedAttachment = uploadTextAttachment(contentType, text);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -4574,7 +4573,7 @@ public abstract class SetMessagesMethodTest {
     public void attachmentAndEmptyBodyShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithTextAttachmentWithoutMailBody() throws Exception {
         String text = "some text";
         String contentType = "text/plain; charset=UTF-8";
-        Attachment uploadedAttachment = uploadTextAttachment(contentType, text);
+        AttachmentMetadata uploadedAttachment = uploadTextAttachment(contentType, text);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -5334,7 +5333,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldCreateMessageWhenSendingMessageWithNonIndexableAttachment() throws Exception {
         byte[] bytes = ClassLoaderUtils.getSystemResourceAsByteArray("attachment/nonIndexableAttachment.html");
         String contentType = "text/html";
-        Attachment uploadedAttachment = uploadAttachment(contentType, bytes);
+        AttachmentMetadata uploadedAttachment = uploadAttachment(contentType, bytes);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -5383,7 +5382,7 @@ public abstract class SetMessagesMethodTest {
     public void messageWithNonIndexableAttachmentShouldBeRetrievedWhenChainingSetMessagesAndGetMessages() throws Exception {
         byte[] bytes = ClassLoaderUtils.getSystemResourceAsByteArray("attachment/nonIndexableAttachment.html");
         String contentType = "text/html";
-        Attachment uploadedAttachment = uploadAttachment(contentType, bytes);
+        AttachmentMetadata uploadedAttachment = uploadAttachment(contentType, bytes);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -5441,7 +5440,7 @@ public abstract class SetMessagesMethodTest {
     public void messageWithNonIndexableAttachmentShouldHaveItsEmailBodyIndexed() throws Exception {
         byte[] bytes = ClassLoaderUtils.getSystemResourceAsByteArray("attachment/nonIndexableAttachment.html");
         String contentType = "text/html";
-        Attachment uploadedAttachment = uploadAttachment(contentType, bytes);
+        AttachmentMetadata uploadedAttachment = uploadAttachment(contentType, bytes);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -5494,9 +5493,9 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnAttachmentsWhenMessageHasInlinedAttachmentButNoCid() throws Exception {
         String bytes = "attachment";
-        Attachment uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE, bytes.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment1 = uploadAttachment(OCTET_CONTENT_TYPE, bytes.getBytes(StandardCharsets.UTF_8));
         String bytes2 = "attachment2";
-        Attachment uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE, bytes2.getBytes(StandardCharsets.UTF_8));
+        AttachmentMetadata uploadedAttachment2 = uploadAttachment(OCTET_CONTENT_TYPE, bytes2.getBytes(StandardCharsets.UTF_8));
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();

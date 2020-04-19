@@ -25,10 +25,10 @@ import static org.mockito.Mockito.when;
 import java.util.Collection;
 import java.util.Optional;
 
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +51,7 @@ class AttachmentLoaderTest {
     void getAttachmentsShouldWorkWithDuplicatedAttachments() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(attachmentId)
             .size(11)
             .type("type")
@@ -65,10 +65,10 @@ class AttachmentLoaderTest {
         boolean isInlined = false;
         MessageAttachmentRepresentation attachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, name, cid, isInlined);
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation, attachmentRepresentation))
+        Collection<MessageAttachmentMetadata> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation, attachmentRepresentation))
             .block();
 
-        MessageAttachment expectedAttachment = new MessageAttachment(attachment, name, cid, isInlined);
+        MessageAttachmentMetadata expectedAttachment = new MessageAttachmentMetadata(attachment, name, cid, isInlined);
         assertThat(attachments).hasSize(2)
             .containsOnly(expectedAttachment, expectedAttachment);
     }
@@ -77,7 +77,7 @@ class AttachmentLoaderTest {
     void getAttachmentsShouldWorkWithDuplicatedIds() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(attachmentId)
             .size(11)
             .type("type")
@@ -93,12 +93,12 @@ class AttachmentLoaderTest {
         MessageAttachmentRepresentation attachmentRepresentation1 = new MessageAttachmentRepresentation(attachmentId, name1, cid, isInlined);
         MessageAttachmentRepresentation attachmentRepresentation2 = new MessageAttachmentRepresentation(attachmentId, name2, cid, isInlined);
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
+        Collection<MessageAttachmentMetadata> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
             .block();
 
         assertThat(attachments).hasSize(2)
-            .containsOnly(new MessageAttachment(attachment, name1, cid, isInlined),
-                new MessageAttachment(attachment, name2, cid, isInlined));
+            .containsOnly(new MessageAttachmentMetadata(attachment, name1, cid, isInlined),
+                new MessageAttachmentMetadata(attachment, name2, cid, isInlined));
     }
 
     @Test
@@ -106,12 +106,12 @@ class AttachmentLoaderTest {
         AttachmentId attachmentId1 = AttachmentId.from("1");
         AttachmentId attachmentId2 = AttachmentId.from("2");
 
-        Attachment attachment1 = Attachment.builder()
+        AttachmentMetadata attachment1 = AttachmentMetadata.builder()
             .attachmentId(attachmentId1)
             .size(12)
             .type("type")
             .build();
-        Attachment attachment2 = Attachment.builder()
+        AttachmentMetadata attachment2 = AttachmentMetadata.builder()
             .attachmentId(attachmentId2)
             .size(13)
             .type("type")
@@ -129,19 +129,19 @@ class AttachmentLoaderTest {
         MessageAttachmentRepresentation attachmentRepresentation1 = new MessageAttachmentRepresentation(attachmentId1, name1, cid, isInlined);
         MessageAttachmentRepresentation attachmentRepresentation2 = new MessageAttachmentRepresentation(attachmentId2, name2, cid, isInlined);
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
+        Collection<MessageAttachmentMetadata> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
             .block();
 
         assertThat(attachments).hasSize(2)
-            .containsOnly(new MessageAttachment(attachment1, name1, cid, isInlined),
-                new MessageAttachment(attachment2, name2, cid, isInlined));
+            .containsOnly(new MessageAttachmentMetadata(attachment1, name1, cid, isInlined),
+                new MessageAttachmentMetadata(attachment2, name2, cid, isInlined));
     }
 
     @Test
     void getAttachmentsShouldReturnEmptyByDefault() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(attachmentId)
             .size(11)
             .type("type")
@@ -150,7 +150,7 @@ class AttachmentLoaderTest {
         when(attachmentMapper.getAttachmentsAsMono(attachmentId))
                 .thenReturn(Mono.just(attachment));
 
-        Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of())
+        Collection<MessageAttachmentMetadata> attachments = testee.getAttachments(ImmutableList.of())
             .block();
 
         assertThat(attachments).isEmpty();

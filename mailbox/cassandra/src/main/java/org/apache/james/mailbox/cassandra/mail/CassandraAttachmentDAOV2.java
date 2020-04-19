@@ -38,8 +38,8 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -78,8 +78,8 @@ public class CassandraAttachmentDAOV2 {
             return size;
         }
 
-        public Attachment toAttachment() {
-            return Attachment.builder()
+        public AttachmentMetadata toAttachment() {
+            return AttachmentMetadata.builder()
                 .attachmentId(attachmentId)
                 .type(type)
                 .size(size)
@@ -105,7 +105,7 @@ public class CassandraAttachmentDAOV2 {
         }
     }
 
-    public static DAOAttachment from(Attachment attachment, BlobId blobId) {
+    public static DAOAttachment from(AttachmentMetadata attachment, BlobId blobId) {
         return new DAOAttachment(
             attachment.getAttachmentId(),
             blobId,

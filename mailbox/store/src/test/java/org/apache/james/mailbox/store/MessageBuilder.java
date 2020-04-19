@@ -31,7 +31,7 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -44,7 +44,7 @@ import com.google.common.primitives.Bytes;
 
 public class MessageBuilder {
     private static final char[] NEW_LINE = { 0x0D, 0x0A };
-    private static final ImmutableList<MessageAttachment> NO_ATTACHMENTS = ImmutableList.of();
+    private static final ImmutableList<MessageAttachmentMetadata> NO_ATTACHMENTS = ImmutableList.of();
 
     private TestId mailboxId = TestId.of(113);
     private MessageUid uid = MessageUid.of(776);

@@ -27,7 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageResult;
 
 import com.google.common.base.MoreObjects;
@@ -88,7 +88,7 @@ public class MessageFastViewPrecomputedProperties {
                 .build();
         }
 
-        private boolean hasAttachment(List<MessageAttachment> attachments) {
+        private boolean hasAttachment(List<MessageAttachmentMetadata> attachments) {
             return attachments.stream()
                 .anyMatch(attachment -> !attachment.isInlinedWithCid());
         }

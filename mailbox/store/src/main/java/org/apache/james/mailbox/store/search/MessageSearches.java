@@ -46,9 +46,9 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Header;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
@@ -245,25 +245,25 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     }
 
     private boolean attachmentsContain(String value, MailboxMessage message) throws IOException, MimeException {
-        List<MessageAttachment> attachments = message.getAttachments();
+        List<MessageAttachmentMetadata> attachments = message.getAttachments();
         return isInAttachments(value, attachments);
     }
 
     private boolean hasFileName(String value, MailboxMessage message) throws IOException, MimeException {
         return message.getAttachments()
             .stream()
-            .map(MessageAttachment::getName)
+            .map(MessageAttachmentMetadata::getName)
             .anyMatch(nameOptional -> nameOptional.map(value::equals).orElse(false));
     }
 
-    private boolean isInAttachments(String value, List<MessageAttachment> attachments) {
+    private boolean isInAttachments(String value, List<MessageAttachmentMetadata> attachments) {
         return attachments.stream()
-            .map(MessageAttachment::getAttachment)
+            .map(MessageAttachmentMetadata::getAttachment)
             .flatMap(attachment -> toAttachmentContent(attachment, mailboxSession))
             .anyMatch(string -> string.contains(value));
     }
 
-    private Stream<String> toAttachmentContent(Attachment attachment, MailboxSession mailboxSession) {
+    private Stream<String> toAttachmentContent(AttachmentMetadata attachment, MailboxSession mailboxSession) {
         try (InputStream rawData = attachmentContentLoader.load(attachment, mailboxSession)) {
             return OptionalUtils.toStream(
                 textExtractor
@@ -547,7 +547,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
 
     private boolean matches(SearchQuery.AttachmentCriterion criterion, MailboxMessage message) throws UnsupportedSearchException {
-        boolean mailHasAttachments = MessageAttachment.hasNonInlinedAttachment(message.getAttachments());
+        boolean mailHasAttachments = MessageAttachmentMetadata.hasNonInlinedAttachment(message.getAttachments());
         return mailHasAttachments == criterion.getOperator().isSet();
     }
 

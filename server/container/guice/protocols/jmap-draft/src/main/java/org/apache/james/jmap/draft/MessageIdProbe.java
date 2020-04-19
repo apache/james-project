@@ -33,7 +33,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.utils.GuiceProbe;
@@ -69,7 +69,7 @@ public class MessageIdProbe implements GuiceProbe {
 
         return messages.stream()
             .flatMap(Throwing.function(messageResult -> messageResult.getLoadedAttachments().stream()))
-            .map(MessageAttachment::getAttachmentId)
+            .map(MessageAttachmentMetadata::getAttachmentId)
             .collect(Guavate.toImmutableList());
     }
 }

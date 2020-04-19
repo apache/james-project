@@ -37,9 +37,9 @@ import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -324,8 +324,8 @@ class IndexableMessageTest {
         when(mailboxMessage.getUid())
             .thenReturn(MESSAGE_UID);
         when(mailboxMessage.getAttachments())
-            .thenReturn(ImmutableList.of(MessageAttachment.builder()
-                .attachment(Attachment.builder()
+            .thenReturn(ImmutableList.of(MessageAttachmentMetadata.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(AttachmentId.from("1"))
                     .type("text/plain")
                     .size(36)

@@ -36,7 +36,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -64,7 +64,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         private MailboxId mailboxId;
         private Optional<MessageUid> uid = Optional.empty();
         private Optional<ModSeq> modseq = Optional.empty();
-        private ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
+        private ImmutableList.Builder<MessageAttachmentMetadata> attachments = ImmutableList.builder();
         private Optional<Boolean> hasAttachment = Optional.empty();
 
         public Builder messageId(MessageId messageId) {
@@ -129,7 +129,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             return this;
         }
 
-        public Builder addAttachments(Collection<MessageAttachment> attachments) {
+        public Builder addAttachments(Collection<MessageAttachmentMetadata> attachments) {
             this.attachments.addAll(attachments);
             return this;
         }
@@ -144,7 +144,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             Preconditions.checkNotNull(propertyBuilder, "propertyBuilder is required");
             Preconditions.checkNotNull(mailboxId, "mailboxId is required");
 
-            ImmutableList<MessageAttachment> attachments = this.attachments.build();
+            ImmutableList<MessageAttachmentMetadata> attachments = this.attachments.build();
             boolean hasAttachment = this.hasAttachment.orElse(!attachments.isEmpty());
             SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size,
                 bodyStartOctet, content, flags, propertyBuilder, mailboxId, attachments, hasAttachment);
@@ -205,7 +205,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     public SimpleMailboxMessage(MessageId messageId, Date internalDate, long size, int bodyStartOctet,
             SharedInputStream content, Flags flags,
-            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<MessageAttachment> attachments,
+            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments,
             boolean hasAttachment) {
         super(new SimpleMessage(
                 messageId,
@@ -224,7 +224,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     public SimpleMailboxMessage(MessageId messageId, Date internalDate, long size, int bodyStartOctet,
             SharedInputStream content, Flags flags,
-            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<MessageAttachment> attachments) {
+            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments) {
         this(messageId, internalDate, size, bodyStartOctet,
             content, flags,
             propertyBuilder, mailboxId, attachments, !attachments.isEmpty());

@@ -26,32 +26,32 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-class MessageAttachmentTest {
+class MessageAttachmentMetadataTest {
 
     @Test
     void buildShouldThrowWhenAttachmentIsNotGiven() {
-        assertThatThrownBy(() -> MessageAttachment.builder()
+        assertThatThrownBy(() -> MessageAttachmentMetadata.builder()
                 .build())
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void builderShouldThrowWhenAttachmentIsNull() {
-        assertThatThrownBy(() -> MessageAttachment.builder()
+        assertThatThrownBy(() -> MessageAttachmentMetadata.builder()
                 .attachment(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void buildShouldWorkWhenMandatoryAttributesAreGiven() {
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
-        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.empty(), Optional.empty(), false);
+        MessageAttachmentMetadata expectedMessageAttachment = new MessageAttachmentMetadata(attachment, Optional.empty(), Optional.empty(), false);
 
-        MessageAttachment messageAttachment = MessageAttachment.builder()
+        MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
             .attachment(attachment)
             .build();
 
@@ -60,13 +60,13 @@ class MessageAttachmentTest {
 
     @Test
     void buildShouldAcceptIsInlineAndNoCid() {
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
 
-        MessageAttachment messageAttachment = MessageAttachment.builder()
+        MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
             .attachment(attachment)
             .isInline(true)
             .build();
@@ -76,14 +76,14 @@ class MessageAttachmentTest {
 
     @Test
     void buildShouldSetAttributesWhenAllAreGiven() {
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
-        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.of("name"), Optional.of(Cid.from("cid")), true);
+        MessageAttachmentMetadata expectedMessageAttachment = new MessageAttachmentMetadata(attachment, Optional.of("name"), Optional.of(Cid.from("cid")), true);
 
-        MessageAttachment messageAttachment = MessageAttachment.builder()
+        MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
             .attachment(attachment)
             .name("name")
             .cid(Cid.from("cid"))
@@ -95,13 +95,13 @@ class MessageAttachmentTest {
 
     @Test
     void isInlinedWithCidShouldReturnTrueWhenIsInlineAndHasCid() throws Exception {
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
 
-        MessageAttachment messageAttachment = MessageAttachment.builder()
+        MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
             .attachment(attachment)
             .name("name")
             .cid(Cid.from("cid"))
@@ -113,13 +113,13 @@ class MessageAttachmentTest {
 
     @Test
     void isInlinedWithCidShouldReturnFalseWhenIsNotInline() throws Exception {
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
 
-        MessageAttachment messageAttachment = MessageAttachment.builder()
+        MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
             .attachment(attachment)
             .name("name")
             .cid(Cid.from("cid"))
@@ -131,13 +131,13 @@ class MessageAttachmentTest {
 
     @Test
     void isInlinedWithCidShouldReturnFalseWhenIsInlineButNoCid() throws Exception {
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
 
-        MessageAttachment messageAttachment = MessageAttachment.builder()
+        MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
             .attachment(attachment)
             .name("name")
             .isInline(true)

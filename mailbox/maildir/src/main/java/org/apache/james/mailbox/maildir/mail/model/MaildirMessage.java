@@ -32,7 +32,7 @@ import javax.mail.util.SharedFileInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -274,12 +274,12 @@ public class MaildirMessage implements Message {
     }
 
     @Override
-    public List<MessageAttachment> getAttachments() {
+    public List<MessageAttachmentMetadata> getAttachments() {
         try {
             AtomicInteger counter = new AtomicInteger(0);
             return new MessageParser().retrieveAttachments(getFullContent())
                 .stream()
-                .map(Throwing.<ParsedAttachment, MessageAttachment>function(
+                .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
                     attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet())))
                     .sneakyThrow())
                 .collect(Guavate.toImmutableList());

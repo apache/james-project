@@ -31,9 +31,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -52,7 +52,7 @@ import reactor.core.publisher.Mono;
 public class InMemoryAttachmentMapper implements AttachmentMapper {
     
     private static final int INITIAL_SIZE = 128;
-    private final Map<AttachmentId, Attachment> attachmentsById;
+    private final Map<AttachmentId, AttachmentMetadata> attachmentsById;
     private final Map<AttachmentId, byte[]> attachmentsRawContentById;
     private final Multimap<AttachmentId, MessageId> messageIdsByAttachmentId;
     private final Multimap<AttachmentId, Username> ownersByAttachmentId;
@@ -65,7 +65,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
+    public AttachmentMetadata getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
         Preconditions.checkArgument(attachmentId != null);
         if (!attachmentsById.containsKey(attachmentId)) {
             throw new AttachmentNotFoundException(attachmentId.getId());
@@ -74,9 +74,9 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
+    public List<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
-        Builder<Attachment> builder = ImmutableList.builder();
+        Builder<AttachmentMetadata> builder = ImmutableList.builder();
         for (AttachmentId attachmentId : attachmentIds) {
             if (attachmentsById.containsKey(attachmentId)) {
                 builder.add(attachmentsById.get(attachmentId));
@@ -86,10 +86,10 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Mono<Attachment> storeAttachmentForOwner(String contentType, InputStream inputStream, Username owner) {
+    public Mono<AttachmentMetadata> storeAttachmentForOwner(String contentType, InputStream inputStream, Username owner) {
         return Mono.fromCallable(() -> {
             byte[] bytes = toByteArray(inputStream);
-            Attachment attachment = Attachment.builder()
+            AttachmentMetadata attachment = AttachmentMetadata.builder()
                 .type(contentType)
                 .attachmentId(AttachmentId.random())
                 .size(bytes.length)
@@ -120,19 +120,19 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public List<MessageAttachment> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
+    public List<MessageAttachmentMetadata> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
         return parsedAttachments.stream()
-            .map(Throwing.<ParsedAttachment, MessageAttachment>function(
+            .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
                 typedContent -> storeAttachmentForMessage(ownerMessageId, typedContent))
                 .sneakyThrow())
             .collect(Guavate.toImmutableList());
     }
 
-    private MessageAttachment storeAttachmentForMessage(MessageId ownerMessageId, ParsedAttachment parsedAttachment) throws MailboxException {
+    private MessageAttachmentMetadata storeAttachmentForMessage(MessageId ownerMessageId, ParsedAttachment parsedAttachment) throws MailboxException {
         AttachmentId attachmentId = AttachmentId.random();
         byte[] bytes = parsedAttachment.getContent();
 
-        attachmentsById.put(attachmentId, Attachment.builder()
+        attachmentsById.put(attachmentId, AttachmentMetadata.builder()
             .attachmentId(attachmentId)
             .type(parsedAttachment.getContentType())
             .size(bytes.length)

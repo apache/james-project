@@ -33,9 +33,9 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -76,7 +76,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
+    public AttachmentMetadata getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
         Preconditions.checkArgument(attachmentId != null);
         return getAttachmentInternal(attachmentId)
             .blockOptional()
@@ -84,7 +84,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
+    public List<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
         return Flux.fromIterable(attachmentIds)
             .flatMap(this::getAttachmentsAsMono)
@@ -100,25 +100,25 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.toString()));
     }
 
-    public Mono<Attachment> getAttachmentsAsMono(AttachmentId attachmentId) {
+    public Mono<AttachmentMetadata> getAttachmentsAsMono(AttachmentId attachmentId) {
         return getAttachmentInternal(attachmentId)
             .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> logNotFound((attachmentId))));
     }
 
-    private Mono<Attachment> getAttachmentInternal(AttachmentId id) {
+    private Mono<AttachmentMetadata> getAttachmentInternal(AttachmentId id) {
         return attachmentDAOV2.getAttachment(id)
             .map(DAOAttachment::toAttachment);
     }
 
     @Override
-    public Mono<Attachment> storeAttachmentForOwner(String contentType, InputStream inputStream, Username owner) {
+    public Mono<AttachmentMetadata> storeAttachmentForOwner(String contentType, InputStream inputStream, Username owner) {
         CurrentPositionInputStream currentPositionInputStream = new CurrentPositionInputStream(inputStream);
         AttachmentId attachmentId = AttachmentId.random();
         return ownerDAO.addOwner(attachmentId, owner)
             .then(Mono.from(blobStore.save(blobStore.getDefaultBucketName(), currentPositionInputStream, LOW_COST)))
                 .map(blobId -> new DAOAttachment(attachmentId, blobId, contentType, currentPositionInputStream.getPosition()))
             .flatMap(attachmentDAOV2::storeAttachment)
-            .then(Mono.defer(() -> Mono.just(Attachment.builder()
+            .then(Mono.defer(() -> Mono.just(AttachmentMetadata.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
                 .size(currentPositionInputStream.getPosition())
@@ -126,7 +126,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public List<MessageAttachment> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
+    public List<MessageAttachmentMetadata> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
         return Flux.fromIterable(parsedAttachments)
             .concatMap(attachment -> storeAttachmentAsync(attachment, ownerMessageId))
             .collectList()
@@ -145,7 +145,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         return ownerDAO.retrieveOwners(attachmentId).collect(Guavate.toImmutableList()).block();
     }
 
-    private Mono<MessageAttachment> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {
+    private Mono<MessageAttachmentMetadata> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {
         AttachmentId attachmentId = AttachmentId.random();
         byte[] content = parsedAttachment.getContent();
         return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))

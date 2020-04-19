@@ -52,7 +52,7 @@ import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -506,12 +506,12 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     }
 
     @Override
-    public List<MessageAttachment> getAttachments() {
+    public List<MessageAttachmentMetadata> getAttachments() {
         try {
             AtomicInteger counter = new AtomicInteger(0);
             return new MessageParser().retrieveAttachments(getFullContent())
                 .stream()
-                .map(Throwing.<ParsedAttachment, MessageAttachment>function(
+                .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
                     attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet())))
                     .sneakyThrow())
                 .collect(Guavate.toImmutableList());

@@ -40,8 +40,9 @@ import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.codec.EncoderUtil.Usage;
 import org.apache.james.mime4j.dom.Entity;
@@ -614,8 +615,8 @@ class MIMEMessageConverterTest {
             String text = "123456";
             TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
             AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachment attachment = MessageAttachment.builder()
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
@@ -663,8 +664,8 @@ class MIMEMessageConverterTest {
             String expectedMimeType = "image/png";
             String text = "123456";
             TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
-            MessageAttachment attachment = MessageAttachment.builder()
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(AttachmentId.from("blodId"))
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
@@ -715,7 +716,7 @@ class MIMEMessageConverterTest {
                     .build();
 
             // When
-            ImmutableList<MessageAttachment> attachments = ImmutableList.of();
+            ImmutableList<MessageAttachmentMetadata> attachments = ImmutableList.of();
             byte[] convert = sut.convert(new ValueWithId.CreationMessageEntry(
                     CreationMessageId.of("user|mailbox|1"), testMessage), attachments, session);
 
@@ -743,9 +744,9 @@ class MIMEMessageConverterTest {
             String text = "123456";
             String name = "ديناصور.png";
             String expectedName = EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN);
-            MessageAttachment attachment = MessageAttachment.builder()
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name(name)
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(AttachmentId.from("blodId"))
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
@@ -782,9 +783,9 @@ class MIMEMessageConverterTest {
                 .build();
 
             String text = "123456";
-            MessageAttachment attachment = MessageAttachment.builder()
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("ديناصور.png")
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(AttachmentId.from("blodId"))
                     .size(text.getBytes().length)
                     .type("image/png")
@@ -815,9 +816,9 @@ class MIMEMessageConverterTest {
                 .build();
 
             String text = "123456";
-            MessageAttachment attachment = MessageAttachment.builder()
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("ديناصور.png")
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(AttachmentId.from("blodId"))
                     .size(text.getBytes().length)
                     .type("image/png")
@@ -848,9 +849,9 @@ class MIMEMessageConverterTest {
                 .build();
 
             String text = "123456";
-            MessageAttachment attachment = MessageAttachment.builder()
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("ديناصور.png")
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(AttachmentId.from("blodId"))
                     .size(text.getBytes().length)
                     .type("image/png")
@@ -883,9 +884,9 @@ class MIMEMessageConverterTest {
 
             String name = "ديناصور.png";
             String text = "123456";
-            MessageAttachment attachment = MessageAttachment.builder()
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name(name)
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(AttachmentId.from("blodId"))
                     .size(text.getBytes().length)
                     .type("image/png")
@@ -920,9 +921,9 @@ class MIMEMessageConverterTest {
                 .build();
 
             String text = "inline data";
-            MessageAttachment inline = MessageAttachment.builder()
+            MessageAttachmentMetadata inline = MessageAttachmentMetadata.builder()
                 .name("ديناصور.png")
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(AttachmentId.from("blodId"))
                     .size(text.getBytes().length)
                     .type("image/png")
@@ -935,9 +936,9 @@ class MIMEMessageConverterTest {
 
 
             String text2 = "attachment data";
-            MessageAttachment attachment = MessageAttachment.builder()
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("att.pdf")
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                .attachment(AttachmentMetadata.builder()
                     .attachmentId(AttachmentId.from("blodId2"))
                     .size(text2.getBytes().length)
                     .type("image/png")

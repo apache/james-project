@@ -46,7 +46,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
@@ -200,13 +200,13 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
             .orElse(messageContent.getTextBody());
     }
     
-    private List<Attachment> getAttachments(List<MessageAttachment> attachments) {
+    private List<Attachment> getAttachments(List<MessageAttachmentMetadata> attachments) {
         return attachments.stream()
                 .map(this::fromMailboxAttachment)
                 .collect(Guavate.toImmutableList());
     }
 
-    private Attachment fromMailboxAttachment(MessageAttachment attachment) {
+    private Attachment fromMailboxAttachment(MessageAttachmentMetadata attachment) {
         return Attachment.builder()
                     .blobId(BlobId.of(attachment.getAttachmentId().getId()))
                     .type(attachment.getAttachment().getType())
@@ -243,7 +243,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
             private Instant internalDate;
             private InputStream content;
             private SharedInputStream sharedContent;
-            private List<MessageAttachment> attachments;
+            private List<MessageAttachmentMetadata> attachments;
             private Set<MailboxId> mailboxIds = Sets.newHashSet();
             private MessageId messageId;
 
@@ -277,7 +277,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
                 return this;
             }
             
-            public Builder attachments(List<MessageAttachment> attachments) {
+            public Builder attachments(List<MessageAttachmentMetadata> attachments) {
                 this.attachments = attachments;
                 return this;
             }
@@ -316,7 +316,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         private final Instant internalDate;
         private final InputStream content;
         private final SharedInputStream sharedContent;
-        private final List<MessageAttachment> attachments;
+        private final List<MessageAttachmentMetadata> attachments;
         private final Set<MailboxId> mailboxIds;
         private final MessageId messageId;
 
@@ -326,7 +326,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
                                     Instant internalDate,
                                     InputStream content,
                                     SharedInputStream sharedContent,
-                                    List<MessageAttachment> attachments,
+                                    List<MessageAttachmentMetadata> attachments,
                                     Set<MailboxId> mailboxIds,
                                     MessageId messageId) {
             this.uid = uid;
@@ -365,7 +365,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
             return content;
         }
 
-        public List<MessageAttachment> getAttachments() {
+        public List<MessageAttachmentMetadata> getAttachments() {
             return attachments;
         }
 

@@ -42,9 +42,11 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
+import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -63,7 +65,7 @@ class CassandraMessageDAOTest {
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final String CONTENT = "Subject: Test7 \n\nBody7\n.\n";
     private static final MessageUid messageUid = MessageUid.of(1);
-    private static final List<MessageAttachment> NO_ATTACHMENT = ImmutableList.of();
+    private static final List<MessageAttachmentMetadata> NO_ATTACHMENT = ImmutableList.of();
 
     public static final CassandraModule MODULES = CassandraModule.aggregateModules(
             CassandraMessageModule.MODULE,
@@ -167,7 +169,7 @@ class CassandraMessageDAOTest {
             .isEqualTo(CONTENT.substring(0, BODY_START));
     }
 
-    private SimpleMailboxMessage createMessage(MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, Collection<MessageAttachment> attachments) {
+    private SimpleMailboxMessage createMessage(MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, Collection<MessageAttachmentMetadata> attachments) {
         return SimpleMailboxMessage.builder()
             .messageId(messageId)
             .mailboxId(MAILBOX_ID)

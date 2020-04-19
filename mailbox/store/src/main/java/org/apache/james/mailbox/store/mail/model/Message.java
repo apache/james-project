@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 
 public interface Message {
@@ -107,7 +107,7 @@ public interface Message {
      * 
      * @return a read only list of attachments
      */
-    List<MessageAttachment> getAttachments();
+    List<MessageAttachmentMetadata> getAttachments();
 
     boolean hasAttachment();
 

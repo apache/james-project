@@ -45,7 +45,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
@@ -144,9 +144,9 @@ public interface MessageManager {
 
     class AppendResult {
         private final ComposedMessageId id;
-        private final Optional<List<MessageAttachment>> messageAttachments;
+        private final Optional<List<MessageAttachmentMetadata>> messageAttachments;
 
-        public AppendResult(ComposedMessageId id, Optional<List<MessageAttachment>> messageAttachments) {
+        public AppendResult(ComposedMessageId id, Optional<List<MessageAttachmentMetadata>> messageAttachments) {
             this.id = id;
             this.messageAttachments = messageAttachments;
         }
@@ -155,7 +155,7 @@ public interface MessageManager {
             return id;
         }
 
-        public List<MessageAttachment> getMessageAttachments() {
+        public List<MessageAttachmentMetadata> getMessageAttachments() {
             Preconditions.checkState(messageAttachments.isPresent(), "'attachment storage' not supported by the implementation");
             return messageAttachments.get();
         }

@@ -24,7 +24,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-public class Attachment {
+public class AttachmentMetadata {
     public static class Builder {
         private AttachmentId attachmentId;
         private Long size;
@@ -48,12 +48,12 @@ public class Attachment {
             return this;
         }
 
-        public Attachment build() {
+        public AttachmentMetadata build() {
             Preconditions.checkState(type != null, "'type' is mandatory");
             Preconditions.checkState(size != null, "'size' is mandatory");
             Preconditions.checkState(attachmentId != null, "'attachmentId' is mandatory");
 
-            return new Attachment(attachmentId, type, size);
+            return new AttachmentMetadata(attachmentId, type, size);
         }
     }
 
@@ -65,7 +65,7 @@ public class Attachment {
     private final String type;
     private final long size;
 
-    private Attachment(AttachmentId attachmentId, String type, long size) {
+    private AttachmentMetadata(AttachmentId attachmentId, String type, long size) {
         this.attachmentId = attachmentId;
         this.type = type;
         this.size = size;
@@ -86,8 +86,8 @@ public class Attachment {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Attachment) {
-            Attachment other = (Attachment) obj;
+        if (obj instanceof AttachmentMetadata) {
+            AttachmentMetadata other = (AttachmentMetadata) obj;
             return Objects.equal(attachmentId, other.attachmentId)
                 && Objects.equal(type, other.type)
                 && Objects.equal(size, other.size);

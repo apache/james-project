@@ -34,10 +34,10 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
@@ -114,7 +114,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         Optional<String> expectedName = Optional.of("exploits_of_a_mom.png");
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
-        List<MessageAttachment> attachments = messages.next().getAttachments();
+        List<MessageAttachmentMetadata> attachments = messages.next().getAttachments();
         assertThat(attachments.get(0).getName()).isEqualTo(expectedName);
     }
 
@@ -127,7 +127,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        List<MessageAttachment> attachments = messages.next().getAttachments();
+        List<MessageAttachmentMetadata> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(1);
         assertThat(attachmentMapper.loadAttachmentContent(attachments.get(0).getAttachmentId()))
             .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
@@ -154,13 +154,13 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        List<MessageAttachment> attachments = messages.next().getAttachments();
+        List<MessageAttachmentMetadata> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(2);
         ImmutableList<byte[]> attachmentContents = attachments
             .stream()
-            .map(MessageAttachment::getAttachmentId)
+            .map(MessageAttachmentMetadata::getAttachmentId)
             .map(Throwing.function(attachmentMapper::getAttachment))
-            .map(Attachment::getAttachmentId)
+            .map(AttachmentMetadata::getAttachmentId)
             .map(Throwing.function(attachmentMapper::loadAttachmentContent))
             .map(Throwing.function(IOUtils::toByteArray))
             .collect(ImmutableList.toImmutableList());
@@ -197,7 +197,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        List<MessageAttachment> attachments = messages.next().getAttachments();
+        List<MessageAttachmentMetadata> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(0);
     }
 }

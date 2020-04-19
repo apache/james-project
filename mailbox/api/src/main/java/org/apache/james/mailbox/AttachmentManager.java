@@ -25,24 +25,24 @@ import java.util.List;
 
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.reactivestreams.Publisher;
 
 public interface AttachmentManager extends AttachmentContentLoader {
 
     boolean exists(AttachmentId attachmentId, MailboxSession session) throws MailboxException;
 
-    Attachment getAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException, AttachmentNotFoundException;
+    AttachmentMetadata getAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException, AttachmentNotFoundException;
 
-    List<Attachment> getAttachments(List<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException;
+    List<AttachmentMetadata> getAttachments(List<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException;
 
-    Publisher<Attachment> storeAttachment(String contentType, InputStream attachmentContent, MailboxSession mailboxSession);
+    Publisher<AttachmentMetadata> storeAttachment(String contentType, InputStream attachmentContent, MailboxSession mailboxSession);
 
     InputStream loadAttachmentContent(AttachmentId attachmentId, MailboxSession mailboxSession) throws AttachmentNotFoundException, IOException;
 
     @Override
-    default InputStream load(Attachment attachment, MailboxSession mailboxSession) throws IOException, AttachmentNotFoundException {
+    default InputStream load(AttachmentMetadata attachment, MailboxSession mailboxSession) throws IOException, AttachmentNotFoundException {
         return loadAttachmentContent(attachment.getAttachmentId(), mailboxSession);
     }
 

@@ -32,7 +32,7 @@ import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMailboxMessag
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.MessageFactory;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -51,7 +51,7 @@ public class OpenJPAMessageFactory implements MessageFactory<AbstractJPAMailboxM
     }
 
     @Override
-    public AbstractJPAMailboxMessage createMessage(MessageId messageId, Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
+    public AbstractJPAMailboxMessage createMessage(MessageId messageId, Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) throws MailboxException {
         switch (feature) {
             case Streaming:
                 return new JPAStreamingMailboxMessage(JPAMailbox.from(mailbox), internalDate, size, flags, content,

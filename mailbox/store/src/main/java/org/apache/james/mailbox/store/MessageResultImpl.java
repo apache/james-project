@@ -36,7 +36,7 @@ import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
@@ -306,7 +306,7 @@ public class MessageResultImpl implements MessageResult {
     }
     
     @Override
-    public List<MessageAttachment> getLoadedAttachments() {
+    public List<MessageAttachmentMetadata> getLoadedAttachments() {
         return message.getAttachments();
     }
 

@@ -27,8 +27,8 @@ import static org.mockito.Mockito.when;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -43,7 +43,7 @@ class StoreAttachmentManagerTest {
     static final TestMessageId MESSAGE_ID = TestMessageId.of(1L);
     static final ImmutableList<MessageId> MESSAGE_IDS = ImmutableList.of(MESSAGE_ID);
     static final AttachmentId ATTACHMENT_ID = AttachmentId.from("1");
-    static final Attachment ATTACHMENT = Attachment.builder()
+    static final AttachmentMetadata ATTACHMENT = AttachmentMetadata.builder()
         .attachmentId(ATTACHMENT_ID)
         .size(48)
         .type("type")

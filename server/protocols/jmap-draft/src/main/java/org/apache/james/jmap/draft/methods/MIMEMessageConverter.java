@@ -38,7 +38,7 @@ import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.codec.EncoderUtil.Usage;
@@ -113,7 +113,7 @@ public class MIMEMessageConverter {
         this.bodyFactory = new BasicBodyFactory();
     }
 
-    public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments, MailboxSession session) {
+    public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachmentMetadata> messageAttachments, MailboxSession session) {
         return asBytes(convertToMime(creationMessageEntry, messageAttachments, session));
     }
 
@@ -125,7 +125,7 @@ public class MIMEMessageConverter {
         }
     }
 
-    @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments, MailboxSession session) {
+    @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachmentMetadata> messageAttachments, MailboxSession session) {
         if (creationMessageEntry == null || creationMessageEntry.getValue() == null) {
             throw new IllegalArgumentException("creationMessageEntry is either null or has null message");
         }
@@ -141,7 +141,7 @@ public class MIMEMessageConverter {
         return messageBuilder.build();
     }
 
-    private void buildMimeHeaders(Message.Builder messageBuilder, CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
+    private void buildMimeHeaders(Message.Builder messageBuilder, CreationMessage newMessage, ImmutableList<MessageAttachmentMetadata> messageAttachments) {
         Optional<Mailbox> fromAddress = newMessage.getFrom().filter(DraftEmailer::hasValidEmail).map(this::convertEmailToMimeHeader);
         fromAddress.ifPresent(messageBuilder::setFrom);
         fromAddress.ifPresent(messageBuilder::setSender);
@@ -195,12 +195,12 @@ public class MIMEMessageConverter {
         messageBuilder.addField(parser.parse(rawField, DecodeMonitor.SILENT));
     }
 
-    private boolean isMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
+    private boolean isMultipart(CreationMessage newMessage, ImmutableList<MessageAttachmentMetadata> messageAttachments) {
         return (newMessage.getTextBody().isPresent() && newMessage.getHtmlBody().isPresent())
                 || hasAttachment(messageAttachments);
     }
 
-    private boolean hasAttachment(ImmutableList<MessageAttachment> messageAttachments) {
+    private boolean hasAttachment(ImmutableList<MessageAttachmentMetadata> messageAttachments) {
         return !messageAttachments.isEmpty();
     }
 
@@ -211,7 +211,7 @@ public class MIMEMessageConverter {
         return bodyFactory.textBody(body, StandardCharsets.UTF_8);
     }
 
-    private Multipart createMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments, MailboxSession session) {
+    private Multipart createMultipart(CreationMessage newMessage, ImmutableList<MessageAttachmentMetadata> messageAttachments, MailboxSession session) {
         try {
             if (hasAttachment(messageAttachments)) {
                 return createMultipartWithAttachments(newMessage, messageAttachments, session);
@@ -224,12 +224,12 @@ public class MIMEMessageConverter {
         }
     }
 
-    private Multipart createMultipartWithAttachments(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments, MailboxSession session) throws IOException {
+    private Multipart createMultipartWithAttachments(CreationMessage newMessage, ImmutableList<MessageAttachmentMetadata> messageAttachments, MailboxSession session) throws IOException {
         MultipartBuilder mixedMultipartBuilder = MultipartBuilder.create(MIXED_SUB_TYPE);
-        List<MessageAttachment> inlineAttachments = messageAttachments.stream()
-            .filter(MessageAttachment::isInline)
+        List<MessageAttachmentMetadata> inlineAttachments = messageAttachments.stream()
+            .filter(MessageAttachmentMetadata::isInline)
             .collect(Guavate.toImmutableList());
-        List<MessageAttachment> besideAttachments = messageAttachments.stream()
+        List<MessageAttachmentMetadata> besideAttachments = messageAttachments.stream()
             .filter(attachment -> !attachment.isInline())
             .collect(Guavate.toImmutableList());
 
@@ -244,7 +244,7 @@ public class MIMEMessageConverter {
         return mixedMultipartBuilder.build();
     }
 
-    private Message relatedInnerMessage(CreationMessage newMessage, List<MessageAttachment> inlines, MailboxSession session) throws IOException {
+    private Message relatedInnerMessage(CreationMessage newMessage, List<MessageAttachmentMetadata> inlines, MailboxSession session) throws IOException {
         MultipartBuilder relatedMultipart = MultipartBuilder.create(RELATED_SUB_TYPE);
         addBody(newMessage, relatedMultipart);
 
@@ -254,7 +254,7 @@ public class MIMEMessageConverter {
             .build();
     }
 
-    private MultipartBuilder addAttachments(List<MessageAttachment> messageAttachments,
+    private MultipartBuilder addAttachments(List<MessageAttachmentMetadata> messageAttachments,
                                             MultipartBuilder multipartBuilder, MailboxSession session) {
         messageAttachments.forEach(addAttachment(multipartBuilder, session));
 
@@ -298,7 +298,7 @@ public class MIMEMessageConverter {
         }
     }
 
-    private Consumer<MessageAttachment> addAttachment(MultipartBuilder builder, MailboxSession session) {
+    private Consumer<MessageAttachmentMetadata> addAttachment(MultipartBuilder builder, MailboxSession session) {
         return att -> { 
             try {
                 builder.addBodyPart(attachmentBodyPart(att, session));
@@ -309,7 +309,7 @@ public class MIMEMessageConverter {
         };
     }
 
-    private BodyPart attachmentBodyPart(MessageAttachment att, MailboxSession session) throws IOException, AttachmentNotFoundException {
+    private BodyPart attachmentBodyPart(MessageAttachmentMetadata att, MailboxSession session) throws IOException, AttachmentNotFoundException {
         try (InputStream attachmentStream = attachmentContentLoader.load(att.getAttachment(), session)) {
             BodyPartBuilder builder = BodyPartBuilder.create()
                 .use(bodyFactory)
@@ -322,13 +322,13 @@ public class MIMEMessageConverter {
         }
     }
 
-    private void contentId(BodyPartBuilder builder, MessageAttachment att) {
+    private void contentId(BodyPartBuilder builder, MessageAttachmentMetadata att) {
         if (att.getCid().isPresent()) {
             builder.setField(new RawField("Content-ID", att.getCid().get().getValue()));
         }
     }
 
-    private ContentTypeField contentTypeField(MessageAttachment att) {
+    private ContentTypeField contentTypeField(MessageAttachmentMetadata att) {
         Builder<String, String> parameters = ImmutableMap.builder();
         if (att.getName().isPresent()) {
             parameters.put("name", encode(att.getName().get()));

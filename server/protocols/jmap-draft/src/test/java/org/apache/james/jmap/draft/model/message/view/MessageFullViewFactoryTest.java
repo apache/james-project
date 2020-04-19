@@ -60,12 +60,13 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
@@ -493,8 +494,8 @@ class MessageFullViewFactoryTest {
                 .size(0)
                 .internalDate(INTERNAL_DATE)
                 .content(ClassLoader.getSystemResourceAsStream("spamMail.eml"))
-                .attachments(ImmutableList.of(MessageAttachment.builder()
-                        .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                .attachments(ImmutableList.of(MessageAttachmentMetadata.builder()
+                        .attachment(AttachmentMetadata.builder()
                                 .attachmentId(AttachmentId.from(blodId.getRawValue()))
                                 .size(payload.length())
                                 .type(type)

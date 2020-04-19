@@ -36,11 +36,11 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -101,8 +101,8 @@ public abstract class MessageWithAttachmentMapperTest {
 
         MessageId messageId1 = mapperProvider.generateMessageId();
         MessageId messageId2 = mapperProvider.generateMessageId();
-        List<MessageAttachment> message1Attachments = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment1), messageId1);
-        List<MessageAttachment> message2Attachments = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment2, attachment3), messageId2);
+        List<MessageAttachmentMetadata> message1Attachments = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment1), messageId1);
+        List<MessageAttachmentMetadata> message2Attachments = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment2, attachment3), messageId2);
 
         messageWith1Attachment = createMessage(attachmentsMailbox, messageId1, "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(),
                 message1Attachments);
@@ -192,7 +192,7 @@ public abstract class MessageWithAttachmentMapperTest {
         messageWith2Attachments.setModSeq(messageMapper.getHighestModSeq(attachmentsMailbox));
     }
 
-    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) {
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
         return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder, mailbox.getMailboxId(), attachments);
     }
 

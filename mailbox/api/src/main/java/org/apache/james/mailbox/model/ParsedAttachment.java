@@ -108,9 +108,9 @@ public class ParsedAttachment {
         return isInline;
     }
 
-    public MessageAttachment asMessageAttachment(AttachmentId attachmentId, long size) {
-        return MessageAttachment.builder()
-            .attachment(Attachment.builder()
+    public MessageAttachmentMetadata asMessageAttachment(AttachmentId attachmentId, long size) {
+        return MessageAttachmentMetadata.builder()
+            .attachment(AttachmentMetadata.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
                 .size(size)
@@ -121,9 +121,9 @@ public class ParsedAttachment {
             .build();
     }
 
-    public MessageAttachment asMessageAttachment(AttachmentId attachmentId) throws IOException {
-        return MessageAttachment.builder()
-            .attachment(Attachment.builder()
+    public MessageAttachmentMetadata asMessageAttachment(AttachmentId attachmentId) throws IOException {
+        return MessageAttachmentMetadata.builder()
+            .attachment(AttachmentMetadata.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
                 .size(content.length)
