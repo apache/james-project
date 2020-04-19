@@ -116,7 +116,7 @@ class ExportServiceTest {
             .appendMessage(MessageManager.AppendCommand.builder()
                     .build(message),
                 testSystem.bobSession)
-            .getIds();
+            .getId();
     }
 
     @Test

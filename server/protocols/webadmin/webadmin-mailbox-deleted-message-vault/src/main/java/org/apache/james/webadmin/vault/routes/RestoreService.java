@@ -80,7 +80,7 @@ class RestoreService {
     private Mono<RestoreResult> appendToMailbox(MessageManager restoreMailboxManager, DeletedMessage deletedMessage, MailboxSession session) {
         return appendCommand(deletedMessage)
             .map(Throwing.<AppendCommand, ComposedMessageId>function(
-                appendCommand -> restoreMailboxManager.appendMessage(appendCommand, session).getIds()).sneakyThrow())
+                appendCommand -> restoreMailboxManager.appendMessage(appendCommand, session).getId()).sneakyThrow())
             .map(any -> RESTORE_SUCCEED)
             .onErrorResume(throwable -> {
                 LOGGER.error("append message {} to restore mailbox of user {} didn't success",

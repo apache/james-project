@@ -51,7 +51,7 @@ public class MailboxAppender {
     public ComposedMessageId append(MimeMessage mail, Username user, String folder) throws MessagingException {
         MailboxSession session = createMailboxSession(user);
         return append(mail, user, useSlashAsSeparator(folder, session), session)
-            .getIds();
+            .getId();
     }
 
     private String useSlashAsSeparator(String urlPath, MailboxSession session) throws MessagingException {

@@ -166,7 +166,7 @@ class MessageRoutesTest {
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession).getIds();
+                        systemSession).getId();
 
                 String taskId = when()
                     .post("/messages/" + composedMessageId.getMessageId().serialize() + "?task=reIndex")
@@ -197,7 +197,7 @@ class MessageRoutesTest {
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession).getIds();
+                        systemSession).getId();
 
                 String taskId = when()
                     .post("/messages/" + composedMessageId.getMessageId().serialize() + "?task=reIndex")

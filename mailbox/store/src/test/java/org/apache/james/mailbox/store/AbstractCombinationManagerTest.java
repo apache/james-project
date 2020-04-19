@@ -98,7 +98,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMessageCountFromMessageManagerShouldReturnDataSetInMailboxesFromMessageIdManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -111,7 +111,7 @@ public abstract class AbstractCombinationManagerTest {
         query.andCriteria(SearchQuery.all());
 
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -124,7 +124,7 @@ public abstract class AbstractCombinationManagerTest {
         query.andCriteria(SearchQuery.all());
 
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId,
             ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
@@ -142,7 +142,7 @@ public abstract class AbstractCombinationManagerTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
 
-        ComposedMessageId composedMessageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session).getIds();
+        ComposedMessageId composedMessageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session).getId();
 
         messageIdManager.setInMailboxes(composedMessageId.getMessageId(),
             ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
@@ -161,7 +161,7 @@ public abstract class AbstractCombinationManagerTest {
         MultimailboxesSearchQuery multiMailboxesQuery = builder.build();
 
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -173,7 +173,7 @@ public abstract class AbstractCombinationManagerTest {
     void setFlagsToDeleteThenExpungeFromMessageManagerThenGetMessageFromMessageIdManagerShouldNotReturnAnything() throws Exception {
         Flags deleted = new Flags(Flag.DELETED);
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageManager1.setFlags(deleted, FlagsUpdateMode.ADD, MessageRange.all(), session);
         messageManager1.expunge(MessageRange.all(), session);
@@ -184,7 +184,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void expungeFromMessageManagerShouldWorkWhenSetFlagsToDeletedWithMessageIdManager() throws Exception {
         Flags deleted = new Flags(Flag.DELETED);
-        ComposedMessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session).getIds();
+        ComposedMessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session).getId();
 
         messageIdManager.setFlags(deleted, FlagsUpdateMode.ADD, messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId()), session);
 
@@ -199,7 +199,7 @@ public abstract class AbstractCombinationManagerTest {
         ComposedMessageId messageId = messageManager1.appendMessage(
             MessageManager.AppendCommand.builder()
                 .withFlags(deleted)
-                .build(mailContent), session).getIds();
+                .build(mailContent), session).getId();
 
         messageIdManager.setInMailboxes(messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId()), session);
 
@@ -211,7 +211,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMessageFromMessageIdManagerShouldReturnMessageWhenAppendMessageFromMessageManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session)).hasSize(1);
     }
@@ -219,7 +219,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMessageFromMessageIdManagerShouldReturnMessageWhenCopyMessageWithMailboxIdFromMailboxManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         mailboxManager.copyMessages(MessageRange.all(), mailbox1.getMailboxId(), mailbox2.getMailboxId(), session);
 
@@ -233,7 +233,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMessageFromMessageIdManagerShouldReturnMessageWhenCopyMessageWithMailboxPathFromMailboxManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         mailboxManager.copyMessages(MessageRange.all(), MailboxFixture.INBOX_ALICE, MailboxFixture.OUTBOX_ALICE, session);
 
@@ -247,7 +247,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMessageFromMessageIdManagerShouldReturnMessageWhenMoveMessageWithMailboxIdFromMailboxManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         mailboxManager.moveMessages(MessageRange.all(), MailboxFixture.INBOX_ALICE, MailboxFixture.OUTBOX_ALICE, session);
 
@@ -261,7 +261,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMessagesFromMessageManagerShouldReturnMessagesCreatedBySetInMailboxesFromMessageIdManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -276,7 +276,7 @@ public abstract class AbstractCombinationManagerTest {
         ComposedMessageId messageId = messageManager1.appendMessage(
             MessageManager.AppendCommand.builder()
                 .withFlags(recent)
-                .build(mailContent), session).getIds();
+                .build(mailContent), session).getId();
 
         long mailbox2NextUid = messageManager2.getMetaData(true, session, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT).getUidNext().asLong();
         messageIdManager.setInMailboxes(messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
@@ -294,7 +294,7 @@ public abstract class AbstractCombinationManagerTest {
             MessageManager.AppendCommand.builder()
                 .withFlags(recent)
                 .build(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -307,7 +307,7 @@ public abstract class AbstractCombinationManagerTest {
         ComposedMessageId messageId = messageManager1.appendMessage(
             MessageManager.AppendCommand.builder()
                 .withFlags(recent)
-                .build(mailContent), session).getIds();
+                .build(mailContent), session).getId();
 
         messageIdManager.setInMailboxes(messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -327,7 +327,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMetadataFromMessageManagerShouldReturnHighestModSeqWhenSetInMailboxesFromMessageIdManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -337,7 +337,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMetadataFromMessageManagerShouldReturnMessageCountWhenSetInMailboxesFromMessageIdManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -347,7 +347,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMetadataFromMessageManagerShouldReturnNumberOfUnseenMessageWhenSetInMailboxesFromMessageIdManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -356,7 +356,7 @@ public abstract class AbstractCombinationManagerTest {
 
     @Test
     void getMetadataFromMessageManagerShouldReturnFirstUnseenMessageWhenSetInMailboxesFromMessageIdManager() throws Exception {
-        ComposedMessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session).getIds();
+        ComposedMessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session).getId();
 
         messageIdManager.setInMailboxes(messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -367,7 +367,7 @@ public abstract class AbstractCombinationManagerTest {
     void getMetadataFromMessageManagerShouldReturnNumberOfUnseenMessageWhenSetFlagsFromMessageIdManager() throws Exception {
         Flags newFlag = new Flags(Flag.RECENT);
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setFlags(newFlag, FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -377,7 +377,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void getMetadataFromMessageManagerShouldReturnFirstUnseenMessageWhenSetFlagsFromMessageIdManager() throws Exception {
         Flags newFlag = new Flags(Flag.USER);
-        ComposedMessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session).getIds();
+        ComposedMessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session).getId();
 
         messageIdManager.setFlags(newFlag, FlagsUpdateMode.ADD, messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -387,7 +387,7 @@ public abstract class AbstractCombinationManagerTest {
     @Test
     void setInMailboxesFromMessageIdManagerShouldMoveMessage() throws Exception {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox2.getMailboxId()), session);
 
@@ -412,7 +412,7 @@ public abstract class AbstractCombinationManagerTest {
             MessageManager.AppendCommand.builder()
                 .withFlags(messageFlag)
                 .build(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -443,7 +443,7 @@ public abstract class AbstractCombinationManagerTest {
             MessageManager.AppendCommand.builder()
                 .withFlags(messageFlag)
                 .build(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setFlags(deleted, FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
@@ -461,7 +461,7 @@ public abstract class AbstractCombinationManagerTest {
             MessageManager.AppendCommand.builder()
                 .withFlags(customFlag1)
                 .build(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
 
         messageIdManager.setFlags(customFlag2, FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
@@ -483,7 +483,7 @@ public abstract class AbstractCombinationManagerTest {
             MessageManager.AppendCommand.builder()
                 .withFlags(custom1)
                 .build(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
         messageManager2.setFlags(custom2, FlagsUpdateMode.ADD, MessageRange.all(), session);
@@ -500,7 +500,7 @@ public abstract class AbstractCombinationManagerTest {
     void getUidsShouldInteractWellWithSetInMailboxes() throws Exception {
         MessageId messageId = messageManager1
             .appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
@@ -521,7 +521,7 @@ public abstract class AbstractCombinationManagerTest {
     void getUidsShouldInteractWellWithDelete() throws Exception {
         MessageId messageId = messageManager1
             .appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
@@ -533,10 +533,10 @@ public abstract class AbstractCombinationManagerTest {
     void getUidsShouldInteractWellWithDeletes() throws Exception {
         MessageId messageId1 = messageManager1
             .appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
         MessageId messageId2 = messageManager1
             .appendMessage(MessageManager.AppendCommand.from(mailContent), session)
-            .getIds().getMessageId();
+            .getId().getMessageId();
 
         messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session);
 

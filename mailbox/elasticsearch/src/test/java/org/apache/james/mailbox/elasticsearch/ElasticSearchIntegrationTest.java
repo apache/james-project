@@ -131,7 +131,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             Message.Builder.of()
                 .setTo(recipient)
                 .setBody(Strings.repeat("0à2345678é", 3200), StandardCharsets.UTF_8)),
-            session).getIds();
+            session).getId();
 
         elasticSearch.awaitForElasticSearch();
 
@@ -150,7 +150,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             Message.Builder.of()
                 .setTo(recipient)
                 .setBody(Strings.repeat("0123456789", 3300), StandardCharsets.UTF_8)),
-            session).getIds();
+            session).getId();
 
         elasticSearch.awaitForElasticSearch();
 
@@ -169,7 +169,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             Message.Builder.of()
                 .setTo(recipient)
                 .setBody(Strings.repeat("0123456789 ", 5000), StandardCharsets.UTF_8)),
-            session).getIds();
+            session).getId();
 
         elasticSearch.awaitForElasticSearch();
 
@@ -188,7 +188,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             Message.Builder.of()
                 .setTo(recipient)
                 .setBody(Strings.repeat("0123456789 ", 5000) + " matchMe", StandardCharsets.UTF_8)),
-            session).getIds();
+            session).getId();
 
         elasticSearch.awaitForElasticSearch();
 
@@ -208,7 +208,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             Message.Builder.of()
                 .setTo(recipient)
                 .setBody(reasonableLongTerm, StandardCharsets.UTF_8)),
-            session).getIds();
+            session).getId();
 
         elasticSearch.awaitForElasticSearch();
 
@@ -225,14 +225,14 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         ComposedMessageId customDateHeaderMessageId = messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomDateHeader.eml")),
-            session).getIds();
+            session).getId();
 
         elasticSearch.awaitForElasticSearch();
 
         ComposedMessageId customStringHeaderMessageId = messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomStringHeader.eml")),
-            session).getIds();
+            session).getId();
 
         elasticSearch.awaitForElasticSearch();
 
@@ -256,7 +256,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         ComposedMessageId customStringHeaderMessageId = messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomStringHeader.eml")),
-            session).getIds();
+            session).getId();
 
         elasticSearch.awaitForElasticSearch();
 

@@ -121,19 +121,19 @@ class MessageFastViewFactoryTest {
         previewComputedMessage1 = bobInbox.appendMessage(MessageManager.AppendCommand.builder()
                 .withFlags(new Flags(Flags.Flag.SEEN))
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
-            session).getIds();
+            session).getId();
         missingPreviewComputedMessage1 = bobInbox.appendMessage(MessageManager.AppendCommand.builder()
                 .withFlags(new Flags(Flags.Flag.SEEN))
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
-            session).getIds();
+            session).getId();
         previewComputedMessage2 = bobInbox.appendMessage(MessageManager.AppendCommand.builder()
                 .withFlags(new Flags(Flags.Flag.SEEN))
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
-            session).getIds();
+            session).getId();
         previewComputedMessage3 = bobInbox.appendMessage(MessageManager.AppendCommand.builder()
                 .withFlags(new Flags(Flags.Flag.SEEN))
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
-            session).getIds();
+            session).getId();
 
         fastViewProjection = new MemoryMessageFastViewProjection(new RecordingMetricFactory());
 

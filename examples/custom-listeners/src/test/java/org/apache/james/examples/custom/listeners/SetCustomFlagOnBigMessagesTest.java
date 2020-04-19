@@ -81,7 +81,7 @@ class SetCustomFlagOnBigMessagesTest {
         ComposedMessageId composedId = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(smallMessage()),
-            mailboxSession).getIds();
+            mailboxSession).getId();
 
         assertThat(getMessageFlags(composedId.getUid()))
             .allSatisfy(flags -> assertThat(flags.contains(BIG_MESSAGE)).isFalse());
@@ -97,7 +97,7 @@ class SetCustomFlagOnBigMessagesTest {
             MessageManager.AppendCommand.builder()
                 .withFlags(appendMessageFlag)
                 .build(smallMessage()),
-            mailboxSession).getIds();
+            mailboxSession).getId();
 
         assertThat(getMessageFlags(composedId.getUid()))
             .allSatisfy(flags -> {
@@ -111,7 +111,7 @@ class SetCustomFlagOnBigMessagesTest {
         ComposedMessageId composedId = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(bigMessage()),
-            mailboxSession).getIds();
+            mailboxSession).getId();
 
         assertThat(getMessageFlags(composedId.getUid()))
             .allSatisfy(flags -> assertThat(flags.contains(BIG_MESSAGE)).isTrue());
@@ -122,7 +122,7 @@ class SetCustomFlagOnBigMessagesTest {
         ComposedMessageId composedIdOfSmallMessage = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(smallMessage()),
-            mailboxSession).getIds();
+            mailboxSession).getId();
 
         MessageResult addedMessage = inboxMessageManager
             .getMessages(MessageRange.one(composedIdOfSmallMessage.getUid()), FetchGroup.MINIMAL, mailboxSession)
@@ -154,7 +154,7 @@ class SetCustomFlagOnBigMessagesTest {
             MessageManager.AppendCommand.builder()
                 .withFlags(appendMessageFlag)
                 .build(bigMessage()),
-            mailboxSession).getIds();
+            mailboxSession).getId();
 
         assertThat(getMessageFlags(composedId.getUid()))
             .allSatisfy(flags -> {
@@ -173,7 +173,7 @@ class SetCustomFlagOnBigMessagesTest {
             MessageManager.AppendCommand.builder()
                 .withFlags(appendMessageFlag)
                 .build(bigMessage()),
-            mailboxSession).getIds();
+            mailboxSession).getId();
 
         assertThat(getMessageFlags(composedId.getUid()))
             .allSatisfy(flags -> assertThat(flags.contains(BIG_MESSAGE)).isTrue());

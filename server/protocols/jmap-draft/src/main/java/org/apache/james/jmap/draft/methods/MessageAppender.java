@@ -91,7 +91,7 @@ public class MessageAppender {
                 .notRecent()
                 .build(content),
             session);
-        ComposedMessageId ids = appendResult.getIds();
+        ComposedMessageId ids = appendResult.getId();
         if (targetMailboxes.size() > 1) {
             messageIdManager.setInMailboxes(ids.getMessageId(), targetMailboxes, session);
         }
@@ -121,7 +121,7 @@ public class MessageAppender {
         AppendResult appendResult = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withFlags(flags)
             .build(content), session);
-        ComposedMessageId ids = appendResult.getIds();
+        ComposedMessageId ids = appendResult.getId();
 
         return MetaDataWithContent.builder()
             .uid(ids.getUid())

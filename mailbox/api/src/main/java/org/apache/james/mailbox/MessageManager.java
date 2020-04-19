@@ -143,16 +143,16 @@ public interface MessageManager {
     Map<MessageUid, Flags> setFlags(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) throws MailboxException;
 
     class AppendResult {
-        private final ComposedMessageId ids;
+        private final ComposedMessageId id;
         private final Optional<List<MessageAttachment>> messageAttachments;
 
-        public AppendResult(ComposedMessageId ids, Optional<List<MessageAttachment>> messageAttachments) {
-            this.ids = ids;
+        public AppendResult(ComposedMessageId id, Optional<List<MessageAttachment>> messageAttachments) {
+            this.id = id;
             this.messageAttachments = messageAttachments;
         }
 
-        public ComposedMessageId getIds() {
-            return ids;
+        public ComposedMessageId getId() {
+            return id;
         }
 
         public List<MessageAttachment> getMessageAttachments() {
@@ -165,7 +165,7 @@ public interface MessageManager {
             if (o instanceof AppendResult) {
                 AppendResult that = (AppendResult) o;
 
-                return Objects.equals(this.ids, that.ids)
+                return Objects.equals(this.id, that.id)
                     && Objects.equals(this.messageAttachments, that.messageAttachments);
             }
             return false;
@@ -173,7 +173,7 @@ public interface MessageManager {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(ids, messageAttachments);
+            return Objects.hash(id, messageAttachments);
         }
     }
 

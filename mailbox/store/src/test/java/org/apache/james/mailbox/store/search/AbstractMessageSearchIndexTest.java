@@ -133,7 +133,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1388617200000L),
             session,
             RECENT,
-            new Flags(Flags.Flag.DELETED)).getIds();
+            new Flags(Flags.Flag.DELETED)).getId();
         // sentDate: Thu, 4 Jun 2015 09:23:37 +0000
         // Internal date : 2014/02/02 00:00:00.000
         m2 = inboxMessageManager.appendMessage(
@@ -141,7 +141,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1391295600000L),
             session,
             RECENT,
-            new Flags(Flags.Flag.ANSWERED)).getIds();
+            new Flags(Flags.Flag.ANSWERED)).getId();
         // sentDate: Thu, 4 Jun 2015 09:27:37 +0000
         // Internal date : 2014/03/02 00:00:00.000
         m3 = inboxMessageManager.appendMessage(
@@ -149,7 +149,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1393714800000L),
             session,
             RECENT,
-            new Flags(Flags.Flag.DRAFT)).getIds();
+            new Flags(Flags.Flag.DRAFT)).getId();
         // sentDate: Tue, 2 Jun 2015 08:16:19 +0000
         // Internal date : 2014/05/02 00:00:00.000
         m4 = inboxMessageManager.appendMessage(
@@ -157,7 +157,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1398981600000L),
             session,
             RECENT,
-            new Flags(Flags.Flag.RECENT)).getIds();
+            new Flags(Flags.Flag.RECENT)).getId();
         // sentDate: Fri, 15 May 2015 06:35:59 +0000
         // Internal date : 2014/04/02 00:00:00.000
         m5 = inboxMessageManager.appendMessage(
@@ -165,7 +165,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1396389600000L),
             session,
             RECENT,
-            new Flags(Flags.Flag.FLAGGED)).getIds();
+            new Flags(Flags.Flag.FLAGGED)).getId();
         // sentDate: Wed, 03 Jun 2015 19:14:32 +0000
         // Internal date : 2014/06/02 00:00:00.000
         m6 = inboxMessageManager.appendMessage(
@@ -173,7 +173,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1401660000000L),
             session,
             RECENT,
-            new Flags(Flags.Flag.SEEN)).getIds();
+            new Flags(Flags.Flag.SEEN)).getId();
         // sentDate: Thu, 04 Jun 2015 07:36:08 +0000
         // Internal date : 2014/07/02 00:00:00.000
         m7 = inboxMessageManager.appendMessage(
@@ -181,7 +181,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1404252000000L),
             session,
             NOT_RECENT,
-            new Flags()).getIds();
+            new Flags()).getId();
         // sentDate: Thu, 4 Jun 2015 06:08:41 +0200
         // Internal date : 2014/08/02 00:00:00.000
         m8 = inboxMessageManager.appendMessage(
@@ -189,7 +189,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1406930400000L),
             session,
             RECENT,
-            new Flags("Hello")).getIds();
+            new Flags("Hello")).getId();
         // sentDate: Thu, 4 Jun 2015 06:08:41 +0200
         // Internal date : 2014/08/02 00:00:00.000
         mOther = myFolderMessageManager.appendMessage(
@@ -197,34 +197,34 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1406930400000L),
             session,
             RECENT,
-            new Flags(Flags.Flag.SEEN)).getIds();
+            new Flags(Flags.Flag.SEEN)).getId();
         m9 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/frnog.eml"),
             new Date(1409608800000L),
             session,
             RECENT,
-            new Flags("Hello you")).getIds();
+            new Flags("Hello you")).getId();
 
         mailWithAttachment = myFolderMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"),
             new Date(1409608900000L),
             session,
             RECENT,
-            new Flags("Hello you")).getIds();
+            new Flags("Hello you")).getId();
 
         mailWithInlinedAttachment = myFolderMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"),
             new Date(1409608900000L),
             session,
             RECENT,
-            new Flags("Hello you")).getIds();
+            new Flags("Hello you")).getId();
 
         m10 = otherInboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail1.eml"),
             new Date(1391295600000L),
             otherSession,
             RECENT,
-            new Flags()).getIds();
+            new Flags()).getId();
 
         await();
     }
@@ -422,7 +422,7 @@ public abstract class AbstractMessageSearchIndexTest {
         ComposedMessageId mailWithDotsInHeader = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoader.getSystemResourceAsStream("eml/headerWithDot.eml")),
-            session).getIds();
+            session).getId();
         await();
         
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
@@ -437,7 +437,7 @@ public abstract class AbstractMessageSearchIndexTest {
         ComposedMessageId mailWithDotsInHeader = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoader.getSystemResourceAsStream("eml/headerWithDot.eml")),
-            session).getIds();
+            session).getId();
         await();
 
         SearchQuery searchQuery = new SearchQuery(SearchQuery.headerExists("X-header.with.dots"));
@@ -453,7 +453,7 @@ public abstract class AbstractMessageSearchIndexTest {
         ComposedMessageId m11 = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
             .build(ClassLoader.getSystemResourceAsStream("eml/mail5.eml")),
-            session).getIds();
+            session).getId();
 
         String emailToSearch = "luc.duzan@james.apache.org";
 
@@ -1362,7 +1362,7 @@ public abstract class AbstractMessageSearchIndexTest {
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
             .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
-            session).getIds();
+            session).getId();
         await();
 
         SearchQuery searchQuery = new SearchQuery(SearchQuery.mailContains("User message banana"));
@@ -1377,7 +1377,7 @@ public abstract class AbstractMessageSearchIndexTest {
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
-            session).getIds();
+            session).getId();
         await();
 
         SearchQuery searchQuery = new SearchQuery(SearchQuery.attachmentContains("beautiful banana"));
@@ -1401,7 +1401,7 @@ public abstract class AbstractMessageSearchIndexTest {
                 .setBody(multipart)
                 .build();
         ComposedMessageId messageWithBeautifulBananaAsPDFAttachment = myFolderMessageManager
-            .appendMessage(MessageManager.AppendCommand.from(message), session).getIds();
+            .appendMessage(MessageManager.AppendCommand.from(message), session).getId();
         await();
 
         SearchQuery searchQuery = new SearchQuery(SearchQuery.attachmentContains("beautiful banana"));
@@ -1441,19 +1441,19 @@ public abstract class AbstractMessageSearchIndexTest {
             .build(Message.Builder.of()
                 .setSubject("test")
                 .setBody("testmail", StandardCharsets.UTF_8)),
-            session).getIds();
+            session).getId();
         ComposedMessageId message2 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date2)
             .build(Message.Builder.of()
                 .setSubject("test")
                 .setBody("testmail", StandardCharsets.UTF_8)),
-            session).getIds();
+            session).getId();
         ComposedMessageId message3 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date3)
             .build(Message.Builder.of()
                 .setSubject("test")
                 .setBody("testmail", StandardCharsets.UTF_8)),
-            session).getIds();
+            session).getId();
 
         await();
 
@@ -1480,7 +1480,7 @@ public abstract class AbstractMessageSearchIndexTest {
             .withInternalDate(date1)
             .build(Message.Builder.of()
                 .setSubject("test")
-                .setBody("testmail", StandardCharsets.UTF_8)), session).getIds();
+                .setBody("testmail", StandardCharsets.UTF_8)), session).getId();
         ComposedMessageId message2 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date2)
             .build(Message.Builder.of()
@@ -1488,12 +1488,12 @@ public abstract class AbstractMessageSearchIndexTest {
                 .setDate(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
                     .parse("2017/08/23 00:00:00 "), TimeZone.getTimeZone(ZoneId.of("+0200")))
                 .setBody("testmail", StandardCharsets.UTF_8)),
-            session).getIds();
+            session).getId();
         ComposedMessageId message3 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date3)
             .build(Message.Builder.of()
                 .setSubject("test")
-                .setBody("testmail", StandardCharsets.UTF_8)), session).getIds();
+                .setBody("testmail", StandardCharsets.UTF_8)), session).getId();
 
         await();
 
@@ -1555,7 +1555,7 @@ public abstract class AbstractMessageSearchIndexTest {
                                     .build())
                                 .build())
                             .build())),
-            session).getIds();
+            session).getId();
 
         await();
 

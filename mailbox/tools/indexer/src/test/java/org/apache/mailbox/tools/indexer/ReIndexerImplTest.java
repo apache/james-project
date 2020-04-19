@@ -71,7 +71,7 @@ public class ReIndexerImplTest {
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
             .appendMessage(
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                systemSession).getIds();
+                systemSession).getId();
 
         reIndexer.reIndex(INBOX).run();
 
@@ -98,7 +98,7 @@ public class ReIndexerImplTest {
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
             .appendMessage(
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                systemSession).getIds();
+                systemSession).getId();
 
         reIndexer.reIndex().run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
@@ -124,7 +124,7 @@ public class ReIndexerImplTest {
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
             .appendMessage(
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                systemSession).getIds();
+                systemSession).getId();
 
         reIndexer.reIndex(USERNAME).run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
@@ -150,7 +150,7 @@ public class ReIndexerImplTest {
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
             .appendMessage(
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                systemSession).getIds();
+                systemSession).getId();
 
         reIndexer.reIndex(INBOX, createdMessage.getUid()).run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
@@ -173,7 +173,7 @@ public class ReIndexerImplTest {
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
             .appendMessage(
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                systemSession).getIds();
+                systemSession).getId();
 
         reIndexer.reIndex(mailboxId, createdMessage.getUid()).run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
@@ -216,7 +216,7 @@ public class ReIndexerImplTest {
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
             .appendMessage(
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                systemSession).getIds();
+                systemSession).getId();
 
         reIndexer.reIndex(mailboxId).run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);

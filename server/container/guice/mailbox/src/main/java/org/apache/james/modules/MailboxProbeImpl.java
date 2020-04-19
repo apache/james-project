@@ -152,7 +152,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(username));
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        return messageManager.appendMessage(message, internalDate, mailboxSession, isRecent, flags).getIds();
+        return messageManager.appendMessage(message, internalDate, mailboxSession, isRecent, flags).getId();
     }
 
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, MessageManager.AppendCommand appendCommand)
@@ -160,7 +160,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(username));
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        return messageManager.appendMessage(appendCommand, mailboxSession).getIds();
+        return messageManager.appendMessage(appendCommand, mailboxSession).getId();
     }
 
     @Override

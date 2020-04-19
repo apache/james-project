@@ -103,7 +103,7 @@ class DeletedMessageVaultHookTest {
         return messageManager.appendMessage(MessageManager.AppendCommand.builder()
                 .withInternalDate(INTERNAL_DATE)
                 .build(mailContent), aliceSession)
-            .getIds();
+            .getId();
     }
 
     @BeforeEach

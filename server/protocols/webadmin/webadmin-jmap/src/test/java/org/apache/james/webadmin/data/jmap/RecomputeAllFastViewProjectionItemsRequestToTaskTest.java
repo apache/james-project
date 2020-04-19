@@ -304,7 +304,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), session);
         ComposedMessageId messageId = mailboxManager.getMailbox(mailboxId.get(), session).appendMessage(
             MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-            session).getIds();
+            session).getId();
 
         String taskId = with()
             .queryParam("action", "recomputeFastViewProjectionItems")
@@ -327,7 +327,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), session);
         ComposedMessageId messageId = mailboxManager.getMailbox(mailboxId.get(), session).appendMessage(
             MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-            session).getIds();
+            session).getId();
 
         String taskId1 = with()
             .queryParam("action", "recomputeFastViewProjectionItems")

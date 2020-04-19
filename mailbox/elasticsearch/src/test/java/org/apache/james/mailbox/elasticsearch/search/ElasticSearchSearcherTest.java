@@ -168,6 +168,6 @@ class ElasticSearchSearcherTest {
                 .setTo(recipient)
                 .setBody("Hello", StandardCharsets.UTF_8)),
             session)
-            .getIds();
+            .getId();
     }
 }

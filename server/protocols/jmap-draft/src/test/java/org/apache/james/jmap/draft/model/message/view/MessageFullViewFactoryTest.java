@@ -121,7 +121,7 @@ class MessageFullViewFactoryTest {
         message1 = bobInbox.appendMessage(MessageManager.AppendCommand.builder()
                 .withFlags(new Flags(Flags.Flag.SEEN))
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
-            session).getIds();
+            session).getId();
 
         fastViewProjection = spy(new MemoryMessageFastViewProjection(new RecordingMetricFactory()));
         messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messageContentExtractor, htmlTextExtractor,
