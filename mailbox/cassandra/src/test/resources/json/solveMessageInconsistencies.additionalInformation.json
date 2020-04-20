@@ -1,0 +1,28 @@
+{
+  "type":"solve-message-inconsistencies",
+  "timestamp":"2007-12-03T10:15:30Z",
+  "processedImapUidEntries": 2,
+  "processedMessageIdEntries": 1,
+  "addedMessageIdEntries": 1,
+  "updatedMessageIdEntries": 0,
+  "removedMessageIdEntries": 1,
+  "fixedInconsistencies": [
+    {
+      "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
+      "messageId": "d2bee791-7e63-11ea-883c-95b84008f979",
+      "uid": 1
+    },
+    {
+      "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
+      "messageId": "d2bee792-7e63-11ea-883c-95b84008f979",
+      "uid": 2
+    }
+  ],
+  "errors": [
+    {
+      "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
+      "messageId": "ffffffff-7e63-11ea-883c-95b84008f979",
+      "uid": 3
+    }
+  ]
+}
