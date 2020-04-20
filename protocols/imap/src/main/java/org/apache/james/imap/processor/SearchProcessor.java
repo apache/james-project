@@ -67,6 +67,7 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
@@ -212,8 +213,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         } else {
             return uids.stream()
                 .map(uid -> session.getSelected().msn(uid))
-                .map(Integer::longValue)
-                .filter(msn -> msn != SelectedMailbox.NO_SUCH_MESSAGE)
+                .flatMap(Throwing.function(nullableMsn ->
+                    nullableMsn.fold(
+                        Stream::empty,
+                        msn -> Stream.of(Integer.valueOf(msn.asInt()).longValue()))))
                 .collect(Guavate.toImmutableList());
         }
     }

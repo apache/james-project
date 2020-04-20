@@ -34,6 +34,7 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.MessageFlags;
 import org.apache.james.imap.api.message.UidRange;
+import org.apache.james.mailbox.MessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.UidValidity;
@@ -299,8 +300,8 @@ public interface StatusResponse extends ImapResponseMessage {
          *            positive non-zero integer
          * @return <code>ResponseCode</code>, not null
          */
-        public static ResponseCode unseen(int numberUnseen) {
-            return new ResponseCode("UNSEEN", numberUnseen);
+        public static ResponseCode unseen(MessageSequenceNumber numberUnseen) {
+            return new ResponseCode("UNSEEN", numberUnseen.asInt());
         }
 
         /**

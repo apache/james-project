@@ -25,6 +25,7 @@ import org.apache.james.imap.message.response.ExpungeResponse;
 
 public class ExpungeResponseEncoder implements ImapResponseEncoder<ExpungeResponse> {
     public static final String EXPUNGE = "EXPUNGE";
+    private static final int NO_MESSAGE = -1;
 
     @Override
     public Class<ExpungeResponse> acceptableMessages() {
@@ -33,7 +34,7 @@ public class ExpungeResponseEncoder implements ImapResponseEncoder<ExpungeRespon
 
     @Override
     public void encode(ExpungeResponse expungeResponse, ImapResponseComposer composer) throws IOException {
-        int messageSequenceNumber = expungeResponse.getMessageSequenceNumber();
+        int messageSequenceNumber = expungeResponse.getMessageSequenceNumber().asInt().orElse(NO_MESSAGE);
         composer.untagged().message(messageSequenceNumber).message(EXPUNGE).end();
     }
 }

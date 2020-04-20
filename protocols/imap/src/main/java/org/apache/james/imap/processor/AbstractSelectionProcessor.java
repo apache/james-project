@@ -349,15 +349,15 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     private boolean unseen(Responder responder, MessageUid firstUnseen, SelectedMailbox selected) throws MailboxException {
         if (firstUnseen != null) {
             final MessageUid unseenUid = firstUnseen;
-            int msn = selected.msn(unseenUid);
 
-            if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
+            return selected.msn(unseenUid).fold(() -> {
                 LOGGER.debug("No message found with uid {} in mailbox {}", unseenUid, selected.getMailboxId().serialize());
                 return false;
-            } 
-
-            final StatusResponse untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.unseen(msn), ResponseCode.unseen(msn));
-            responder.respond(untaggedOk);
+            }, msn -> {
+                final StatusResponse untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.unseen(msn), ResponseCode.unseen(msn));
+                responder.respond(untaggedOk);
+                return true;
+            });
         }
         return true;
 

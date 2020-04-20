@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.TreeSet;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.NullableMessageSequenceNumber;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -48,12 +49,12 @@ public class UidMsnConverter {
         uids.addAll(tmp);
     }
 
-    public synchronized Optional<Integer> getMsn(MessageUid uid) {
+    public synchronized NullableMessageSequenceNumber getMsn(MessageUid uid) {
         int position = Collections.binarySearch(uids, uid);
         if (position < 0) {
-            return Optional.empty();
+            return NullableMessageSequenceNumber.noMessage();
         }
-        return Optional.of(position + 1);
+        return NullableMessageSequenceNumber.of(position + 1);
     }
 
     public synchronized Optional<MessageUid> getUid(int msn) {

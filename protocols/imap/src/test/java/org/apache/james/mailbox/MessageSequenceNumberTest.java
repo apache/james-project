@@ -17,24 +17,41 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.message.response;
+package org.apache.james.mailbox;
 
-import org.apache.james.imap.api.message.response.ImapResponseMessage;
-import org.apache.james.mailbox.NullableMessageSequenceNumber;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public final class ExpungeResponse implements ImapResponseMessage {
+import org.junit.jupiter.api.Test;
 
-    private final NullableMessageSequenceNumber messageSequenceNumber;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    public ExpungeResponse(NullableMessageSequenceNumber messageSequenceNumber) {
-        this.messageSequenceNumber = messageSequenceNumber;
+class MessageSequenceNumberTest {
+
+    @Test
+    void ofShouldThrowOnNegative() {
+        assertThatThrownBy(() -> MessageSequenceNumber.of(-1)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    public NullableMessageSequenceNumber getMessageSequenceNumber() {
-        return messageSequenceNumber;
+    @Test
+    void ofShouldNotThrowOnZero() {
+        assertThatCode(() -> MessageSequenceNumber.of(0)).doesNotThrowAnyException();
     }
 
-    public String toString() {
-        return "EXPUNGE " + messageSequenceNumber;
+    @Test
+    void ofShouldNotThrowOnPositiveValue() {
+        assertThatCode(() -> MessageSequenceNumber.of(12)).doesNotThrowAnyException();
     }
+
+    @Test
+    void asIntShouldReturnValue() {
+        assertThat(MessageSequenceNumber.of(12).asInt()).isEqualTo(12);
+    }
+
+    @Test
+    void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(MessageSequenceNumber.class).verify();
+    }
+
 }

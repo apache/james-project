@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import java.util.Map;
 
+import org.apache.james.mailbox.MessageSequenceNumber;
+import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Before;
@@ -98,7 +100,7 @@ public class UidMsnConverterTest {
     public void getMsnShouldReturnAbsentIfNoCorrespondingMessage() {
         testee.addUid(messageUid1);
 
-        assertThat(testee.getMsn(messageUid2)).isEmpty();
+        assertThat(testee.getMsn(messageUid2)).isEqualTo(NullableMessageSequenceNumber.noMessage());
     }
 
     @Test
@@ -107,7 +109,7 @@ public class UidMsnConverterTest {
         testee.addUid(messageUid2);
 
         assertThat(testee.getMsn(messageUid2))
-            .contains(2);
+            .isEqualTo(NullableMessageSequenceNumber.of(2));
     }
 
     @Test
@@ -173,7 +175,7 @@ public class UidMsnConverterTest {
         testee.addUid(messageUid2);
 
         assertThat(testee.getMsn(messageUid2))
-            .contains(2);
+            .isEqualTo(NullableMessageSequenceNumber.of(2));
     }
 
     @Test

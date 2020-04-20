@@ -33,6 +33,7 @@ import javax.mail.Flags;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.message.response.FetchResponse.Structure;
+import org.apache.james.mailbox.MessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.slf4j.Logger;
@@ -63,9 +64,9 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
 
     @Override
     public void encode(FetchResponse fetchResponse, ImapResponseComposer composer) throws IOException {
-        long messageNumber = fetchResponse.getMessageNumber();
+        MessageSequenceNumber messageNumber = fetchResponse.getMessageNumber();
 
-        composer.untagged().message(messageNumber).message(ImapConstants.FETCH_COMMAND.getName()).openParen();
+        composer.untagged().message(messageNumber.asInt()).message(ImapConstants.FETCH_COMMAND.getName()).openParen();
 
         encodeModSeq(composer, fetchResponse);
         encodeFlags(composer, fetchResponse);

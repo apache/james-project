@@ -25,6 +25,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -42,10 +43,10 @@ public interface SelectedMailbox {
     void deselect();
 
     /**
-     * Return the msg index of the given uid or {@link #NO_SUCH_MESSAGE} if no
+     * Return the msg index of the given uid or {@link NullableMessageSequenceNumber#noMessage()} instance if no
      * message with the given uid was found
      */
-    int msn(MessageUid uid);
+    NullableMessageSequenceNumber msn(MessageUid uid);
 
     /**
      * Return the uid of the message for the given index or empty if no message with the given index was found
@@ -144,10 +145,10 @@ public interface SelectedMailbox {
      * @param uid
      *            not null
      * @return the message sequence number that the UID held before or
-     *         {@link #NO_SUCH_MESSAGE} if no message with the given uid was
+     *         {@link NullableMessageSequenceNumber#noMessage()} instance if no message with the given uid was
      *         found being expunged
      */
-    int remove(MessageUid uid);
+    NullableMessageSequenceNumber remove(MessageUid uid);
 
     /**
      * Return a Collection which holds all uids reflecting the Messages which

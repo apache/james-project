@@ -26,11 +26,13 @@ import javax.mail.Flags;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
+import org.apache.james.mailbox.MessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
 import org.junit.Before;
 import org.junit.Test;
 
 public class FetchResponseEncoderTest  {
+    private static final MessageSequenceNumber MSN = MessageSequenceNumber.of(100);
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
     private Flags flags;
@@ -49,7 +51,7 @@ public class FetchResponseEncoderTest  {
 
     @Test
     public void testShouldEncodeFlagsResponse() throws Exception {
-        FetchResponse message = new FetchResponse(100, flags, null, null, null, null,
+        FetchResponse message = new FetchResponse(MSN, flags, null, null, null, null,
                 null, null, null, null);
         encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted))\r\n");
@@ -59,7 +61,7 @@ public class FetchResponseEncoderTest  {
 
     @Test
     public void testShouldEncodeUidResponse() throws Exception {
-        FetchResponse message = new FetchResponse(100, null, MessageUid.of(72), null,
+        FetchResponse message = new FetchResponse(MSN, null, MessageUid.of(72), null,
                 null, null, null, null, null, null); 
         encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (UID 72)\r\n");
@@ -69,7 +71,7 @@ public class FetchResponseEncoderTest  {
 
     @Test
     public void testShouldEncodeAllResponse() throws Exception {
-        FetchResponse message = new FetchResponse(100, flags, MessageUid.of(72), null,
+        FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null,
                 null, null, null, null, null, null);
         encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n");

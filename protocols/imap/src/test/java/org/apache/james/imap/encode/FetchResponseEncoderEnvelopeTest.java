@@ -27,6 +27,7 @@ import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.message.response.FetchResponse.Envelope.Address;
+import org.apache.james.mailbox.MessageSequenceNumber;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,7 +50,7 @@ public class FetchResponseEncoderEnvelopeTest {
 
     private static final String ADDRESS_TWO_NAME = "2NAME";
 
-    private static final int MSN = 100;
+    private static final MessageSequenceNumber MSN = MessageSequenceNumber.of(100);
 
     private FetchResponseEncoder encoder;
 

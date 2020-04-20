@@ -41,6 +41,7 @@ import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -55,7 +56,7 @@ public final class FetchResponseBuilder {
 
     private final EnvelopeBuilder envelopeBuilder;
 
-    private int msn;
+    private MessageSequenceNumber msn;
 
     private MessageUid uid;
 
@@ -80,7 +81,7 @@ public final class FetchResponseBuilder {
         this.envelopeBuilder = envelopeBuilder;
     }
 
-    public void reset(int msn) {
+    public void reset(MessageSequenceNumber msn) {
         this.msn = msn;
         uid = null;
         flags = null;
@@ -112,95 +113,94 @@ public final class FetchResponseBuilder {
     public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, ImapSession session, boolean useUids) throws MessageRangeException, MailboxException {
         final SelectedMailbox selected = session.getSelected();
         final MessageUid resultUid = result.getUid();
-        final int resultMsn = selected.msn(resultUid);
-
-        if (resultMsn == SelectedMailbox.NO_SUCH_MESSAGE) {
+        return selected.msn(resultUid).fold(() -> {
             throw new MessageRangeException("No such message found with uid " + resultUid);
-        }
+        }, msn -> {
 
-        reset(resultMsn);
-        // setMsn(resultMsn);
+            reset(msn);
+            // setMsn(resultMsn);
 
-        // Check if this fetch will cause the "SEEN" flag to be set on this
-        // message. If so, update the flags, and ensure that a flags response is
-        // included in the response.
-        final MailboxSession mailboxSession = session.getMailboxSession();
-        boolean ensureFlagsResponse = false;
-        final Flags resultFlags = result.getFlags();
-        if (fetch.isSetSeen() && !resultFlags.contains(Flags.Flag.SEEN)) {
-            mailbox.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(resultUid), mailboxSession);
-            resultFlags.add(Flags.Flag.SEEN);
-            ensureFlagsResponse = true;
-        }
-
-        // FLAGS response
-        if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
-            if (selected.isRecent(resultUid)) {
-                resultFlags.add(Flags.Flag.RECENT);
-            }
-            setFlags(resultFlags);
-        }
-
-        // INTERNALDATE response
-        if (fetch.contains(Item.INTERNAL_DATE)) {
-            setInternalDate(result.getInternalDate());
-        }
-
-        // RFC822.SIZE response
-        if (fetch.contains(Item.SIZE)) {
-            setSize(result.getSize());
-        }
-
-        if (fetch.contains(Item.ENVELOPE)) {
-            this.envelope = buildEnvelope(result);
-        }
-
-
-        // BODY part responses.
-        Collection<BodyFetchElement> elements = fetch.getBodyElements();
-        this.elements = new ArrayList<>();
-        for (BodyFetchElement fetchElement : elements) {
-            final FetchResponse.BodyElement element = bodyFetch(result, fetchElement);
-            if (element != null) {
-                this.elements.add(element);
-            }
-        }
-        
-        // Only create when needed
-        if (fetch.contains(Item.BODY) || fetch.contains(Item.BODY_STRUCTURE)) {
-            // BODY response
-            //
-            // the STRUCTURE is only needed when no specific element is requested otherwise we don't need 
-            // to access it and may be able to not parse the message
-            //
-            // See IMAP-333
-            if (fetch.contains(Item.BODY) && this.elements.isEmpty()) {
-                body = new MimeDescriptorStructure(false, result.getMimeDescriptor(), envelopeBuilder);
+            // Check if this fetch will cause the "SEEN" flag to be set on this
+            // message. If so, update the flags, and ensure that a flags response is
+            // included in the response.
+            final MailboxSession mailboxSession = session.getMailboxSession();
+            boolean ensureFlagsResponse = false;
+            final Flags resultFlags = result.getFlags();
+            if (fetch.isSetSeen() && !resultFlags.contains(Flags.Flag.SEEN)) {
+                mailbox.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(resultUid), mailboxSession);
+                resultFlags.add(Flags.Flag.SEEN);
+                ensureFlagsResponse = true;
             }
 
-            // BODYSTRUCTURE response
-            if (fetch.contains(Item.BODY_STRUCTURE)) {
-                bodystructure = new MimeDescriptorStructure(true, result.getMimeDescriptor(), envelopeBuilder);
+            // FLAGS response
+            if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
+                if (selected.isRecent(resultUid)) {
+                    resultFlags.add(Flags.Flag.RECENT);
+                }
+                setFlags(resultFlags);
             }
-        }
-        // UID response
-        if (fetch.contains(Item.UID)) {
-            setUid(resultUid);
-        }
 
-        
-        if (fetch.contains(Item.MODSEQ)) {
-            long changedSince = fetch.getChangedSince();
-            if (changedSince != -1) {
-                // check if the modsequence if higher then the one specified by the CHANGEDSINCE option
-                if (changedSince < result.getModSeq().asLong()) {
+            // INTERNALDATE response
+            if (fetch.contains(Item.INTERNAL_DATE)) {
+                setInternalDate(result.getInternalDate());
+            }
+
+            // RFC822.SIZE response
+            if (fetch.contains(Item.SIZE)) {
+                setSize(result.getSize());
+            }
+
+            if (fetch.contains(Item.ENVELOPE)) {
+                this.envelope = buildEnvelope(result);
+            }
+
+
+            // BODY part responses.
+            Collection<BodyFetchElement> elements = fetch.getBodyElements();
+            this.elements = new ArrayList<>();
+            for (BodyFetchElement fetchElement : elements) {
+                final FetchResponse.BodyElement element = bodyFetch(result, fetchElement);
+                if (element != null) {
+                    this.elements.add(element);
+                }
+            }
+
+            // Only create when needed
+            if (fetch.contains(Item.BODY) || fetch.contains(Item.BODY_STRUCTURE)) {
+                // BODY response
+                //
+                // the STRUCTURE is only needed when no specific element is requested otherwise we don't need
+                // to access it and may be able to not parse the message
+                //
+                // See IMAP-333
+                if (fetch.contains(Item.BODY) && this.elements.isEmpty()) {
+                    body = new MimeDescriptorStructure(false, result.getMimeDescriptor(), envelopeBuilder);
+                }
+
+                // BODYSTRUCTURE response
+                if (fetch.contains(Item.BODY_STRUCTURE)) {
+                    bodystructure = new MimeDescriptorStructure(true, result.getMimeDescriptor(), envelopeBuilder);
+                }
+            }
+            // UID response
+            if (fetch.contains(Item.UID)) {
+                setUid(resultUid);
+            }
+
+
+            if (fetch.contains(Item.MODSEQ)) {
+                long changedSince = fetch.getChangedSince();
+                if (changedSince != -1) {
+                    // check if the modsequence if higher then the one specified by the CHANGEDSINCE option
+                    if (changedSince < result.getModSeq().asLong()) {
+                        setModSeq(result.getModSeq());
+                    }
+                } else {
                     setModSeq(result.getModSeq());
                 }
-            } else {
-                setModSeq(result.getModSeq());
             }
-        }
-        return build();
+            return build();
+        });
     }
 
     private FetchResponse.Envelope buildEnvelope(MessageResult result) throws MailboxException {

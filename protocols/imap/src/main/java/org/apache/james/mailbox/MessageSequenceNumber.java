@@ -17,24 +17,48 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.message.response;
+package org.apache.james.mailbox;
 
-import org.apache.james.imap.api.message.response.ImapResponseMessage;
-import org.apache.james.mailbox.NullableMessageSequenceNumber;
+import java.util.Objects;
 
-public final class ExpungeResponse implements ImapResponseMessage {
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
-    private final NullableMessageSequenceNumber messageSequenceNumber;
+public final class MessageSequenceNumber {
 
-    public ExpungeResponse(NullableMessageSequenceNumber messageSequenceNumber) {
-        this.messageSequenceNumber = messageSequenceNumber;
+    public static MessageSequenceNumber of(int msn) {
+        Preconditions.checkArgument(msn >= 0);
+        return new MessageSequenceNumber(msn);
     }
 
-    public NullableMessageSequenceNumber getMessageSequenceNumber() {
-        return messageSequenceNumber;
+    private final int msn;
+
+    private MessageSequenceNumber(int msn) {
+        this.msn = msn;
     }
 
+    public int asInt() {
+        return msn;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof MessageSequenceNumber) {
+            MessageSequenceNumber that = (MessageSequenceNumber) o;
+            return Objects.equals(msn, that.msn);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msn);
+    }
+
+    @Override
     public String toString() {
-        return "EXPUNGE " + messageSequenceNumber;
+        return MoreObjects.toStringHelper(this)
+            .add("msn", msn)
+            .toString();
     }
 }

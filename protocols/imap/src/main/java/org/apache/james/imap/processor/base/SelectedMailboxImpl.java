@@ -38,6 +38,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
@@ -183,8 +184,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     @Override
-    public synchronized  int remove(MessageUid uid) {
-        final int result = msn(uid);
+    public synchronized NullableMessageSequenceNumber remove(MessageUid uid) {
+        NullableMessageSequenceNumber result = msn(uid);
         uidMsnConverter.remove(uid);
         return result;
     }
@@ -391,8 +392,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     @Override
-    public synchronized int msn(MessageUid uid) {
-        return uidMsnConverter.getMsn(uid).orElse(NO_SUCH_MESSAGE);
+    public synchronized NullableMessageSequenceNumber msn(MessageUid uid) {
+        return uidMsnConverter.getMsn(uid);
     }
 
     @Override

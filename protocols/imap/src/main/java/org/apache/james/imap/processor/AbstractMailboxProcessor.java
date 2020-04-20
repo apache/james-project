@@ -57,6 +57,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -178,7 +179,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             // we need to remove the message in the loop to the sequence numbers
             // are updated correctly.
             // See 7.4.1. EXPUNGE Response
-            final int msn = selected.remove(uid);
+            final NullableMessageSequenceNumber msn = selected.remove(uid);
             ExpungeResponse response = new ExpungeResponse(msn);
             responder.respond(response);
         }
@@ -245,37 +246,38 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         while (it.hasNext()) {
             MessageResult mr = it.next();
             final MessageUid uid = mr.getUid();
-            int msn = selected.msn(uid);
-            if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
+            selected.msn(uid).fold(() -> {
                 LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getMailboxId().serialize());
                 // skip this as it was not found in the mapping
                 // 
                 // See IMAP-346
-                continue;
-            }
+                return null;
+            }, msn -> {
 
-            final Flags flags = mr.getFlags();
-            final MessageUid uidOut;
-            if (useUid || qresyncEnabled) {
-                uidOut = uid;
-            } else {
-                uidOut = null;
-            }
-            if (selected.isRecent(uid)) {
-                flags.add(Flags.Flag.RECENT);
-            } else {
-                flags.remove(Flags.Flag.RECENT);
-            }
-            final FetchResponse response;
-            
-            // Check if we also need to return the MODSEQ in the response. This is true if CONDSTORE or
-            // if QRESYNC was enabled, and the mailbox supports the permant storage of mod-sequences
-            if ((condstoreEnabled || qresyncEnabled) && isModSeqPermanent) {
-                response = new FetchResponse(msn, flags, uidOut, mr.getModSeq(), null, null, null, null, null, null);
-            } else {
-                response = new FetchResponse(msn, flags, uidOut, null, null, null, null, null, null, null);
-            }
-            responder.respond(response);
+                final Flags flags = mr.getFlags();
+                final MessageUid uidOut;
+                if (useUid || qresyncEnabled) {
+                    uidOut = uid;
+                } else {
+                    uidOut = null;
+                }
+                if (selected.isRecent(uid)) {
+                    flags.add(Flags.Flag.RECENT);
+                } else {
+                    flags.remove(Flags.Flag.RECENT);
+                }
+                final FetchResponse response;
+
+                // Check if we also need to return the MODSEQ in the response. This is true if CONDSTORE or
+                // if QRESYNC was enabled, and the mailbox supports the permant storage of mod-sequences
+                if ((condstoreEnabled || qresyncEnabled) && isModSeqPermanent) {
+                    response = new FetchResponse(msn, flags, uidOut, mr.getModSeq(), null, null, null, null, null, null);
+                } else {
+                    response = new FetchResponse(msn, flags, uidOut, null, null, null, null, null, null, null);
+                }
+                responder.respond(response);
+                return null;
+            });
         }
     }
 
