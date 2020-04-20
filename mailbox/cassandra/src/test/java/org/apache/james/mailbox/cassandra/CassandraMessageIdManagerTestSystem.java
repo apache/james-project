@@ -30,7 +30,6 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
 class CassandraMessageIdManagerTestSystem {
@@ -51,7 +50,7 @@ class CassandraMessageIdManagerTestSystem {
 
         CassandraMailboxManager mailboxManager = CassandraTestSystemFixture.createMailboxManager(mapperFactory);
         ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(
-            (StoreCurrentQuotaManager) currentQuotaManager,
+            currentQuotaManager,
             mailboxManager.getQuotaComponents().getQuotaRootResolver(), mailboxManager.getEventBus(), quotaManager);
         mailboxManager.getEventBus().register(listeningCurrentQuotaUpdater);
         return new MessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, mailboxManager.getEventBus(),

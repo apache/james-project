@@ -39,14 +39,14 @@ import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
+public class CassandraCurrentQuotaManager implements CurrentQuotaManager {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement increaseStatement;
@@ -112,5 +112,17 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
                 QuotaCountUsage.count(row.getLong(MESSAGE_COUNT)),
                 QuotaSizeUsage.size(row.getLong(STORAGE))))
             .defaultIfEmpty(CurrentQuotas.emptyQuotas());
+    }
+
+    @Override
+    public Mono<Void> resetCurrentQuotas(QuotaOperation quotaOperation) {
+        return Mono.from(getCurrentQuotas(quotaOperation.quotaRoot()))
+            .flatMap(storedQuotas -> {
+                if (!storedQuotas.equals(CurrentQuotas.from(quotaOperation))) {
+                    return Mono.from(decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size())))
+                        .then(Mono.from(increase(quotaOperation)));
+                }
+                return Mono.empty();
+            });
     }
 }

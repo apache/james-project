@@ -32,11 +32,11 @@ import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 
 import reactor.core.publisher.Mono;
 
-public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
+public class JpaCurrentQuotaManager implements CurrentQuotaManager {
 
     public static final long NO_MESSAGES = 0L;
     public static final long NO_STORED_BYTES = 0L;

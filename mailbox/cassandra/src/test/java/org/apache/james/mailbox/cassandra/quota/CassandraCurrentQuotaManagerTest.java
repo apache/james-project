@@ -21,17 +21,17 @@ package org.apache.james.mailbox.cassandra.quota;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManagerTest;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
+import org.apache.james.mailbox.store.quota.CurrentQuotaManagerTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraCurrentQuotaManagerTest extends StoreCurrentQuotaManagerTest {
+class CassandraCurrentQuotaManagerTest extends CurrentQuotaManagerTest {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraQuotaModule.MODULE);
 
     @Override
-    protected StoreCurrentQuotaManager provideTestee() {
+    protected CurrentQuotaManager provideTestee() {
         return new CassandraCurrentQuotaManager(cassandraCluster.getCassandraCluster().getConf());
     }
 }

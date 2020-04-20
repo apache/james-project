@@ -28,6 +28,7 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,14 +37,14 @@ import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
 
-public abstract class StoreCurrentQuotaManagerTest {
+public abstract class CurrentQuotaManagerTest {
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
     private static final CurrentQuotas CURRENT_QUOTAS = new CurrentQuotas(QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
     private static final QuotaOperation RESET_QUOTA_OPERATION = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
     
-    protected abstract StoreCurrentQuotaManager provideTestee();
+    protected abstract CurrentQuotaManager provideTestee();
     
-    private StoreCurrentQuotaManager testee;
+    private CurrentQuotaManager testee;
 
     @BeforeEach
     void setUp() {
@@ -105,7 +106,7 @@ public abstract class StoreCurrentQuotaManagerTest {
     void resetCurrentQuotasShouldNoopWhenZeroAndNoData() {
         QuotaOperation quotaOperation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(0), QuotaSizeUsage.size(0));
 
-        testee.resetCurrentQuotas(quotaOperation).block();
+        Mono.from(testee.resetCurrentQuotas(quotaOperation)).block();
 
         assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
             .isEqualTo(CurrentQuotas.emptyQuotas());
@@ -113,7 +114,7 @@ public abstract class StoreCurrentQuotaManagerTest {
 
     @Test
     void resetCurrentQuotasShouldReInitQuotasWhenNothing() {
-        testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
+        Mono.from(testee.resetCurrentQuotas(RESET_QUOTA_OPERATION)).block();
 
         assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
             .isEqualTo(CURRENT_QUOTAS);
@@ -123,7 +124,7 @@ public abstract class StoreCurrentQuotaManagerTest {
     void resetCurrentQuotasShouldReInitQuotasWhenData() {
         Mono.from(testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200)))).block();
 
-        testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
+        Mono.from(testee.resetCurrentQuotas(RESET_QUOTA_OPERATION)).block();
 
         assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
             .isEqualTo(CURRENT_QUOTAS);
@@ -133,8 +134,8 @@ public abstract class StoreCurrentQuotaManagerTest {
     void resetCurrentQuotasShouldBeIdempotent() {
         Mono.from(testee.increase(new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(20), QuotaSizeUsage.size(200)))).block();
 
-        testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
-        testee.resetCurrentQuotas(RESET_QUOTA_OPERATION).block();
+        Mono.from(testee.resetCurrentQuotas(RESET_QUOTA_OPERATION)).block();
+        Mono.from(testee.resetCurrentQuotas(RESET_QUOTA_OPERATION)).block();
 
         assertThat(Mono.from(testee.getCurrentQuotas(QUOTA_ROOT)).block())
             .isEqualTo(CURRENT_QUOTAS);

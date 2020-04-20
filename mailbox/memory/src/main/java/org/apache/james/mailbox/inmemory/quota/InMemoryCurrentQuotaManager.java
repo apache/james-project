@@ -32,8 +32,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -41,7 +41,7 @@ import com.google.common.cache.LoadingCache;
 
 import reactor.core.publisher.Mono;
 
-public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
+public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
 
     private final LoadingCache<QuotaRoot, AtomicReference<CurrentQuotas>> quotaCache;
 
@@ -81,6 +81,18 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
     public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
         return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get())
             .onErrorMap(this::wrapAsMailboxException);
+    }
+
+    @Override
+    public Mono<Void> resetCurrentQuotas(QuotaOperation quotaOperation) {
+        return Mono.from(getCurrentQuotas(quotaOperation.quotaRoot()))
+            .flatMap(storedQuotas -> {
+                if (!storedQuotas.equals(CurrentQuotas.from(quotaOperation))) {
+                    return Mono.from(decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size())))
+                        .then(Mono.from(increase(quotaOperation)));
+                }
+                return Mono.empty();
+            });
     }
 
     private Mono<Void> updateQuota(QuotaRoot quotaRoot, UnaryOperator<CurrentQuotas> quotaFunction) {

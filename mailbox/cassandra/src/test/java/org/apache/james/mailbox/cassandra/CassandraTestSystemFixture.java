@@ -36,6 +36,7 @@ import org.apache.james.mailbox.events.EventBusTestFixture;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.Authenticator;
@@ -52,7 +53,6 @@ import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -104,7 +104,7 @@ public class CassandraTestSystemFixture {
             new CassandraGlobalMaxQuotaDao(cassandra.getConf()));
     }
 
-    public static StoreCurrentQuotaManager createCurrentQuotaManager(CassandraCluster cassandra) {
+    public static CurrentQuotaManager createCurrentQuotaManager(CassandraCluster cassandra) {
         return new CassandraCurrentQuotaManager(cassandra.getConf());
     }
 

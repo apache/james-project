@@ -48,6 +48,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -67,14 +68,14 @@ class ListeningCurrentQuotaUpdaterTest {
     static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot(BENWA, Optional.empty());
     static final QuotaOperation QUOTA = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(2), QuotaSizeUsage.size(2 * SIZE));
 
-    StoreCurrentQuotaManager mockedCurrentQuotaManager;
+    CurrentQuotaManager mockedCurrentQuotaManager;
     QuotaRootResolver mockedQuotaRootResolver;
     ListeningCurrentQuotaUpdater testee;
 
     @BeforeEach
     void setUp() {
         mockedQuotaRootResolver = mock(QuotaRootResolver.class);
-        mockedCurrentQuotaManager = mock(StoreCurrentQuotaManager.class);
+        mockedCurrentQuotaManager = mock(CurrentQuotaManager.class);
         EventBus eventBus = mock(EventBus.class);
         when(eventBus.dispatch(any(Event.class), anySet())).thenReturn(Mono.empty());
         testee = new ListeningCurrentQuotaUpdater(mockedCurrentQuotaManager, mockedQuotaRootResolver,

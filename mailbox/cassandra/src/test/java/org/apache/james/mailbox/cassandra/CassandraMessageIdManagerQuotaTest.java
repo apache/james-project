@@ -26,7 +26,6 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerQuotaTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -46,12 +45,12 @@ class CassandraMessageIdManagerQuotaTest extends AbstractMessageIdManagerQuotaTe
     }
 
     @Override
-    protected QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, StoreCurrentQuotaManager currentQuotaManager) {
+    protected QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, CurrentQuotaManager currentQuotaManager) {
         return new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
     }
 
     @Override
-    protected StoreCurrentQuotaManager createCurrentQuotaManager() {
+    protected CurrentQuotaManager createCurrentQuotaManager() {
         return CassandraTestSystemFixture.createCurrentQuotaManager(cassandraCluster.getCassandraCluster());
     }
 }

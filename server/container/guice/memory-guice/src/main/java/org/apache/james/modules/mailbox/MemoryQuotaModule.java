@@ -31,7 +31,6 @@ import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.QuotaUpdater;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 
 import com.google.inject.AbstractModule;
@@ -53,7 +52,6 @@ public class MemoryQuotaModule extends AbstractModule {
         bind(MaxQuotaManager.class).to(InMemoryPerUserMaxQuotaManager.class);
         bind(QuotaManager.class).to(StoreQuotaManager.class);
         bind(CurrentQuotaManager.class).to(InMemoryCurrentQuotaManager.class);
-        bind(StoreCurrentQuotaManager.class).to(InMemoryCurrentQuotaManager.class);
 
         bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);
         bind(QuotaUpdater.class).to(ListeningCurrentQuotaUpdater.class);

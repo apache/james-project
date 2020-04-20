@@ -33,6 +33,7 @@ import org.apache.james.mailbox.events.RegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.EventFactory;
@@ -50,13 +51,13 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
     public static final Group GROUP = new ListeningCurrentQuotaUpdaterGroup();
     private static final ImmutableSet<RegistrationKey> NO_REGISTRATION_KEYS = ImmutableSet.of();
 
-    private final StoreCurrentQuotaManager currentQuotaManager;
+    private final CurrentQuotaManager currentQuotaManager;
     private final QuotaRootResolver quotaRootResolver;
     private final EventBus eventBus;
     private final QuotaManager quotaManager;
 
     @Inject
-    public ListeningCurrentQuotaUpdater(StoreCurrentQuotaManager currentQuotaManager, QuotaRootResolver quotaRootResolver, EventBus eventBus, QuotaManager quotaManager) {
+    public ListeningCurrentQuotaUpdater(CurrentQuotaManager currentQuotaManager, QuotaRootResolver quotaRootResolver, EventBus eventBus, QuotaManager quotaManager) {
         this.currentQuotaManager = currentQuotaManager;
         this.quotaRootResolver = quotaRootResolver;
         this.eventBus = eventBus;

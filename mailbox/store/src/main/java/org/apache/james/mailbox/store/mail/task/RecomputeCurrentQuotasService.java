@@ -31,9 +31,9 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
-import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -120,14 +120,14 @@ public class RecomputeCurrentQuotasService {
     }
 
     private final UsersRepository usersRepository;
-    private final StoreCurrentQuotaManager storeCurrentQuotaManager;
+    private final CurrentQuotaManager storeCurrentQuotaManager;
     private final CurrentQuotaCalculator currentQuotaCalculator;
     private final UserQuotaRootResolver userQuotaRootResolver;
     private final SessionProvider sessionProvider;
 
     @Inject
     public RecomputeCurrentQuotasService(UsersRepository usersRepository,
-                                         StoreCurrentQuotaManager storeCurrentQuotaManager,
+                                         CurrentQuotaManager storeCurrentQuotaManager,
                                          CurrentQuotaCalculator currentQuotaCalculator,
                                          UserQuotaRootResolver userQuotaRootResolver,
                                          SessionProvider sessionProvider) {
@@ -155,7 +155,7 @@ public class RecomputeCurrentQuotasService {
 
         return Mono.fromCallable(() -> currentQuotaCalculator.recalculateCurrentQuotas(quotaRoot, session))
             .map(recalculatedQuotas -> QuotaOperation.from(quotaRoot, recalculatedQuotas))
-            .flatMap(storeCurrentQuotaManager::resetCurrentQuotas)
+            .flatMap(quotaOperation -> Mono.from(storeCurrentQuotaManager.resetCurrentQuotas(quotaOperation)))
             .then(Mono.just(Task.Result.COMPLETED))
             .doOnNext(any -> {
                 LOGGER.info("Current quotas recomputed for {}", quotaRoot);
