@@ -51,6 +51,7 @@ import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventDispatcher.DispatchingFailureGroup;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -191,6 +192,10 @@ class RabbitMQEventDeadLettersIntegrationTest {
         }
     }
 
+    //This value is duplicated from default configuration to ensure we keep the same behavior over time
+    //unless we really want to change that default value
+    private static final int MAX_RETRIES = 2;
+
     private static RabbitMQExtension RABBIT_MQ_EXTENSION = new RabbitMQExtension();
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
@@ -201,12 +206,14 @@ class RabbitMQEventDeadLettersIntegrationTest {
         .extension(new RetryEventsListenerExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(new WebadminIntegrationTestModule()))
+            .overrideWith(new WebadminIntegrationTestModule())
+            .overrideWith(binder -> binder.bind(RetryBackoffConfiguration.class)
+                .toInstance(RetryBackoffConfiguration.builder()
+                    .maxRetries(MAX_RETRIES)
+                    .firstBackoff(java.time.Duration.ofMillis(100))
+                    .jitterFactor(0.5)
+                    .build())))
         .build();
-
-    //This value is duplicated from default configuration to ensure we keep the same behavior over time
-    //unless we really want to change that default value
-    private static final int MAX_RETRIES = 8;
 
     private static final String DOMAIN = "domain.tld";
     private static final String BOB = "bob@" + DOMAIN;
