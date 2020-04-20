@@ -19,7 +19,12 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.RFC2822Headers.CONTENT_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
@@ -28,7 +33,7 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class HasMimeTypeTest {
+class HasMimeTypeTest {
 
     private static final String RECIPIENT = "test@james.apache.org";
     private static final String FROM = "test@james.apache.org";
@@ -38,12 +43,12 @@ public class HasMimeTypeTest {
     private HasMimeType matcher;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         matcher = new HasMimeType();
     }
 
     @Test
-    public void hasMimeType() throws Exception {
+    void hasMimeType() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("HasMimeType")
                 .condition(MIME_TYPES)
@@ -74,7 +79,7 @@ public class HasMimeTypeTest {
     }
 
     @Test
-    public void doesNotHaveMimeType() throws Exception {
+    void doesNotHaveMimeType() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("HasMimeType")
                 .condition(NON_MATCHING_MIME_TYPES)
@@ -105,7 +110,7 @@ public class HasMimeTypeTest {
     }
 
     @Test
-    public void matchShouldReturnRecipientsWhenAtLeastOneMimeTypeMatch() throws Exception {
+    void matchShouldReturnRecipientsWhenAtLeastOneMimeTypeMatch() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
             .matcherName("HasMimeType")
             .condition("text/md, text/html")
@@ -114,6 +119,26 @@ public class HasMimeTypeTest {
         MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setText("content <b>in</b> <i>HTML</i>", "text/html")
             .setSubject("test");
+
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
+            .sender(FROM)
+            .recipient(RECIPIENT)
+            .build();
+
+        assertThat(matcher.match(mail)).containsExactlyElementsOf(mail.getRecipients());
+    }
+
+    @Test
+    void matchShouldNotFailOnEmptyCharset() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+            .matcherName("HasMimeType")
+            .condition("text/html")
+            .build());
+
+        MimeMessage message = mock(MimeMessage.class);
+        when(message.getHeader(CONTENT_TYPE)).thenReturn(new String[] {"text/html; charset="});
 
         Mail mail = FakeMail.builder()
             .name("mail")

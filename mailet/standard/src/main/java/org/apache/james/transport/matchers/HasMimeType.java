@@ -20,16 +20,15 @@
 
 package org.apache.james.transport.matchers;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import static org.apache.mailet.base.RFC2822Headers.CONTENT_TYPE;
 
-import javax.activation.MimeType;
-import javax.activation.MimeTypeParseException;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.mime4j.field.Fields;
+import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
@@ -58,19 +57,20 @@ public class HasMimeType extends GenericMatcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
-        Optional<String> mimeTypes = getMimeTypeFromMessage(mail.getMessage());
-
-        return mimeTypes.filter(acceptedContentTypes::contains)
-                .map(any -> mail.getRecipients())
-                .orElse(ImmutableList.of());
+        return StreamUtils.ofNullable(mail.getMessage().getHeader(CONTENT_TYPE))
+            .flatMap(this::getMimeType)
+            .filter(acceptedContentTypes::contains)
+            .findAny()
+            .map(any -> mail.getRecipients())
+            .orElse(ImmutableList.of());
     }
 
-    private static Optional<String> getMimeTypeFromMessage(MimeMessage message) throws MessagingException {
+    private Stream<String> getMimeType(String rawValue) {
         try {
-            return Optional.of(new MimeType(message.getContentType()).getBaseType());
-        } catch (MimeTypeParseException e) {
-            LOGGER.warn("Error while parsing message's mimeType {}", message.getContentType(), e);
-            return Optional.empty();
+            return Stream.of(Fields.contentType(rawValue).getMimeType());
+        } catch (Exception e) {
+            LOGGER.warn("Error while parsing message's mimeType {}", rawValue, e);
+            return Stream.empty();
         }
     }
 
