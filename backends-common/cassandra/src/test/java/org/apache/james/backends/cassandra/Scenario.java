@@ -36,9 +36,7 @@ public class Scenario {
     @FunctionalInterface
     interface Behavior {
         Behavior THROW = (session, statement) -> {
-            RuntimeException injected_failure = new RuntimeException("Injected failure");
-            injected_failure.printStackTrace();
-            throw injected_failure;
+            throw new RuntimeException("Injected failure");
         };
 
         Behavior EXECUTE_NORMALLY = Session::executeAsync;
