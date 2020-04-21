@@ -27,7 +27,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.draft.utils.MimeMessageBodyGenerator;
-import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 
@@ -70,7 +69,7 @@ public class VacationReply {
             Preconditions.checkState(mailRecipient != null, "Original recipient address should not be null");
             Preconditions.checkState(originalMail.hasSender(), "Original sender address should not be null");
 
-            return new VacationReply(mailRecipient, OptionalUtils.toList(originalMail.getMaybeSender().asOptional()), generateMimeMessage(mimeMessageBodyGenerator));
+            return new VacationReply(mailRecipient, originalMail.getMaybeSender().asList(), generateMimeMessage(mimeMessageBodyGenerator));
         }
 
         private MimeMessage generateMimeMessage(MimeMessageBodyGenerator mimeMessageBodyGenerator) throws MessagingException {
