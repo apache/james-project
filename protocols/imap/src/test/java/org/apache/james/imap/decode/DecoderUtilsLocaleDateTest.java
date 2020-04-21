@@ -33,6 +33,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 
@@ -46,8 +47,9 @@ public class DecoderUtilsLocaleDateTest {
     }
 
     static Stream<Arguments> decodeDateTimeWithVariousDefaultLocale() {
+        //(explicit type arguments speedup compilation and analysis time)
         return
-            Stream.of(
+            Stream.<Tuple2<String, String>>of(
                 Tuples.of("21-Oct-1972 20:00:00 +0000", "21 Oct 1972 20:00:00 GMT"),
                 Tuples.of("21-Oct-1972 20:00:00 +0100", "21 Oct 1972 19:00:00 GMT"),
                 Tuples.of("21-Oct-1972 20:00:00 +0200", "21 Oct 1972 18:00:00 GMT"),
