@@ -41,7 +41,7 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
 
-public class CacheBlobStore implements BlobStore {
+public class CachedBlobStore implements BlobStore {
 
     private static final String DEFAULT_BUCKET = "cassandraDefault";
 
@@ -51,9 +51,9 @@ public class CacheBlobStore implements BlobStore {
     private final BucketName defaultBucket;
 
     @Inject
-    public CacheBlobStore(BlobStoreCache cache, BlobStore backend,
-                          CassandraCacheConfiguration cacheConfiguration,
-                          @Named(DEFAULT_BUCKET) BucketName defaultBucket) {
+    public CachedBlobStore(BlobStoreCache cache, BlobStore backend,
+                           CassandraCacheConfiguration cacheConfiguration,
+                           @Named(DEFAULT_BUCKET) BucketName defaultBucket) {
         this.cache = cache;
         this.backend = backend;
         this.sizeThresholdInBytes = cacheConfiguration.getSizeThresholdInBytes();

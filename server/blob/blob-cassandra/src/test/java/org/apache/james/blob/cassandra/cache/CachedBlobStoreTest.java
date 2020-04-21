@@ -50,7 +50,7 @@ import com.google.common.base.Strings;
 
 import reactor.core.publisher.Mono;
 
-public class CacheBlobStoreTest implements BlobStoreContract {
+public class CachedBlobStoreTest implements BlobStoreContract {
 
     private static final BucketName DEFAULT_BUCKERNAME = DEFAULT;
     private static final BucketName TEST_BUCKERNAME = BucketName.of("test");
@@ -71,7 +71,7 @@ public class CacheBlobStoreTest implements BlobStoreContract {
             .sizeThresholdInBytes(EIGHT_KILOBYTES.length + 1)
             .build();
         cache = new CassandraBlobStoreCache(cassandra.getConf(), cacheConfig);
-        testee = new CacheBlobStore(cache, backend, cacheConfig, DEFAULT);
+        testee = new CachedBlobStore(cache, backend, cacheConfig, DEFAULT);
     }
 
     @Override
