@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Header;
@@ -121,12 +122,7 @@ public class LazyMimeDescriptor implements MimeDescriptor {
 
     @Override
     public long getLines() {
-        Long count =  message.getTextualLineCount();
-        if (count == null) {
-            return -1;
-        } else {
-            return count;
-        }
+        return Objects.requireNonNullElse(message.getTextualLineCount(), -1L);
     }
 
     @Override

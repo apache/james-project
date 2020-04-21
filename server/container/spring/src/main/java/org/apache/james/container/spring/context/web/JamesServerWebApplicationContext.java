@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.container.spring.context.web;
 
+import java.util.Objects;
+
 import org.apache.james.container.spring.resource.DefaultJamesResourceLoader;
 import org.apache.james.container.spring.resource.JamesResourceLoader;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
@@ -48,11 +50,7 @@ public class JamesServerWebApplicationContext extends XmlWebApplicationContext i
          */
         @Override
         public String getConfDirectory() {
-            if (confDirectory == null) {
-                return getRootDirectory() + "/WEB-INF/conf/";
-            } else {
-                return confDirectory;
-            }
+            return Objects.requireNonNullElseGet(confDirectory, () -> getRootDirectory() + "/WEB-INF/conf/");
         }
 
         /**
@@ -71,11 +69,7 @@ public class JamesServerWebApplicationContext extends XmlWebApplicationContext i
          */
         @Override
         public String getVarDirectory() {
-            if (varDirectory == null) {
-                return getRootDirectory() + "/var/";
-            } else {
-                return varDirectory;
-            }
+            return Objects.requireNonNullElseGet(varDirectory, () -> getRootDirectory() + "/var/");
         }
     });
     

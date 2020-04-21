@@ -20,6 +20,7 @@
 package org.apache.james.imap.decode;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 
@@ -85,14 +86,8 @@ public class DecodingException extends IOException {
      * @return the key, not null
      */
     public final HumanReadableText getKey() {
-        final HumanReadableText key;
-        if (this.key == null) {
-            // API specifies not null but best to default to generic message
-            key = HumanReadableText.ILLEGAL_ARGUMENTS;
-        } else {
-            key = this.key;
-        }
-        return key;
+        // API specifies not null but best to default to generic message
+        return Objects.requireNonNullElse(this.key, HumanReadableText.ILLEGAL_ARGUMENTS);
     }
 
     @Override
