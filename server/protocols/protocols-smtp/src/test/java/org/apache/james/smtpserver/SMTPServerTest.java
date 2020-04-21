@@ -308,9 +308,7 @@ public class SMTPServerTest {
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < AbstractChannelPipelineFactory.MAX_LINE_LENGTH; i++) {
-            sb.append("A");
-        }
+        sb.append("A".repeat(AbstractChannelPipelineFactory.MAX_LINE_LENGTH));
         smtpProtocol.sendCommand("EHLO " + sb.toString());
         System.out.println(smtpProtocol.getReplyString());
         assertThat(smtpProtocol.getReplyCode())
@@ -473,9 +471,7 @@ public class SMTPServerTest {
         stringBuilder.append("Subject: test\r\n\r\n");
         String repeatedString = "This is the repeated body...\r\n";
         int repeatCount = (maxSize / repeatedString.length()) + 1;
-        for (int i = 0; i < repeatCount; i++) {
-            stringBuilder.append(repeatedString);
-        }
+        stringBuilder.append(repeatedString.repeat(repeatCount));
         stringBuilder.append("\r\n\r\n.\r\n");
         smtpProtocol.sendShortMessageData(stringBuilder.toString());
 
@@ -508,9 +504,7 @@ public class SMTPServerTest {
         stringBuilder.append("Subject: test\r\n\r\n");
         String repeatedString = "This is the repeated body...\r\n";
         int repeatCount = (maxSize / repeatedString.length()) + 1;
-        for (int i = 0; i < repeatCount; i++) {
-            stringBuilder.append(repeatedString);
-        }
+        stringBuilder.append(repeatedString.repeat(repeatCount));
         stringBuilder.append("\r\n\r\n.\r\n");
         smtpProtocol.sendShortMessageData(stringBuilder.toString());
 
