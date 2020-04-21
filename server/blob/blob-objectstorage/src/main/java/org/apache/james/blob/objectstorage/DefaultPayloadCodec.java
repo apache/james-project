@@ -37,7 +37,9 @@ public class DefaultPayloadCodec implements PayloadCodec {
         if (bytes.length == 0) {
             return write(new ByteArrayInputStream(bytes));
         }
-        return new Payload(Payloads.newByteArrayPayload(bytes), Optional.of(new Long(bytes.length)));
+        return new Payload(
+            Payloads.newByteArrayPayload(bytes),
+            Optional.of(Integer.valueOf(bytes.length).longValue()));
     }
 
     @Override
