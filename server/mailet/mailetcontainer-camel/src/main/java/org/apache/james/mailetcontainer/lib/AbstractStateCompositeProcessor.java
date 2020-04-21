@@ -115,7 +115,7 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
     }
 
     public String[] getProcessorStates() {
-        return processors.keySet().toArray(new String[processors.size()]);
+        return processors.keySet().toArray(String[]::new);
     }
 
     /**

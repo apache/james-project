@@ -145,7 +145,7 @@ public final class EnvelopeBuilder {
                     }
                 }
 
-                results = addresses.toArray(FetchResponse.Envelope.Address.EMPTY);
+                results = addresses.toArray(FetchResponse.Envelope.Address[]::new);
                 
 
             }

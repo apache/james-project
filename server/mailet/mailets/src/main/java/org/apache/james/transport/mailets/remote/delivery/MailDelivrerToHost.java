@@ -68,19 +68,13 @@ public class MailDelivrerToHost {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost(props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()));
             connect(outgoingMailServer, transport);
-            transport.sendMessage(adaptToTransport(mail.getMessage(), transport), toArray(addr));
+            transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
             LOGGER.debug("Mail ({})  sent successfully to {} at {} from {} for {}", mail.getName(), outgoingMailServer.getHostName(),
                 outgoingMailServer.getHost(), props.get("mail.smtp.from"), mail.getRecipients());
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
         }
         return ExecutionResult.success();
-    }
-
-    private InternetAddress[] toArray(Collection<InternetAddress> addr) {
-        InternetAddress[] addresses = new InternetAddress[addr.size()];
-        addr.toArray(addresses);
-        return addresses;
     }
 
     private Properties getPropertiesForMail(Mail mail) {

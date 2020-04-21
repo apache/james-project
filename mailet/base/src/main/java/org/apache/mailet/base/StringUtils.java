@@ -63,7 +63,7 @@ public final class StringUtils {
                 list.add(prev.substring(0, prev.length() - 1) + pattern + array[i]);
             }
         }
-        return list.toArray(new String[list.size()]);
+        return list.toArray(String[]::new);
     }
 
     public static String listToString(List<String> strings) {

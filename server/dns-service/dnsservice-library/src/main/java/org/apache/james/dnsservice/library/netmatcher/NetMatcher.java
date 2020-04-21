@@ -143,7 +143,7 @@ public class NetMatcher {
      *            a Collection which holds all networks
      */
     private void initInetNetworks(Collection<String> nets) {
-        initInetNetworks(nets.toArray(new String[nets.size()]));
+        initInetNetworks(nets.toArray(String[]::new));
     }
 
     /**

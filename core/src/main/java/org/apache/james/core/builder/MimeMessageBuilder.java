@@ -397,19 +397,19 @@ public class MimeMessageBuilder {
         }
         ImmutableList<InternetAddress> fromAddresses = from.build();
         if (!fromAddresses.isEmpty()) {
-            mimeMessage.addFrom(fromAddresses.toArray(new InternetAddress[fromAddresses.size()]));
+            mimeMessage.addFrom(fromAddresses.toArray(InternetAddress[]::new));
         }
         List<InternetAddress> toAddresses = to.build();
         if (!toAddresses.isEmpty()) {
-            mimeMessage.setRecipients(Message.RecipientType.TO, toAddresses.toArray(new InternetAddress[toAddresses.size()]));
+            mimeMessage.setRecipients(Message.RecipientType.TO, toAddresses.toArray(InternetAddress[]::new));
         }
         List<InternetAddress> ccAddresses = cc.build();
         if (!ccAddresses.isEmpty()) {
-            mimeMessage.setRecipients(Message.RecipientType.CC, ccAddresses.toArray(new InternetAddress[ccAddresses.size()]));
+            mimeMessage.setRecipients(Message.RecipientType.CC, ccAddresses.toArray(InternetAddress[]::new));
         }
         List<InternetAddress> bccAddresses = bcc.build();
         if (!bccAddresses.isEmpty()) {
-            mimeMessage.setRecipients(Message.RecipientType.BCC, bccAddresses.toArray(new InternetAddress[bccAddresses.size()]));
+            mimeMessage.setRecipients(Message.RecipientType.BCC, bccAddresses.toArray(InternetAddress[]::new));
         }
 
         MimeMessage wrappedMessage = MimeMessageWrapper.wrap(mimeMessage);

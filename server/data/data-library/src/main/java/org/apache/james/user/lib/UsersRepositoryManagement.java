@@ -98,7 +98,7 @@ public class UsersRepositoryManagement extends StandardMBean implements UsersRep
             throw new Exception(e.getMessage());
 
         }
-        return userNames.toArray(new String[userNames.size()]);
+        return userNames.toArray(String[]::new);
     }
 
     @Override

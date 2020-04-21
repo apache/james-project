@@ -48,13 +48,13 @@ public class DNSRBLHandler extends org.apache.james.protocols.smtp.core.fastfail
 
         Collections.addAll(rblserverCollection, handlerConfiguration.getStringArray("rblservers.whitelist"));
         if (rblserverCollection.size() > 0) {
-            setWhitelist(rblserverCollection.toArray(new String[rblserverCollection.size()]));
+            setWhitelist(rblserverCollection.toArray(String[]::new));
             rblserverCollection.clear();
             validConfig = true;
         }
         Collections.addAll(rblserverCollection, handlerConfiguration.getStringArray("rblservers.blacklist"));
         if (rblserverCollection.size() > 0) {
-            setBlacklist(rblserverCollection.toArray(new String[rblserverCollection.size()]));
+            setBlacklist(rblserverCollection.toArray(String[]::new));
             rblserverCollection.clear();
             validConfig = true;
         }

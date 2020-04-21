@@ -47,7 +47,7 @@ public class SearchResUtil {
      * Save the given sequence-set which you can refer to later with $.
      */
     public static void saveSequenceSet(ImapSession session, IdRange[] ranges) {
-        session.setAttribute(SEARCHRES_SAVED_SET, IdRange.mergeRanges(Arrays.asList(ranges)).toArray(new IdRange[0]));
+        session.setAttribute(SEARCHRES_SAVED_SET, IdRange.mergeRanges(Arrays.asList(ranges)).toArray(IdRange[]::new));
     }
     
     /**

@@ -52,14 +52,14 @@ public class SearchCommandParserSearchKeySequenceSetTest {
                 new IdRange(16), new IdRange(25), new IdRange(36),
                 new IdRange(49), new IdRange(64), new IdRange(81),
                 new IdRange(100) };
-        checkSequence("2,4,9,16,25,36,49,64,81,100", IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
+        checkSequence("2,4,9,16,25,36,49,64,81,100", IdRange.mergeRanges(Arrays.asList(range)).toArray(IdRange[]::new));
     }
 
     @Test
     public void testEndStarSequence() throws Exception {
         IdRange[] range = { new IdRange(8), new IdRange(10,11),
                 new IdRange(17), new IdRange(100, Long.MAX_VALUE) };
-        checkSequence("8,10:11,17,100:*", IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
+        checkSequence("8,10:11,17,100:*", IdRange.mergeRanges(Arrays.asList(range)).toArray(IdRange[]::new));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class SearchCommandParserSearchKeySequenceSetTest {
                 new IdRange(15),
                 new IdRange(799, 820) 
                 };
-        checkSequence("*:9,15,799:820", IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
+        checkSequence("*:9,15,799:820", IdRange.mergeRanges(Arrays.asList(range)).toArray(IdRange[]::new));
     }
 
 
@@ -87,7 +87,7 @@ public class SearchCommandParserSearchKeySequenceSetTest {
                 new UidRange(MessageUid.of(64)), 
                 new UidRange(MessageUid.of(81)),
                 new UidRange(MessageUid.of(100)) };
-        checkUid("2,4,9,16,25,36,49,64,81,100", UidRange.mergeRanges(Arrays.asList(range)).toArray(new UidRange[0]));
+        checkUid("2,4,9,16,25,36,49,64,81,100", UidRange.mergeRanges(Arrays.asList(range)).toArray(UidRange[]::new));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class SearchCommandParserSearchKeySequenceSetTest {
                 new UidRange(MessageUid.of(10),MessageUid.of(11)),
                 new UidRange(MessageUid.of(17)), 
                 new UidRange(MessageUid.of(100), MessageUid.MAX_VALUE) };
-        checkUid("8,10:11,17,100:*", UidRange.mergeRanges(Arrays.asList(range)).toArray(new UidRange[0]));
+        checkUid("8,10:11,17,100:*", UidRange.mergeRanges(Arrays.asList(range)).toArray(UidRange[]::new));
     }
 
     @Test
@@ -107,7 +107,7 @@ public class SearchCommandParserSearchKeySequenceSetTest {
                 new UidRange(MessageUid.of(15)),
                 new UidRange(MessageUid.of(799), MessageUid.of(820)) 
                 };
-        checkUid("*:9,15,799:820", UidRange.mergeRanges(Arrays.asList(range)).toArray(new UidRange[0]));
+        checkUid("*:9,15,799:820", UidRange.mergeRanges(Arrays.asList(range)).toArray(UidRange[]::new));
     }
 
     

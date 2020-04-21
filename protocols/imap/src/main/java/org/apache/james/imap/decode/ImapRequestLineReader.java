@@ -652,7 +652,7 @@ public abstract class ImapRequestLineReader {
         // merge the ranges to minimize the needed queries.
         // See IMAP-211
         List<IdRange> merged = IdRange.mergeRanges(rangeList);
-        return (IdRange[]) merged.toArray(new IdRange[merged.size()]);
+        return merged.toArray(IdRange[]::new);
     }
 
     /**
@@ -685,7 +685,7 @@ public abstract class ImapRequestLineReader {
         // merge the ranges to minimize the needed queries.
         // See IMAP-211
         List<UidRange> merged = UidRange.mergeRanges(rangeList);
-        return merged.toArray(new UidRange[merged.size()]);
+        return merged.toArray(UidRange[]::new);
     }
     
     /**

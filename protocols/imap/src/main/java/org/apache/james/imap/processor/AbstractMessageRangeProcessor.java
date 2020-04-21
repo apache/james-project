@@ -104,7 +104,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                 .sneakyThrow())
             .map(IdRange::from)
             .collect(Guavate.toImmutableList()))
-            .toArray(new IdRange[0]);
+            .toArray(IdRange[]::new);
 
         // get folder UIDVALIDITY
         UidValidity uidValidity = mailbox.getMailboxEntity().getUidValidity();

@@ -77,7 +77,7 @@ public final class MailetManagement extends StandardMBean implements MailetManag
             String value = config.getInitParameter(name);
             parameterList.add(name + "=" + value);
         }
-        return parameterList.toArray(new String[parameterList.size()]);
+        return parameterList.toArray(String[]::new);
     }
 
     @Override

@@ -70,7 +70,7 @@ public class SearchCommandParserAndParenthesesTest {
     public static Input sequence() {
         IdRange[] range = { new IdRange(100, Long.MAX_VALUE), new IdRange(110),
                 new IdRange(200, 201), new IdRange(400, Long.MAX_VALUE) };
-        SearchKey key = SearchKey.buildSequenceSet(IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
+        SearchKey key = SearchKey.buildSequenceSet(IdRange.mergeRanges(Arrays.asList(range)).toArray(IdRange[]::new));
         return new Input("*:100,110,200:201,400:*", key);
     }
 
@@ -81,7 +81,7 @@ public class SearchCommandParserAndParenthesesTest {
                 new UidRange(MessageUid.of(200), MessageUid.of(201)), 
                 new UidRange(MessageUid.of(400), MessageUid.MAX_VALUE) 
                 };
-        SearchKey key = SearchKey.buildUidSet(UidRange.mergeRanges(Arrays.asList(range)).toArray(new UidRange[0]));
+        SearchKey key = SearchKey.buildUidSet(UidRange.mergeRanges(Arrays.asList(range)).toArray(UidRange[]::new));
         return new Input("UID *:100,110,200:201,400:*", key);
     }
 

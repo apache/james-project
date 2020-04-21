@@ -257,7 +257,7 @@ public class ServerCmd {
             break;
         case LISTUSERMAILBOXES:
             Collection<String> mailboxes = mailboxProbe.listUserMailboxes(arguments[1]);
-            print(mailboxes.toArray(new String[0]), printStream);
+            print(mailboxes.toArray(String[]::new), printStream);
             break;
         case DELETEMAILBOX:
             mailboxProbe.deleteMailbox(arguments[1], arguments[2], arguments[3]);

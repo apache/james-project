@@ -127,13 +127,13 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 for (Long id: idList) {
                     idsAsRanges.add(new IdRange(id));
                 }
-                IdRange[] idRanges = IdRange.mergeRanges(idsAsRanges).toArray(new IdRange[0]);
+                IdRange[] idRanges = IdRange.mergeRanges(idsAsRanges).toArray(IdRange[]::new);
                 
                 List<UidRange> uidsAsRanges = new ArrayList<>();
                 for (MessageUid uid: uids) {
                     uidsAsRanges.add(new UidRange(uid));
                 }
-                UidRange[] uidRanges = UidRange.mergeRanges(uidsAsRanges).toArray(new UidRange[0]);
+                UidRange[] uidRanges = UidRange.mergeRanges(uidsAsRanges).toArray(UidRange[]::new);
                 
                 boolean esearch = false;
                 for (SearchResultOption resultOption : resultOptions) {
@@ -169,7 +169,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                                 // Store the MAX
                                 savedRanges.add(new IdRange(max));
                             }
-                            SearchResUtil.saveSequenceSet(session, savedRanges.toArray(new IdRange[0]));
+                            SearchResUtil.saveSequenceSet(session, savedRanges.toArray(IdRange[]::new));
                         }
                     }
                     response = new ESearchResponse(min, max, count, idRanges, uidRanges, highestModSeq, request.getTag(), useUids, resultOptions);
@@ -435,7 +435,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             }
         }
 
-        return SearchQuery.uid(ranges.toArray(new SearchQuery.UidRange[0]));
+        return SearchQuery.uid(ranges.toArray(SearchQuery.UidRange[]::new));
     }
     
     /**
@@ -471,7 +471,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             }
         }
 
-        return SearchQuery.uid(ranges.toArray(new SearchQuery.UidRange[0]));
+        return SearchQuery.uid(ranges.toArray(SearchQuery.UidRange[]::new));
     }
 
     private Criterion or(List<SearchKey> keys, ImapSession session) throws MessageRangeException {

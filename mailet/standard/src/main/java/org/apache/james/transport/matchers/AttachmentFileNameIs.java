@@ -124,7 +124,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
             mask.matchString = cleanFileName(mask.matchString);
             theMasks.add(mask);
         }
-        masks = theMasks.toArray(new Mask[theMasks.size()]);
+        masks = theMasks.toArray(Mask[]::new);
     }
 
     /** 

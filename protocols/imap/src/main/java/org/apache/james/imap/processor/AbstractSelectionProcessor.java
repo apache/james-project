@@ -260,7 +260,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                                         filteredUidSet.add(r);
                                     }
                                 }
-                                uidSet = filteredUidSet.toArray(new UidRange[0]);
+                                uidSet = filteredUidSet.toArray(UidRange[]::new);
 
                                 break;
                             }

@@ -35,7 +35,7 @@ public class CommandHandlerResultJMXMonitor extends AbstractCommandHandlerResult
         Collection<String> col = handler.getImplCommands();
         String cName = handler.getClass().getName();
 
-        return new SMTPCommandHandlerStats(getJMXName(), cName, col.toArray(new String[col.size()]));
+        return new SMTPCommandHandlerStats(getJMXName(), cName, col.toArray(String[]::new));
     }
 
     @Override

@@ -175,7 +175,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
         }
 
-        searchPaths = sPaths.toArray(new Name[sPaths.size()]);
+        searchPaths = sPaths.toArray(Name[]::new);
 
         if (dnsServers.isEmpty()) {
             LOGGER.info("No DNS servers have been specified or found by autodiscovery - adding 127.0.0.1");
@@ -207,7 +207,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         }
 
         // Create the extended resolver...
-        final String[] serversArray = dnsServers.toArray(new String[dnsServers.size()]);
+        final String[] serversArray = dnsServers.toArray(String[]::new);
 
         if (LOGGER.isInfoEnabled()) {
             for (String aServersArray : serversArray) {
@@ -252,7 +252,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      */
     @Override
     public String[] getDNSServers() {
-        return dnsServers.toArray(new String[dnsServers.size()]);
+        return dnsServers.toArray(String[]::new);
     }
 
     /**

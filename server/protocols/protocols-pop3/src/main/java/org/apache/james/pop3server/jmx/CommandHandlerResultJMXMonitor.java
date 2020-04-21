@@ -36,7 +36,7 @@ public class CommandHandlerResultJMXMonitor extends AbstractCommandHandlerResult
         Collection<String> col = handler.getImplCommands();
         String cName = handler.getClass().getName();
 
-        return new POP3CommandHandlerStats(getJMXName(), cName, col.toArray(new String[col.size()]));
+        return new POP3CommandHandlerStats(getJMXName(), cName, col.toArray(String[]::new));
     }
 
     @Override

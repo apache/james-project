@@ -77,7 +77,7 @@ public class ProcessorUtil {
      */
     public static void verifyMailAddresses(Collection<MailAddress> col) throws MessagingException {
         try {
-            MailAddress[] addresses = col.toArray(new MailAddress[col.size()]);
+            MailAddress[] addresses = col.toArray(MailAddress[]::new);
 
             // Why is this here? According to the javadoc for
             // java.util.Collection.toArray(Object[]), this should

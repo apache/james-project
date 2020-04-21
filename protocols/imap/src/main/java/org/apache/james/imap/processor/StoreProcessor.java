@@ -201,7 +201,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                     for (long msn: failedMsns) {
                         ranges.add(new IdRange(msn));
                     }
-                    IdRange[] failedRanges = IdRange.mergeRanges(ranges).toArray(new IdRange[0]);
+                    IdRange[] failedRanges = IdRange.mergeRanges(ranges).toArray(IdRange[]::new);
                     // See RFC4551 3.2. STORE and UID STORE Commands
                     final StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(failedRanges));
                     responder.respond(response);

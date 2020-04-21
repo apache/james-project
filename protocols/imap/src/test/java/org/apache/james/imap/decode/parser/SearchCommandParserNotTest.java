@@ -55,7 +55,7 @@ public class SearchCommandParserNotTest {
     public void testShouldParseNotSequence() throws Exception {
         IdRange[] range = { new IdRange(100, Long.MAX_VALUE), new IdRange(110),
                 new IdRange(200, 201), new IdRange(400, Long.MAX_VALUE) };
-        SearchKey notdKey = SearchKey.buildSequenceSet(IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
+        SearchKey notdKey = SearchKey.buildSequenceSet(IdRange.mergeRanges(Arrays.asList(range)).toArray(IdRange[]::new));
         SearchKey key = SearchKey.buildNot(notdKey);
         checkValid("NOT *:100,110,200:201,400:*\r\n", key);
     }
@@ -68,7 +68,7 @@ public class SearchCommandParserNotTest {
                 new UidRange(MessageUid.of(200), MessageUid.of(201)), 
                 new UidRange(MessageUid.of(400), MessageUid.MAX_VALUE) 
                 };
-        SearchKey notdKey = SearchKey.buildUidSet(UidRange.mergeRanges(Arrays.asList(range)).toArray(new UidRange[0]));
+        SearchKey notdKey = SearchKey.buildUidSet(UidRange.mergeRanges(Arrays.asList(range)).toArray(UidRange[]::new));
         SearchKey key = SearchKey.buildNot(notdKey);
         checkValid("NOT UID *:100,110,200:201,400:*\r\n", key);
     }

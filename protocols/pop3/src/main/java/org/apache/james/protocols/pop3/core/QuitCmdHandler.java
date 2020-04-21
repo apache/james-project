@@ -68,7 +68,7 @@ public class QuitCmdHandler implements CommandHandler<POP3Session> {
         List<String> toBeRemoved = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction).orElse(ImmutableList.of());
         Mailbox mailbox = session.getUserMailbox();
         try {
-            String[] uids = toBeRemoved.toArray(new String[toBeRemoved.size()]);
+            String[] uids = toBeRemoved.toArray(String[]::new);
             mailbox.remove(uids);
             response = SIGN_OFF;
         } catch (Exception ex) {

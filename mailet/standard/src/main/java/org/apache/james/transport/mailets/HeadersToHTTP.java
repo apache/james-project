@@ -141,7 +141,7 @@ public class HeadersToHTTP extends GenericMailet {
     private String httpPost(HashSet<NameValuePair> pairs) throws IOException {
 
         try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-            HttpUriRequest request = RequestBuilder.post(url).addParameters(pairs.toArray(new NameValuePair[0])).build();
+            HttpUriRequest request = RequestBuilder.post(url).addParameters(pairs.toArray(NameValuePair[]::new)).build();
             try (CloseableHttpResponse clientResponse = client.execute(request)) {
                 String result = clientResponse.getStatusLine().getStatusCode() + ": " + clientResponse.getStatusLine();
                 LOGGER.debug("HeadersToHTTP: {}", result);

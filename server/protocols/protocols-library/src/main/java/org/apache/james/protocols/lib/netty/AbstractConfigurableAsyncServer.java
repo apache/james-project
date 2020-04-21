@@ -186,7 +186,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
             bindAddresses.add(address);
         }
-        setListenAddresses(bindAddresses.toArray(new InetSocketAddress[bindAddresses.size()]));
+        setListenAddresses(bindAddresses.toArray(InetSocketAddress[]::new));
 
         jmxName = config.getString("jmxName", getDefaultJMXName());
         int ioWorker = config.getInt("ioWorkerCount", DEFAULT_IO_WORKER_COUNT);

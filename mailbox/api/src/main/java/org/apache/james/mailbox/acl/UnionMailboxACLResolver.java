@@ -287,7 +287,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
                 result.add(new Rfc4314Rights(right));
             }
         }
-        return result.toArray(new Rfc4314Rights[result.size()]);
+        return result.toArray(Rfc4314Rights[]::new);
     }
 
     @Override

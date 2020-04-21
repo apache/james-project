@@ -989,7 +989,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         // add the uid sorting as last so if no other sorting was able to do the job it will get sorted by the uid
         fields.add(UID_SORT);
         Sort sort = new Sort();
-        sort.setSort(fields.toArray(new SortField[0]));
+        sort.setSort(fields.toArray(SortField[]::new));
         return sort;
     }
 
