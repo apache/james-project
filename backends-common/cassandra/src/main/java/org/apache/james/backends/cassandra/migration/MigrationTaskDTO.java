@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MigrationTaskDTO implements TaskDTO {
 
-    public static final TaskDTOModule<MigrationTask, MigrationTaskDTO> module(MigrationTask.Factory factory) {
+    public static TaskDTOModule<MigrationTask, MigrationTaskDTO> module(MigrationTask.Factory factory) {
         return DTOModule.forDomainObject(MigrationTask.class)
             .convertToDTO(MigrationTaskDTO.class)
             .toDomainObjectConverter(dto -> factory.create(new SchemaVersion(dto.targetVersion)))

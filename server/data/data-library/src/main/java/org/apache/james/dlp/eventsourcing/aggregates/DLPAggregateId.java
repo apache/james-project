@@ -30,7 +30,7 @@ public class DLPAggregateId implements AggregateId {
     private static final String SEPARATOR = "/";
     private static final String PREFIX = "DLPRule";
 
-    public static final DLPAggregateId parse(String rawString) {
+    public static DLPAggregateId parse(String rawString) {
         Preconditions.checkArgument(rawString.startsWith(PREFIX + SEPARATOR));
 
         return new DLPAggregateId(Domain.of(

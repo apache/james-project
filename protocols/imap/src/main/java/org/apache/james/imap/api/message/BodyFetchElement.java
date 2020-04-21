@@ -35,15 +35,15 @@ public class BodyFetchElement {
 
     private static final BodyFetchElement rfc822Text = new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, SectionType.TEXT, null, null, null, null);
 
-    public static final BodyFetchElement createRFC822() {
+    public static BodyFetchElement createRFC822() {
         return rfc822;
     }
 
-    public static final BodyFetchElement createRFC822Header() {
+    public static BodyFetchElement createRFC822Header() {
         return rfc822Header;
     }
 
-    public static final BodyFetchElement createRFC822Text() {
+    public static BodyFetchElement createRFC822Text() {
         return rfc822Text;
     }
 

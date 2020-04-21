@@ -43,7 +43,7 @@ public class CreateScript {
 
     public static final String ANOTHER_DOMAIN = "apache.org";
 
-    public static final void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         ScriptBuilder builder = ScriptBuilder.open("localhost", 143);
         expunge(builder);
     }

@@ -52,7 +52,7 @@ public class Main {
     private static final String SHABANG_OPTION = "s";
     private static final String VERBOSE_OPTION = "v";
 
-    public static final void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         Options options = buildOptions();
         
         try {

@@ -143,7 +143,7 @@ public class CommonProcessors {
                 .build();
     }
 
-    public static final ProcessorConfiguration.Builder rrtErrorEnabledTransport() {
+    public static ProcessorConfiguration.Builder rrtErrorEnabledTransport() {
         return ProcessorConfiguration.transport()
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)

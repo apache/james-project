@@ -36,7 +36,7 @@ public class HumanReadableText {
 
     public static final HumanReadableText SELECT = new HumanReadableText("org.apache.james.imap.SELECT", "completed.");
 
-    public static final HumanReadableText unseen(long numberUnseen) {
+    public static HumanReadableText unseen(long numberUnseen) {
         return new HumanReadableText("org.apache.james.imap.UNSEEN", "MailboxMessage " + numberUnseen + " is first unseen");
     }
 
@@ -47,7 +47,7 @@ public class HumanReadableText {
 
     public static final HumanReadableText UID_VALIDITY = new HumanReadableText("org.apache.james.imap.UID_VALIDITY", "UIDs valid");
 
-    public static final HumanReadableText permanentFlags(Flags flags) {
+    public static HumanReadableText permanentFlags(Flags flags) {
         String text;
         if (flags.getSystemFlags() != null && flags.getSystemFlags().length > 0) {
             text = "Limited";

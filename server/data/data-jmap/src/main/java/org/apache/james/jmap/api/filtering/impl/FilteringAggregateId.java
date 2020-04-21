@@ -31,7 +31,7 @@ public class FilteringAggregateId implements AggregateId {
     private static final String SEPARATOR = "/";
     private static final String PREFIX = "FilteringRule";
 
-    public static final FilteringAggregateId parse(String rawString) {
+    public static FilteringAggregateId parse(String rawString) {
         Preconditions.checkArgument(rawString.startsWith(PREFIX + SEPARATOR));
         return new FilteringAggregateId(Username.of(rawString.substring(PREFIX.length() + SEPARATOR.length())));
     }

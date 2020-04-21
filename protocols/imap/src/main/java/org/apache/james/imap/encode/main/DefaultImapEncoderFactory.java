@@ -96,7 +96,7 @@ public class DefaultImapEncoderFactory implements ImapEncoderFactory {
      *            parse BODYSTRUCTURE extensions, false to fully support RFC3501
      * @return not null
      */
-    public static final ImapEncoder createDefaultEncoder(Localizer localizer, boolean neverAddBodyStructureExtensions) {
+    public static ImapEncoder createDefaultEncoder(Localizer localizer, boolean neverAddBodyStructureExtensions) {
         return new DefaultImapEncoder(Stream.of(
             new AnnotationResponseEncoder(),
             new MyRightsResponseEncoder(),

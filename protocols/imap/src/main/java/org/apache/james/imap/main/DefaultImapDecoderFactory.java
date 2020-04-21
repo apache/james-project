@@ -32,7 +32,7 @@ import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
  */
 public class DefaultImapDecoderFactory implements ImapDecoderFactory {
 
-    public static final ImapDecoder createDecoder() {
+    public static ImapDecoder createDecoder() {
         final UnpooledStatusResponseFactory unpooledStatusResponseFactory = new UnpooledStatusResponseFactory();
         final ImapCommandParserFactory imapCommands = new ImapParserFactory(unpooledStatusResponseFactory);
         return new DefaultImapDecoder(unpooledStatusResponseFactory, imapCommands);

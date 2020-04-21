@@ -143,7 +143,7 @@ class ZipAssertTest {
     }
 
     @SafeVarargs
-    private final ZipFile buildZipFile(SimpleImmutableEntry<String, byte[]>... entries) throws Exception {
+    private ZipFile buildZipFile(SimpleImmutableEntry<String, byte[]>... entries) throws Exception {
         try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
             for (SimpleImmutableEntry<String, byte[]> entry : entries) {
                 ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File("any"), entry.getKey());

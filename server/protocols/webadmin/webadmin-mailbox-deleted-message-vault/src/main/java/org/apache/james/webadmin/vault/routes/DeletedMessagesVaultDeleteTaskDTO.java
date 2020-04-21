@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DeletedMessagesVaultDeleteTaskDTO implements TaskDTO {
 
-    public static final TaskDTOModule<DeletedMessagesVaultDeleteTask, DeletedMessagesVaultDeleteTaskDTO> module(DeletedMessagesVaultDeleteTask.Factory factory) {
+    public static TaskDTOModule<DeletedMessagesVaultDeleteTask, DeletedMessagesVaultDeleteTaskDTO> module(DeletedMessagesVaultDeleteTask.Factory factory) {
         return DTOModule
             .forDomainObject(DeletedMessagesVaultDeleteTask.class)
             .convertToDTO(DeletedMessagesVaultDeleteTaskDTO.class)

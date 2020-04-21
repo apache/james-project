@@ -24,14 +24,14 @@ import java.nio.charset.Charset;
 
 public class NioUtils {
 
-    public static final byte[] toBytes(String string, Charset charset) {
+    public static byte[] toBytes(String string, Charset charset) {
         ByteBuffer buffer = charset.encode(string);
         byte[] results = new byte[buffer.limit()];
         buffer.get(results);
         return results;
     }
 
-    public static final byte[] add(byte[] one, byte[] two) {
+    public static byte[] add(byte[] one, byte[] two) {
         byte[] results = new byte[one.length + two.length];
         System.arraycopy(one, 0, results, 0, one.length);
         System.arraycopy(two, 0, results, one.length, two.length);
