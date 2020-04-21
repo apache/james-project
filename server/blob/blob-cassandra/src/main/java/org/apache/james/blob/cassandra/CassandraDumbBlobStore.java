@@ -21,7 +21,6 @@ package org.apache.james.blob.cassandra;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -41,7 +40,6 @@ import org.apache.james.util.ReactorUtils;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Flux;

@@ -27,10 +27,10 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
-import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.ID;
 import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.DATA;
 import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.TABLE_NAME;
 import static org.apache.james.blob.cassandra.BlobTables.BlobStoreCache.TTL_FOR_ROW;
+import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.ID;
 
 import java.nio.ByteBuffer;
 
