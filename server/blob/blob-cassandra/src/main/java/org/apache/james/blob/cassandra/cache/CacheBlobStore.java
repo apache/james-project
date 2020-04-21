@@ -144,7 +144,6 @@ public class CacheBlobStore implements BlobStore {
     }
 
     private boolean isALargeStream(PushbackInputStream pushbackInputStream) throws IOException {
-        pushbackInputStream.mark(0);
         long skip = pushbackInputStream.skip(sizeThresholdInBytes + 1);
         pushbackInputStream.unread(Math.toIntExact(skip));
         return skip >= sizeThresholdInBytes;
@@ -154,7 +153,7 @@ public class CacheBlobStore implements BlobStore {
      * bytes: byte[] from PushbackInputStream.If PushbackInputStream is empty bytes.length == 1
      */
     private boolean isAbleToCache(BucketName bucketName, byte[] bytes, StoragePolicy storagePolicy) {
-        return isAbleToCache(bucketName, storagePolicy) && bytes.length <= sizeThresholdInBytes && bytes.length > 1;
+        return isAbleToCache(bucketName, storagePolicy) && bytes.length <= sizeThresholdInBytes;
     }
 
     private boolean isAbleToCache(BucketName bucketName, StoragePolicy storagePolicy) {
