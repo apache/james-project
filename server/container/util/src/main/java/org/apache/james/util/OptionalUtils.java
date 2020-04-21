@@ -51,9 +51,8 @@ public class OptionalUtils {
 
     private static <T> Optional<T> orStream(Stream<Optional<T>> stream) {
         return stream
-            .filter(Optional::isPresent)
-            .findFirst()
-            .orElse(Optional.empty());
+            .flatMap(Optional::stream)
+            .findFirst();
     }
 
     public static <T> boolean containsDifferent(Optional<T> requestValue, T storeValue) {
