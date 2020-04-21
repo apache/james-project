@@ -49,7 +49,6 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
@@ -219,9 +218,10 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private Mono<ComposedMessageIdWithMetaData> retrieveComposedId(CassandraId mailboxId, MessageUid uid) {
         return messageIdDAO.retrieve(mailboxId, uid)
-            .doOnNext(optional -> OptionalUtils.executeIfEmpty(optional,
-                () -> LOGGER.warn("Could not retrieve message {} {}", mailboxId, uid)))
-            .handle((t, sink) -> t.ifPresent(sink::next));
+            .handle((t, sink) ->
+                t.ifPresentOrElse(
+                    sink::next,
+                    () -> LOGGER.warn("Could not retrieve message {} {}", mailboxId, uid)));
     }
 
     @Override
