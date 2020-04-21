@@ -155,7 +155,7 @@ public class RecomputeCurrentQuotasService {
 
         return Mono.fromCallable(() -> currentQuotaCalculator.recalculateCurrentQuotas(quotaRoot, session))
             .map(recalculatedQuotas -> QuotaOperation.from(quotaRoot, recalculatedQuotas))
-            .flatMap(quotaOperation -> Mono.from(storeCurrentQuotaManager.resetCurrentQuotas(quotaOperation)))
+            .flatMap(quotaOperation -> Mono.from(storeCurrentQuotaManager.setCurrentQuotas(quotaOperation)))
             .then(Mono.just(Task.Result.COMPLETED))
             .doOnNext(any -> {
                 LOGGER.info("Current quotas recomputed for {}", quotaRoot);

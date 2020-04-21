@@ -41,6 +41,6 @@ public interface CurrentQuotaManager {
 
     Publisher<Void> decrease(QuotaOperation quotaOperation);
 
-    Publisher<Void> resetCurrentQuotas(QuotaOperation quotaOperation);
+    Publisher<Void> setCurrentQuotas(QuotaOperation quotaOperation);
 
 }

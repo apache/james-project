@@ -108,7 +108,7 @@ public class JpaCurrentQuotaManager implements CurrentQuotaManager {
     }
 
     @Override
-    public Mono<Void> resetCurrentQuotas(QuotaOperation quotaOperation) {
+    public Mono<Void> setCurrentQuotas(QuotaOperation quotaOperation) {
         return Mono.fromCallable(() -> getCurrentQuotas(quotaOperation.quotaRoot()))
             .flatMap(storedQuotas -> Mono.fromRunnable(() ->
                 transactionRunner.run(

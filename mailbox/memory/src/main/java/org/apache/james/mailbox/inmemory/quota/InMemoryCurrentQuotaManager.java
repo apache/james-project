@@ -84,7 +84,7 @@ public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
     }
 
     @Override
-    public Mono<Void> resetCurrentQuotas(QuotaOperation quotaOperation) {
+    public Mono<Void> setCurrentQuotas(QuotaOperation quotaOperation) {
         return Mono.from(getCurrentQuotas(quotaOperation.quotaRoot()))
             .flatMap(storedQuotas -> {
                 if (!storedQuotas.equals(CurrentQuotas.from(quotaOperation))) {
