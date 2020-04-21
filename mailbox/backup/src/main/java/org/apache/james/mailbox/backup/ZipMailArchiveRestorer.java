@@ -35,7 +35,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +70,7 @@ public class ZipMailArchiveRestorer implements MailArchiveRestorer {
     private Map<SerializedMailboxId, MessageManager> restoreMailboxes(MailboxSession session, List<MailboxWithAnnotationsArchiveEntry> mailboxes) {
         return mailboxes.stream()
             .flatMap(Throwing.<MailboxWithAnnotationsArchiveEntry, Stream<ImmutablePair<SerializedMailboxId, MessageManager>>>function(
-                mailboxEntry ->
-                    OptionalUtils.toStream(restoreMailboxEntry(session, mailboxEntry))).sneakyThrow())
+                mailboxEntry -> restoreMailboxEntry(session, mailboxEntry).stream()).sneakyThrow())
             .collect(Guavate.entriesToImmutableMap());
     }
 

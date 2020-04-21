@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -41,7 +42,6 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.MemoizedSupplier;
-import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
@@ -206,7 +206,7 @@ public class RecipientRewriteTableProcessor {
         return mappings.asStream()
             .map(mapping -> mapping.appendDomainIfNone(defaultDomainSupplier))
             .map(Mapping::asMailAddress)
-            .flatMap(OptionalUtils::toStream)
+            .flatMap(Optional::stream)
             .collect(Guavate.toImmutableListMultimap(
                 MailAddress::getDomain))
             .asMap()

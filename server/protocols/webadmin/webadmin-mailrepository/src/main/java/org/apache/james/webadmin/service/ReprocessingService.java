@@ -35,7 +35,6 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueName;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
@@ -100,7 +99,7 @@ public class ReprocessingService {
                     Iterators.toStream(repository.list())
                         .peek(keyListener)
                         .map(Throwing.function(key -> Optional.ofNullable(repository.retrieve(key))))
-                        .flatMap(OptionalUtils::toStream)
+                        .flatMap(Optional::stream)
                         .forEach(mail -> reprocessor.reprocess(repository, mail))));
         }
     }

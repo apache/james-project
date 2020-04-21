@@ -82,7 +82,6 @@ import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
@@ -501,9 +500,9 @@ public class SetMessagesCreationProcessorTest {
         @Override
         public Stream<MessageManager> getMailboxByRole(Role aRole, Username username) {
             if (aRole.equals(Role.OUTBOX)) {
-                return OptionalUtils.toStream(outboxSupplier.get());
+                return outboxSupplier.get().stream();
             } else if (aRole.equals(Role.DRAFTS)) {
-                return OptionalUtils.toStream(draftsSupplier.get());
+                return draftsSupplier.get().stream();
             }
             return Stream.empty();
         }

@@ -27,7 +27,6 @@ import javax.mail.Address;
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +43,7 @@ public class AddressesArrayToMailAddressListConverter {
         return Arrays.asList(addresses)
             .stream()
             .map(address -> toMailAddress(address))
-            .flatMap(OptionalUtils::toStream)
+            .flatMap(Optional::stream)
             .collect(Guavate.toImmutableList());
     }
 

@@ -28,7 +28,6 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
@@ -96,9 +95,9 @@ public class MailAttributesListToMimeHeaders extends GenericMailet {
     }
 
     private void addCollectionToHeader(MimeMessage message, String headerName, Optional<Collection<Serializable>> values) {
-        OptionalUtils.toStream(values)
-            .flatMap(Collection::stream)
-            .forEach(value -> addValueToHeader(message, headerName, value));
+        values.ifPresent(collection ->
+            collection.forEach(
+                value -> addValueToHeader(message, headerName, value)));
     }
 
     private void addValueToHeader(MimeMessage message, String headerName, Object value) {

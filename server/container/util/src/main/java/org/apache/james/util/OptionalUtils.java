@@ -41,11 +41,6 @@ public class OptionalUtils {
         return optional;
     }
 
-    public static <T> Stream<T> toStream(Optional<T> optional) {
-        return optional.map(Stream::of)
-            .orElse(Stream.of());
-    }
-
     public static <T> ImmutableList<T> toList(Optional<T> optional) {
         return optional.map(ImmutableList::of)
             .orElse(ImmutableList.of());

@@ -63,7 +63,7 @@ public class FakePropertiesProvider extends PropertiesProvider {
     public Configuration getConfigurations(String... filenames) throws FileNotFoundException {
         return Arrays.stream(filenames)
             .map(filename -> Optional.ofNullable(configurations.get(filename)))
-            .flatMap(OptionalUtils::toStream)
+            .flatMap(Optional::stream)
             .findFirst()
             .orElseThrow(() -> new FileNotFoundException(
                 "no configuration defined for " +

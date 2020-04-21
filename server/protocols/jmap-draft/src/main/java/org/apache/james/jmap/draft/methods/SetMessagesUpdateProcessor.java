@@ -65,7 +65,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -263,7 +262,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private Set<MailboxId> listTargetMailboxIds(UpdateMessagePatch updateMessagePatch) {
-        return OptionalUtils.toStream(updateMessagePatch.getMailboxIds())
+        return updateMessagePatch.getMailboxIds()
+            .stream()
             .flatMap(Collection::stream)
             .map(mailboxIdFactory::fromString)
             .collect(Guavate.toImmutableSet());

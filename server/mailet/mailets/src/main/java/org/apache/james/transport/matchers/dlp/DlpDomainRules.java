@@ -38,7 +38,6 @@ import org.apache.james.dlp.api.DLPConfigurationItem;
 import org.apache.james.dlp.api.DLPConfigurationItem.Targets;
 import org.apache.james.javax.AddressHelper;
 import org.apache.james.javax.MultipartUtil;
-import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
@@ -89,8 +88,10 @@ public class DlpDomainRules {
             private Stream<String> getMessageSubjects(Mail mail) throws MessagingException {
                 MimeMessage message = mail.getMessage();
                 if (message != null) {
-                    return OptionalUtils.toStream(
-                        Optional.ofNullable(message.getSubject()));
+                    String subject = message.getSubject();
+                    if (subject != null) {
+                        return Stream.of(subject);
+                    }
                 }
                 return Stream.of();
             }

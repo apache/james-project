@@ -31,7 +31,6 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.StreamUtils;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +91,7 @@ public class Envelope {
             .orElse(Stream.of())
             .map(Mailbox::getAddress)
             .map(addressAsString -> newMailAddress(validationPolicy, addressAsString))
-            .flatMap(OptionalUtils::toStream);
+            .flatMap(Optional::stream);
     }
 
     private final MaybeSender from;

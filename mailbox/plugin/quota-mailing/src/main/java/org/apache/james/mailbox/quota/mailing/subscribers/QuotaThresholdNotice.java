@@ -44,7 +44,6 @@ import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.SizeFormat;
 
 import com.github.mustachejava.DefaultMustacheFactory;
@@ -156,7 +155,7 @@ public class QuotaThresholdNotice {
 
     private QuotaThreshold mostSignificantThreshold() {
         return Stream.of(countThreshold, sizeThreshold)
-            .flatMap(OptionalUtils::toStream)
+            .flatMap(Optional::stream)
             .min(Comparator.reverseOrder())
             .get();
     }

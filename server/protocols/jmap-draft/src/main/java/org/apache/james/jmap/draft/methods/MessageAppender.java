@@ -48,7 +48,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,7 +150,7 @@ public class MessageAppender {
         ThrowingFunction<Attachment, Optional<MessageAttachmentMetadata>> toMessageAttachment = att -> messageAttachment(session, att);
         return attachments.stream()
             .map(Throwing.function(toMessageAttachment).sneakyThrow())
-            .flatMap(OptionalUtils::toStream)
+            .flatMap(Optional::stream)
             .collect(Guavate.toImmutableList());
     }
 

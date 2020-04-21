@@ -65,15 +65,14 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.junit.Before;
@@ -110,9 +109,9 @@ public class SetMessagesUpdateProcessorTest {
         @Override
         public Stream<MessageManager> getMailboxByRole(Role aRole, Username username) {
             if (aRole.equals(Role.OUTBOX)) {
-                return OptionalUtils.toStream(outboxSupplier.get());
+                return outboxSupplier.get().stream();
             } else if (aRole.equals(Role.DRAFTS)) {
-                return OptionalUtils.toStream(draftsSupplier.get());
+                return draftsSupplier.get().stream();
             }
             return Stream.empty();
         }

@@ -19,11 +19,11 @@
 package org.apache.james.rrt.lib;
 
 import static org.apache.james.rrt.lib.Mapping.Type.Alias;
-import static org.apache.james.rrt.lib.Mapping.Type.Domain;
 import static org.apache.james.rrt.lib.Mapping.Type.DomainAlias;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -35,7 +35,6 @@ import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.util.OptionalUtils;
 
 public class CanSendFromImpl implements CanSendFrom {
 
@@ -73,7 +72,7 @@ public class CanSendFromImpl implements CanSendFrom {
             && recipientRewriteTable.getResolvedMappings(fromUser.getLocalPart(), fromUser.getDomainPart().get(), ALIAS_TYPES_ACCEPTED_IN_FROM)
             .asStream()
             .map(Mapping::asMailAddress)
-            .flatMap(OptionalUtils::toStream)
+            .flatMap(Optional::stream)
             .map(Username::fromMailAddress)
             .anyMatch(alias -> alias.equals(connectedUser));
     }

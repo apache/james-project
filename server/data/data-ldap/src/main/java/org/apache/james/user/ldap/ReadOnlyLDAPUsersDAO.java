@@ -51,7 +51,6 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.ldap.api.LdapConstants;
 import org.apache.james.user.lib.UsersDAO;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.retry.DoublingRetrySchedule;
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.apache.james.util.retry.naming.ldap.RetryingLdapContext;
@@ -341,7 +340,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         try {
             return Math.toIntExact(getValidUsers().stream()
                 .map(Throwing.function(this::buildUser).sneakyThrow())
-                .flatMap(OptionalUtils::toStream)
+                .flatMap(Optional::stream)
                 .count());
         } catch (NamingException e) {
             LOGGER.error("Unable to retrieve user count from ldap", e);

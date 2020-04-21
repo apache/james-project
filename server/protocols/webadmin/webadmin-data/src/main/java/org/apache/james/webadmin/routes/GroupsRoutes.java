@@ -23,6 +23,7 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -44,7 +45,6 @@ import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -225,7 +225,7 @@ public class GroupsRoutes implements Routes {
         return mappings
                 .asStream()
                 .map(Mapping::asMailAddress)
-                .flatMap(OptionalUtils::toStream)
+                .flatMap(Optional::stream)
                 .map(MailAddress::asString)
                 .collect(Guavate.toImmutableSortedSet());
     }

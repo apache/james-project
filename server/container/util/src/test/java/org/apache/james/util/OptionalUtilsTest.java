@@ -61,19 +61,6 @@ class OptionalUtilsTest {
     }
 
     @Test
-    void toStreamShouldConvertEmptyOptionalToEmptyStream() {
-        assertThat(OptionalUtils.toStream(Optional.empty()))
-            .isEmpty();
-    }
-
-    @Test
-    void toStreamShouldConvertFullOptionalToStream() {
-        long value = 18L;
-        assertThat(OptionalUtils.toStream(Optional.of(value)))
-            .containsExactly(value);
-    }
-
-    @Test
     void orShouldReturnEmptyWhenNoParameter() {
         assertThat(OptionalUtils.or())
             .isEmpty();

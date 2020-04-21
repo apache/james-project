@@ -27,7 +27,6 @@ import java.util.zip.ZipException;
 import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.compress.archivers.zip.ZipShort;
-import org.apache.james.util.OptionalUtils;
 
 public class ExtraFieldExtractor {
 
@@ -46,8 +45,7 @@ public class ExtraFieldExtractor {
             ZipExtraField[] extraFields = ExtraFieldUtils.parse(entry.getExtra());
             return Arrays.stream(extraFields)
                 .filter(field -> field.getHeaderId().equals(EntryTypeExtraField.ID_AQ))
-                .flatMap(extraField ->
-                    OptionalUtils.toStream(((EntryTypeExtraField) extraField).getEnumValue()))
+                .flatMap(extraField -> ((EntryTypeExtraField) extraField).getEnumValue().stream())
                 .findFirst();
         } catch (Exception e) {
             return Optional.empty();

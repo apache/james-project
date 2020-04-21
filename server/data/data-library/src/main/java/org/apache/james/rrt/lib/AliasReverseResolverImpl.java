@@ -34,7 +34,6 @@ import org.apache.james.core.Username;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.StreamUtils;
 
 import com.github.fge.lambdas.Throwing;
@@ -69,7 +68,7 @@ public class AliasReverseResolverImpl implements AliasReverseResolver {
                 recipientRewriteTable
                     .listSources(Mapping.alias(targetUser.asString()))
                     .map(MappingSource::asUsername)
-                    .flatMap(OptionalUtils::toStream)).sneakyThrow()
+                    .flatMap(Optional::stream)).sneakyThrow()
         );
     }
 
@@ -99,7 +98,7 @@ public class AliasReverseResolverImpl implements AliasReverseResolver {
                 recipientRewriteTable
                     .listSources(Mapping.domainAlias(targetDomain))
                     .map(MappingSource::asDomain)
-                    .flatMap(OptionalUtils::toStream)).sneakyThrow()
+                    .flatMap(Optional::stream)).sneakyThrow()
         );
     }
 

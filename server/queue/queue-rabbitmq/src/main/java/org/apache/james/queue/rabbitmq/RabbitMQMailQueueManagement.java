@@ -19,13 +19,13 @@
 
 package org.apache.james.queue.rabbitmq;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
-import org.apache.james.util.OptionalUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -48,7 +48,7 @@ public class RabbitMQMailQueueManagement {
             .stream()
             .map(RabbitMQManagementAPI.MessageQueue::getName)
             .map(MailQueueName::fromRabbitWorkQueueName)
-            .flatMap(OptionalUtils::toStream)
+            .flatMap(Optional::stream)
             .distinct();
     }
 

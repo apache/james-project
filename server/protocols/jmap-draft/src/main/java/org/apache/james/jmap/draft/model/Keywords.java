@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +94,7 @@ public class Keywords {
             Optional<Keyword> toKeyword(String value);
 
             default Stream<Keyword> asKeywordStream(String value) {
-                return OptionalUtils.toStream(toKeyword(value));
+                return toKeyword(value).stream();
             }
         }
 

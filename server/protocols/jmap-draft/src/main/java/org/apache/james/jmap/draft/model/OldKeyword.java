@@ -21,11 +21,9 @@ package org.apache.james.jmap.draft.model;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
-
-import org.apache.james.util.OptionalUtils;
-import org.apache.james.util.StreamUtils;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
@@ -174,13 +172,14 @@ public class OldKeyword {
 
     public Keywords asKeywords() {
         return Keywords.strictFactory()
-            .fromSet(StreamUtils
-                .flatten(
-                    OptionalUtils.toStream(isAnswered.filter(b -> b).map(b -> Keyword.ANSWERED)),
-                    OptionalUtils.toStream(isDraft.filter(b -> b).map(b -> Keyword.DRAFT)),
-                    OptionalUtils.toStream(isForwarded.filter(b -> b).map(b -> Keyword.FORWARDED)),
-                    OptionalUtils.toStream(isFlagged.filter(b -> b).map(b -> Keyword.FLAGGED)),
-                    OptionalUtils.toStream(isUnread.filter(b -> !b).map(b -> Keyword.SEEN)))
+            .fromSet(
+                Stream.of(
+                    isAnswered.filter(b -> b).map(b -> Keyword.ANSWERED),
+                    isDraft.filter(b -> b).map(b -> Keyword.DRAFT),
+                    isForwarded.filter(b -> b).map(b -> Keyword.FORWARDED),
+                    isFlagged.filter(b -> b).map(b -> Keyword.FLAGGED),
+                    isUnread.filter(b -> !b).map(b -> Keyword.SEEN))
+                .flatMap(Optional::stream)
                 .collect(Guavate.toImmutableSet()));
     }
 

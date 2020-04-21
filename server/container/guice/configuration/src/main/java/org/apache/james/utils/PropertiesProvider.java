@@ -34,7 +34,6 @@ import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.util.OptionalUtils;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -57,7 +56,7 @@ public class PropertiesProvider {
     public Configuration getConfigurations(String... filenames) throws FileNotFoundException, ConfigurationException {
         File file = Arrays.stream(filenames)
             .map(this::getConfigurationFile)
-            .flatMap(OptionalUtils::toStream)
+            .flatMap(Optional::stream)
             .findFirst()
             .orElseThrow(() -> new FileNotFoundException(Joiner.on(",").join(filenames) + " not found"));
 

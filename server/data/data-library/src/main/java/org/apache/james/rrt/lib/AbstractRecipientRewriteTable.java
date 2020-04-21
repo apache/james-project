@@ -45,7 +45,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping.Type;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -352,9 +351,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     protected abstract Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException;
 
     private void checkDomainMappingSourceIsManaged(MappingSource source) throws RecipientRewriteTableException {
-        Optional<Domain> notManagedSourceDomain = OptionalUtils.toStream(source.availableDomain())
-            .filter(Throwing.<Domain>predicate(domain -> !isManagedByDomainList(domain)).sneakyThrow())
-            .findFirst();
+        Optional<Domain> notManagedSourceDomain = source.availableDomain()
+            .filter(Throwing.<Domain>predicate(domain -> !isManagedByDomainList(domain)).sneakyThrow());
 
         if (notManagedSourceDomain.isPresent()) {
             throw new SourceDomainIsNotInDomainListException("Source domain '" + notManagedSourceDomain.get().asString() + "' is not managed by the domainList");

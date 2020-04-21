@@ -142,7 +142,7 @@ public class Rights {
     private static List<Right> fromACL(MailboxACL.Rfc4314Rights rights) {
         return rights.list()
             .stream()
-            .flatMap(right -> OptionalUtils.toStream(Right.forRight(right)))
+            .flatMap(right -> Right.forRight(right).stream())
             .collect(Guavate.toImmutableList());
     }
 

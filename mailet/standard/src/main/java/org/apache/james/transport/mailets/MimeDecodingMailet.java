@@ -30,7 +30,6 @@ import javax.mail.internet.MimeBodyPart;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -81,9 +80,13 @@ public class MimeDecodingMailet extends GenericMailet {
     }
 
     private void setAttribute(Mail mail, Attribute attribute) throws MailetException {
-        Function<Map.Entry<String, byte[]>, Stream<Pair<String, byte[]>>> convertToMapContent = Throwing.<Map.Entry<String, byte[]>, Stream<Pair<String, byte[]>>>function(entry ->
-                OptionalUtils.toStream(extractContent(entry.getValue())
-                        .map(content -> Pair.of(entry.getKey(), content)))).sneakyThrow();
+        Function<Map.Entry<String, byte[]>, Stream<Pair<String, byte[]>>> convertToMapContent =
+            Throwing
+                .<Map.Entry<String, byte[]>, Stream<Pair<String, byte[]>>>function(entry ->
+                    extractContent(entry.getValue())
+                        .stream()
+                        .map(content -> Pair.of(entry.getKey(), content)))
+                .sneakyThrow();
 
         ImmutableMap<String, byte[]> extractedMimeContentByName = getAttributeContent(attribute)
                 .entrySet()

@@ -46,7 +46,6 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AliasSourcesResponse;
@@ -122,7 +121,7 @@ public class AliasRoutes implements Routes {
     })
     public ImmutableSet<String> listAddressesWithAliases(Request request, Response response) throws RecipientRewriteTableException {
         return recipientRewriteTable.getMappingsForType(Mapping.Type.Alias)
-            .flatMap(mapping -> OptionalUtils.toStream(mapping.asMailAddress()))
+            .flatMap(mapping -> mapping.asMailAddress().stream())
             .map(MailAddress::asString)
             .collect(Guavate.toImmutableSortedSet());
     }
