@@ -37,7 +37,7 @@ import com.github.fge.lambdas.Throwing;
 import reactor.core.publisher.Mono;
 
 public interface CurrentQuotaManagerContract {
-    QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
+    QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
     CurrentQuotas CURRENT_QUOTAS = new CurrentQuotas(QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
     QuotaOperation RESET_QUOTA_OPERATION = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
     

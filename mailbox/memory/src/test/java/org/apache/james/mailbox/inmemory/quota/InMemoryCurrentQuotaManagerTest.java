@@ -19,82 +19,24 @@
 
 package org.apache.james.mailbox.inmemory.quota;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.Optional;
-
-import org.apache.james.core.quota.QuotaCountUsage;
-import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.mailbox.SessionProvider;
-import org.apache.james.mailbox.model.CurrentQuotas;
-import org.apache.james.mailbox.model.QuotaOperation;
-import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
+import org.apache.james.mailbox.store.quota.CurrentQuotaManagerContract;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-class InMemoryCurrentQuotaManagerTest {
+class InMemoryCurrentQuotaManagerTest implements CurrentQuotaManagerContract {
 
-    static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
-    static final CurrentQuotas CURRENT_QUOTAS = new CurrentQuotas(
-        QuotaCountUsage.count(18),
-        QuotaSizeUsage.size(512));
-
-    InMemoryCurrentQuotaManager testee;
-    CurrentQuotaCalculator mockedCurrentQuotaCalculator;
+    CurrentQuotaManager testee;
 
     @BeforeEach
     void setUp() {
-        mockedCurrentQuotaCalculator = mock(CurrentQuotaCalculator.class);
-        testee = new InMemoryCurrentQuotaManager(mockedCurrentQuotaCalculator, mock(SessionProvider.class));
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
+
+        testee = resources.getCurrentQuotaManager();
     }
 
-    @Test
-    void getCurrentMessageCountShouldReturnRecalculateMessageCountWhenEntryIsNotInitialized() throws Exception {
-        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
-
-        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT).block()).isEqualTo(QuotaCountUsage.count(18));
-    }
-
-    @Test
-    void getCurrentStorageShouldReturnRecalculateSizeWhenEntryIsNotInitialized() throws Exception {
-        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
-
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT).block()).isEqualTo(QuotaSizeUsage.size(512));
-    }
-
-    @Test
-    void getCurrentStorageShouldReRetrieveStoredQuotasWhenCalculateOnUnknownQuotaIsTrue() throws Exception {
-        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
-
-        QuotaOperation quotaOperation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
-        testee.increase(quotaOperation).block();
-
-        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT).block()).isEqualTo(QuotaCountUsage.count(28));
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT).block()).isEqualTo(QuotaSizeUsage.size(612));
-    }
-
-    @Test
-    void getCurrentQuotasShouldReturnRecalculateSizeWhenEntryIsNotInitialized() throws Exception {
-        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
-
-        assertThat(testee.getCurrentQuotas(QUOTA_ROOT).block()).isEqualTo(CURRENT_QUOTAS);
-    }
-
-    @Test
-    void getCurrentQuotasShouldReRetrieveStoredQuotasWhenCalculateOnUnknownQuotaIsTrue() throws Exception {
-        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
-
-        QuotaOperation quotaOperation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
-        testee.increase(quotaOperation).block();
-
-        assertThat(testee.getCurrentQuotas(QUOTA_ROOT).block()).isEqualTo(new CurrentQuotas(QuotaCountUsage.count(28), QuotaSizeUsage.size(612)));
+    @Override
+    public CurrentQuotaManager testee() {
+        return testee;
     }
 }
