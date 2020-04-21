@@ -33,7 +33,6 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholds;
 import org.apache.james.util.DurationParser;
-import org.apache.james.util.OptionalUtils;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
@@ -286,20 +285,20 @@ public class QuotaMailingListenerConfiguration {
     }
 
     public String getBodyTemplate(QuotaThreshold quotaThreshold) {
-        return OptionalUtils.or(
-            Optional.ofNullable(
+        return Optional
+            .ofNullable(
                 toRenderingInformation.get(quotaThreshold))
-                    .flatMap(RenderingInformation::getBodyTemplate),
-                bodyTemplate)
+                    .flatMap(RenderingInformation::getBodyTemplate)
+            .or(() -> bodyTemplate)
             .orElse(DEFAULT_BODY_TEMPLATE);
     }
 
     public String getSubjectTemplate(QuotaThreshold quotaThreshold) {
-        return OptionalUtils.or(
-            Optional.ofNullable(
+        return Optional
+            .ofNullable(
                 toRenderingInformation.get(quotaThreshold))
-                    .flatMap(RenderingInformation::getSubjectTemplate),
-                subjectTemplate)
+                    .flatMap(RenderingInformation::getSubjectTemplate)
+            .or(() -> subjectTemplate)
             .orElse(DEFAULT_SUBJECT_TEMPLATE);
     }
 

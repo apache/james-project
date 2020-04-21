@@ -44,7 +44,6 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.util.OptionalUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -132,9 +131,8 @@ public class MailboxFactory {
         private MailboxId computeMailboxId() {
             int idCount = Booleans.countTrue(id.isPresent(), mailboxMetaData.isPresent());
             Preconditions.checkState(idCount == 1, "You need exactly one 'id' 'mailboxMetaData'");
-            return OptionalUtils.or(
-                id,
-                mailboxMetaData.map(MailboxMetaData::getId))
+            return id.or(
+                () -> mailboxMetaData.map(MailboxMetaData::getId))
                 .get();
         }
 

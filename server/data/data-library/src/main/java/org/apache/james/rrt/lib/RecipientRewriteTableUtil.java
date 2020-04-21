@@ -25,7 +25,6 @@ import java.util.Optional;
 import java.util.StringTokenizer;
 
 import org.apache.james.core.Domain;
-import org.apache.james.util.OptionalUtils;
 
 /**
  * This helper class contains methods for the RecipientRewriteTable implementations
@@ -46,9 +45,8 @@ public class RecipientRewriteTableUtil {
      *         exists
      */
     public static String getTargetString(String user, Domain domain, Map<MappingSource, String> mappings) {
-        return OptionalUtils.or(
-                Optional.ofNullable(mappings.get(MappingSource.fromUser(user, domain))),
-                Optional.ofNullable(mappings.get(MappingSource.fromDomain(domain))))
+        return Optional.ofNullable(mappings.get(MappingSource.fromUser(user, domain)))
+            .or(() -> Optional.ofNullable(mappings.get(MappingSource.fromDomain(domain))))
             .orElse(null);
     }
 

@@ -47,10 +47,9 @@ public interface ContentMatcher {
             this.fullAddress = fullAddress;
             Optional<InternetAddress> internetAddress = parseFullAddress();
             this.address = internetAddress.map(InternetAddress::getAddress);
-            this.personal = OptionalUtils.or(
-                internetAddress.map(InternetAddress::getPersonal),
-                address,
-                Optional.of(fullAddress));
+            this.personal = internetAddress.map(InternetAddress::getPersonal)
+                .or(() -> address)
+                .or(() -> Optional.of(fullAddress));
         }
 
         private Optional<InternetAddress> parseFullAddress() {

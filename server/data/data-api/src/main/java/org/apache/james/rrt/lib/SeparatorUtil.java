@@ -21,8 +21,6 @@ package org.apache.james.rrt.lib;
 
 import java.util.Optional;
 
-import org.apache.james.util.OptionalUtils;
-
 public class SeparatorUtil {
     /**
      * Returns the character used to delineate multiple addresses.
@@ -32,10 +30,9 @@ public class SeparatorUtil {
      * @return the character to tokenize on
      */
     public static String getSeparator(String targetString) {
-        return OptionalUtils.or(
-            mayContainComma(targetString),
-            mayContainSemicolon(targetString),
-            mayContainColon(targetString))
+        return mayContainComma(targetString)
+            .or(() -> mayContainSemicolon(targetString))
+            .or(() -> mayContainColon(targetString))
             .orElse("");
     }
 

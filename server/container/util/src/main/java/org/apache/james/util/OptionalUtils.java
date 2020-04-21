@@ -39,11 +39,6 @@ public class OptionalUtils {
     }
 
     @SafeVarargs
-    public static <T> Optional<T> or(Optional<T>... optionals) {
-        return orStream(Arrays.stream(optionals));
-    }
-
-    @SafeVarargs
     public static <T> Optional<T> orSuppliers(Supplier<Optional<T>>... suppliers) {
         return orStream(Arrays.stream(suppliers)
             .map(Supplier::get));

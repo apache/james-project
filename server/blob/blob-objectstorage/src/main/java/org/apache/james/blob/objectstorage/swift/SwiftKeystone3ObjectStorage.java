@@ -26,7 +26,6 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreBuilder;
-import org.apache.james.util.OptionalUtils;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
@@ -183,12 +182,9 @@ public class SwiftKeystone3ObjectStorage {
         public Properties getOverrides() {
             Properties properties = new Properties();
             properties.setProperty(KeystoneProperties.KEYSTONE_VERSION, "3");
-            OptionalUtils.or(
-                project.map(project -> setScope(project)),
-                domainId.map(domain -> setScope(domain))
-            ).ifPresent(scopeProps ->
-                properties.putAll(scopeProps)
-            );
+            project.map(this::setScope)
+                .or(() -> domainId.map(this::setScope)
+            ).ifPresent(properties::putAll);
             return properties;
         }
 
@@ -203,10 +199,9 @@ public class SwiftKeystone3ObjectStorage {
             properties.setProperty(KeystoneProperties.SCOPE, project.name().asString());
             project.domainName()
                 .map(domain -> Pair.of(KeystoneProperties.PROJECT_DOMAIN_NAME, domain));
-            OptionalUtils.or(
-                project.domainName()
-                    .map(domain -> Pair.of(KeystoneProperties.PROJECT_DOMAIN_NAME, domain.value())),
-                project.domainId()
+            project.domainName()
+                    .map(domain -> Pair.of(KeystoneProperties.PROJECT_DOMAIN_NAME, domain.value()))
+                .or(() -> project.domainId()
                     .map(domain -> Pair.of(KeystoneProperties.PROJECT_DOMAIN_ID, domain.value()))
             ).ifPresent(pair ->
                 properties.setProperty(pair.getKey(), pair.getValue())

@@ -133,9 +133,8 @@ public class MappingSource implements Serializable {
     }
 
     public Optional<Domain> availableDomain() {
-        return OptionalUtils.or(
-            user.flatMap(Username::getDomainPart),
-            domain);
+        return user.flatMap(Username::getDomainPart)
+            .or(() -> domain);
     }
 
     @Override

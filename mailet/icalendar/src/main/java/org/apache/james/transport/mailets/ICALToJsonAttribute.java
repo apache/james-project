@@ -33,7 +33,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.model.ICAL;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -232,8 +231,6 @@ public class ICALToJsonAttribute extends GenericMailet {
         Optional<String> fromEnvelope = mail.getMaybeSender().asOptional()
             .map(MailAddress::asString);
 
-        return OptionalUtils.or(
-            fromMime,
-            fromEnvelope);
+        return fromMime.or(() -> fromEnvelope);
     }
 }

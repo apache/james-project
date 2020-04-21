@@ -49,7 +49,6 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -390,14 +389,12 @@ public class AuthCmdHandler
         if (result != null) {
             HookReturnCode returnCode = result.getResult();
 
-            String smtpReturnCode = OptionalUtils.or(
-                Optional.ofNullable(result.getSmtpRetCode()),
-                retrieveDefaultSmtpReturnCode(returnCode))
+            String smtpReturnCode = Optional.ofNullable(result.getSmtpRetCode())
+                .or(() -> retrieveDefaultSmtpReturnCode(returnCode))
                 .orElse(null);
 
-            String smtpDescription = OptionalUtils.or(
-                Optional.ofNullable(result.getSmtpDescription()),
-                retrieveDefaultSmtpDescription(returnCode))
+            String smtpDescription = Optional.ofNullable(result.getSmtpDescription())
+                .or(() -> retrieveDefaultSmtpDescription(returnCode))
                 .orElse(null);
     
             if (HookReturnCode.Action.ACTIVE_ACTIONS.contains(returnCode.getAction())) {

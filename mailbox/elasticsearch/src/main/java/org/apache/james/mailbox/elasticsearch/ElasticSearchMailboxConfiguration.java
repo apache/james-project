@@ -26,7 +26,6 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.WriteAliasName;
-import org.apache.james.util.OptionalUtils;
 
 public class ElasticSearchMailboxConfiguration {
 
@@ -100,26 +99,23 @@ public class ElasticSearchMailboxConfiguration {
     }
 
     static Optional<IndexName> computeMailboxIndexName(Configuration configuration) {
-        return OptionalUtils.or(
-            Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_MAILBOX_NAME))
-                .map(IndexName::new),
-            Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_NAME))
+        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_MAILBOX_NAME))
+                .map(IndexName::new)
+            .or(() -> Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_NAME))
                 .map(IndexName::new));
     }
 
     static Optional<WriteAliasName> computeMailboxWriteAlias(Configuration configuration) {
-        return OptionalUtils.or(
-            Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME))
-                .map(WriteAliasName::new),
-            Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_NAME))
+        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME))
+                .map(WriteAliasName::new)
+            .or(() -> Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_NAME))
                 .map(WriteAliasName::new));
     }
 
     static Optional<ReadAliasName> computeMailboxReadAlias(Configuration configuration) {
-        return OptionalUtils.or(
-            Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME))
-                .map(ReadAliasName::new),
-            Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_NAME))
+        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME))
+                .map(ReadAliasName::new)
+            .or(() -> Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_NAME))
                 .map(ReadAliasName::new));
     }
 

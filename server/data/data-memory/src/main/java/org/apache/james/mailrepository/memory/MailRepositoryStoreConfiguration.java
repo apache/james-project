@@ -27,7 +27,6 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailrepository.api.Protocol;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,9 +81,9 @@ public class MailRepositoryStoreConfiguration {
             .map(MailRepositoryStoreConfiguration::readItem)
             .collect(Guavate.toImmutableList());
 
-        Optional<Protocol> defaultProtocol = OptionalUtils.or(
-            Optional.ofNullable(configuration.getString("defaultProtocol", null)).map(Protocol::new),
-            computeDefaultProtocol(items));
+        Optional<Protocol> defaultProtocol =
+            Optional.ofNullable(configuration.getString("defaultProtocol", null)).map(Protocol::new)
+            .or(() -> computeDefaultProtocol(items));
 
         return new MailRepositoryStoreConfiguration(items, defaultProtocol);
     }

@@ -32,7 +32,6 @@ import org.apache.james.blob.objectstorage.swift.ProjectName;
 import org.apache.james.blob.objectstorage.swift.Region;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.UserName;
-import org.apache.james.util.OptionalUtils;
 
 import com.google.common.base.Preconditions;
 
@@ -125,10 +124,8 @@ public class SwiftKeystone3ConfigurationReader implements SwiftConfiguration {
                 configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_PROJECT_DOMAIN_ID, null))
             .map(DomainId::of);
 
-        return OptionalUtils.or(
-            projectName.flatMap(project -> projectDomainName.map(domain -> Project.of(project, domain))),
-            projectName.flatMap(project -> projectDomainId.map(domain -> Project.of(project, domain))),
-            projectName.map(Project::of)
-        );
+        return projectName.flatMap(project -> projectDomainName.map(domain -> Project.of(project, domain)))
+            .or(() -> projectName.flatMap(project -> projectDomainId.map(domain -> Project.of(project, domain))))
+            .or(() -> projectName.map(Project::of));
     }
 }
