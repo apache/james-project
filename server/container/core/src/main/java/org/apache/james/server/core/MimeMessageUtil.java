@@ -29,8 +29,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
-import org.apache.commons.io.IOUtils;
-
 /**
  * Utility class to provide optimized write methods for the various MimeMessage
  * implementations.
@@ -162,7 +160,7 @@ public class MimeMessageUtil {
         }
 
         try (InputStream input = bis) {
-            IOUtils.copy(input, bos);
+            input.transferTo(bos);
         }
     }
 
@@ -194,7 +192,7 @@ public class MimeMessageUtil {
      */
     public static void writeHeadersTo(Enumeration<String> headers, OutputStream headerOs) throws MessagingException {
         try {
-            IOUtils.copy(new InternetHeadersInputStream(headers), headerOs);
+            new InternetHeadersInputStream(headers).transferTo(headerOs);
         } catch (IOException e) {
             throw new MessagingException("Unable to write headers to stream", e);
         }

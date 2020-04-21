@@ -39,7 +39,6 @@ import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 
@@ -314,8 +313,8 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                     myHeaders = headers;
                 }
                 Enumeration<String> filteredHeaders = myHeaders.getNonMatchingHeaderLines(ignoreList);
-                IOUtils.copy(new InternetHeadersInputStream(filteredHeaders), headerOs);
-                IOUtils.copy(in, bodyOs);
+                new InternetHeadersInputStream(filteredHeaders).transferTo(headerOs);
+                in.transferTo(bodyOs);
             }
         } else {
             // save the changes as the message was modified
@@ -330,7 +329,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 loadHeaders();
             }
             Enumeration<String> filteredHeaders = headers.getNonMatchingHeaderLines(ignoreList);
-            IOUtils.copy(new InternetHeadersInputStream(filteredHeaders), headerOs);
+            new InternetHeadersInputStream(filteredHeaders).transferTo(headerOs);
 
             if (preLoad && !messageParsed) {
                 loadMessage();

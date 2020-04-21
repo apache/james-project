@@ -162,7 +162,7 @@ public class TemporaryJamesServer {
 
     private void copyResource(Path resourcesFolder, String resourceName) {
         try (OutputStream outputStream = new FileOutputStream(resourcesFolder.resolve(resourceName).toFile())) {
-            IOUtils.copy(ClassLoader.getSystemClassLoader().getResource(resourceName).openStream(), outputStream);
+            ClassLoader.getSystemClassLoader().getResource(resourceName).openStream().transferTo(outputStream);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
