@@ -4,7 +4,7 @@
 
 === Requirements
 
- * Java 8 SDK
+ * Java 11 SDK
  * Docker
  * Maven 3
 

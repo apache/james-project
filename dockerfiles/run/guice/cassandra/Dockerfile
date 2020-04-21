@@ -2,7 +2,7 @@
 #
 # VERSION	1.0
 
-FROM openjdk:8u222-jre
+FROM adoptopenjdk:11-jre-hotspot
 
 # Ports that are used
 #

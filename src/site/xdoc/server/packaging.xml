@@ -74,14 +74,6 @@
                         <td>Guice</td>
                     </tr>
                     <tr>
-                        <td>Java version</td>
-                        <td>Java 6</td>
-                        <td>Java 8</td>
-                        <td>Java 8</td>
-                        <td>Java 8</td>
-                        <td>Java 8</td>
-                    </tr>
-                    <tr>
                         <td>Docker image</td>
                         <td><a href="https://github.com/apache/james-project/tree/master/dockerfiles/run/spring">Available</a></td>
                         <td><a href="https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra">Available</a></td>

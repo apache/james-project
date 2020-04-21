@@ -35,7 +35,7 @@
 Step 0: Requirements
 ####################
 
-  * Java 8 SDK
+  * Java 11 SDK
   * 2GB RAM
   * Docker 1.7.1+
   * Maven 3.3

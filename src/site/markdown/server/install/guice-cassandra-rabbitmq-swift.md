@@ -4,7 +4,7 @@
 
 ### Requirements
 
- - Java 8 SDK
+ - Java 11 SDK
  - Docker ∕ ElasticSearch 6.3.2, RabbitMQ Management 3.3.7, Swift ObjectStorage 2.15.1 and Cassandra 3.11.3
  - Maven 3
 

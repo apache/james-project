@@ -4,7 +4,7 @@
 
 ### Requirements
 
- - Java 8 SDK
+ - Java 11 SDK
  - Docker ∕ ElasticSearch 6.3.2 and Cassandra 3.11.3
  - Maven 3
 

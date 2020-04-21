@@ -2,7 +2,11 @@
 #
 # VERSION	1.0
 
-FROM openjdk:8u222-jre
+FROM adoptopenjdk:11-jre-hotspot
+
+# Install unzip
+RUN apt-get update
+RUN apt-get install -y unzip
 
 # Ports that are used
 #

@@ -19,6 +19,7 @@ of tasks being currently executed.
 - JAMES-3117 Add PeriodicalHealthChecks for periodical calling all health checks
 
 ### Changed
+- Switch to Java 11 for build and run
 - Multiple changes have been made to enhance ElasticSearch performance:
   - Use of routing keys to collocate documents per mailbox
   - Under some configuration, html was not extracted before document indexing
