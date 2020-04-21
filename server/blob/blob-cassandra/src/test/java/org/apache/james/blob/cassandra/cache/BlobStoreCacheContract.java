@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.awaitility.Awaitility.await;
 
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -106,5 +107,16 @@ public interface BlobStoreCacheContract {
         //add some time after the TTL to avoid threshold effect
         await().atMost(Duration.TWO_SECONDS.plus(Duration.FIVE_HUNDRED_MILLISECONDS)).await().untilAsserted(()
             -> assertThat(Mono.from(testee().read(blobId)).blockOptional()).isEmpty());
+    }
+
+    @Test
+    default void readShouldReturnEmptyCachedByteArray() {
+        BlobId blobId = blobIdFactory().randomId();
+        byte[] emptyByteArray = new byte[] {};
+
+        Mono.from(testee().cache(blobId, emptyByteArray)).block();
+
+        assertThat(new ByteArrayInputStream(Mono.from(testee().read(blobId)).block()))
+            .hasSameContentAs(new ByteArrayInputStream(emptyByteArray));
     }
 }

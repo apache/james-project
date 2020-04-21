@@ -24,11 +24,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
+import java.util.Arrays;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -67,8 +68,7 @@ public class CacheBlobStore implements BlobStore {
             .filter(defaultBucket::equals)
             .flatMap(ignored ->
                 Mono.from(cache.read(blobId))
-                    .<InputStream>flatMap(bytes -> Mono.fromCallable(() -> new ByteArrayInputStream(bytes)))
-            )
+                    .<InputStream>flatMap(bytes -> Mono.fromCallable(() -> new ByteArrayInputStream(bytes))))
             .switchIfEmpty(Mono.fromCallable(() -> backend.read(bucketName, blobId)))
             .blockOptional()
             .orElseThrow(() -> new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId)));
@@ -97,18 +97,23 @@ public class CacheBlobStore implements BlobStore {
     public Publisher<BlobId> save(BucketName bucketName, InputStream inputStream, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(inputStream, "InputStream must not be null");
 
+        if (isAbleToCache(bucketName, storagePolicy)) {
+            return saveInCache(bucketName, inputStream, storagePolicy);
+        }
+
+        return backend.save(bucketName, inputStream, storagePolicy);
+    }
+
+    private Publisher<BlobId> saveInCache(BucketName bucketName, InputStream inputStream, StoragePolicy storagePolicy) {
         PushbackInputStream pushbackInputStream = new PushbackInputStream(inputStream, sizeThresholdInBytes + 1);
-        return Mono.from(backend.save(bucketName, pushbackInputStream, storagePolicy))
-            .flatMap(blobId ->
-                Mono.fromCallable(() -> isALargeStream(pushbackInputStream))
-                    .flatMap(largeStream -> {
-                        if (!largeStream) {
-                            return Mono.from(saveInCache(bucketName, blobId, pushbackInputStream, storagePolicy))
-                                .thenReturn(blobId);
-                        }
-                        return Mono.just(blobId);
-                    })
-            );
+
+        return Mono.fromCallable(() -> fullyReadSmallStream(pushbackInputStream))
+            .flatMap(Mono::justOrEmpty)
+            .filter(bytes -> isAbleToCache(bucketName, bytes, storagePolicy))
+            .flatMap(bytes -> Mono.from(backend.save(bucketName, pushbackInputStream, storagePolicy))
+                .flatMap(blobId -> Mono.from(cache.cache(blobId, bytes))
+                    .thenReturn(blobId)))
+            .switchIfEmpty(Mono.from(backend.save(bucketName, pushbackInputStream, storagePolicy)));
     }
 
     @Override
@@ -130,23 +135,23 @@ public class CacheBlobStore implements BlobStore {
         return Mono.from(backend.deleteBucket(bucketName));
     }
 
-    private Mono<Void> saveInCache(BucketName bucketName, BlobId blobId, PushbackInputStream pushbackInputStream, StoragePolicy storagePolicy) {
-        return Mono.fromCallable(() -> copyBytesFromStream(pushbackInputStream))
-            .filter(bytes -> isAbleToCache(bucketName, bytes, storagePolicy))
-            .flatMap(bytes -> Mono.from(cache.cache(blobId, bytes)));
-    }
-
-    private byte[] copyBytesFromStream(PushbackInputStream pushbackInputStream) throws IOException {
-        byte[] bytes = new byte[pushbackInputStream.available()];
-        int read = IOUtils.read(pushbackInputStream, bytes);
-        pushbackInputStream.unread(read);
-        return bytes;
-    }
-
-    private boolean isALargeStream(PushbackInputStream pushbackInputStream) throws IOException {
-        long skip = pushbackInputStream.skip(sizeThresholdInBytes + 1);
-        pushbackInputStream.unread(Math.toIntExact(skip));
-        return skip >= sizeThresholdInBytes;
+    private Optional<byte[]> fullyReadSmallStream(PushbackInputStream pushbackInputStream) throws IOException {
+        int sizeToRead = sizeThresholdInBytes + 1;
+        byte[] bytes = new byte[sizeToRead];
+        int readByteCount = pushbackInputStream.read(bytes, 0, sizeToRead);
+        try {
+            if (readByteCount > sizeThresholdInBytes) {
+                return Optional.empty();
+            }
+            if (readByteCount < 0) {
+                return Optional.of(new byte[] {});
+            }
+            return Optional.of(Arrays.copyOf(bytes, readByteCount));
+        } finally {
+            if (readByteCount > 0) {
+                pushbackInputStream.unread(bytes, 0, readByteCount);
+            }
+        }
     }
 
     /**
