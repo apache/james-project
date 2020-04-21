@@ -34,6 +34,7 @@ import org.apache.mailet.MailetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Strings;
 
 public class ContentReplacer {
@@ -92,23 +93,19 @@ public class ContentReplacer {
         }
     }
 
-    private boolean applySubjectReplacingUnits(Mail mail, ReplaceConfig replaceConfig, Optional<Charset> charset) throws MessagingException {
+    private boolean applySubjectReplacingUnits(Mail mail, ReplaceConfig replaceConfig, Optional<Charset> maybeCharset) throws MessagingException {
         if (!replaceConfig.getSubjectReplacingUnits().isEmpty()) {
             String subject = applyPatterns(replaceConfig.getSubjectReplacingUnits(), 
                     Strings.nullToEmpty(mail.getMessage().getSubject()));
-            if (charset.isPresent()) {
-                mail.getMessage().setSubject(subject, charset.get().name());
-                return true;
-            } else {
-                String previousCharset = previousCharset(mail);
-                mail.getMessage().setSubject(subject, previousCharset);
-                return true;
-            }
+            String charset = maybeCharset.map(Charset::name)
+                .orElseGet(Throwing.supplier(() -> previousCharset(mail)).sneakyThrow());
+            mail.getMessage().setSubject(subject, charset);
+            return true;
         }
         return false;
     }
 
-    private String previousCharset(Mail mail) throws ParseException, MessagingException {
+    private String previousCharset(Mail mail) throws MessagingException {
         ContentType contentType = new ContentType(mail.getMessage().getContentType());
         return contentType.getParameter("Charset");
     }
