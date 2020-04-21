@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.task;
+package org.apache.james.mailbox.quota.task;
 
 import java.util.Collection;
 import java.util.Objects;

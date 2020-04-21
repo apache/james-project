@@ -72,6 +72,7 @@
         <module>tools/indexer</module>
         <module>tools/jpa-migrator</module>
         <module>tools/maildir-utils</module>
+        <module>tools/quota-recompute</module>
     </modules>
 
     <issueManagement>
