@@ -18,11 +18,8 @@
  ****************************************************************/
 package org.apache.james.util;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BiPredicate;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 public class OptionalUtils {
 
@@ -36,18 +33,6 @@ public class OptionalUtils {
             operation.perform();
         }
         return optional;
-    }
-
-    @SafeVarargs
-    public static <T> Optional<T> orSuppliers(Supplier<Optional<T>>... suppliers) {
-        return orStream(Arrays.stream(suppliers)
-            .map(Supplier::get));
-    }
-
-    private static <T> Optional<T> orStream(Stream<Optional<T>> stream) {
-        return stream
-            .flatMap(Optional::stream)
-            .findFirst();
     }
 
     public static <T> boolean containsDifferent(Optional<T> requestValue, T storeValue) {

@@ -31,7 +31,6 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-import org.apache.james.util.OptionalUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -179,9 +178,8 @@ public class DeleteMailsFromMailQueueTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return OptionalUtils.orSuppliers(
-            () -> this.lastAdditionalInformation,
-            () -> this.queue.map(queue ->
+        return this.lastAdditionalInformation
+            .or(() -> this.queue.map(queue ->
                 new AdditionalInformation(
                     queueName,
                     initialCount.get(),

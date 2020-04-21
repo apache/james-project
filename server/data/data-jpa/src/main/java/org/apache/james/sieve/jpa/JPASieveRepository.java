@@ -50,7 +50,6 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,11 +82,10 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     private QuotaSizeLimit limitToUser(Username username) throws StorageException {
-        return OptionalUtils.orSuppliers(
-                Throwing.supplier(() -> findQuotaForUser(username.asString())).sneakyThrow(),
-                Throwing.supplier(() -> findQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME)).sneakyThrow())
-                .map(JPASieveQuota::toQuotaSize)
-                .orElse(QuotaSizeLimit.unlimited());
+        return findQuotaForUser(username.asString())
+            .or(Throwing.supplier(() -> findQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME)).sneakyThrow())
+            .map(JPASieveQuota::toQuotaSize)
+            .orElse(QuotaSizeLimit.unlimited());
     }
 
     private boolean overQuotaAfterModification(long usedSpace, long size, QuotaSizeLimit quota) {

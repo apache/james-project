@@ -28,7 +28,6 @@ import javax.mail.internet.AddressException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,10 +113,9 @@ public class MappingSource implements Serializable {
     }
 
     public String asString() {
-        return OptionalUtils.orSuppliers(
-                () -> wildcard.map(x -> "*"),
-                () -> user.map(Username::asString),
-                () -> domain.map(Domain::asString))
+        return wildcard.map(x -> "*")
+            .or(() -> user.map(Username::asString))
+            .or(() -> domain.map(Domain::asString))
             .orElseThrow(IllegalStateException::new);
     }
 

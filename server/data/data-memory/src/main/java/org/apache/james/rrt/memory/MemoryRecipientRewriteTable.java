@@ -34,7 +34,6 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
-import org.apache.james.util.OptionalUtils;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
@@ -101,9 +100,8 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) {
-        return OptionalUtils.orSuppliers(
-            () -> retrieveMappings(MappingSource.fromUser(Username.fromLocalPartWithDomain(user, domain))),
-            () -> retrieveMappings(MappingSource.fromDomain(domain)))
+        return retrieveMappings(MappingSource.fromUser(Username.fromLocalPartWithDomain(user, domain)))
+            .or(() -> retrieveMappings(MappingSource.fromDomain(domain)))
             .orElse(MappingsImpl.empty());
     }
 

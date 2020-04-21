@@ -61,68 +61,6 @@ class OptionalUtilsTest {
     }
 
     @Test
-    void orSuppliersShouldReturnEmptyWhenEmpty() {
-        assertThat(
-            OptionalUtils.orSuppliers(
-                Optional::empty))
-            .isEmpty();
-    }
-
-    @Test
-    void orSuppliersShouldReturnValueWhenValue() {
-        assertThat(
-            OptionalUtils.orSuppliers(
-                () -> Optional.of(1)))
-            .contains(1);
-    }
-
-    @Test
-    void orSuppliersShouldReturnEmptyWhenBothEmpty() {
-        assertThat(
-            OptionalUtils.orSuppliers(
-                () -> Optional.empty(),
-                () -> Optional.empty()))
-            .isEmpty();
-    }
-
-    @Test
-    void orSuppliersShouldReturnFirstValueWhenOnlyFirstValue() {
-        assertThat(
-            OptionalUtils.orSuppliers(
-                () -> Optional.of(18),
-                Optional::empty))
-            .contains(18);
-    }
-
-    @Test
-    void orSuppliersShouldReturnSecondValueWhenOnlySecondValue() {
-        assertThat(
-            OptionalUtils.orSuppliers(
-                Optional::empty,
-                () -> Optional.of(18)))
-            .contains(18);
-    }
-
-    @Test
-    void orSuppliersShouldReturnFirstValueWhenBothValues() {
-        assertThat(
-            OptionalUtils.orSuppliers(
-                () -> Optional.of(1),
-                () -> Optional.of(2)))
-            .contains(1);
-    }
-
-    @Test
-    void orSuppliersShouldReturnThirdValueWhenOnlyThirdValue() {
-        assertThat(
-            OptionalUtils.orSuppliers(
-                Optional::empty,
-                Optional::empty,
-                () -> Optional.of(1)))
-            .contains(1);
-    }
-
-    @Test
     void containsDifferentShouldReturnTrueWhenNullStoreValue() {
         assertThat(OptionalUtils.containsDifferent(Optional.of("any"), null)).isTrue();
     }
