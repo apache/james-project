@@ -24,8 +24,6 @@ import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import com.google.common.collect.ImmutableSet;
-
 public class OptionalUtils {
 
     @FunctionalInterface
@@ -38,11 +36,6 @@ public class OptionalUtils {
             operation.perform();
         }
         return optional;
-    }
-
-    public static <T> ImmutableSet<T> toSet(Optional<T> optional) {
-        return optional.map(ImmutableSet::of)
-            .orElse(ImmutableSet.of());
     }
 
     @SafeVarargs

@@ -33,12 +33,12 @@ import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddressKind;
-import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -126,7 +126,7 @@ public class SpecialAddressesUtils {
     }
 
     private Set<MailAddress> getSender(Mail mail) {
-        return OptionalUtils.toSet(mail.getMaybeSender().asOptional());
+        return mail.getMaybeSender().asStream().collect(Guavate.toImmutableSet());
     }
 
     private Set<MailAddress> getReplyTos(InternetAddress[] replyToArray) {
