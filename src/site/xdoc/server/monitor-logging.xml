@@ -26,18 +26,38 @@
 <body>
 
   <section name="Monitor via Logging">
-  
-    <p>Use the well-known log4j system.</p>
-    
-    <p>The log4j.properties reside in the ./conf folder. You can edit it to change the 
-       logging level, per component.</p>
-       
-    <p>You can change the logging level while the server is running via JMX 
-       (under org.apache.james/container).</p>
-       
-    <p>All log files are written in the ./log folder. The ./log/james-sever.log gathers all the other logs.
-      Log file rotation is also available.</p>
-    
+
+    As most server softwares, James is using logs to report problems, track weird behaviors and audit
+    what happens during run.
+
+    In the Java ecosystem, it's frequent to use FQDN for logger names: it allows to enable logs for a subtree
+    (i.e. org.apache.james.mailbox for logs about mailbox) or log from a single address
+    (i.e. org.apache.james.mailbox.store.search.MessageSearches).
+
+    These addresses can be actual packages or class names but they don't have to.
+
+    Using class names makes loggers configuration brittle as classes can change quite often or being moved from
+    one package to another. It's why you should be careful when using a specific logging address.
+
+    However, for some important logging purpose, James defines stable addresses that are documented bellow:
+
+    <ul>
+        <li>org.apache.james.metrics will allow to output all server metrics to logs</li>
+    </ul>
+
+    <section name="Spring product">
+
+      <p>Use the well-known log4j system.</p>
+
+      <p>The log4j.properties reside in the ./conf folder. You can edit it to change the
+         logging level, per component.</p>
+
+      <p>You can change the logging level while the server is running via JMX
+         (under org.apache.james/container).</p>
+
+      <p>All log files are written in the ./log folder. The ./log/james-sever.log gathers all the other logs.
+        Log file rotation is also available.</p>
+
 <source>
 [root@srv001 log]# ls -alp
 total 2892
@@ -65,15 +85,15 @@ drwxrwxrwx. 7 root root   4096 2010-11-06 09:01 ../
 -rw-r--r--. 1 root root 615271 2010-11-07 08:29 smtpserver.log
 -rw-r--r--. 1 root root 717888 2010-11-06 23:59 smtpserver.log.2010-11-06
 -rw-r--r--. 1 root root     71 2010-11-06 09:24 usersrepository.log
-</source>    
-       
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/log4j.properties">log4j.properties</a> in GIT to get some examples and hints.</p>
+</source>
 
-    <p>You can rise the logging level on protocols.</p>
-    <p>Set log4j.logger.james.smtpserver=DEBUG, SMTPSERVER</p>
-    <p>In the following log example, the 250 in front of it is the session id.. so you can now see the whole transaction flow even if you have many stuff currently going on.</p>
-    <p>As you see 5xx and 4xx stuff is logged with INFO .. the rest with DEBUG</p>
-    <p>You can do the same on IMAP, POP3.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/log4j.properties">log4j.properties</a> in GIT to get some examples and hints.</p>
+
+      <p>You can rise the logging level on protocols.</p>
+      <p>Set log4j.logger.james.smtpserver=DEBUG, SMTPSERVER</p>
+      <p>In the following log example, the 250 in front of it is the session id.. so you can now see the whole transaction flow even if you have many stuff currently going on.</p>
+      <p>As you see 5xx and 4xx stuff is logged with INFO .. the rest with DEBUG</p>
+      <p>You can do the same on IMAP, POP3.</p>
 
 <source>
 DEBUG 16:16:06,705 | james.smtpserver | 250 Lookup command handler for command: EHLO
@@ -179,7 +199,7 @@ INFO  17:24:18,726 | james.smtpserver | 262 org.apache.james.smtpserver.fastfai
 DEBUG 17:24:17,829 | james.smtpserver | 262 org.apache.james.smtpserver.SenderAuthIdentifyVerificationRcptHook: result=8 (DECLINED)
 </source>
 
-    <p>The default log4j.properties is taken hereafter for information.</p>
+      <p>The default log4j.properties is taken hereafter for information.</p>
 
 <source>
 #  Licensed to the Apache Software Foundation (ASF) under one
@@ -336,9 +356,9 @@ log4j.logger.james.objectstorage=INFO, OBJECTSTORAGE
 log4j.logger.james.fetchmail=INFO, FETCHMAIL
 log4j.logger.james.domainlist=INFO, DOMAINLIST
 </source>
-  
-  </section>
 
+    </section>
+  </section>
     <section name="Guice products and logging">
         <p>James Guice products uses a different logging library: <a href="http://logback.qos.ch/">logback</a>. Information about logback
             configuration can be found <a href="http://logback.qos.ch/manual/configuration.html">here</a></p>

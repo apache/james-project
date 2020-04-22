@@ -38,6 +38,10 @@
                 See <a href="config-elasticsearch.html">elaticseach.properties</a> documentation for more details on how to set this up.
             </p>
 
+            <p>
+                Yet another solution is to have metrics values written in logs, see  See <a href="monitor-logging.html">Monitor via Logging</a>.
+            </p>
+
         </section>
 
         <section name="Available metrics">
