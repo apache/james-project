@@ -46,7 +46,7 @@
                 <dt><strong>implementation</strong></dt>
                 <dd>cassandra: use cassandra based BlobStore</dd>
                 <dd>objectstorage: use Swift/AWS S3 based BlobStore</dd>
-                <dd>hybrid: Using both objectstorage for unfrequently read or big blobs & cassandra for small, often read blobs</dd>
+                <dd>hybrid: Using both objectstorage for unfrequently read or big blobs &amp; cassandra for small, often read blobs</dd>
             </dl>
 
             <subsection name="Hybrid BlobStore size threshold">
