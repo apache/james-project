@@ -199,6 +199,39 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
     }
 
     @Test
+    void solveMessageInconsistenciesTasksShouldBeExposed() {
+        String taskId = with().post(UPGRADE_TO_LATEST_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .get("/tasks/" + taskId + "/await")
+        .then()
+            .body("status", is("completed"));
+
+        taskId = with()
+            .queryParam("task", "SolveInconsistencies")
+            .post("/messages")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("type", is("solve-message-inconsistencies"))
+            .body("additionalInformation.processedImapUidEntries", is(0))
+            .body("additionalInformation.processedMessageIdEntries", is(0))
+            .body("additionalInformation.addedMessageIdEntries", is(0))
+            .body("additionalInformation.updatedMessageIdEntries", is(0))
+            .body("additionalInformation.removedMessageIdEntries", is(0))
+            .body("additionalInformation.fixedInconsistencies", hasSize(0))
+            .body("additionalInformation.errors", hasSize(0));
+    }
+
+    @Test
     void getSwaggerShouldContainDistributedEndpoints() {
         when()
             .get(SwaggerRoutes.SWAGGER_ENDPOINT)
