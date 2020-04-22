@@ -41,6 +41,9 @@ import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersTask
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesTaskAdditionalInformationDTO;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesTaskDTO;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTaskAdditionalInformationDTO;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTaskDTO;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -296,6 +299,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> solveMessageInconsistenciesTask(SolveMessageInconsistenciesService solveMessageInconsistenciesService) {
+        return SolveMessageInconsistenciesTaskDTO.module(solveMessageInconsistenciesService);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> singleMailboxReindexingTask(SingleMailboxReindexingTask.Factory factory) {
         return SingleMailboxReindexingTaskDTO.module(factory);
     }
@@ -438,6 +446,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> mailboxesExportAdditionalInformation() {
         return MailboxesExportTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> solveMessageInconsistenciesAdditionalInformation() {
+        return SolveMessageInconsistenciesTaskAdditionalInformationDTO.MODULE;
     }
 
     @Named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME)

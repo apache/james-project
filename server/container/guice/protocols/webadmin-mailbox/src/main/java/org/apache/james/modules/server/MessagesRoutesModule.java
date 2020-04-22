@@ -30,5 +30,7 @@ public class MessagesRoutesModule extends AbstractModule {
     protected void configure() {
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultibinder.addBinding().to(MessagesRoutes.class);
+
+
     }
 }

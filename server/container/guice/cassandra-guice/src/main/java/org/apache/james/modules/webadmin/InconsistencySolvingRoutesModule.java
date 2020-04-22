@@ -21,11 +21,14 @@ package org.apache.james.modules.webadmin;
 
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.MailboxesRoutes;
+import org.apache.james.webadmin.routes.MessagesRoutes;
 import org.apache.james.webadmin.routes.RecomputeMailboxCountersRequestToTask;
 import org.apache.james.webadmin.routes.SolveMailboxInconsistenciesRequestToTask;
+import org.apache.james.webadmin.routes.SolveMessageInconsistenciesRequestToTask;
 import org.apache.james.webadmin.service.CassandraMappingsService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 
@@ -60,9 +63,22 @@ public class InconsistencySolvingRoutesModule extends AbstractModule {
         }
     }
 
+    public static class SolveMessageInconsistenciesModules extends AbstractModule {
+        @Override
+        protected void configure() {
+            bind(SolveMessageInconsistenciesService.class).in(Scopes.SINGLETON);
+
+            Multibinder<TaskFromRequestRegistry.TaskRegistration> multiBinder = Multibinder.newSetBinder(binder(),
+                TaskFromRequestRegistry.TaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
+
+            multiBinder.addBinding().to(SolveMessageInconsistenciesRequestToTask.class);
+        }
+    }
+
     @Override
     protected void configure() {
         install(new SolveRRTInconsistenciesModules());
         install(new SolveMailboxInconsistenciesModules());
+        install(new SolveMessageInconsistenciesModules());
     }
 }
