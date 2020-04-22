@@ -49,6 +49,35 @@
                 <dd>hybrid: Using both objectstorage for unfrequently read or big blobs &amp; cassandra for small, often read blobs</dd>
             </dl>
 
+
+            <subsection name="Cassandra BlobStore Cache">
+                <p>A Cassandra cache can be enabled to reduce latency when reading small blobs frequently.
+                    A dedicated keyspace with a replication factor of one is then used.
+                    Cache eviction policy is TTL based.
+                    Only blobs below a given threshold will be stored.
+                    To be noted that blobs are stored within a single Cassandra row, hence a low threshold should be used.
+                </p>
+                <dl>
+                    <dt><strong>cache.enable</strong></dt>
+                    <dd>DEFAULT: false, optional, must be a boolean. Whether the cache should be enabled.</dd>
+                </dl>
+                <dl>
+                    <dt><strong>cache.cassandra.ttl</strong></dt>
+                    <dd>DEFAULT: 7 days, optional, must be a duration. Cache eviction policy is TTL based. </dd>
+                </dl>
+                <dl>
+                    <dt><strong>cache.cassandra.timeout</strong></dt>
+                    <dd>DEFAULT: 100ms, optional, must be a duration, cannot exceed 1 hour.
+                        Timeout after which this cache should be bypassed.</dd>
+                </dl>
+                <dl>
+                    <dt><strong>cache.sizeThresholdInBytes</strong></dt>
+                    <dd>DEFAULT: 8192, optional, must be a positive integer. Unit: bytes.
+                        Supported units: bytes, Kib, MiB, GiB, TiB
+                        Maximum size of stored objects expressed in bytes.</dd>
+                </dl>
+            </subsection>
+
             <subsection name="Hybrid BlobStore size threshold">
                 <dl>
                     <dt><strong>hybrid.size.threshold</strong></dt>
@@ -194,4 +223,3 @@
     </body>
 
 </document>
-
