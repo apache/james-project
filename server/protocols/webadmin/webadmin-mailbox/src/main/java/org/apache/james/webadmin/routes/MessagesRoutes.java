@@ -21,7 +21,11 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.routes.MailboxesRoutes.TASK_PARAMETER;
 
+import java.util.Optional;
+import java.util.Set;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -58,13 +62,18 @@ public class MessagesRoutes implements Routes {
     private final MessageId.Factory messageIdFactory;
     private final MessageIdReIndexer reIndexer;
     private final JsonTransformer jsonTransformer;
+    private final Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration;
+
+    public static final String ALL_MESSAGES_TASKS = "allMessagesTasks";
 
     @Inject
-    MessagesRoutes(TaskManager taskManager, MessageId.Factory messageIdFactory, MessageIdReIndexer reIndexer, JsonTransformer jsonTransformer) {
+    MessagesRoutes(TaskManager taskManager, MessageId.Factory messageIdFactory, MessageIdReIndexer reIndexer, JsonTransformer jsonTransformer,
+                   @Named(ALL_MESSAGES_TASKS) Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration) {
         this.taskManager = taskManager;
         this.messageIdFactory = messageIdFactory;
         this.reIndexer = reIndexer;
         this.jsonTransformer = jsonTransformer;
+        this.allMessagesTaskRegistration = allMessagesTaskRegistration;
     }
 
     @Override
@@ -75,6 +84,8 @@ public class MessagesRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.post(MESSAGE_PATH, reIndexMessage(), jsonTransformer);
+        allMessagesOperations()
+            .ifPresent(route -> service.post(BASE_PATH, route, jsonTransformer));
     }
 
     @POST
@@ -120,5 +131,30 @@ public class MessagesRoutes implements Routes {
                 .cause(e)
                 .haltError();
         }
+    }
+
+    @POST
+    @Path("/")
+    @ApiOperation(value = "Operation on messages")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "task",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?task=SolveInconsistencies",
+            value = "Compulsory. Depends on the tasks handled by the product")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
+    })
+    private Optional<Route> allMessagesOperations() {
+        return TaskFromRequestRegistry.builder()
+            .parameterName(TASK_PARAMETER)
+            .registrations(allMessagesTaskRegistration)
+            .buildAsRouteOptional(taskManager);
     }
 }

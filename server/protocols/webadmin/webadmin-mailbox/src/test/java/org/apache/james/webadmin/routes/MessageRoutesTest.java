@@ -55,6 +55,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import io.restassured.RestAssured;
 
@@ -83,7 +84,8 @@ class MessageRoutesTest {
                 new MessagesRoutes(taskManager,
                     new InMemoryMessageId.Factory(),
                     new MessageIdReIndexerImpl(reIndexerPerformer),
-                    jsonTransformer))
+                    jsonTransformer,
+                    ImmutableSet.of()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();
