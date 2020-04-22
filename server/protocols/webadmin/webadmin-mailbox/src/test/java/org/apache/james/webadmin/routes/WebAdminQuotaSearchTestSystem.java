@@ -20,6 +20,9 @@
 package org.apache.james.webadmin.routes;
 
 import org.apache.james.quota.search.QuotaSearchTestSystem;
+import org.apache.james.task.Hostname;
+import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.jackson.QuotaModule;
@@ -47,9 +50,13 @@ public class WebAdminQuotaSearchTestSystem {
 
         QuotaModule quotaModule = new QuotaModule();
         JsonTransformer jsonTransformer = new JsonTransformer(quotaModule);
+        TaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         UserQuotaRoutes userQuotaRoutes = new UserQuotaRoutes(quotaSearchTestSystem.getUsersRepository(),
-            userQuotaService, jsonTransformer,
-            ImmutableSet.of(quotaModule));
+            userQuotaService,
+            jsonTransformer,
+            ImmutableSet.of(quotaModule),
+            taskManager,
+            ImmutableSet.of());
         DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(
             quotaSearchTestSystem.getDomainList(),
             new DomainQuotaService(quotaSearchTestSystem.getMaxQuotaManager()),

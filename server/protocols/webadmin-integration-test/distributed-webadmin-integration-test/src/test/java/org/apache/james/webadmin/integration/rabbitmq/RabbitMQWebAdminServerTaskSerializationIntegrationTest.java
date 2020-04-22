@@ -82,7 +82,6 @@ import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.apache.mailet.base.test.FakeMail;
-import org.assertj.core.api.Assertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -757,6 +756,27 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("taskId", is(taskId))
             .body("type", is("recompute-mailbox-counters"))
             .body("additionalInformation.processedMailboxes", is(0));
+    }
+
+    @Test
+    void recomputeCurrentQuotasShouldComplete() {
+        String taskId = with()
+            .basePath("/quota/users")
+            .queryParam("task", "RecomputeCurrentQuotas")
+        .post()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(taskId))
+            .body("type", is("recompute-current-quotas"))
+            .body("additionalInformation.processedQuotaRoots", is(0))
+            .body("additionalInformation.failedQuotaRoots", empty());
     }
 
     private MailboxListener.MailboxAdded createMailboxAdded() {

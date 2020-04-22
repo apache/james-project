@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.routes;
 
+import static org.apache.james.webadmin.routes.MailboxesRoutes.TASK_PARAMETER;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -27,8 +29,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -37,10 +41,13 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasTask;
 import org.apache.james.quota.search.Limit;
 import org.apache.james.quota.search.Offset;
 import org.apache.james.quota.search.QuotaBoundary;
 import org.apache.james.quota.search.QuotaQuery;
+import org.apache.james.task.TaskManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
@@ -48,6 +55,9 @@ import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.QuotaDetailsDTO;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 import org.apache.james.webadmin.service.UserQuotaService;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskIdDto;
+import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
@@ -67,6 +77,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import spark.Request;
+import spark.Route;
 import spark.Service;
 
 @Api(tags = "UserQuota")
@@ -74,6 +85,16 @@ import spark.Service;
 @Produces("application/json")
 public class UserQuotaRoutes implements Routes {
 
+    public static final String USER_QUOTAS_OPERATIONS_INJECTION_KEY = "userQuotasOperations";
+
+    public static class RecomputeCurrentQuotasRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+        @Inject
+        public RecomputeCurrentQuotasRequestToTask(RecomputeCurrentQuotasService service) {
+            super(RECOMPUTE_CURRENT_QUOTAS, request -> new RecomputeCurrentQuotasTask(service));
+        }
+    }
+
+    private static final TaskRegistrationKey RECOMPUTE_CURRENT_QUOTAS = TaskRegistrationKey.of("RecomputeCurrentQuotas");
     private static final String USER = "user";
     private static final String MIN_OCCUPATION_RATIO = "minOccupationRatio";
     private static final String MAX_OCCUPATION_RATIO = "maxOccupationRatio";
@@ -88,15 +109,24 @@ public class UserQuotaRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<QuotaDTO> jsonExtractor;
     private final QuotaDTOValidator quotaDTOValidator;
+    private final TaskManager taskManager;
+    private final Set<TaskFromRequestRegistry.TaskRegistration> usersQuotasTaskRegistration;
     private Service service;
 
     @Inject
-    public UserQuotaRoutes(UsersRepository usersRepository, UserQuotaService userQuotaService, JsonTransformer jsonTransformer, Set<JsonTransformerModule> modules) {
+    public UserQuotaRoutes(UsersRepository usersRepository,
+                           UserQuotaService userQuotaService,
+                           JsonTransformer jsonTransformer,
+                           Set<JsonTransformerModule> modules,
+                           TaskManager taskManager,
+                           @Named(USER_QUOTAS_OPERATIONS_INJECTION_KEY) Set<TaskFromRequestRegistry.TaskRegistration> usersQuotasTaskRegistration) {
         this.usersRepository = usersRepository;
         this.userQuotaService = userQuotaService;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class, modules.stream().map(JsonTransformerModule::asJacksonModule).collect(Collectors.toList()));
         this.quotaDTOValidator = new QuotaDTOValidator();
+        this.taskManager = taskManager;
+        this.usersQuotasTaskRegistration = usersQuotasTaskRegistration;
     }
 
     @Override
@@ -120,6 +150,33 @@ public class UserQuotaRoutes implements Routes {
         defineUpdateQuota();
 
         defineGetUsersQuota();
+        definePostUsersQuota();
+        definePostUsersQuota()
+            .ifPresent(route -> service.post(USERS_QUOTA_ENDPOINT, route, jsonTransformer));
+    }
+
+    @POST
+    @ApiOperation(value = "Recomputing current quotas of users")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "task",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?task=RecomputeCurrentQuotas",
+            value = "Compulsory. Only supported value is `RecomputeCurrentQuotas`")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
+    })
+    public Optional<Route> definePostUsersQuota() {
+        return TaskFromRequestRegistry.builder()
+            .parameterName(TASK_PARAMETER)
+            .registrations(usersQuotasTaskRegistration)
+            .buildAsRouteOptional(taskManager);
     }
 
     @PUT

@@ -23,6 +23,7 @@ import static org.apache.james.webadmin.routes.MailboxesRoutes.ALL_MAILBOXES_TAS
 import static org.apache.james.webadmin.routes.MailboxesRoutes.ONE_MAILBOX_TASKS;
 import static org.apache.james.webadmin.routes.MailboxesRoutes.ONE_MAIL_TASKS;
 import static org.apache.james.webadmin.routes.UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY;
+import static org.apache.james.webadmin.routes.UserQuotaRoutes.USER_QUOTAS_OPERATIONS_INJECTION_KEY;
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.jackson.QuotaModule;
@@ -58,5 +59,6 @@ public class MailboxRoutesModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS));
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAILBOX_TASKS));
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAIL_TASKS));
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(USER_QUOTAS_OPERATIONS_INJECTION_KEY));
     }
 }
