@@ -5444,7 +5444,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             .body(createdPath + ".attachments", hasSize(1))
-            .body(singleAttachment + ".type", equalTo("text/html; charset=UTF-8"))
+            .body(singleAttachment + ".type", equalTo("text/html; charset=UTF-8; name=\"=?US-ASCII?Q?nonIndexableAttachment.html?=\""))
             .body(singleAttachment + ".size", equalTo((int) uploadedAttachment.getSize()));
     }
 
@@ -5754,7 +5754,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(message + ".attachments", hasSize(1))
-            .body(firstAttachment + ".type", equalTo("text/calendar; charset=UTF-8"))
+            .body(firstAttachment + ".type", equalTo("text/calendar; method=REPLY; charset=UTF-8"))
             .body(firstAttachment + ".blobId", not(isEmptyOrNullString()));
     }
 

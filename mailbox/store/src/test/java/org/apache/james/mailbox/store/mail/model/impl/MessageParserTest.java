@@ -106,7 +106,7 @@ class MessageParserTest {
         List<ParsedAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getContentType()).isEqualTo("application/octet-stream");
+        assertThat(attachments.get(0).getContentType()).isEqualTo("application/octet-stream;\tname=\"exploits_of_a_mom.png\"");
     }
 
     @Test
@@ -270,7 +270,7 @@ class MessageParserTest {
 
         assertThat(attachments).hasSize(1)
             .first()
-            .satisfies(attachment -> assertThat(attachment.getContentType()).isEqualTo("text/calendar; charset=iso-8859-1"));
+            .satisfies(attachment -> assertThat(attachment.getContentType()).isEqualTo("text/calendar; charset=\"iso-8859-1\"; method=COUNTER"));
     }
 
     @Test
@@ -280,7 +280,8 @@ class MessageParserTest {
 
         assertThat(attachments).hasSize(2)
             .extracting(ParsedAttachment::getContentType)
-            .containsOnly("text/calendar; charset=iso-8859-1", "text/calendar; charset=iso-4444-5");
+            .containsOnly("text/calendar; charset=\"iso-8859-1\"; method=COUNTER",
+                "text/calendar; charset=\"iso-4444-5\"; method=COUNTER");
     }
 
     @Test
@@ -290,7 +291,8 @@ class MessageParserTest {
 
         assertThat(attachments)
             .hasSize(1)
-            .allMatch(messageAttachment -> messageAttachment.getContentType().equals("text/calendar; charset=utf-8"));
+            .extracting(ParsedAttachment::getContentType)
+            .containsExactly("text/calendar; charset=\"utf-8\"; method=COUNTER");
     }
 
     @Test

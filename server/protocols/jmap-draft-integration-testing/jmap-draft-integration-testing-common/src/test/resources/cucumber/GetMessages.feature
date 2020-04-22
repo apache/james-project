@@ -165,13 +165,13 @@ Feature: GetMessages method
     And the list of attachments of the message contains 2 attachments
     And the first attachment is:
       |key      | value                                                             |
-      |type     |"image/jpeg"                                                       |
+      |type     |"image/jpeg; name="4037_014.jpg""                                |
       |size     |846                                                                |
       |cid      |null                                                               |
       |isInline |false                                                              |
     And the second attachment is:
       |key      | value                                                             |
-      |type     |"image/jpeg"                                                       |
+      |type     |"image/jpeg; name="4037_015.jpg""                                |
       |size     |597                                                                |
       |cid      |"part1.37A15C92.A7C3488D@linagora.com"                             |
       |isInline |true                                                               |
@@ -274,10 +274,10 @@ Feature: GetMessages method
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
-      |key      | value                                     |
-      |type     |"application/pdf"                          |
-      |cid      |null                                       |
-      |isInline |false                                      |
+      |key      | value                                                                  |
+      |type     |"application/pdf;	x-unix-mode=0644;	name="deromaCollection-628.pdf"" |
+      |cid      |null                                                                    |
+      |isInline |false                                                                   |
 
   Scenario: Retrieving message with inline attachment and blank CID should convert that inlined attachment to normal attachment
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with inline attachment and blank CID
@@ -287,10 +287,10 @@ Feature: GetMessages method
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
-        |key      | value            |
-        |type     |"application/pdf" |
-        |cid      |null              |
-        |isInline |false             |
+        |key      | value                                                                    |
+        |type     |"application/pdf;	x-unix-mode=0644;	name="deromaCollection-628.pdf"" |
+        |cid      |null                                                                      |
+        |isInline |false                                                                     |
 
   Scenario: Preview should be computed even when HTML body contains many tags without content
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with HTML body with many empty tags
@@ -403,11 +403,11 @@ Feature: GetMessages method
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
-      |key      | value                        |
-      |type     |"application/octet-stream"    |
-      |cid      |null                          |
-      |name     |"encrypted.asc"               |
-      |isInline |false                         |
+      |key      | value                                           |
+      |type     |"application/octet-stream; name="encrypted.asc"" |
+      |cid      |null                                             |
+      |name     |"encrypted.asc"                                  |
+      |isInline |false                                            |
 
   Scenario: Retrieving message should be possible when message with inlined image but without content disposition
     Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with inlined image without content disposition
@@ -418,7 +418,7 @@ Feature: GetMessages method
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
       |key      | value                                           |
-      |type     |"image/png"                                      |
+      |type     |"image/png; name=vlc.png"                        |
       |cid      |"14672787885774e5c4d4cee471352039@linagora.com"  |
       |name     |"vlc.png"                                        |
       |isInline |false                                            |
@@ -431,11 +431,11 @@ Feature: GetMessages method
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
-    |key      | value                        |
-    |type     |"image/jpeg"                  |
-    |cid      |null                          |
-    |name     |"IMG_6112.JPG"                |
-    |isInline |false                         |
+    |key      | value                                                                                  |
+    |type     |"image/jpeg;	name=IMG_6112.JPG;	x-apple-part-url=B11616AF-86EB-47AF-863A-176A823498DB" |
+    |cid      |null                                                                                    |
+    |name     |"IMG_6112.JPG"                                                                          |
+    |isInline |false                                                                                   |
 
   Scenario: Header only text calendar should be read as normal calendar attachment by JMAP
     Given "alice@domain.tld" receives a SMTP message specified in file "eml/ics_in_header.eml" as message "m1"
@@ -445,8 +445,8 @@ Feature: GetMessages method
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
-    |key      | value                         |
-    |type     |"text/calendar; charset=UTF-8" |
-    |size     |1096                           |
-    |name     |"event.ics"                    |
-    |isInline |false                          |
+    |key      | value                                                       |
+    |type     |"text/calendar; method=REPLY; charset=UTF-8; name=event.ics" |
+    |size     |1096                                                         |
+    |name     |"event.ics"                                                  |
+    |isInline |false                                                        |

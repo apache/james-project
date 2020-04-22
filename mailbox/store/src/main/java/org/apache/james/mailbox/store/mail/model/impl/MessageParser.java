@@ -19,14 +19,11 @@
 
 package org.apache.james.mailbox.store.mail.model.impl;
 
-import static org.apache.james.mime4j.dom.field.ContentTypeField.PARAM_CHARSET;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -41,7 +38,6 @@ import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.dom.field.ContentIdField;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.james.mime4j.dom.field.ParsedField;
-import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.stream.Field;
@@ -126,7 +122,8 @@ public class MessageParser {
     private ParsedAttachment retrieveAttachment(Entity entity) throws IOException {
         Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
         Optional<ContentDispositionField> contentDispositionField = getContentDispositionField(entity);
-        Optional<String> contentType = contentType(contentTypeField);
+        Optional<String> contentType = contentTypeField.map(ContentTypeField::getBody)
+            .filter(string -> !string.isEmpty());
         Optional<String> name = name(contentTypeField, contentDispositionField);
         Optional<Cid> cid = cid(readHeader(entity, CONTENT_ID, ContentIdField.class));
         boolean isInline = isInline(readHeader(entity, CONTENT_DISPOSITION, ContentDispositionField.class)) && cid.isPresent();
@@ -157,25 +154,6 @@ public class MessageParser {
             return Optional.empty();
         }
         return Optional.of((U) field);
-    }
-
-    private Optional<String> contentType(Optional<ContentTypeField> contentTypeField) {
-        return contentTypeField.map(this::contentTypePreserveCharset);
-    }
-
-    private String contentTypePreserveCharset(ContentTypeField contentTypeField) {
-        Map<String, String> params = contentTypeField.getParameters()
-            .entrySet()
-            .stream()
-            .filter(param -> param.getKey().equals(PARAM_CHARSET))
-            .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        try {
-            return Fields.contentType(contentTypeField.getMimeType(), params)
-                .getBody();
-        } catch (IllegalArgumentException e) {
-            return contentTypeField.getMimeType();
-        }
     }
 
     private Optional<String> name(Optional<ContentTypeField> contentTypeField, Optional<ContentDispositionField> contentDispositionField) {
