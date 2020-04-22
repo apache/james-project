@@ -697,6 +697,81 @@ The scheduled task will have the following type `messageId-reindexing` and the f
 
 Warning: During the re-indexing, the result of search operations might be altered.
 
+### Fixing message inconsistencies
+
+This task is only available on top of Guice Cassandra products.
+
+```
+curl -XPOST /messages?task=SolveInconsistencies
+```
+
+Will schedule a task for fixing message inconsistencies created by the message denormalization process. 
+
+Messages are denormalized and stored in separated data tables in Cassandra, so they can be accessed 
+by their unique identifier or mailbox identifier & local mailbox identifier through different protocols. 
+
+Failure in the denormalization process will lead to inconsistencies, for example:
+
+```
+BOB receives a message
+The denormalization process fails
+BOB can read the message via JMAP
+BOB cannot read the message via IMAP
+
+BOB marks a message as SEEN
+The denormalization process fails
+The message is SEEN via JMAP
+The message is UNSEEN via IMAP
+```
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `solve-message-inconsistencies` and the following `additionalInformation`:
+
+```
+{
+  "type":"solve-message-inconsistencies",
+  "timestamp":"2007-12-03T10:15:30Z",
+  "processedImapUidEntries": 2,
+  "processedMessageIdEntries": 1,
+  "addedMessageIdEntries": 1,
+  "updatedMessageIdEntries": 0,
+  "removedMessageIdEntries": 1,
+  "fixedInconsistencies": [
+    {
+      "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
+      "messageId": "d2bee791-7e63-11ea-883c-95b84008f979",
+      "uid": 1
+    },
+    {
+      "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
+      "messageId": "d2bee792-7e63-11ea-883c-95b84008f979",
+      "uid": 2
+    }
+  ],
+  "errors": [
+    {
+      "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
+      "messageId": "ffffffff-7e63-11ea-883c-95b84008f979",
+      "uid": 3
+    }
+  ]
+}
+```
+
+User actions concurrent to the inconsistency fixing task could result in concurrency issues. New inconsistencies 
+could be created. 
+
+However the source of truth will not be impacted, hence rerunning the task will eventually fix all issues.
+
+This task could be run safely online and can be scheduled on a recurring basis outside of peak traffic 
+by an admin to ensure Cassandra message consistency.
+
 ## Administrating user mailboxes
 
  - [Creating a mailbox](#Creating_a_mailbox)
@@ -3554,4 +3629,3 @@ Response codes :
 
  - 201: the taskId of the created task
  - 400: Invalid action argument for performing operation on mappings data
-
