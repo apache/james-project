@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
@@ -27,12 +29,40 @@ import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersTask
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+
+import spark.Request;
+
 public class RecomputeMailboxCountersRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
     private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("RecomputeMailboxCounters");
+    public static final String TRUST_PARAM = "trustMessageDenormalization";
 
     @Inject
     public RecomputeMailboxCountersRequestToTask(RecomputeMailboxCountersService service) {
         super(REGISTRATION_KEY,
-            request -> new RecomputeMailboxCountersTask(service, Options.recheckMessageDenormalization()));
+            request -> new RecomputeMailboxCountersTask(service, parseOptions(request)));
+    }
+
+    private static Options parseOptions(Request request) {
+        var stringValue = Optional.ofNullable(request.queryParams(TRUST_PARAM));
+        return parseOptions(stringValue);
+    }
+
+    @VisibleForTesting
+    static Options parseOptions(Optional<String> stringValue) {
+        return stringValue
+            .map(RecomputeMailboxCountersRequestToTask::parseOptions)
+            .orElse(Options.recheckMessageDenormalization());
+    }
+
+    private static Options parseOptions(String stringValue) {
+        Preconditions.checkArgument(isValid(stringValue), "'%s' needs to be a valid boolean", TRUST_PARAM);
+        return Options.of(Boolean.valueOf(stringValue));
+    }
+
+    private static boolean isValid(String stringValue) {
+        return stringValue.equalsIgnoreCase("true")
+            || stringValue.equalsIgnoreCase("false");
     }
 }

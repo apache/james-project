@@ -77,6 +77,21 @@ public class RecomputeMailboxCountersService {
         public boolean isMessageDenormalizationTrusted() {
             return trustMessageDenormalization;
         }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Options) {
+                Options options = (Options) o;
+
+                return Objects.equals(this.trustMessageDenormalization, options.trustMessageDenormalization);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(trustMessageDenormalization);
+        }
     }
 
     private static class Counter {

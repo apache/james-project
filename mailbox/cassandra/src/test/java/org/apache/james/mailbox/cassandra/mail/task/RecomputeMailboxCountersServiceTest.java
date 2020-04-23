@@ -39,6 +39,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService.Context;
+import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService.Options;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -55,6 +56,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 class RecomputeMailboxCountersServiceTest {
     private static final UidValidity UID_VALIDITY_1 = UidValidity.of(145);
@@ -91,6 +94,11 @@ class RecomputeMailboxCountersServiceTest {
         testee = new RecomputeMailboxCountersService(mailboxDAO, imapUidToMessageIdDAO, messageIdToImapUidDAO, counterDAO);
     }
 
+    @Test
+    void optionsShouldMatchBeanContract() {
+        EqualsVerifier.forClass(Options.class).verify();
+    }
+
     @Nested
     class TrustMessageDenormalizationTest implements Contract {
         @Override
@@ -104,8 +112,8 @@ class RecomputeMailboxCountersServiceTest {
         }
 
         @Override
-        public RecomputeMailboxCountersService.Options options() {
-            return RecomputeMailboxCountersService.Options.trustMessageDenormalization();
+        public Options options() {
+            return Options.trustMessageDenormalization();
         }
 
         @Override
@@ -155,8 +163,8 @@ class RecomputeMailboxCountersServiceTest {
         }
 
         @Override
-        public RecomputeMailboxCountersService.Options options() {
-            return RecomputeMailboxCountersService.Options.recheckMessageDenormalization();
+        public Options options() {
+            return Options.recheckMessageDenormalization();
         }
 
         @Override
@@ -180,7 +188,7 @@ class RecomputeMailboxCountersServiceTest {
 
         CassandraMailboxDAO mailboxDAO();
 
-        RecomputeMailboxCountersService.Options options();
+        Options options();
 
         CassandraMessageIdDAO imapUidToMessageIdDAO();
 

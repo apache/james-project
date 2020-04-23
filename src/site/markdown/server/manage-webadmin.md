@@ -491,6 +491,10 @@ Rerunning the task will *eventually* provide the consistent result. As such we a
 In order to ensure being offline, stop the traffic on SMTP, JMAP and IMAP ports, for example via re-configuration or 
 firewall rules.
 
+`trustMessageDenormalization` query parameter can be set to `true`. This will result in a better performance running the
+task at the cost of safety in the face of message denormalization inconsistencies. Defaults to false, which generates 
+additional checks.
+
 #### Recomputing Global JMAP fast message view projection
 
 This action is only available for backends supporting JMAP protocol.
