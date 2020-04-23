@@ -24,6 +24,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.modules.mailbox.CassandraBlobStoreDeclarationModule;
 import org.apache.james.modules.mailbox.KeyspacesConfiguration;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
 import org.apache.james.modules.server.CamelMailetContainerModule;
@@ -48,6 +49,7 @@ public final class CassandraSmtpTestRuleFactory {
 
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_CORE_MODULE,
+                new CassandraBlobStoreDeclarationModule(),
                 SmtpTestRule.SMTP_PROTOCOL_MODULE,
                 binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)

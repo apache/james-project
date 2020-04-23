@@ -26,6 +26,7 @@ import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
