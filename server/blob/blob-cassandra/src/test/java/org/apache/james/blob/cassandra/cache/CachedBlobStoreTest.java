@@ -71,7 +71,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
             .sizeThresholdInBytes(EIGHT_KILOBYTES.length + 1)
             .build();
         cache = new CassandraBlobStoreCache(cassandra.getConf(), cacheConfig);
-        testee = new CachedBlobStore(cache, backend, cacheConfig, DEFAULT);
+        testee = new CachedBlobStore(cache, backend, cacheConfig);
     }
 
     @Override
