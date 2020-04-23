@@ -33,6 +33,7 @@ import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 public class SimpleConnectionPool implements AutoCloseable {
     private final AtomicReference<Connection> connectionReference;
@@ -56,9 +57,8 @@ public class SimpleConnectionPool implements AutoCloseable {
     public Mono<Connection> getResilientConnection() {
         int numRetries = 10;
         Duration initialDelay = Duration.ofMillis(100);
-        Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         return Mono.defer(this::getOpenConnection)
-            .retryBackoff(numRetries, initialDelay, forever, Schedulers.elastic());
+            .retryWhen(Retry.backoff(numRetries, initialDelay).scheduler(Schedulers.elastic()));
     }
 
     private Mono<Connection> getOpenConnection() {

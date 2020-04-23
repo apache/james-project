@@ -56,6 +56,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 public class ClientProvider implements Provider<ReactorElasticSearchClient> {
 
@@ -180,13 +181,12 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
 
     private RestHighLevelClient connect(ElasticSearchConfiguration configuration) {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
-        Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         boolean suppressLeadingZeroElements = true;
         boolean suppressTrailingZeroElements = true;
         return Mono.fromCallable(() -> connectToCluster(configuration))
             .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {}",
                 DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), suppressLeadingZeroElements, suppressTrailingZeroElements), e))
-            .retryBackoff(configuration.getMaxRetries(), waitDelay, forever, Schedulers.elastic())
+            .retryWhen(Retry.backoff(configuration.getMaxRetries(), waitDelay).scheduler(Schedulers.elastic()))
             .publishOn(Schedulers.elastic())
             .block();
     }

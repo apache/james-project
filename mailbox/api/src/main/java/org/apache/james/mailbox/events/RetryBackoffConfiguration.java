@@ -65,7 +65,6 @@ public class RetryBackoffConfiguration {
     static final double DEFAULT_JITTER_FACTOR = 0.5;
     static final int DEFAULT_MAX_RETRIES = 8;
     static final Duration DEFAULT_FIRST_BACKOFF = Duration.ofMillis(100);
-    static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
     public static final RetryBackoffConfiguration DEFAULT = new RetryBackoffConfiguration(
         DEFAULT_MAX_RETRIES,
         DEFAULT_FIRST_BACKOFF,

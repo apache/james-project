@@ -55,6 +55,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.GroupedFlux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
@@ -158,7 +159,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         return imapUidDAO.insert(composedMessageIdWithMetaData)
             .thenEmpty(Flux.merge(
                 messageIdDAO.insert(composedMessageIdWithMetaData)
-                    .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF),
+                    .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF)),
                 indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
             .then());
     }

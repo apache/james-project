@@ -56,6 +56,7 @@ import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
+import reactor.util.retry.Retry;
 
 public class RabbitMQWorkQueue implements WorkQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQWorkQueue.class);
@@ -71,7 +72,6 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     public static final int NUM_RETRIES = 8;
     public static final Duration FIRST_BACKOFF = Duration.ofMillis(100);
-    public static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
 
     private final TaskManagerWorker worker;
     private final JsonTaskSerializer taskSerializer;
@@ -106,13 +106,13 @@ public class RabbitMQWorkQueue implements WorkQueue {
     void declareQueue() {
         Mono<AMQP.Exchange.DeclareOk> declareExchange = sender
             .declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME))
-            .retryBackoff(NUM_RETRIES, FIRST_BACKOFF, FOREVER);
+            .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
         Mono<AMQP.Queue.DeclareOk> declareQueue = sender
             .declare(QueueSpecification.queue(QUEUE_NAME).durable(true).arguments(Constants.WITH_SINGLE_ACTIVE_CONSUMER))
-            .retryBackoff(NUM_RETRIES, FIRST_BACKOFF, FOREVER);
+            .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
         Mono<AMQP.Queue.BindOk> bindQueueToExchange = sender
             .bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, QUEUE_NAME))
-            .retryBackoff(NUM_RETRIES, FIRST_BACKOFF, FOREVER);
+            .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
 
         declareExchange
             .then(declareQueue)

@@ -49,6 +49,7 @@ import com.datastax.driver.core.Session;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 public class CassandraUidProvider implements UidProvider {
     private static final String CONDITION = "Condition";
@@ -105,13 +106,12 @@ public class CassandraUidProvider implements UidProvider {
         Mono<MessageUid> updateUid = findHighestUid(cassandraId)
             .flatMap(messageUid -> tryUpdateUid(cassandraId, messageUid));
 
-        Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         Duration firstBackoff = Duration.ofMillis(10);
         return updateUid
             .switchIfEmpty(tryInsert(cassandraId))
             .switchIfEmpty(updateUid)
             .single()
-            .retryBackoff(maxUidRetries, firstBackoff, forever, Schedulers.elastic());
+            .retryWhen(Retry.backoff(maxUidRetries, firstBackoff).scheduler(Schedulers.elastic()));
     }
 
     @Override

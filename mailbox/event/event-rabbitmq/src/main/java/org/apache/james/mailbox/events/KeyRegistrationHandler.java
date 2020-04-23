@@ -23,7 +23,6 @@ import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
-import static org.apache.james.mailbox.events.RetryBackoffConfiguration.FOREVER;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -52,6 +51,7 @@ import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
+import reactor.util.retry.Retry;
 
 class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
@@ -107,7 +107,7 @@ class KeyRegistrationHandler {
             .autoDelete(AUTO_DELETE)
             .arguments(QUEUE_ARGUMENTS))
             .map(AMQP.Queue.DeclareOk::getQueue)
-            .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor())
+            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()))
             .doOnSuccess(queueName -> {
                 if (!registrationQueueInitialized.get()) {
                     registrationQueue.initialize(queueName);
@@ -122,7 +122,7 @@ class KeyRegistrationHandler {
             .ifPresent(Disposable::dispose);
         receiver.close();
         sender.delete(QueueSpecification.queue(registrationQueue.asString()))
-            .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor(), Schedulers.elastic())
+            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
             .block();
     }
 
@@ -130,13 +130,13 @@ class KeyRegistrationHandler {
         LocalListenerRegistry.LocalRegistration registration = localListenerRegistry.addListener(key, listener);
         if (registration.isFirstListener()) {
             registrationBinder.bind(key)
-                .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor(), Schedulers.elastic())
+                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
                 .block();
         }
         return new KeyRegistration(() -> {
             if (registration.unregister().lastListenerRemoved()) {
                 registrationBinder.unbind(key)
-                    .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor(), Schedulers.elastic())
+                    .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
                     .block();
             }
         });

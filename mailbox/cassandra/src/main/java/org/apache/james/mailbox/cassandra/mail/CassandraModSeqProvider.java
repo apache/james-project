@@ -51,6 +51,7 @@ import com.datastax.driver.core.Session;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 public class CassandraModSeqProvider implements ModSeqProvider {
 
@@ -185,11 +186,10 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     }
 
     private Mono<ModSeq> handleRetries(CassandraId mailboxId) {
-        Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         Duration firstBackoff = Duration.ofMillis(10);
         return tryFindThenUpdateOnce(mailboxId)
             .single()
-            .retryBackoff(maxModSeqRetries, firstBackoff, forever, Schedulers.elastic());
+            .retryWhen(Retry.backoff(maxModSeqRetries, firstBackoff).scheduler(Schedulers.elastic()));
     }
 
     private Mono<ModSeq> tryFindThenUpdateOnce(CassandraId mailboxId) {

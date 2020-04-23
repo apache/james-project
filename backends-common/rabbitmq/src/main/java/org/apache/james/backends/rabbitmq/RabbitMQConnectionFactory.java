@@ -27,6 +27,7 @@ import com.rabbitmq.client.ConnectionFactory;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 public class RabbitMQConnectionFactory {
 
@@ -60,8 +61,7 @@ public class RabbitMQConnectionFactory {
     }
 
     Mono<Connection> connectionMono() {
-        Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         return Mono.fromCallable(connectionFactory::newConnection)
-            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs()), forever, Schedulers.elastic());
+            .retryWhen(Retry.backoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs())).scheduler(Schedulers.elastic()));
     }
 }

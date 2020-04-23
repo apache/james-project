@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 @Singleton
 public class ResilientClusterProvider implements Provider<Cluster> {
@@ -51,10 +52,9 @@ public class ResilientClusterProvider implements Provider<Cluster> {
     @Inject
     ResilientClusterProvider(ClusterConfiguration configuration) {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
-        Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         cluster = Mono.fromCallable(getClusterRetryCallable(configuration))
             .doOnError(e -> LOGGER.warn("Error establishing Cassandra connection. Next retry scheduled in {} ms", waitDelay, e))
-            .retryBackoff(configuration.getMaxRetry(), waitDelay, forever, Schedulers.elastic())
+            .retryWhen(Retry.backoff(configuration.getMaxRetry(), waitDelay).scheduler(Schedulers.elastic()))
             .publishOn(Schedulers.elastic())
             .block();
     }

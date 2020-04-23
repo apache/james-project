@@ -40,6 +40,7 @@ import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 public class WebAdminUtils {
     private static class ConcurrentSafeWebAdminServer extends WebAdminServer {
@@ -54,7 +55,7 @@ public class WebAdminUtils {
         @Override
         public WebAdminServer start() {
             Mono.fromRunnable(super::start)
-                .retryBackoff(5, Duration.ofMillis(10))
+                .retryWhen(Retry.backoff(5, Duration.ofMillis(10)))
                 .block();
             return this;
         }

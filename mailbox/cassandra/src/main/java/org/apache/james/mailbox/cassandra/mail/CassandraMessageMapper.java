@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 public class CassandraMessageMapper implements MessageMapper {
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
@@ -389,7 +390,7 @@ public class CassandraMessageMapper implements MessageMapper {
         return imapUidDAO.insert(composedMessageIdWithMetaData)
             .then(Flux.merge(
                 messageIdDAO.insert(composedMessageIdWithMetaData)
-                    .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF),
+                    .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF)),
                 indexTableHandler.updateIndexOnAdd(message, mailboxId))
             .then());
     }

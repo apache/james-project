@@ -22,8 +22,6 @@ package org.apache.james.mailbox.events.delivery;
 import static org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHandler.NO_HANDLER;
 import static org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.NO_RETRYER;
 
-import java.time.Duration;
-
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
@@ -34,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 public interface EventDelivery {
 
@@ -75,7 +74,6 @@ public interface EventDelivery {
             }
 
             private static final Logger LOGGER = LoggerFactory.getLogger(BackoffRetryer.class);
-            private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
 
             private final RetryBackoffConfiguration retryBackoff;
             private final MailboxListener mailboxListener;
@@ -88,7 +86,7 @@ public interface EventDelivery {
             @Override
             public Mono<Void> doRetry(Mono<Void> executionResult, Event event) {
                 return executionResult
-                    .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor(), Schedulers.elastic())
+                    .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
                     .doOnError(throwable -> LOGGER.error("listener {} exceeded maximum retry({}) to handle event {}",
                         mailboxListener.getClass().getCanonicalName(),
                         retryBackoff.getMaxRetries(),

@@ -49,6 +49,7 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 public class CassandraMailboxMapper implements MailboxMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
@@ -89,7 +90,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         deletePath(mailbox)
             .thenEmpty(mailboxDAO.delete(mailboxId)
-                .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF))
+                .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF)))
             .block();
     }
 
@@ -247,12 +248,12 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     private Mono<Void> persistMailboxEntity(Mailbox cassandraMailbox) {
         return mailboxDAO.save(cassandraMailbox)
-            .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF);
+            .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF));
     }
 
     private Mono<Void> deletePreviousMailboxPathReference(MailboxPath mailboxPath) {
         return mailboxPathV2DAO.delete(mailboxPath)
-            .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF);
+            .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF));
     }
 
     @Override

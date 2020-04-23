@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableMap;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 public class MailDispatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDispatcher.class);
@@ -156,7 +157,7 @@ public class MailDispatcher {
        return Mono.fromRunnable((ThrowingRunnable)() -> mailStore.storeMail(recipient, mail))
            .doOnError(error -> LOGGER.error("Error While storing mail.", error))
            .subscribeOn(scheduler)
-           .retryBackoff(RETRIES, FIRST_BACKOFF, MAX_BACKOFF, scheduler)
+           .retryWhen(Retry.backoff(RETRIES, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.elastic()))
            .then();
     }
 

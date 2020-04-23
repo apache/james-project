@@ -26,7 +26,6 @@ import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
-import static org.apache.james.mailbox.events.RetryBackoffConfiguration.FOREVER;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -49,6 +48,7 @@ import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
+import reactor.util.retry.Retry;
 
 class GroupRegistration implements Registration {
     static class WorkQueueName {
@@ -109,7 +109,7 @@ class GroupRegistration implements Registration {
             .of(createGroupWorkQueue()
                 .then(retryHandler.createRetryExchange(queueName))
                 .then(Mono.fromCallable(() -> this.consumeWorkQueue()))
-                .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor(), Schedulers.elastic())
+                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
                 .block());
         return this;
     }

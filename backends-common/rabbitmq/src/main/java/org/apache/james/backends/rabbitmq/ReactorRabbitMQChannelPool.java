@@ -49,6 +49,7 @@ import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
+import reactor.util.retry.Retry;
 
 public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
@@ -82,7 +83,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
             return Mono.fromCallable(connection::openChannel)
                 .map(maybeChannel ->
                     maybeChannel.orElseThrow(() -> new RuntimeException("RabbitMQ reached to maximum opened channels, cannot get more channels")))
-                .retryBackoff(MAX_RETRIES, RETRY_FIRST_BACK_OFF, FOREVER, Schedulers.elastic())
+                .retryWhen(Retry.backoff(MAX_RETRIES, RETRY_FIRST_BACK_OFF).scheduler(Schedulers.elastic()))
                 .doOnError(throwable -> LOGGER.error("error when creating new channel", throwable));
         }
 
@@ -105,7 +106,6 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     private static final int MAX_CHANNELS_NUMBER = 3;
     private static final int MAX_BORROW_RETRIES = 3;
     private static final Duration MIN_BORROW_DELAY = Duration.ofMillis(50);
-    private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
 
     private final Mono<Connection> connectionMono;
     private final GenericObjectPool<Channel> pool;
@@ -146,7 +146,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     private Mono<Channel> borrow() {
         return tryBorrowFromPool()
             .doOnError(throwable -> LOGGER.warn("Cannot borrow channel", throwable))
-            .retryBackoff(MAX_BORROW_RETRIES, MIN_BORROW_DELAY, FOREVER, Schedulers.elastic())
+            .retryWhen(Retry.backoff(MAX_BORROW_RETRIES, MIN_BORROW_DELAY).scheduler(Schedulers.elastic()))
             .onErrorMap(this::propagateException)
             .subscribeOn(Schedulers.elastic())
             .doOnNext(borrowedChannels::add);
