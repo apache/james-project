@@ -49,6 +49,8 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
@@ -94,7 +96,7 @@ public class HealthCheckRoutes implements PublicRoutes {
             message = "Internal server error - When one check has failed.")
     })
     public Object validateHealthChecks(Request request, Response response) {
-        ImmutableList<Result> results = executeHealthChecks();
+        List<Result> results = executeHealthChecks().collectList().block();
         ResultStatus status = retrieveAggregationStatus(results);
         response.status(getCorrespondingStatusCode(status));
         return new HeathCheckAggregationExecutionResultDto(status, mapResultToDto(results));
@@ -119,8 +121,8 @@ public class HealthCheckRoutes implements PublicRoutes {
             .filter(c -> c.componentName().getName().equals(componentName))
             .findFirst()
             .orElseThrow(() -> throw404(componentName));
-        
-        Result result = healthCheck.check();
+
+        Result result = Mono.from(healthCheck.checkReactive()).block();
         logFailedCheck(result);
         response.status(getCorrespondingStatusCode(result.getStatus()));
         return new HealthCheckExecutionResultDto(result);
@@ -175,11 +177,10 @@ public class HealthCheckRoutes implements PublicRoutes {
         }
     }
 
-    private ImmutableList<Result> executeHealthChecks() {
-        return healthChecks.stream()
-            .map(HealthCheck::check)
-            .peek(this::logFailedCheck)
-            .collect(ImmutableList.toImmutableList());
+    private Flux<Result> executeHealthChecks() {
+        return Flux.fromIterable(healthChecks)
+            .flatMap(HealthCheck::checkReactive)
+            .doOnNext(this::logFailedCheck);
     }
 
     private ResultStatus retrieveAggregationStatus(List<Result> results) {

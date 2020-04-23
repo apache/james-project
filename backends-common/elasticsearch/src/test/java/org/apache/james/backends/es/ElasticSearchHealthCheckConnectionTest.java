@@ -44,7 +44,7 @@ class ElasticSearchHealthCheckConnectionTest {
 
     @Test
     void checkShouldSucceedWhenElasticSearchIsRunning() {
-        assertThat(elasticSearchHealthCheck.check().isHealthy()).isTrue();
+        assertThat(elasticSearchHealthCheck.checkReactive().block().isHealthy()).isTrue();
     }
 
     @Test
@@ -53,7 +53,7 @@ class ElasticSearchHealthCheckConnectionTest {
         elasticSearch.getDockerElasticSearch().pause();
 
         try {
-            assertThat(elasticSearchHealthCheck.check().isUnHealthy()).isTrue();
+            assertThat(elasticSearchHealthCheck.checkReactive().block().isUnHealthy()).isTrue();
         } finally {
             elasticSearch.getDockerElasticSearch().unpause();
         }

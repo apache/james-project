@@ -30,6 +30,8 @@ import org.apache.james.core.healthcheck.Result;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 
+import reactor.core.publisher.Mono;
+
 public class MessageFastViewProjectionHealthCheck implements HealthCheck {
 
     private static final ComponentName COMPONENT_NAME = new ComponentName("MessageFastViewProjection");
@@ -50,14 +52,16 @@ public class MessageFastViewProjectionHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Result check() {
-        long hitCount = retrieveHitCountMetric.getCount();
-        long missCount = retrieveMissCountMetric.getCount();
-
-        if (missCount == 0) {
-            return Result.healthy(COMPONENT_NAME);
-        }
-        return check(hitCount, missCount);
+    public Mono<Result> checkReactive() {
+        return Mono.fromCallable(() -> retrieveMissCountMetric.getCount())
+            .flatMap(missCount -> {
+                if (missCount == 0) {
+                    return Mono.just(Result.healthy(COMPONENT_NAME));
+                } else {
+                    return Mono.fromCallable(() -> retrieveHitCountMetric.getCount())
+                        .map(hitCount -> check(hitCount, missCount));
+                }
+            });
     }
 
     private Result check(long hitCount, long missCount) {

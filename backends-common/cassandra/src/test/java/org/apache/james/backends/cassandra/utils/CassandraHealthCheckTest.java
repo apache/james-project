@@ -49,7 +49,7 @@ class CassandraHealthCheckTest {
 
     @Test
     void checkShouldReturnHealthyWhenCassandraIsRunning() {
-        Result check = healthCheck.check();
+        Result check = healthCheck.checkReactive().block();
 
         assertThat(check.isHealthy()).isTrue();
     }
@@ -58,7 +58,7 @@ class CassandraHealthCheckTest {
     void checkShouldReturnUnhealthyWhenCassandraIsNotRunning(DockerCassandraExtension.DockerCassandra cassandraServer) {
         try {
             cassandraServer.getContainer().pause();
-            Result check = healthCheck.check();
+            Result check = healthCheck.checkReactive().block();
 
             assertThat(check.isUnHealthy()).isTrue();
         } finally {
@@ -72,12 +72,12 @@ class CassandraHealthCheckTest {
         try {
             cassandraServer.getContainer().pause();
 
-            healthCheck.check();
+            healthCheck.checkReactive().block();
         } finally {
             cassandraServer.getContainer().unpause();
         }
 
-        Result check = healthCheck.check();
+        Result check = healthCheck.checkReactive().block();
 
         assertThat(check.isHealthy()).isTrue();
     }

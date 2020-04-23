@@ -62,7 +62,7 @@ class MessageFastViewProjectionHealthCheckTest {
 
         @Test
         void checkShouldReturnHealthyWhenNoRetrieveCalled() {
-            assertThat(testee.check())
+            assertThat(testee.checkReactive().block())
                 .isEqualTo(Result.healthy(COMPONENT_NAME));
         }
 
@@ -71,7 +71,7 @@ class MessageFastViewProjectionHealthCheckTest {
             missMetric.increment();
             missMetric.increment();
 
-            assertThat(testee.check())
+            assertThat(testee.checkReactive().block())
                 .isEqualTo(Result.degraded(COMPONENT_NAME, "retrieveMissCount percentage 100.0% (2/2) is higher than the threshold 10.0%"));
         }
 
@@ -80,7 +80,7 @@ class MessageFastViewProjectionHealthCheckTest {
             missMetric.increment();
             hitMetric.add(43);
 
-            assertThat(testee.check())
+            assertThat(testee.checkReactive().block())
                 .isEqualTo(Result.healthy(COMPONENT_NAME));
         }
 
@@ -89,7 +89,7 @@ class MessageFastViewProjectionHealthCheckTest {
             missMetric.increment();
             hitMetric.add(9);
 
-            assertThat(testee.check())
+            assertThat(testee.checkReactive().block())
                 .isEqualTo(Result.healthy(COMPONENT_NAME));
         }
 
@@ -98,7 +98,7 @@ class MessageFastViewProjectionHealthCheckTest {
             missMetric.increment();
             hitMetric.add(3);
 
-            assertThat(testee.check())
+            assertThat(testee.checkReactive().block())
                 .isEqualTo(Result.degraded(COMPONENT_NAME,
                     "retrieveMissCount percentage 25.0% (1/4) is higher than the threshold 10.0%"));
         }
@@ -107,11 +107,11 @@ class MessageFastViewProjectionHealthCheckTest {
         void checkShouldReturnHealthyAfterMoreHits() {
             missMetric.increment();
             hitMetric.increment();
-            Result resultWithLessHit = testee.check();
+            Result resultWithLessHit = testee.checkReactive().block();
 
             // more hits
             hitMetric.add(10);
-            Result resultWithMoreHit = testee.check();
+            Result resultWithMoreHit = testee.checkReactive().block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(resultWithLessHit)
@@ -126,11 +126,11 @@ class MessageFastViewProjectionHealthCheckTest {
         void checkShouldKeepBeingDegradedAfterNotEnoughOfHits() {
             missMetric.increment();
             hitMetric.increment();
-            Result resultWithLessHit = testee.check();
+            Result resultWithLessHit = testee.checkReactive().block();
 
             // more hits, but not enough
             hitMetric.add(3);
-            Result resultWithMoreHit = testee.check();
+            Result resultWithMoreHit = testee.checkReactive().block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(resultWithLessHit)
@@ -148,11 +148,11 @@ class MessageFastViewProjectionHealthCheckTest {
             // enough of hits
             hitMetric.add(10);
 
-            Result resultWithEnoughOfHits = testee.check();
+            Result resultWithEnoughOfHits = testee.checkReactive().block();
 
             // more miss
             missMetric.increment();
-            Result resultWithMoreMiss = testee.check();
+            Result resultWithMoreMiss = testee.checkReactive().block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(resultWithEnoughOfHits)
@@ -168,12 +168,12 @@ class MessageFastViewProjectionHealthCheckTest {
             missMetric.increment();
             // enough of hits
             hitMetric.add(10000);
-            Result resultWithEnoughOfHits = testee.check();
+            Result resultWithEnoughOfHits = testee.checkReactive().block();
 
             // more miss, but not enough
             IntStream.rangeClosed(1, 3)
                 .forEach(counter -> missMetric.increment());
-            Result resultWithMoreMiss = testee.check();
+            Result resultWithMoreMiss = testee.checkReactive().block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(resultWithEnoughOfHits)

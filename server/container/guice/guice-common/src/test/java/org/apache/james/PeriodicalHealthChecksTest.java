@@ -95,7 +95,7 @@ public class PeriodicalHealthChecksTest {
 
     @Test
     void startShouldCallRemainingHealthChecksWhenAHealthCheckThrows() {
-        when(mockHealthCheck1.check()).thenThrow(new RuntimeException());
+        when(mockHealthCheck1.checkReactive()).thenReturn(Mono.error(RuntimeException::new));
 
         testee.start();
 

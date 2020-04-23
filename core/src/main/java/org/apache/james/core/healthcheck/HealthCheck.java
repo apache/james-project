@@ -20,16 +20,8 @@ package org.apache.james.core.healthcheck;
 
 import org.reactivestreams.Publisher;
 
-import reactor.core.publisher.Mono;
-
 public interface HealthCheck {
     ComponentName componentName();
 
-    default Result check() {
-        return Mono.from(checkReactive()).block();
-    }
-
-    default Publisher<Result> checkReactive() {
-        return Mono.fromCallable(this::check);
-    }
+    Publisher<Result> checkReactive();
 }

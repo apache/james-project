@@ -41,9 +41,11 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.reactivestreams.Publisher;
 
 import io.restassured.RestAssured;
 import net.javacrumbs.jsonunit.core.Option;
+import reactor.core.publisher.Mono;
 
 public class HealthCheckRoutesTest {
 
@@ -65,8 +67,8 @@ public class HealthCheckRoutesTest {
             }
 
             @Override
-            public Result check() {
-                return result;
+            public Publisher<Result> checkReactive() {
+                return Mono.just(result);
             }
         };
     }

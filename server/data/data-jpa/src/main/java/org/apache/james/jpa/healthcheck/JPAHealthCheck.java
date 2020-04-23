@@ -28,6 +28,8 @@ import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 
+import reactor.core.publisher.Mono;
+
 public class JPAHealthCheck implements HealthCheck {
 
     private final EntityManagerFactory entityManagerFactory;
@@ -43,15 +45,17 @@ public class JPAHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Result check() {
-        try {
-            if (entityManagerFactory.createEntityManager().isOpen()) {
-                return healthy(componentName());
-            }
-        } catch (IllegalStateException stateException) {
-            return unhealthy(componentName(), "EntityManagerFactory or EntityManager thrown an IllegalStateException, the connection is unhealthy", stateException);
-        }
-
-        return unhealthy(componentName(), "entityManager is not open");
+    public Mono<Result> checkReactive() {
+        return Mono.fromCallable(entityManagerFactory::createEntityManager)
+            .map(entityManager -> entityManager.isOpen())
+            .map(open -> {
+                if (open) {
+                    return healthy(componentName());
+                } else {
+                    return unhealthy(componentName(), "entityManager is not open");
+                }
+            })
+            .onErrorResume(IllegalStateException.class,
+                e -> Mono.just(unhealthy(componentName(), "EntityManagerFactory or EntityManager thrown an IllegalStateException, the connection is unhealthy", e)));
     }
 }
