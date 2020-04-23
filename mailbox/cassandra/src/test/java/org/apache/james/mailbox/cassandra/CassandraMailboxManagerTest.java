@@ -38,6 +38,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -56,12 +57,11 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.PreDeletionHooks;
@@ -118,21 +118,21 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteMailboxShouldUnreferenceMessageMetadata(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
             mailboxManager.deleteMailbox(inbox, session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
-                CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
+                CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
@@ -153,13 +153,13 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteMailboxShouldEventuallyUnreferenceMessageMetadataWhenDeleteAttachmentFails(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
@@ -170,8 +170,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
-                CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
+                CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
@@ -192,13 +192,13 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteMailboxShouldEventuallyUnreferenceMessageMetadataWhenDeleteMessageFails(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
@@ -209,8 +209,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
-                CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
+                CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
@@ -231,13 +231,13 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteMailboxShouldEventuallyUnreferenceMessageMetadataWhenDeleteMailboxContextFails(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
@@ -248,8 +248,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
-                CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
+                CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
@@ -270,13 +270,13 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteMailboxShouldEventuallyUnreferenceMessageMetadataWhenDeleteMailboxContextByIdFails(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
@@ -287,8 +287,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
-                CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
+                CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
@@ -309,20 +309,20 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteShouldUnreferenceMessageMetadata(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
-            inboxManager.delete(ImmutableList.of(composedMessageId.getUid()), session);
+            inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
@@ -337,13 +337,13 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteShouldUnreferenceMessageMetadataWhenDeleteMessageFails(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
@@ -351,10 +351,10 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 .times(1)
                 .whenQueryStartsWith("DELETE FROM messageV2 WHERE messageId=:messageId;"));
 
-            inboxManager.delete(ImmutableList.of(composedMessageId.getUid()), session);
+            inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
@@ -369,13 +369,13 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteShouldUnreferenceMessageMetadataWhenDeleteAttachmentFails(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
@@ -383,10 +383,10 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 .times(1)
                 .whenQueryStartsWith("DELETE FROM attachmentV2 WHERE idAsUUID=:idAsUUID;"));
 
-            inboxManager.delete(ImmutableList.of(composedMessageId.getUid()), session);
+            inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
@@ -401,13 +401,13 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteMailboxShouldNotUnreferenceMessageMetadataWhenOtherReference(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
@@ -416,8 +416,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
-                CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
+                CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isPresent();
@@ -438,22 +438,22 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteShouldNotUnreferenceMessageMetadataWhenOtherReference(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
             mailboxManager.copyMessages(MessageRange.all(), inboxId, otherBoxManager.getId(), session);
 
-            inboxManager.delete(ImmutableList.of(composedMessageId.getUid()), session);
+            inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isPresent();
@@ -468,13 +468,13 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteMailboxShouldNotUnreferenceAttachmentWhenOtherReference(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
@@ -483,8 +483,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
-                CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
+                CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
@@ -505,22 +505,22 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         @Test
         void deleteShouldNotUnreferenceAttachmentWhenOtherReference(CassandraCluster cassandraCluster) throws Exception {
-            ComposedMessageId composedMessageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
 
             AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .map(Throwing.function(MessageResult::getLoadedAttachments))
                 .flatMap(Collection::stream)
-                .map(MessageAttachment::getAttachmentId)
+                .map(MessageAttachmentMetadata::getAttachmentId)
                 .findFirst()
                 .get();
 
             new CassandraAttachmentOwnerDAO(cassandraCluster.getConf()).addOwner(attachmentId, Username.of("bob")).block();
 
-            inboxManager.delete(ImmutableList.of(composedMessageId.getUid()), session);
+            inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
             SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) composedMessageId.getMessageId();
+                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
 
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();

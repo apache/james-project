@@ -81,10 +81,10 @@ class CassandraAttachmentDAOV2Test {
 
     @Test
     void getAttachmentShouldNotReturnDeletedAttachments() {
-        Attachment attachment = Attachment.builder()
+        AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
-            .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
+            .size(36)
             .build();
         BlobId blobId = BLOB_ID_FACTORY.from("blobId");
         DAOAttachment daoAttachment = CassandraAttachmentDAOV2.from(attachment, blobId);
