@@ -34,7 +34,7 @@ public class CassandraDumbBlobStoreCacheTest implements DumbBlobStoreCacheContra
 
     private final Duration DEFAULT_READ_TIMEOUT = Duration.ofSeconds(50);
     private final int DEFAULT_THRESHOLD_IN_BYTES = EIGHT_KILOBYTES.length;
-    private final Duration _1_SEC_TTL = Duration.ofSeconds(1);
+    private final Duration _2_SEC_TTL = Duration.ofSeconds(2);
 
     private DumbBlobStoreCache testee;
     private HashBlobId.Factory blobIdFactory;
@@ -45,7 +45,7 @@ public class CassandraDumbBlobStoreCacheTest implements DumbBlobStoreCacheContra
         CassandraCacheConfiguration cacheConfiguration = new CassandraCacheConfiguration.Builder()
             .sizeThresholdInBytes(DEFAULT_THRESHOLD_IN_BYTES)
             .timeOut(DEFAULT_READ_TIMEOUT)
-            .ttl(_1_SEC_TTL)
+            .ttl(_2_SEC_TTL)
             .build();
         testee = new CassandraDumbBlobStoreCache(cassandra.getConf(), cacheConfiguration);
     }
