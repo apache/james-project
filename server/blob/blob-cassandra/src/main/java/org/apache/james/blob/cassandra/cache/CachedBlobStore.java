@@ -30,6 +30,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -136,11 +137,11 @@ public class CachedBlobStore implements BlobStore {
     }
 
     private Optional<byte[]> fullyReadSmallStream(PushbackInputStream pushbackInputStream) throws IOException {
-        int sizeToRead = sizeThresholdInBytes + 1;
-        byte[] bytes = new byte[sizeToRead];
-        int readByteCount = pushbackInputStream.read(bytes, 0, sizeToRead);
+        byte[] bytes = new byte[sizeThresholdInBytes];
+        int readByteCount = IOUtils.read(pushbackInputStream, bytes);
+        int extraByte = pushbackInputStream.read();
         try {
-            if (readByteCount > sizeThresholdInBytes) {
+            if (extraByte >= 0) {
                 return Optional.empty();
             }
             if (readByteCount < 0) {
@@ -148,6 +149,9 @@ public class CachedBlobStore implements BlobStore {
             }
             return Optional.of(Arrays.copyOf(bytes, readByteCount));
         } finally {
+            if (extraByte >= 0) {
+                pushbackInputStream.unread(extraByte);
+            }
             if (readByteCount > 0) {
                 pushbackInputStream.unread(bytes, 0, readByteCount);
             }
