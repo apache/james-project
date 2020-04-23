@@ -70,16 +70,18 @@ public class RecomputeMailboxCountersTask implements Task {
     }
 
     private final RecomputeMailboxCountersService service;
+    private final RecomputeMailboxCountersService.Options options;
     private RecomputeMailboxCountersService.Context context;
 
-    public RecomputeMailboxCountersTask(RecomputeMailboxCountersService service) {
+    public RecomputeMailboxCountersTask(RecomputeMailboxCountersService service, RecomputeMailboxCountersService.Options options) {
         this.service = service;
+        this.options = options;
         this.context = new RecomputeMailboxCountersService.Context();
     }
 
     @Override
     public Result run() {
-        return service.recomputeMailboxCounters(context)
+        return service.recomputeMailboxCounters(context, options)
             .subscribeOn(Schedulers.elastic())
             .block();
     }
@@ -87,6 +89,10 @@ public class RecomputeMailboxCountersTask implements Task {
     @Override
     public TaskType type() {
         return RECOMPUTE_MAILBOX_COUNTERS;
+    }
+
+    public RecomputeMailboxCountersService.Options getOptions() {
+        return options;
     }
 
     @Override

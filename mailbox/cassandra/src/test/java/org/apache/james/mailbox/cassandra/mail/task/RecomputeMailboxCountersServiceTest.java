@@ -51,6 +51,8 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.task.Task.Result;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -89,199 +91,297 @@ class RecomputeMailboxCountersServiceTest {
         testee = new RecomputeMailboxCountersService(mailboxDAO, imapUidToMessageIdDAO, messageIdToImapUidDAO, counterDAO);
     }
 
-    @Test
-    void recomputeMailboxCountersShouldReturnCompletedWhenNoMailboxes() {
-        assertThat(testee.recomputeMailboxCounters(new Context()).block())
-            .isEqualTo(Result.COMPLETED);
+    @Nested
+    class TrustMessageDenormalizationTest implements Contract {
+        @Override
+        public RecomputeMailboxCountersService testee() {
+            return testee;
+        }
+
+        @Override
+        public CassandraMailboxDAO mailboxDAO() {
+            return mailboxDAO;
+        }
+
+        @Override
+        public RecomputeMailboxCountersService.Options options() {
+            return RecomputeMailboxCountersService.Options.trustMessageDenormalization();
+        }
+
+        @Override
+        public CassandraMessageIdDAO imapUidToMessageIdDAO() {
+            return imapUidToMessageIdDAO;
+        }
+
+        @Override
+        public CassandraMessageIdToImapUidDAO messageIdToImapUidDAO() {
+            return messageIdToImapUidDAO;
+        }
+
+        @Override
+        public CassandraMailboxCounterDAO counterDAO() {
+            return counterDAO;
+        }
+
+        @Disabled("Inconsitencies can not be corrected on the fly as trust avoid their detection")
+        @Override
+        public void recomputeMailboxCountersShouldIgnoreMissingMailboxListReferences() {
+
+        }
+
+        @Disabled("Inconsitencies can not be corrected on the fly as trust avoid their detection")
+        @Override
+        public void recomputeMailboxCountersShouldUseSourceOfTruthForComputation() {
+
+        }
+
+        @Disabled("Inconsitencies can not be corrected on the fly as trust avoid their detection")
+        @Override
+        public void recomputeMailboxCountersShouldIgnoreOrphanMailboxListReference() {
+
+        }
     }
 
-    @Test
-    void recomputeMailboxCountersShouldReturnCompletedWhenMailboxWithNoMessages() {
-        mailboxDAO.save(MAILBOX).block();
+    @Nested
+    class RecheckMessageDenormalizationTest implements Contract {
+        @Override
+        public RecomputeMailboxCountersService testee() {
+            return testee;
+        }
 
-        assertThat(testee.recomputeMailboxCounters(new Context()).block())
-            .isEqualTo(Result.COMPLETED);
+        @Override
+        public CassandraMailboxDAO mailboxDAO() {
+            return mailboxDAO;
+        }
+
+        @Override
+        public RecomputeMailboxCountersService.Options options() {
+            return RecomputeMailboxCountersService.Options.recheckMessageDenormalization();
+        }
+
+        @Override
+        public CassandraMessageIdDAO imapUidToMessageIdDAO() {
+            return imapUidToMessageIdDAO;
+        }
+
+        @Override
+        public CassandraMessageIdToImapUidDAO messageIdToImapUidDAO() {
+            return messageIdToImapUidDAO;
+        }
+
+        @Override
+        public CassandraMailboxCounterDAO counterDAO() {
+            return counterDAO;
+        }
     }
 
-    @Test
-    void recomputeMailboxCountersShouldReturnCompletedWhenMailboxWithMessages() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
-        messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
-        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
-        counterDAO.incrementCount(CASSANDRA_ID_1).block();
+    interface Contract {
+        RecomputeMailboxCountersService testee();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+        CassandraMailboxDAO mailboxDAO();
 
-        assertThat(testee.recomputeMailboxCounters(new Context()).block())
-            .isEqualTo(Result.COMPLETED);
-    }
+        RecomputeMailboxCountersService.Options options();
 
-    @Test
-    void recomputeMailboxCountersShouldReturnCompletedWhenMessageDenormalizationIssue() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
-        messageIdToImapUidDAO.insert(METADATA_SEEN).block();
-        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
-        counterDAO.incrementCount(CASSANDRA_ID_1).block();
+        CassandraMessageIdDAO imapUidToMessageIdDAO();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+        CassandraMessageIdToImapUidDAO messageIdToImapUidDAO();
 
-        assertThat(testee.recomputeMailboxCounters(new Context()).block())
-            .isEqualTo(Result.COMPLETED);
-    }
+        CassandraMailboxCounterDAO counterDAO();
 
-    @Test
-    void recomputeMailboxCountersShouldReturnCountersAreIncorrect() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
-        messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
+        @Test
+        default void recomputeMailboxCountersShouldReturnCompletedWhenNoMailboxes() {
+            assertThat(testee().recomputeMailboxCounters(new Context(), options()).block())
+                .isEqualTo(Result.COMPLETED);
+        }
 
-        testee.recomputeMailboxCounters(new Context()).block();
+        @Test
+        default void recomputeMailboxCountersShouldReturnCompletedWhenMailboxWithNoMessages() {
+            mailboxDAO().save(MAILBOX).block();
 
-        assertThat(testee.recomputeMailboxCounters(new Context()).block())
-            .isEqualTo(Result.COMPLETED);
-    }
+            assertThat(testee().recomputeMailboxCounters(new Context(), options()).block())
+                .isEqualTo(Result.COMPLETED);
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldReturnCompletedWhenOrphanMailboxRegistration() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
-        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
-        counterDAO.incrementCount(CASSANDRA_ID_1).block();
+        @Test
+        default void recomputeMailboxCountersShouldReturnCompletedWhenMailboxWithMessages() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_UNSEEN).block();
+            messageIdToImapUidDAO().insert(METADATA_UNSEEN).block();
+            counterDAO().incrementUnseenAndCount(CASSANDRA_ID_1).block();
+            counterDAO().incrementCount(CASSANDRA_ID_1).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(testee.recomputeMailboxCounters(new Context()).block())
-            .isEqualTo(Result.COMPLETED);
-    }
+            assertThat(testee().recomputeMailboxCounters(new Context(), options()).block())
+                .isEqualTo(Result.COMPLETED);
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldReturnCompletedWhenMailboxListReferenceIsMissing() {
-        mailboxDAO.save(MAILBOX).block();
-        messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
-        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
-        counterDAO.incrementCount(CASSANDRA_ID_1).block();
+        @Test
+        default void recomputeMailboxCountersShouldReturnCompletedWhenMessageDenormalizationIssue() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_UNSEEN).block();
+            messageIdToImapUidDAO().insert(METADATA_SEEN).block();
+            counterDAO().incrementUnseenAndCount(CASSANDRA_ID_1).block();
+            counterDAO().incrementCount(CASSANDRA_ID_1).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(testee.recomputeMailboxCounters(new Context()).block())
-            .isEqualTo(Result.COMPLETED);
-    }
+            assertThat(testee().recomputeMailboxCounters(new Context(), options()).block())
+                .isEqualTo(Result.COMPLETED);
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldNoopWhenMailboxWithoutMessage() {
-        mailboxDAO.save(MAILBOX).block();
+        @Test
+        default void recomputeMailboxCountersShouldReturnCountersAreIncorrect() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_UNSEEN).block();
+            messageIdToImapUidDAO().insert(METADATA_UNSEEN).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(counterDAO.retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
-            .isEmpty();
-    }
+            assertThat(testee().recomputeMailboxCounters(new Context(), options()).block())
+                .isEqualTo(Result.COMPLETED);
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldNoopWhenValidCounters() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
-        messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
-        counterDAO.incrementUnseenAndCount(CASSANDRA_ID_1).block();
-        counterDAO.incrementCount(CASSANDRA_ID_1).block();
+        @Test
+        default void recomputeMailboxCountersShouldReturnCompletedWhenOrphanMailboxRegistration() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_UNSEEN).block();
+            counterDAO().incrementUnseenAndCount(CASSANDRA_ID_1).block();
+            counterDAO().incrementCount(CASSANDRA_ID_1).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(counterDAO.retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
-            .contains(MailboxCounters.builder()
-                .mailboxId(CASSANDRA_ID_1)
-                .count(1)
-                .unseen(1)
-                .build());
-    }
+            assertThat(testee().recomputeMailboxCounters(new Context(), options()).block())
+                .isEqualTo(Result.COMPLETED);
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldRecreateMissingCounters() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
-        messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
+        @Test
+        default void recomputeMailboxCountersShouldReturnCompletedWhenMailboxListReferenceIsMissing() {
+            mailboxDAO().save(MAILBOX).block();
+            messageIdToImapUidDAO().insert(METADATA_UNSEEN).block();
+            counterDAO().incrementUnseenAndCount(CASSANDRA_ID_1).block();
+            counterDAO().incrementCount(CASSANDRA_ID_1).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(counterDAO.retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
-            .contains(MailboxCounters.builder()
-                .mailboxId(CASSANDRA_ID_1)
-                .count(1)
-                .unseen(1)
-                .build());
-    }
+            assertThat(testee().recomputeMailboxCounters(new Context(), options()).block())
+                .isEqualTo(Result.COMPLETED);
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldResetIncorrectCounters() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
-        messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
-        counterDAO.incrementCount(CASSANDRA_ID_1).block();
+        @Test
+        default void recomputeMailboxCountersShouldNoopWhenMailboxWithoutMessage() {
+            mailboxDAO().save(MAILBOX).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(counterDAO.retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
-            .contains(MailboxCounters.builder()
-                .mailboxId(CASSANDRA_ID_1)
-                .count(1)
-                .unseen(1)
-                .build());
-    }
+            assertThat(counterDAO().retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
+                .isEmpty();
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldTakeSeenIntoAccount() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_SEEN).block();
-        messageIdToImapUidDAO.insert(METADATA_SEEN).block();
-        counterDAO.incrementCount(CASSANDRA_ID_1).block();
+        @Test
+        default void recomputeMailboxCountersShouldNoopWhenValidCounters() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_UNSEEN).block();
+            messageIdToImapUidDAO().insert(METADATA_UNSEEN).block();
+            counterDAO().incrementUnseenAndCount(CASSANDRA_ID_1).block();
+            counterDAO().incrementCount(CASSANDRA_ID_1).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(counterDAO.retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
-            .contains(MailboxCounters.builder()
-                .mailboxId(CASSANDRA_ID_1)
-                .count(1)
-                .unseen(0)
-                .build());
-    }
+            assertThat(counterDAO().retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
+                .contains(MailboxCounters.builder()
+                    .mailboxId(CASSANDRA_ID_1)
+                    .count(1)
+                    .unseen(1)
+                    .build());
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldUseSourceOfTruthForComputation() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_SEEN).block();
-        messageIdToImapUidDAO.insert(METADATA_UNSEEN).block();
+        @Test
+        default void recomputeMailboxCountersShouldRecreateMissingCounters() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_UNSEEN).block();
+            messageIdToImapUidDAO().insert(METADATA_UNSEEN).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(counterDAO.retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
-            .contains(MailboxCounters.builder()
-                .mailboxId(CASSANDRA_ID_1)
-                .count(1)
-                .unseen(1)
-                .build());
-    }
+            assertThat(counterDAO().retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
+                .contains(MailboxCounters.builder()
+                    .mailboxId(CASSANDRA_ID_1)
+                    .count(1)
+                    .unseen(1)
+                    .build());
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldIgnoreMissingMailboxListReferences() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_SEEN).block();
+        @Test
+        default void recomputeMailboxCountersShouldResetIncorrectCounters() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_UNSEEN).block();
+            messageIdToImapUidDAO().insert(METADATA_UNSEEN).block();
+            counterDAO().incrementCount(CASSANDRA_ID_1).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(counterDAO.retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
-            .isEmpty();
-    }
+            assertThat(counterDAO().retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
+                .contains(MailboxCounters.builder()
+                    .mailboxId(CASSANDRA_ID_1)
+                    .count(1)
+                    .unseen(1)
+                    .build());
+        }
 
-    @Test
-    void recomputeMailboxCountersShouldIgnoreOrphanMailboxListReference() {
-        mailboxDAO.save(MAILBOX).block();
-        imapUidToMessageIdDAO.insert(METADATA_UNSEEN).block();
+        @Test
+        default void recomputeMailboxCountersShouldTakeSeenIntoAccount() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_SEEN).block();
+            messageIdToImapUidDAO().insert(METADATA_SEEN).block();
+            counterDAO().incrementCount(CASSANDRA_ID_1).block();
 
-        testee.recomputeMailboxCounters(new Context()).block();
+            testee().recomputeMailboxCounters(new Context(), options()).block();
 
-        assertThat(counterDAO.retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
-            .isEmpty();
+            assertThat(counterDAO().retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
+                .contains(MailboxCounters.builder()
+                    .mailboxId(CASSANDRA_ID_1)
+                    .count(1)
+                    .unseen(0)
+                    .build());
+        }
+
+        @Test
+        default void recomputeMailboxCountersShouldUseSourceOfTruthForComputation() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_SEEN).block();
+            messageIdToImapUidDAO().insert(METADATA_UNSEEN).block();
+
+            testee().recomputeMailboxCounters(new Context(), options()).block();
+
+            assertThat(counterDAO().retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
+                .contains(MailboxCounters.builder()
+                    .mailboxId(CASSANDRA_ID_1)
+                    .count(1)
+                    .unseen(1)
+                    .build());
+        }
+
+        @Test
+        default void recomputeMailboxCountersShouldIgnoreMissingMailboxListReferences() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_SEEN).block();
+
+            testee().recomputeMailboxCounters(new Context(), options()).block();
+
+            assertThat(counterDAO().retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
+                .isEmpty();
+        }
+
+        @Test
+        default void recomputeMailboxCountersShouldIgnoreOrphanMailboxListReference() {
+            mailboxDAO().save(MAILBOX).block();
+            imapUidToMessageIdDAO().insert(METADATA_UNSEEN).block();
+
+            testee().recomputeMailboxCounters(new Context(), options()).block();
+
+            assertThat(counterDAO().retrieveMailboxCounters(CASSANDRA_ID_1).blockOptional())
+                .isEmpty();
+        }
     }
 }

@@ -18,7 +18,10 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import java.util.Optional;
+
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService.Options;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 
@@ -26,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RecomputeMailboxCountersTaskDTO implements TaskDTO {
     private static RecomputeMailboxCountersTaskDTO toDTO(RecomputeMailboxCountersTask domainObject, String typeName) {
-        return new RecomputeMailboxCountersTaskDTO(typeName);
+        return new RecomputeMailboxCountersTaskDTO(typeName, Optional.of(domainObject.getOptions().isMessageDenormalizationTrusted()));
     }
 
     public static TaskDTOModule<RecomputeMailboxCountersTask, RecomputeMailboxCountersTaskDTO> module(RecomputeMailboxCountersService service) {
@@ -40,17 +43,27 @@ public class RecomputeMailboxCountersTaskDTO implements TaskDTO {
     }
 
     private final String type;
+    private final Optional<Boolean> trustMessageDenormalization;
 
-    public RecomputeMailboxCountersTaskDTO(@JsonProperty("type") String type) {
+    public RecomputeMailboxCountersTaskDTO(@JsonProperty("type") String type,
+                                           @JsonProperty("trustMessageDenormalization") Optional<Boolean> trustMessageDenormalization) {
         this.type = type;
+        this.trustMessageDenormalization = trustMessageDenormalization;
     }
 
     private RecomputeMailboxCountersTask toDomainObject(RecomputeMailboxCountersService service) {
-        return new RecomputeMailboxCountersTask(service);
+        Options options = trustMessageDenormalization.map(Options::of).orElse(Options.recheckMessageDenormalization());
+        return new RecomputeMailboxCountersTask(service, options);
     }
 
     @Override
+    @JsonProperty("type")
     public String getType() {
         return type;
+    }
+
+    @JsonProperty("trustMessageDenormalization")
+    public Optional<Boolean> trustMessageDenormalization() {
+        return trustMessageDenormalization;
     }
 }

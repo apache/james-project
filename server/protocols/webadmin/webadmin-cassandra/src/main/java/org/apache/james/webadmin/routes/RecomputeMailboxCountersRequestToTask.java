@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
+import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService.Options;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
@@ -32,6 +33,6 @@ public class RecomputeMailboxCountersRequestToTask extends TaskFromRequestRegist
     @Inject
     public RecomputeMailboxCountersRequestToTask(RecomputeMailboxCountersService service) {
         super(REGISTRATION_KEY,
-            request -> new RecomputeMailboxCountersTask(service));
+            request -> new RecomputeMailboxCountersTask(service, Options.recheckMessageDenormalization()));
     }
 }

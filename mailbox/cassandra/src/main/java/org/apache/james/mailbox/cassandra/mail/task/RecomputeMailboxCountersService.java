@@ -55,6 +55,30 @@ public class RecomputeMailboxCountersService {
     private static final int MAILBOX_CONCURRENCY = 2;
     private static final int MESSAGE_CONCURRENCY = 8;
 
+    public static class Options {
+        public static Options trustMessageDenormalization() {
+            return of(true);
+        }
+
+        public static Options recheckMessageDenormalization() {
+            return of(false);
+        }
+
+        public static Options of(boolean value) {
+            return new Options(value);
+        }
+
+        private final boolean trustMessageDenormalization;
+
+        private Options(boolean trustMessageDenormalization) {
+            this.trustMessageDenormalization = trustMessageDenormalization;
+        }
+
+        public boolean isMessageDenormalizationTrusted() {
+            return trustMessageDenormalization;
+        }
+    }
+
     private static class Counter {
         private final CassandraId mailboxId;
         private final AtomicLong total;
@@ -163,9 +187,9 @@ public class RecomputeMailboxCountersService {
         this.counterDAO = counterDAO;
     }
 
-    Mono<Result> recomputeMailboxCounters(Context context) {
+    Mono<Result> recomputeMailboxCounters(Context context, Options options) {
         return mailboxDAO.retrieveAllMailboxes()
-            .flatMap(mailbox -> recomputeMailboxCounter(context, mailbox), MAILBOX_CONCURRENCY)
+            .flatMap(mailbox -> recomputeMailboxCounter(context, mailbox, options), MAILBOX_CONCURRENCY)
             .reduce(Result.COMPLETED, Task::combine)
             .onErrorResume(e -> {
                 LOGGER.error("Error listing mailboxes", e);
@@ -173,12 +197,12 @@ public class RecomputeMailboxCountersService {
             });
     }
 
-    private Mono<Result> recomputeMailboxCounter(Context context, Mailbox mailbox) {
+    private Mono<Result> recomputeMailboxCounter(Context context, Mailbox mailbox, Options options) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         Counter counter = new Counter(mailboxId);
 
         return imapUidToMessageIdDAO.retrieveMessages(mailboxId, MessageRange.all())
-            .flatMap(message -> latestMetadata(mailboxId, message), MESSAGE_CONCURRENCY)
+            .flatMap(message -> latestMetadata(mailboxId, message, options), MESSAGE_CONCURRENCY)
             .doOnNext(counter::process)
             .then(Mono.defer(() -> counterDAO.resetCounters(counter.snapshot())))
             .then(Mono.just(Result.COMPLETED))
@@ -193,7 +217,12 @@ public class RecomputeMailboxCountersService {
             });
     }
 
-    private Flux<ComposedMessageIdWithMetaData> latestMetadata(CassandraId mailboxId, ComposedMessageIdWithMetaData message) {
+    private Flux<ComposedMessageIdWithMetaData> latestMetadata(CassandraId mailboxId,
+                                                               ComposedMessageIdWithMetaData message,
+                                                               Options options) {
+        if (options.isMessageDenormalizationTrusted()) {
+            return Flux.just(message);
+        }
         CassandraMessageId messageId = (CassandraMessageId) message.getComposedMessageId().getMessageId();
 
         return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId))
