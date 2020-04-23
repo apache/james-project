@@ -6,6 +6,8 @@ Date: 2020-04-03
 
 Accepted (lazy consensus)
 
+Superceded by [34. Distributed Mailbox Listener Configuration](0035-distributed-listeners-configuration.md)
+
 ## Context
 
 James enables a user to register additional mailbox listeners.
