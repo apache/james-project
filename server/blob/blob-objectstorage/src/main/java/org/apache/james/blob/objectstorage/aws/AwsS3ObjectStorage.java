@@ -65,7 +65,7 @@ import com.google.inject.Module;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.retry.Retry;
+import reactor.util.retry.Retry;
 
 public class AwsS3ObjectStorage {
 
@@ -180,11 +180,10 @@ public class AwsS3ObjectStorage {
             return Mono.<Void>fromRunnable(puttingAttempt)
                 .publishOn(Schedulers.elastic())
                 .retryWhen(Retry
-                    .<Void>onlyIf(retryContext -> needToCreateBucket(retryContext.exception()))
-                    .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
-                    .withBackoffScheduler(Schedulers.elastic())
-                    .retryMax(MAX_RETRY_ON_EXCEPTION)
-                    .doOnRetry(retryContext -> s3Client.createBucket(bucketName.asString())));
+                    .backoff(MAX_RETRY_ON_EXCEPTION, FIRST_BACK_OFF)
+                    .filter(throwable -> needToCreateBucket(throwable))
+                    .doBeforeRetry(retryContext -> s3Client.createBucket(bucketName.asString()))
+                    .scheduler(Schedulers.elastic()));
         }
 
         private void uploadByFile(ObjectStorageBucketName bucketName, BlobId blobId, File file) throws InterruptedException {
