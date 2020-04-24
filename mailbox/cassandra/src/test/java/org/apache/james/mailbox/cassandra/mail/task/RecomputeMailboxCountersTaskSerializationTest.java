@@ -36,15 +36,15 @@ class RecomputeMailboxCountersTaskSerializationTest {
     private static final String MAILBOX_ID_AS_STRING = "464765a0-e4e7-11e4-aba4-710c1de3782b";
 
     private static final RecomputeMailboxCountersService SERVICE = mock(RecomputeMailboxCountersService.class);
-    private static final RecomputeMailboxCountersTask TASK_TRUSTED = new RecomputeMailboxCountersTask(SERVICE, Options.trustMessageDenormalization());
-    private static final RecomputeMailboxCountersTask TASK_UNTRUSTED = new RecomputeMailboxCountersTask(SERVICE, Options.recheckMessageDenormalization());
+    private static final RecomputeMailboxCountersTask TASK_TRUSTED = new RecomputeMailboxCountersTask(SERVICE, Options.trustMessageProjection());
+    private static final RecomputeMailboxCountersTask TASK_UNTRUSTED = new RecomputeMailboxCountersTask(SERVICE, Options.recheckMessageProjection());
     private static final String SERIALIZED_TASK_TRUSTED = "{" +
         "  \"type\": \"recompute-mailbox-counters\"," +
-        "  \"trustMessageDenormalization\": true" +
+        "  \"trustMessageProjection\": true" +
         "}";
     private static final String SERIALIZED_TASK_UNTRUSTED = "{" +
         "  \"type\": \"recompute-mailbox-counters\"," +
-        "  \"trustMessageDenormalization\": false" +
+        "  \"trustMessageProjection\": false" +
         "}";
     private static final String SERIALIZED_TASK_OLD = "{\"type\": \"recompute-mailbox-counters\"}";
     private static final RecomputeMailboxCountersTask.Details DETAILS = new RecomputeMailboxCountersTask.Details(TIMESTAMP, 12, ImmutableList.of(MAILBOX_ID_AS_STRING));

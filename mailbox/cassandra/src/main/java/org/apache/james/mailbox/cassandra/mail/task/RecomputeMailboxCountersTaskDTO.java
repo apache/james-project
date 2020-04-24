@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RecomputeMailboxCountersTaskDTO implements TaskDTO {
     private static RecomputeMailboxCountersTaskDTO toDTO(RecomputeMailboxCountersTask domainObject, String typeName) {
-        return new RecomputeMailboxCountersTaskDTO(typeName, Optional.of(domainObject.getOptions().isMessageDenormalizationTrusted()));
+        return new RecomputeMailboxCountersTaskDTO(typeName, Optional.of(domainObject.getOptions().isMessageProjectionTrusted()));
     }
 
     public static TaskDTOModule<RecomputeMailboxCountersTask, RecomputeMailboxCountersTaskDTO> module(RecomputeMailboxCountersService service) {
@@ -43,16 +43,16 @@ public class RecomputeMailboxCountersTaskDTO implements TaskDTO {
     }
 
     private final String type;
-    private final Optional<Boolean> trustMessageDenormalization;
+    private final Optional<Boolean> trustMessageProjection;
 
     public RecomputeMailboxCountersTaskDTO(@JsonProperty("type") String type,
-                                           @JsonProperty("trustMessageDenormalization") Optional<Boolean> trustMessageDenormalization) {
+                                           @JsonProperty("trustMessageProjection") Optional<Boolean> trustMessageProjection) {
         this.type = type;
-        this.trustMessageDenormalization = trustMessageDenormalization;
+        this.trustMessageProjection = trustMessageProjection;
     }
 
     private RecomputeMailboxCountersTask toDomainObject(RecomputeMailboxCountersService service) {
-        Options options = trustMessageDenormalization.map(Options::of).orElse(Options.recheckMessageDenormalization());
+        Options options = trustMessageProjection.map(Options::of).orElse(Options.recheckMessageProjection());
         return new RecomputeMailboxCountersTask(service, options);
     }
 
@@ -62,8 +62,8 @@ public class RecomputeMailboxCountersTaskDTO implements TaskDTO {
         return type;
     }
 
-    @JsonProperty("trustMessageDenormalization")
-    public Optional<Boolean> trustMessageDenormalization() {
-        return trustMessageDenormalization;
+    @JsonProperty("trustMessageProjection")
+    public Optional<Boolean> trustMessageProjection() {
+        return trustMessageProjection;
     }
 }

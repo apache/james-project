@@ -113,7 +113,7 @@ class RecomputeMailboxCountersServiceTest {
 
         @Override
         public Options options() {
-            return Options.trustMessageDenormalization();
+            return Options.trustMessageProjection();
         }
 
         @Override
@@ -164,7 +164,7 @@ class RecomputeMailboxCountersServiceTest {
 
         @Override
         public Options options() {
-            return Options.recheckMessageDenormalization();
+            return Options.recheckMessageProjection();
         }
 
         @Override

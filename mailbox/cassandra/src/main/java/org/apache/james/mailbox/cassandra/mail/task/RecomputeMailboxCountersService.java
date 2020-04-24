@@ -56,11 +56,11 @@ public class RecomputeMailboxCountersService {
     private static final int MESSAGE_CONCURRENCY = 8;
 
     public static class Options {
-        public static Options trustMessageDenormalization() {
+        public static Options trustMessageProjection() {
             return of(true);
         }
 
-        public static Options recheckMessageDenormalization() {
+        public static Options recheckMessageProjection() {
             return of(false);
         }
 
@@ -68,14 +68,14 @@ public class RecomputeMailboxCountersService {
             return new Options(value);
         }
 
-        private final boolean trustMessageDenormalization;
+        private final boolean trustMessageProjection;
 
-        private Options(boolean trustMessageDenormalization) {
-            this.trustMessageDenormalization = trustMessageDenormalization;
+        private Options(boolean trustMessageProjection) {
+            this.trustMessageProjection = trustMessageProjection;
         }
 
-        public boolean isMessageDenormalizationTrusted() {
-            return trustMessageDenormalization;
+        public boolean isMessageProjectionTrusted() {
+            return trustMessageProjection;
         }
 
         @Override
@@ -83,14 +83,14 @@ public class RecomputeMailboxCountersService {
             if (o instanceof Options) {
                 Options options = (Options) o;
 
-                return Objects.equals(this.trustMessageDenormalization, options.trustMessageDenormalization);
+                return Objects.equals(this.trustMessageProjection, options.trustMessageProjection);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(trustMessageDenormalization);
+            return Objects.hash(trustMessageProjection);
         }
     }
 
@@ -235,7 +235,7 @@ public class RecomputeMailboxCountersService {
     private Flux<ComposedMessageIdWithMetaData> latestMetadata(CassandraId mailboxId,
                                                                ComposedMessageIdWithMetaData message,
                                                                Options options) {
-        if (options.isMessageDenormalizationTrusted()) {
+        if (options.isMessageProjectionTrusted()) {
             return Flux.just(message);
         }
         CassandraMessageId messageId = (CassandraMessageId) message.getComposedMessageId().getMessageId();

@@ -31,25 +31,25 @@ class RecomputeMailboxCountersRequestToTaskTest {
     @Test
     void parseOptionsShouldReturnRecheckWhenEmpty() {
         assertThat(RecomputeMailboxCountersRequestToTask.parseOptions(Optional.empty()))
-            .isEqualTo(Options.recheckMessageDenormalization());
+            .isEqualTo(Options.recheckMessageProjection());
     }
 
     @Test
     void parseOptionsShouldReturnRecheckWhenFalse() {
         assertThat(RecomputeMailboxCountersRequestToTask.parseOptions(Optional.of("false")))
-            .isEqualTo(Options.recheckMessageDenormalization());
+            .isEqualTo(Options.recheckMessageProjection());
     }
 
     @Test
     void parseOptionsShouldBeCaseIncentive() {
         assertThat(RecomputeMailboxCountersRequestToTask.parseOptions(Optional.of("False")))
-            .isEqualTo(Options.recheckMessageDenormalization());
+            .isEqualTo(Options.recheckMessageProjection());
     }
 
     @Test
     void parseOptionsShouldReturnTrueWhenTrust() {
         assertThat(RecomputeMailboxCountersRequestToTask.parseOptions(Optional.of("true")))
-            .isEqualTo(Options.trustMessageDenormalization());
+            .isEqualTo(Options.trustMessageProjection());
     }
 
     @Test

@@ -36,7 +36,7 @@ import spark.Request;
 
 public class RecomputeMailboxCountersRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
     private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("RecomputeMailboxCounters");
-    public static final String TRUST_PARAM = "trustMessageDenormalization";
+    public static final String TRUST_PARAM = "trustMessageProjection";
 
     @Inject
     public RecomputeMailboxCountersRequestToTask(RecomputeMailboxCountersService service) {
@@ -53,7 +53,7 @@ public class RecomputeMailboxCountersRequestToTask extends TaskFromRequestRegist
     static Options parseOptions(Optional<String> stringValue) {
         return stringValue
             .map(RecomputeMailboxCountersRequestToTask::parseOptions)
-            .orElse(Options.recheckMessageDenormalization());
+            .orElse(Options.recheckMessageProjection());
     }
 
     private static Options parseOptions(String stringValue) {
