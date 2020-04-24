@@ -35,7 +35,7 @@ public class TestingSession implements Session {
     private final Session delegate;
     private volatile Scenario scenario;
 
-    TestingSession(Session delegate) {
+    public TestingSession(Session delegate) {
         this.delegate = delegate;
         this.scenario = Scenario.NOTHING;
     }

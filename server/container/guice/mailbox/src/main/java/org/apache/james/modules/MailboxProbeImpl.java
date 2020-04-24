@@ -36,6 +36,7 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -144,6 +145,11 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         } finally {
             closeSession(mailboxSession);
         }
+    }
+
+    public MailboxCounters retrieveCounters(MailboxPath path) throws MailboxException {
+        MailboxSession systemSession = mailboxManager.createSystemSession(path.getUser());
+        return mailboxManager.getMailbox(path, systemSession).getMailboxCounters(systemSession);
     }
 
     @Override
