@@ -56,8 +56,6 @@ public class CachedBlobStore implements BlobStore {
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        Preconditions.checkNotNull(bucketName, "bucketName should not be null");
-
         return Mono.just(bucketName)
             .filter(backend.getDefaultBucketName()::equals)
             .flatMap(ignored -> Mono.from(cache.read(blobId))
