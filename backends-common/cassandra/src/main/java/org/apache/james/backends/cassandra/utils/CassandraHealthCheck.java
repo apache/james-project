@@ -51,7 +51,7 @@ public class CassandraHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Mono<Result> checkReactive() {
+    public Mono<Result> check() {
         // execute a simple query to check if cassandra is responding
         // idea from: https://stackoverflow.com/questions/10246287
         return queryExecutor.execute(SAMPLE_QUERY)
