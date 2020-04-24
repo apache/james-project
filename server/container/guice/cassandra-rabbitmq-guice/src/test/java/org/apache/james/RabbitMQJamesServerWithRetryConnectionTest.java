@@ -27,6 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -43,6 +44,7 @@ class RabbitMQJamesServerWithRetryConnectionTest {
     @RegisterExtension
     JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture
         .baseExtensionBuilder(rabbitMQExtension)
+        .extension(new AwsS3BlobStoreExtension())
         .disableAutoStart()
         .build();
 

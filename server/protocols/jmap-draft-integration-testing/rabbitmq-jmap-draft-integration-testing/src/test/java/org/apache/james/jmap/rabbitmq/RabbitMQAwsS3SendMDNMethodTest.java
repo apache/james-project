@@ -33,6 +33,7 @@ import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class RabbitMQAwsS3SendMDNMethodTest extends SendMDNMethodTest {
@@ -44,7 +45,7 @@ public class RabbitMQAwsS3SendMDNMethodTest extends SendMDNMethodTest {
             .extension(new AwsS3BlobStoreExtension())
             .extension(new RabbitMQExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+                .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(new TestJMAPServerModule()))
             .build();

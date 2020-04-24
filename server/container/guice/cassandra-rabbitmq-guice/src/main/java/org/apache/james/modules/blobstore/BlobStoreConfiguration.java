@@ -19,17 +19,25 @@
 
 package org.apache.james.modules.blobstore;
 
+import java.io.FileNotFoundException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.modules.mailbox.ConfigurationComponent;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
+import org.apache.james.utils.PropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 
-public class BlobStoreChoosingConfiguration {
+public class BlobStoreConfiguration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreConfiguration.class);
 
     public enum BlobStoreImplName {
         CASSANDRA("cassandra"),
@@ -63,7 +71,23 @@ public class BlobStoreChoosingConfiguration {
 
     static final String BLOBSTORE_IMPLEMENTATION_PROPERTY = "implementation";
 
-    static BlobStoreChoosingConfiguration from(Configuration configuration) {
+    public static BlobStoreConfiguration parse(org.apache.james.server.core.configuration.Configuration configuration) throws ConfigurationException {
+        PropertiesProvider propertiesProvider = new PropertiesProvider(new FileSystemImpl(configuration.directories()), configuration);
+
+        return parse(propertiesProvider);
+    }
+
+    public static BlobStoreConfiguration parse(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            Configuration configuration = propertiesProvider.getConfigurations(ConfigurationComponent.NAMES);
+            return BlobStoreConfiguration.from(configuration);
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Could not find " + ConfigurationComponent.NAME + " configuration file, using cassandra blobstore as the default");
+            return BlobStoreConfiguration.cassandra();
+        }
+    }
+
+    static BlobStoreConfiguration from(Configuration configuration) {
         BlobStoreImplName blobStoreImplName = Optional.ofNullable(configuration.getString(BLOBSTORE_IMPLEMENTATION_PROPERTY))
             .filter(StringUtils::isNotBlank)
             .map(StringUtils::trim)
@@ -71,25 +95,25 @@ public class BlobStoreChoosingConfiguration {
             .orElseThrow(() -> new IllegalStateException(String.format("%s property is missing please use one of " +
                 "supported values in: %s", BLOBSTORE_IMPLEMENTATION_PROPERTY, BlobStoreImplName.supportedImplNames())));
 
-        return new BlobStoreChoosingConfiguration(blobStoreImplName);
+        return new BlobStoreConfiguration(blobStoreImplName);
     }
 
-    public static BlobStoreChoosingConfiguration cassandra() {
-        return new BlobStoreChoosingConfiguration(BlobStoreImplName.CASSANDRA);
+    public static BlobStoreConfiguration cassandra() {
+        return new BlobStoreConfiguration(BlobStoreImplName.CASSANDRA);
     }
 
-    public static BlobStoreChoosingConfiguration objectStorage() {
-        return new BlobStoreChoosingConfiguration(BlobStoreImplName.OBJECTSTORAGE);
+    public static BlobStoreConfiguration objectStorage() {
+        return new BlobStoreConfiguration(BlobStoreImplName.OBJECTSTORAGE);
     }
 
-    public static BlobStoreChoosingConfiguration hybrid() {
-        return new BlobStoreChoosingConfiguration(BlobStoreImplName.HYBRID);
+    public static BlobStoreConfiguration hybrid() {
+        return new BlobStoreConfiguration(BlobStoreImplName.HYBRID);
     }
 
     private final BlobStoreImplName implementation;
 
-    BlobStoreChoosingConfiguration(BlobStoreImplName implementation) {
-        this.implementation = implementation;
+    BlobStoreConfiguration(BlobStoreImplName implementation) {
+       this.implementation = implementation;
     }
 
     BlobStoreImplName getImplementation() {
@@ -98,8 +122,8 @@ public class BlobStoreChoosingConfiguration {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof BlobStoreChoosingConfiguration) {
-            BlobStoreChoosingConfiguration that = (BlobStoreChoosingConfiguration) o;
+        if (o instanceof BlobStoreConfiguration) {
+            BlobStoreConfiguration that = (BlobStoreConfiguration) o;
 
             return Objects.equals(this.implementation, that.implementation);
         }

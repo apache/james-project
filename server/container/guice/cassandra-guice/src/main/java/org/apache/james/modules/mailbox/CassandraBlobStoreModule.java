@@ -17,30 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.modules.mailbox;
 
-import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
-import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
+import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.MetricableBlobStore;
+import org.apache.james.blob.cassandra.CassandraBlobStore;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
+import com.google.inject.name.Names;
 
-public class TestSwiftBlobStoreModule extends AbstractModule {
-
-    private final DockerSwiftTestRule dockerSwiftTestRule;
-
-    public TestSwiftBlobStoreModule() {
-        this.dockerSwiftTestRule = new DockerSwiftTestRule();
-    }
-
+public class CassandraBlobStoreModule extends AbstractModule {
     @Override
     protected void configure() {
-        Module testSwiftBlobStoreModule = Modules
-            .override(dockerSwiftTestRule.getModule())
-            .with(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                .toInstance(BlobStoreChoosingConfiguration.objectStorage()));
-
-        install(testSwiftBlobStoreModule);
+        bind(BlobStore.class)
+            .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
+            .to(CassandraBlobStore.class);
     }
 }

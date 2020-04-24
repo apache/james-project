@@ -28,6 +28,7 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.webadmin.integration.ForwardIntegrationTest;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,7 +42,7 @@ class RabbitMQForwardIntegrationTest extends ForwardIntegrationTest {
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();

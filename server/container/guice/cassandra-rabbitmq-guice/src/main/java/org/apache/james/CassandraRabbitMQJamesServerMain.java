@@ -23,21 +23,40 @@ import static org.apache.james.CassandraJamesServerMain.REQUIRE_TASK_MANAGER_MOD
 
 import org.apache.james.modules.DistributedTaskManagerModule;
 import org.apache.james.modules.TaskSerializationModule;
-import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.server.core.configuration.Configuration;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
-    public static final Module MODULES =
+    protected static final Module MODULES =
         Modules
             .override(Modules.combine(REQUIRE_TASK_MANAGER_MODULE, new DistributedTaskManagerModule()))
-            .with(new RabbitMQModule(), new BlobStoreChoosingModule(), new RabbitMQEventBusModule(), new TaskSerializationModule());
+            .with(new RabbitMQModule(), new RabbitMQEventBusModule(), new TaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
-        JamesServerMain.main(MODULES, new JMXServerModule());
+        Configuration configuration = Configuration.builder()
+            .useWorkingDirectoryEnvProperty()
+            .build();
+
+        BlobStoreConfiguration blobStoreConfiguration = BlobStoreConfiguration.parse(configuration);
+
+        Module baseModule = modules(blobStoreConfiguration);
+
+        JamesServerMain.main(configuration,
+            baseModule, new JMXServerModule());
+    }
+
+    public static Module modules(BlobStoreConfiguration blobStoreConfiguration) {
+        return Modules.combine(ImmutableList.<Module>builder()
+                .add(MODULES)
+                .addAll(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration))
+                .build());
     }
 }

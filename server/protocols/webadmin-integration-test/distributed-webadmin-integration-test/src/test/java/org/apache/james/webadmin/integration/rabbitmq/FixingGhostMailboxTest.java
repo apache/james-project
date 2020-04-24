@@ -70,6 +70,7 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.task.TaskManager;
 import org.apache.james.util.Port;
@@ -114,7 +115,7 @@ class FixingGhostMailboxTest {
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();

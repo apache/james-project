@@ -22,13 +22,14 @@ package org.apache.james;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 
 public class CassandraRabbitMQJamesServerFixture {
 
     private static final JamesServerBuilder.ServerProvider CONFIGURATION_BUILDER =
         configuration -> GuiceJamesServer
             .forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
 

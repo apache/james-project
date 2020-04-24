@@ -24,15 +24,11 @@ import org.apache.james.server.core.configuration.Configuration;
 import com.google.inject.Module;
 
 public interface JamesServerMain {
-    static void main(Module... modules) throws Exception {
-        Configuration configuration = Configuration.builder()
-            .useWorkingDirectoryEnvProperty()
-            .build();
-
+    static void main(Configuration configuration, Module... modules) throws Exception {
         GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
             .combineWith(modules);
         server.start();
-        
+
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
 }

@@ -28,6 +28,7 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.integration.JwtFilterIntegrationTest;
@@ -43,7 +44,7 @@ class RabbitMQJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
             .overrideWith(binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration()))
             .overrideWith(new WebadminIntegrationTestModule()))

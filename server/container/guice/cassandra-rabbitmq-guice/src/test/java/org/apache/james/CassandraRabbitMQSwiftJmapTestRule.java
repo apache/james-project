@@ -27,7 +27,8 @@ import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
-import org.apache.james.modules.TestSwiftBlobStoreModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
@@ -66,10 +67,10 @@ public class CassandraRabbitMQSwiftJmapTestRule implements TestRule {
             .build();
 
         return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
-            .overrideWith(new TestSwiftBlobStoreModule())
+            .overrideWith(new DockerSwiftTestRule().getModule())
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new TestDockerESMetricReporterModule(dockerElasticSearchRule.getDockerEs().getHttpHost()))
             .overrideWith(guiceModuleTestRule.getModule())

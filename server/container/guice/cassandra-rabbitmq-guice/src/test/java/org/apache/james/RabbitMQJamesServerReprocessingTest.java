@@ -24,9 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -54,9 +55,9 @@ class RabbitMQJamesServerReprocessingTest {
     @RegisterExtension
     JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture
         .baseExtensionBuilder(rabbitMQExtension)
+        .extension(new AwsS3BlobStoreExtension())
         .server(configuration -> GuiceJamesServer
             .forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))

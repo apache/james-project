@@ -25,11 +25,13 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
+import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.MetricableBlobStore;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.modules.TestAwsS3BlobStoreModule;
 import org.apache.james.modules.TestRabbitMQModule;
-import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
 import org.apache.james.modules.mailbox.KeyspacesConfiguration;
+import org.apache.james.modules.objectstorage.ObjectStorageDependenciesModule;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
@@ -40,12 +42,26 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.util.Host;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import com.google.inject.name.Names;
+
 public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
     public static SmtpTestRule create(SmtpServerConnectedType smtpServerConnectedType, Host cassandraHost, DockerAwsS3TestRule awsS3TestRule) {
         SmtpTestRule.ServerBuilder createJamesServer = (folder, dnsService) -> createJamesServer(cassandraHost, awsS3TestRule, folder, dnsService);
 
         return new SmtpTestRule(smtpServerConnectedType, createJamesServer);
     }
+
+    private static Module BLOB_STORE_MODULE = new AbstractModule() {
+        @Override
+        protected void configure() {
+            install(new ObjectStorageDependenciesModule());
+            bind(BlobStore.class)
+                .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
+                .to(ObjectStorageBlobStore.class);
+        }
+    };
 
     private static GuiceJamesServer createJamesServer(Host cassandraHost, DockerAwsS3TestRule awsS3TestRule, TemporaryFolder folder, DNSService dnsService) throws Exception {
         Configuration configuration = Configuration.builder()
@@ -59,12 +75,10 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
                 binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
                     .toInstance(BaseHierarchicalConfiguration::new))
-            .overrideWith(
-                new RabbitMQModule(),
-                new BlobStoreChoosingModule())
+            .overrideWith(new RabbitMQModule(), BLOB_STORE_MODULE)
             .overrideWith(
                 new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON),
-                new TestAwsS3BlobStoreModule(awsS3TestRule),
+                awsS3TestRule.getModule(),
                 binder -> binder.bind(KeyspacesConfiguration.class)
                     .toInstance(KeyspacesConfiguration.builder()
                         .keyspace(DockerCassandra.KEYSPACE)

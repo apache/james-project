@@ -23,6 +23,7 @@ import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MO
 
 import org.apache.james.data.LdapUsersRepositoryModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -33,7 +34,11 @@ public class CassandraLdapJamesServerMain implements JamesServerMain {
         .with(new LdapUsersRepositoryModule());
 
     public static void main(String[] args) throws Exception {
-        JamesServerMain.main(MODULES, new JMXServerModule());
+        Configuration configuration = Configuration.builder()
+            .useWorkingDirectoryEnvProperty()
+            .build();
+
+        JamesServerMain.main(configuration, MODULES, new JMXServerModule());
     }
 
 }

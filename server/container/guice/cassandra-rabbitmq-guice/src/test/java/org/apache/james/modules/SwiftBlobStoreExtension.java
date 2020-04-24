@@ -20,13 +20,11 @@
 package org.apache.james.modules;
 
 import org.apache.james.GuiceModuleTestExtension;
-import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
 
 public class SwiftBlobStoreExtension implements GuiceModuleTestExtension {
 
@@ -52,8 +50,6 @@ public class SwiftBlobStoreExtension implements GuiceModuleTestExtension {
 
     @Override
     public Module getModule() {
-        return Modules.override(swiftRule.getModule())
-            .with(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                .toInstance(BlobStoreChoosingConfiguration.objectStorage()));
+        return swiftRule.getModule();
     }
 }

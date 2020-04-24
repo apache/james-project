@@ -21,13 +21,11 @@ package org.apache.james.modules;
 
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.blob.objectstorage.DockerAwsS3Singleton;
-import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
 
 public class AwsS3BlobStoreExtension implements GuiceModuleTestExtension {
 
@@ -52,8 +50,6 @@ public class AwsS3BlobStoreExtension implements GuiceModuleTestExtension {
 
     @Override
     public Module getModule() {
-        return Modules.override(awsS3TestRule.getModule())
-            .with(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                .toInstance(BlobStoreChoosingConfiguration.objectStorage()));
+        return awsS3TestRule.getModule();
     }
 }
