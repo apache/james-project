@@ -19,6 +19,11 @@
 
 package org.apache.james.mailbox.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Optional;
+
+import org.apache.james.core.Domain;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -27,5 +32,24 @@ class QuotaRootTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaRoot.class).verify();
+    }
+
+    @Test
+    void asStringShouldReturnValueWhenNoDomain() {
+        String value = "#private&bob";
+        QuotaRoot quotaRoot = QuotaRoot.quotaRoot(value, Optional.empty());
+
+        assertThat(quotaRoot.asString()).isEqualTo(value);
+    }
+
+    @Test
+    void asStringShouldReturnValueWithDomainWhenHasDomain() {
+        String value = "#private&bob";
+        Domain domain = Domain.of("apache.org");
+        QuotaRoot quotaRoot = QuotaRoot.quotaRoot(value, Optional.of(domain));
+
+        String expectedValue = "#private&bob@apache.org";
+
+        assertThat(quotaRoot.asString()).isEqualTo(expectedValue);
     }
 }
