@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.json;
+package org.apache.james.mailbox.cassandra.json;
 
 import java.io.IOException;
 
