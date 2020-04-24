@@ -60,8 +60,7 @@ public class CachedBlobStore implements BlobStore {
 
         return Mono.just(bucketName)
             .filter(backend.getDefaultBucketName()::equals)
-            .flatMap(ignored ->
-                Mono.from(cache.read(blobId))
+            .flatMap(ignored -> Mono.from(cache.read(blobId))
                     .<InputStream>flatMap(bytes -> Mono.fromCallable(() -> new ByteArrayInputStream(bytes))))
             .switchIfEmpty(Mono.fromCallable(() -> backend.read(bucketName, blobId)))
             .blockOptional()
@@ -151,9 +150,6 @@ public class CachedBlobStore implements BlobStore {
         }
     }
 
-    /**
-     * bytes: byte[] from PushbackInputStream.If PushbackInputStream is empty bytes.length == 1
-     */
     private boolean isAbleToCache(BucketName bucketName, byte[] bytes, StoragePolicy storagePolicy) {
         return isAbleToCache(bucketName, storagePolicy) && bytes.length <= sizeThresholdInBytes;
     }
