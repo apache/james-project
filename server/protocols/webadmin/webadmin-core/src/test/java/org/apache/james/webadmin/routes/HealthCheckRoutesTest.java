@@ -67,7 +67,7 @@ public class HealthCheckRoutesTest {
             }
 
             @Override
-            public Publisher<Result> checkReactive() {
+            public Publisher<Result> check() {
                 return Mono.just(result);
             }
         };

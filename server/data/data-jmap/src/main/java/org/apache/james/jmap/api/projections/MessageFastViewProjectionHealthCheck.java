@@ -52,7 +52,7 @@ public class MessageFastViewProjectionHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Mono<Result> checkReactive() {
+    public Mono<Result> check() {
         return Mono.fromCallable(() -> retrieveMissCountMetric.getCount())
             .flatMap(missCount -> {
                 if (missCount == 0) {

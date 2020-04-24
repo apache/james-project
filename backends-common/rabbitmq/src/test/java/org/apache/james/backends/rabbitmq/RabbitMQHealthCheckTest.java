@@ -46,21 +46,21 @@ class RabbitMQHealthCheckTest {
 
     @Test
     void checkShouldReturnHealthyWhenRabbitMQIsRunning() {
-        Result check = healthCheck.checkReactive().block();
+        Result check = healthCheck.check().block();
 
         assertThat(check.isHealthy()).isTrue();
     }
 
     @Test
     void checkShouldReturnHealthyWhenCalledSeveralTime() {
-        healthCheck.checkReactive().block();
-        healthCheck.checkReactive().block();
-        healthCheck.checkReactive().block();
-        healthCheck.checkReactive().block();
-        healthCheck.checkReactive().block();
-        healthCheck.checkReactive().block();
-        healthCheck.checkReactive().block();
-        Result check = healthCheck.checkReactive().block();
+        healthCheck.check().block();
+        healthCheck.check().block();
+        healthCheck.check().block();
+        healthCheck.check().block();
+        healthCheck.check().block();
+        healthCheck.check().block();
+        healthCheck.check().block();
+        Result check = healthCheck.check().block();
 
         assertThat(check.isHealthy()).isTrue();
     }
@@ -69,7 +69,7 @@ class RabbitMQHealthCheckTest {
     void checkShouldReturnUnhealthyWhenRabbitMQIsNotRunning(DockerRabbitMQ rabbitMQ) throws Exception {
         rabbitMQ.stopApp();
 
-        Result check = healthCheck.checkReactive().block();
+        Result check = healthCheck.check().block();
 
         assertThat(check.isHealthy()).isFalse();
     }
@@ -77,21 +77,21 @@ class RabbitMQHealthCheckTest {
     @Test
     void checkShouldDetectWhenRabbitMQRecovered(DockerRabbitMQ rabbitMQ) throws Exception {
         rabbitMQ.stopApp();
-        healthCheck.checkReactive().block();
+        healthCheck.check().block();
 
         rabbitMQ.startApp();
 
-        Result check = healthCheck.checkReactive().block();
+        Result check = healthCheck.check().block();
         assertThat(check.isHealthy()).isTrue();
     }
 
     @Test
     void checkShouldDetectWhenRabbitMQFail(DockerRabbitMQ rabbitMQ) throws Exception {
-        healthCheck.checkReactive().block();
+        healthCheck.check().block();
 
         rabbitMQ.stopApp();
 
-        Result check = healthCheck.checkReactive().block();
+        Result check = healthCheck.check().block();
         assertThat(check.isHealthy()).isFalse();
     }
 }

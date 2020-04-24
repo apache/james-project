@@ -43,7 +43,7 @@ public class EventDeadLettersHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Mono<Result> checkReactive() {
+    public Mono<Result> check() {
         return eventDeadLetters.containEvents()
             .map(containEvents -> {
                 if (containEvents) {

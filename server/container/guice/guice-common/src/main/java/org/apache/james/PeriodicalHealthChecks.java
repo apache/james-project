@@ -60,7 +60,7 @@ public class PeriodicalHealthChecks implements Startable {
     public void start() {
         disposable = Flux.interval(configuration.getPeriod(), scheduler)
             .flatMap(any -> Flux.fromIterable(healthChecks)
-                .flatMap(healthCheck -> Mono.from(healthCheck.checkReactive())))
+                .flatMap(healthCheck -> Mono.from(healthCheck.check())))
             .doOnNext(this::logResult)
             .onErrorContinue(this::logError)
             .subscribeOn(Schedulers.elastic())

@@ -49,7 +49,7 @@ public class RabbitMQHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Mono<Result> checkReactive() {
+    public Mono<Result> check() {
         try {
             return Flux.concat(connectionPool.tryConnection(),
                 rabbitChannelPoolImpl.tryChannel())

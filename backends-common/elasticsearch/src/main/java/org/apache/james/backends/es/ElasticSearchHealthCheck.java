@@ -55,7 +55,7 @@ public class ElasticSearchHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Mono<Result> checkReactive() {
+    public Mono<Result> check() {
         String[] indices = indexNames.stream()
             .map(IndexName::getValue)
             .toArray(String[]::new);

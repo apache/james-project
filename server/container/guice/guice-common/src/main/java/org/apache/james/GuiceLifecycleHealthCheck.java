@@ -41,7 +41,7 @@ public class GuiceLifecycleHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Mono<Result> checkReactive() {
+    public Mono<Result> check() {
         if (probe.isStarted()) {
             return Mono.just(Result.healthy(componentName()));
         } else {

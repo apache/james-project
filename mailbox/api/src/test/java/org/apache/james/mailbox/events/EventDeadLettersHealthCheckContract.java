@@ -57,8 +57,8 @@ interface EventDeadLettersHealthCheckContract {
 
     @Test
     default void checkShouldReturnHealthyWhenEventDeadLetterEmpty() {
-        assertThat(testee().checkReactive().block().isHealthy()).isTrue();
-        assertThat(testee().checkReactive().block())
+        assertThat(testee().check().block().isHealthy()).isTrue();
+        assertThat(testee().check().block())
             .isEqualTo(Result.healthy(COMPONENT_NAME));
     }
 
@@ -66,8 +66,8 @@ interface EventDeadLettersHealthCheckContract {
     default void checkShouldReturnDegradedWhenEventDeadLetterContainEvent() {
         eventDeadLetters().store(GROUP_A, EVENT_1).block();
 
-        assertThat(testee().checkReactive().block().isDegraded()).isTrue();
-        assertThat(testee().checkReactive().block())
+        assertThat(testee().check().block().isDegraded()).isTrue();
+        assertThat(testee().check().block())
             .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
     }
 
@@ -76,8 +76,8 @@ interface EventDeadLettersHealthCheckContract {
         eventDeadLetters().store(GROUP_A, EVENT_1).block();
         eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
-        assertThat(testee().checkReactive().block().isDegraded()).isTrue();
-        assertThat(testee().checkReactive().block())
+        assertThat(testee().check().block().isDegraded()).isTrue();
+        assertThat(testee().check().block())
             .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
     }
 
@@ -86,15 +86,15 @@ interface EventDeadLettersHealthCheckContract {
         EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
         EventDeadLetters.InsertionId insertionId2 = eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
-        assertThat(testee().checkReactive().block().isDegraded()).isTrue();
-        assertThat(testee().checkReactive().block())
+        assertThat(testee().check().block().isDegraded()).isTrue();
+        assertThat(testee().check().block())
             .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
 
         eventDeadLetters().remove(GROUP_A, insertionId1).block();
         eventDeadLetters().remove(GROUP_B, insertionId2).block();
 
-        assertThat(testee().checkReactive().block().isHealthy()).isTrue();
-        assertThat(testee().checkReactive().block())
+        assertThat(testee().check().block().isHealthy()).isTrue();
+        assertThat(testee().check().block())
             .isEqualTo(Result.healthy(COMPONENT_NAME));
     }
 
@@ -103,14 +103,14 @@ interface EventDeadLettersHealthCheckContract {
         EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
         eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
-        assertThat(testee().checkReactive().block().isDegraded()).isTrue();
-        assertThat(testee().checkReactive().block())
+        assertThat(testee().check().block().isDegraded()).isTrue();
+        assertThat(testee().check().block())
             .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
 
         eventDeadLetters().remove(GROUP_A, insertionId1).block();
 
-        assertThat(testee().checkReactive().block().isDegraded()).isTrue();
-        assertThat(testee().checkReactive().block())
+        assertThat(testee().check().block().isDegraded()).isTrue();
+        assertThat(testee().check().block())
             .isEqualTo(Result.degraded(COMPONENT_NAME, EXPECTED_DEGRADED_MESSAGE));
     }
 
@@ -119,7 +119,7 @@ interface EventDeadLettersHealthCheckContract {
         Result actualResult;
         try {
             createErrorWhenDoingHealthCheck();
-            actualResult = testee().checkReactive().block();
+            actualResult = testee().check().block();
         } finally {
             resolveErrorWhenDoingHealthCheck();
         }

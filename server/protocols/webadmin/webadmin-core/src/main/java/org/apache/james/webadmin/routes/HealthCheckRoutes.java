@@ -122,7 +122,7 @@ public class HealthCheckRoutes implements PublicRoutes {
             .findFirst()
             .orElseThrow(() -> throw404(componentName));
 
-        Result result = Mono.from(healthCheck.checkReactive()).block();
+        Result result = Mono.from(healthCheck.check()).block();
         logFailedCheck(result);
         response.status(getCorrespondingStatusCode(result.getStatus()));
         return new HealthCheckExecutionResultDto(result);
@@ -179,7 +179,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     private Flux<Result> executeHealthChecks() {
         return Flux.fromIterable(healthChecks)
-            .flatMap(HealthCheck::checkReactive)
+            .flatMap(HealthCheck::check)
             .doOnNext(this::logFailedCheck);
     }
 

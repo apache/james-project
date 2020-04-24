@@ -54,8 +54,8 @@ public class PeriodicalHealthChecksTest {
     void setUp() {
         mockHealthCheck1 = Mockito.mock(EventDeadLettersHealthCheck.class);
         mockHealthCheck2 = Mockito.mock(GuiceLifecycleHealthCheck.class);
-        when(mockHealthCheck1.checkReactive()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck1"))));
-        when(mockHealthCheck2.checkReactive()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck2"))));
+        when(mockHealthCheck1.check()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck1"))));
+        when(mockHealthCheck2.check()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck2"))));
 
         scheduler = VirtualTimeScheduler.getOrSet();
         testee = new PeriodicalHealthChecks(ImmutableSet.of(mockHealthCheck1, mockHealthCheck2),
@@ -73,7 +73,7 @@ public class PeriodicalHealthChecksTest {
         testee.start();
 
         scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD));
-        verify(mockHealthCheck1, atLeast(1)).checkReactive();
+        verify(mockHealthCheck1, atLeast(1)).check();
     }
 
     @Test
@@ -81,7 +81,7 @@ public class PeriodicalHealthChecksTest {
         testee.start();
 
         scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD * EXPECTED_INVOKED_TIME));
-        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).checkReactive();
+        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).check();
     }
 
     @Test
@@ -89,17 +89,17 @@ public class PeriodicalHealthChecksTest {
         testee.start();
 
         scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD * EXPECTED_INVOKED_TIME));
-        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).checkReactive();
-        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).checkReactive();
+        verify(mockHealthCheck1, times(EXPECTED_INVOKED_TIME)).check();
+        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).check();
     }
 
     @Test
     void startShouldCallRemainingHealthChecksWhenAHealthCheckThrows() {
-        when(mockHealthCheck1.checkReactive()).thenReturn(Mono.error(RuntimeException::new));
+        when(mockHealthCheck1.check()).thenReturn(Mono.error(RuntimeException::new));
 
         testee.start();
 
         scheduler.advanceTimeBy(Duration.ofSeconds(PERIOD * EXPECTED_INVOKED_TIME));
-        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).checkReactive();
+        verify(mockHealthCheck2, times(EXPECTED_INVOKED_TIME)).check();
     }
 }

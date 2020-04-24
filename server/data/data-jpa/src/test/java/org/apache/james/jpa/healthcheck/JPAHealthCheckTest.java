@@ -46,7 +46,7 @@ class JPAHealthCheckTest {
 
     @Test
     void testWhenActive() {
-        Result result = jpaHealthCheck.checkReactive().block();
+        Result result = jpaHealthCheck.check().block();
         ResultStatus healthy = ResultStatus.HEALTHY;
         assertThat(result.getStatus()).as("Result %s status should be %s", result.getStatus(), healthy)
                 .isEqualTo(healthy);
@@ -57,7 +57,7 @@ class JPAHealthCheckTest {
         jpaTestCluster.getEntityManagerFactory().close();
         Result result = Result.healthy(jpaHealthCheck.componentName());
         try {
-            result = jpaHealthCheck.checkReactive().block();
+            result = jpaHealthCheck.check().block();
         } catch (IllegalStateException e) {
             fail("The exception of the EMF was not handled property.ª");
         }

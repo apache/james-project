@@ -45,7 +45,7 @@ public class JPAHealthCheck implements HealthCheck {
     }
 
     @Override
-    public Mono<Result> checkReactive() {
+    public Mono<Result> check() {
         return Mono.fromCallable(entityManagerFactory::createEntityManager)
             .map(entityManager -> entityManager.isOpen())
             .map(open -> {

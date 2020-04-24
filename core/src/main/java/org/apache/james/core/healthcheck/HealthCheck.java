@@ -23,5 +23,5 @@ import org.reactivestreams.Publisher;
 public interface HealthCheck {
     ComponentName componentName();
 
-    Publisher<Result> checkReactive();
+    Publisher<Result> check();
 }
