@@ -96,7 +96,7 @@ public class CachedBlobStore implements BlobStore {
     }
 
     private Publisher<BlobId> saveInCache(BucketName bucketName, InputStream inputStream, StoragePolicy storagePolicy) {
-        PushbackInputStream pushbackInputStream = new PushbackInputStream(inputStream, sizeThresholdInBytes + 1);
+        PushbackInputStream pushbackInputStream = new PushbackInputStream(inputStream, sizeThresholdInBytes);
 
         return Mono.fromCallable(() -> fullyReadSmallStream(pushbackInputStream))
             .flatMap(Mono::justOrEmpty)
