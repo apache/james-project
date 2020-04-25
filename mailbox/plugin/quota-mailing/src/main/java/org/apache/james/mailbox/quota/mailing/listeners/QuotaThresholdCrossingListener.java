@@ -39,12 +39,13 @@ import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossingHa
 import org.apache.james.mailbox.quota.mailing.subscribers.QuotaThresholdMailer;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.MailetContext;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
-public class QuotaThresholdCrossingListener implements MailboxListener.GroupMailboxListener {
+public class QuotaThresholdCrossingListener implements MailboxListener.ReactiveGroupMailboxListener {
     public static class QuotaThresholdCrossingListenerGroup extends Group {
 
     }
@@ -73,11 +74,13 @@ public class QuotaThresholdCrossingListener implements MailboxListener.GroupMail
         return GROUP;
     }
 
+
     @Override
-    public void event(Event event) {
+    public Publisher<Void> reactiveEvent(Event event) {
         if (event instanceof QuotaUsageUpdatedEvent) {
-            handleEvent(event.getUsername(), (QuotaUsageUpdatedEvent) event).block();
+            return handleEvent(event.getUsername(), (QuotaUsageUpdatedEvent) event);
         }
+        return Mono.empty();
     }
 
     private Mono<Void> handleEvent(Username username, QuotaUsageUpdatedEvent event) {
