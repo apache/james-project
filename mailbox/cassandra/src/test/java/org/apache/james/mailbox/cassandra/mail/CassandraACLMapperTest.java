@@ -164,8 +164,9 @@ class CassandraACLMapperTest {
         Barrier barrier = new Barrier(2);
         cassandra.getConf()
             .registerScenario(awaitOn(barrier)
-                    .times(2)
-                    .whenQueryStartsWith("SELECT acl,version FROM acl WHERE id=:id;"));
+                .thenExecuteNormally()
+                .times(2)
+                .whenQueryStartsWith("SELECT acl,version FROM acl WHERE id=:id;"));
 
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
@@ -191,6 +192,7 @@ class CassandraACLMapperTest {
         Barrier barrier = new Barrier(2);
         cassandra.getConf()
             .registerScenario(awaitOn(barrier)
+                .thenExecuteNormally()
                 .times(2)
                 .whenQueryStartsWith("SELECT acl,version FROM acl WHERE id=:id;"));
 

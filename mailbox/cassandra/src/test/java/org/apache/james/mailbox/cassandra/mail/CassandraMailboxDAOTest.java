@@ -30,7 +30,6 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
@@ -136,6 +135,7 @@ class CassandraMailboxDAOTest {
 
         Barrier barrier = new Barrier(2);
         cassandra.getConf().registerScenario(awaitOn(barrier)
+            .thenExecuteNormally()
             .times(2)
             .whenQueryStartsWith("UPDATE mailbox SET"));
 

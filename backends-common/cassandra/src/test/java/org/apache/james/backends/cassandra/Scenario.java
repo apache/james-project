@@ -41,10 +41,10 @@ public class Scenario {
 
         Behavior EXECUTE_NORMALLY = Session::executeAsync;
 
-        static Behavior awaitOn(Barrier barrier) {
+        static Behavior awaitOn(Barrier barrier, Behavior behavior) {
             return (session, statement) -> {
                 barrier.call();
-                return session.executeAsync(statement);
+                return behavior.execute(session, statement);
             };
         }
 
@@ -130,6 +130,19 @@ public class Scenario {
             }
         }
 
+        @FunctionalInterface
+        interface ComposeBehavior {
+            RequiresValidity then(Behavior behavior);
+
+            default RequiresValidity thenExecuteNormally() {
+                return then(Behavior.EXECUTE_NORMALLY);
+            }
+
+            default RequiresValidity thenFail() {
+                return then(Behavior.THROW);
+            }
+        }
+
         static RequiresValidity fail() {
             return validity -> statementPredicate -> new ExecutionHook(
                 statementPredicate,
@@ -144,10 +157,10 @@ public class Scenario {
                 validity);
         }
 
-        static RequiresValidity awaitOn(Barrier barrier) {
-            return validity -> statementPredicate -> new ExecutionHook(
+        static ComposeBehavior awaitOn(Barrier barrier) {
+            return behavior -> validity -> statementPredicate -> new ExecutionHook(
                 statementPredicate,
-                Behavior.awaitOn(barrier),
+                Behavior.awaitOn(barrier, behavior),
                 validity);
         }
     }

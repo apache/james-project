@@ -209,6 +209,7 @@ class TestingSessionTest {
         Barrier barrier = new Barrier();
         cassandra.getConf()
             .registerScenario(awaitOn(barrier)
+                .thenExecuteNormally()
                 .times(1)
                 .whenQueryStartsWith("INSERT INTO schemaVersion"));
 
@@ -229,6 +230,7 @@ class TestingSessionTest {
         Barrier barrier = new Barrier();
         cassandra.getConf()
             .registerScenario(awaitOn(barrier)
+                .thenExecuteNormally()
                 .times(1)
                 .whenQueryStartsWith("INSERT INTO schemaVersion"));
 
@@ -251,6 +253,7 @@ class TestingSessionTest {
         Barrier barrier = new Barrier();
         cassandra.getConf()
             .registerScenario(awaitOn(barrier)
+                .thenExecuteNormally()
                 .times(1)
                 .whenQueryStartsWith("INSERT INTO schemaVersion"));
 
@@ -263,5 +266,28 @@ class TestingSessionTest {
 
         assertThat(dao.getCurrentSchemaVersion().block())
             .contains(newVersion);
+    }
+
+    @Test
+    void awaitOnShouldBeAbleToInjectFailure(CassandraCluster cassandra) throws Exception {
+        SchemaVersion originalSchemaVersion = new SchemaVersion(32);
+        SchemaVersion newVersion = new SchemaVersion(36);
+
+        dao.updateVersion(originalSchemaVersion).block();
+        Barrier barrier = new Barrier();
+        cassandra.getConf()
+            .registerScenario(awaitOn(barrier)
+                .thenFail()
+                .times(1)
+                .whenQueryStartsWith("INSERT INTO schemaVersion"));
+
+        Mono<Void> operation = dao.updateVersion(newVersion).cache();
+
+        operation.subscribeOn(Schedulers.elastic()).subscribe();
+        barrier.awaitCaller();
+        barrier.releaseCaller();
+
+        assertThatThrownBy(operation::block)
+            .isInstanceOf(RuntimeException.class);
     }
 }
