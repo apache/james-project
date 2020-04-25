@@ -141,7 +141,7 @@ public class RecomputeCurrentQuotasService {
     public Mono<Task.Result> recomputeCurrentQuotas(Context context) {
         try {
             return Iterators.toFlux(usersRepository.list())
-                .flatMap(username -> recomputeUserCurrentQuotas(context, username))
+                .concatMap(username -> recomputeUserCurrentQuotas(context, username))
                 .reduce(Task.Result.COMPLETED, Task::combine);
         } catch (UsersRepositoryException e) {
             LOGGER.error("Error while accessing users from repository", e);
