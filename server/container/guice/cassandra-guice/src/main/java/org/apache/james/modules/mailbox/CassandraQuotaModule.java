@@ -65,7 +65,7 @@ public class CassandraQuotaModule extends AbstractModule {
 
         bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);
         bind(QuotaUpdater.class).to(ListeningCurrentQuotaUpdater.class);
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
+        Multibinder.newSetBinder(binder(), MailboxListener.ReactiveGroupMailboxListener.class)
             .addBinding()
             .to(ListeningCurrentQuotaUpdater.class);
     }
