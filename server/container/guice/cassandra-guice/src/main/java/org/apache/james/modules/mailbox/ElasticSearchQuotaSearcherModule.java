@@ -81,7 +81,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
+        Multibinder.newSetBinder(binder(), MailboxListener.ReactiveGroupMailboxListener.class)
             .addBinding()
             .to(ElasticSearchQuotaMailboxListener.class);
     }
