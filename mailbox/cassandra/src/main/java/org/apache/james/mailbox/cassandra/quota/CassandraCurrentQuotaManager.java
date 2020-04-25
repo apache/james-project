@@ -116,13 +116,9 @@ public class CassandraCurrentQuotaManager implements CurrentQuotaManager {
 
     @Override
     public Mono<Void> setCurrentQuotas(QuotaOperation quotaOperation) {
-        return Mono.from(getCurrentQuotas(quotaOperation.quotaRoot()))
-            .flatMap(storedQuotas -> {
-                if (!storedQuotas.equals(CurrentQuotas.from(quotaOperation))) {
-                    return Mono.from(decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size())))
-                        .then(Mono.from(increase(quotaOperation)));
-                }
-                return Mono.empty();
-            });
+        return getCurrentQuotas(quotaOperation.quotaRoot())
+            .filter(storedQuotas -> !storedQuotas.equals(CurrentQuotas.from(quotaOperation)))
+            .flatMap(storedQuotas -> decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size()))
+                .then(increase(quotaOperation)));
     }
 }
