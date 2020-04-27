@@ -28,6 +28,7 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
@@ -42,7 +43,7 @@ public interface AttachmentMapper extends Mapper {
 
     List<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds);
 
-    Publisher<AttachmentMetadata> storeAttachmentForOwner(String contentType, InputStream attachmentContent, Username owner);
+    Publisher<AttachmentMetadata> storeAttachmentForOwner(ContentType contentType, InputStream attachmentContent, Username owner);
 
     List<MessageAttachmentMetadata> storeAttachmentsForMessage(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) throws MailboxException;
 

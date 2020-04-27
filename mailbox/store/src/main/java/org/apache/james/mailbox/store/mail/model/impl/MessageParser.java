@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.Cid;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Body;
@@ -55,7 +56,7 @@ public class MessageParser {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String CONTENT_ID = "Content-ID";
     private static final String CONTENT_DISPOSITION = "Content-Disposition";
-    private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
+    private static final ContentType DEFAULT_CONTENT_TYPE = ContentType.of("application/octet-stream");
     private static final List<String> ATTACHMENT_CONTENT_DISPOSITIONS = ImmutableList.of(
             ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(Locale.US),
             ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase(Locale.US));
@@ -122,8 +123,9 @@ public class MessageParser {
     private ParsedAttachment retrieveAttachment(Entity entity) throws IOException {
         Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
         Optional<ContentDispositionField> contentDispositionField = getContentDispositionField(entity);
-        Optional<String> contentType = contentTypeField.map(ContentTypeField::getBody)
-            .filter(string -> !string.isEmpty());
+        Optional<ContentType> contentType = contentTypeField.map(ContentTypeField::getBody)
+            .filter(string -> !string.isEmpty())
+            .map(ContentType::of);
         Optional<String> name = name(contentTypeField, contentDispositionField);
         Optional<Cid> cid = cid(readHeader(entity, CONTENT_ID, ContentIdField.class));
         boolean isInline = isInline(readHeader(entity, CONTENT_DISPOSITION, ContentDispositionField.class)) && cid.isPresent();

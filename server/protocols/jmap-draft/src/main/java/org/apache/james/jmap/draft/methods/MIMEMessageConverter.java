@@ -328,7 +328,8 @@ public class MIMEMessageConverter {
     }
 
     private ContentTypeField contentTypeField(MessageAttachmentMetadata att) {
-        String type = att.getAttachment().getType();
+        // todo mailbox pojo should be able to expose itself as a mime4j object
+        String type = att.getAttachment().getType().asString();
         ContentTypeField typeAsField = Fields.contentType(type);
         if (att.getName().isPresent()) {
             return Fields.contentType(typeAsField.getMimeType(),

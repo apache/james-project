@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.mailbox.Rights;
 import org.apache.james.mailbox.Role;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
@@ -87,10 +88,15 @@ public class ObjectMapperFactory {
         mailboxIdModule.addDeserializer(DispositionSendingMode.class, new MDNSendingModeDeserializer());
         mailboxIdModule.addDeserializer(DispositionType.class, new MDNTypeDeserializer());
 
+        SimpleModule contentTypeModule = new SimpleModule();
+        contentTypeModule.addDeserializer(ContentType.class, new ContentTypeDeserializer());
+        contentTypeModule.addSerializer(ContentType.class, new ContentTypeSerializer());
+
         mailboxIdModule.setMixInAnnotation(Role.class, RoleMixIn.class);
 
         jacksonModules = JACKSON_BASE_MODULES.add(mailboxIdModule)
             .add(mdnModule)
+            .add(contentTypeModule)
             .build();
     }
 
@@ -131,6 +137,21 @@ public class ObjectMapperFactory {
             return DispositionSendingMode.fromString(value)
                 .orElseThrow(() -> new IllegalStateException(
                     String.format("Unrecognized MDN Disposition sending mode %s. Should be one of %s", value, ALLOWED_VALUES)));
+        }
+    }
+
+    public static class ContentTypeDeserializer extends JsonDeserializer<ContentType> {
+        @Override
+        public ContentType deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+            String value = jsonParser.getValueAsString();
+            return ContentType.of(value);
+        }
+    }
+
+    public static class ContentTypeSerializer extends JsonSerializer<ContentType> {
+        @Override
+        public void serialize(ContentType value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
+            gen.writeString(value.asString());
         }
     }
 

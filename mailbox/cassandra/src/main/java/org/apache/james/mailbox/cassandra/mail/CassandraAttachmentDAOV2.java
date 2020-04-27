@@ -40,6 +40,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ContentType;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -52,10 +53,10 @@ public class CassandraAttachmentDAOV2 {
     public static class DAOAttachment {
         private final AttachmentId attachmentId;
         private final BlobId blobId;
-        private final String type;
+        private final ContentType type;
         private final long size;
 
-        DAOAttachment(AttachmentId attachmentId, BlobId blobId, String type, long size) {
+        DAOAttachment(AttachmentId attachmentId, BlobId blobId, ContentType type, long size) {
             this.attachmentId = attachmentId;
             this.blobId = blobId;
             this.type = type;
@@ -70,7 +71,7 @@ public class CassandraAttachmentDAOV2 {
             return blobId;
         }
 
-        public String getType() {
+        public ContentType getType() {
             return type;
         }
 
@@ -117,7 +118,7 @@ public class CassandraAttachmentDAOV2 {
         return new DAOAttachment(
             AttachmentId.from(row.getString(ID)),
             blobIfFactory.from(row.getString(BLOB_ID)),
-            row.getString(TYPE),
+            ContentType.of(row.getString(TYPE)),
             row.getLong(SIZE));
     }
 
@@ -166,7 +167,7 @@ public class CassandraAttachmentDAOV2 {
                 .setUUID(ID_AS_UUID, attachment.getAttachmentId().asUUID())
                 .setString(ID, attachment.getAttachmentId().getId())
                 .setLong(SIZE, attachment.getSize())
-                .setString(TYPE, attachment.getType())
+                .setString(TYPE, attachment.getType().asString())
                 .setString(BLOB_ID, attachment.getBlobId().asString()));
     }
 

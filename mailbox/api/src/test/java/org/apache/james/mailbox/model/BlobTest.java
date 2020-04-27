@@ -32,7 +32,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class BlobTest {
     static final BlobId ID = BlobId.fromString("123");
-    static final String CONTENT_TYPE = "text/plain";
+    static final ContentType CONTENT_TYPE = ContentType.of("text/plain");
     static final InputStreamSupplier PAYLOAD = () -> new ByteArrayInputStream("abc".getBytes(StandardCharsets.UTF_8));
     static final int LENGTH = 3;
 

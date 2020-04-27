@@ -52,6 +52,7 @@ import org.apache.james.mailbox.exception.BlobNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Blob;
 import org.apache.james.mailbox.model.BlobId;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.codec.EncoderUtil.Usage;
@@ -222,10 +223,10 @@ public class DownloadRoutes implements JMAPRoutes {
         }
     }
 
-    private Mono<Void> downloadBlob(Optional<String> optionalName, HttpServerResponse response, long blobSize, String blobContentType, InputStream stream) {
+    private Mono<Void> downloadBlob(Optional<String> optionalName, HttpServerResponse response, long blobSize, ContentType blobContentType, InputStream stream) {
         return addContentDispositionHeader(optionalName, response)
             .header("Content-Length", String.valueOf(blobSize))
-            .header(CONTENT_TYPE, blobContentType)
+            .header(CONTENT_TYPE, blobContentType.asString())
             .status(OK)
             .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
                 .map(Unpooled::wrappedBuffer)

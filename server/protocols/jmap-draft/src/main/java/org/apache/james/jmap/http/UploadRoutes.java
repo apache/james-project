@@ -43,6 +43,7 @@ import org.apache.james.jmap.draft.model.UploadResponse;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
@@ -98,7 +99,7 @@ public class UploadRoutes implements JMAPRoutes {
             return response.status(BAD_REQUEST).send();
         } else {
             return authenticator.authenticate(request)
-                .flatMap(session -> post(request, response, contentType, session)
+                .flatMap(session -> post(request, response, ContentType.of(contentType), session)
                     .subscriberContext(jmapAuthContext(session)))
                 .onErrorResume(CancelledUploadException.class, e -> handleCanceledUpload(response, e))
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
@@ -111,13 +112,13 @@ public class UploadRoutes implements JMAPRoutes {
         }
     }
 
-    private Mono<Void> post(HttpServerRequest request, HttpServerResponse response, String contentType, MailboxSession session) {
+    private Mono<Void> post(HttpServerRequest request, HttpServerResponse response, ContentType contentType, MailboxSession session) {
         InputStream content = ReactorUtils.toInputStream(request.receive().asByteBuffer().subscribeOn(Schedulers.elastic()));
         return Mono.from(metricFactory.runPublishingTimerMetric("JMAP-upload-post",
             handle(contentType, content, session, response)));
     }
 
-    private Mono<Void> handle(String contentType, InputStream content, MailboxSession mailboxSession, HttpServerResponse response) {
+    private Mono<Void> handle(ContentType contentType, InputStream content, MailboxSession mailboxSession, HttpServerResponse response) {
         return uploadContent(contentType, content, mailboxSession)
             .flatMap(storedContent -> {
                 try {
@@ -131,11 +132,11 @@ public class UploadRoutes implements JMAPRoutes {
             });
     }
 
-    private Mono<UploadResponse> uploadContent(String contentType, InputStream inputStream, MailboxSession session) {
+    private Mono<UploadResponse> uploadContent(ContentType contentType, InputStream inputStream, MailboxSession session) {
         return Mono.from(attachmentManager.storeAttachment(contentType, inputStream, session))
             .map(attachment -> UploadResponse.builder()
                 .blobId(attachment.getAttachmentId().getId())
-                .type(attachment.getType())
+                .type(attachment.getType().asString())
                 .size(attachment.getSize())
                 .build())
             .onErrorMap(e -> e.getCause() instanceof EOFException, any -> new CancelledUploadException())

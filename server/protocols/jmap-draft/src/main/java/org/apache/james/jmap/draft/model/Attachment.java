@@ -22,12 +22,13 @@ package org.apache.james.jmap.draft.model;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.mailbox.model.ContentType;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 @JsonDeserialize(builder = Attachment.Builder.class)
 public class Attachment {
@@ -39,7 +40,7 @@ public class Attachment {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
         private BlobId blobId;
-        private String type;
+        private ContentType type;
         private String name;
         private Number size;
         private String cid;
@@ -52,7 +53,13 @@ public class Attachment {
             return this;
         }
 
+        @JsonDeserialize
         public Builder type(String type) {
+            this.type = ContentType.of(type);
+            return this;
+        }
+
+        public Builder type(ContentType type) {
             this.type = type;
             return this;
         }
@@ -104,14 +111,13 @@ public class Attachment {
 
         public Attachment build() {
             Preconditions.checkState(blobId != null, "'blobId' is mandatory");
-            Preconditions.checkState(!Strings.isNullOrEmpty(type), "'type' is mandatory");
             Preconditions.checkState(size != null, "'size' is mandatory");
             return new Attachment(blobId, type, Optional.ofNullable(name), size, Optional.ofNullable(cid), isInline, Optional.ofNullable(width), Optional.ofNullable(height));
         }
     }
 
     private final BlobId blobId;
-    private final String type;
+    private final ContentType type;
     private final Optional<String> name;
     private final Number size;
     private final Optional<String> cid;
@@ -119,7 +125,7 @@ public class Attachment {
     private final Optional<Number> width;
     private final Optional<Number> height;
 
-    @VisibleForTesting Attachment(BlobId blobId, String type, Optional<String> name, Number size, Optional<String> cid, boolean isInline, Optional<Number> width, Optional<Number> height) {
+    @VisibleForTesting Attachment(BlobId blobId, ContentType type, Optional<String> name, Number size, Optional<String> cid, boolean isInline, Optional<Number> width, Optional<Number> height) {
         this.blobId = blobId;
         this.type = type;
         this.name = name;
@@ -134,7 +140,7 @@ public class Attachment {
         return blobId;
     }
 
-    public String getType() {
+    public ContentType getType() {
         return type;
     }
 

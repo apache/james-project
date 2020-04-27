@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.mailbox.model.ContentType;
 import org.junit.Test;
 
 public class AttachmentTest {
@@ -46,7 +47,7 @@ public class AttachmentTest {
         Attachment.builder().blobId(BlobId.of("blobId")).type("type").name("name").build();
     }
     
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void buildShouldThrowWhenTypeIsEmpty() {
         Attachment.builder().blobId(BlobId.of("blobId")).type("").name("name").size(123).build();
     }
@@ -54,7 +55,7 @@ public class AttachmentTest {
     @Test
     public void buildShouldWorkWhenMandatoryFieldsArePresent() {
         Number attachmentSize = Number.fromLong(123);
-        Attachment expected = new Attachment(BlobId.of("blobId"), "type", Optional.empty(), attachmentSize, Optional.empty(), false, Optional.empty(), Optional.empty());
+        Attachment expected = new Attachment(BlobId.of("blobId"), ContentType.of("type"), Optional.empty(), attachmentSize, Optional.empty(), false, Optional.empty(), Optional.empty());
         Attachment tested = Attachment.builder()
             .blobId(BlobId.of("blobId"))
             .type("type")
@@ -68,7 +69,7 @@ public class AttachmentTest {
         Number attachmentSize = Number.fromLong(123);
         Optional<Number> attachmentWidth = Optional.of(Number.fromLong(456L));
         Optional<Number> attachmentHeight = Optional.of(Number.fromLong(789L));
-        Attachment expected = new Attachment(BlobId.of("blobId"), "type", Optional.of("name"), attachmentSize, Optional.of("cid"), true,
+        Attachment expected = new Attachment(BlobId.of("blobId"), ContentType.of("type"), Optional.of("name"), attachmentSize, Optional.of("cid"), true,
             attachmentWidth, attachmentHeight);
         Attachment tested = Attachment.builder()
             .blobId(BlobId.of("blobId"))

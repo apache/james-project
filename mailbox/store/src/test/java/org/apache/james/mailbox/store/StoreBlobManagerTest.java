@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Blob;
 import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -57,7 +58,7 @@ import com.google.common.collect.ImmutableList;
 class StoreBlobManagerTest {
     static final String ID = "abc";
     static final AttachmentId ATTACHMENT_ID = AttachmentId.from(ID);
-    static final String CONTENT_TYPE = "text/plain";
+    static final ContentType CONTENT_TYPE = ContentType.of("text/plain");
     static final byte[] BYTES = "abc".getBytes(StandardCharsets.UTF_8);
     static final TestMessageId MESSAGE_ID = TestMessageId.of(125);
     static final BlobId BLOB_ID_ATTACHMENT = BlobId.fromString(ID);

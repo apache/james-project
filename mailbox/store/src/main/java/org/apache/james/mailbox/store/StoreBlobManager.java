@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Blob;
 import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
@@ -42,7 +43,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import com.github.fge.lambdas.Throwing;
 
 public class StoreBlobManager implements BlobManager {
-    public static final String MESSAGE_RFC822_CONTENT_TYPE = "message/rfc822";
+    public static final ContentType MESSAGE_RFC822_CONTENT_TYPE = ContentType.of("message/rfc822");
     private final AttachmentManager attachmentManager;
     private final MessageIdManager messageIdManager;
     private final MessageId.Factory messageIdFactory;

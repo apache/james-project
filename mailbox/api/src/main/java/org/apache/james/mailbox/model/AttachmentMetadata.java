@@ -22,13 +22,12 @@ package org.apache.james.mailbox.model;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 public class AttachmentMetadata {
     public static class Builder {
         private AttachmentId attachmentId;
         private Long size;
-        private String type;
+        private ContentType type;
 
         public Builder attachmentId(AttachmentId attachmentId) {
             Preconditions.checkArgument(attachmentId != null);
@@ -36,9 +35,13 @@ public class AttachmentMetadata {
             return this;
         }
 
-        public Builder type(String type) {
-            Preconditions.checkArgument(!Strings.isNullOrEmpty(type));
+        public Builder type(ContentType type) {
             this.type = type;
+            return this;
+        }
+
+        public Builder type(String type) {
+            this.type = ContentType.of(type);
             return this;
         }
 
@@ -62,10 +65,10 @@ public class AttachmentMetadata {
     }
 
     private final AttachmentId attachmentId;
-    private final String type;
+    private final ContentType type;
     private final long size;
 
-    private AttachmentMetadata(AttachmentId attachmentId, String type, long size) {
+    private AttachmentMetadata(AttachmentId attachmentId, ContentType type, long size) {
         this.attachmentId = attachmentId;
         this.type = type;
         this.size = size;
@@ -75,7 +78,7 @@ public class AttachmentMetadata {
         return attachmentId;
     }
 
-    public String getType() {
+    public ContentType getType() {
         return type;
     }
 

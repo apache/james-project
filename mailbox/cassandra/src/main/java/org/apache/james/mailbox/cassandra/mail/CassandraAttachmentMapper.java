@@ -35,6 +35,7 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
@@ -111,7 +112,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Mono<AttachmentMetadata> storeAttachmentForOwner(String contentType, InputStream inputStream, Username owner) {
+    public Mono<AttachmentMetadata> storeAttachmentForOwner(ContentType contentType, InputStream inputStream, Username owner) {
         CurrentPositionInputStream currentPositionInputStream = new CurrentPositionInputStream(inputStream);
         AttachmentId attachmentId = AttachmentId.random();
         return ownerDAO.addOwner(attachmentId, owner)

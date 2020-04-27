@@ -44,7 +44,7 @@ public class Blob {
     public static class Builder {
         private BlobId blobId;
         private InputStreamSupplier payload;
-        private String contentType;
+        private ContentType contentType;
         private Long size;
 
         private Builder() {
@@ -61,6 +61,11 @@ public class Blob {
         }
 
         public Builder contentType(String contentType) {
+            this.contentType = ContentType.of(contentType);
+            return this;
+        }
+
+        public Builder contentType(ContentType contentType) {
             this.contentType = contentType;
             return this;
         }
@@ -86,11 +91,11 @@ public class Blob {
 
     private final BlobId blobId;
     private final InputStreamSupplier payload;
-    private final String contentType;
+    private final ContentType contentType;
     private final long size;
 
     @VisibleForTesting
-    Blob(BlobId blobId, InputStreamSupplier payload, String contentType, long size) {
+    Blob(BlobId blobId, InputStreamSupplier payload, ContentType contentType, long size) {
         this.blobId = blobId;
         this.payload = payload;
         this.contentType = contentType;
@@ -109,7 +114,7 @@ public class Blob {
         return size;
     }
 
-    public String getContentType() {
+    public ContentType getContentType() {
         return contentType;
     }
 

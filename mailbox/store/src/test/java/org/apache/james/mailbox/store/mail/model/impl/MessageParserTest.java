@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.mailbox.model.Cid;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mdn.MDN;
 import org.apache.james.mdn.MDNReport;
@@ -90,7 +91,8 @@ class MessageParserTest {
         List<ParsedAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutContentType.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getContentType()).isEqualTo("application/octet-stream");
+        assertThat(attachments.get(0).getContentType())
+            .isEqualTo(ContentType.of("application/octet-stream"));
     }
 
     @Test
@@ -98,7 +100,8 @@ class MessageParserTest {
         List<ParsedAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithEmptyContentType.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getContentType()).isEqualTo("application/octet-stream");
+        assertThat(attachments.get(0).getContentType())
+            .isEqualTo(ContentType.of("application/octet-stream"));
     }
 
     @Test
@@ -106,7 +109,8 @@ class MessageParserTest {
         List<ParsedAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getContentType()).isEqualTo("application/octet-stream;\tname=\"exploits_of_a_mom.png\"");
+        assertThat(attachments.get(0).getContentType())
+            .isEqualTo(ContentType.of("application/octet-stream;\tname=\"exploits_of_a_mom.png\""));
     }
 
     @Test
@@ -128,7 +132,8 @@ class MessageParserTest {
         List<ParsedAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithSimpleContentType.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getContentType()).isEqualTo("application/octet-stream");
+        assertThat(attachments.get(0).getContentType())
+            .isEqualTo(ContentType.of("application/octet-stream"));
     }
 
     @Test
@@ -270,7 +275,8 @@ class MessageParserTest {
 
         assertThat(attachments).hasSize(1)
             .first()
-            .satisfies(attachment -> assertThat(attachment.getContentType()).isEqualTo("text/calendar; charset=\"iso-8859-1\"; method=COUNTER"));
+            .satisfies(attachment -> assertThat(attachment.getContentType())
+                .isEqualTo(ContentType.of("text/calendar; charset=\"iso-8859-1\"; method=COUNTER")));
     }
 
     @Test
@@ -280,8 +286,8 @@ class MessageParserTest {
 
         assertThat(attachments).hasSize(2)
             .extracting(ParsedAttachment::getContentType)
-            .containsOnly("text/calendar; charset=\"iso-8859-1\"; method=COUNTER",
-                "text/calendar; charset=\"iso-4444-5\"; method=COUNTER");
+            .containsOnly(ContentType.of("text/calendar; charset=\"iso-8859-1\"; method=COUNTER"),
+                ContentType.of("text/calendar; charset=\"iso-4444-5\"; method=COUNTER"));
     }
 
     @Test
@@ -292,7 +298,7 @@ class MessageParserTest {
         assertThat(attachments)
             .hasSize(1)
             .extracting(ParsedAttachment::getContentType)
-            .containsExactly("text/calendar; charset=\"utf-8\"; method=COUNTER");
+            .containsExactly(ContentType.of("text/calendar; charset=\"utf-8\"; method=COUNTER"));
     }
 
     @Test
@@ -328,6 +334,6 @@ class MessageParserTest {
 
         List<ParsedAttachment> result = testee.retrieveAttachments(new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)));
         assertThat(result).hasSize(1)
-            .allMatch(attachment -> attachment.getContentType().equals("message/disposition-notification; charset=UTF-8"));
+            .allMatch(attachment -> attachment.getContentType().equals(ContentType.of("message/disposition-notification; charset=UTF-8")));
     }
 }

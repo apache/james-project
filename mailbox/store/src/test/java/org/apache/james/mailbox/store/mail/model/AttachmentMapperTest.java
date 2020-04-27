@@ -31,6 +31,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -72,7 +73,7 @@ public abstract class AttachmentMapperTest {
 
     @Test
     void storeAttachmentForOwnerShouldReturnSuppliedInformation() throws Exception {
-        String content = "content";
+        ContentType content = ContentType.of("content");
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
 
         AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
@@ -85,7 +86,7 @@ public abstract class AttachmentMapperTest {
 
     @Test
     void getAttachmentShouldReturnTheAttachmentWhenReferenced() throws Exception {
-        String content = "content";
+        ContentType content = ContentType.of("content");
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
 
         AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
@@ -101,7 +102,7 @@ public abstract class AttachmentMapperTest {
 
     @Test
     void loadAttachmentContentShouldReturnStoredContent() throws Exception {
-        String content = "content";
+        ContentType content = ContentType.of("content");
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
 
         AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
@@ -126,10 +127,10 @@ public abstract class AttachmentMapperTest {
     @Test
     void getAttachmentsShouldReturnTheAttachmentsWhenSome() {
         //Given
-        String content1 = "content";
+        ContentType content1 = ContentType.of("content");
         byte[] bytes1 = "payload".getBytes(StandardCharsets.UTF_8);
         AttachmentMetadata stored1 = Mono.from(attachmentMapper.storeAttachmentForOwner(content1, new ByteArrayInputStream(bytes1), OWNER)).block();
-        String content2 = "content";
+        ContentType content2 = ContentType.of("content");
         byte[] bytes2 = "payload".getBytes(StandardCharsets.UTF_8);
         AttachmentMetadata stored2 = Mono.from(attachmentMapper.storeAttachmentForOwner(content2, new ByteArrayInputStream(bytes2), OWNER)).block();
 
@@ -146,7 +147,7 @@ public abstract class AttachmentMapperTest {
 
     @Test
     void getOwnerMessageIdsShouldReturnEmptyWhenStoredWithoutMessageId() throws Exception {
-        String content = "content";
+        ContentType content = ContentType.of("content");
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
         AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
 
@@ -190,7 +191,7 @@ public abstract class AttachmentMapperTest {
 
     @Test
     void getOwnersShouldBeRetrievedWhenExplicitlySpecified() throws Exception {
-        String content = "content";
+        ContentType content = ContentType.of("content");
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
         AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
 
@@ -201,10 +202,10 @@ public abstract class AttachmentMapperTest {
 
     @Test
     void getOwnersShouldNotReturnUnrelatedOwners() throws Exception {
-        String content = "content";
+        ContentType content = ContentType.of("content");
         byte[] bytes = "payload".getBytes(StandardCharsets.UTF_8);
         AttachmentMetadata stored = Mono.from(attachmentMapper.storeAttachmentForOwner(content, new ByteArrayInputStream(bytes), OWNER)).block();
-        String content2 = "content";
+        ContentType content2 = ContentType.of("content");
         byte[] bytes2 = "payload".getBytes(StandardCharsets.UTF_8);
         AttachmentMetadata stored2 = Mono.from(attachmentMapper.storeAttachmentForOwner(content2, new ByteArrayInputStream(bytes2), ADDITIONAL_OWNER)).block();
 

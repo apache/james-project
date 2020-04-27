@@ -26,7 +26,11 @@ public class ParsedAttachment {
     interface Builder {
         @FunctionalInterface
         interface RequireContentType {
-            RequireContent contentType(String contentType);
+            RequireContent contentType(ContentType contentType);
+
+            default RequireContent contentType(String contentType) {
+                return contentType(ContentType.of(contentType));
+            }
         }
 
         @FunctionalInterface
@@ -74,13 +78,13 @@ public class ParsedAttachment {
         return contentType -> content -> name -> cid -> isInline -> new ParsedAttachment(contentType, content, name, cid, isInline);
     }
 
-    private final String contentType;
+    private final ContentType contentType;
     private final byte[] content;
     private final Optional<String> name;
     private final Optional<Cid> cid;
     private final boolean isInline;
 
-    private ParsedAttachment(String contentType, byte[] content, Optional<String> name, Optional<Cid> cid, boolean isInline) {
+    private ParsedAttachment(ContentType contentType, byte[] content, Optional<String> name, Optional<Cid> cid, boolean isInline) {
         this.contentType = contentType;
         this.content = content;
         this.name = name;
@@ -88,7 +92,7 @@ public class ParsedAttachment {
         this.isInline = isInline;
     }
 
-    public String getContentType() {
+    public ContentType getContentType() {
         return contentType;
     }
 

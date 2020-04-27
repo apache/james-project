@@ -2109,7 +2109,7 @@ public abstract class SetMessagesMethodTest {
             "        \"keywords\": {\"$Draft\": true}," +
             "        \"attachments\": [" +
             "                {\"blobId\" : \"" + uploadedAttachment.getAttachmentId().getId() + "\", " +
-            "                 \"type\" : \"" + uploadedAttachment.getType() + "\"," +
+            "                 \"type\" : \"" + uploadedAttachment.getType().asString() + "\"," +
             "                 \"size\" : " + uploadedAttachment.getSize() + "}" +
             "             ]," +
             "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
@@ -3982,10 +3982,10 @@ public abstract class SetMessagesMethodTest {
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
             "               {\"blobId\" : \"" + uploadedAttachment1.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment1.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment1.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment1.getSize() + "}," +
             "               {\"blobId\" : \"" + uploadedAttachment2.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment2.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment2.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment2.getSize() + ", " +
             "               \"cid\" : \"123456789\", " +
             "               \"isInline\" : true }" +
@@ -4051,10 +4051,10 @@ public abstract class SetMessagesMethodTest {
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
             "               {\"blobId\" : \"" + uploadedAttachment1.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment1.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment1.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment1.getSize() + "}," +
             "               {\"blobId\" : \"" + uploadedAttachment2.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment2.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment2.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment2.getSize() + ", " +
             "               \"cid\" : \"123456789\", " +
             "               \"isInline\" : true }" +
@@ -4127,21 +4127,21 @@ public abstract class SetMessagesMethodTest {
             "          [" +
             "            {" +
             "              \"blobId\" : \"" + uploadedAttachment1.getAttachmentId().getId() + "\", " +
-            "              \"type\" : \"" + uploadedAttachment1.getType() + "\", " +
+            "              \"type\" : \"" + uploadedAttachment1.getType().asString() + "\", " +
             "              \"size\" : " + uploadedAttachment1.getSize() + "," +
             "              \"name\" : \"ديناصور.png\", " +
             "              \"isInline\" : false" +
             "            }," +
             "            {" +
             "              \"blobId\" : \"" + uploadedAttachment2.getAttachmentId().getId() + "\", " +
-            "              \"type\" : \"" + uploadedAttachment2.getType() + "\", " +
+            "              \"type\" : \"" + uploadedAttachment2.getType().asString() + "\", " +
             "              \"size\" : " + uploadedAttachment2.getSize() + "," +
             "              \"name\" : \"эволюционировать.png\", " +
             "              \"isInline\" : false" +
             "            }," +
             "            {" +
             "              \"blobId\" : \"" + uploadedAttachment3.getAttachmentId().getId() + "\", " +
-            "              \"type\" : \"" + uploadedAttachment3.getType() + "\", " +
+            "              \"type\" : \"" + uploadedAttachment3.getType().asString() + "\", " +
             "              \"size\" : " + uploadedAttachment3.getSize() + "," +
             "              \"name\" : \"进化还是不.png\"," +
             "              \"isInline\" : false" +
@@ -4204,21 +4204,21 @@ public abstract class SetMessagesMethodTest {
             "          [" +
             "            {" +
             "              \"blobId\" : \"" + uploadedAttachment1.getAttachmentId().getId() + "\", " +
-            "              \"type\" : \"" + uploadedAttachment1.getType() + "\", " +
+            "              \"type\" : \"" + uploadedAttachment1.getType().asString() + "\", " +
             "              \"size\" : " + uploadedAttachment1.getSize() + "," +
             "              \"name\" : \"ديناصور.png\", " +
             "              \"isInline\" : false" +
             "            }," +
             "            {" +
             "              \"blobId\" : \"" + uploadedAttachment2.getAttachmentId().getId() + "\", " +
-            "              \"type\" : \"" + uploadedAttachment2.getType() + "\", " +
+            "              \"type\" : \"" + uploadedAttachment2.getType().asString() + "\", " +
             "              \"size\" : " + uploadedAttachment2.getSize() + "," +
             "              \"name\" : \"эволюционировать.png\", " +
             "              \"isInline\" : false" +
             "            }," +
             "            {" +
             "              \"blobId\" : \"" + uploadedAttachment3.getAttachmentId().getId() + "\", " +
-            "              \"type\" : \"" + uploadedAttachment3.getType() + "\", " +
+            "              \"type\" : \"" + uploadedAttachment3.getType().asString() + "\", " +
             "              \"size\" : " + uploadedAttachment3.getSize() + "," +
             "              \"name\" : \"进化还是不.png\"," +
             "              \"isInline\" : false" +
@@ -4332,7 +4332,7 @@ public abstract class SetMessagesMethodTest {
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
             "               {\"blobId\" : \"" + uploadedAttachment.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment.getSize() + ", " +
             "               \"cid\" : \"123456789\", " +
             "               \"isInline\" : true }" +
@@ -4404,7 +4404,7 @@ public abstract class SetMessagesMethodTest {
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
             "               {\"blobId\" : \"" + uploadedAttachment.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment.getSize() + ", " +
             "               \"cid\" : \"123456789\", " +
             "               \"isInline\" : true }" +
@@ -4499,7 +4499,7 @@ public abstract class SetMessagesMethodTest {
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
             "               {\"blobId\" : \"" + uploadedAttachment.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment.getSize() + ", " +
             "               \"isInline\" : false }" +
             "           ]" +
@@ -4574,7 +4574,7 @@ public abstract class SetMessagesMethodTest {
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
             "               {\"blobId\" : \"" + uploadedAttachment.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment.getSize() + ", " +
             "               \"isInline\" : false }" +
             "           ]" +
@@ -4659,7 +4659,7 @@ public abstract class SetMessagesMethodTest {
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
             "               {\"blobId\" : \"" + uploadedAttachment.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment.getSize() + ", " +
             "               \"isInline\" : false }" +
             "           ]" +
@@ -5420,7 +5420,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"mailboxIds\": [\"" + outboxId + "\"], " +
                 "        \"attachments\": [" +
                 "               {\"blobId\" : \"" + uploadedAttachment.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + uploadedAttachment.getType() + "\", " +
+                "               \"type\" : \"" + uploadedAttachment.getType().asString() + "\", " +
                 "               \"name\" : \"nonIndexableAttachment.html\", " +
                 "               \"size\" : " + uploadedAttachment.getSize() + "}" +
                 "           ]" +
@@ -5469,7 +5469,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"mailboxIds\": [\"" + outboxId + "\"], " +
                 "        \"attachments\": [" +
                 "               {\"blobId\" : \"" + uploadedAttachment.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + uploadedAttachment.getType() + "\", " +
+                "               \"type\" : \"" + uploadedAttachment.getType().asString() + "\", " +
                 "               \"name\" : \"nonIndexableAttachment.html\", " +
                 "               \"size\" : " + uploadedAttachment.getSize() + "}" +
                 "           ]" +
@@ -5528,7 +5528,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"mailboxIds\": [\"" + outboxId + "\"], " +
                 "        \"attachments\": [" +
                 "               {\"blobId\" : \"" + uploadedAttachment.getAttachmentId().getId() + "\", " +
-                "               \"type\" : \"" + uploadedAttachment.getType() + "\", " +
+                "               \"type\" : \"" + uploadedAttachment.getType().asString() + "\", " +
                 "               \"name\" : \"nonIndexableAttachment.html\", " +
                 "               \"size\" : " + uploadedAttachment.getSize() + "}" +
                 "           ]" +
@@ -5582,10 +5582,10 @@ public abstract class SetMessagesMethodTest {
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
             "               {\"blobId\" : \"" + uploadedAttachment1.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment1.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment1.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment1.getSize() + "}," +
             "               {\"blobId\" : \"" + uploadedAttachment2.getAttachmentId().getId() + "\", " +
-            "               \"type\" : \"" + uploadedAttachment2.getType() + "\", " +
+            "               \"type\" : \"" + uploadedAttachment2.getType().asString() + "\", " +
             "               \"size\" : " + uploadedAttachment2.getSize() + ", " +
             "               \"isInline\" : true }" +
             "           ]" +

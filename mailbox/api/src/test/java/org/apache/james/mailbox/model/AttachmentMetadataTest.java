@@ -35,7 +35,7 @@ class AttachmentMetadataTest {
     @Test
     void builderShouldThrowWhenTypeIsNull() {
         assertThatThrownBy(() -> AttachmentMetadata.builder()
-                .type(null))
+                .type((String) null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

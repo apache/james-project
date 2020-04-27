@@ -34,6 +34,7 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.reactivestreams.Publisher;
@@ -77,7 +78,7 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
-    public Publisher<AttachmentMetadata> storeAttachment(String contentType, InputStream attachmentContent, MailboxSession mailboxSession) {
+    public Publisher<AttachmentMetadata> storeAttachment(ContentType contentType, InputStream attachmentContent, MailboxSession mailboxSession) {
         return attachmentMapperFactory.getAttachmentMapper(mailboxSession)
             .storeAttachmentForOwner(contentType, attachmentContent, mailboxSession.getUser());
     }
