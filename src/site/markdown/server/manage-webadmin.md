@@ -491,9 +491,15 @@ Rerunning the task will *eventually* provide the consistent result. As such we a
 In order to ensure being offline, stop the traffic on SMTP, JMAP and IMAP ports, for example via re-configuration or 
 firewall rules.
 
-`trustMessageProjection` query parameter can be set to `true`. This will result in a better performance running the
-task at the cost of safety in the face of message denormalization inconsistencies. Defaults to false, which generates 
-additional checks.
+`trustMessageProjection` query parameter can be set to `true`. Cpntent of `messageIdTable` (listing messages by their 
+mailbox context) table will be trusted and not compared against content of `imapUidTable` table (listing messages by their
+messageId mailbox independent identifier). This will result in a better performance running the
+task at the cost of safety in the face of message denormalization inconsistencies. 
+
+Defaults to false, which generates 
+additional checks. You can read 
+[this ADR](https://github.com/apache/james-project/blob/master/src/adr/0022-cassandra-message-inconsistency.md) to 
+better understand the message projection and how it can become inconsistent. 
 
 #### Recomputing Global JMAP fast message view projection
 

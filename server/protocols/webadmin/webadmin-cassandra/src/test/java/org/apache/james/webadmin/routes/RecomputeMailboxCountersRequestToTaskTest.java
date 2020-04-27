@@ -41,7 +41,7 @@ class RecomputeMailboxCountersRequestToTaskTest {
     }
 
     @Test
-    void parseOptionsShouldBeCaseIncentive() {
+    void parseOptionsShouldNotBeSensitiveToCase() {
         assertThat(RecomputeMailboxCountersRequestToTask.parseOptions(Optional.of("False")))
             .isEqualTo(Options.recheckMessageProjection());
     }
