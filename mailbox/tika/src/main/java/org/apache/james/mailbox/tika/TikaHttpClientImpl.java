@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.Optional;
 
 import org.apache.http.client.fluent.Request;
@@ -52,12 +53,16 @@ public class TikaHttpClientImpl implements TikaHttpClient {
     }
 
     @Override
-    public Optional<InputStream> recursiveMetaDataAsJson(InputStream inputStream, String contentType) {
+    public Optional<InputStream> recursiveMetaDataAsJson(InputStream inputStream, org.apache.james.mailbox.model.ContentType contentType) {
         try {
+            ContentType httpContentType = ContentType.create(contentType.mimeType().asString(),
+                contentType.charset()
+                    .map(Charset::name)
+                    .orElse(null));
             return Optional.ofNullable(
                     Request.Put(recursiveMetaData)
                         .socketTimeout(tikaConfiguration.getTimeoutInMillis())
-                        .bodyStream(inputStream, ContentType.create(contentType))
+                        .bodyStream(inputStream, httpContentType)
                         .execute()
                         .returnContent()
                         .asStream());

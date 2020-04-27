@@ -27,12 +27,13 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class JsoupTextExtractorTest {
 
-    private static final String TEXT_HTML_CONTENT_TYPE = "text/html";
+    private static final ContentType TEXT_HTML_CONTENT_TYPE = ContentType.of("text/html");
     private static final String HTML_TEXT_CONTENT = "HTML pages can include a lot of null '\0' character. But still expecting the content can be parsed." +
         "Jsoup 1.12.1 thinks a file containing more than 10 null characters can be a binary file";
     private static final String NULL_CHARACTERS = "\0\0\0\0\0\0\0\0\0\0";
@@ -57,7 +58,15 @@ class JsoupTextExtractorTest {
     void extractContentShouldHandlePlainText() throws Exception {
         InputStream inputStream = new ByteArrayInputStream("myText".getBytes(StandardCharsets.UTF_8));
 
-        assertThat(textExtractor.extractContent(inputStream, "text/plain").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("text/plain")).getTextualContent())
+                .contains("myText");
+    }
+
+    @Test
+    void extractContentShouldHandlePlainTextWithCharset() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream("myText".getBytes(StandardCharsets.UTF_8));
+
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("text/plain; charset=utf-8")).getTextualContent())
                 .contains("myText");
     }
 
@@ -65,7 +74,7 @@ class JsoupTextExtractorTest {
     void extractContentShouldHandleArbitraryTextMediaType() throws Exception {
         InputStream inputStream = new ByteArrayInputStream("myText".getBytes(StandardCharsets.UTF_8));
 
-        assertThat(textExtractor.extractContent(inputStream, "text/arbitrary").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("text/arbitrary")).getTextualContent())
                 .isEmpty();
     }
 
@@ -91,6 +100,24 @@ class JsoupTextExtractorTest {
                 .getTextualContent())
             .hasValueSatisfying(text -> assertThat(text)
                 .contains(HTML_TEXT_CONTENT));
+    }
+
+    @Test
+    void extractContentShouldTakeIntoAccountCharsetWhenPlainText() throws Exception {
+        InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/simple-text-iso-8859-1.txt");
+        assertThat(inputStream).isNotNull();
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("text/plain; charset=ISO-8859-1"))
+            .getTextualContent())
+            .contains("\"é\" This text is not UTF-8 \"à\"");
+    }
+
+    @Test
+    void extractContentTakeIntoAccountCharsetWhenHTML() throws Exception {
+        InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/html-iso-8859-1.html");
+        assertThat(inputStream).isNotNull();
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("text/html; charset=ISO-8859-1"))
+            .getTextualContent())
+            .contains("\"é\" this is a simple HTML text \"à\"");
     }
 
     private InputStream textContentWithManyNullCharacters() {

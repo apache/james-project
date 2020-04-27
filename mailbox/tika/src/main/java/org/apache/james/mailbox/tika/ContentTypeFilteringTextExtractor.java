@@ -23,28 +23,30 @@ import java.io.InputStream;
 
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType;
+import org.apache.james.mailbox.model.ContentType.MimeType;
 
 import com.google.common.collect.ImmutableSet;
 
 public class ContentTypeFilteringTextExtractor implements TextExtractor {
 
     private final TextExtractor textExtractor;
-    private final ImmutableSet<String> contentTypeBlacklist;
+    private final ImmutableSet<MimeType> contentTypeBlacklist;
 
-    public ContentTypeFilteringTextExtractor(TextExtractor textExtractor, ImmutableSet<String> contentTypeBlacklist) {
+    public ContentTypeFilteringTextExtractor(TextExtractor textExtractor, ImmutableSet<MimeType> contentTypeBlacklist) {
         this.textExtractor = textExtractor;
         this.contentTypeBlacklist = contentTypeBlacklist;
     }
 
     @Override
-    public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
-        if (isBlacklisted(contentType)) {
+    public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
+        if (isBlacklisted(contentType.mimeType())) {
             return ParsedContent.empty();
         }
         return textExtractor.extractContent(inputStream, contentType);
     }
 
-    private boolean isBlacklisted(String contentType) {
+    private boolean isBlacklisted(MimeType contentType) {
         return contentTypeBlacklist.contains(contentType);
     }
 

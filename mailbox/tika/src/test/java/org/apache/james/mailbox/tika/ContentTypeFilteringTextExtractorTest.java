@@ -31,6 +31,8 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType;
+import org.apache.james.mailbox.model.ContentType.MimeType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -52,10 +54,22 @@ class ContentTypeFilteringTextExtractorTest {
     void extractContentReturnEmptyWithContentTypeInBlacklist() throws Exception {
         ContentTypeFilteringTextExtractor contentTypeFilteringTextExtractor =
             new ContentTypeFilteringTextExtractor(textExtractor,
-                ImmutableSet.of("application/ics", "application/zip"));
+                ImmutableSet.of(MimeType.of("application/ics"), MimeType.of("application/zip")));
 
         assertThat(contentTypeFilteringTextExtractor
-            .extractContent(IOUtils.toInputStream("", StandardCharsets.UTF_8), "application/ics"))
+            .extractContent(IOUtils.toInputStream("", StandardCharsets.UTF_8), ContentType.of("application/ics")))
+            .isEqualTo(ParsedContent.empty());
+        verifyNoMoreInteractions(textExtractor);
+    }
+
+    @Test
+    void extractContentShouldIgnoreContentTypeParameters() throws Exception {
+        ContentTypeFilteringTextExtractor contentTypeFilteringTextExtractor =
+            new ContentTypeFilteringTextExtractor(textExtractor,
+                ImmutableSet.of(MimeType.of("application/ics"), MimeType.of("application/zip")));
+
+        assertThat(contentTypeFilteringTextExtractor
+            .extractContent(IOUtils.toInputStream("", StandardCharsets.UTF_8), ContentType.of("application/ics; charset=utf-8")))
             .isEqualTo(ParsedContent.empty());
         verifyNoMoreInteractions(textExtractor);
     }
@@ -65,8 +79,8 @@ class ContentTypeFilteringTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
         ContentTypeFilteringTextExtractor contentTypeFilteringTextExtractor =
             new ContentTypeFilteringTextExtractor(textExtractor,
-                ImmutableSet.of("application/ics", "application/zip"));
-        contentTypeFilteringTextExtractor.extractContent(inputStream, "text/plain");
+                ImmutableSet.of(MimeType.of("application/ics"), MimeType.of("application/zip")));
+        contentTypeFilteringTextExtractor.extractContent(inputStream, ContentType.of("text/plain"));
 
         verify(textExtractor, times(1)).extractContent(any(), any());
     }

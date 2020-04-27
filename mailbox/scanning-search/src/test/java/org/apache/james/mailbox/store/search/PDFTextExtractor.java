@@ -26,6 +26,8 @@ import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType;
+import org.apache.james.mailbox.model.ContentType.MimeType;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
@@ -34,10 +36,10 @@ import com.google.common.collect.ImmutableMap;
 
 public class PDFTextExtractor implements TextExtractor {
 
-    static final String PDF_TYPE = "application/pdf";
+    static final MimeType PDF_TYPE = MimeType.of("application/pdf");
 
     @Override
-    public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
+    public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
         Preconditions.checkNotNull(inputStream);
         Preconditions.checkNotNull(contentType);
 
@@ -47,8 +49,8 @@ public class PDFTextExtractor implements TextExtractor {
         return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, StandardCharsets.UTF_8)), ImmutableMap.of());
     }
 
-    private boolean isPDF(String contentType) {
-        return contentType.equals(PDF_TYPE);
+    private boolean isPDF(ContentType contentType) {
+        return contentType.mimeType().equals(PDF_TYPE);
     }
 
     private ParsedContent extractTextFromPDF(InputStream inputStream) throws IOException {

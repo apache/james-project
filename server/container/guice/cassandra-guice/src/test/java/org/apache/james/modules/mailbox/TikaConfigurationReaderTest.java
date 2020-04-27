@@ -26,6 +26,7 @@ import java.time.Duration;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
+import org.apache.james.mailbox.model.ContentType.MimeType;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.junit.Test;
 
@@ -272,7 +273,7 @@ public class TikaConfigurationReaderTest {
                     .port(889)
                     .timeoutInMillis(500)
                     .cacheWeightInBytes(1520000)
-                    .contentTypeBlacklist(ImmutableSet.of("application/ics", "application/zip"))
+                    .contentTypeBlacklist(ImmutableSet.of(MimeType.of("application/ics"), MimeType.of("application/zip")))
                     .build());
     }
 
@@ -297,7 +298,7 @@ public class TikaConfigurationReaderTest {
                     .port(889)
                     .timeoutInMillis(500)
                     .cacheWeightInBytes(1520000)
-                    .contentTypeBlacklist(ImmutableSet.of("application/ics", "application/zip"))
+                    .contentTypeBlacklist(ImmutableSet.of(MimeType.of("application/ics"), MimeType.of("application/zip")))
                     .build());
     }
 

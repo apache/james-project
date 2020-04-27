@@ -23,6 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.mailbox.model.ContentType;
+import org.apache.james.mailbox.model.ContentType.MediaType;
+import org.apache.james.mailbox.model.ContentType.SubType;
 import org.junit.jupiter.api.Test;
 
 class MimePartTest {
@@ -31,8 +34,8 @@ class MimePartTest {
     void buildShouldWorkWhenTextualContentFromParserIsEmpty() {
         MimePart.builder()
             .addBodyContent(new ByteArrayInputStream(new byte[] {}))
-            .addMediaType("text")
-            .addSubType("plain")
+            .addMediaType(MediaType.of("text"))
+            .addSubType(SubType.of("plain"))
             .build();
     }
 
@@ -41,8 +44,8 @@ class MimePartTest {
         String body = "text";
         MimePart mimePart = MimePart.builder()
             .addBodyContent(new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)))
-            .addMediaType("text")
-            .addSubType("plain")
+            .addMediaType(MediaType.of("text"))
+            .addSubType(SubType.of("plain"))
             .build();
         
         assertThat(mimePart.getTextualBody()).contains(body);

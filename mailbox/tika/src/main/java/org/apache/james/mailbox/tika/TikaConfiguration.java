@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.mailbox.model.ContentType.MimeType;
 import org.apache.james.util.Port;
 
 import com.google.common.base.Preconditions;
@@ -41,7 +42,7 @@ public class TikaConfiguration {
         private Optional<Integer> timeoutInMillis;
         private Optional<Duration> cacheEvictionPeriod;
         private Optional<Long> cacheWeightInBytes;
-        private ImmutableSet.Builder<String> contentTypeBlacklist;
+        private ImmutableSet.Builder<MimeType> contentTypeBlacklist;
 
         private Builder() {
             isEnabled = Optional.empty();
@@ -140,7 +141,7 @@ public class TikaConfiguration {
             return this;
         }
 
-        public Builder contentTypeBlacklist(Set<String> contentTypeBlacklist) {
+        public Builder contentTypeBlacklist(Set<MimeType> contentTypeBlacklist) {
             Preconditions.checkNotNull(contentTypeBlacklist);
             this.contentTypeBlacklist.addAll(contentTypeBlacklist);
             return this;
@@ -179,9 +180,9 @@ public class TikaConfiguration {
     private final int timeoutInMillis;
     private final Duration cacheEvictionPeriod;
     private final long cacheWeightInBytes;
-    private final ImmutableSet<String> contentTypeBlacklist;
+    private final ImmutableSet<MimeType> contentTypeBlacklist;
 
-    private TikaConfiguration(boolean enabled, boolean cacheEnabled, String host, int port, int timeoutInMillis, Duration cacheEvictionPeriod, long cacheWeightInBytes,  ImmutableSet<String> contentTypeBlacklist) {
+    private TikaConfiguration(boolean enabled, boolean cacheEnabled, String host, int port, int timeoutInMillis, Duration cacheEvictionPeriod, long cacheWeightInBytes,  ImmutableSet<MimeType> contentTypeBlacklist) {
         this.enabled = enabled;
         this.cacheEnabled = cacheEnabled;
         this.host = host;
@@ -220,7 +221,7 @@ public class TikaConfiguration {
         return cacheWeightInBytes;
     }
 
-    public ImmutableSet<String> getContentTypeBlacklist() {
+    public ImmutableSet<MimeType> getContentTypeBlacklist() {
         return contentTypeBlacklist;
     }
 

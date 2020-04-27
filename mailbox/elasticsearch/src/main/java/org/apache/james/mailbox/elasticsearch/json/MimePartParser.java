@@ -26,6 +26,8 @@ import java.util.LinkedList;
 import java.util.Optional;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType.MediaType;
+import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
@@ -119,9 +121,13 @@ public class MimePartParser {
     private void extractMimePartBodyDescription(MimeTokenStream stream) {
         MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) stream.getBodyDescriptor();
 
-        currentlyBuildMimePart.addMediaType(descriptor.getMediaType())
-            .addSubType(descriptor.getSubType())
-            .addContentDisposition(descriptor.getContentDispositionType())
+        Optional.ofNullable(descriptor.getMediaType())
+            .map(MediaType::of)
+            .ifPresent(currentlyBuildMimePart::addMediaType);
+        Optional.ofNullable(descriptor.getSubType())
+            .map(SubType::of)
+            .ifPresent(currentlyBuildMimePart::addSubType);
+        currentlyBuildMimePart.addContentDisposition(descriptor.getContentDispositionType())
             .addFileName(descriptor.getContentDispositionFilename());
         extractCharset(descriptor);
     }

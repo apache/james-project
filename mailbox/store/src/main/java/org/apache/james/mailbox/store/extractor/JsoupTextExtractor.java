@@ -29,6 +29,8 @@ import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType;
+import org.apache.james.mailbox.model.ContentType.MimeType;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -38,16 +40,18 @@ public class JsoupTextExtractor implements TextExtractor {
     private static final String TITLE_HTML_TAG = "title";
     private static final String NO_BASE_URI = "";
     private static final Map<String, List<String>> EMPTY_METADATA = ImmutableMap.of();
+    private static final MimeType TEXT_HTML = MimeType.of("text/html");
+    private static final MimeType TEXT_PLAIN = MimeType.of("text/plain");
 
     @Override
-    public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
+    public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
         if (inputStream == null || contentType == null) {
             return ParsedContent.empty();
         }
-        if (contentType.equals("text/html")) {
+        if (contentType.mimeType().equals(TEXT_HTML)) {
             return parseHtmlContent(inputStream);
         }
-        if (contentType.equals("text/plain")) {
+        if (contentType.mimeType().equals(TEXT_PLAIN)) {
             return parsePlainTextContent(inputStream);
         }
         return ParsedContent.empty();

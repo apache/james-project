@@ -31,6 +31,7 @@ import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.tika.TikaTextExtractor.ContentAndMetadataDeserializer;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +60,8 @@ class TikaTextExtractorTest {
 
     @Test
     void textualContentShouldReturnEmptyWhenInputStreamIsEmpty() throws Exception {
-        assertThat(textExtractor.extractContent(IOUtils.toInputStream("", StandardCharsets.UTF_8), "text/plain").getTextualContent())
+        assertThat(textExtractor.extractContent(IOUtils.toInputStream("", StandardCharsets.UTF_8), ContentType.of("text/plain"))
+            .getTextualContent())
             .contains("");
     }
 
@@ -67,7 +69,7 @@ class TikaTextExtractorTest {
     void textTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "text/plain").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("text/plain")).getTextualContent())
             .isPresent()
             .asString()
             .contains("This is some awesome text text.");
@@ -77,7 +79,9 @@ class TikaTextExtractorTest {
     void textMicrosoftWorldTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/writter.docx");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream,
+                ContentType.of("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                .getTextualContent())
             .isPresent()
             .asString()
             .contains("This is an awesome document on libroffice writter !");
@@ -87,7 +91,8 @@ class TikaTextExtractorTest {
     void textOdtTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/writter.odt");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.text").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("application/vnd.oasis.opendocument.text"))
+                .getTextualContent())
             .isPresent()
             .asString()
             .contains("This is an awesome document on libroffice writter !");
@@ -97,7 +102,8 @@ class TikaTextExtractorTest {
     void documentWithBadDeclaredMetadataShouldBeWellHandled() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/fake.txt");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.text").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("application/vnd.oasis.opendocument.text"))
+                .getTextualContent())
             .isPresent()
             .asString()
             .contains("This is an awesome document on libroffice writter !");
@@ -107,7 +113,7 @@ class TikaTextExtractorTest {
     void slidePowerPointTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/slides.pptx");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.presentationml.presentation").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("application/vnd.openxmlformats-officedocument.presentationml.presentation")).getTextualContent())
             .isPresent()
             .asString()
             .contains("James is awesome")
@@ -118,7 +124,8 @@ class TikaTextExtractorTest {
     void slideOdpTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/slides.odp");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.presentation").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("application/vnd.oasis.opendocument.presentation"))
+                .getTextualContent())
             .isPresent()
             .asString()
             .contains("James is awesome")
@@ -129,7 +136,8 @@ class TikaTextExtractorTest {
     void pdfTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/PDF.pdf");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "application/pdf").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("application/pdf"))
+                .getTextualContent())
             .isPresent()
             .asString()
             .contains("This is an awesome document on libroffice writter !");
@@ -139,7 +147,8 @@ class TikaTextExtractorTest {
     void odsTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/calc.ods");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.spreadsheet").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("application/vnd.oasis.opendocument.spreadsheet"))
+                .getTextualContent())
             .isPresent()
             .asString()
             .contains("This is an aesome LibreOffice document !");
@@ -149,7 +158,8 @@ class TikaTextExtractorTest {
     void excelTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/calc.xlsx");
         assertThat(inputStream).isNotNull();
-        assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").getTextualContent())
+        assertThat(textExtractor.extractContent(inputStream, ContentType.of("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .getTextualContent())
             .isPresent()
             .asString()
             .contains("Feuille1")
@@ -165,7 +175,7 @@ class TikaTextExtractorTest {
                                                         .getBytes(StandardCharsets.UTF_8))));
 
         InputStream inputStream = null;
-        textExtractor.extractContent(inputStream, "text/plain");
+        textExtractor.extractContent(inputStream, ContentType.of("text/plain"));
     }
 
     @Test
@@ -178,7 +188,8 @@ class TikaTextExtractorTest {
                                                         .getBytes(StandardCharsets.UTF_8))));
 
         InputStream inputStream = new ByteArrayInputStream("toto".getBytes(StandardCharsets.UTF_8));
-        ParsedContent parsedContent = textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        ParsedContent parsedContent = textExtractor.extractContent(inputStream,
+            ContentType.of("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
 
         assertThat(parsedContent.getTextualContent()).contains(expectedExtractedContent);
     }
@@ -192,7 +203,8 @@ class TikaTextExtractorTest {
 
         InputStream inputStream = new ByteArrayInputStream("toto".getBytes(StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        assertThatThrownBy(() -> textExtractor.extractContent(inputStream,
+                ContentType.of("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("The element should be a Json object");
     }

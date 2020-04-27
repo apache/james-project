@@ -267,8 +267,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             return textExtractor
                     .extractContent(
                         rawData,
-                        // todo we likely want only the media type here
-                        attachment.getType().asString())
+                        attachment.getType())
                     .getTextualContent()
                     .stream();
         } catch (Exception e) {

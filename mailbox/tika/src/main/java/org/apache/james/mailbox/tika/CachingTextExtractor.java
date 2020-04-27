@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
@@ -108,7 +109,7 @@ public class CachingTextExtractor implements TextExtractor {
     }
 
     @Override
-    public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
+    public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
         byte[] bytes = IOUtils.toByteArray(inputStream);
         String key = Hashing.sha256().hashBytes(bytes).toString();
 
@@ -119,7 +120,7 @@ public class CachingTextExtractor implements TextExtractor {
         }
     }
 
-    private ParsedContent retrieveAndUpdateWeight(byte[] bytes, String contentType) throws Exception {
+    private ParsedContent retrieveAndUpdateWeight(byte[] bytes, ContentType contentType) throws Exception {
         ParsedContent parsedContent = underlying.extractContent(new ByteArrayInputStream(bytes), contentType);
         weightMetric.add(computeWeight(parsedContent));
         return parsedContent;

@@ -58,6 +58,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.manager.ManagerTestProvisionner;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
@@ -130,7 +131,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
     static class FailingTextExtractor implements TextExtractor {
         @Override
-        public ParsedContent extractContent(InputStream inputStream, String contentType) {
+        public ParsedContent extractContent(InputStream inputStream, ContentType contentType) {
             throw new RuntimeException();
         }
     }

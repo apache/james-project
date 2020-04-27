@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType.MediaType;
+import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mime4j.stream.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,13 +73,13 @@ public class RootMimePartContainerBuilder implements MimePartContainerBuilder {
     }
 
     @Override
-    public MimePartContainerBuilder addMediaType(String mediaType) {
+    public MimePartContainerBuilder addMediaType(MediaType mediaType) {
         LOGGER.warn("Trying to add media type to the Root MimePart container");
         return this;
     }
 
     @Override
-    public MimePartContainerBuilder addSubType(String subType) {
+    public MimePartContainerBuilder addSubType(SubType subType) {
         LOGGER.warn("Trying to add sub type to the Root MimePart container");
         return this;
     }

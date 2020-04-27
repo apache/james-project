@@ -33,6 +33,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.metrics.api.MetricFactory;
 
@@ -56,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class TikaTextExtractor implements TextExtractor {
+    private static final ContentType.MediaType TEXT = ContentType.MediaType.of("text");
 
     private final MetricFactory metricFactory;
     private final TikaHttpClient tikaHttpClient;
@@ -79,8 +81,8 @@ public class TikaTextExtractor implements TextExtractor {
     }
 
     @Override
-    public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
-        if (contentType.startsWith("text/")) {
+    public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
+        if (contentType.mediaType().equals(TEXT)) {
             return jsoupTextExtractor.extractContent(inputStream, contentType);
         }
         return metricFactory.runPublishingTimerMetric("tikaTextExtraction", Throwing.supplier(
@@ -88,7 +90,7 @@ public class TikaTextExtractor implements TextExtractor {
             .sneakyThrow());
     }
 
-    public ParsedContent performContentExtraction(InputStream inputStream, String contentType) throws IOException {
+    public ParsedContent performContentExtraction(InputStream inputStream, ContentType contentType) throws IOException {
         ContentAndMetadata contentAndMetadata = convert(tikaHttpClient.recursiveMetaDataAsJson(inputStream, contentType));
         return new ParsedContent(contentAndMetadata.getContent(), contentAndMetadata.getMetadata());
     }

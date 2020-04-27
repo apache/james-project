@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.james.mailbox.model.ContentType.MimeType;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.util.DurationParser;
 import org.apache.james.util.Size;
@@ -69,9 +70,10 @@ public class TikaConfigurationReader {
             .map(Throwing.function(Size::parse))
             .map(Size::asBytes);
 
-        Set<String> contentTypeBlacklist = StreamUtils
+        Set<MimeType> contentTypeBlacklist = StreamUtils
             .ofNullable(configuration.getStringArray(TIKA_CONTENT_TYPE_BLACKLIST))
             .map(String::trim)
+            .map(MimeType::of)
             .collect(ImmutableSet.toImmutableSet());
 
         return TikaConfiguration.builder()

@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.mailbox.model.ContentType;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,7 +42,7 @@ public class PDFTextExtractorTest {
     @Test
     public void extractContentShouldThrowWhenNullInputStream() throws Exception {
         assertThatThrownBy(() ->
-            testee.extractContent(null, "any/any"))
+            testee.extractContent(null, ContentType.of("any/any")))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -57,7 +58,7 @@ public class PDFTextExtractorTest {
         String content = "content";
         InputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
 
-        assertThat(testee.extractContent(inputStream, "text/plain")
+        assertThat(testee.extractContent(inputStream, ContentType.of("text/plain"))
             .getTextualContent())
             .contains(content);
     }
@@ -67,7 +68,7 @@ public class PDFTextExtractorTest {
         String content = "Little PDF\n";
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("pdf.pdf");
 
-        assertThat(testee.extractContent(inputStream, PDFTextExtractor.PDF_TYPE)
+        assertThat(testee.extractContent(inputStream, ContentType.of(PDFTextExtractor.PDF_TYPE))
             .getTextualContent())
             .contains(content);
     }

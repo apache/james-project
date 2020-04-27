@@ -328,9 +328,7 @@ public class MIMEMessageConverter {
     }
 
     private ContentTypeField contentTypeField(MessageAttachmentMetadata att) {
-        // todo mailbox pojo should be able to expose itself as a mime4j object
-        String type = att.getAttachment().getType().asString();
-        ContentTypeField typeAsField = Fields.contentType(type);
+        ContentTypeField typeAsField =  att.getAttachment().getType().asMime4J();
         if (att.getName().isPresent()) {
             return Fields.contentType(typeAsField.getMimeType(),
                 ImmutableMap.<String, String>builder()

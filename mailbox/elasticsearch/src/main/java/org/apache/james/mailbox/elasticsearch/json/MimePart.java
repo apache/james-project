@@ -30,6 +30,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType;
+import org.apache.james.mailbox.model.ContentType.MediaType;
+import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mime4j.stream.Field;
 import org.slf4j.Logger;
@@ -48,8 +51,8 @@ public class MimePart {
         private final HeaderCollection.Builder headerCollectionBuilder;
         private Optional<InputStream> bodyContent;
         private final List<MimePart> children;
-        private Optional<String> mediaType;
-        private Optional<String> subType;
+        private Optional<MediaType> mediaType;
+        private Optional<SubType> subType;
         private Optional<String> fileName;
         private Optional<String> fileExtension;
         private Optional<String> contentDisposition;
@@ -95,14 +98,14 @@ public class MimePart {
         }
 
         @Override
-        public Builder addMediaType(String mediaType) {
+        public Builder addMediaType(MediaType mediaType) {
             this.mediaType = Optional.ofNullable(mediaType);
             return this;
         }
 
         @Override
-        public Builder addSubType(String subType) {
-            this.subType = Optional.ofNullable(subType);
+        public Builder addSubType(SubType subType) {
+            this.subType = Optional.of(subType);
             return this;
         }
 
@@ -166,16 +169,18 @@ public class MimePart {
         }
 
         private Boolean isTextBody() {
-            return mediaType.map("text"::equals).orElse(false);
+            return mediaType.map(MediaType.of("text")::equals).orElse(false);
         }
 
         private Boolean isHtml() {
-            return isTextBody() && subType.map("html"::equals).orElse(false);
+            return isTextBody() && subType.map(SubType.of("html")::equals).orElse(false);
         }
 
-        private Optional<String> computeContentType() {
+        private Optional<ContentType> computeContentType() {
             if (mediaType.isPresent() && subType.isPresent()) {
-                return Optional.of(mediaType.get() + "/" + subType.get());
+                return Optional.of(ContentType.of(
+                    ContentType.MimeType.of(mediaType.get(), subType.get()),
+                    charset));
             } else {
                 return Optional.empty();
             }
@@ -191,15 +196,15 @@ public class MimePart {
 
     private final HeaderCollection headerCollection;
     private final Optional<String> bodyTextContent;
-    private final Optional<String> mediaType;
-    private final Optional<String> subType;
+    private final Optional<MediaType> mediaType;
+    private final Optional<SubType> subType;
     private final Optional<String> fileName;
     private final Optional<String> fileExtension;
     private final Optional<String> contentDisposition;
     private final List<MimePart> attachments;
 
-    private MimePart(HeaderCollection headerCollection, Optional<String> bodyTextContent, Optional<String> mediaType,
-                    Optional<String> subType, Optional<String> fileName, Optional<String> fileExtension,
+    private MimePart(HeaderCollection headerCollection, Optional<String> bodyTextContent, Optional<MediaType> mediaType,
+                    Optional<SubType> subType, Optional<String> fileName, Optional<String> fileExtension,
                     Optional<String> contentDisposition, List<MimePart> attachments) {
         this.headerCollection = headerCollection;
         this.mediaType = mediaType;
@@ -233,12 +238,12 @@ public class MimePart {
 
     @JsonProperty(JsonMessageConstants.Attachment.MEDIA_TYPE)
     public Optional<String> getMediaType() {
-        return mediaType;
+        return mediaType.map(MediaType::asString);
     }
 
     @JsonProperty(JsonMessageConstants.Attachment.SUBTYPE)
     public Optional<String> getSubType() {
-        return subType;
+        return subType.map(SubType::asString);
     }
 
     @JsonProperty(JsonMessageConstants.Attachment.CONTENT_DISPOSITION)

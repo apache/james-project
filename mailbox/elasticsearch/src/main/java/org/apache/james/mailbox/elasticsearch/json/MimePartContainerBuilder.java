@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ContentType.MediaType;
+import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mime4j.stream.Field;
 
 public interface MimePartContainerBuilder {
@@ -41,9 +43,9 @@ public interface MimePartContainerBuilder {
 
     MimePartContainerBuilder charset(Charset charset);
 
-    MimePartContainerBuilder addMediaType(String mediaType);
+    MimePartContainerBuilder addMediaType(MediaType mediaType);
 
-    MimePartContainerBuilder addSubType(String subType);
+    MimePartContainerBuilder addSubType(SubType subType);
 
     MimePartContainerBuilder addContentDisposition(String contentDisposition);
 
