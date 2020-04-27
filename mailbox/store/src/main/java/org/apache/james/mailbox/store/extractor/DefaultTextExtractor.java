@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.extractor;
 
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Optional;
@@ -39,7 +40,8 @@ public class DefaultTextExtractor implements TextExtractor {
     @Override
     public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
         if (contentType != null && contentType.asString().startsWith("text/")) {
-            return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, StandardCharsets.UTF_8)), new HashMap<>());
+            Charset charset = contentType.charset().orElse(StandardCharsets.UTF_8);
+            return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, charset)), new HashMap<>());
         } else {
             return new ParsedContent(Optional.empty(), new HashMap<>());
         }
