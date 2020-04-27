@@ -20,6 +20,7 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.ListRightsResponse;
@@ -45,7 +46,7 @@ public class ListRightsResponseEncoder implements ImapResponseEncoder<ListRights
         String identifier = listRightsResponse.getIdentifier();
         composer.quote(identifier);
         
-        Rfc4314Rights[] rights = listRightsResponse.getRights();
+        List<Rfc4314Rights> rights = listRightsResponse.getRights();
         
         for (Rfc4314Rights entry : rights) {
             composer.quote(entry.serialize());

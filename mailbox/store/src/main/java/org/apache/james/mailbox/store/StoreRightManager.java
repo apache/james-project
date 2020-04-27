@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -126,7 +127,7 @@ public class StoreRightManager implements RightManager {
     }
 
     @Override
-    public Rfc4314Rights[] listRights(MailboxPath mailboxPath, EntryKey key, MailboxSession session) throws MailboxException {
+    public List<Rfc4314Rights> listRights(MailboxPath mailboxPath, EntryKey key, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPathBlocking(mailboxPath);
 

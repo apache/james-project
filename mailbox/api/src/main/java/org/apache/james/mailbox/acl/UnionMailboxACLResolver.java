@@ -20,10 +20,12 @@
 
 package org.apache.james.mailbox.acl;
 
-import java.util.ArrayList;
+import static java.util.function.Predicate.not;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -34,6 +36,8 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxACL.SpecialName;
 import org.apache.james.mime4j.dom.address.Mailbox;
+
+import com.github.steveash.guavate.Guavate;
 
 
 /**
@@ -266,28 +270,28 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * authenticated.
      */
     @Override
-    public Rfc4314Rights[] listRights(EntryKey queryKey, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
+    public List<Rfc4314Rights> listRights(EntryKey queryKey, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
         Rfc4314Rights[] positiveNegativePair = { MailboxACL.NO_RIGHTS, MailboxACL.NO_RIGHTS };
 
         MailboxACL userACL = resourceOwnerIsGroup ? groupGlobalACL : userGlobalACL;
         resolveRights(queryKey, groupMembershipResolver, userACL.getEntries(), resourceOwner, resourceOwnerIsGroup, positiveNegativePair);
 
         if (queryKey.isNegative()) {
-            return toListRightsArray(positiveNegativePair[NEGATIVE_INDEX]);
+            return toListRights(positiveNegativePair[NEGATIVE_INDEX]);
         } else {
-            return toListRightsArray(positiveNegativePair[POSITIVE_INDEX].except(positiveNegativePair[NEGATIVE_INDEX]));
+            return toListRights(positiveNegativePair[POSITIVE_INDEX].except(positiveNegativePair[NEGATIVE_INDEX]));
         }
     }
 
-    private static Rfc4314Rights[] toListRightsArray(Rfc4314Rights implicitRights) throws UnsupportedRightException {
-        List<Rfc4314Rights> result = new ArrayList<>();
-        result.add(implicitRights);
-        for (Right right : MailboxACL.FULL_RIGHTS.list()) {
-            if (!implicitRights.contains(right)) {
-                result.add(new Rfc4314Rights(right));
-            }
-        }
-        return result.toArray(Rfc4314Rights[]::new);
+    private static List<Rfc4314Rights> toListRights(Rfc4314Rights implicitRights) throws UnsupportedRightException {
+        return Stream.concat(
+            MailboxACL.FULL_RIGHTS
+                .list()
+                .stream()
+                .filter(not(implicitRights::contains))
+                .map(Rfc4314Rights::new),
+            Stream.of(implicitRights))
+        .collect(Guavate.toImmutableList());
     }
 
     @Override

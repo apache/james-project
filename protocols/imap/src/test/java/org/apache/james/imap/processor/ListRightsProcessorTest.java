@@ -29,6 +29,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
@@ -69,7 +71,7 @@ public class ListRightsProcessorTest {
     private ListRightsRequest listRightsRequest;
     private ListRightsProcessor subject;
     private EntryKey user1Key;
-    private Rfc4314Rights[] listRights;
+    private List<Rfc4314Rights> listRights;
     private MailboxPath path;
     private Responder responder;
     private ArgumentCaptor<ImapResponseMessage> argumentCaptor;
@@ -98,7 +100,10 @@ public class ListRightsProcessorTest {
         listRightsRequest = new ListRightsRequest(TAG, MAILBOX_NAME, USER_1.asString());
 
         user1Key = EntryKey.deserialize(USER_1.asString());
-        listRights = new Rfc4314Rights[] {Rfc4314Rights.fromSerializedRfc4314Rights("ae"), Rfc4314Rights.fromSerializedRfc4314Rights("i"), Rfc4314Rights.fromSerializedRfc4314Rights("k")};
+        listRights = List.of(
+            Rfc4314Rights.fromSerializedRfc4314Rights("ae"),
+            Rfc4314Rights.fromSerializedRfc4314Rights("i"),
+            Rfc4314Rights.fromSerializedRfc4314Rights("k"));
     }
     
     @Test

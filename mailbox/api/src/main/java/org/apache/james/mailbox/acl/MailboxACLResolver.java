@@ -20,6 +20,8 @@
 
 package org.apache.james.mailbox.acl;
 
+import java.util.List;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -68,7 +70,7 @@ public interface MailboxACLResolver {
      *         explicitly for the given identifier. Further elements are groups
      *         of rights which can be set for the given identifier and resource.
      */
-    MailboxACL.Rfc4314Rights[] listRights(MailboxACL.EntryKey key, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
+    List<MailboxACL.Rfc4314Rights> listRights(MailboxACL.EntryKey key, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 
     /**
      * Computes the rights which apply to the given user and resource. Global
