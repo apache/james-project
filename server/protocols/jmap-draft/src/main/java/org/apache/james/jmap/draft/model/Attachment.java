@@ -19,13 +19,13 @@
 
 package org.apache.james.jmap.draft.model;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -170,21 +170,21 @@ public class Attachment {
     public boolean equals(Object obj) {
         if (obj instanceof Attachment) {
             Attachment other = (Attachment) obj;
-            return Objects.equal(blobId, other.blobId)
-                && Objects.equal(type, other.type)
-                && Objects.equal(name, other.name)
-                && Objects.equal(size, other.size)
-                && Objects.equal(cid, other.cid)
-                && Objects.equal(isInline, other.isInline)
-                && Objects.equal(width, other.width)
-                && Objects.equal(height, other.height);
+            return Objects.equals(blobId, other.blobId)
+                && Objects.equals(type, other.type)
+                && Objects.equals(name, other.name)
+                && Objects.equals(size, other.size)
+                && Objects.equals(cid, other.cid)
+                && Objects.equals(isInline, other.isInline)
+                && Objects.equals(width, other.width)
+                && Objects.equals(height, other.height);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(blobId, type, name, size, cid, isInline, width, height);
+        return Objects.hash(blobId, type, name, size, cid, isInline, width, height);
     }
 
     @Override
