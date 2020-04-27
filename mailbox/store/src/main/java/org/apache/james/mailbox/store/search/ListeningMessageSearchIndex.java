@@ -34,8 +34,6 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.util.streams.Iterators;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -47,8 +45,6 @@ import reactor.core.publisher.Mono;
  * notified about message changes. This will then allow to update the underlying index.
  */
 public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener.ReactiveGroupMailboxListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ListeningMessageSearchIndex.class);
-
     protected static final int UNLIMITED = -1;
     private final MailboxSessionMapperFactory factory;
     private final SessionProvider sessionProvider;
@@ -113,9 +109,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
             return Iterators.toFlux(factory.getMessageMapper(session)
                 .findInMailbox(mailbox, range, FetchType.Full, UNLIMITED));
         } catch (Exception e) {
-            // todo this error handling makes us loose messages!
-            LOGGER.error("Could not retrieve message {} in mailbox {}", range.toString(), mailbox.getMailboxId().serialize(), e);
-            return Flux.empty();
+            return Flux.error(e);
         }
     }
 
