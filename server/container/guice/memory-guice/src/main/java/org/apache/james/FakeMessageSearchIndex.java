@@ -39,6 +39,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
     private static class FakeMessageSearchIndexGroup extends Group {
@@ -52,22 +53,22 @@ public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws Exception {
+    public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message) {
         throw new NotImplementedException("not implemented");
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws Exception {
+    public Mono<Void> delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
         throw new NotImplementedException("not implemented");
     }
 
     @Override
-    public void deleteAll(MailboxSession session, MailboxId mailboxId) throws Exception {
+    public Mono<Void> deleteAll(MailboxSession session, MailboxId mailboxId) {
         throw new NotImplementedException("not implemented");
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws Exception {
+    public Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
         throw new NotImplementedException("not implemented");
     }
 

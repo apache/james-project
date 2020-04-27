@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
@@ -46,6 +47,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import reactor.core.publisher.Mono;
+
 public class ReIndexerImplTest {
 
     private static final Username USERNAME = Username.of("benwa@apache.org");
@@ -60,6 +63,8 @@ public class ReIndexerImplTest {
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         MailboxSessionMapperFactory mailboxSessionMapperFactory = mailboxManager.getMapperFactory();
         messageSearchIndex = mock(ListeningMessageSearchIndex.class);
+        when(messageSearchIndex.add(any(), any(), any())).thenReturn(Mono.empty());
+        when(messageSearchIndex.deleteAll(any(), any())).thenReturn(Mono.empty());
         reIndexer = new ReIndexerImpl(new ReIndexerPerformer(mailboxManager, messageSearchIndex, mailboxSessionMapperFactory),
             mailboxManager, mailboxSessionMapperFactory);
     }

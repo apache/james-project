@@ -163,7 +163,7 @@ class ElasticSearchIndexerTest {
         testee.index(documentId, content, routingKey).block();
         elasticSearch.awaitForElasticSearch();
         
-        testee.deleteAllMatchingQuery(termQuery("property", "1"), routingKey);
+        testee.deleteAllMatchingQuery(termQuery("property", "1"), routingKey).block();
         elasticSearch.awaitForElasticSearch();
         
         CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
@@ -193,7 +193,7 @@ class ElasticSearchIndexerTest {
         testee.index(documentId3, content3, ROUTING).block();
         elasticSearch.awaitForElasticSearch();
 
-        testee.deleteAllMatchingQuery(termQuery("property", "1"), ROUTING);
+        testee.deleteAllMatchingQuery(termQuery("property", "1"), ROUTING).block();
         elasticSearch.awaitForElasticSearch();
         
         CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)

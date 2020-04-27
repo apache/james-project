@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -64,9 +64,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import io.restassured.RestAssured;
+import reactor.core.publisher.Mono;
 
 class MailboxesRoutesTest {
     private static final Username USERNAME = Username.of("benwa@apache.org");
@@ -83,6 +85,8 @@ class MailboxesRoutesTest {
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         searchIndex = mock(ListeningMessageSearchIndex.class);
+        Mockito.when(searchIndex.add(any(), any(), any())).thenReturn(Mono.empty());
+        Mockito.when(searchIndex.deleteAll(any(), any())).thenReturn(Mono.empty());
         ReIndexerPerformer reIndexerPerformer = new ReIndexerPerformer(
             mailboxManager,
             searchIndex,
@@ -750,7 +754,7 @@ class MailboxesRoutesTest {
                     .basePath(TasksRoutes.BASE)
                     .get(taskId + "/await");
 
-                doNothing().when(searchIndex).add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
+                doReturn(Mono.empty()).when(searchIndex).add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
 
                 String fixingTaskId = with()
                     .queryParam("reIndexFailedMessagesOf", taskId)
@@ -843,6 +847,8 @@ class MailboxesRoutesTest {
                     .get(taskId + "/await");
 
                 reset(searchIndex);
+                Mockito.when(searchIndex.add(any(), any(), any())).thenReturn(Mono.empty());
+                Mockito.when(searchIndex.deleteAll(any(), any())).thenReturn(Mono.empty());
 
                 String fixingTaskId = with()
                     .queryParam("reIndexFailedMessagesOf", taskId)

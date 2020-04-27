@@ -133,7 +133,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .internalDate(new Date())
             .body("My Body".getBytes(StandardCharsets.UTF_8))
             .size(200);
-        index.add(session, mailbox, builder1.build(id1));
+        index.add(session, mailbox, builder1.build(id1)).block();
 
         uid2 = MessageUid.of(1);
         MessageBuilder builder2 = new MessageBuilder()
@@ -144,7 +144,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .internalDate(new Date())
             .body("My Body".getBytes(StandardCharsets.UTF_8))
             .size(20);
-        index.add(session, mailbox2, builder2.build(id2));
+        index.add(session, mailbox2, builder2.build(id2)).block();
         
         uid3 = MessageUid.of(2);
         Calendar cal = Calendar.getInstance();
@@ -157,7 +157,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .internalDate(cal.getTime())
             .body("My Otherbody".getBytes(StandardCharsets.UTF_8))
             .size(20);
-        index.add(session, mailbox, builder3.build(id3));
+        index.add(session, mailbox, builder3.build(id3)).block();
         
         uid4 = MessageUid.of(3);
         Calendar cal2 = Calendar.getInstance();
@@ -170,7 +170,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .internalDate(cal2.getTime())
             .body("My Otherbody2".getBytes(StandardCharsets.UTF_8))
             .size(20);
-        index.add(session, mailbox, builder4.build(id4));
+        index.add(session, mailbox, builder4.build(id4)).block();
         
         uid5 = MessageUid.of(10);
         MessageBuilder builder = new MessageBuilder();
@@ -181,7 +181,7 @@ class LuceneMailboxMessageSearchIndexTest {
         builder.body(StandardCharsets.US_ASCII.encode(BODY).array());
         builder.uid(uid5);
         builder.mailboxId(TEST_ID_3);
-        index.add(session, mailbox3, builder.build(id5));
+        index.add(session, mailbox3, builder.build(id5)).block();
 
     }
 

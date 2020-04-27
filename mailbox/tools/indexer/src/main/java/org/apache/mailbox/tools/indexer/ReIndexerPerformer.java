@@ -74,7 +74,7 @@ public class ReIndexerPerformer {
         LOGGER.info("Intend to reindex mailbox with mailboxId {}", mailboxId.serialize());
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
         Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
-        messageSearchIndex.deleteAll(mailboxSession, mailboxId);
+        messageSearchIndex.deleteAll(mailboxSession, mailboxId).block();
         try {
             return Iterators.toStream(
                 mailboxSessionMapperFactory.getMessageMapper(mailboxSession)
@@ -163,7 +163,7 @@ public class ReIndexerPerformer {
         try {
             MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
             Mailbox mailbox = mailboxMapper.findMailboxById(mailboxMessage.getMailboxId());
-            messageSearchIndex.add(session, mailbox, mailboxMessage);
+            messageSearchIndex.add(session, mailbox, mailboxMessage).block();
             return Task.Result.COMPLETED;
         } catch (Exception e) {
             LOGGER.warn("Failed to re-index {} in {}", mailboxMessage.getUid(), mailboxMessage.getMailboxId(), e);
@@ -189,7 +189,7 @@ public class ReIndexerPerformer {
         try {
             Optional.of(uid)
                 .flatMap(Throwing.function(mUid -> fullyReadMessage(mailboxSession, mailbox, mUid)))
-                .ifPresent(Throwing.consumer(message -> messageSearchIndex.add(mailboxSession, mailbox, message)));
+                .ifPresent(message -> messageSearchIndex.add(mailboxSession, mailbox, message).block());
             reprocessingContext.recordSuccess();
             return Task.Result.COMPLETED;
         } catch (Exception e) {

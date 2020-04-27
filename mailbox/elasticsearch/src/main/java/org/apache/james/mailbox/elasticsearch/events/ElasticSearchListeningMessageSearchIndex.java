@@ -20,7 +20,6 @@ package org.apache.james.mailbox.elasticsearch.events;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -135,18 +134,19 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws IOException {
+    public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message) {
         LOGGER.info("Indexing mailbox {}-{} of user {} on message {}",
             mailbox.getName(),
             mailbox.getMailboxId(),
             session.getUser().asString(),
             message.getUid());
 
-        String jsonContent = generateIndexedJson(mailbox, message, session);
+        RoutingKey from = routingKeyFactory.from(mailbox.getMailboxId());
+        DocumentId id = indexIdFor(mailbox, message.getUid());
 
-        elasticSearchIndexer
-            .index(indexIdFor(mailbox, message.getUid()), jsonContent, routingKeyFactory.from(mailbox.getMailboxId()))
-            .block();
+        return Mono.fromCallable(() -> generateIndexedJson(mailbox, message, session))
+            .flatMap(jsonContent -> elasticSearchIndexer.index(id, jsonContent, from))
+            .then();
     }
 
     private String generateIndexedJson(Mailbox mailbox, MailboxMessage message, MailboxSession session) throws JsonProcessingException {
@@ -164,36 +164,36 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
-        elasticSearchIndexer
+    public Mono<Void> delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
+        return elasticSearchIndexer
             .delete(expungedUids.stream()
                 .map(uid ->  indexIdFor(mailbox, uid))
                 .collect(Guavate.toImmutableList()),
                 routingKeyFactory.from(mailbox.getMailboxId()))
-            .block();
+            .then();
     }
 
     @Override
-    public void deleteAll(MailboxSession session, MailboxId mailboxId) {
+    public Mono<Void> deleteAll(MailboxSession session, MailboxId mailboxId) {
         TermQueryBuilder queryBuilder = termQuery(
             JsonMessageConstants.MAILBOX_ID,
             mailboxId.serialize());
 
-        elasticSearchIndexer
+        return elasticSearchIndexer
                 .deleteAllMatchingQuery(queryBuilder, routingKeyFactory.from(mailboxId));
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
-        ImmutableList<UpdatedRepresentation> updates = updatedFlagsList.stream()
+    public Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
+        RoutingKey routingKey = routingKeyFactory.from(mailbox.getMailboxId());
+
+        return Flux.fromIterable(updatedFlagsList)
             .map(Throwing.<UpdatedFlags, UpdatedRepresentation>function(
                 updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
                 .sneakyThrow())
-            .collect(Guavate.toImmutableList());
-
-        elasticSearchIndexer
-            .update(updates, routingKeyFactory.from(mailbox.getMailboxId()))
-            .block();
+            .collect(Guavate.toImmutableList())
+            .flatMap(updates -> elasticSearchIndexer.update(updates, routingKey))
+            .then();
     }
 
     private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) throws JsonProcessingException {

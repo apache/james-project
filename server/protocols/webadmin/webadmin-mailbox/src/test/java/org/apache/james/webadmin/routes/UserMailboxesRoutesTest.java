@@ -78,6 +78,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -103,6 +104,8 @@ class UserMailboxesRoutesTest {
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         searchIndex = mock(ListeningMessageSearchIndex.class);
+        Mockito.when(searchIndex.add(any(), any(), any())).thenReturn(Mono.empty());
+        Mockito.when(searchIndex.deleteAll(any(), any())).thenReturn(Mono.empty());
         ReIndexerPerformer reIndexerPerformer = new ReIndexerPerformer(
             mailboxManager,
             searchIndex,

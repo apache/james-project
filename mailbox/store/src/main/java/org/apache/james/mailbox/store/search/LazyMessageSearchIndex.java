@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * {@link ListeningMessageSearchIndex} implementation which wraps another {@link ListeningMessageSearchIndex} and will forward all calls to it.
@@ -88,18 +89,18 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws Exception {
-        index.add(session, mailbox, message);
+    public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message) {
+        return index.add(session, mailbox, message);
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws Exception {
-        index.delete(session, mailbox, expungedUids);
+    public Mono<Void> delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
+        return index.delete(session, mailbox, expungedUids);
     }
 
     @Override
-    public void deleteAll(MailboxSession session, MailboxId mailboxId) throws Exception {
-        index.deleteAll(session, mailboxId);
+    public Mono<Void> deleteAll(MailboxSession session, MailboxId mailboxId) {
+        return index.deleteAll(session, mailboxId);
     }
 
     /**
@@ -125,7 +126,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
                 while (messages.hasNext()) {
                     final MailboxMessage message = messages.next();
                     try {
-                        add(session, mailbox, message);
+                        add(session, mailbox, message).block();
                     } catch (Exception e) {
                         LOGGER.error("Unable to index message {} in mailbox {}", message.getUid(), mailbox.getName(), e);
                     }
@@ -137,8 +138,8 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws Exception {
-        index.update(session, mailbox, updatedFlagsList);
+    public Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
+        return index.update(session, mailbox, updatedFlagsList);
     }
     
 

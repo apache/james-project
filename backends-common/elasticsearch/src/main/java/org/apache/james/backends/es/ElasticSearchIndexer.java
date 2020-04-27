@@ -113,8 +113,8 @@ public class ElasticSearchIndexer {
             });
     }
 
-    public void deleteAllMatchingQuery(QueryBuilder queryBuilder, RoutingKey routingKey) {
-        deleteByQueryPerformer.perform(queryBuilder, routingKey).block();
+    public Mono<Void> deleteAllMatchingQuery(QueryBuilder queryBuilder, RoutingKey routingKey) {
+        return deleteByQueryPerformer.perform(queryBuilder, routingKey);
     }
 
     private void checkArgument(String content) {

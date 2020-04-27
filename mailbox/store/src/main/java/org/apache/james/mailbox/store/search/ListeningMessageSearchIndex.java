@@ -20,7 +20,6 @@ package org.apache.james.mailbox.store.search;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -38,14 +37,16 @@ import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * {@link MessageSearchIndex} which needs to get registered as global {@link MailboxListener} and so get
  * notified about message changes. This will then allow to update the underlying index.
  */
-public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener.GroupMailboxListener {
+public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener.ReactiveGroupMailboxListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListeningMessageSearchIndex.class);
 
     protected static final int UNLIMITED = -1;
@@ -68,45 +69,53 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * something relevant is received
      */
     @Override
-    public void event(Event event) throws Exception {
-        handleMailboxEvent(event,
+    public Mono<Void> reactiveEvent(Event event) {
+        return handleMailboxEvent(event,
             sessionProvider.createSystemSession(event.getUsername()),
             (MailboxEvent) event);
     }
 
-    private void handleMailboxEvent(Event event, MailboxSession session, MailboxEvent mailboxEvent) throws Exception {
+    private Mono<Void> handleMailboxEvent(Event event, MailboxSession session, MailboxEvent mailboxEvent) {
         MailboxId mailboxId = mailboxEvent.getMailboxId();
 
         if (event instanceof Added) {
-            Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxId);
-            handleAdded(session, mailbox, (Added) event);
+            return factory.getMailboxMapper(session)
+                .findMailboxByIdReactive(mailboxId)
+                .flatMap(mailbox -> handleAdded(session, mailbox, (Added) event));
         } else if (event instanceof Expunged) {
-            Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxId);
             Expunged expunged = (Expunged) event;
-            delete(session, mailbox, expunged.getUids());
+
+            return factory.getMailboxMapper(session)
+                .findMailboxByIdReactive(mailboxId)
+                .flatMap(mailbox -> delete(session, mailbox, expunged.getUids()));
         } else if (event instanceof FlagsUpdated) {
-            Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxId);
             FlagsUpdated flagsUpdated = (FlagsUpdated) event;
-            update(session, mailbox, flagsUpdated.getUpdatedFlags());
+
+            return factory.getMailboxMapper(session)
+                .findMailboxByIdReactive(mailboxId)
+                .flatMap(mailbox -> update(session, mailbox, flagsUpdated.getUpdatedFlags()));
         } else if (event instanceof MailboxDeletion) {
-            deleteAll(session, mailboxId);
+            return deleteAll(session, mailboxId);
+        } else {
+            return Mono.empty();
         }
     }
 
-    private void handleAdded(MailboxSession session, Mailbox mailbox, Added added) {
-        MessageRange.toRanges(added.getUids())
-            .stream()
-            .flatMap(range -> retrieveMailboxMessages(session, mailbox, range))
-            .forEach(Throwing.<MailboxMessage>consumer(mailboxMessage -> add(session, mailbox, mailboxMessage)).sneakyThrow());
+    private Mono<Void> handleAdded(MailboxSession session, Mailbox mailbox, Added added) {
+        return Flux.fromIterable(MessageRange.toRanges(added.getUids()))
+            .concatMap(range -> retrieveMailboxMessages(session, mailbox, range))
+            .concatMap(mailboxMessage -> add(session, mailbox, mailboxMessage))
+            .then();
     }
 
-    private Stream<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range) {
+    private Flux<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range) {
         try {
-            return Iterators.toStream(factory.getMessageMapper(session)
+            return Iterators.toFlux(factory.getMessageMapper(session)
                 .findInMailbox(mailbox, range, FetchType.Full, UNLIMITED));
         } catch (Exception e) {
+            // todo this error handling makes us loose messages!
             LOGGER.error("Could not retrieve message {} in mailbox {}", range.toString(), mailbox.getMailboxId().serialize(), e);
-            return Stream.empty();
+            return Flux.empty();
         }
     }
 
@@ -117,7 +126,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param mailbox mailbox on which the message addition was performed
      * @param message The added message
      */
-    public abstract void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws Exception;
+    public abstract Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message);
 
     /**
      * Delete the concerned UIDs for the given {@link Mailbox} from the index
@@ -126,7 +135,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param mailbox      mailbox on which the expunge was performed
      * @param expungedUids UIDS to be deleted
      */
-    public abstract void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws Exception;
+    public abstract Mono<Void> delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids);
 
     /**
      * Delete the messages contained in the given {@link Mailbox} from the index
@@ -134,7 +143,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param session The mailbox session performing the expunge
      * @param mailboxId mailboxId on which the expunge was performed
      */
-    public abstract void deleteAll(MailboxSession session, MailboxId mailboxId) throws Exception;
+    public abstract Mono<Void> deleteAll(MailboxSession session, MailboxId mailboxId);
 
     /**
      * Update the messages concerned by the updated flags list for the given {@link Mailbox}
@@ -143,5 +152,5 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param mailbox          mailbox containing the updated messages
      * @param updatedFlagsList list of flags that were updated
      */
-    public abstract void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws Exception;
+    public abstract Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList);
 }

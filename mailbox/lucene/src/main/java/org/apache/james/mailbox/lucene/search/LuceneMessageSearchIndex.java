@@ -119,11 +119,13 @@ import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Lucene based {@link ListeningMessageSearchIndex} which offers message searching via a Lucene index
@@ -1176,19 +1178,23 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) throws IOException, MimeException {
-        Document doc = createMessageDocument(session, membership);
-        Document flagsDoc = createFlagsDocument(membership);
+    public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) {
+        return Mono.fromRunnable(Throwing.runnable(() -> {
+            Document doc = createMessageDocument(session, membership);
+            Document flagsDoc = createFlagsDocument(membership);
 
-        writer.addDocument(doc);
-        writer.addDocument(flagsDoc);
+            writer.addDocument(doc);
+            writer.addDocument(flagsDoc);
+        }));
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws IOException {
-        for (UpdatedFlags updatedFlags : updatedFlagsList) {
-            update(mailbox, updatedFlags.getUid(), updatedFlags.getNewFlags());
-        }
+    public Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
+        return Mono.fromRunnable(Throwing.runnable(() -> {
+            for (UpdatedFlags updatedFlags : updatedFlagsList) {
+                update(mailbox, updatedFlags.getUid(), updatedFlags.getNewFlags());
+            }
+        }));
     }
 
     private void update(Mailbox mailbox, MessageUid uid, Flags f) throws IOException {
@@ -1266,16 +1272,18 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws IOException {
-        Collection<MessageRange> messageRanges = MessageRange.toRanges(expungedUids);
-        for (MessageRange messageRange : messageRanges) {
-            delete(mailbox.getMailboxId(), messageRange);
-        }
+    public Mono<Void> delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
+        return Mono.fromRunnable(Throwing.runnable(() -> {
+            Collection<MessageRange> messageRanges = MessageRange.toRanges(expungedUids);
+            for (MessageRange messageRange : messageRanges) {
+                delete(mailbox.getMailboxId(), messageRange);
+            }
+        }));
     }
 
     @Override
-    public void deleteAll(MailboxSession session, MailboxId mailboxId) throws IOException {
-        delete(mailboxId, MessageRange.all());
+    public Mono<Void> deleteAll(MailboxSession session, MailboxId mailboxId) {
+        return Mono.fromRunnable(Throwing.runnable(() -> delete(mailboxId, MessageRange.all())));
     }
 
     public void delete(MailboxId mailboxId, MessageRange range) throws IOException {

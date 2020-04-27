@@ -55,9 +55,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
+import org.mockito.Mockito;
+
+import com.google.common.collect.ImmutableSet;
 
 import io.restassured.RestAssured;
+import reactor.core.publisher.Mono;
 
 class MessageRoutesTest {
     private static final Username USERNAME = Username.of("benwa@apache.org");
@@ -72,7 +75,9 @@ class MessageRoutesTest {
     void beforeEach() {
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        searchIndex = mock(ListeningMessageSearchIndex.class);
+        searchIndex = mock(ListeningMessageSearchIndex.class);;
+        Mockito.when(searchIndex.add(any(), any(), any())).thenReturn(Mono.empty());
+        Mockito.when(searchIndex.deleteAll(any(), any())).thenReturn(Mono.empty());
         ReIndexerPerformer reIndexerPerformer = new ReIndexerPerformer(
             mailboxManager,
             searchIndex,
