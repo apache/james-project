@@ -27,6 +27,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.reactivestreams.Publisher;
 
 public interface QuotaRootResolver extends QuotaRootDeserializer {
 
@@ -39,6 +40,8 @@ public interface QuotaRootResolver extends QuotaRootDeserializer {
     QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException;
 
     QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException;
+
+    Publisher<QuotaRoot> getQuotaRootReactive(MailboxId mailboxId);
 
     List<Mailbox> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException;
 }

@@ -41,6 +41,8 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 
+import reactor.core.publisher.Mono;
+
 public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
     public static class DefaultQuotaRootDeserializer implements QuotaRootDeserializer {
@@ -93,13 +95,18 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
     @Override
     public QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException {
-        MailboxSession session = sessionProvider.createSystemSession(Username.of("DefaultUserQuotaRootResolver"));
-        Username username = factory.getMailboxMapper(session)
-            .findMailboxById(mailboxId)
-            .generateAssociatedPath()
-            .getUser();
+        return getQuotaRootReactive(mailboxId).block();
+    }
 
-        return forUser(username);
+    @Override
+    public Mono<QuotaRoot> getQuotaRootReactive(MailboxId mailboxId) {
+        MailboxSession session = sessionProvider.createSystemSession(Username.of("DefaultUserQuotaRootResolver"));
+
+        return factory.getMailboxMapper(session)
+            .findMailboxByIdReactive(mailboxId)
+            .map(Mailbox::generateAssociatedPath)
+            .map(MailboxPath::getUser)
+            .map(this::forUser);
     }
 
     @Override

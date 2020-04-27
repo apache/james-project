@@ -32,7 +32,6 @@ import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.RegistrationKey;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -81,23 +80,19 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.ReactiveGro
 
     @Override
     public Publisher<Void> reactiveEvent(Event event) {
-        try {
-            if (event instanceof Added) {
-                Added addedEvent = (Added) event;
-                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(addedEvent.getMailboxId());
-                return handleAddedEvent(addedEvent, quotaRoot);
-            } else if (event instanceof Expunged) {
-                Expunged expungedEvent = (Expunged) event;
-                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(expungedEvent.getMailboxId());
-                return handleExpungedEvent(expungedEvent, quotaRoot);
-            } else if (event instanceof MailboxDeletion) {
-                MailboxDeletion mailboxDeletionEvent = (MailboxDeletion) event;
-                return handleMailboxDeletionEvent(mailboxDeletionEvent);
-            }
-            return Mono.empty();
-        } catch (MailboxException e) {
-            return Mono.error(e);
+        if (event instanceof Added) {
+            Added addedEvent = (Added) event;
+            return Mono.from(quotaRootResolver.getQuotaRootReactive(addedEvent.getMailboxId()))
+                .flatMap(quotaRoot -> handleAddedEvent(addedEvent, quotaRoot));
+        } else if (event instanceof Expunged) {
+            Expunged expungedEvent = (Expunged) event;
+            return Mono.from(quotaRootResolver.getQuotaRootReactive(expungedEvent.getMailboxId()))
+                .flatMap(quotaRoot -> handleExpungedEvent(expungedEvent, quotaRoot));
+        } else if (event instanceof MailboxDeletion) {
+            MailboxDeletion mailboxDeletionEvent = (MailboxDeletion) event;
+            return handleMailboxDeletionEvent(mailboxDeletionEvent);
         }
+        return Mono.empty();
     }
 
     private Mono<Void> handleExpungedEvent(Expunged expunged, QuotaRoot quotaRoot) {
@@ -152,7 +147,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.ReactiveGro
             .sum();
     }
 
-    private Mono<Void> handleMailboxDeletionEvent(MailboxDeletion mailboxDeletionEvent) throws MailboxException {
+    private Mono<Void> handleMailboxDeletionEvent(MailboxDeletion mailboxDeletionEvent) {
         boolean mailboxContainedMessages = mailboxDeletionEvent.getDeletedMessageCount().asLong() > 0;
         if (mailboxContainedMessages) {
             return Mono.from(currentQuotaManager.decrease(new QuotaOperation(mailboxDeletionEvent.getQuotaRoot(),

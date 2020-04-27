@@ -43,6 +43,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class DefaultUserQuotaRootResolverTest {
 
@@ -108,7 +109,7 @@ class DefaultUserQuotaRootResolverTest {
     void getQuotaRootShouldReturnUserValueWhenCalledWithMailboxId() throws Exception {
         MailboxMapper mockedMapper = mock(MailboxMapper.class);
         when(mockedFactory.getMailboxMapper(any())).thenReturn(mockedMapper);
-        when(mockedMapper.findMailboxById(MAILBOX_ID)).thenReturn(MAILBOX);
+        when(mockedMapper.findMailboxByIdReactive(MAILBOX_ID)).thenReturn(Mono.just(MAILBOX));
 
         assertThat(testee.getQuotaRoot(MAILBOX_ID)).isEqualTo(QUOTA_ROOT);
     }
