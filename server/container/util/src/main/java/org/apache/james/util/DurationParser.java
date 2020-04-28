@@ -23,22 +23,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class DurationParser {
-
-    private static final String PATTERN_STRING = "\\s*(-?[0-9]+)\\s*([a-z,A-Z]*)\\s*";
-    private static final int AMOUNT = 1;
-    private static final int UNIT = 2;
-
-    private static Pattern PATTERN = Pattern.compile(PATTERN_STRING);
-
     private enum Unit {
         MILLI_SECONDS(ImmutableList.of("ms", "msec", "msecs"), ChronoUnit.MILLIS),
         SECONDS(ImmutableList.of("s", "sec", "secs", "second", "seconds"), ChronoUnit.SECONDS),
@@ -86,30 +75,16 @@ public class DurationParser {
     }
 
     public static Duration parse(String rawString, ChronoUnit defaultUnit) throws NumberFormatException {
-        Matcher res = PATTERN.matcher(rawString);
-        if (res.matches()) {
-            String unitAsString = res.group(UNIT);
-            String amountAsString = res.group(AMOUNT);
-            if (amountAsString != null && unitAsString != null) {
-                long time = Integer.parseInt(res.group(AMOUNT).trim());
-                Duration unitAsDuration = parseUnitAsDuration(unitAsString).orElse(defaultUnit.getDuration());
-
-                return computeDuration(unitAsDuration, time);
-            }
-        }
-        throw new NumberFormatException("The supplied String is not a supported format " + rawString);
+        UnitParser.ParsingResult parsingResult = UnitParser.parse(rawString);
+        Duration unitAsDuration = parsingResult.getUnit()
+            .map(s -> Unit.parse(s).getDuration())
+            .orElse(defaultUnit.getDuration());
+        return computeDuration(unitAsDuration, parsingResult.getNumber());
     }
 
     private static Duration computeDuration(Duration unitAsDuration, long time) {
         Preconditions.checkArgument(time >= 0, "Duration amount should be positive");
 
         return unitAsDuration.multipliedBy(time);
-    }
-
-    private static Optional<Duration> parseUnitAsDuration(String unit) {
-        if (Strings.isNullOrEmpty(unit)) {
-            return Optional.empty();
-        }
-        return Optional.of(Unit.parse(unit).getDuration());
     }
 }

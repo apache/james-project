@@ -24,7 +24,9 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 
@@ -59,12 +61,23 @@ public class SizeFormat {
         private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = new DecimalFormatSymbols(Locale.US);
         private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.##", DECIMAL_FORMAT_SYMBOLS);
 
+        public static Optional<Unit> of(String rawValue) {
+            return Arrays.stream(values())
+                .filter(unit -> unit.notation.equals(rawValue))
+                .findAny();
+        }
+
         private final BigInteger bytesCount;
         private final String notation;
 
         Unit(BigInteger bytesCount, String notation) {
             this.bytesCount = bytesCount;
             this.notation = notation;
+        }
+
+        public long toByteCount(long value) {
+            return bytesCount.multiply(BigInteger.valueOf(value))
+                .longValueExact();
         }
 
         public String format(long size) {
@@ -76,7 +89,7 @@ public class SizeFormat {
         }
 
         public BigDecimal scaleToUnit(BigDecimal sizeAsDecimal) {
-            return sizeAsDecimal.divide(new BigDecimal((bytesCount)), SCALE, RoundingMode.FLOOR);
+            return sizeAsDecimal.divide(new BigDecimal(bytesCount), SCALE, RoundingMode.FLOOR);
         }
 
         private String asString(BigDecimal bigDecimal) {
@@ -89,5 +102,15 @@ public class SizeFormat {
 
         return Unit.locateUnit(bytesCount)
             .format(bytesCount);
+    }
+
+    public static long parseAsByteCount(String bytesWithUnit) {
+        UnitParser.ParsingResult parsingResult = UnitParser.parse(bytesWithUnit);
+        Unit unit = parsingResult.getUnit()
+            .map(rawValue -> Unit.of(rawValue)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown unit " + rawValue)))
+            .orElse(Unit.Byte);
+
+        return unit.toByteCount(parsingResult.getNumber());
     }
 }
