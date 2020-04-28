@@ -30,7 +30,6 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public interface MessageFastViewProjection {
 
@@ -52,7 +51,6 @@ public interface MessageFastViewProjection {
         return Flux.fromIterable(messageIds)
             .flatMap(messageId -> Mono.from(this.retrieve(messageId))
                 .map(preview -> Pair.of(messageId, preview)))
-            .collectMap(Pair::getLeft, Pair::getRight)
-            .subscribeOn(Schedulers.elastic());
+            .collectMap(Pair::getLeft, Pair::getRight);
     }
 }
