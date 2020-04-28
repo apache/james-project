@@ -30,69 +30,48 @@ import org.junit.jupiter.api.Test;
 
 class DateResolutionFormatterTest {
 
-    final String dateString = "2014-01-02T15:15:15Z";
+    final ZonedDateTime date = ZonedDateTime.parse("2014-01-02T15:15:15Z");
 
     @Test
     void calculateUpperDateShouldReturnDateUpToTheNextMinuteUsingMinuteUnit() {
-        assertThat(
-            ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Minute)
-            )
-        ).isEqualTo("2014-01-02T15:16:00Z");
+        assertThat(DateResolutionFormatter.computeUpperDate(date, SearchQuery.DateResolution.Minute))
+            .isEqualTo("2014-01-02T15:16:00Z");
     }
 
     @Test
     void calculateUpperDateShouldReturnDateUpToTheNextHourUsingHourUnit() {
-        assertThat(
-            ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Hour)
-            )
-        ).isEqualTo("2014-01-02T16:00:00Z");
+        assertThat(DateResolutionFormatter.computeUpperDate(date, SearchQuery.DateResolution.Hour))
+            .isEqualTo("2014-01-02T16:00:00Z");
     }
 
     @Test
     void calculateUpperDateShouldReturnDateUpToTheNextMonthUsingMonthUnit() {
-        assertThat(
-            ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Month)
-            )
-        ).isEqualTo("2014-02-01T00:00:00Z");
+        assertThat(DateResolutionFormatter.computeUpperDate(date, SearchQuery.DateResolution.Month))
+            .isEqualTo("2014-02-01T00:00:00Z");
     }
 
     @Test
     void calculateUpperDateShouldReturnDateUpToTheNextYearUsingYearUnit() {
-        assertThat(
-            ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Year)
-            )
-        ).isEqualTo("2015-01-01T00:00:00Z");
+        assertThat(DateResolutionFormatter.computeUpperDate(date, SearchQuery.DateResolution.Year))
+            .isEqualTo("2015-01-01T00:00:00Z");
     }
 
     @Test
     void calculateUpperDateShouldReturnDateUpToTheNextDayUsingDayUnit() {
-        assertThat(
-            ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Day)
-            )
-        ).isEqualTo("2014-01-03T00:00:00Z");
+        assertThat(DateResolutionFormatter.computeUpperDate(date, SearchQuery.DateResolution.Day))
+            .isEqualTo("2014-01-03T00:00:00Z");
     }
 
     @Test
     void calculateLowerDateShouldReturnDateUpToThePreviousMinuteUsingMinuteUnit() {
-        assertThat(
-            ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormatter.computeLowerDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Minute)
-            )
-        ).isEqualTo("2014-01-02T15:15:00Z");
+        assertThat(DateResolutionFormatter.computeLowerDate(date, SearchQuery.DateResolution.Minute))
+            .isEqualTo("2014-01-02T15:15:00Z");
     }
 
     @Test
     void calculateLowerDateShouldReturnDateUpToThePreviousDayUsingDayUnit() {
-        assertThat(
-            ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormatter.computeLowerDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Day)
-            )
-        ).isEqualTo("2014-01-02T00:00:00Z");
+        assertThat(DateResolutionFormatter.computeLowerDate(date, SearchQuery.DateResolution.Day))
+            .isEqualTo("2014-01-02T00:00:00Z");
     }
 
 }
