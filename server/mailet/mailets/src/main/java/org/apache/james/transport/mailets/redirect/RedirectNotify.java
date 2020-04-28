@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets.redirect;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -141,7 +142,7 @@ public interface RedirectNotify extends Mailet, MailetConfig {
 
     InitParameters getInitParameters();
 
-    String[] getAllowedInitParameters();
+    Set<String> getAllowedInitParameters();
 
     DNSService getDNSService();
 

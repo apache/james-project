@@ -22,6 +22,7 @@
 package org.apache.james.transport.mailets;
 
 import java.io.IOException;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
@@ -31,6 +32,8 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>Puts a <I>server-side</I> SMIME signature on a message.
@@ -68,8 +71,8 @@ public class SMIMESign extends Sign {
     }
     
     @Override
-    protected  String[] getAllowedInitParameters() {
-        return new String[]{
+    protected Set<String> getAllowedInitParameters() {
+        return ImmutableSet.of(
             "debug",
             "keyStoreFileName",
             "keyStorePassword",
@@ -80,7 +83,7 @@ public class SMIMESign extends Sign {
             "postmasterSigns",
             "rebuildFrom",
             "explanationText"
-        };
+        );
     }
     
     /* ******************************************************************** */

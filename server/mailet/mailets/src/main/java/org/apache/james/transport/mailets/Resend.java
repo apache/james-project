@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -47,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
@@ -298,8 +300,8 @@ import com.google.common.collect.ImmutableList;
 public class Resend extends GenericMailet implements RedirectNotify {
     private static final Logger LOGGER = LoggerFactory.getLogger(Resend.class);
 
-    private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
-            "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
+    private static final ImmutableSet<String> CONFIGURABLE_PARAMETERS = ImmutableSet.of(
+            "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply");
     private final DNSService dns;
 
     @Inject
@@ -318,7 +320,7 @@ public class Resend extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public String[] getAllowedInitParameters() {
+    public Set<String> getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
     }
 

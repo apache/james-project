@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Enumeration;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -161,9 +162,9 @@ public abstract class AbstractSign extends GenericMailet {
     
     /**
      * Gets the expected init parameters.
-     * @return An array containing the parameter names allowed for this mailet.
+     * @return A set containing the parameter names allowed for this mailet.
      */
-    protected abstract String[] getAllowedInitParameters();
+    protected abstract Set<String> getAllowedInitParameters();
     
     /* ******************************************************************** */
     /* ****************** Begin of setters and getters ******************** */

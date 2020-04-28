@@ -50,6 +50,8 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableSet;
+
 
 /**
  * <P>Does an antivirus scan check using a ClamAV daemon (CLAMD)</P>
@@ -253,8 +255,8 @@ public class ClamAVScan extends GenericMailet {
     /**
      * Gets the expected init parameters.
      */
-    protected String[] getAllowedInitParameters() {
-        return new String[]{
+    protected Set<String> getAllowedInitParameters() {
+        return ImmutableSet.of(
                 //            "static",
                 "debug",
                 "host",
@@ -262,7 +264,7 @@ public class ClamAVScan extends GenericMailet {
                 "maxPings",
                 "pingIntervalMilli",
                 "streamBufferSize"
-        };
+        );
     }
 
     /**

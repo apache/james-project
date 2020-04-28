@@ -28,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
@@ -67,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
@@ -111,7 +113,7 @@ import com.google.common.collect.ImmutableList;
 public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final Logger LOGGER = LoggerFactory.getLogger(DSNBounce.class);
 
-    private static final String[] CONFIGURABLE_PARAMETERS = new String[]{ "debug", "passThrough", "messageString", "attachment", "sender", "prefix" };
+    private static final ImmutableSet<String> CONFIGURABLE_PARAMETERS = ImmutableSet.of("debug", "passThrough", "messageString", "attachment", "sender", "prefix");
     private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH);
     private static final List<InternetAddress> TO_INTERNET_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress());
 
@@ -165,7 +167,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     @Override
-    public String[] getAllowedInitParameters() {
+    public Set<String> getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
     }
 
