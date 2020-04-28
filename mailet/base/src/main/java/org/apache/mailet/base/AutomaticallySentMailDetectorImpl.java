@@ -104,6 +104,10 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
         } catch (MimeException e) {
             throw new MessagingException("Can not parse Mime", e);
         } catch (IOException e) {
+            // there's no reason for a mdn report to be bigger than 1MiB
+            if (e.getMessage().startsWith("Input stream limit exceeded")) {
+                return false;
+            }
             throw new MessagingException("Can not read content", e);
         }
         return resultCollector.getResult();

@@ -332,4 +332,23 @@ public class AutomaticallySentMailDetectorImplTest {
         assertThat(new AutomaticallySentMailDetectorImpl().isMdnSentAutomatically(fakeMail)).isFalse();
     }
 
+    @Test
+    public void isMdnSentAutomaticallyShouldNotThrowWhenBiggerThan1MB() throws Exception {
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
+            .addHeaders()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("12345678\r\n".repeat(150 * 1024)),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("12345678\r\n"));
+
+        FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(message)
+            .build();
+
+        assertThat(new AutomaticallySentMailDetectorImpl().isMdnSentAutomatically(fakeMail)).isFalse();
+    }
+
 }
