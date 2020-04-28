@@ -38,7 +38,7 @@ import com.google.common.base.Strings;
  * Follows syntax and usage as defined in https://tools.ietf.org/html/rfc2045#section-5
  * Thus includes mime type, defined by its media type and subtype as well as contentType fields parameters,
  * including charset
- * 
+ *
  * Example: text/plain; charset=utf-8
  */
 public class ContentType {
@@ -228,13 +228,13 @@ public class ContentType {
         if (o instanceof ContentType) {
             ContentType that = (ContentType) o;
 
-            return java.util.Objects.equals(this.value, that.value);
+            return Objects.equals(this.value, that.value);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return java.util.Objects.hash(value);
+        return Objects.hash(value);
     }
 }
