@@ -44,8 +44,8 @@ public class TestingSession implements Session {
         this.scenario = scenario;
     }
 
-    public void registerScenario(Scenario.ExecutionHook hook) {
-        this.scenario = Scenario.combine(hook);
+    public void registerScenario(Scenario.ExecutionHook... hooks) {
+        this.scenario = Scenario.combine(hooks);
     }
 
     @Override

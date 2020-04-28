@@ -44,7 +44,6 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.TestingSession;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
@@ -68,7 +67,6 @@ import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -272,7 +270,7 @@ class ConsistencyTasksIntegrationTest {
         Barrier barrier2 = new Barrier();
         String updatedQuotaQueryString = "UPDATE currentQuota SET messageCount=messageCount+?,storage=storage+? WHERE quotaRoot=?;";
         server.getProbe(TestingSessionProbe.class)
-            .getTestingSession().registerScenario(Scenario.combine(
+            .getTestingSession().registerScenario(
                 awaitOn(barrier1) // Event bus first execution
                     .thenFail()
                     .times(1)
@@ -280,7 +278,7 @@ class ConsistencyTasksIntegrationTest {
                 awaitOn(barrier2) // scenari for event bus retry
                     .thenFail()
                     .times(1)
-                    .whenQueryStartsWith(updatedQuotaQueryString)));
+                    .whenQueryStartsWith(updatedQuotaQueryString));
 
         probe.appendMessage(BOB.asString(), inbox,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(),

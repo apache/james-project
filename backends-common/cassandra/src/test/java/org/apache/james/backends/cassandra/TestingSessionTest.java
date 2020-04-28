@@ -23,7 +23,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
-import static org.apache.james.backends.cassandra.Scenario.combine;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.TABLE_NAME;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -154,13 +153,13 @@ class TestingSessionTest {
     @Test
     void scenarioShouldDefiningSeveralHooks(CassandraCluster cassandra) {
         cassandra.getConf()
-            .registerScenario(combine(
+            .registerScenario(
                 executeNormally()
                     .times(1)
                     .whenQueryStartsWith("SELECT value FROM schemaVersion;"),
                 fail()
                     .times(1)
-                    .whenQueryStartsWith("SELECT value FROM schemaVersion;")));
+                    .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
 
         SoftAssertions.assertSoftly(softly -> {
             assertThatCode(() -> dao.getCurrentSchemaVersion().block())
