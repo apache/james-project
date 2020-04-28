@@ -28,8 +28,8 @@
 
     <artifactId>james-server-guice-wkd</artifactId>
 
-    <name>Apache James :: Server :: Guice :: Web Key Discovery Protocol</name>
-    <description>Web Key Discovery protocol modules for Guice implementation of James server</description>
+    <name>Apache James :: Server :: Guice :: Web Key Directory Protocol</name>
+    <description>Web Key Directory protocol modules for Guice implementation of James server</description>
 
     <dependencies>
         <dependency>
