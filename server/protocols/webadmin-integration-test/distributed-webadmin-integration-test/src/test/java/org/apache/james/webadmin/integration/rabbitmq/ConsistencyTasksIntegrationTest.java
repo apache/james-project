@@ -50,6 +50,7 @@ import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFact
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -290,6 +291,139 @@ class ConsistencyTasksIntegrationTest {
         // Await event bus retry
         barrier2.awaitCaller();
         barrier2.releaseCaller();
+
+        String taskId = with()
+            .basePath("/quota/users")
+            .queryParam("task", "RecomputeCurrentQuotas")
+            .post()
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        QuotaProbesImpl quotaProbe = server.getProbe(QuotaProbesImpl.class);
+        assertThat(
+            quotaProbe.getMessageCountQuota(QuotaRoot.quotaRoot("#private&" + BOB.asString(), Optional.empty()))
+                .getUsed()
+                .asLong())
+            .isEqualTo(1);
+    }
+
+    @Test
+    void solveCassandraMappingInconsistencyShouldSolveNotingWhenNoInconsistencies() {
+        with()
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_1);
+        with()
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_2);
+
+        String taskId = with()
+            .queryParam("action", "SolveInconsistencies")
+            .post(CassandraMappingsRoutes.ROOT_PATH)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        when()
+            .get(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME)
+        .then()
+            .contentType(ContentType.JSON)
+        .statusCode(HttpStatus.OK_200)
+            .body("source", hasItems(ALIAS_1, ALIAS_2));
+    }
+
+    @Test
+    void solveMailboxesInconsistencyShouldSolveNotingWhenNoInconsistencies(GuiceJamesServer server) {
+        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
+
+        try {
+            probe.createMailbox(MailboxPath.inbox(BOB));
+        } catch (Exception e) {
+            // Failure is expected
+        }
+
+        // schema version 6 or higher required to run solve mailbox inconsistencies task
+        String taskId = with().post(UPGRADE_TO_LATEST_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .get("/tasks/" + taskId + "/await")
+        .then()
+            .body("status", is("completed"));
+
+        taskId = with()
+            .header("I-KNOW-WHAT-I-M-DOING", "ALL-SERVICES-ARE-OFFLINE")
+            .queryParam("task", "SolveInconsistencies")
+            .post("/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        // The mailbox is removed as it is not in the mailboxDAO source of truth.
+        assertThat(probe.listUserMailboxes(BOB.asString()))
+            .containsOnly(MailboxConstants.INBOX);
+    }
+
+    @Test
+    void recomputeMailboxCountersShouldSolveNotingWhenNoInconsistencies(GuiceJamesServer server) throws MailboxException {
+        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
+        MailboxPath inbox = MailboxPath.inbox(BOB);
+        probe.createMailbox(inbox);
+
+        try {
+            probe.appendMessage(BOB.asString(), inbox,
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
+        } catch (Exception e) {
+            // Expected to fail
+        }
+
+        String taskId = with()
+            .basePath("/mailboxes")
+            .queryParam("task", "RecomputeMailboxCounters")
+            .post()
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        assertThat(probe.retrieveCounters(inbox).getCount()).isEqualTo(1);
+    }
+
+    @Test
+    void recomputeQuotasShouldSolveNotingWhenNoInconsistencies(GuiceJamesServer server) throws Exception {
+        dataProbe.fluent()
+            .addDomain(BOB.getDomainPart().get().asString())
+            .addUser(BOB.asString(), BOB_PASSWORD);
+        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
+        MailboxPath inbox = MailboxPath.inbox(BOB);
+        probe.createMailbox(inbox);
+
+        Barrier barrier = new Barrier();
+        String updatedQuotaQueryString = "UPDATE currentQuota SET messageCount=messageCount+?,storage=storage+? WHERE quotaRoot=?;";
+        server.getProbe(TestingSessionProbe.class)
+            .getTestingSession().registerScenario(
+                awaitOn(barrier) // Event bus first execution
+                    .thenExecuteNormally()
+                    .times(1)
+                    .whenQueryStartsWith(updatedQuotaQueryString));
+
+        probe.appendMessage(BOB.asString(), inbox,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(),
+            !IS_RECENT, new Flags(Flags.Flag.SEEN));
+
+        // Await first execution
+        barrier.awaitCaller();
+        barrier.releaseCaller();
 
         String taskId = with()
             .basePath("/quota/users")
