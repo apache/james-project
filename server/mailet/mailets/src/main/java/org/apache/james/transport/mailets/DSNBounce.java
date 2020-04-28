@@ -21,6 +21,10 @@ package org.apache.james.transport.mailets;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +37,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.dnsservice.api.DNSService;
@@ -119,7 +122,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final AttributeName DELIVERY_ERROR = AttributeName.of("delivery-error");
 
     private final DNSService dns;
-    private final FastDateFormat dateFormatter;
+    private final DateTimeFormatter dateFormatter;
     private String messageString = null;
 
     @Inject
@@ -127,7 +130,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         this(dns, DateFormats.RFC822_DATE_FORMAT);
     }
 
-    public DSNBounce(DNSService dns, FastDateFormat dateFormatter) {
+    public DSNBounce(DNSService dns, DateTimeFormatter dateFormatter) {
         this.dns = dns;
         this.dateFormatter = dateFormatter;
     }
@@ -295,7 +298,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private String getDateHeader(Mail originalMail) throws MessagingException {
         String[] date = originalMail.getMessage().getHeader(RFC2822Headers.DATE);
         if (date == null) {
-            return dateFormatter.format(new Date());
+            return dateFormatter.format(LocalDateTime.now());
         }
         return date[0];
     }
@@ -415,7 +418,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         buffer.append("Action: failed").append(LINE_BREAK);
         buffer.append("Status: " + deliveryError).append(LINE_BREAK);
         buffer.append("Diagnostic-Code: " + getDiagnosticType(deliveryError) + "; " + deliveryError).append(LINE_BREAK);
-        buffer.append("Last-Attempt-Date: " + dateFormatter.format(lastUpdated))
+        buffer.append("Last-Attempt-Date: " + dateFormatter.format(ZonedDateTime.ofInstant(lastUpdated.toInstant(), ZoneId.systemDefault())))
             .append(LINE_BREAK);
     }
 

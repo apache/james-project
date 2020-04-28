@@ -27,9 +27,9 @@ import static org.mockito.Mockito.when;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
@@ -74,7 +74,7 @@ public class DSNBounceTest {
         postmaster = new MailAddress("postmaster@domain.com");
         
         DNSService dnsService = mock(DNSService.class);
-        dsnBounce = new DSNBounce(dnsService, DateFormats.getRFC822FormatForTimeZone(TimeZone.getTimeZone("UTC")));
+        dsnBounce = new DSNBounce(dnsService, DateFormats.RFC822_DATE_FORMAT.withZone(ZoneId.of("UTC")));
         fakeMailContext = FakeMailContext.builder().postmaster(postmaster).build();
 
         InetAddress localHost = InetAddress.getLocalHost();
