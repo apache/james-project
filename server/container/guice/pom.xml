@@ -72,6 +72,7 @@
         <module>protocols/webadmin-mailqueue</module>
         <module>protocols/webadmin-mailrepository</module>
         <module>protocols/webadmin-swagger</module>
+        <module>protocols/wkd</module>
         <module>rabbitmq</module>
         <module>testing</module>
         <module>sieve-file</module>
