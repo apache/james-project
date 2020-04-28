@@ -1352,6 +1352,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-data-wkd</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-data-jpa</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1536,6 +1541,11 @@
                 <type>test-jar</type>
             </dependency>
             <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-wkd</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-jwt</artifactId>
                 <version>${project.version}</version>

@@ -97,6 +97,7 @@
         <module>protocols/protocols-smtp</module>
         <module>protocols/webadmin</module>
         <module>protocols/webadmin-integration-test</module>
+	<module>protocols/wkd</module>
 
         <module>queue/queue-activemq</module>
         <module>queue/queue-api</module>
