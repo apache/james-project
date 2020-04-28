@@ -37,6 +37,14 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
 
+/**
+ * Will be removed in future release (3.6.0).
+ * Prefer using CachedBlobStore.
+ *
+ * Introduced to fasten small blob access, its usage could be compared to a cache, but with a sub-optimal
+ * implementation (no eviction, default replication factor, no  circuit breaking).
+ */
+@Deprecated
 public class HybridBlobStore implements BlobStore {
     @FunctionalInterface
     public interface RequireLowCost {
