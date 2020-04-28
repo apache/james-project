@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,7 +31,6 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
-import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormatter;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -44,6 +44,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class IndexableMessage {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
     public static class Builder {
         private static ZonedDateTime getSanitizedInternalDate(MailboxMessage message, ZoneId zoneId) {
@@ -116,7 +118,7 @@ public class IndexableMessage {
             EMailers to = EMailers.from(headerCollection.getToAddressSet());
             EMailers cc = EMailers.from(headerCollection.getCcAddressSet());
             EMailers bcc = EMailers.from(headerCollection.getBccAddressSet());
-            String sentDate = DateResolutionFormatter.DATE_TIME_FORMATTER.format(headerCollection.getSentDate().orElse(internalDate));
+            String sentDate = DATE_TIME_FORMATTER.format(headerCollection.getSentDate().orElse(internalDate));
             Optional<String> mimeMessageID = headerCollection.getMessageID();
 
             String text = Stream.of(from.serialize(),
@@ -133,7 +135,7 @@ public class IndexableMessage {
             String mailboxId = message.getMailboxId().serialize();
             ModSeq modSeq = message.getModSeq();
             long size = message.getFullContentOctets();
-            String date = DateResolutionFormatter.DATE_TIME_FORMATTER.format(getSanitizedInternalDate(message, zoneId));
+            String date = DATE_TIME_FORMATTER.format(getSanitizedInternalDate(message, zoneId));
             String mediaType = message.getMediaType();
             String subType = message.getSubType();
             boolean isAnswered = message.isAnswered();

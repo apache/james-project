@@ -28,6 +28,7 @@ import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
@@ -186,11 +187,11 @@ public class CriterionConverter {
         return boolQuery().filter(
             convertDateOperator(field,
                 dateOperator.getType(),
-                DateResolutionFormatter.DATE_TIME_FORMATTER.format(
+                DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(
                     DateResolutionFormatter.computeLowerDate(
                         DateResolutionFormatter.convertDateToZonedDateTime(dateOperator.getDate()),
                         dateOperator.getDateResultion())),
-                DateResolutionFormatter.DATE_TIME_FORMATTER.format(
+                DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(
                     DateResolutionFormatter.computeUpperDate(
                         DateResolutionFormatter.convertDateToZonedDateTime(dateOperator.getDate()),
                         dateOperator.getDateResultion()))));

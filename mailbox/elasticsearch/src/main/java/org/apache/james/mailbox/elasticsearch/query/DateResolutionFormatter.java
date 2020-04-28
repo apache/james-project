@@ -22,7 +22,6 @@ package org.apache.james.mailbox.elasticsearch.query;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Date;
@@ -30,8 +29,6 @@ import java.util.Date;
 import org.apache.james.mailbox.model.SearchQuery;
 
 public class DateResolutionFormatter {
-
-    public static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
     public static ZonedDateTime computeUpperDate(ZonedDateTime date, SearchQuery.DateResolution resolution) {
         return computeLowerDate(date, resolution).plus(1, convertDateResolutionField(resolution));
