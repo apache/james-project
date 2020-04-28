@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class RequestHandler {
 
@@ -75,19 +76,14 @@ public class RequestHandler {
     
     private Function<Method, Flux<JmapResponse>> extractAndProcess(AuthenticatedRequest request) {
         MailboxSession mailboxSession = request.getMailboxSession();
-        return (Method method) -> {
-                    try {
-                        JmapRequest jmapRequest = jmapRequestParser.extractJmapRequest(request, method.requestType());
-                        return method.process(jmapRequest, request.getMethodCallId(), mailboxSession)
-                            .onErrorResume(JmapFieldNotSupportedException.class, e -> errorNotImplemented(e, request));
-                    } catch (IOException e) {
-                        LOGGER.error("Error occured while parsing the request.", e);
-                        if (e.getCause() instanceof JmapFieldNotSupportedException) {
-                            return errorNotImplemented((JmapFieldNotSupportedException) e.getCause(), request);
-                        }
-                        return error(request, generateInvalidArgumentError(e.getMessage()));
-                    }
-                };
+        return (Method method) ->
+            Mono.fromCallable(() -> jmapRequestParser.extractJmapRequest(request, method.requestType()))
+                .flatMapMany(jmapRequest -> method.process(jmapRequest, request.getMethodCallId(), mailboxSession))
+                .onErrorResume(JmapFieldNotSupportedException.class, e -> errorNotImplemented(e, request))
+                .onErrorResume(
+                    e -> e.getCause() instanceof JmapFieldNotSupportedException,
+                    e -> errorNotImplemented((JmapFieldNotSupportedException) e.getCause(), request))
+                .onErrorResume(IOException.class, e -> error(request, generateInvalidArgumentError(e.getMessage())));
     }
 
     public ErrorResponse generateInvalidArgumentError(String description) {

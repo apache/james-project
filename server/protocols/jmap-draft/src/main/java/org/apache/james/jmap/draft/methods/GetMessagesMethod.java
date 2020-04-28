@@ -114,7 +114,7 @@ public class GetMessagesMethod implements Method {
     }
 
     private Mono<GetMessagesResponse> getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest) {
-        getMessagesRequest.getAccountId().ifPresent((input) -> notImplemented("accountId"));
+        getMessagesRequest.getAccountId().ifPresent(input -> notImplemented("accountId"));
 
         MessageProperties.ReadProfile readProfile = getMessagesRequest.getProperties().computeReadLevel();
         MessageViewFactory<? extends MessageView> factory = messageViewFactory.getFactory(readProfile);
