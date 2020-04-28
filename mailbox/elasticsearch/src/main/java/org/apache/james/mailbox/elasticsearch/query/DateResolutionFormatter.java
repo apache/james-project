@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.elasticsearch.query;
 
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -65,6 +64,6 @@ public class DateResolutionFormatter {
     }
 
     public static ZonedDateTime convertDateToZonedDateTime(Date date) {
-        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(date.getTime()), ZoneId.systemDefault());
+        return ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
     }
 }
