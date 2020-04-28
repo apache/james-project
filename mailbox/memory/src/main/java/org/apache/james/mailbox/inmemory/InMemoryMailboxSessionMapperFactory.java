@@ -20,7 +20,6 @@ package org.apache.james.mailbox.inmemory;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.inmemory.mail.InMemoryAnnotationMapper;
 import org.apache.james.mailbox.inmemory.mail.InMemoryAttachmentMapper;
 import org.apache.james.mailbox.inmemory.mail.InMemoryMailboxMapper;
@@ -63,12 +62,12 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
     
     @Override
-    public MailboxMapper createMailboxMapper(MailboxSession session) throws MailboxException {
+    public MailboxMapper createMailboxMapper(MailboxSession session) {
         return mailboxMapper;
     }
 
     @Override
-    public InMemoryMessageMapper createMessageMapper(MailboxSession session) throws MailboxException {
+    public InMemoryMessageMapper createMessageMapper(MailboxSession session) {
         return messageMapper;
     }
 
@@ -78,7 +77,7 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
 
     @Override
-    public SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
+    public SubscriptionMapper createSubscriptionMapper(MailboxSession session) {
         return subscriptionMapper;
     }
     
@@ -94,8 +93,7 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
 
     @Override
-    public AnnotationMapper createAnnotationMapper(MailboxSession session)
-            throws MailboxException {
+    public AnnotationMapper createAnnotationMapper(MailboxSession session) {
         return annotationMapper;
     }
 

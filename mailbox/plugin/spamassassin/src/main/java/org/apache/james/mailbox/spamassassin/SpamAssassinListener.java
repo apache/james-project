@@ -116,7 +116,7 @@ public class SpamAssassinListener implements SpamEventListener {
         }
     }
 
-    private void handleMessageMove(Event event, MailboxSession session, MessageMoveEvent messageMoveEvent) throws MailboxException {
+    private void handleMessageMove(Event event, MailboxSession session, MessageMoveEvent messageMoveEvent) {
         if (isMessageMovedToSpamMailbox(messageMoveEvent)) {
             LOGGER.debug("Spam event detected");
             ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent, session);
@@ -147,7 +147,7 @@ public class SpamAssassinListener implements SpamEventListener {
         }
     }
 
-    private ImmutableList<InputStream> retrieveMessages(MessageMoveEvent messageMoveEvent, MailboxSession session) throws MailboxException {
+    private ImmutableList<InputStream> retrieveMessages(MessageMoveEvent messageMoveEvent, MailboxSession session) {
         return mapperFactory.getMessageIdMapper(session)
             .find(messageMoveEvent.getMessageIds(), MessageMapper.FetchType.Full)
             .stream()

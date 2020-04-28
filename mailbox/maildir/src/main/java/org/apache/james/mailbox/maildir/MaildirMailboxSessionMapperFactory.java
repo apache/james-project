@@ -20,8 +20,6 @@ package org.apache.james.mailbox.maildir;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.maildir.mail.MaildirMailboxMapper;
 import org.apache.james.mailbox.maildir.mail.MaildirMessageMapper;
 import org.apache.james.mailbox.maildir.user.MaildirSubscriptionMapper;
@@ -46,31 +44,27 @@ public class MaildirMailboxSessionMapperFactory extends
     
     
     @Override
-    public MailboxMapper createMailboxMapper(MailboxSession session)
-            throws MailboxException {
+    public MailboxMapper createMailboxMapper(MailboxSession session) {
         return new MaildirMailboxMapper(store, session);
     }
 
     @Override
-    public MessageMapper createMessageMapper(MailboxSession session)
-            throws MailboxException {
+    public MessageMapper createMessageMapper(MailboxSession session) {
         return new MaildirMessageMapper(session, store);
     }
 
     @Override
-    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
+    public MessageIdMapper createMessageIdMapper(MailboxSession session) {
         throw new NotImplementedException("Not implemented");
     }
 
     @Override
-    public SubscriptionMapper createSubscriptionMapper(MailboxSession session)
-            throws SubscriptionException {
+    public SubscriptionMapper createSubscriptionMapper(MailboxSession session) {
         return new MaildirSubscriptionMapper(store);
     }
 
     @Override
-    public AnnotationMapper createAnnotationMapper(MailboxSession session)
-            throws MailboxException {
+    public AnnotationMapper createAnnotationMapper(MailboxSession session) {
         throw new NotImplementedException("Not implemented");
     }
 

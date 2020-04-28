@@ -27,7 +27,6 @@ import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -55,7 +54,7 @@ public class MailboxAnnotationListener implements MailboxListener.GroupMailboxLi
     }
 
     @Override
-    public void event(Event event) throws MailboxException {
+    public void event(Event event) {
         if (event instanceof MailboxDeletion) {
             MailboxSession mailboxSession = sessionProvider.createSystemSession(event.getUsername());
             AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(mailboxSession);

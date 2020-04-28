@@ -270,7 +270,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         }
     }
 
-    private List<MailboxMessage> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) throws MailboxException {
+    private List<MailboxMessage> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         return messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
