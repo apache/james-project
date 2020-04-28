@@ -33,6 +33,14 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
+
+/**
+ * Follows syntax and usage as defined in https://tools.ietf.org/html/rfc2045#section-5
+ * Thus includes mime type, defined by its media type and subtype as well as contentType fields parameters,
+ * including charset
+ * 
+ * Example: text/plain; charset=utf-8
+ */
 public class ContentType {
     public static class MimeType {
         public static MimeType of(String value) {
@@ -181,11 +189,6 @@ public class ContentType {
             .orElse(mimeType.asString()));
     }
 
-    /**
-     * Follows syntax and usage as defined in https://tools.ietf.org/html/rfc2045#section-5
-     * Thus includes media type and parameters, including charset
-     * Example: text/plain; charset=utf-8
-     */
     private final String value;
 
     public ContentType(String value) {
