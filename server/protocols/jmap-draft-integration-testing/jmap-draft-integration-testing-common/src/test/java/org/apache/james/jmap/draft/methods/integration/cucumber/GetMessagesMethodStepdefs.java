@@ -52,11 +52,9 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.SMTPMessageSender;
-import org.javatuples.Pair;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
@@ -199,8 +197,7 @@ public class GetMessagesMethodStepdefs {
 
     private Function<Set<Entry<String, String>>, String> entriesToString() {
         return entries -> entries.stream()
-            .map(this::entryToPair)
-            .map(this::joinKeyValue)
+            .map(entry -> entry.getKey() + ": " + entry.getValue())
             .collect(Collectors.joining("\r\n", "", "\r\n"));
     }
 
@@ -527,14 +524,6 @@ public class GetMessagesMethodStepdefs {
             .collect(Collectors.joining(",", "[", "]"));
 
         httpClient.post("[[\"getMessages\", {\"ids\": " + serializedIds + ", \"properties\": " + serializedProperties + "}, \"#0\"]]");
-    }
-
-    private Pair<String, String> entryToPair(Map.Entry<String, String> entry) {
-        return Pair.with(entry.getKey(), entry.getValue());
-    }
-
-    private String joinKeyValue(Pair<String, String> pair) {
-        return Joiner.on(": ").join(pair);
     }
 
     @Then("^an error \"([^\"]*)\" with type \"([^\"]*)\" is returned$")
