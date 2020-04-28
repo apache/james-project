@@ -183,7 +183,7 @@ class MessageFullViewFactoryTest {
                 .messageId(TestMessageId.of(2))
                 .build();
 
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getSize, MessageFullView::getSubject, MessageFullView::getHeaders, MessageFullView::getDate)
             .containsExactly(PreviewDTO.of(""), Number.ZERO, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
@@ -201,7 +201,7 @@ class MessageFullViewFactoryTest {
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
                 .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee)
             .extracting(MessageFullView::isIsUnread, MessageFullView::isIsFlagged, MessageFullView::isIsAnswered, MessageFullView::isIsDraft, MessageFullView::isIsForwarded)
             .containsExactly(true, true, true, true, true);
@@ -249,7 +249,7 @@ class MessageFullViewFactoryTest {
                 .put("MIME-Version", "1.0")
                 .build();
 
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         MessageFullView expected = MessageFullView.builder()
                 .id(TestMessageId.of(2))
                 .blobId(BlobId.of("2"))
@@ -304,7 +304,7 @@ class MessageFullViewFactoryTest {
             .put("To", "user1 <user1@domain>, user2 <user2@domain>")
             .put("MIME-Version", "1.0")
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         MessageFullView expected = MessageFullView.builder()
             .id(TestMessageId.of(2))
             .blobId(BlobId.of("2"))
@@ -355,7 +355,7 @@ class MessageFullViewFactoryTest {
             .put("To", "user1 <user1@domain>")
             .put("MIME-Version", "1.0")
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         MessageFullView expected = MessageFullView.builder()
             .id(TestMessageId.of(2))
             .blobId(BlobId.of("2"))
@@ -393,7 +393,7 @@ class MessageFullViewFactoryTest {
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
                 .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee.getTextBody()).hasValue("Mail body");
     }
 
@@ -426,7 +426,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getTextBody())
             .isPresent()
@@ -455,7 +455,7 @@ class MessageFullViewFactoryTest {
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
                 .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee.getPreview())
             .isEqualTo(expectedPreview);
     }
@@ -472,7 +472,7 @@ class MessageFullViewFactoryTest {
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
                 .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee.getAttachments()).isEmpty();
     }
     
@@ -507,7 +507,7 @@ class MessageFullViewFactoryTest {
                 .messageId(TestMessageId.of(2))
                 .build();
 
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getAttachments()).hasSize(1);
         assertThat(testee.getAttachments().get(0)).isEqualToComparingFieldByField(expectedAttachment);
@@ -531,7 +531,7 @@ class MessageFullViewFactoryTest {
             .messageId(new TestMessageId.Factory().generate())
             .build();
 
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         Emailer user = Emailer.builder().name("user").email("userdomain").allowInvalid().build();
         Emailer user1 = Emailer.builder().name("user1").email("user1domain").allowInvalid().build();
@@ -560,7 +560,7 @@ class MessageFullViewFactoryTest {
             .messageId(new TestMessageId.Factory().generate())
             .build();
 
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getFrom()).isEmpty();
     }
@@ -585,7 +585,7 @@ class MessageFullViewFactoryTest {
             .messageId(new TestMessageId.Factory().generate())
             .build();
 
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getDate())
             .isEqualTo(Instant.parse("2017-05-17T11:18:52.000Z"));
@@ -611,7 +611,7 @@ class MessageFullViewFactoryTest {
             .messageId(new TestMessageId.Factory().generate())
             .build();
 
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getDate())
             .isEqualTo(Instant.parse("2017-05-17T11:18:52.000Z"));
@@ -636,7 +636,7 @@ class MessageFullViewFactoryTest {
             .messageId(new TestMessageId.Factory().generate())
             .build();
 
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getDate()).isEqualTo(INTERNAL_DATE);
     }
@@ -654,7 +654,7 @@ class MessageFullViewFactoryTest {
                 .messageId(TestMessageId.of(2))
                 .build();
 
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getSize, MessageFullView::getSubject, MessageFullView::getHeaders, MessageFullView::getDate)
             .containsExactly(PreviewDTO.of(""), Number.fromLong(1010L), "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
@@ -676,7 +676,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getPreview())
             .isEqualTo(PreviewDTO.of("my HTML message"));
@@ -698,7 +698,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getPreview()).isEqualTo(PreviewDTO.of(""));
         assertThat(testee.getHtmlBody()).contains("");
@@ -730,7 +730,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getPreview())
             .isEqualTo(PreviewDTO.of(expected));
@@ -753,7 +753,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee.getPreview())
             .isEqualTo(PreviewDTO.of("My plain text"));
@@ -773,7 +773,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getHtmlBody, MessageFullView::getTextBody)
@@ -797,7 +797,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getHtmlBody, MessageFullView::getTextBody)
@@ -833,7 +833,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
 
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getHtmlBody, MessageFullView::getTextBody)
@@ -854,7 +854,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee.getKeywords()).containsAllEntriesOf(keywords.asMap());
     }
 
@@ -872,7 +872,7 @@ class MessageFullViewFactoryTest {
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
             .build();
-        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
+        MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee.getKeywords()).containsAllEntriesOf(keywords.asMap());
     }
 
@@ -883,10 +883,12 @@ class MessageFullViewFactoryTest {
         void fromMessageResultsShouldComputeWhenProjectionReturnEmpty() throws Exception {
             List<MessageResult> messages = messageIdManager
                 .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
-            messageFullViewFactory.fromMessageResults(messages);
+            messageFullViewFactory.fromMessageResults(messages).block();
 
             AWAIT_CONDITION.untilAsserted(() ->
-                assertThat(Mono.from(fastViewProjection.retrieve(message1.getMessageId())).block())
+                assertThat(fastViewProjection.retrieve(message1.getMessageId()).blockOptional())
+                    .isPresent()
+                    .get()
                     .extracting(MessageFastViewPrecomputedProperties::getPreview)
                     .isEqualTo(DEFAULT_PREVIEW));
         }
@@ -903,7 +905,7 @@ class MessageFullViewFactoryTest {
             List<MessageResult> messages = messageIdManager
                 .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
 
-            assertThat(messageFullViewFactory.fromMessageResults(messages))
+            assertThat(messageFullViewFactory.fromMessageResults(messages).block())
                 .extracting(MessageFullView::getPreview)
                 .isEqualTo(PreviewDTO.of(preview));
         }
@@ -916,7 +918,7 @@ class MessageFullViewFactoryTest {
             List<MessageResult> messages = messageIdManager
                 .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
 
-            assertThat(messageFullViewFactory.fromMessageResults(messages))
+            assertThat(messageFullViewFactory.fromMessageResults(messages).block())
                 .extracting(MessageFullView::getPreview)
                 .isEqualTo(PreviewDTO.of(DEFAULT_PREVIEW_AS_STRING));
         }
@@ -929,7 +931,7 @@ class MessageFullViewFactoryTest {
             List<MessageResult> messages = messageIdManager
                 .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
 
-            assertThat(messageFullViewFactory.fromMessageResults(messages))
+            assertThat(messageFullViewFactory.fromMessageResults(messages).block())
                 .extracting(MessageFullView::getPreview)
                 .isEqualTo(PreviewDTO.of(DEFAULT_PREVIEW_AS_STRING));
         }

@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.draft.model.message.view;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -30,17 +29,18 @@ import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeaderView> {
     private final BlobManager blobManager;
@@ -59,15 +59,21 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 
-    private MessageHeaderView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException, IOException {
+    private Mono<MessageHeaderView> fromMessageResults(Collection<MessageResult> messageResults) {
         Helpers.assertOneMessageId(messageResults);
 
-        MessageResult firstMessageResult = messageResults.iterator().next();
-        List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
-        Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
+        return Mono.fromCallable(() -> messageResults.iterator().next())
+            .flatMap(Throwing.function(firstMessageResult -> {
+                List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
+                Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
+                return instanciateHeaderView(messageResults, firstMessageResult, mailboxIds, mimeMessage);
+            }));
+    }
 
-        return MessageHeaderView.messageHeaderBuilder()
+    private Mono<MessageHeaderView> instanciateHeaderView(Collection<MessageResult> messageResults, MessageResult firstMessageResult,
+                                                          List<MailboxId> mailboxIds, Message mimeMessage) {
+        return Mono.just(MessageHeaderView.messageHeaderBuilder()
             .id(firstMessageResult.getMessageId())
             .mailboxIds(mailboxIds)
             .blobId(BlobId.of(blobManager.toBlobId(firstMessageResult.getMessageId())))
@@ -83,6 +89,6 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
             .bcc(Emailer.fromAddressList(mimeMessage.getBcc()))
             .replyTo(Emailer.fromAddressList(mimeMessage.getReplyTo()))
             .date(Helpers.getDateFromHeaderOrInternalDateOtherwise(mimeMessage, firstMessageResult))
-            .build();
+            .build());
     }
 }

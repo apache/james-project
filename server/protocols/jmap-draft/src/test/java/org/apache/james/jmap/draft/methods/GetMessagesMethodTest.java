@@ -89,6 +89,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.JsonPath;
 
+import reactor.core.publisher.Mono;
+
 public class GetMessagesMethodTest {
     private static final String FORWARDED = "forwarded";
     private static final Username ROBERT = Username.of("robert");
@@ -615,7 +617,7 @@ public class GetMessagesMethodTest {
         ComposedMessageId message2 = inbox.appendMessage(AppendCommand.from(messageContent), session).getId();
 
         doCallRealMethod()
-            .doThrow(new RuntimeException())
+            .doReturn(Mono.error(new RuntimeException()))
             .when(messageMetadataViewFactory)
             .fromMessageResults(any());
 

@@ -56,6 +56,7 @@ import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -92,18 +93,23 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 
-    public MessageFullView fromMetaDataWithContent(MetaDataWithContent message) throws IOException {
-        Message mimeMessage = Helpers.parse(message.getContent());
+    public Mono<MessageFullView> fromMetaDataWithContent(MetaDataWithContent message) {
+        return Mono.fromCallable(() -> Helpers.parse(message.getContent()))
+            .flatMap(Throwing.function(mimeMessage -> fromMetaDataWithContent(message, mimeMessage)));
+    }
+
+    private Mono<MessageFullView> fromMetaDataWithContent(MetaDataWithContent message, Message mimeMessage) throws IOException {
         MessageContent messageContent = messageContentExtractor.extract(mimeMessage);
         Optional<String> htmlBody = messageContent.getHtmlBody();
         Optional<String> mainTextContent = messageContent.extractMainTextContent(htmlTextExtractor);
         Optional<String> textBody = computeTextBodyIfNeeded(messageContent, mainTextContent);
 
-        MessageFastViewPrecomputedProperties messageProjection = retrieveProjection(
-            messageContent,
-            message.getMessageId(),
-            () -> MessageFullView.hasAttachment(getAttachments(message.getAttachments())));
+        return retrieveProjection(messageContent, message.getMessageId(),
+                () -> MessageFullView.hasAttachment(getAttachments(message.getAttachments())))
+            .map(messageProjection -> instanciateMessageFullView(message, mimeMessage, htmlBody, textBody, messageProjection));
+    }
 
+    private MessageFullView instanciateMessageFullView(MetaDataWithContent message, Message mimeMessage, Optional<String> htmlBody, Optional<String> textBody, MessageFastViewPrecomputedProperties messageProjection) {
         return MessageFullView.builder()
                 .id(message.getMessageId())
                 .blobId(BlobId.of(blobManager.toBlobId(message.getMessageId())))
@@ -127,13 +133,11 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
                 .build();
     }
 
-    private MessageFastViewPrecomputedProperties retrieveProjection(MessageContent messageContent,
+    private Mono<MessageFastViewPrecomputedProperties> retrieveProjection(MessageContent messageContent,
                                                                     MessageId messageId, Supplier<Boolean> hasAttachments) {
         return Mono.from(fastViewProjection.retrieve(messageId))
             .onErrorResume(throwable -> fallBackToCompute(messageContent, hasAttachments, throwable))
-            .switchIfEmpty(computeThenStoreAsync(messageContent, messageId, hasAttachments))
-            .subscribeOn(Schedulers.elastic())
-            .block();
+            .switchIfEmpty(computeThenStoreAsync(messageContent, messageId, hasAttachments));
     }
 
     private Mono<MessageFastViewPrecomputedProperties> fallBackToCompute(MessageContent messageContent,
@@ -169,8 +173,12 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
             .orElse(message.getInternalDate());
     }
 
-    public MessageFullView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException, IOException {
-        return fromMetaDataWithContent(toMetaDataWithContent(messageResults));
+    Mono<MessageFullView> fromMessageResults(Collection<MessageResult> messageResults) {
+        try {
+            return fromMetaDataWithContent(toMetaDataWithContent(messageResults));
+        } catch (MailboxException e) {
+            return Mono.error(e);
+        }
     }
 
     private MetaDataWithContent toMetaDataWithContent(Collection<MessageResult> messageResults) throws MailboxException {

@@ -94,7 +94,7 @@ class MessageSenderTest {
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager,
             new MemoryMessageFastViewProjection(new RecordingMetricFactory()));
-        jmapMessage = messageFullViewFactory.fromMetaDataWithContent(message);
+        jmapMessage = messageFullViewFactory.fromMetaDataWithContent(message).block();
         envelope = EnvelopeUtils.fromMessage(jmapMessage);
     }
 

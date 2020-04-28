@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.draft.model.message.view;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -66,16 +65,23 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
         }
 
         @Override
-        public MessageFastView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException, IOException {
+        public Mono<MessageFastView> fromMessageResults(Collection<MessageResult> messageResults) {
             Helpers.assertOneMessageId(messageResults);
             MessageResult firstMessageResult = messageResults.iterator().next();
             Preconditions.checkArgument(fastProjections.containsKey(firstMessageResult.getMessageId()),
                 "FromMessageResultAndPreview usage requires a precomputed preview");
-            MessageFastViewPrecomputedProperties messageProjection = fastProjections.get(firstMessageResult.getMessageId());
-            List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
-            Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
+            return Mono.fromCallable(() -> {
+                MessageFastViewPrecomputedProperties messageProjection = fastProjections.get(firstMessageResult.getMessageId());
+                List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
+                Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
+
+                return instanciateFastView(messageResults, firstMessageResult, messageProjection, mailboxIds, mimeMessage);
+            });
+        }
+
+        private MessageFastView instanciateFastView(Collection<MessageResult> messageResults, MessageResult firstMessageResult, MessageFastViewPrecomputedProperties messageProjection, List<MailboxId> mailboxIds, Message mimeMessage) {
             return MessageFastView.builder()
                 .id(firstMessageResult.getMessageId())
                 .mailboxIds(mailboxIds)

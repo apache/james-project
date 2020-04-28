@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class MessageMetadataViewFactory implements MessageViewFactory<MessageMetadataView> {
 
@@ -56,20 +57,20 @@ public class MessageMetadataViewFactory implements MessageViewFactory<MessageMet
     }
 
     @VisibleForTesting
-    public MessageMetadataView fromMessageResults(Collection<MessageResult> messageResults) {
+    public Mono<MessageMetadataView> fromMessageResults(Collection<MessageResult> messageResults) {
         Helpers.assertOneMessageId(messageResults);
 
         MessageResult firstMessageResult = messageResults.iterator().next();
         List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
-        return MessageMetadataView.messageMetadataBuilder()
+        return Mono.just(MessageMetadataView.messageMetadataBuilder()
             .id(firstMessageResult.getMessageId())
             .mailboxIds(mailboxIds)
             .blobId(BlobId.of(blobManager.toBlobId(firstMessageResult.getMessageId())))
             .threadId(firstMessageResult.getMessageId().serialize())
             .keywords(Helpers.getKeywords(messageResults))
             .size(firstMessageResult.getSize())
-            .build();
+            .build());
     }
 
 }

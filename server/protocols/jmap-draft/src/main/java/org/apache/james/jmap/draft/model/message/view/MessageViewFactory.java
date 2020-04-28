@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.utils.KeywordsCombiner;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
@@ -41,6 +40,7 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +64,7 @@ public interface MessageViewFactory<T extends MessageView> {
 
     class Helpers {
         interface FromMessageResult<T extends MessageView> {
-            T fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException, IOException;
+            Mono<T> fromMessageResults(Collection<MessageResult> messageResults);
         }
 
         static void assertOneMessageId(Collection<MessageResult> messageResults) {
@@ -120,14 +120,12 @@ public interface MessageViewFactory<T extends MessageView> {
         }
 
         static <T extends MessageView>  Function<Collection<MessageResult>, Mono<T>> toMessageViews(FromMessageResult<T> converter) {
-            return messageResults -> {
-                try {
-                    return Mono.just(converter.fromMessageResults(messageResults));
-                } catch (Exception e) {
-                    LOGGER.error("Can not convert MessageResults to Message for {}", messageResults.iterator().next().getMessageId().serialize(), e);
-                    return Mono.empty();
-                }
-            };
+            return messageResults ->
+                converter.fromMessageResults(messageResults)
+                    .doOnEach(ReactorUtils.logOnError(e -> LOGGER.error("Can not convert MessageResults to Message for {}",
+                        messageResults.iterator().next().getMessageId().serialize(),
+                        e)))
+                    .onErrorResume(e -> Mono.empty());
         }
 
         static <T extends MessageView> Flux<T> toMessageViews(Flux<MessageResult> messageResults, FromMessageResult<T> converter) {
