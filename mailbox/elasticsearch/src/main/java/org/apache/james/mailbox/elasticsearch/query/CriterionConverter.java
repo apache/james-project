@@ -186,13 +186,13 @@ public class CriterionConverter {
         return boolQuery().filter(
             convertDateOperator(field,
                 dateOperator.getType(),
-                DateResolutionFormater.DATE_TIME_FOMATTER.format(
-                    DateResolutionFormater.computeLowerDate(
-                        DateResolutionFormater.convertDateToZonedDateTime(dateOperator.getDate()),
+                DateResolutionFormatter.DATE_TIME_FORMATTER.format(
+                    DateResolutionFormatter.computeLowerDate(
+                        DateResolutionFormatter.convertDateToZonedDateTime(dateOperator.getDate()),
                         dateOperator.getDateResultion())),
-                DateResolutionFormater.DATE_TIME_FOMATTER.format(
-                    DateResolutionFormater.computeUpperDate(
-                        DateResolutionFormater.convertDateToZonedDateTime(dateOperator.getDate()),
+                DateResolutionFormatter.DATE_TIME_FORMATTER.format(
+                    DateResolutionFormatter.computeUpperDate(
+                        DateResolutionFormatter.convertDateToZonedDateTime(dateOperator.getDate()),
                         dateOperator.getDateResultion()))));
     }
 

@@ -28,7 +28,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.junit.jupiter.api.Test;
 
 
-class DateResolutionFormaterTest {
+class DateResolutionFormatterTest {
 
     final String dateString = "2014-01-02T15:15:15Z";
 
@@ -36,7 +36,7 @@ class DateResolutionFormaterTest {
     void calculateUpperDateShouldReturnDateUpToTheNextMinuteUsingMinuteUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Minute)
+                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Minute)
             )
         ).isEqualTo("2014-01-02T15:16:00Z");
     }
@@ -45,7 +45,7 @@ class DateResolutionFormaterTest {
     void calculateUpperDateShouldReturnDateUpToTheNextHourUsingHourUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Hour)
+                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Hour)
             )
         ).isEqualTo("2014-01-02T16:00:00Z");
     }
@@ -54,7 +54,7 @@ class DateResolutionFormaterTest {
     void calculateUpperDateShouldReturnDateUpToTheNextMonthUsingMonthUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Month)
+                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Month)
             )
         ).isEqualTo("2014-02-01T00:00:00Z");
     }
@@ -63,7 +63,7 @@ class DateResolutionFormaterTest {
     void calculateUpperDateShouldReturnDateUpToTheNextYearUsingYearUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Year)
+                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Year)
             )
         ).isEqualTo("2015-01-01T00:00:00Z");
     }
@@ -72,7 +72,7 @@ class DateResolutionFormaterTest {
     void calculateUpperDateShouldReturnDateUpToTheNextDayUsingDayUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Day)
+                DateResolutionFormatter.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Day)
             )
         ).isEqualTo("2014-01-03T00:00:00Z");
     }
@@ -81,7 +81,7 @@ class DateResolutionFormaterTest {
     void calculateLowerDateShouldReturnDateUpToThePreviousMinuteUsingMinuteUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormater.computeLowerDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Minute)
+                DateResolutionFormatter.computeLowerDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Minute)
             )
         ).isEqualTo("2014-01-02T15:15:00Z");
     }
@@ -90,7 +90,7 @@ class DateResolutionFormaterTest {
     void calculateLowerDateShouldReturnDateUpToThePreviousDayUsingDayUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
-                DateResolutionFormater.computeLowerDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Day)
+                DateResolutionFormatter.computeLowerDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Day)
             )
         ).isEqualTo("2014-01-02T00:00:00Z");
     }

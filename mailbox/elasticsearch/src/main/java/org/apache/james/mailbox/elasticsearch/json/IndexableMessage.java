@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
-import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
+import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormatter;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -116,7 +116,7 @@ public class IndexableMessage {
             EMailers to = EMailers.from(headerCollection.getToAddressSet());
             EMailers cc = EMailers.from(headerCollection.getCcAddressSet());
             EMailers bcc = EMailers.from(headerCollection.getBccAddressSet());
-            String sentDate = DateResolutionFormater.DATE_TIME_FOMATTER.format(headerCollection.getSentDate().orElse(internalDate));
+            String sentDate = DateResolutionFormatter.DATE_TIME_FORMATTER.format(headerCollection.getSentDate().orElse(internalDate));
             Optional<String> mimeMessageID = headerCollection.getMessageID();
 
             String text = Stream.of(from.serialize(),
@@ -133,7 +133,7 @@ public class IndexableMessage {
             String mailboxId = message.getMailboxId().serialize();
             ModSeq modSeq = message.getModSeq();
             long size = message.getFullContentOctets();
-            String date = DateResolutionFormater.DATE_TIME_FOMATTER.format(getSanitizedInternalDate(message, zoneId));
+            String date = DateResolutionFormatter.DATE_TIME_FORMATTER.format(getSanitizedInternalDate(message, zoneId));
             String mediaType = message.getMediaType();
             String subType = message.getSubType();
             boolean isAnswered = message.isAnswered();
