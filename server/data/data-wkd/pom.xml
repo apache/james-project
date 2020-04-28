@@ -30,7 +30,7 @@
     <artifactId>james-server-data-wkd</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Data :: Web Key Discovery Protocol</name>
+    <name>Apache James :: Server :: Data :: Web Key Directory Protocol</name>
 
     <dependencies>
         <dependency>

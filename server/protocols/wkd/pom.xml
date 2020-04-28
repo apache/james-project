@@ -30,7 +30,7 @@
     <artifactId>james-server-wkd</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Web Discovery Protocol</name>
+    <name>Apache James :: Server :: Web Directory Protocol</name>
 
     <properties>
     </properties>
