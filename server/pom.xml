@@ -64,6 +64,7 @@
         <module>data/data-ldap</module>
         <module>data/data-library</module>
         <module>data/data-memory</module>
+        <module>data/data-wkd</module>
 
         <module>dns-service/dnsservice-api</module>
         <module>dns-service/dnsservice-dnsjava</module>
