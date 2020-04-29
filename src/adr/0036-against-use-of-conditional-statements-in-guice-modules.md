@@ -13,7 +13,7 @@ James uses Spring in a way that enables overriding any class via a configuration
 power to the user.
 
 James propose several implementations for each of the interfaces it defines. The number of possible combinations of implementations is thus really high (like factorial(n) with n > 10). It makes it unpractical to run tests for each possible interface
-combination. We rather run integration tests for combinations that make sense. By overriding any components, Spring defeats 
+combination. We rather run integration tests for combinations that we decide brings the more value to the users. By overriding any class, Spring defeats 
 this testing logic. Knowing which component implementation combines well with which other one is not intuitive to users,
 hard to document and test.
 
