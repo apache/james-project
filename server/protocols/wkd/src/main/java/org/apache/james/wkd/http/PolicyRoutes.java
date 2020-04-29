@@ -17,22 +17,22 @@ import reactor.netty.http.server.HttpServerRoutes;
 
 public class PolicyRoutes implements WebKeyDirectoryRoutes {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(PolicyRoutes.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PolicyRoutes.class);
 
-	@Override
-	public HttpServerRoutes define(HttpServerRoutes builder) {
-		return builder.get(WELLKNOWN_POLICY, WebKeyDirectoryRoutes.corsHeaders(this::get)).options(WELLKNOWN_POLICY,
-				CORS_CONTROL);
-	}
+    @Override
+    public HttpServerRoutes define(HttpServerRoutes builder) {
+        return builder.get(WELLKNOWN_POLICY, WebKeyDirectoryRoutes.corsHeaders(this::get)).options(WELLKNOWN_POLICY,
+                CORS_CONTROL);
+    }
 
-	@VisibleForTesting
-	Mono<Void> get(HttpServerRequest request, HttpServerResponse response) {
-		return response.header(CONTENT_TYPE, "text/plain").status(OK).sendString(Mono.just("auth-submit")).then();
-	}
+    @VisibleForTesting
+    Mono<Void> get(HttpServerRequest request, HttpServerResponse response) {
+        return response.header(CONTENT_TYPE, "text/plain").status(OK).sendString(Mono.just("auth-submit")).then();
+    }
 
-	@Override
-	public Logger logger() {
-		return LOGGER;
-	}
+    @Override
+    public Logger logger() {
+        return LOGGER;
+    }
 
 }

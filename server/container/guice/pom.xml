@@ -110,6 +110,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-wkd</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+             <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-jmap-draft</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>

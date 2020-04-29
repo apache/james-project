@@ -26,6 +26,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class WebKeyDirectoryConfiguration {
+    
+    public static final String SUBMISSION_ADDRESS_LOCAL_PART = "submission-address";
 
     public static Builder builder() {
         return new Builder();
@@ -63,7 +65,8 @@ public class WebKeyDirectoryConfiguration {
         }
 
         public WebKeyDirectoryConfiguration build() {
-            Preconditions.checkState(enabled.isPresent(), "You should specify if WebKeyDirectory server should be started");
+            Preconditions.checkState(enabled.isPresent(),
+                    "You should specify if WebKeyDirectory server should be started");
             return new WebKeyDirectoryConfiguration(enabled.get(), port);
         }
 

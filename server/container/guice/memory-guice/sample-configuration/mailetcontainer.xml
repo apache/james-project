@@ -57,6 +57,11 @@
                 <name>bcc</name>
             </mailet>
             <mailet match="All" class="RecipientRewriteTable" />
+            <mailet match="org.apache.james.mailetcontainer.impl.matchers.And" class="org.apache.james.wkd.mailet.WebKeyDirectoryMailet">
+            	<matcher match="SMTPAuthSuccessful"/>
+            	<matcher match="RecipientIsLocal" />
+            	<matcher match="ReceiverIsRegex=submission-address@.*" />
+            </mailet>
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="RecipientIsLocal" class="Sieve"/>
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>

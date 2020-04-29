@@ -37,6 +37,7 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.protocols.WebKeyDirectoryServerModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
@@ -100,6 +101,9 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new JmapTasksModule(),
         new MemoryDataJmapModule(),
         new JMAPDraftServerModule());
+    
+    public static final Module WKD = Modules.combine(
+            new WebKeyDirectoryServerModule());
 
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(
         new BlobMemoryModule(),
@@ -129,6 +133,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         IN_MEMORY_SERVER_MODULE,
         PROTOCOLS,
         JMAP,
+        WKD,
         WEBADMIN,
         new DKIMMailetModule());
 

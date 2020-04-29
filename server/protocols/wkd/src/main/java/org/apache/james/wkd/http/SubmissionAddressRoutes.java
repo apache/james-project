@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.wkd.WebKeyDirectoryConfiguration;
 import org.apache.james.wkd.WebKeyDirectoryRoutes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,34 +22,40 @@ import reactor.netty.http.server.HttpServerRoutes;
 
 public class SubmissionAddressRoutes implements WebKeyDirectoryRoutes {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SubmissionAddressRoutes.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubmissionAddressRoutes.class);
 
-	private String defaultDomain;
+    private DomainList domainList;
 
-	@Inject
-	public SubmissionAddressRoutes(DomainList domainList) {
-		try {
-			this.defaultDomain = domainList.getDefaultDomain().asString();
-		} catch (DomainListException e) {
-			LOGGER.error("Could not get default domain", e);
-		}
-	}
+    @Inject
+    public SubmissionAddressRoutes(DomainList domainList) {
 
-	@Override
-	public HttpServerRoutes define(HttpServerRoutes builder) {
-		return builder.get(WELLKNOWN_SUBMISSION_ADDRESS, WebKeyDirectoryRoutes.corsHeaders(this::get))
-				.options(WELLKNOWN_SUBMISSION_ADDRESS, CORS_CONTROL);
-	}
+        this.domainList = domainList;
 
-	@VisibleForTesting
-	Mono<Void> get(HttpServerRequest request, HttpServerResponse response) {
-		return response.header(CONTENT_TYPE, "text/plain").status(OK)
-				.sendString(Mono.just("submission-address@" + defaultDomain)).then();
-	}
+    }
 
-	@Override
-	public Logger logger() {
-		return LOGGER;
-	}
+    @Override
+    public HttpServerRoutes define(HttpServerRoutes builder) {
+        return builder
+            .get(WELLKNOWN_SUBMISSION_ADDRESS, WebKeyDirectoryRoutes.corsHeaders(this::get))
+            .options(WELLKNOWN_SUBMISSION_ADDRESS, CORS_CONTROL);
+    }
+
+    @VisibleForTesting
+    Mono<Void> get(HttpServerRequest request, HttpServerResponse response) {
+        try {
+            String defaultDomain = domainList.getDefaultDomain().asString();
+            return response.header(CONTENT_TYPE, "text/plain").status(OK).sendString(Mono.just(
+                WebKeyDirectoryConfiguration.SUBMISSION_ADDRESS_LOCAL_PART + "@" + defaultDomain))
+                .then();
+        } catch (DomainListException e) {
+            LOGGER.error("Could not get default domain", e);
+            return response.status(500).sendString(Mono.just(e.getMessage())).then();
+        }
+    }
+
+    @Override
+    public Logger logger() {
+        return LOGGER;
+    }
 
 }

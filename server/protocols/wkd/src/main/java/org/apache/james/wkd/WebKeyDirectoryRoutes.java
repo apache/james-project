@@ -35,13 +35,15 @@ import reactor.netty.http.server.HttpServerRoutes;
 public interface WebKeyDirectoryRoutes {
     HttpServerRoutes define(HttpServerRoutes builder);
 
-    BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> CORS_CONTROL = corsHeaders((req, res) -> res.send());
+    BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> CORS_CONTROL = corsHeaders(
+            (req, res) -> res.send());
 
-    static BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> corsHeaders(BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> action) {
-        return (req, res) -> action.apply(req, res
-            .header("Access-Control-Allow-Origin", "*")
-            .header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
-            .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept"));
+    static BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> corsHeaders(
+            BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> action) {
+        return (req, res) -> action.apply(req,
+                res.header("Access-Control-Allow-Origin", "*")
+                        .header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
+                        .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept"));
     }
 
     Logger logger();

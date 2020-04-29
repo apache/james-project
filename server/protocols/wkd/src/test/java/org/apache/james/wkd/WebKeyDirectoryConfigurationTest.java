@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.wkd;
 
-
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -35,40 +34,38 @@ class WebKeyDirectoryConfigurationTest {
     @Test
     void buildShouldThrowWhenEnableIsMissing() {
         assertThatThrownBy(() -> WebKeyDirectoryConfiguration.builder().build())
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("You should specify if WebKeyDirectory server should be started");
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("You should specify if WebKeyDirectory server should be started");
     }
 
     @Test
     void buildShouldWorkWhenRandomPort() {
-        WebKeyDirectoryConfiguration expectedWebKeyDirectoryConfiguration = new WebKeyDirectoryConfiguration(ENABLED, Optional.empty());
+        WebKeyDirectoryConfiguration expectedWebKeyDirectoryConfiguration = new WebKeyDirectoryConfiguration(ENABLED,
+                Optional.empty());
 
-        WebKeyDirectoryConfiguration webKeyDirectoryConfiguration = WebKeyDirectoryConfiguration.builder()
-            .enable()
-            .randomPort()
-            .build();
+        WebKeyDirectoryConfiguration webKeyDirectoryConfiguration = WebKeyDirectoryConfiguration.builder().enable()
+                .randomPort().build();
         assertThat(webKeyDirectoryConfiguration).isEqualToComparingFieldByField(expectedWebKeyDirectoryConfiguration);
     }
 
     @Test
     void buildShouldWorkWhenFixedPort() {
-        WebKeyDirectoryConfiguration expectedWebKeyDirectoryConfiguration = new WebKeyDirectoryConfiguration(ENABLED, Optional.of(Port.of(80)));
+        WebKeyDirectoryConfiguration expectedWebKeyDirectoryConfiguration = new WebKeyDirectoryConfiguration(ENABLED,
+                Optional.of(Port.of(80)));
 
-        WebKeyDirectoryConfiguration webKeyDirectoryConfiguration = WebKeyDirectoryConfiguration.builder()
-            .enable()
-            .port(Port.of(80))
-            .build();
+        WebKeyDirectoryConfiguration webKeyDirectoryConfiguration = WebKeyDirectoryConfiguration.builder().enable()
+                .port(Port.of(80)).build();
 
         assertThat(webKeyDirectoryConfiguration).isEqualToComparingFieldByField(expectedWebKeyDirectoryConfiguration);
     }
 
     @Test
     void buildShouldWorkWhenDisabled() {
-        WebKeyDirectoryConfiguration expectedWebKeyDirectoryConfiguration = new WebKeyDirectoryConfiguration(DISABLED, Optional.empty());
+        WebKeyDirectoryConfiguration expectedWebKeyDirectoryConfiguration = new WebKeyDirectoryConfiguration(DISABLED,
+                Optional.empty());
 
-        WebKeyDirectoryConfiguration webKeyDirectoryConfiguration = WebKeyDirectoryConfiguration.builder()
-            .disable()
-            .build();
+        WebKeyDirectoryConfiguration webKeyDirectoryConfiguration = WebKeyDirectoryConfiguration.builder().disable()
+                .build();
         assertThat(webKeyDirectoryConfiguration).isEqualToComparingFieldByField(expectedWebKeyDirectoryConfiguration);
     }
 }

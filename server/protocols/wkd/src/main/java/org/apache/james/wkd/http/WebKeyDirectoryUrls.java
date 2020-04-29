@@ -1,6 +1,8 @@
 package org.apache.james.wkd.http;
+
 /**
- * URLs based on: https://tools.ietf.org/id/draft-koch-openpgp-webkey-service-07.html#rfc.section.4
+ * URLs based on:
+ * https://tools.ietf.org/id/draft-koch-openpgp-webkey-service-07.html#rfc.section.4
  * 
  * @author manuel
  *
