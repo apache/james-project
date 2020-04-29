@@ -27,7 +27,7 @@ Instead of having a single big application being able to instantiate each and ev
 several products defining their dependencies in a minimalistic way, relying only on the components implementation that 
 are needed.
 
-Here is the list of products we rely on:
+Here is the list of products we provide:
 
  - memory-guice: A memory based James server, mainly for testing purposes
  - Distributed James: A scalable James server, storing data in various data stores. Cassandra is used for metadata, 
