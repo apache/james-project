@@ -12,7 +12,7 @@ James products rely historically on Spring for dependency injection. It doesn't 
 James uses Spring in a way that enables overriding any class via a configuration file thus endangering overall correctness by giving too much 
 power to the user.
 
-James propose several implementations for each of the interfaces we define. We don't run tests for each possible interface
+James propose several implementations for each of the interfaces it defines. The number of possible combinations of implementations is thus really high (like factorial(n) with n > 10). It makes it unpractical to run tests for each possible interface
 combination. We rather run integration tests for combinations that make sense. By overriding any components, Spring defeats 
 this testing logic. Knowing which component implementation combines well with which other one is not intuitive to users,
 hard to document and test.
