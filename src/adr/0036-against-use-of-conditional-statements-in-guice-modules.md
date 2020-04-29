@@ -50,7 +50,7 @@ configuration to select which one to enable. Eventually defeating the Guice adop
 Finally, Blob Storing technology offers a wide combination of technologies:
 
  - ObjectStorage in itself could implement either Swift APIs or Amazon S3 APIs
- - We decided to keep supporting Cassandra for blob storing as an upgrade solution from Cassandra-guice to Distributed 
+ - We decided to keep supporting Cassandra for blob storing as an upgrade solution from Cassandra product to Distributed 
 James for existing users.
  - Proposals such as [HybridBlobStore](0014-blobstore-storage-policies.md) and then 
 [Cassandra BlobStore cache](0025-cassandra-blob-store-cache.md) proposed to leverage Cassandra as a performance 
