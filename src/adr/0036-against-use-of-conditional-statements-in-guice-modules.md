@@ -44,7 +44,7 @@ Some components however do have several implementations a user can choose from i
  - Text extraction: Extracting text from attachment to enable attachment search. There is a Tika implementation, but 
  lighter JSOUP based options are also available.
 
-In order to keep the cardinality of Guice products low, we decided to use conditional statements in modules based on the 
+In order to keep the number of products low, we decided to use conditional statements in modules based on the 
 configuration to select which one to enable. Eventually defeating the Guice adoption goals mentioned above.
 
 Finally, Blob Storing technology offers a wide combination of technologies:
