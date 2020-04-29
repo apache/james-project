@@ -32,7 +32,7 @@ Here is the list of products we provide:
  - In-Memory: A memory based James server, mainly for testing purposes
  - Distributed James: A scalable James server, storing data in various data stores. Cassandra is used for metadata, 
  ElasticSearch for search, RabbitMQ for messaging, and ObjectStorage for blobs.
- - Cassandra-guice: An implementation step toward Distributed James. It does not include messaging and ObjectStorage.
+ - Cassandra: An implementation step toward Distributed James. It does not include messaging and ObjectStorage and should not be run in a cluster way but is still relevant for good performance.
  - JPA-guice: A JPA and Lucene based implementation of James. Only Derby driver is currently supported.
  - JPA-smtp: A minimalistic SMTP server based on JPA storage technology.
 
