@@ -8,23 +8,23 @@ Accepted (lazy consensus)
 
 ## Context
 
-James products relies historically on Spring for injections. Spring version is outdated (4.3.25 instead of 5.3 release line).
+James products rely historically on Spring for injections. Spring version is outdated (4.3.25 instead of 5.3 release line).
 Spring enables overriding any component via a configuration file thus endangering overall correctness by giving too much 
 power to the user.
 
-James propose several implementation for each of the interfaces we define. We don't run tests for each possible interface
-combination. We rather run integration tests for combinations that makes sens. By overriding any components, spring defeats 
+James propose several implementations for each of the interfaces we define. We don't run tests for each possible interface
+combination. We rather run integration tests for combinations that make sense. By overriding any components, Spring defeats 
 this testing logic. Knowing which component implementation combines well with which other one is not intuitive to users,
 hard to document and test.
 
 We thus decided to rely on Guice. Components are defined by code in a static fashion. Overriding components requires 
 explicit code modification and recompilation, thus warning the user about the impact of the choices he does, and lowering 
-the project responsibility.
+the project's responsibility.
 
 With Guice we expose only supported, well tested combinations of components, thus addressing the combination issue.
 
 Instead of having a single big application being able to instantiate each and every component application, we have 
-several product defining their dependencies in a minimalistic way, relying only on the components implementation that 
+several products defining their dependencies in a minimalistic way, relying only on the components implementation that 
 are needed.
 
 Here is the list of products we rely on:
@@ -32,22 +32,22 @@ Here is the list of products we rely on:
  - memory-guice: A memory based James server, mainly for testing purposes
  - Distributed James: A scalable James server, storing data in various data stores. Cassandra is used for metadata, 
  ElasticSearch for search, RabbitMQ for messaging, and ObjectStorage for byte contents.
- - Cassandra-guice: An implementation step toward Distributed James. It do not include messaging and ObjectStorage.
+ - Cassandra-guice: An implementation step toward Distributed James. It does not include messaging and ObjectStorage.
  - JPA-guice: A JPA and Lucene based implementation of James. Only Derby driver is currently supported.
  - JPA-smtp: A minimalistic SMTP server based on JPA storage technology.
 
-Some components however do have several subtly diverging implementation a user might choose to rely on independently 
+Some components however do have several subtly diverging implementations a user might choose to rely on independently 
 of the product he uses. This is the case for:
 
- - BlobExport: Exporting a blob from the blobStore to and external user. Two implementation are currently supported: 
+ - BlobExport: Exporting a blob from the blobStore to an external user. Two implementations are currently supported: 
  localFiles and LinShare.
  - Text extraction: Extracting text from attachment to enable attachment search. There is a Tika implementation, but 
- lighter, JSOUP based options are also available.
+ lighter JSOUP based options are also available.
 
 In order to keep the cardinality of Guice products low, we decided to use conditional statements in modules based on the 
 configuration to select which one to enable. Eventually defeating the Guice adoption goals mentioned above.
 
-Finally, Blob Storing technology offers a wide combination of technology:
+Finally, Blob Storing technology offers a wide combination of technologies:
 
  - ObjectStorage in itself could implement either Swift APIs or Amazon S3 APIs
  - We decided to keep supporting Cassandra for blob storing as an upgrade solution from Cassandra-guice to Distributed 
@@ -101,7 +101,7 @@ Concerning the usages listed above :
 
 Integration testing can not offer conditional, configuration based module composition. This is because:
 
- - Integration test don't rely on Main classes but on GuiceJamesServer class with similar guice modules
+ - Integration tests don't rely on Main classes but on GuiceJamesServer class with similar guice modules
  - Overriding a configuration file within a same maven module is painful
  
 As a consequence, we should define statically the modules an integration test needs to run. Configuration defined Guice
