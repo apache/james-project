@@ -22,6 +22,7 @@ package org.apache.james.mailbox.jpa;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -33,7 +34,6 @@ import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
-import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;

@@ -22,8 +22,8 @@ package org.apache.james.adapter.mailbox.store;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 

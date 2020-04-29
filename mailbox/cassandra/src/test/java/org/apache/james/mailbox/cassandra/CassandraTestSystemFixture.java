@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.AttachmentContentLoader;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -39,7 +40,6 @@ import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;

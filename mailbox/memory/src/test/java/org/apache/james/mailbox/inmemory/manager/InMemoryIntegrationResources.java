@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.james.mailbox.AttachmentContentLoader;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -47,7 +48,6 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;

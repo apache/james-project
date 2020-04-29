@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.SessionProvider;

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.AttachmentContentLoader;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
@@ -36,7 +37,6 @@ import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.store.AbstractMailboxManagerAttachmentTest;
-import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;

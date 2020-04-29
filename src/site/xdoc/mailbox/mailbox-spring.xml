@@ -33,7 +33,7 @@
             <p>The module is small. It contains just two classes:</p>
             <ul>
                 <li>SpringMailbox - this loads the spring-mailbox.xml </li>    
-                <li>AnonymousAuthenticator - provides a dummy org.apache.james.mailbox.store.Authenticator</li>
+                <li>AnonymousAuthenticator - provides a dummy org.apache.james.mailbox.Authenticator</li>
             </ul>            
             <p>SpringMailbox class is used to load the spring application context from <em>spring-mailbox.xml</em> 
             and provides a method to get beans declared in that context.

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.Authenticator;
 
 public class FakeAuthenticator implements Authenticator {
 
