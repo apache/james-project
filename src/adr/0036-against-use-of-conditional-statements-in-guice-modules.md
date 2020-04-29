@@ -45,7 +45,7 @@ Some components however do have several implementations a user can choose from i
  lighter JSOUP based options are also available.
 
 In order to keep the number of products low, we decided to use conditional statements in modules based on the 
-configuration to select which one to enable. Eventually defeating the Guice adoption goals mentioned above.
+configuration to select which one to enable at runtime. Eventually defeating the Guice adoption goals mentioned above.
 
 Finally, Blob Storing technology offers a wide combination of technologies:
 
