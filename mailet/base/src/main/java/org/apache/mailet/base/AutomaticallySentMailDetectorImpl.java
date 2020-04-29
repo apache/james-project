@@ -92,7 +92,7 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
     public boolean isMdnSentAutomatically(Mail mail) throws MessagingException {
         ResultCollector resultCollector = new ResultCollector(false);
         MimeStreamParser parser = new MimeStreamParser(MimeConfig.custom()
-            .setMaxContentLen(1024 * 1024) // there's no reason for a mdn report to be bigger than 1MiB
+            .setMaxContentLen(100 * 1024 * 1024)
             .setMaxHeaderCount(-1)
             .setMaxHeaderLen(-1)
             .setMaxLineLen(-1)
@@ -104,10 +104,6 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
         } catch (MimeException e) {
             throw new MessagingException("Can not parse Mime", e);
         } catch (IOException e) {
-            // there's no reason for a mdn report to be bigger than 1MiB
-            if (e.getMessage().startsWith("Input stream limit exceeded")) {
-                return false;
-            }
             throw new MessagingException("Can not read content", e);
         }
         return resultCollector.getResult();

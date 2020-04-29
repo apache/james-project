@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
+import javax.mail.BodyPart;
 import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -338,7 +339,7 @@ public class AutomaticallySentMailDetectorImplTest {
             .addHeaders()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("12345678\r\n".repeat(150 * 1024)),
+                    .data("12345678\r\n".repeat(150 * 1024)), // ~ 1.5 MB
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("12345678\r\n"));
 
@@ -349,6 +350,39 @@ public class AutomaticallySentMailDetectorImplTest {
             .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMdnSentAutomatically(fakeMail)).isFalse();
+    }
+
+    @Test
+    public void isMdnSentAutomaticallyShouldDetectBigMDN() throws Exception {
+
+        MimeMessage message = MimeMessageUtil.defaultMimeMessage();
+        MimeMultipart multipart = new MimeMultipart();
+        MimeBodyPart scriptPart = new MimeBodyPart();
+        scriptPart.setDataHandler(
+            new DataHandler(
+                new ByteArrayDataSource(
+                    Joiner.on("\r\n").join(
+                        "Final-Recipient: rfc822;any@any.com",
+                        "Disposition: automatic-action/MDN-sent-automatically; displayed",
+                        ""),
+                    "message/disposition-notification;")
+            ));
+        scriptPart.setHeader("Content-Type", "message/disposition-notification");
+        BodyPart bigBody = MimeMessageBuilder.bodyPartBuilder() // ~3MB
+            .data("12345678\r\n".repeat(300 * 1024))
+            .build();
+        multipart.addBodyPart(bigBody);
+        multipart.addBodyPart(scriptPart);
+        message.setContent(multipart);
+        message.saveChanges();
+
+        FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(message)
+            .build();
+
+        assertThat(new AutomaticallySentMailDetectorImpl().isMdnSentAutomatically(fakeMail)).isTrue();
     }
 
 }
