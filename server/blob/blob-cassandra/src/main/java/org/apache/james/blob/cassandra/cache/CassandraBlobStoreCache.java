@@ -38,6 +38,8 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -47,6 +49,8 @@ import com.google.common.annotations.VisibleForTesting;
 import reactor.core.publisher.Mono;
 
 public class CassandraBlobStoreCache implements BlobStoreCache {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(CassandraBlobStoreCache.class);
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
@@ -99,7 +103,11 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
                 .setString(ID, blobId.asString())
                 .setBytes(DATA, data)
                 .setInt(TTL_FOR_ROW, timeToLive)
-                .setConsistencyLevel(ONE));
+                .setConsistencyLevel(ONE))
+            .onErrorResume(e -> {
+                LOGGER.warn("Failed saving {} in blob store cache", blobId, e);
+                return Mono.empty();
+            });
     }
 
     private ByteBuffer toByteBuffer(byte[] bytes) {

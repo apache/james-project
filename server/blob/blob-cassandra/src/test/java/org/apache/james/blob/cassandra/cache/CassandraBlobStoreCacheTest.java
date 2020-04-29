@@ -18,14 +18,20 @@
  ****************************************************************/
 package org.apache.james.blob.cassandra.cache;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
 import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
 
@@ -58,5 +64,17 @@ public class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
     @Override
     public BlobId.Factory blobIdFactory() {
         return blobIdFactory;
+    }
+
+    @Test
+    void cacheShouldNotPropagateFailures(CassandraCluster cassandra) {
+        cassandra.getConf().registerScenario(fail()
+            .forever()
+            .whenQueryStartsWith("INSERT INTO blob_cache (id,data) VALUES (:id,:data) USING TTL :ttl;"));
+
+        BlobId blobId = blobIdFactory().randomId();
+
+        assertThatCode(() -> Mono.from(testee.cache(blobId, EIGHT_KILOBYTES)).block())
+            .doesNotThrowAnyException();
     }
 }
