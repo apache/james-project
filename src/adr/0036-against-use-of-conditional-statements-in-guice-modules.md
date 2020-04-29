@@ -8,7 +8,7 @@ Accepted (lazy consensus)
 
 ## Context
 
-James products rely historically on Spring for injections. Spring version is outdated (4.3.25 instead of 5.3 release line).
+James products rely historically on Spring for dependency injection. It doesn't use last major Spring version (4.x instead of 5.x).
 Spring enables overriding any component via a configuration file thus endangering overall correctness by giving too much 
 power to the user.
 
