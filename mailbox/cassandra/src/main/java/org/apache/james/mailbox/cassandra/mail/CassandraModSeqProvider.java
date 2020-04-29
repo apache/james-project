@@ -56,7 +56,6 @@ import reactor.util.retry.Retry;
 public class CassandraModSeqProvider implements ModSeqProvider {
 
     public static final String MOD_SEQ_CONDITION = "modSeqCondition";
-    private final long maxModSeqRetries;
 
     public static class ExceptionRelay extends RuntimeException {
         private final MailboxException underlying;
@@ -83,6 +82,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     }
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
+    private final long maxModSeqRetries;
     private final PreparedStatement select;
     private final PreparedStatement update;
     private final PreparedStatement insert;
@@ -178,24 +178,14 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     }
 
     public Mono<ModSeq> nextModSeq(CassandraId mailboxId) {
+        Duration firstBackoff = Duration.ofMillis(10);
+
         return findHighestModSeq(mailboxId)
             .flatMap(maybeHighestModSeq -> maybeHighestModSeq
                         .map(highestModSeq -> tryUpdateModSeq(mailboxId, highestModSeq))
                         .orElseGet(() -> tryInsertModSeq(mailboxId, ModSeq.first())))
-            .switchIfEmpty(handleRetries(mailboxId));
-    }
-
-    private Mono<ModSeq> handleRetries(CassandraId mailboxId) {
-        Duration firstBackoff = Duration.ofMillis(10);
-        return tryFindThenUpdateOnce(mailboxId)
             .single()
             .retryWhen(Retry.backoff(maxModSeqRetries, firstBackoff).scheduler(Schedulers.elastic()));
-    }
-
-    private Mono<ModSeq> tryFindThenUpdateOnce(CassandraId mailboxId) {
-        return Mono.defer(() -> findHighestModSeq(mailboxId)
-            .<ModSeq>handle((t, sink) -> t.ifPresent(sink::next))
-            .flatMap(highestModSeq -> tryUpdateModSeq(mailboxId, highestModSeq)));
     }
 
 }

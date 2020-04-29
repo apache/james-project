@@ -18,7 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
+import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.MAILBOX_ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.TABLE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -27,6 +33,8 @@ import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.Scenario;
+import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.ModSeq;
@@ -40,7 +48,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class CassandraModSeqProviderTest {
     private static final CassandraId CASSANDRA_ID = new CassandraId.Factory().fromString("e22b3ac0-a80b-11e7-bb00-777268d65503");
@@ -81,6 +93,51 @@ class CassandraModSeqProviderTest {
                 ModSeq result = modSeqProvider.nextModSeq(mailbox);
                 assertThat(result.asLong()).isEqualTo(value);
             }));
+    }
+
+    @Test
+    void failedInsertsShouldBeRetried(CassandraCluster cassandra) throws Exception {
+        Barrier insertBarrier = new Barrier(2);
+        Barrier retryBarrier = new Barrier(1);
+        cassandra.getConf()
+            .registerScenario(
+                executeNormally()
+                    .times(2)
+                    .whenQueryStartsWith("SELECT nextModseq FROM modseq WHERE mailboxId=:mailboxId;"),
+                awaitOn(insertBarrier)
+                    .thenExecuteNormally()
+                    .times(2)
+                    .whenQueryStartsWith("INSERT INTO modseq (nextModseq,mailboxId) VALUES (:nextModseq,:mailboxId) IF NOT EXISTS;"),
+                awaitOn(retryBarrier)
+                    .thenExecuteNormally()
+                    .times(1)
+                    .whenQueryStartsWith("SELECT nextModseq FROM modseq WHERE mailboxId=:mailboxId;"));
+
+        Mono<ModSeq> operation1 = modSeqProvider.nextModSeq(CASSANDRA_ID)
+            .subscribeOn(Schedulers.elastic())
+            .cache();
+        Mono<ModSeq> operation2 = modSeqProvider.nextModSeq(CASSANDRA_ID)
+            .subscribeOn(Schedulers.elastic())
+            .cache();
+
+        operation1.subscribe();
+        operation2.subscribe();
+
+        insertBarrier.awaitCaller();
+        insertBarrier.releaseCaller();
+
+        retryBarrier.awaitCaller();
+        retryBarrier.releaseCaller();
+
+        // Artificially fail the insert failure
+        cassandra.getConf()
+            .execute(QueryBuilder.delete().from(TABLE_NAME)
+                .where(QueryBuilder.eq(MAILBOX_ID, CASSANDRA_ID.asUuid())));
+
+        retryBarrier.releaseCaller();
+
+        assertThatCode(() -> operation1.block(Duration.ofSeconds(1))).doesNotThrowAnyException();
+        assertThatCode(() -> operation2.block(Duration.ofSeconds(1))).doesNotThrowAnyException();
     }
 
     @Test

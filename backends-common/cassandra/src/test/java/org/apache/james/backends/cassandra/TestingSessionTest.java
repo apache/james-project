@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.Scenario.Barrier;
+import org.apache.james.backends.cassandra.Scenario.InjectedFailureException;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
@@ -89,7 +90,7 @@ class TestingSessionTest {
                 .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
 
         assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-            .isInstanceOf(RuntimeException.class);
+            .isInstanceOf(InjectedFailureException.class);
     }
 
     @Test
@@ -102,7 +103,7 @@ class TestingSessionTest {
         assertThatThrownBy(() -> new CassandraAsyncExecutor(cassandra.getConf())
                 .execute(select(VALUE).from(TABLE_NAME))
                 .block())
-            .isInstanceOf(RuntimeException.class);
+            .isInstanceOf(InjectedFailureException.class);
     }
 
     @Test
@@ -113,7 +114,7 @@ class TestingSessionTest {
                 .forAllQueries());
 
         assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-            .isInstanceOf(RuntimeException.class);
+            .isInstanceOf(InjectedFailureException.class);
     }
 
     @Test
@@ -142,9 +143,9 @@ class TestingSessionTest {
 
         SoftAssertions.assertSoftly(softly -> {
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(InjectedFailureException.class);
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(InjectedFailureException.class);
             assertThatCode(() -> dao.getCurrentSchemaVersion().block())
                 .doesNotThrowAnyException();
         });
@@ -165,7 +166,7 @@ class TestingSessionTest {
             assertThatCode(() -> dao.getCurrentSchemaVersion().block())
                 .doesNotThrowAnyException();
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(InjectedFailureException.class);
             assertThatCode(() -> dao.getCurrentSchemaVersion().block())
                 .doesNotThrowAnyException();
         });
@@ -180,11 +181,11 @@ class TestingSessionTest {
 
         SoftAssertions.assertSoftly(softly -> {
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(InjectedFailureException.class);
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(InjectedFailureException.class);
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(InjectedFailureException.class);
         });
     }
 
@@ -198,7 +199,7 @@ class TestingSessionTest {
         dao.updateVersion(new SchemaVersion(36)).block();
 
         assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-            .isInstanceOf(RuntimeException.class);
+            .isInstanceOf(InjectedFailureException.class);
     }
 
     @Test
@@ -287,6 +288,6 @@ class TestingSessionTest {
         barrier.releaseCaller();
 
         assertThatThrownBy(operation::block)
-            .isInstanceOf(RuntimeException.class);
+            .isInstanceOf(InjectedFailureException.class);
     }
 }

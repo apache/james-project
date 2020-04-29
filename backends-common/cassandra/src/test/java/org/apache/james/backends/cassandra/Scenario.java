@@ -33,10 +33,16 @@ import com.datastax.driver.core.Statement;
 import com.google.common.base.Preconditions;
 
 public class Scenario {
+    public static class InjectedFailureException extends RuntimeException {
+        public InjectedFailureException() {
+            super("Injected failure");
+        }
+    }
+
     @FunctionalInterface
     interface Behavior {
         Behavior THROW = (session, statement) -> {
-            throw new RuntimeException("Injected failure");
+            throw new InjectedFailureException();
         };
 
         Behavior EXECUTE_NORMALLY = Session::executeAsync;
