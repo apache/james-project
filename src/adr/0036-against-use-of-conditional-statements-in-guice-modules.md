@@ -37,8 +37,7 @@ Here is the list of products we provide:
  - JPA with SMTP only using derby: A minimalist SMTP server based on JPA storage technology and Derby driver
  - JPA with SMTP only using mariadb: A minimalist SMTP server based on JPA storage technology and MariaDB driver
 
-Some components however do have several subtly diverging implementations a user might choose to rely on independently 
-of the product he uses. This is the case for:
+Some components however do have several implementations a user can choose from in a given product. This is the case for:
 
  - BlobExport: Exporting a blob from the blobStore to an external user. Two implementations are currently supported: 
  localFiles and LinShare.
