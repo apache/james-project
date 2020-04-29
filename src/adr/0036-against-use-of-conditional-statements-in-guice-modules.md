@@ -9,7 +9,7 @@ Accepted (lazy consensus)
 ## Context
 
 James products rely historically on Spring for dependency injection. It doesn't use last major Spring version (4.x instead of 5.x).
-Spring enables overriding any component via a configuration file thus endangering overall correctness by giving too much 
+James uses Spring in a way that enables overriding any class via a configuration file thus endangering overall correctness by giving too much 
 power to the user.
 
 James propose several implementations for each of the interfaces we define. We don't run tests for each possible interface
