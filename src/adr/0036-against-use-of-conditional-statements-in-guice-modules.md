@@ -56,7 +56,7 @@ James for existing users.
 [Cassandra BlobStore cache](0025-cassandra-blob-store-cache.md) proposed to leverage Cassandra as a performance 
 (latency) enhancer for ObjectStorage technologies.
 
-Yet again it had been decided to use conditional statements in modules in order to lower the cardinality.
+Yet again it had been decided to use conditional statements in modules in order to lower the number of product.
 
 However, [Cassandra BlobStore cache](0025-cassandra-blob-store-cache.md) requires expensive resource initialization
 requiring to perform upgrade procedure (usage of an additional cache keyspace) that represents a cost we don't want to
