@@ -34,7 +34,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
@@ -43,20 +42,16 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.probe.MailboxProbe;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.utils.GuiceProbe;
 
 public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     private final MailboxManager mailboxManager;
-    private final MailboxMapperFactory mailboxMapperFactory;
     private final SubscriptionManager subscriptionManager;
 
     @Inject
-    private MailboxProbeImpl(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
+    private MailboxProbeImpl(MailboxManager mailboxManager,
                              SubscriptionManager subscriptionManager) {
         this.mailboxManager = mailboxManager;
-        this.mailboxMapperFactory = mailboxMapperFactory;
         this.subscriptionManager = subscriptionManager;
     }
 
@@ -85,12 +80,9 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         MailboxSession mailboxSession = null;
         try {
             mailboxSession = mailboxManager.createSystemSession(username);
-            MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(mailboxSession);
             MailboxPath path = new MailboxPath(namespace, username, name);
-            return mailboxMapper.findMailboxByPath(path)
-                .blockOptional()
-                .orElseThrow(() -> new MailboxNotFoundException(path.asString()))
-                .getMailboxId();
+            return mailboxManager.getMailbox(path, mailboxSession)
+                .getId();
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         } finally {
