@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;

@@ -24,8 +24,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.Before;
