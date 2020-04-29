@@ -29,7 +29,7 @@ are needed.
 
 Here is the list of products we provide:
 
- - memory-guice: A memory based James server, mainly for testing purposes
+ - In-Memory: A memory based James server, mainly for testing purposes
  - Distributed James: A scalable James server, storing data in various data stores. Cassandra is used for metadata, 
  ElasticSearch for search, RabbitMQ for messaging, and ObjectStorage for byte contents.
  - Cassandra-guice: An implementation step toward Distributed James. It does not include messaging and ObjectStorage.
