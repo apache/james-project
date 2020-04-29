@@ -27,6 +27,6 @@
       Mailbox Authenticator
      -->
 
-    <bean id="authenticator" class="org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator"/>
+    <bean id="authenticator" class="org.apache.james.adapter.mailbox.UserRepositoryAuthenticator"/>
 
 </beans>
