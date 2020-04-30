@@ -27,6 +27,6 @@
       Mailbox Authorizator
      -->
 
-    <bean id="authorizator" class="org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator"/>
+    <bean id="authorizator" class="org.apache.james.adapter.mailbox.UserRepositoryAuthorizator"/>
 
 </beans>

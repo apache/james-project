@@ -19,7 +19,7 @@
 package org.apache.james.mailbox.spring;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.Authorizator;
 
 public class NoAuthorizator implements Authorizator {
 

@@ -17,23 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.adapter.mailbox;
+
+import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 
 /**
- * Authenticates user credentials.
+ * Authenticator which use an UsersRepository to check if the user and password
+ * match
  */
-public interface Authenticator {
+public class UserRepositoryAuthenticator implements Authenticator {
 
-    /**
-     * Is the given user authentic?
-     * 
-     * @param userid not null
-     * @param passwd not null
-     * @return true when the user is authentic,
-     * false otherwise
-     */
-    boolean isAuthentic(Username userid, CharSequence passwd) throws MailboxException;
+    private final UsersRepository repos;
+
+    @Inject
+    public UserRepositoryAuthenticator(UsersRepository repos) {
+        this.repos = repos;
+    }
+
+    @Override
+    public boolean isAuthentic(Username userid, CharSequence passwd) throws MailboxException {
+        try {
+            return repos.test(userid, passwd.toString());
+        } catch (UsersRepositoryException e) {
+            throw new MailboxException("Unable to access UsersRepository", e);
+        }
+    }
+
 }

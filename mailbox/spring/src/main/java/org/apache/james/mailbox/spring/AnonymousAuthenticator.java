@@ -19,7 +19,7 @@
 package org.apache.james.mailbox.spring;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.store.Authenticator;
+import org.apache.james.mailbox.Authenticator;
 
 public class AnonymousAuthenticator implements Authenticator {
 

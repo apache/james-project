@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.Authorizator;
 
 public class FakeAuthorizator implements Authorizator {
 
