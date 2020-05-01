@@ -36,6 +36,17 @@
  ****************************************************************/
 package org.apache.james.wkd;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
 import java.util.Optional;
 import java.util.Set;
 
@@ -46,6 +57,7 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.Port;
 import org.slf4j.LoggerFactory;
 
+import io.netty.handler.ssl.SslContextBuilder;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
 
@@ -72,11 +84,60 @@ public class WebKeyDirectoryServer implements Startable {
 
     public void start() {
         if (configuration.isEnabled()) {
-            server = Optional.of(HttpServer.create()
-                .port(configuration.getPort().map(Port::getValue).orElse(RANDOM_PORT))
-                .route(routes -> webKeyDirectoryRoutes
-                    .forEach(webKeyDirectoryRoute -> webKeyDirectoryRoute.define(routes)))
-                .wiretap(wireTapEnabled()).bindNow());
+
+            SslContextBuilder sslContextBuilder = createSslContextBuilder();
+
+            server = Optional
+                .of(HttpServer.create().secure((spec) -> spec.sslContext(sslContextBuilder))
+                    .port(configuration.getPort().map(Port::getValue).orElse(RANDOM_PORT))
+                    .route(routes -> webKeyDirectoryRoutes
+                        .forEach(webKeyDirectoryRoute -> webKeyDirectoryRoute.define(routes)))
+                    .wiretap(wireTapEnabled()).bindNow());
+        }
+    }
+
+    private SslContextBuilder createSslContextBuilder() {
+        // keytool -genkey -alias wkd -keyalg RSA -validity 1825 
+        // -keystore "wkd-keystore.jks" 
+        // -dname "CN=localhost.local,OU=Part,O=Example,L=Berlin,ST=Berlin,C=DE" 
+        // -ext san=dns:localhost,dns:manuel-XPS-13-9360 -keypass changeit 
+        // -storepass changeit
+        KeyStore keyStore;
+        try {
+            keyStore = KeyStore.getInstance("JKS");
+
+            // Provide location of Java Keystore and password for access
+            keyStore.load(new FileInputStream(configuration.getKeyStore()),
+                configuration.getKeyStorePassword().toCharArray());
+
+            // iterate over all aliases
+            Enumeration<String> es = keyStore.aliases();
+            String alias = "";
+            while (es.hasMoreElements()) {
+                alias = (String) es.nextElement();
+                // if alias refers to a private key break at that point
+                // as we want to use that certificate
+                if (keyStore.isKeyEntry(alias)) {
+                    break;
+                }
+            }
+
+            KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(alias,
+                new KeyStore.PasswordProtection(configuration.getKeyStorePassword().toCharArray()));
+
+            PrivateKey myPrivateKey = pkEntry.getPrivateKey();
+
+            // Load certificate chain
+            Certificate[] chain = keyStore.getCertificateChain(alias);
+
+            SslContextBuilder sslContextBuilder = SslContextBuilder.forServer(myPrivateKey,
+                new X509Certificate[] { (X509Certificate) chain[0] });
+            return sslContextBuilder;
+        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
+            | UnrecoverableEntryException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return null;
         }
     }
 

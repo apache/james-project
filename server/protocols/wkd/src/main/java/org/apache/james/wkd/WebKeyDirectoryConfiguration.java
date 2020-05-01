@@ -36,6 +36,8 @@ public class WebKeyDirectoryConfiguration {
     public static class Builder {
         private Optional<Boolean> enabled = Optional.empty();
         private Optional<Port> port = Optional.empty();
+        private Optional<String> keyStore = Optional.empty();
+        private Optional<String> keyStorePassword = Optional.empty();
 
         private Builder() {
 
@@ -63,22 +65,37 @@ public class WebKeyDirectoryConfiguration {
             this.port = Optional.empty();
             return this;
         }
+        
+        public Builder keyStore(String keyStore) {
+            this.keyStore = Optional.of(keyStore);
+            return this;
+        }
+        
+        public Builder keyStorePassword(String keyStorePassword) {
+            this.keyStorePassword = Optional.of(keyStorePassword);
+            return this;
+        }
 
         public WebKeyDirectoryConfiguration build() {
             Preconditions.checkState(enabled.isPresent(),
                     "You should specify if WebKeyDirectory server should be started");
-            return new WebKeyDirectoryConfiguration(enabled.get(), port);
+            return new WebKeyDirectoryConfiguration(enabled.get(), port, keyStore.get(), keyStorePassword.get());
         }
 
     }
 
     private final boolean enabled;
     private final Optional<Port> port;
+    private final String keyStore;
+    private final String keyStorePassword;
+    
 
     @VisibleForTesting
-    WebKeyDirectoryConfiguration(boolean enabled, Optional<Port> port) {
+    WebKeyDirectoryConfiguration(boolean enabled, Optional<Port> port, String keyStore, String keyStorePassword) {
         this.enabled = enabled;
         this.port = port;
+        this.keyStore = keyStore;
+        this.keyStorePassword = keyStorePassword;
     }
 
     public boolean isEnabled() {
@@ -87,5 +104,13 @@ public class WebKeyDirectoryConfiguration {
 
     public Optional<Port> getPort() {
         return port;
+    }
+
+    public String getKeyStore() {
+        return keyStore;
+    }
+
+    public String getKeyStorePassword() {
+        return keyStorePassword;
     }
 }

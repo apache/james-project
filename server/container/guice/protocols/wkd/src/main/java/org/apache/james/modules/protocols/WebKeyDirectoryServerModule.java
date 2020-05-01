@@ -49,7 +49,7 @@ public class WebKeyDirectoryServerModule extends AbstractModule {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebKeyDirectoryServerModule.class);
 
-    private static final int DEFAULT_WKD_PORT = 9443;
+    private static final int DEFAULT_WKD_PORT = 443;
 
     @Override
     protected void configure() {
@@ -85,7 +85,10 @@ public class WebKeyDirectoryServerModule extends AbstractModule {
             Configuration configuration = propertiesProvider.getConfiguration("web-key-directory");
             return WebKeyDirectoryConfiguration.builder()
                 .enabled(configuration.getBoolean("enabled", true))
-                .port(Port.of(configuration.getInt("wkd.port", DEFAULT_WKD_PORT))).build();
+                .port(Port.of(configuration.getInt("wkd.port", DEFAULT_WKD_PORT)))
+                .keyStore(configuration.getString("keyStore"))
+                .keyStorePassword(configuration.getString("keyStorePassword"))
+            .build();
         } catch (FileNotFoundException e) {
             LOGGER.warn(
                 "Could not find Web Key Directory configuration file. Web Key Directory server will not be enabled.");

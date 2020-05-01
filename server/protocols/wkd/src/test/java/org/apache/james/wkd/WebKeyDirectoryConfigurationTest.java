@@ -41,7 +41,7 @@ class WebKeyDirectoryConfigurationTest {
     @Test
     void buildShouldWorkWhenRandomPort() {
         WebKeyDirectoryConfiguration expectedWebKeyDirectoryConfiguration = new WebKeyDirectoryConfiguration(ENABLED,
-                Optional.empty());
+                Optional.empty(), "", "");
 
         WebKeyDirectoryConfiguration webKeyDirectoryConfiguration = WebKeyDirectoryConfiguration.builder().enable()
                 .randomPort().build();
@@ -51,7 +51,7 @@ class WebKeyDirectoryConfigurationTest {
     @Test
     void buildShouldWorkWhenFixedPort() {
         WebKeyDirectoryConfiguration expectedWebKeyDirectoryConfiguration = new WebKeyDirectoryConfiguration(ENABLED,
-                Optional.of(Port.of(80)));
+                Optional.of(Port.of(80)), "", "");
 
         WebKeyDirectoryConfiguration webKeyDirectoryConfiguration = WebKeyDirectoryConfiguration.builder().enable()
                 .port(Port.of(80)).build();
@@ -62,7 +62,7 @@ class WebKeyDirectoryConfigurationTest {
     @Test
     void buildShouldWorkWhenDisabled() {
         WebKeyDirectoryConfiguration expectedWebKeyDirectoryConfiguration = new WebKeyDirectoryConfiguration(DISABLED,
-                Optional.empty());
+                Optional.empty(), "", "");
 
         WebKeyDirectoryConfiguration webKeyDirectoryConfiguration = WebKeyDirectoryConfiguration.builder().disable()
                 .build();
