@@ -9,18 +9,23 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.wkd.WebKeyDirectoryConfiguration;
 import org.apache.james.wkd.store.PublicKeyEntry;
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebKeyDirectorySubmissionAddressKeyPairManager {
-    
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebKeyDirectorySubmissionAddressKeyPairManager.class);
+
+    private static final Logger LOGGER = LoggerFactory
+        .getLogger(WebKeyDirectorySubmissionAddressKeyPairManager.class);
 
     private DomainList domainList;
-    
+
     private static final String PRIVATE_KEY_PASSWORD = "secret";
     PGPPublicKeyRing publicKeySubmissionAddress = null;
     PGPSecretKeyRing privateKeySubmissionAddress = null;
@@ -29,7 +34,6 @@ public class WebKeyDirectorySubmissionAddressKeyPairManager {
     public WebKeyDirectorySubmissionAddressKeyPairManager(DomainList domainList) {
         this.domainList = domainList;
     }
-    
 
     public PublicKeyEntry getPublicKeyEntryForSubmissionAddress() {
         try {
@@ -60,5 +64,16 @@ public class WebKeyDirectorySubmissionAddressKeyPairManager {
             return null;
         }
 
+    }
+
+    public PGPPrivateKey receivePGPPrivateKey() {
+        try {
+            return privateKeySubmissionAddress.getSecretKey().extractPrivateKey(
+                new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider())
+                    .build(PRIVATE_KEY_PASSWORD.toCharArray()));
+        } catch (PGPException e) {
+            LOGGER.error("Could not receive pgp private key", e);
+            return null;
+        }
     }
 }
