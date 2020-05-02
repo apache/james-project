@@ -17,7 +17,7 @@ class MemoryWebKeyDirectoryStoreTest {
         DomainList domainList = mock(DomainList.class);
         when(domainList.getDefaultDomain()).thenReturn(Domain.of("example.org"));
         WebKeyDirectorySubmissionAddressKeyPairManager webKeyDirectorySubmissionAddressKeyPairManager = new WebKeyDirectorySubmissionAddressKeyPairManager(
-            domainList);
+            domainList, null, null);
         WebKeyDirectoryStore webKeyDirectoryStore = new MemoryWebKeyDirectoryStore(webKeyDirectorySubmissionAddressKeyPairManager);
         // zbase32(sha1(submission-address@example.org)) =
         // ez5ttrptyoa3fqrk3649ns5s7ksxjsro

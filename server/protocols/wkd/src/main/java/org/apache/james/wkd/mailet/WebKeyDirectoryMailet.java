@@ -27,11 +27,15 @@ import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,9 +60,7 @@ public class WebKeyDirectoryMailet extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         if (!mail.getState().equals(Mail.GHOST)) {
             doService(mail);
-
             mail.setState(Mail.GHOST);
-
         }
     }
 
@@ -76,12 +78,14 @@ public class WebKeyDirectoryMailet extends GenericMailet {
             for (int i = 0; i < parts.getCount(); i++) {
                 BodyPart bodyPart = parts.getBodyPart(i);
                 if (bodyPart.isMimeType("application/pgp-encrypted")) {
-                    byte[] publicKeyBytesArmored = decryptBodyPartWithPublicKey(bodyPart);
+                    byte[] publicKeyBytesArmored = decryptBodyPartWithPublicKey(
+                        bodyPart.getInputStream());
                     PGPPublicKey pgpPublicKey = getKeyFromArmoredBytes(publicKeyBytesArmored);
                     ByteArrayOutputStream boas = new ByteArrayOutputStream();
                     pgpPublicKey.encode(boas);
-                    new PublicKeyEntry(mail.getMaybeSender().get().getLocalPart(),
-                        boas.toByteArray());
+                    PublicKeyEntry publicKeyEntry = new PublicKeyEntry(
+                        mail.getMaybeSender().get().getLocalPart(), boas.toByteArray());
+                    webKeyDirectoryStore.put(publicKeyEntry);
                     pgpPubliyKeyFound = true;
                 }
             }
@@ -95,12 +99,11 @@ public class WebKeyDirectoryMailet extends GenericMailet {
 
     }
 
-    byte[] decryptBodyPartWithPublicKey(BodyPart bodyPart)
+    byte[] decryptBodyPartWithPublicKey(InputStream inputStream)
         throws IOException, MessagingException, PGPException {
-        InputStream inputStream = PGPUtil.getDecoderStream(bodyPart.getInputStream());
+        inputStream = PGPUtil.getDecoderStream(inputStream);
 
-        PGPPrivateKey pGPPrivateKey = webKeyDirectorySubmissionAddressKeyPairManager
-            .receivePGPPrivateKey();
+        PGPPrivateKey pGPPrivateKey = null;
 
         PGPObjectFactory pGPObjectFactory = new PGPObjectFactory(inputStream,
             new BcKeyFingerprintCalculator());
@@ -111,22 +114,41 @@ public class WebKeyDirectoryMailet extends GenericMailet {
         } else {
             pGPEncryptedDataList = (PGPEncryptedDataList) pGPObjectFactory.nextObject();
         }
-        Iterator<PGPPublicKeyEncryptedData> pGPPublicKeyEncryptedDataIterator = pGPEncryptedDataList
-            .getEncryptedDataObjects();
-        PGPPublicKeyEncryptedData pGPPublicKeyEncryptedData = pGPPublicKeyEncryptedDataIterator
-            .next();
 
-        PublicKeyDataDecryptorFactory decryptorFactory = new BcPublicKeyDataDecryptorFactory(pGPPrivateKey);
+        PGPPublicKeyEncryptedData pGPPublicKeyEncryptedData = null;
+
+        for (Iterator<PGPPublicKeyEncryptedData> iterator = pGPEncryptedDataList
+            .getEncryptedDataObjects(); iterator.hasNext();) {
+            pGPPublicKeyEncryptedData = iterator.next();
+            pGPPrivateKey = webKeyDirectorySubmissionAddressKeyPairManager
+                .receivePGPPrivateKey(pGPPublicKeyEncryptedData.getKeyID());
+            continue;
+        }
+        if (pGPPrivateKey == null) {
+            throw new IllegalArgumentException("Unable to find secret key to decrypt the message");
+        }
+        /*
+         * Iterator<PGPPublicKeyEncryptedData> pGPPublicKeyEncryptedDataIterator =
+         * pGPEncryptedDataList .getEncryptedDataObjects(); PGPPublicKeyEncryptedData
+         * pGPPublicKeyEncryptedData = pGPPublicKeyEncryptedDataIterator .next();
+         */
+
+        PublicKeyDataDecryptorFactory decryptorFactory = new BcPublicKeyDataDecryptorFactory(
+            pGPPrivateKey);
         InputStream decryptedInputStream = pGPPublicKeyEncryptedData
-            .getDataStream(decryptorFactory );
+            .getDataStream(decryptorFactory);
 
         JcaPGPObjectFactory jcaPGPObjectFactory = new JcaPGPObjectFactory(decryptedInputStream);
 
-        PGPCompressedData pgpCompressedData = (PGPCompressedData) jcaPGPObjectFactory.nextObject();
+        Object message = jcaPGPObjectFactory.nextObject();
+        if (message instanceof PGPCompressedData) {
+            PGPCompressedData cData = (PGPCompressedData) message;
+            PGPObjectFactory pgpFact = new PGPObjectFactory(cData.getDataStream(),
+                new BcKeyFingerprintCalculator());
+            message = pgpFact.nextObject();
+        }
 
-        jcaPGPObjectFactory = new JcaPGPObjectFactory(pgpCompressedData.getDataStream());
-
-        PGPLiteralData pGPLiteralData = (PGPLiteralData) jcaPGPObjectFactory.nextObject();
+        PGPLiteralData pGPLiteralData = (PGPLiteralData) message;
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 

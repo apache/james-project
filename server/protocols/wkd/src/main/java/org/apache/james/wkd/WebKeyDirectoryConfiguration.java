@@ -26,7 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class WebKeyDirectoryConfiguration {
-    
+
     public static final String SUBMISSION_ADDRESS_LOCAL_PART = "submission-address";
 
     public static Builder builder() {
@@ -65,12 +65,12 @@ public class WebKeyDirectoryConfiguration {
             this.port = Optional.empty();
             return this;
         }
-        
+
         public Builder keyStore(String keyStore) {
             this.keyStore = Optional.of(keyStore);
             return this;
         }
-        
+
         public Builder keyStorePassword(String keyStorePassword) {
             this.keyStorePassword = Optional.of(keyStorePassword);
             return this;
@@ -78,8 +78,9 @@ public class WebKeyDirectoryConfiguration {
 
         public WebKeyDirectoryConfiguration build() {
             Preconditions.checkState(enabled.isPresent(),
-                    "You should specify if WebKeyDirectory server should be started");
-            return new WebKeyDirectoryConfiguration(enabled.get(), port, keyStore.get(), keyStorePassword.get());
+                "You should specify if WebKeyDirectory server should be started");
+            return new WebKeyDirectoryConfiguration(enabled.get(), port,
+                keyStore.orElse("wkd-keystore.jks"), keyStorePassword.orElse("changeit"));
         }
 
     }
@@ -88,10 +89,10 @@ public class WebKeyDirectoryConfiguration {
     private final Optional<Port> port;
     private final String keyStore;
     private final String keyStorePassword;
-    
 
     @VisibleForTesting
-    WebKeyDirectoryConfiguration(boolean enabled, Optional<Port> port, String keyStore, String keyStorePassword) {
+    WebKeyDirectoryConfiguration(boolean enabled, Optional<Port> port, String keyStore,
+        String keyStorePassword) {
         this.enabled = enabled;
         this.port = port;
         this.keyStore = keyStore;

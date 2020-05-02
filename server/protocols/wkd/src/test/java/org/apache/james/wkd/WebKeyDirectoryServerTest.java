@@ -39,7 +39,7 @@ class WebKeyDirectoryServerTest {
     @Test
     void serverShouldAnswerWhenStarted() {
         WebKeyDirectoryServer WebKeyDirectoryServer = new WebKeyDirectoryServer(TEST_CONFIGURATION,
-            NO_ROUTES);
+            NO_ROUTES, null, null);
         WebKeyDirectoryServer.start();
 
         try {
@@ -53,7 +53,7 @@ class WebKeyDirectoryServerTest {
     @Test
     void startShouldNotThrowWhenConfigurationDisabled() {
         WebKeyDirectoryServer WebKeyDirectoryServer = new WebKeyDirectoryServer(
-            DISABLED_CONFIGURATION, NO_ROUTES);
+            DISABLED_CONFIGURATION, NO_ROUTES, null, null);
 
         assertThatCode(WebKeyDirectoryServer::start).doesNotThrowAnyException();
     }
@@ -61,7 +61,7 @@ class WebKeyDirectoryServerTest {
     @Test
     void stopShouldNotThrowWhenConfigurationDisabled() {
         WebKeyDirectoryServer WebKeyDirectoryServer = new WebKeyDirectoryServer(
-            DISABLED_CONFIGURATION, NO_ROUTES);
+            DISABLED_CONFIGURATION, NO_ROUTES, null, null);
         WebKeyDirectoryServer.start();
 
         assertThatCode(WebKeyDirectoryServer::stop).doesNotThrowAnyException();
@@ -70,7 +70,7 @@ class WebKeyDirectoryServerTest {
     @Test
     void getPortShouldThrowWhenServerIsNotStarted() {
         WebKeyDirectoryServer WebKeyDirectoryServer = new WebKeyDirectoryServer(TEST_CONFIGURATION,
-            NO_ROUTES);
+            NO_ROUTES, null, null);
 
         assertThatThrownBy(WebKeyDirectoryServer::getPort)
             .isInstanceOf(IllegalStateException.class);
@@ -79,7 +79,7 @@ class WebKeyDirectoryServerTest {
     @Test
     void getPortShouldThrowWhenDisabledConfiguration() {
         WebKeyDirectoryServer WebKeyDirectoryServer = new WebKeyDirectoryServer(
-            DISABLED_CONFIGURATION, NO_ROUTES);
+            DISABLED_CONFIGURATION, NO_ROUTES, null, null);
         WebKeyDirectoryServer.start();
 
         assertThatThrownBy(WebKeyDirectoryServer::getPort)
