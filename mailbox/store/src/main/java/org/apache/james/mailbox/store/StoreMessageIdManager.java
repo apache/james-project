@@ -145,18 +145,14 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     @Override
     public Flux<MessageResult> getMessagesReactive(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) {
-        try {
-            MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
+        MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-            MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
-            return messageIdMapper.findReactive(messageIds, fetchType)
-                .groupBy(MailboxMessage::getMailboxId)
-                .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()))
-                .flatMap(Function.identity())
-                .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow());
-        } catch (MailboxException e) {
-            return Flux.error(e);
-        }
+        MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
+        return messageIdMapper.findReactive(messageIds, fetchType)
+            .groupBy(MailboxMessage::getMailboxId)
+            .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()))
+            .flatMap(Function.identity())
+            .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow());
     }
 
     private ImmutableSet<MailboxId> getAllowedMailboxIds(MailboxSession mailboxSession, List<MailboxMessage> messageList, Right... rights) {

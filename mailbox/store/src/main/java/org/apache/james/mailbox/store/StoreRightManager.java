@@ -104,13 +104,9 @@ public class StoreRightManager implements RightManager {
 
     @Override
     public Mono<Rfc4314Rights> myRightsReactive(MailboxId mailboxId, MailboxSession session) {
-        try {
-            MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-            return mapper.findMailboxByIdReactive(mailboxId)
-                .map(Throwing.function(mailbox -> myRights(mailbox, session)));
-        } catch (MailboxException e) {
-            return Mono.error(e);
-        }
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        return mapper.findMailboxByIdReactive(mailboxId)
+            .map(Throwing.function(mailbox -> myRights(mailbox, session)));
     }
 
     public Rfc4314Rights myRights(Mailbox mailbox, MailboxSession session) throws UnsupportedRightException {
