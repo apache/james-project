@@ -154,7 +154,7 @@ public class ReactorElasticSearchClient implements AutoCloseable {
 
     private static <T> Mono<T> toReactor(Consumer<ActionListener<T>> async) {
         return Mono.<T>create(sink -> async.accept(getListener(sink)))
-            .subscribeOn(Schedulers.elastic());
+            .publishOn(Schedulers.elastic());
     }
 
     private static <T> ActionListener<T> getListener(MonoSink<T> sink) {
