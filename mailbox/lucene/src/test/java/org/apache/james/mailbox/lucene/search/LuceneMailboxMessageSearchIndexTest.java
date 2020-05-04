@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -131,7 +132,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .mailboxId(TEST_ID_1)
             .uid(uid1)
             .internalDate(new Date())
-            .body("My Body".getBytes(StandardCharsets.UTF_8))
+            .body("My Body".getBytes(UTF_8))
             .size(200);
         index.add(session, mailbox, builder1.build(id1)).block();
 
@@ -142,7 +143,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .mailboxId(TEST_ID_2)
             .uid(uid2)
             .internalDate(new Date())
-            .body("My Body".getBytes(StandardCharsets.UTF_8))
+            .body("My Body".getBytes(UTF_8))
             .size(20);
         index.add(session, mailbox2, builder2.build(id2)).block();
         
@@ -155,7 +156,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .mailboxId(TEST_ID_1)
             .uid(uid3)
             .internalDate(cal.getTime())
-            .body("My Otherbody".getBytes(StandardCharsets.UTF_8))
+            .body("My Otherbody".getBytes(UTF_8))
             .size(20);
         index.add(session, mailbox, builder3.build(id3)).block();
         
@@ -168,7 +169,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .mailboxId(TEST_ID_1)
             .uid(uid4)
             .internalDate(cal2.getTime())
-            .body("My Otherbody2".getBytes(StandardCharsets.UTF_8))
+            .body("My Otherbody2".getBytes(UTF_8))
             .size(20);
         index.add(session, mailbox, builder4.build(id4)).block();
         
