@@ -46,7 +46,6 @@ import com.rabbitmq.client.AMQP;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoProcessor;
-import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
@@ -95,7 +94,6 @@ public class EventDispatcher {
             .concat(
                 dispatchToLocalListeners(event, keys),
                 dispatchToRemoteListeners(event, keys))
-            .subscribeOn(Schedulers.elastic())
             .doOnError(throwable -> LOGGER.error("error while dispatching event", throwable))
             .then()
             .subscribeWith(MonoProcessor.create());
@@ -106,7 +104,7 @@ public class EventDispatcher {
             .flatMap(key -> localListenerRegistry.getLocalMailboxListeners(key)
                 .map(listener -> Tuples.of(key, listener)))
             .filter(pair -> pair.getT2().getExecutionMode() == MailboxListener.ExecutionMode.SYNCHRONOUS)
-            .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1())).subscribeOn(Schedulers.elastic())
+            .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1()))
             .then();
     }
 
@@ -161,8 +159,7 @@ public class EventDispatcher {
         if (routingKeys.isEmpty()) {
             return Mono.empty();
         }
-        return sender.send(toMessages(serializedEvent, routingKeys))
-            .subscribeOn(Schedulers.elastic());
+        return sender.send(toMessages(serializedEvent, routingKeys));
     }
 
     private Flux<OutboundMessage> toMessages(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {

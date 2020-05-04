@@ -56,6 +56,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+
 import reactor.core.scheduler.Schedulers;
 
 public interface GroupContract {
@@ -158,7 +159,9 @@ public interface GroupContract {
             AtomicBoolean successfulRetry = new AtomicBoolean(false);
             MailboxListener listener = event -> {
                 if (event.getEventId().equals(EVENT_ID)) {
-                    eventBus().dispatch(EVENT_2, NO_KEYS).block();
+                    eventBus().dispatch(EVENT_2, NO_KEYS)
+                        .subscribeOn(Schedulers.elastic())
+                        .block();
                     successfulRetry.set(true);
                 }
             };

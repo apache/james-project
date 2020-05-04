@@ -93,6 +93,7 @@ import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
@@ -382,6 +383,7 @@ public class StoreMailboxManager implements MailboxManager {
                                 .mailbox(mailbox)
                                 .build(),
                                 new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                            .subscribeOn(Schedulers.elastic())
                             .block();
                     }));
                 } catch (MailboxExistsException e) {
@@ -451,14 +453,15 @@ public class StoreMailboxManager implements MailboxManager {
         Mailbox m = new Mailbox(mailbox);
         mailboxMapper.delete(mailbox);
         eventBus.dispatch(EventFactory.mailboxDeleted()
-            .randomEventId()
-            .mailboxSession(session)
-            .mailbox(mailbox)
-            .quotaRoot(quotaRoot)
-            .quotaCount(QuotaCountUsage.count(messageCount))
-            .quotaSize(QuotaSizeUsage.size(totalSize))
-            .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                .randomEventId()
+                .mailboxSession(session)
+                .mailbox(mailbox)
+                .quotaRoot(quotaRoot)
+                .quotaCount(QuotaCountUsage.count(messageCount))
+                .quotaSize(QuotaSizeUsage.size(totalSize))
+                .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .subscribeOn(Schedulers.elastic())
             .block();
         return m;
     }
@@ -519,13 +522,14 @@ public class StoreMailboxManager implements MailboxManager {
         mapper.rename(mailbox);
 
         eventBus.dispatch(EventFactory.mailboxRenamed()
-            .randomEventId()
-            .mailboxSession(session)
-            .mailboxId(mailbox.getMailboxId())
-            .oldPath(from)
-            .newPath(newMailboxPath)
-            .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                .randomEventId()
+                .mailboxSession(session)
+                .mailboxId(mailbox.getMailboxId())
+                .oldPath(from)
+                .newPath(newMailboxPath)
+                .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .subscribeOn(Schedulers.elastic())
             .block();
 
         // rename submailboxes
@@ -543,13 +547,14 @@ public class StoreMailboxManager implements MailboxManager {
                 sub.setName(subNewName);
                 mapper.rename(sub);
                 eventBus.dispatch(EventFactory.mailboxRenamed()
-                    .randomEventId()
-                    .mailboxSession(session)
-                    .mailboxId(sub.getMailboxId())
-                    .oldPath(fromPath)
-                    .newPath(sub.generateAssociatedPath())
-                    .build(),
-                    new MailboxIdRegistrationKey(sub.getMailboxId()))
+                        .randomEventId()
+                        .mailboxSession(session)
+                        .mailboxId(sub.getMailboxId())
+                        .oldPath(fromPath)
+                        .newPath(sub.generateAssociatedPath())
+                        .build(),
+                        new MailboxIdRegistrationKey(sub.getMailboxId()))
+                    .subscribeOn(Schedulers.elastic())
                     .block();
 
                 LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName);

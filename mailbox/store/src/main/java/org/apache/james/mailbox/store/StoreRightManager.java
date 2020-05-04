@@ -54,6 +54,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class StoreRightManager implements RightManager {
     public static final boolean GROUP_FOLDER = true;
@@ -156,6 +157,7 @@ public class StoreRightManager implements RightManager {
             .aclDiff(aclDiff)
             .build(),
             new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .subscribeOn(Schedulers.elastic())
             .block();
     }
 
@@ -241,6 +243,7 @@ public class StoreRightManager implements RightManager {
             .aclDiff(aclDiff)
             .build(),
             new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

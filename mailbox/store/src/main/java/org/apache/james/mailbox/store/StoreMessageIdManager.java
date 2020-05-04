@@ -80,6 +80,7 @@ import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class StoreMessageIdManager implements MessageIdManager {
 
@@ -235,6 +236,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                 new MailboxIdRegistrationKey(metadataWithMailboxId.getMailboxId())))
                 .sneakyThrow())
             .then()
+            .subscribeOn(Schedulers.elastic())
             .block();
     }
 
@@ -305,6 +307,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             messageMoves.impactedMailboxIds()
                 .map(MailboxIdRegistrationKey::new)
                 .collect(Guavate.toImmutableSet()))
+            .subscribeOn(Schedulers.elastic())
             .block();
     }
 
@@ -322,6 +325,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                 .addMetaData(eventPayload)
                 .build(),
                 new MailboxIdRegistrationKey(mailboxId))
+            .subscribeOn(Schedulers.elastic())
             .block();
         }
     }
@@ -331,12 +335,13 @@ public class StoreMessageIdManager implements MessageIdManager {
             Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
 
             eventBus.dispatch(EventFactory.flagsUpdated()
-                .randomEventId()
-                .mailboxSession(mailboxSession)
-                .mailbox(mailbox)
-                .updatedFlags(updatedFlags)
-                .build(),
+                    .randomEventId()
+                    .mailboxSession(mailboxSession)
+                    .mailbox(mailbox)
+                    .updatedFlags(updatedFlags)
+                    .build(),
                 new MailboxIdRegistrationKey(mailboxId))
+                .subscribeOn(Schedulers.elastic())
                 .block();
         }
     }
@@ -393,12 +398,13 @@ public class StoreMessageIdManager implements MessageIdManager {
             save(messageIdMapper, copy);
 
             eventBus.dispatch(EventFactory.added()
-                .randomEventId()
-                .mailboxSession(mailboxSession)
-                .mailbox(mailboxMapper.findMailboxById(mailboxId))
-                .addMetaData(copy.metaData())
-                .build(),
-                new MailboxIdRegistrationKey(mailboxId))
+                    .randomEventId()
+                    .mailboxSession(mailboxSession)
+                    .mailbox(mailboxMapper.findMailboxById(mailboxId))
+                    .addMetaData(copy.metaData())
+                    .build(),
+                    new MailboxIdRegistrationKey(mailboxId))
+                .subscribeOn(Schedulers.elastic())
                 .block();
         }
     }

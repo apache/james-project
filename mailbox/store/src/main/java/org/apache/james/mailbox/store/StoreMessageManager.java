@@ -289,6 +289,7 @@ public class StoreMessageManager implements MessageManager {
                 .metaData(ImmutableSortedMap.copyOf(deletedMessages))
                 .build(),
             new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .subscribeOn(Schedulers.elastic())
             .block();
     }
 
@@ -437,12 +438,12 @@ public class StoreMessageManager implements MessageManager {
                 Mailbox mailbox = getMailboxEntity();
 
                 eventBus.dispatch(EventFactory.added()
-                    .randomEventId()
-                    .mailboxSession(mailboxSession)
-                    .mailbox(mailbox)
-                    .addMetaData(data.getLeft())
-                    .build(),
-                    new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                        .randomEventId()
+                        .mailboxSession(mailboxSession)
+                        .mailbox(mailbox)
+                        .addMetaData(data.getLeft())
+                        .build(),
+                        new MailboxIdRegistrationKey(mailbox.getMailboxId()))
                     .subscribeOn(Schedulers.elastic())
                     .block();
                 MessageMetaData messageMetaData = data.getLeft();
@@ -592,12 +593,13 @@ public class StoreMessageManager implements MessageManager {
         List<UpdatedFlags> updatedFlags = Iterators.toStream(it).collect(Guavate.toImmutableList());
 
         eventBus.dispatch(EventFactory.flagsUpdated()
-            .randomEventId()
-            .mailboxSession(mailboxSession)
-            .mailbox(getMailboxEntity())
-            .updatedFlags(updatedFlags)
-            .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                .randomEventId()
+                .mailboxSession(mailboxSession)
+                .mailbox(getMailboxEntity())
+                .updatedFlags(updatedFlags)
+                .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .subscribeOn(Schedulers.elastic())
             .block();
 
         return updatedFlags.stream().collect(Guavate.toImmutableMap(
@@ -759,6 +761,7 @@ public class StoreMessageManager implements MessageManager {
                     .messageId(messageIds.build())
                     .build(),
                 messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(Guavate.toImmutableSet())))
+            .subscribeOn(Schedulers.elastic())
             .blockLast();
 
         return copiedUids;
@@ -800,6 +803,7 @@ public class StoreMessageManager implements MessageManager {
                     .session(session)
                     .build(),
                 messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(Guavate.toImmutableSet())))
+            .subscribeOn(Schedulers.elastic())
             .blockLast();
 
         return moveUids;
