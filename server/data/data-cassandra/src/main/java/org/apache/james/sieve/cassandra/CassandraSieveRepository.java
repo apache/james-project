@@ -178,7 +178,8 @@ public class CassandraSieveRepository implements SieveRepository {
 
     private Mono<Void> unactivateOldScript(Username username) {
         return cassandraActiveScriptDAO.getActiveSctiptInfo(username)
-            .flatMap(activeScriptInfo -> updateScriptActivation(username, activeScriptInfo.getName(), false).then());
+            .flatMap(activeScriptInfo -> updateScriptActivation(username, activeScriptInfo.getName(), false))
+            .then();
     }
 
     private Mono<Boolean> updateScriptActivation(Username username, ScriptName scriptName, boolean active) {
