@@ -34,6 +34,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.configuration.Eventsourcin
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CassandraMailQueueView implements MailQueueView {
 
@@ -91,13 +92,17 @@ public class CassandraMailQueueView implements MailQueueView {
     public ManageableMailQueue.MailQueueIterator browse() {
         return new CassandraMailQueueBrowser.CassandraMailQueueIterator(
             cassandraMailQueueBrowser.browse(mailQueueName)
+                .subscribeOn(Schedulers.elastic())
                 .toIterable()
                 .iterator());
     }
 
     @Override
     public long getSize() {
-        return cassandraMailQueueBrowser.browseReferences(mailQueueName).count().block();
+        return cassandraMailQueueBrowser.browseReferences(mailQueueName)
+            .count()
+            .subscribeOn(Schedulers.elastic())
+            .block();
     }
 
     @Override
@@ -117,6 +122,7 @@ public class CassandraMailQueueView implements MailQueueView {
             .flatMap(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getEnqueueId(), mailQueueName))
             .count()
             .doOnNext(ignored -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName))
+            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

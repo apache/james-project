@@ -47,7 +47,6 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class CassandraMailQueueBrowser {
 
@@ -110,8 +109,7 @@ public class CassandraMailQueueBrowser {
     Flux<EnqueuedItemWithSlicingContext> browseReferences(MailQueueName queueName) {
         return browseStartDao.findBrowseStart(queueName)
             .flatMapMany(this::allSlicesStartingAt)
-            .flatMapSequential(slice -> browseSlice(queueName, slice))
-            .subscribeOn(Schedulers.elastic());
+            .flatMapSequential(slice -> browseSlice(queueName, slice));
     }
 
     private Mono<Mail> toMailFuture(EnqueuedItemWithSlicingContext enqueuedItemWithSlicingContext) {
