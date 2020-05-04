@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,6 +44,10 @@ public class ReactorUtils {
 
     public static <T> BiConsumer<Optional<T>, SynchronousSink<T>> publishIfPresent() {
         return (element, sink) -> element.ifPresent(sink::next);
+    }
+
+    public static <T, U> BiConsumer<U, SynchronousSink<T>> transformAndPublishIfNotNull(Function<U, T> mapper) {
+        return (element, sink) -> Optional.ofNullable(mapper.apply(element)).ifPresent(sink::next);
     }
 
     public static InputStream toInputStream(Flux<ByteBuffer> byteArrays) {

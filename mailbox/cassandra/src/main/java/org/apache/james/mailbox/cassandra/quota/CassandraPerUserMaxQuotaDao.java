@@ -25,6 +25,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
+import static org.apache.james.util.ReactorUtils.transformAndPublishIfNotNull;
 
 import javax.inject.Inject;
 
@@ -109,14 +110,14 @@ public class CassandraPerUserMaxQuotaDao {
 
     Mono<QuotaSizeLimit> getMaxStorage(QuotaRoot quotaRoot) {
         return queryExecutor.executeSingleRow(getMaxStorageStatement.bind(quotaRoot.getValue()))
-            .flatMap(row -> Mono.justOrEmpty(row.get(CassandraMaxQuota.STORAGE, Long.class)))
+            .handle(transformAndPublishIfNotNull(row -> row.get(CassandraMaxQuota.STORAGE, Long.class)))
             .map(QuotaCodec::longToQuotaSize)
             .handle(publishIfPresent());
     }
 
     Mono<QuotaCountLimit> getMaxMessage(QuotaRoot quotaRoot) {
         return queryExecutor.executeSingleRow(getMaxMessageStatement.bind(quotaRoot.getValue()))
-            .flatMap(row -> Mono.justOrEmpty(row.get(CassandraMaxQuota.MESSAGE_COUNT, Long.class)))
+            .handle(transformAndPublishIfNotNull(row -> row.get(CassandraMaxQuota.MESSAGE_COUNT, Long.class)))
             .map(QuotaCodec::longToQuotaCount)
             .handle(publishIfPresent());
     }
