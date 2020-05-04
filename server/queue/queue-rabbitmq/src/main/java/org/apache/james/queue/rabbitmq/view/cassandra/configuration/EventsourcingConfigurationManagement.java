@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import javax.inject.Inject;
 
 import org.apache.james.eventsourcing.AggregateId;
@@ -53,9 +55,10 @@ public class EventsourcingConfigurationManagement {
     @VisibleForTesting
     Mono<CassandraMailQueueViewConfiguration> load() {
         return Mono.from(eventStore.getEventsOfAggregate(CONFIGURATION_AGGREGATE_ID))
-            .flatMap(history -> Mono.justOrEmpty(ConfigurationAggregate
+            .map(history -> ConfigurationAggregate
                 .load(CONFIGURATION_AGGREGATE_ID, history)
-                .getCurrentConfiguration()));
+                .getCurrentConfiguration())
+            .handle(publishIfPresent());
     }
 
     public void registerConfiguration(CassandraMailQueueViewConfiguration newConfiguration) {

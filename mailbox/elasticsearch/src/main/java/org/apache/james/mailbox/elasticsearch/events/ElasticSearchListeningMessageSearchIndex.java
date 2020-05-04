@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.elasticsearch.events;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.util.Collection;
@@ -128,7 +129,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         return searcher.search(mailboxIds, searchQuery, Optional.empty())
             .doOnNext(this::logIfNoMessageId)
             .map(SearchResult::getMessageId)
-            .flatMap(Mono::justOrEmpty)
+            .handle(publishIfPresent())
             .distinct()
             .take(limit);
     }

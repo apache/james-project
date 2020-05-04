@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft.methods;
 
 import static org.apache.james.util.ReactorUtils.context;
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.util.Comparator;
 import java.util.List;
@@ -144,7 +145,7 @@ public class GetMailboxesMethod implements Method {
                     .usingPreloadedMailboxesMetadata(NO_PRELOADED_METADATA)
                     .build())
                 .subscribeOn(Schedulers.elastic()))
-            .handle((element, sink) -> element.ifPresent(sink::next));
+            .handle(publishIfPresent());
     }
 
     private Flux<Mailbox> retrieveAllMailboxes(MailboxSession mailboxSession) {
@@ -156,12 +157,13 @@ public class GetMailboxesMethod implements Method {
         return userMailboxesMono.zipWith(quotaLoaderMono)
             .flatMapMany(
                 tuple -> Flux.fromIterable(tuple.getT1())
-                    .flatMap(mailboxMetaData -> Mono.justOrEmpty(mailboxFactory.builder()
+                    .map(mailboxMetaData -> mailboxFactory.builder()
                         .mailboxMetadata(mailboxMetaData)
                         .session(mailboxSession)
                         .usingPreloadedMailboxesMetadata(Optional.of(tuple.getT1()))
                         .quotaLoader(tuple.getT2())
-                        .build())));
+                        .build())
+                    .handle(publishIfPresent()));
     }
 
     private Flux<MailboxMetaData> getAllMailboxesMetaData(MailboxSession mailboxSession) {

@@ -28,6 +28,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.NEXT_MODSEQ;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.TABLE_NAME;
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -157,7 +158,8 @@ public class CassandraModSeqProvider implements ModSeqProvider {
             insert.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(NEXT_MODSEQ, nextModSeq.asLong()))
-            .handle((success, sink) -> successToModSeq(nextModSeq, success).ifPresent(sink::next));
+            .map(success -> successToModSeq(nextModSeq, success))
+            .handle(publishIfPresent());
     }
 
     private Mono<ModSeq> tryUpdateModSeq(CassandraId mailboxId, ModSeq modSeq) {
@@ -167,7 +169,8 @@ public class CassandraModSeqProvider implements ModSeqProvider {
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(NEXT_MODSEQ, nextModSeq.asLong())
                 .setLong(MOD_SEQ_CONDITION, modSeq.asLong()))
-            .handle((success, sink) -> successToModSeq(nextModSeq, success).ifPresent(sink::next));
+            .map(success -> successToModSeq(nextModSeq, success))
+            .handle(publishIfPresent());
     }
 
     private Optional<ModSeq> successToModSeq(ModSeq modSeq, Boolean success) {
@@ -187,5 +190,4 @@ public class CassandraModSeqProvider implements ModSeqProvider {
             .single()
             .retryWhen(Retry.backoff(maxModSeqRetries, firstBackoff).scheduler(Schedulers.elastic()));
     }
-
 }

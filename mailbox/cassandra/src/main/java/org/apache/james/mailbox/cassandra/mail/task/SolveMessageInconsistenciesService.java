@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
@@ -414,7 +416,7 @@ public class SolveMessageInconsistenciesService {
 
     private Mono<Inconsistency> compareWithMessageIdRecord(ComposedMessageIdWithMetaData upToDateMessageFromImapUid) {
         return messageIdDAO.retrieve((CassandraId) upToDateMessageFromImapUid.getComposedMessageId().getMailboxId(), upToDateMessageFromImapUid.getComposedMessageId().getUid())
-            .flatMap(Mono::justOrEmpty)
+            .handle(publishIfPresent())
             .map(messageIdRecord -> {
                 if (messageIdRecord.equals(upToDateMessageFromImapUid)) {
                     return NO_INCONSISTENCY;
@@ -433,7 +435,7 @@ public class SolveMessageInconsistenciesService {
 
     private Mono<Inconsistency> detectInconsistencyInMessageId(ComposedMessageIdWithMetaData message) {
         return messageIdDAO.retrieve((CassandraId) message.getComposedMessageId().getMailboxId(), message.getComposedMessageId().getUid())
-            .flatMap(Mono::justOrEmpty)
+            .handle(publishIfPresent())
             .flatMap(upToDateMessage -> messageIdToImapUidDAO.retrieve((CassandraMessageId) message.getComposedMessageId().getMessageId(), Optional.of((CassandraId) message.getComposedMessageId().getMailboxId()))
                 .map(uidRecord -> NO_INCONSISTENCY)
                 .switchIfEmpty(Mono.just(new OrphanMessageIdEntry(message)))

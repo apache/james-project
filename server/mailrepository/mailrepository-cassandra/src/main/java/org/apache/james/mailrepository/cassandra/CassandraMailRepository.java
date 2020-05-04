@@ -19,6 +19,8 @@
 
 package org.apache.james.mailrepository.cassandra;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -93,7 +95,7 @@ public class CassandraMailRepository implements MailRepository {
     @Override
     public Mail retrieve(MailKey key) {
         return mailDAO.read(url, key)
-            .<MailDTO>handle((t, sink) -> t.ifPresent(sink::next))
+            .handle(publishIfPresent())
             .flatMap(this::toMail)
             .blockOptional()
             .orElse(null);

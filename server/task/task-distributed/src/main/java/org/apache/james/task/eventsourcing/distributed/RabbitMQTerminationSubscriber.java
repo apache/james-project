@@ -20,6 +20,8 @@
 
 package org.apache.james.task.eventsourcing.distributed;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -91,7 +93,8 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
         listenQueueHandle = listenerReceiver
             .consumeAutoAck(queueName)
             .subscribeOn(Schedulers.elastic())
-            .<Event>handle((delivery, sink) -> toEvent(delivery).ifPresent(sink::next))
+            .map(this::toEvent)
+            .handle(publishIfPresent())
             .subscribe(listener::onNext);
     }
 

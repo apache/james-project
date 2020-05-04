@@ -24,11 +24,13 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
+import reactor.core.publisher.SynchronousSink;
 import reactor.util.context.Context;
 
 public class ReactorUtils {
@@ -39,6 +41,9 @@ public class ReactorUtils {
         return Mono.fromRunnable(runnable).then(Mono.empty());
     }
 
+    public static <T> BiConsumer<Optional<T>, SynchronousSink<T>> publishIfPresent() {
+        return (element, sink) -> element.ifPresent(sink::next);
+    }
 
     public static InputStream toInputStream(Flux<ByteBuffer> byteArrays) {
         return new StreamInputStream(byteArrays.toIterable(1).iterator());
