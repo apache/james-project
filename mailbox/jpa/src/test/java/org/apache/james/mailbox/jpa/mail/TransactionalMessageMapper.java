@@ -40,6 +40,8 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
+import reactor.core.publisher.Flux;
+
 public class TransactionalMessageMapper implements MessageMapper {
     private final JPAMessageMapper messageMapper;
 
@@ -62,7 +64,7 @@ public class TransactionalMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
+    public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
         return messageMapper.listAllMessageUids(mailbox);
     }
 

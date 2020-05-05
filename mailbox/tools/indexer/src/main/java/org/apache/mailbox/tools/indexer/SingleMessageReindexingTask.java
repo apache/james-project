@@ -26,13 +26,14 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Mono;
 
 public class SingleMessageReindexingTask implements Task {
     private static final Logger LOGGER = LoggerFactory.getLogger(SingleMessageReindexingTask.class);
@@ -95,12 +96,12 @@ public class SingleMessageReindexingTask implements Task {
 
     @Override
     public Result run() {
-        try {
-            return reIndexerPerformer.handleMessageReIndexing(mailboxId, uid, new ReprocessingContext());
-        } catch (MailboxException e) {
-            LOGGER.warn("Error encounteres while reindexing {} : {}", mailboxId, uid, e);
-            return Result.PARTIAL;
-        }
+        return reIndexerPerformer.handleMessageReIndexing(mailboxId, uid, new ReprocessingContext())
+            .onErrorResume(e -> {
+                LOGGER.warn("Error encountered while reindexing {} : {}", mailboxId, uid, e);
+                return Mono.just(Result.PARTIAL);
+            })
+            .block();
     }
 
     MailboxId getMailboxId() {

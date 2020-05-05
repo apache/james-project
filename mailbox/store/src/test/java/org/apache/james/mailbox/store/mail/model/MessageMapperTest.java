@@ -1134,8 +1134,7 @@ public abstract class MessageMapperTest {
     void getUidsShouldReturnUidsOfMessagesInTheMailbox() throws Exception {
         saveMessages();
 
-        assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox))
-            .toIterable()
+        assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox).collectList().block())
             .containsOnly(message1.getUid(),
                 message2.getUid(),
                 message3.getUid(),
@@ -1149,8 +1148,7 @@ public abstract class MessageMapperTest {
 
         messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message2.getUid(), message3.getUid()));
 
-        assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox))
-            .toIterable()
+        assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox).collectList().block())
             .containsOnly(message1.getUid(),
                 message4.getUid(),
                 message5.getUid());
@@ -1166,8 +1164,7 @@ public abstract class MessageMapperTest {
         List<MessageUid> uids = messageMapper.retrieveMessagesMarkedForDeletion(benwaInboxMailbox, MessageRange.all());
         messageMapper.deleteMessages(benwaInboxMailbox, uids);
 
-        assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox))
-            .toIterable()
+        assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox).collectList().block())
             .containsOnly(message1.getUid(), message5.getUid());
     }
 

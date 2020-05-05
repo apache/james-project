@@ -79,7 +79,8 @@ public class SingleMailboxReindexingTask implements Task {
     @Override
     public Result run() {
         try {
-            return reIndexerPerformer.reIndex(mailboxId, reprocessingContext);
+            return reIndexerPerformer.reIndex(mailboxId, reprocessingContext)
+                .block();
         } catch (Exception e) {
             return Result.PARTIAL;
         }

@@ -24,7 +24,6 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.json.DTOModule;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
@@ -32,6 +31,8 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import reactor.core.publisher.Mono;
 
 public class FullReindexingTask implements Task {
 
@@ -73,11 +74,9 @@ public class FullReindexingTask implements Task {
 
     @Override
     public Result run() {
-        try {
-            return reIndexerPerformer.reIndex(reprocessingContext);
-        } catch (MailboxException e) {
-            return Result.PARTIAL;
-        }
+        return reIndexerPerformer.reIndex(reprocessingContext)
+            .onErrorResume(e -> Mono.just(Result.PARTIAL))
+            .block();
     }
 
     @Override

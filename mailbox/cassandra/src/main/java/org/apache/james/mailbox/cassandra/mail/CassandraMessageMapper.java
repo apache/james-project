@@ -109,12 +109,10 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) {
+    public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return messageIdDAO.retrieveMessages(cassandraId, MessageRange.all())
-            .map(metaData -> metaData.getComposedMessageId().getUid())
-            .toIterable()
-            .iterator();
+            .map(metaData -> metaData.getComposedMessageId().getUid());
     }
 
     @Override
@@ -163,14 +161,20 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int max) {
+        return findInMailboxReactive(mailbox, messageRange, ftype, max)
+            .toIterable()
+            .iterator();
+    }
+
+    @Override
+    public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int limit) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        return Limit.from(max).applyOnFlux(
+
+        return Limit.from(limit).applyOnFlux(
             messageIdDAO.retrieveMessages(mailboxId, messageRange)
                 .flatMap(id -> retrieveMessage(id, ftype), cassandraConfiguration.getMessageReadChunkSize()))
             .map(MailboxMessage.class::cast)
-            .sort(Comparator.comparing(MailboxMessage::getUid))
-            .toIterable()
-            .iterator();
+            .sort(Comparator.comparing(MailboxMessage::getUid));
     }
 
     private Mono<MailboxMessage> retrieveMessage(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {

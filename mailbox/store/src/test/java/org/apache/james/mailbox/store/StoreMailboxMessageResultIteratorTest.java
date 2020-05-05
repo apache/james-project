@@ -51,6 +51,8 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Iterables;
 
+import reactor.core.publisher.Flux;
+
 class StoreMailboxMessageResultIteratorTest {
 
     private final class TestMessageMapper implements MessageMapper {
@@ -61,8 +63,8 @@ class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
-            return messageRange.iterator();
+        public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
+            return Flux.fromIterable(messageRange);
         }
 
         @Override

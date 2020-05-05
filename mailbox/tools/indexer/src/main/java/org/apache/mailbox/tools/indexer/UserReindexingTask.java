@@ -26,11 +26,12 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
+
+import reactor.core.publisher.Mono;
 
 public class UserReindexingTask implements Task {
 
@@ -78,11 +79,9 @@ public class UserReindexingTask implements Task {
 
     @Override
     public Result run() {
-        try {
-            return reIndexerPerformer.reIndex(username, reprocessingContext);
-        } catch (MailboxException e) {
-            return Result.PARTIAL;
-        }
+        return reIndexerPerformer.reIndex(username, reprocessingContext)
+            .onErrorResume(e -> Mono.just(Result.PARTIAL))
+            .block();
     }
 
     public Username getUsername() {

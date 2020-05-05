@@ -73,7 +73,7 @@ public class ErrorRecoveryIndexationTask implements Task {
 
     @Override
     public Result run() {
-        return reIndexerPerformer.reIndex(reprocessingContext, previousFailures);
+        return reIndexerPerformer.reIndex(reprocessingContext, previousFailures).block();
     }
 
     @Override

@@ -40,12 +40,13 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.util.streams.Iterators;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
+
+import reactor.core.publisher.Flux;
 
 public class InMemoryMessageIdMapper implements MessageIdMapper {
     private final MailboxMapper mailboxMapper;
@@ -58,13 +59,16 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
 
     @Override
     public List<MailboxMessage> find(Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
-        return mailboxMapper.list()
-            .flatMap(Throwing.function(mailbox ->
-                Iterators.toFlux(
-                    messageMapper.findInMailbox(mailbox, MessageRange.all(), fetchType, UNLIMITED))))
-            .filter(message -> messageIds.contains(message.getMessageId()))
+        return findReactive(messageIds, fetchType)
             .collect(Guavate.toImmutableList())
             .block();
+    }
+
+    @Override
+    public Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
+        return mailboxMapper.list()
+            .flatMap(mailbox -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), fetchType, UNLIMITED))
+            .filter(message -> messageIds.contains(message.getMessageId()));
     }
 
     @Override

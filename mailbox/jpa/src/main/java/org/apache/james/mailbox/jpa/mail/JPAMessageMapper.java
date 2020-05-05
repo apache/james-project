@@ -58,7 +58,8 @@ import org.apache.openjpa.persistence.ArgumentException;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
+
+import reactor.core.publisher.Flux;
 
 /**
  * JPA implementation of a {@link MessageMapper}. This class is not thread-safe!
@@ -88,8 +89,9 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     @Override
-    public Iterator<MessageUid> listAllMessageUids(final Mailbox mailbox) throws MailboxException {
-        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED), MailboxMessage::getUid);
+    public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
+        return findInMailboxReactive(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED)
+            .map(MailboxMessage::getUid);
     }
 
     @Override

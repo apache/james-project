@@ -37,7 +37,9 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.transaction.Mapper;
+import org.apache.james.util.streams.Iterators;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -57,6 +59,14 @@ public interface MessageMapper extends Mapper {
      */
     Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType type, int limit)
             throws MailboxException;
+
+    default Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange set, FetchType type, int limit) {
+        try {
+            return Iterators.toFlux(findInMailbox(mailbox, set, type, limit));
+        } catch (MailboxException e) {
+            return Flux.error(e);
+        }
+    }
 
     /**
      * Returns a list of {@link MessageUid} which are marked as deleted
@@ -147,7 +157,7 @@ public interface MessageMapper extends Mapper {
     /**
      * Return a list containing all MessageUid of Messages that belongs to given {@link Mailbox}
      */
-    Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException;
+    Flux<MessageUid> listAllMessageUids(Mailbox mailbox);
 
     /**
      * Specify what data needs to get filled in a {@link MailboxMessage} before returning it

@@ -58,6 +58,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * {@link MessageSearchIndex} which just fetch {@link MailboxMessage}'s from the {@link MessageMapper} and use {@link MessageSearcher}
@@ -155,8 +156,9 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery), limit);
     }
 
-    private Flux<SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
-        return mailboxes.concatMap(mailbox -> Flux.fromStream(getSearchResultStream(session, query, mailbox)));
+    private Flux<? extends SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
+        return mailboxes.concatMap(mailbox -> Flux.fromStream(getSearchResultStream(session, query, mailbox)))
+            .subscribeOn(Schedulers.elastic());
     }
 
     private Stream<? extends SearchResult> getSearchResultStream(MailboxSession session, SearchQuery query, Mailbox mailbox) {
@@ -167,7 +169,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         }
     }
 
-    private Flux<MessageId> getAsMessageIds(Flux<SearchResult> temp, long limit) {
+    private Flux<MessageId> getAsMessageIds(Flux<? extends SearchResult> temp, long limit) {
         return temp.map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
             .take(Long.valueOf(limit).intValue());

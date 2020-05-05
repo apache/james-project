@@ -39,7 +39,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
+
+import reactor.core.publisher.Flux;
 
 /**
  * Abstract base class for {@link MessageMapper} implementation
@@ -149,8 +150,8 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     protected abstract MessageMetaData copy(Mailbox mailbox, MessageUid uid, ModSeq modSeq, MailboxMessage original) throws MailboxException;
 
     @Override
-    public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
-        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED),
-            MailboxMessage::getUid);
+    public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
+        return findInMailboxReactive(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED)
+            .map(MailboxMessage::getUid);
     }
 }
