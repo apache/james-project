@@ -65,17 +65,6 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         return createMailbox(new MailboxPath(namespace, Username.of(user), name));
     }
 
-    public List<ComposedMessageId> listMessages(MailboxId mailboxId, Username username) {
-        MailboxSession session = mailboxManager.createSystemSession(username);
-        try {
-            return Iterators.toStream(mailboxManager.getMailbox(mailboxId, session).getMessages(MessageRange.all(), FetchGroup.MINIMAL, session))
-                .map(messageResult -> new ComposedMessageId(mailboxId, messageResult.getMessageId(), messageResult.getUid()))
-                .collect(Guavate.toImmutableList());
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public MailboxId createMailbox(MailboxPath mailboxPath) {
         MailboxSession mailboxSession = null;
         try {
@@ -139,7 +128,6 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             session);
     }
 
-
     @Override
     public void deleteMailbox(String namespace, String user, String name) {
         MailboxSession mailboxSession = null;
@@ -177,10 +165,20 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         return messageManager.appendMessage(appendCommand, mailboxSession).getId();
     }
 
+    public List<ComposedMessageId> listMessages(MailboxId mailboxId, Username username) {
+        MailboxSession session = mailboxManager.createSystemSession(username);
+        try {
+            return Iterators.toStream(mailboxManager.getMailbox(mailboxId, session).getMessages(MessageRange.all(), FetchGroup.MINIMAL, session))
+                .map(messageResult -> new ComposedMessageId(mailboxId, messageResult.getMessageId(), messageResult.getUid()))
+                .collect(Guavate.toImmutableList());
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public Collection<String> listSubscriptions(String user) throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(user));
         return subscriptionManager.subscriptions(mailboxSession);
     }
-
 }

@@ -30,11 +30,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.is;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import javax.mail.Flags;
 
@@ -48,9 +48,15 @@ import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.TestingSession;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.junit.categories.BasicFeature;
+import org.apache.james.mailbox.MessageManager.AppendCommand;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -66,6 +72,7 @@ import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
+import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -73,6 +80,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.Session;
+import com.github.steveash.guavate.Guavate;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -95,6 +103,14 @@ class ConsistencyTasksIntegrationTest {
 
         public TestingSession getTestingSession() {
             return testingSession;
+        }
+
+        public List<ComposedMessageId> listMessagesInTruthTable() {
+            return new CassandraMessageIdToImapUidDAO(testingSession, new CassandraMessageId.Factory())
+                .retrieveAllMessages()
+                .map(ComposedMessageIdWithMetaData::getComposedMessageId)
+                .collect(Guavate.toImmutableList())
+                .block();
         }
     }
 
@@ -141,7 +157,17 @@ class ConsistencyTasksIntegrationTest {
     private static final String USERNAME = "username@" + DOMAIN;
     private static final String ALIAS_1 = "alias1@" + DOMAIN;
     private static final String ALIAS_2 = "alias2@" + DOMAIN;
-    private static final boolean IS_RECENT = true;
+    private static final String MESSAGE_CONTENT = "Subject: test\n" +
+        "\n" +
+        "testmail";
+    private static final Date DATE = new Date();
+    private static final Flags FLAGS = new Flags(Flags.Flag.SEEN);
+    private static final Supplier<AppendCommand> APPEND_COMMAND = () -> AppendCommand.builder()
+        .withFlags(FLAGS)
+        .withInternalDate(DATE)
+        .notRecent()
+        .build(MESSAGE_CONTENT);
+    private static final int DAO_DENORMALIZATION_TOTAL_TRIES = 6;
 
     private DataProbe dataProbe;
 
@@ -187,11 +213,21 @@ class ConsistencyTasksIntegrationTest {
 
     @Test
     void shouldSolveMailboxesInconsistency(GuiceJamesServer server) {
+        // schema version 6 or higher required to run solve mailbox inconsistencies task
+        String upgradeTaskId = with().post(UPGRADE_TO_LATEST_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .get("/tasks/" + upgradeTaskId + "/await")
+        .then()
+            .body("status", is("completed"));
+
         MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
 
         server.getProbe(TestingSessionProbe.class)
             .getTestingSession().registerScenario(fail()
-            .times(6) // Insertion in the DAO is retried 5 times once it failed
+            .times(DAO_DENORMALIZATION_TOTAL_TRIES)
             .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase)"));
 
         try {
@@ -200,17 +236,7 @@ class ConsistencyTasksIntegrationTest {
             // Failure is expected
         }
 
-        // schema version 6 or higher required to run solve mailbox inconsistencies task
-        String taskId = with().post(UPGRADE_TO_LATEST_VERSION)
-            .jsonPath()
-            .get("taskId");
-
-        with()
-            .get("/tasks/" + taskId + "/await")
-        .then()
-            .body("status", is("completed"));
-
-        taskId = with()
+        String solveConsistenciesTaskId = with()
             .header("I-KNOW-WHAT-I-M-DOING", "ALL-SERVICES-ARE-OFFLINE")
             .queryParam("task", "SolveInconsistencies")
             .post("/mailboxes")
@@ -219,7 +245,7 @@ class ConsistencyTasksIntegrationTest {
 
         with()
             .basePath(TasksRoutes.BASE)
-            .get(taskId + "/await");
+            .get(solveConsistenciesTaskId + "/await");
 
         // The mailbox is removed as it is not in the mailboxDAO source of truth.
         assertThat(probe.listUserMailboxes(BOB.asString()))
@@ -238,8 +264,7 @@ class ConsistencyTasksIntegrationTest {
             .whenQueryStartsWith("INSERT INTO messageCounter (nextUid,mailboxId)"));
 
         try {
-            probe.appendMessage(BOB.asString(), inbox,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
+            probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
         } catch (Exception e) {
             // Expected to fail
         }
@@ -281,9 +306,7 @@ class ConsistencyTasksIntegrationTest {
                     .times(1)
                     .whenQueryStartsWith(updatedQuotaQueryString));
 
-        probe.appendMessage(BOB.asString(), inbox,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(),
-            !IS_RECENT, new Flags(Flags.Flag.SEEN));
+        probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
 
         // Await first execution
         barrier1.awaitCaller();
@@ -312,7 +335,53 @@ class ConsistencyTasksIntegrationTest {
     }
 
     @Test
-    void solveCassandraMappingInconsistencyShouldSolveNotingWhenNoInconsistencies() {
+    void shouldSolveMessagesInconsistency(GuiceJamesServer server) {
+        // schema version 6 or higher required to run solve message inconsistencies task
+        String upgradeTaskId = with().post(UPGRADE_TO_LATEST_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .get("/tasks/" + upgradeTaskId + "/await")
+        .then()
+            .body("status", is("completed"));
+
+        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
+        MailboxPath inbox = MailboxPath.inbox(BOB);
+        MailboxId mailboxId = probe.createMailbox(inbox);
+
+        TestingSessionProbe testingProbe = server.getProbe(TestingSessionProbe.class);
+        testingProbe.getTestingSession().registerScenario(fail()
+            .times(DAO_DENORMALIZATION_TOTAL_TRIES)
+            .whenQueryStartsWith("INSERT INTO messageIdTable"));
+
+        try {
+            probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
+        } catch (Exception e) {
+            // Failure is expected
+        }
+
+        String solveInconsistenciesTaskId = with()
+            .queryParam("task", "SolveInconsistencies")
+            .post("/messages")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(solveInconsistenciesTaskId + "/await");
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(probe.listMessages(mailboxId, BOB))
+                .hasSize(1);
+
+            softly.assertThat(probe.listMessages(mailboxId, BOB))
+                .isEqualTo(testingProbe.listMessagesInTruthTable());
+        });
+    }
+
+    @Test
+    void solveCassandraMappingInconsistencyShouldSolveNothingWhenNoInconsistencies() {
         with()
             .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_1);
         with()
@@ -337,7 +406,24 @@ class ConsistencyTasksIntegrationTest {
     }
 
     @Test
-    void solveMailboxesInconsistencyShouldSolveNotingWhenNoInconsistencies(GuiceJamesServer server) {
+    void solveMailboxesInconsistencyShouldSolveNothingWhenNoInconsistencies(GuiceJamesServer server) {
+        // schema version 6 or higher required to run solve mailbox inconsistencies task
+        String upgradeTaskId = with().post(UPGRADE_TO_LATEST_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .get("/tasks/" + upgradeTaskId + "/await")
+        .then()
+            .body("status", is("completed"));
+
+        String solveInconsistenciesTaskId = with()
+            .header("I-KNOW-WHAT-I-M-DOING", "ALL-SERVICES-ARE-OFFLINE")
+            .queryParam("task", "SolveInconsistencies")
+            .post("/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
         MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
 
         try {
@@ -346,26 +432,9 @@ class ConsistencyTasksIntegrationTest {
             // Failure is expected
         }
 
-        // schema version 6 or higher required to run solve mailbox inconsistencies task
-        String taskId = with().post(UPGRADE_TO_LATEST_VERSION)
-            .jsonPath()
-            .get("taskId");
-
-        with()
-            .get("/tasks/" + taskId + "/await")
-        .then()
-            .body("status", is("completed"));
-
-        taskId = with()
-            .header("I-KNOW-WHAT-I-M-DOING", "ALL-SERVICES-ARE-OFFLINE")
-            .queryParam("task", "SolveInconsistencies")
-            .post("/mailboxes")
-            .jsonPath()
-            .get("taskId");
-
         with()
             .basePath(TasksRoutes.BASE)
-            .get(taskId + "/await");
+            .get(solveInconsistenciesTaskId + "/await");
 
         // The mailbox is removed as it is not in the mailboxDAO source of truth.
         assertThat(probe.listUserMailboxes(BOB.asString()))
@@ -373,14 +442,13 @@ class ConsistencyTasksIntegrationTest {
     }
 
     @Test
-    void recomputeMailboxCountersShouldSolveNotingWhenNoInconsistencies(GuiceJamesServer server) throws MailboxException {
+    void recomputeMailboxCountersShouldSolveNothingWhenNoInconsistencies(GuiceJamesServer server) throws MailboxException {
         MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
         MailboxPath inbox = MailboxPath.inbox(BOB);
         probe.createMailbox(inbox);
 
         try {
-            probe.appendMessage(BOB.asString(), inbox,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
+            probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
         } catch (Exception e) {
             // Expected to fail
         }
@@ -394,13 +462,13 @@ class ConsistencyTasksIntegrationTest {
 
         with()
             .basePath(TasksRoutes.BASE)
-            .get(taskId + "/await");
+        .get(taskId + "/await");
 
         assertThat(probe.retrieveCounters(inbox).getCount()).isEqualTo(1);
     }
 
     @Test
-    void recomputeQuotasShouldSolveNotingWhenNoInconsistencies(GuiceJamesServer server) throws Exception {
+    void recomputeQuotasShouldSolveNothingWhenNoInconsistencies(GuiceJamesServer server) throws Exception {
         dataProbe.fluent()
             .addDomain(BOB.getDomainPart().get().asString())
             .addUser(BOB.asString(), BOB_PASSWORD);
@@ -417,9 +485,7 @@ class ConsistencyTasksIntegrationTest {
                     .times(1)
                     .whenQueryStartsWith(updatedQuotaQueryString));
 
-        probe.appendMessage(BOB.asString(), inbox,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(),
-            !IS_RECENT, new Flags(Flags.Flag.SEEN));
+        probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
 
         // Await first execution
         barrier.awaitCaller();
@@ -442,5 +508,44 @@ class ConsistencyTasksIntegrationTest {
                 .getUsed()
                 .asLong())
             .isEqualTo(1);
+    }
+
+    @Test
+    void solveMessagesInconsistencyShouldSolveNothingWhenNoInconsistencies(GuiceJamesServer server) throws MailboxException {
+        // schema version 6 or higher required to run solve mailbox inconsistencies task
+        String upgradeTaskId = with().post(UPGRADE_TO_LATEST_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .get("/tasks/" + upgradeTaskId + "/await")
+            .then()
+            .body("status", is("completed"));
+
+        MailboxPath inbox = MailboxPath.inbox(BOB);
+        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
+        MailboxId mailboxId = probe.createMailbox(inbox);
+
+        ComposedMessageId messageId = probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
+
+        String solveInconsistenciesTaskId = with()
+            .queryParam("task", "SolveInconsistencies")
+            .post("/messages")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(solveInconsistenciesTaskId + "/await");
+
+        TestingSessionProbe testingSessionProbe = server.getProbe(TestingSessionProbe.class);
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(testingSessionProbe.listMessagesInTruthTable())
+                .containsExactly(messageId);
+
+            softly.assertThat(probe.listMessages(mailboxId, BOB))
+                .containsExactly(messageId);
+        });
     }
 }
