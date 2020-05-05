@@ -157,7 +157,7 @@ Don't forget to add your key to https://downloads.apache.org/james/KEYS
 
 == How to check the compilation
 
-In order to have a standard compilation environment, we introduce Dockerfiles, using java-8.
+In order to have a standard compilation environment, we introduce Dockerfiles, using java-11.
 
 === Java 11
 
@@ -211,7 +211,7 @@ This feature is available for three configurations :
 Built artifacts should be in ./dockerfiles/run/guice/cassandra-rabbitmq/destination folder for cassandra.
 If you haven't already:
 
-    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker build -t james/project dockerfiles/compilation/java-11
     $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
   -v $PWD/dockerfiles/run/guice/cassandra-rabbitmq/destination:/cassandra-rabbitmq/destination \
   -t james/project -s HEAD
@@ -301,7 +301,7 @@ Add a link for the tika container in the above command line:
 Built artifacts should be in ./dockerfiles/run/guice/cassandra/destination folder for cassandra.
 If you haven't already:
 
-    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker build -t james/project dockerfiles/compilation/java-11
     $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
   -v $PWD/dockerfiles/run/guice/cassandra/destination:/cassandra/destination \
   -t james/project -s HEAD
@@ -362,7 +362,7 @@ Add a link for the tika container in the above command line:
 Built artifacts should be in ./dockerfiles/run/guice/jpa/destination folder for jpa.
 If you haven't already:
 
-    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker build -t james/project dockerfiles/compilation/java-11
     $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
   -v $PWD/dockerfiles/run/guice/jpa/destination:/jpa/destination \
   -t james/project -s HEAD
@@ -398,7 +398,7 @@ To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the
 Built artifacts should be in ./dockerfiles/run/spring/destination folder for Spring.
 If you haven't already:
 
-    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker build -t james/project dockerfiles/compilation/java-11
     $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
   -v $PWD/dockerfiles/run/spring/destination:/spring/destination \
   -t james/project -s HEAD
