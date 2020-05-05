@@ -36,17 +36,19 @@ Here is the list of products we provide:
  - In-Memory: A memory based James server, mainly for testing purposes
  - Distributed James: A scalable James server, storing data in various data stores. Cassandra is used for metadata, 
  ElasticSearch for search, RabbitMQ for messaging, and ObjectStorage for blobs.
- - Cassandra: An implementation step toward Distributed James. It does not include messaging and ObjectStorage and should not be run in a cluster way but is still relevant for good performance.
+ - Cassandra: An implementation step toward Distributed James. It does not include messaging and ObjectStorage and 
+ should not be run in a cluster way but is still relevant for good performance. This product is about to be deprecated
+ in favor of Distributed James.
  - JPA: A JPA and Lucene based implementation of James. Only Derby driver is currently supported.
- - JPA with SMTP only using derby: A minimalist SMTP server based on JPA storage technology and Derby driver
- - JPA with SMTP only using mariadb: A minimalist SMTP server based on JPA storage technology and MariaDB driver
+ - JPA with SMTP only using Derby: A minimalist SMTP server based on JPA storage technology and Derby driver
+ - JPA with SMTP only using MariaDB: A minimalist SMTP server based on JPA storage technology and MariaDB driver
 
 Some components however do have several implementations a user can choose from in a given product. This is the case for:
 
  - BlobExport: Exporting a blob from the blobStore to an external user. Two implementations are currently supported: 
  localFiles and LinShare.
  - Text extraction: Extracting text from attachment to enable attachment search. There is a Tika implementation, but 
- lighter JSOUP based options are also available.
+ lighter JSOUP based, as well as no text extraction options are also available.
 
 In order to keep the number of products low, we decided to use conditional statements in modules based on the 
 configuration to select which one to enable at runtime. Eventually defeating the Guice adoption goals mentioned above.
@@ -55,17 +57,19 @@ Finally, Blob Storing technology offers a wide combination of technologies:
 
  - ObjectStorage in itself could implement either Swift APIs or Amazon S3 APIs
  - We decided to keep supporting Cassandra for blob storing as an upgrade solution from Cassandra product to Distributed 
-James for existing users.
+James for existing users. This option also makes sense for small data-sets (less than a TB) where storage cost are less 
+of an issue and don't need to be taken into account when reasoning about performance.
  - Proposals such as [HybridBlobStore](0014-blobstore-storage-policies.md) and then 
 [Cassandra BlobStore cache](0025-cassandra-blob-store-cache.md) proposed to leverage Cassandra as a performance 
 (latency) enhancer for ObjectStorage technologies.
 
-Yet again it had been decided to use conditional statements in modules in order to lower the number of product.
+Yet again it had been decided to use conditional statements in modules in order to lower the number of products.
 
-However, [Cassandra BlobStore cache](0025-cassandra-blob-store-cache.md) requires expensive resource initialization
-requiring to perform upgrade procedure (usage of an additional cache keyspace) that represents a cost we don't want to
-pay if we don't rely on that cache. Not having the cache module thus enables quickly auditing that the caching cassandra 
-session is not initialized. See 
+However, some components requires expensive resource initialization. These operations are performed via a separate module
+that needs to be installed based on the configuration. For instance 
+[Cassandra BlobStore cache](0025-cassandra-blob-store-cache.md) requires usage of an additional cache keyspace that 
+represents a cost and an inconvenience we don't want to pay if we don't rely on that cache. Not having the cache module 
+thus enables quickly auditing that the caching cassandra session is not initialized. See 
 [this comment](https://github.com/linagora/james-project/pull/3261#pullrequestreview-389804841) as well as 
 [this comment](https://github.com/linagora/james-project/pull/3261#issuecomment-613911695).
 
@@ -84,16 +88,13 @@ The following modules perform conditional statements upon injection time:
 
 We should no longer rely on conditional statements in Guice module.
 
-We should within James main method, upon James startup read the configuration and select the modules that should be 
-selected to run it, before calling the Guice injector to perform its full startup.
+Guice modules combination choice should be decided before starting the dependency injection stage.
 
-This enables easy diagnose of the running components via the selected module list. It exposes tested, safe choices to 
-the user while limiting the Guice products count.
+An INFO log with the list of modules used to create its Guice injector. This enables easy diagnose of the running 
+components via the selected module list. It exposes tested, safe choices to the user while limiting the Guice products 
+count.
 
-Basic minimalistic integration tests will be written to cover the possibilities exposed to the user, by statically 
-composing the given modules.
-
-Concerning the usages listed above :
+The following conditional statements in guice modules needs to be removed :
 
  - [Cached blob store pull request](https://github.com/linagora/james-project/pull/3319) addresses 
  ObjectStorageDependenciesModule::selectBlobStoreBuilder and Cassandra Blob Store Cache conditional statement.
@@ -103,12 +104,15 @@ Concerning the usages listed above :
 
 ## Consequences
 
+Component combination count keeps unchanged for Guice products, but the run combination is explicit. QA needs are 
+unchanged.
+
 Integration testing can not offer conditional, configuration based module composition. This is because:
 
  - Integration tests don't rely on Main classes but on GuiceJamesServer class with similar guice modules
  - Overriding a configuration file within a same maven module is painful
  
 As a consequence, we should define statically the modules an integration test needs to run. Configuration defined Guice
-modules declaration logic cannot be tested with the integration technique we have.
+modules declaration logic cannot be tested with the integration test technique we currently use.
 
 Unit tests and integration tests for the possible module composition should limit the risks.
