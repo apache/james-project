@@ -19,6 +19,8 @@ Mailbox listeners can be registered to be triggered every time an event is gener
 mailbox. They are being executed in a distributed fashion following the workqueue messaging pattern. The "group" is an 
 attribute of the mailbox listener identifying to which work queue they belong.
 
+More information about this component can be found in [ADR 0036](0036-eventbus.md).
+
 Currently, mailbox listeners are determined by the guice bindings of the server and additional mailbox listeners defined
 via configuration files.
 
@@ -76,7 +78,7 @@ A WebAdmin endpoint will allow:
     
 A broadcast on the event bus will be attempted to propagate topology changes, by the mean of a common registrationKey 
 to all nodes, a "TopologyChanged" event, and a mailbox listener starting the MailboxListeners on local node upon
-topology changes.
+topology changes. `registrationKey` concept is explained in [ADR 0036](0036-eventbus.md).
  
 If a listener is added but is not in the classpath, an ERROR log is emitted. This can happen during a rolling upgrade,
 which defines a new guice binding for a new mailbox listener. Events will still be emitted (and consumed by other James

@@ -19,6 +19,8 @@ order to retry their processing via webAdmin APIs.
 
 However no such capabilities are supported upon dispatching the event on the eventbus. A failed dispatch will result in message loss.
 
+More information about this component can be found in [ADR 0036](0036-eventbus.md).
+
 ## Decision
 
 Upon dispatch failure, the eventBus should save events in dead letter using a dedicated group.
