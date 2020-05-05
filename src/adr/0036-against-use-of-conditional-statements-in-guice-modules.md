@@ -14,7 +14,7 @@ power to the user.
 
 James proposes several implementations for each of the interfaces we define. The number of possible combinations of
 implementations is thus really high (like factorial(n) with n > 10). It makes it unpractical to run tests for each 
-possible interface combination. We rather run integration tests for combinations that we decide brings the more value to
+possible interface combination. We run integration tests for combinations that we decide brings the more value to
 the users. We rather run integration tests for combinations that make sense. By overriding any components, and 
 allowing arbitrary component combination, Spring defeats this testing logic.
 
