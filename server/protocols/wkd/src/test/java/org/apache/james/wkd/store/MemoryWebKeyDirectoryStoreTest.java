@@ -1,5 +1,6 @@
 package org.apache.james.wkd.store;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -22,6 +23,7 @@ class MemoryWebKeyDirectoryStoreTest {
         // zbase32(sha1(submission-address@example.org)) =
         // ez5ttrptyoa3fqrk3649ns5s7ksxjsro
         assertTrue(webKeyDirectoryStore.containsKey("ez5ttrptyoa3fqrk3649ns5s7ksxjsro"));
+        assertNotNull(webKeyDirectoryStore.get("ez5ttrptyoa3fqrk3649ns5s7ksxjsro"));
     }
 
 }

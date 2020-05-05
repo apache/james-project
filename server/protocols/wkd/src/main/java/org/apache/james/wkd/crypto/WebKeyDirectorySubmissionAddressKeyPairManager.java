@@ -54,7 +54,7 @@ public class WebKeyDirectorySubmissionAddressKeyPairManager {
         org.apache.james.server.core.configuration.Configuration configuration) {
         this.domainList = domainList;
         this.fileSystem = fileSystem;
-        this.configurationPrefix = configuration.configurationPath();
+        this.configurationPrefix = configuration == null ? null : configuration.configurationPath();
     }
 
     public PublicKeyEntry getPublicKeyEntryForSubmissionAddress() {
@@ -75,7 +75,7 @@ public class WebKeyDirectorySubmissionAddressKeyPairManager {
 
     private void makeSureKeysAreLoaded()
         throws FileNotFoundException, IOException, PGPException, DomainListException {
-        if (publicKeySubmissionAddress == null || privateKeySubmissionAddress == null) {
+        if ((publicKeySubmissionAddress == null || privateKeySubmissionAddress == null) && configurationPrefix != null) {
             File privateKey = fileSystem.getFile(configurationPrefix + "submission-address.key");
             if (privateKey.exists()) {
                 privateKeySubmissionAddress = readSecretKey(new FileInputStream(privateKey));
@@ -84,6 +84,9 @@ public class WebKeyDirectorySubmissionAddressKeyPairManager {
             } else {
                 generateAndSaveKeyPair();
             }
+        } else if((publicKeySubmissionAddress == null || privateKeySubmissionAddress == null) && configurationPrefix == null) {
+            LOGGER.info("configurationPrefix is null, generating key pair");
+            generateAndSaveKeyPair();
         }
     }
 
@@ -107,14 +110,19 @@ public class WebKeyDirectorySubmissionAddressKeyPairManager {
 
     private void saveKeyPair() {
         try {
-            File privateKey = fileSystem.getFile(configurationPrefix + "submission-address.key");
-            OutputStream out = new ArmoredOutputStream(new FileOutputStream(privateKey));
-            privateKeySubmissionAddress.encode(out);
-            out.close();
-            File publicKey = fileSystem.getFile(configurationPrefix + "submission-address.pub");
-            out = new ArmoredOutputStream(new FileOutputStream(publicKey));
-            publicKeySubmissionAddress.encode(out);
-            out.close();
+            if (configurationPrefix != null) {
+                File privateKey = fileSystem
+                    .getFile(configurationPrefix + "submission-address.key");
+                OutputStream out = new ArmoredOutputStream(new FileOutputStream(privateKey));
+                privateKeySubmissionAddress.encode(out);
+                out.close();
+                File publicKey = fileSystem.getFile(configurationPrefix + "submission-address.pub");
+                out = new ArmoredOutputStream(new FileOutputStream(publicKey));
+                publicKeySubmissionAddress.encode(out);
+                out.close();
+            } else {
+                LOGGER.warn("Could not save keys because configurationPrefix is null");
+            }
 
         } catch (IOException e) {
             LOGGER.error("Could not save key pair", e);

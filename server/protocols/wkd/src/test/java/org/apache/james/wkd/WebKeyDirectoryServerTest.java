@@ -21,7 +21,15 @@ package org.apache.james.wkd;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.wkd.WebKeyDirectoryConfiguration;
 import org.apache.james.wkd.WebKeyDirectoryRoutes;
 import org.apache.james.wkd.WebKeyDirectoryServer;
@@ -29,24 +37,34 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.restassured.RestAssured;
+
 class WebKeyDirectoryServerTest {
     private static final WebKeyDirectoryConfiguration DISABLED_CONFIGURATION = WebKeyDirectoryConfiguration
         .builder().disable().build();
     private static final WebKeyDirectoryConfiguration TEST_CONFIGURATION = WebKeyDirectoryConfiguration
-        .builder().enable().randomPort().build();
+        .builder().enable().randomPort().keyStorePassword("changeit").build();
     private static final ImmutableSet<WebKeyDirectoryRoutes> NO_ROUTES = ImmutableSet.of();
 
     @Test
-    void serverShouldAnswerWhenStarted() {
-        WebKeyDirectoryServer WebKeyDirectoryServer = new WebKeyDirectoryServer(TEST_CONFIGURATION,
-            NO_ROUTES, null, null);
-        WebKeyDirectoryServer.start();
+    void serverShouldAnswerWhenStarted() throws FileNotFoundException {
+        File keyStoreFile = new File("src/test/resources/wkd-keystore.jks");
+        FileSystem fileSystem = mock(FileSystem.class);
+        when(fileSystem.getFile(any(String.class))).thenReturn(keyStoreFile);
+        WebKeyDirectoryServer webKeyDirectoryServer = new WebKeyDirectoryServer(TEST_CONFIGURATION,
+            NO_ROUTES, fileSystem, Configuration.builder().workingDirectory(".").build());
+        webKeyDirectoryServer.start();
 
         try {
-            given().port(WebKeyDirectoryServer.getPort().getValue()).basePath("http://localhost")
-                .when().get().then().statusCode(404);
+            RestAssured.useRelaxedHTTPSValidation();
+            RestAssured.config().getSSLConfig().with().keyStore("classpath:wkd-keystore.jks",
+                "changeit");
+
+            given().trustStore(keyStoreFile, "changeit").when()
+                .get("https://localhost:" + webKeyDirectoryServer.getPort().getValue() + "/").then()
+                .statusCode(404);
         } finally {
-            WebKeyDirectoryServer.stop();
+            webKeyDirectoryServer.stop();
         }
     }
 
