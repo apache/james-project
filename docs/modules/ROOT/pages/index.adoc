@@ -1,0 +1,15 @@
+= Welcome
+
+Welcome to the Apache James Reference Book! This Book is for version {page-version} of James.
+
+Apache James is the **J**ava **A**pache **M**ail **E**nterprise **S**erver. It boasts of a modular architecture based on a rich set of components that run on the JVM. With James, you can create your own custom enterprise email solution.
+
+This Reference Book is divided into the following Parts:
+
+* xref:main:user:index.adoc[User Manual]
+* xref:main:ops:index.adoc[Operator Manual]
+* xref:main:admin:index.adoc[Administrator Guide]
+* xref:main:dev:index.adoc[Developer Resources]
+* xref:main:doc:index.adoc[About this documentation]
+
+Please note that this Reference Book is a **living document**. It is subject to change. You are currently reading version {page-version}. If you find anything that is unclear, unfinished, or confusing, please do not hestiate to xref:main:doc:index.adoc[lend us a hand].
