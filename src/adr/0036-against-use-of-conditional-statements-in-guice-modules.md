@@ -12,20 +12,24 @@ James products rely historically on Spring for dependency injection. It doesn't 
 James uses Spring in a way that enables overriding any class via a configuration file thus endangering overall correctness by giving too much 
 power to the user.
 
-James propose several implementations for each of the interfaces it defines. The number of possible combinations of implementations is thus really high (like factorial(n) with n > 10). It makes it unpractical to run tests for each possible interface
-combination. We rather run integration tests for combinations that we decide brings the more value to the users. By overriding any class, Spring defeats 
-this testing logic. Knowing which component implementation combines well with which other one is not intuitive to users,
-hard to document and test.
+James propose several implementations for each of the interfaces we define. The number of possible combinations of
+implementations is thus really high (like factorial(n) with n > 10). It makes it unpractical to run tests for each 
+possible interface combination. We rather run integration tests for combinations that we decide brings the more value to
+the users. We rather run integration tests for combinations that make sense. By overriding any components, and 
+allowing arbitrary component combination, Spring defeats this testing logic.
 
-We thus decided to rely on Guice. Components are defined by code in a static fashion. Overriding components requires 
-explicit code modification and recompilation, thus warning the user about the impact of the choices he does, and lowering 
-the project's responsibility.
+Instead of having a single product allowing all component combination, we rather have 
+several products each one exposing a single component combination. Components are defined by code in a static fashion. 
+We thus can provide a decent level of QA for these products. Overriding components requires explicit code modification 
+and recompilation, warning the user about the impact of the choices he does, and lowering the project's responsibility. 
+Guice had been enacted as a way to reach that goal.
 
 With Guice we expose only supported, well tested combinations of components, thus addressing the combination issue.
 
-Instead of having a single big application being able to instantiate each and every component application, we have 
-several products defining their dependencies in a minimalistic way, relying only on the components implementation that 
-are needed.
+Spring application often bring dependencies conflicts, for example between Lucene and ElasticSearch 
+components, leading to potential runtime or compile time issues. Instead of having a single big application being able 
+to instantiate each and every component application, we have several products defining their dependencies in a 
+minimalistic way, relying only on the components implementation that are needed.
 
 Here is the list of products we provide:
 
