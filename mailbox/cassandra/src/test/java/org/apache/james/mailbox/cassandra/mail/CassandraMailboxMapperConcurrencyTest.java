@@ -70,7 +70,7 @@ class CassandraMailboxMapperConcurrencyTest {
             .operationCount(OPERATION_COUNT)
             .runAcceptingErrorsWithin(Duration.ofMinutes(1));
 
-        assertThat(testee.list()).hasSize(1);
+        assertThat(testee.list().collectList().block()).hasSize(1);
     }
 
     @Test
@@ -85,7 +85,7 @@ class CassandraMailboxMapperConcurrencyTest {
             .operationCount(OPERATION_COUNT)
             .runAcceptingErrorsWithin(Duration.ofMinutes(1));
 
-        List<Mailbox> list = testee.list();
+        List<Mailbox> list = testee.list().collectList().block();
         assertThat(list).hasSize(1);
         assertThat(list.get(0)).isEqualToComparingFieldByField(mailbox);
     }

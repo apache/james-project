@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
-import java.util.List;
-
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -102,7 +100,7 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> list() throws MailboxException {
+    public Flux<Mailbox> list() {
         return wrapped.list();
     }
 

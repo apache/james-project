@@ -52,7 +52,6 @@ import com.google.common.collect.ImmutableList;
 public class ReIndexerPerformer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReIndexerPerformer.class);
 
-    private static final int NO_LIMIT = 0;
     private static final int SINGLE_MESSAGE = 1;
     private static final String RE_INDEXING = "re-indexing";
     private static final Username RE_INDEXER_PERFORMER_USER = Username.of(RE_INDEXING);
@@ -111,8 +110,8 @@ public class ReIndexerPerformer {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
         LOGGER.info("Starting a full reindex");
         Stream<MailboxId> mailboxIds = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).list()
-            .stream()
-            .map(Mailbox::getMailboxId);
+            .map(Mailbox::getMailboxId)
+            .toStream();
 
         try {
             return reIndex(mailboxIds, reprocessingContext);

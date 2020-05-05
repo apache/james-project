@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import java.time.Duration;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -276,11 +275,9 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> list() {
+    public Flux<Mailbox> list() {
         return mailboxDAO.retrieveAllMailboxes()
-            .flatMap(this::toMailboxWithAcl)
-            .collectList()
-            .block();
+            .flatMap(this::toMailboxWithAcl);
     }
 
     @Override

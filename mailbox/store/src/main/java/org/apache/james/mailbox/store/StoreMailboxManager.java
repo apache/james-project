@@ -751,10 +751,10 @@ public class StoreMailboxManager implements MailboxManager {
     public List<MailboxPath> list(MailboxSession session) throws MailboxException {
         return mailboxSessionMapperFactory.getMailboxMapper(session)
             .list()
-            .stream()
             .map(Mailbox::generateAssociatedPath)
             .distinct()
-            .collect(Guavate.toImmutableList());
+            .collect(Guavate.toImmutableList())
+            .block();
     }
 
     @Override

@@ -40,6 +40,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.util.streams.Iterators;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -57,19 +58,13 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
 
     @Override
     public List<MailboxMessage> find(Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
-        try {
-            return mailboxMapper.list()
-                .stream()
-                .flatMap(Throwing.function(mailbox ->
-                    ImmutableList.copyOf(
-                        messageMapper.findInMailbox(mailbox, MessageRange.all(), fetchType, UNLIMITED))
-                        .stream()))
-                .filter(message -> messageIds.contains(message.getMessageId()))
-                .collect(Guavate.toImmutableList());
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
-
+        return mailboxMapper.list()
+            .flatMap(Throwing.function(mailbox ->
+                Iterators.toFlux(
+                    messageMapper.findInMailbox(mailbox, MessageRange.all(), fetchType, UNLIMITED))))
+            .filter(message -> messageIds.contains(message.getMessageId()))
+            .collect(Guavate.toImmutableList())
+            .block();
     }
 
     @Override

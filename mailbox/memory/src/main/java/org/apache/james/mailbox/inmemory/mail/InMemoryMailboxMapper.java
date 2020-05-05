@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory.mail;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -139,8 +137,8 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> list() throws MailboxException {
-        return new ArrayList<>(mailboxesByPath.values());
+    public Flux<Mailbox> list() {
+        return Flux.fromIterable(mailboxesByPath.values());
     }
 
     @Override

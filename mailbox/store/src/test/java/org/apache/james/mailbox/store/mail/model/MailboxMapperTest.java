@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -41,8 +40,6 @@ import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * Generic purpose tests for your implementation MailboxMapper.
@@ -159,7 +156,7 @@ public abstract class MailboxMapperTest {
     @Test
     void listShouldRetrieveAllMailbox() throws MailboxException {
         createAll();
-        List<Mailbox> mailboxes = mailboxMapper.list();
+        List<Mailbox> mailboxes = mailboxMapper.list().collectList().block();
 
         assertMailboxes(mailboxes)
             .containOnly(benwaInboxMailbox, benwaWorkMailbox, benwaWorkTodoMailbox, benwaPersoMailbox, benwaWorkDoneMailbox, 

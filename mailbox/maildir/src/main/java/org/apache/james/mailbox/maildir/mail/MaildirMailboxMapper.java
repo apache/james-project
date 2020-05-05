@@ -22,8 +22,10 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.core.Username;
@@ -50,6 +52,10 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -119,9 +125,10 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         if (id == null) {
             throw new MailboxNotFoundException("null");
         }
-        return list().stream()
+        return list()
             .filter(mailbox -> mailbox.getMailboxId().equals(id))
-            .findAny()
+            .next()
+            .blockOptional()
             .orElseThrow(() -> new MailboxNotFoundException(id));
     }
     
@@ -256,22 +263,14 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
 
     @Override
-    public List<Mailbox> list() throws MailboxException {
-       File maildirRoot = maildirStore.getMaildirRoot();
-       List<Mailbox> mailboxList = new ArrayList<>();
-
-       if (maildirStore.getMaildirLocation().endsWith("/" + MaildirStore.PATH_DOMAIN + "/" + MaildirStore.PATH_USER)) {
-           File[] domains = maildirRoot.listFiles();
-           for (File domain : domains) {
-               File[] users = domain.listFiles();
-               visitUsersForMailboxList(domain, users, mailboxList);
-           }
-           return mailboxList;
-       }
-
-        File[] users = maildirRoot.listFiles();
-        visitUsersForMailboxList(null, users, mailboxList);
-        return mailboxList;
+    public Flux<Mailbox> list() {
+        File maildirRoot = maildirStore.getMaildirRoot();
+        return Mono.fromCallable(maildirStore::getMaildirLocation)
+            .filter(dir -> dir.endsWith("/" + MaildirStore.PATH_DOMAIN + "/" + MaildirStore.PATH_USER))
+            .map(ignored -> Arrays.stream(maildirRoot.listFiles())
+                .flatMap(Throwing.<File, Stream<Mailbox>>function(domain -> visitUsersForMailboxList(domain, domain.listFiles()).stream()).sneakyThrow()))
+            .switchIfEmpty(Mono.fromCallable(() -> visitUsersForMailboxList(null, maildirRoot.listFiles()).stream()))
+            .flatMapIterable(mailboxes -> mailboxes.collect(Guavate.toImmutableList()));
     }
 
     @Override
@@ -279,7 +278,8 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
 
     }
 
-    private void visitUsersForMailboxList(File domain, File[] users, List<Mailbox> mailboxList) throws MailboxException {
+    private List<Mailbox> visitUsersForMailboxList(File domain, File[] users) throws MailboxException {
+        ImmutableList.Builder<Mailbox> mailboxList = ImmutableList.builder();
         String userName = null;
         
         for (File user: users) {
@@ -309,6 +309,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                 mailboxList.add(maildirStore.loadMailbox(session, mailboxPath));
             }
         }
+        return mailboxList.build();
     }
 
     @Override

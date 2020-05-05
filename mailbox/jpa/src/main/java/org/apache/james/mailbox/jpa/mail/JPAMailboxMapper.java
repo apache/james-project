@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
-import java.util.List;
-
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
@@ -46,7 +44,6 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
@@ -221,14 +218,14 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     @Override
-    public List<Mailbox> list() throws MailboxException {
+    public Flux<Mailbox> list() {
         try {
-            return getEntityManager().createNamedQuery("listMailboxes", JPAMailbox.class).getResultList()
-                .stream()
-                .map(JPAMailbox::toMailbox)
-                .collect(Guavate.toImmutableList());
+            return Flux.fromIterable(getEntityManager()
+                    .createNamedQuery("listMailboxes", JPAMailbox.class)
+                    .getResultList())
+                .map(JPAMailbox::toMailbox);
         } catch (PersistenceException e) {
-            throw new MailboxException("Delete of mailboxes failed", e);
+            return Flux.error(new MailboxException("Delete of mailboxes failed", e));
         } 
     }
 

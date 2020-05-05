@@ -138,5 +138,5 @@ public interface MailboxMapper extends Mapper {
     /**
      * Return a unmodifable {@link List} of all {@link Mailbox}
      */
-    List<Mailbox> list() throws MailboxException;
+    Flux<Mailbox> list() throws MailboxException;
 }
