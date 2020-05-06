@@ -280,15 +280,10 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
 
     private List<Mailbox> visitUsersForMailboxList(File domain, File[] users) throws MailboxException {
         ImmutableList.Builder<Mailbox> mailboxList = ImmutableList.builder();
-        String userName = null;
         
         for (File user: users) {
-            if (domain == null) {
-                userName = user.getName();
-            } else {
-                userName = user.getName() + "@" + domain.getName();
-            }
-            
+            String userName = retrieveUsername(domain, user);
+
             // Special case for INBOX: Let's use the user's folder.
             MailboxPath inboxMailboxPath = MailboxPath.forUser(Username.of(userName), MailboxConstants.INBOX);
 
@@ -297,19 +292,25 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             } catch (MailboxException e) {
                 //do nothing, we should still be able to list the mailboxes even if INBOX does not exist
             }
-
             
             // List all INBOX sub folders.
             File[] mailboxes = user.listFiles(pathname -> pathname.getName().startsWith("."));
             
             for (File mailbox: mailboxes) {
-                MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, 
-                        Username.of(userName),
-                        mailbox.getName().substring(1));
+                MailboxPath mailboxPath = MailboxPath.forUser(Username.of(userName),
+                    mailbox.getName().substring(1));
                 mailboxList.add(maildirStore.loadMailbox(session, mailboxPath));
             }
         }
         return mailboxList.build();
+    }
+
+    private String retrieveUsername(File domain, File user) {
+        if (domain == null) {
+            return user.getName();
+        } else {
+            return user.getName() + "@" + domain.getName();
+        }
     }
 
     @Override
