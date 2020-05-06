@@ -15,7 +15,7 @@ power to the user.
 James proposes several implementations for each of the interfaces it defines. The number of possible combinations of
 implementations is thus really high (like factorial(n) with n > 10). It makes it unpractical to run tests for each 
 possible component combination. We run integration tests for combinations that we decide brings the more value to
-the users. We run integration tests for combinations that make sense. Spring product defeats this testing logic 
+the users. Spring product defeats this testing logic 
 by allowing the user arbitrary classes combination, which is likely not being tested.
 
 Instead of having a single product allowing all component combination, we rather have 
