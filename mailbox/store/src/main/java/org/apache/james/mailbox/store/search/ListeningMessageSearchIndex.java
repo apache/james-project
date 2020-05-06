@@ -33,7 +33,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.util.streams.Iterators;
 
 import com.google.common.collect.ImmutableList;
 
@@ -105,12 +104,8 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     }
 
     private Flux<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range) {
-        try {
-            return Iterators.toFlux(factory.getMessageMapper(session)
-                .findInMailbox(mailbox, range, FetchType.Full, UNLIMITED));
-        } catch (Exception e) {
-            return Flux.error(e);
-        }
+        return factory.getMessageMapper(session)
+            .findInMailboxReactive(mailbox, range, FetchType.Full, UNLIMITED);
     }
 
     /**
