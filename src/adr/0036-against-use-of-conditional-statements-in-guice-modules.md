@@ -12,11 +12,11 @@ James products rely historically on Spring for dependency injection. It doesn't 
 James uses Spring in a way that enables overriding any class via a configuration file thus endangering overall correctness by giving too much 
 power to the user.
 
-James proposes several implementations for each of the interfaces we define. The number of possible combinations of
+James proposes several implementations for each of the interfaces it defines. The number of possible combinations of
 implementations is thus really high (like factorial(n) with n > 10). It makes it unpractical to run tests for each 
-possible interface combination. We run integration tests for combinations that we decide brings the more value to
-the users. We rather run integration tests for combinations that make sense. By overriding any components, and 
-allowing arbitrary component combination, Spring defeats this testing logic.
+possible component combination. We run integration tests for combinations that we decide brings the more value to
+the users. We run integration tests for combinations that make sense. Spring product defeats this testing logic 
+by allowing the user arbitrary classes combination, which is likely not being tested.
 
 Instead of having a single product allowing all component combination, we rather have 
 several products each one exposing a single component combination. Components are defined by code in a static fashion. 
@@ -37,8 +37,7 @@ Here is the list of products we provide:
  - Distributed James: A scalable James server, storing data in various data stores. Cassandra is used for metadata, 
  ElasticSearch for search, RabbitMQ for messaging, and ObjectStorage for blobs.
  - Cassandra: An implementation step toward Distributed James. It does not include messaging and ObjectStorage and 
- should not be run in a cluster way but is still relevant for good performance. This product is about to be deprecated
- in favor of Distributed James.
+ should not be run in a cluster way but is still relevant for good performance.
  - JPA: A JPA and Lucene based implementation of James. Only Derby driver is currently supported.
  - JPA with SMTP only using Derby: A minimalist SMTP server based on JPA storage technology and Derby driver
  - JPA with SMTP only using MariaDB: A minimalist SMTP server based on JPA storage technology and MariaDB driver
@@ -57,7 +56,7 @@ Finally, Blob Storing technology offers a wide combination of technologies:
 
  - ObjectStorage in itself could implement either Swift APIs or Amazon S3 APIs
  - We decided to keep supporting Cassandra for blob storing as an upgrade solution from Cassandra product to Distributed 
-James for existing users. This option also makes sense for small data-sets (less than a TB) where storage cost are less 
+James for existing users. This option also makes sense for small data-sets (typically less than a TB) where storage cost are less 
 of an issue and don't need to be taken into account when reasoning about performance.
  - Proposals such as [HybridBlobStore](0014-blobstore-storage-policies.md) and then 
 [Cassandra BlobStore cache](0025-cassandra-blob-store-cache.md) proposed to leverage Cassandra as a performance 
@@ -90,9 +89,21 @@ We should no longer rely on conditional statements in Guice module.
 
 Guice modules combination choice should be decided before starting the dependency injection stage.
 
+Each component choice needs to be abstracted by a related configuration POJO.
+
+Products will, given the set of configuration POJOs, generated the modules it should rely on during the dependency 
+injection stage.
+
 An INFO log with the list of modules used to create its Guice injector. This enables easy diagnose of the running 
 components via the selected module list. It exposes tested, safe choices to the user while limiting the Guice products 
 count.
+
+## Consequences
+
+Component combination count keeps unchanged for Guice products, but the run combination is explicit. QA needs are 
+unchanged.
+
+Integration tests needs to be adapted to accept component choice configuration POJO.
 
 The following conditional statements in guice modules needs to be removed :
 
@@ -101,18 +112,3 @@ The following conditional statements in guice modules needs to be removed :
  - [S3 native blobStore implementation](https://github.com/linagora/james-project/pull/3099) along side with S3 endpoints
  support as part of Swift removes the need to select the Object Storage implementation.
  - Follow up work needs to be plan concerning `BlobExportMechanismModule` and `TikaMailboxModule::provideTextExtractor`.
-
-## Consequences
-
-Component combination count keeps unchanged for Guice products, but the run combination is explicit. QA needs are 
-unchanged.
-
-Integration testing can not offer conditional, configuration based module composition. This is because:
-
- - Integration tests don't rely on Main classes but on GuiceJamesServer class with similar guice modules
- - Overriding a configuration file within a same maven module is painful
- 
-As a consequence, we should define statically the modules an integration test needs to run. Configuration defined Guice
-modules declaration logic cannot be tested with the integration test technique we currently use.
-
-Unit tests and integration tests for the possible module composition should limit the risks.
