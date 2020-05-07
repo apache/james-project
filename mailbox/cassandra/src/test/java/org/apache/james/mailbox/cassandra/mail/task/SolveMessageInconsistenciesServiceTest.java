@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,6 +29,7 @@ import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.mailbox.MessageUid;
@@ -46,6 +48,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class SolveMessageInconsistenciesServiceTest {
 
@@ -147,6 +152,65 @@ public class SolveMessageInconsistenciesServiceTest {
 
             assertThat(testee.fixMessageInconsistencies(new Context()).block())
                 .isEqualTo(Task.Result.COMPLETED);
+        }
+
+        @Test
+        void shouldNotConsiderPendingMessageUpdatesAsInconsistency(CassandraCluster cassandra) throws Exception {
+            imapUidDAO.insert(MESSAGE_1_WITH_SEEN_FLAG).block();
+            messageIdDAO.insert(MESSAGE_1).block();
+
+            Scenario.Barrier barrier = new Scenario.Barrier(1);
+            cassandra.getConf()
+                .registerScenario(awaitOn(barrier)
+                    .thenExecuteNormally()
+                    .times(1)
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId AND uid=:uid;"));
+
+            Context context = new Context();
+            Mono<Task.Result> task = testee.fixMessageInconsistencies(context).subscribeOn(Schedulers.elastic()).cache();
+            task.subscribe();
+
+            barrier.awaitCaller();
+            messageIdDAO.insert(MESSAGE_1_WITH_SEEN_FLAG).block();
+            barrier.releaseCaller();
+
+            task.block();
+
+            // Verify that no inconsistency is fixed
+            assertThat(context.snapshot())
+                .isEqualTo(Context.Snapshot.builder()
+                    .processedImapUidEntries(1)
+                    .processedMessageIdEntries(1)
+                    .build());
+        }
+
+        @Test
+        void shouldNotConsiderPendingMessageInsertsAsInconsistency(CassandraCluster cassandra) throws Exception {
+            imapUidDAO.insert(MESSAGE_1).block();
+
+            Scenario.Barrier barrier = new Scenario.Barrier(1);
+            cassandra.getConf()
+                .registerScenario(awaitOn(barrier)
+                    .thenExecuteNormally()
+                    .times(1)
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId AND uid=:uid;"));
+
+            Context context = new Context();
+            Mono<Task.Result> task = testee.fixMessageInconsistencies(context).subscribeOn(Schedulers.elastic()).cache();
+            task.subscribe();
+
+            barrier.awaitCaller();
+            messageIdDAO.insert(MESSAGE_1).block();
+            barrier.releaseCaller();
+
+            task.block();
+
+            // Verify that no inconsistency is fixed
+            assertThat(context.snapshot())
+                .isEqualTo(Context.Snapshot.builder()
+                    .processedImapUidEntries(1)
+                    .processedMessageIdEntries(0)
+                    .build());
         }
 
         @Test
@@ -311,6 +375,37 @@ public class SolveMessageInconsistenciesServiceTest {
 
             assertThat(testee.fixMessageInconsistencies(new Context()).block())
                 .isEqualTo(Task.Result.COMPLETED);
+        }
+
+        @Test
+        void shouldNotConsiderPendingMessageDeleteAsInconsistency(CassandraCluster cassandra) throws Exception {
+            messageIdDAO.insert(MESSAGE_1).block();
+
+            Scenario.Barrier barrier = new Scenario.Barrier(1);
+            cassandra.getConf()
+                .registerScenario(awaitOn(barrier)
+                    .thenExecuteNormally()
+                    .times(1)
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted," +
+                        "flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable " +
+                        "WHERE mailboxId=:mailboxId AND uid=:uid;"));
+
+            Context context = new Context();
+            Mono<Task.Result> task = testee.fixMessageInconsistencies(context).subscribeOn(Schedulers.elastic()).cache();
+            task.subscribe();
+
+            barrier.awaitCaller();
+            messageIdDAO.delete(MAILBOX_ID, MESSAGE_UID_1).block();
+            barrier.releaseCaller();
+
+            task.block();
+
+            // Verify that no inconsistency is fixed
+            assertThat(context.snapshot())
+                .isEqualTo(Context.Snapshot.builder()
+                    .processedImapUidEntries(0)
+                    .processedMessageIdEntries(1)
+                    .build());
         }
 
         @Test
