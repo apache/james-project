@@ -21,6 +21,7 @@ package org.apache.james.backends.cassandra;
 
 import java.util.Map;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
@@ -28,16 +29,23 @@ import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SimpleStatement;
 import com.datastax.driver.core.Statement;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public class TestingSession implements Session {
     private final Session delegate;
     private volatile Scenario scenario;
+    private volatile boolean printStatements;
 
     public TestingSession(Session delegate) {
         this.delegate = delegate;
         this.scenario = Scenario.NOTHING;
+        this.printStatements = false;
+    }
+
+    public void printStatements() {
+        printStatements = true;
     }
 
     public void registerScenario(Scenario scenario) {
@@ -65,44 +73,72 @@ public class TestingSession implements Session {
 
     @Override
     public ResultSet execute(String query) {
+        printStatement(query);
         return delegate.execute(query);
     }
 
     @Override
     public ResultSet execute(String query, Object... values) {
+        printStatement(query);
         return delegate.execute(query, values);
     }
 
     @Override
     public ResultSet execute(String query, Map<String, Object> values) {
+        printStatement(query);
         return delegate.execute(query, values);
     }
 
     @Override
     public ResultSet execute(Statement statement) {
+        printStatement(statement);
         return delegate.execute(statement);
     }
 
     @Override
     public ResultSetFuture executeAsync(String query) {
+        printStatement(query);
         return delegate.executeAsync(query);
     }
 
     @Override
     public ResultSetFuture executeAsync(String query, Object... values) {
+        printStatement(query);
         return delegate.executeAsync(query, values);
     }
 
     @Override
     public ResultSetFuture executeAsync(String query, Map<String, Object> values) {
+        printStatement(query);
         return delegate.executeAsync(query, values);
     }
 
     @Override
     public ResultSetFuture executeAsync(Statement statement) {
+        printStatement(statement);
         return scenario
             .getCorrespondingBehavior(statement)
             .execute(delegate, statement);
+    }
+
+    private void printStatement(String query) {
+        if (printStatements) {
+            System.out.println("Executing: " + query);
+        }
+    }
+
+    private void printStatement(Statement statement) {
+        if (printStatements) {
+            if (statement instanceof BoundStatement) {
+                BoundStatement boundStatement = (BoundStatement) statement;
+                System.out.println("Executing: " + boundStatement.preparedStatement().getQueryString());
+            } else if (statement instanceof SimpleStatement) {
+                SimpleStatement simpleStatement = (SimpleStatement) statement;
+                System.out.println("Executing: " + simpleStatement.getQueryString());
+            } else {
+                System.out.println("Executing: " + statement);
+            }
+        }
     }
 
     @Override
