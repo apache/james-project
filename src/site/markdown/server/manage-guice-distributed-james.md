@@ -278,25 +278,12 @@ Because of the lack of transactions, it's hard to prevent these kind of issues. 
 fix some existing cassandra inconsistency issues that had been reported to James. 
 
 Here is the list of known inconsistencies:
- - [RRT (RecipientRewriteTable) mapping sources](#Rrt_RecipientRewriteTable_mapping_sources)
  - [Jmap message fast view projections](#Jmap_message_fast_view_projections)
  - [Mailboxes](#Mailboxes)
-
-### RRT (RecipientRewriteTable) mapping sources
-
-`rrt` and `mappings_sources` tables store information about address mappings. 
-The source of truth is `rrt` and `mappings_sources` is the projection table containing all 
-mapping sources.
-
-#### How to detect the inconsistencies
-
-Right now there's no tool for detecting that, we're proposing a [development plan](https://issues.apache.org/jira/browse/JAMES-3069). 
-By the mean time, the recommendation is to execute the `SolveInconsistencies` task below 
-in a regular basis. 
-
-#### How to solve
-
-Execute the Cassandra mapping `SolveInconsistencies` task described in [webadmin documentation](manage-webadmin.html#Operations_on_mappings_sources) 
+ - [Mailboxes Counters](#Mailboxes_counters)
+ - [Messages](#Messages)
+ - [Quotas](#Quotas)
+ - [RRT (RecipientRewriteTable) mapping sources](#Rrt_RecipientRewriteTable_mapping_sources)
 
 ### Jmap message fast view projections
 
@@ -310,7 +297,7 @@ You can watch the `MessageFastViewProjection` health check at [webadmin document
 It provides a check based on the ratio of missed projection reads.  
 
 #### How to solve
- 
+
 Since the MessageFastViewProjection is self healing, you should be concerned only if 
 the health check still returns `degraded` for a while, there's a possible thing you 
 can do is looking at James logs for more clues. 
@@ -336,6 +323,69 @@ to sanitize his mailbox denormalization.
                                         
 In order to ensure being offline, stop the traffic on SMTP, JMAP and IMAP ports, for example via re-configuration or 
 firewall rules.
+
+### Mailboxes Counters
+
+James maintains a per mailbox projection for message count and unseen message count. Failures during the denormalization 
+process will lead to incorrect results being returned.
+
+#### How to detect the inconsistencies
+
+Incorrect message count/message unseen count could be seen in the `Mail User Agent` (IMAP or JMAP). Invalid values are reported in the logs 
+as warning with the following class `org.apache.james.mailbox.model.MailboxCounters` and the following message prefix: `Invalid mailbox counters`.
+
+#### How to solve
+
+Execute the [recompute Mailbox counters task](manage-webadmin.html#Recomputing mailbox counters). 
+This task is not concurrent-safe. Concurrent increments & decrements will be ignored during a single mailbox processing. 
+Re-running this task may eventually return the correct result.
+
+### Messages
+
+Messages are denormalized and stored in both `imapUidTable` (source of truth) and `messageIdTable`. Failure in the denormalization 
+process will cause inconsistencies between the two tables.
+
+#### How to detect the inconsistencies
+
+User can see a message in JMAP but not in IMAP, or mark a message as 'SEEN' in JMAP but the message flag is still unchanged in IMAP.
+
+#### How to solve
+
+Execute the [solve Cassandra message inconsistencies task](manage-webadmin.html#Fixing_messages_inconsistencies).
+This task is not concurrent-safe. User actions concurrent to the inconsistency fixing task could result in new inconsistencies 
+being created. However the source of truth `imapUidTable` will not be affected and thus re-running this task may eventually 
+fix all issues.
+
+### Quotas
+
+User can monitor the amount of space and message count he is allowed to use, and that he is effectively using. James relies on 
+an event bus and Cassandra to track the quota of an user. Upon Cassandra failure, this value can be incorrect.
+
+#### How to detect the inconsistencies
+
+Incorrect quotas could be seen in the `Mail User Agent` (IMAP or JMAP).
+
+#### How to solve
+
+Execute the [recompute Quotas counters task](manage-webadmin.html#Recomputing current quotas for users). 
+This task is not concurrent-safe. Concurrent operations will result in an invalid quota to be persisted. Re-running this task may 
+eventually return the correct result.
+
+### RRT (RecipientRewriteTable) mapping sources
+
+`rrt` and `mappings_sources` tables store information about address mappings. 
+The source of truth is `rrt` and `mappings_sources` is the projection table containing all 
+mapping sources.
+
+#### How to detect the inconsistencies
+
+Right now there's no tool for detecting that, we're proposing a [development plan](https://issues.apache.org/jira/browse/JAMES-3069). 
+By the mean time, the recommendation is to execute the `SolveInconsistencies` task below 
+in a regular basis. 
+
+#### How to solve
+
+Execute the Cassandra mapping `SolveInconsistencies` task described in [webadmin documentation](manage-webadmin.html#Operations_on_mappings_sources) 
 
 ## Setting Cassandra user permissions
 
