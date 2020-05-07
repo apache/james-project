@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -39,7 +38,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
@@ -69,7 +67,7 @@ class SerialTaskManagerWorkerTest {
     }
 
     @AfterEach
-    void tearDown() throws IOException {
+    void tearDown() {
         worker.close();
     }
 
@@ -101,7 +99,7 @@ class SerialTaskManagerWorkerTest {
     }
 
     @Test
-    void aRunningTaskShouldHaveAFiniteNumberOfInformation() throws InterruptedException {
+    void aRunningTaskShouldHaveAFiniteNumberOfInformation() {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
             Mono.fromCallable(counter::incrementAndGet)
                 .delayElement(Duration.ofSeconds(1))
@@ -170,7 +168,6 @@ class SerialTaskManagerWorkerTest {
         latch.countDown();
     }
 
-    @Disabled("JAMES-3172 We cannot cancel computation started by Reactor")
     @Test
     void taskExecutingReactivelyShouldStopExecutionUponCancel() throws InterruptedException {
         // Provide a task ticking every 100ms in a separate reactor thread
