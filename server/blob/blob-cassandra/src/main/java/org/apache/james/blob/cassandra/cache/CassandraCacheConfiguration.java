@@ -20,7 +20,13 @@
 package org.apache.james.blob.cassandra.cache;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.Optional;
+
+import org.apache.commons.configuration2.Configuration;
+import org.apache.james.util.DurationParser;
+import org.apache.james.util.SizeFormat;
 
 import com.google.common.base.Preconditions;
 
@@ -38,7 +44,7 @@ public class CassandraCacheConfiguration {
 
         public Builder timeOut(Duration timeout) {
             Preconditions.checkNotNull(timeout, "'Read timeout' must not to be null");
-            Preconditions.checkArgument(timeout.getSeconds() > 0, "'Read timeout' needs to be positive");
+            Preconditions.checkArgument(timeout.toMillis() > 0, "'Read timeout' needs to be positive");
             Preconditions.checkArgument(timeout.getSeconds() <= MAX_READ_TIMEOUT.getSeconds(),
                 "'Read timeout' needs to be less than %s sec", MAX_READ_TIMEOUT.getSeconds());
 
@@ -63,12 +69,49 @@ public class CassandraCacheConfiguration {
             return this;
         }
 
+        public Builder ttl(Optional<Duration> ttl) {
+            ttl.ifPresent(this::ttl);
+            return this;
+        }
+
+        public Builder timeOut(Optional<Duration> timeOut) {
+            timeOut.ifPresent(this::timeOut);
+            return this;
+        }
+
+        public Builder sizeThresholdInBytes(Optional<Integer> sizeThresholdInBytes) {
+            sizeThresholdInBytes.ifPresent(this::sizeThresholdInBytes);
+            return this;
+        }
+
         public CassandraCacheConfiguration build() {
             return new CassandraCacheConfiguration(
                 readTimeout.orElse(DEFAULT_READ_TIMEOUT),
                 sizeThresholdInBytes.orElse(DEFAULT_BYTE_THRESHOLD_SIZE),
                 ttl.orElse(DEFAULT_TTL));
         }
+    }
+
+    public static final CassandraCacheConfiguration DEFAULT = builder().build();
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static CassandraCacheConfiguration from(Configuration configuration) {
+        Optional<Duration> ttl = Optional.ofNullable(configuration.getString("cache.cassandra.ttl", null))
+            .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS));
+        Optional<Duration> timeOut = Optional.ofNullable(configuration.getString("cache.cassandra.timeout", null))
+            .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS));
+        Optional<Integer> sizeThreshold = Optional.ofNullable(configuration.getString("cache.sizeThresholdInBytes", null))
+            .map(SizeFormat::parseAsByteCount)
+            .map(Math::toIntExact);
+
+        return builder()
+            .ttl(ttl)
+            .timeOut(timeOut)
+            .sizeThresholdInBytes(sizeThreshold)
+            .build();
     }
 
     private final Duration readTimeOut;
@@ -91,5 +134,22 @@ public class CassandraCacheConfiguration {
 
     public int getSizeThresholdInBytes() {
         return sizeThresholdInBytes;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof CassandraCacheConfiguration) {
+            CassandraCacheConfiguration that = (CassandraCacheConfiguration) o;
+
+            return Objects.equals(this.sizeThresholdInBytes, that.sizeThresholdInBytes)
+                && Objects.equals(this.readTimeOut, that.readTimeOut)
+                && Objects.equals(this.ttl, that.ttl);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(readTimeOut, sizeThresholdInBytes, ttl);
     }
 }

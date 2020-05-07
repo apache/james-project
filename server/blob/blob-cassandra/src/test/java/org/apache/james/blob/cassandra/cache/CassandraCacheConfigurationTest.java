@@ -19,12 +19,13 @@
 package org.apache.james.blob.cassandra.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -82,7 +83,7 @@ public class CassandraCacheConfigurationTest {
     void shouldThrowWhenConfiguredNullTimeout() {
         assertThatThrownBy(() -> new CassandraCacheConfiguration.Builder()
             .sizeThresholdInBytes(DEFAULT_THRESHOLD_SIZE_IN_BYTES)
-            .timeOut(null)
+            .timeOut((Duration) null)
             .ttl(_1_SEC_TTL)
             .build())
             .isInstanceOf(NullPointerException.class);
@@ -127,4 +128,34 @@ public class CassandraCacheConfigurationTest {
             .build())
             .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void timeOutShouldNotThrowWhenMilliSeconds() {
+        assertThatCode(() -> CassandraCacheConfiguration.builder().timeOut(Duration.ofMillis(50)))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void fromShouldReturnDefaultConfigurationWhenEmpty() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+
+        assertThat(CassandraCacheConfiguration.from(configuration))
+            .isEqualTo(CassandraCacheConfiguration.builder().build());
+    }
+
+    @Test
+    void fromShouldReturnSuppliedConfiguration() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("cache.cassandra.ttl", "3 days");
+        configuration.addProperty("cache.cassandra.timeout", "50 ms");
+        configuration.addProperty("cache.sizeThresholdInBytes", "4 KiB");
+
+        assertThat(CassandraCacheConfiguration.from(configuration))
+            .isEqualTo(CassandraCacheConfiguration.builder()
+                .ttl(Duration.ofDays(3))
+                .timeOut(Duration.ofMillis(50))
+                .sizeThresholdInBytes(4096)
+                .build());
+    }
+
 }
