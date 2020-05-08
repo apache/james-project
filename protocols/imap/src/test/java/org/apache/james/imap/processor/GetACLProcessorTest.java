@@ -42,8 +42,8 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MetaData;
-import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -64,7 +64,7 @@ public class GetACLProcessorTest {
     private FakeImapSession imapSession;
     private MailboxManager mailboxManager;
     private MailboxSession mailboxSession;
-    private MetaData metaData;
+    private MailboxMetaData metaData;
     private GetACLRequest getACLRequest;
     private GetACLProcessor subject;
     private MailboxPath path;
@@ -80,7 +80,7 @@ public class GetACLProcessorTest {
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USER_1);
         MessageManager messageManager = mock(MessageManager.class);
-        metaData = mock(MetaData.class);
+        metaData = mock(MailboxMetaData.class);
         responder = mock(Responder.class);
 
         getACLRequest = new GetACLRequest(TAG, MAILBOX_NAME);

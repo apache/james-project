@@ -46,7 +46,7 @@ import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MetaData;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
@@ -88,7 +88,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             final Flags flags = request.getFlags();
             
             if (unchangedSince != -1) {
-                MetaData metaData = mailbox.getMetaData(false, mailboxSession, MetaData.FetchGroup.NO_COUNT);
+                MailboxMetaData metaData = mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT);
                 if (metaData.isModSeqPermanent() == false) {
                     // Check if the mailbox did not support modsequences. If so return a tagged bad response.
                     // See RFC4551 3.1.2. NOMODSEQ Response Code 
@@ -236,7 +236,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         // See IMAP-303
         if (selected.hasNewApplicableFlags()) {
             flags(responder, selected);
-            permanentFlags(responder, mailbox.getMetaData(false, mailboxSession, MetaData.FetchGroup.NO_COUNT), selected);
+            permanentFlags(responder, mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT), selected);
             selected.resetNewApplicableFlags();
         }
         
@@ -314,7 +314,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
             if (unchangedSince != -1) {
                 // Enable CONDSTORE as this is a CONDSTORE enabling command
-                condstoreEnablingCommand(session, responder,  mailbox.getMetaData(false, mailboxSession, MetaData.FetchGroup.NO_COUNT), true);
+                condstoreEnablingCommand(session, responder,  mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT), true);
                                   
             }
         }

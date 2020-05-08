@@ -34,8 +34,8 @@ import org.apache.james.imap.message.response.ACLResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MetaData;
-import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -93,7 +93,7 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
                 HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
                 no(request, responder, text);
             } else {
-                MetaData metaData = messageManager.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
+                MailboxMetaData metaData = messageManager.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
                 ACLResponse aclResponse = new ACLResponse(mailboxName, metaData.getACL());
                 responder.respond(aclResponse);
                 okComplete(request, responder);

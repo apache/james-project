@@ -42,7 +42,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MetaData;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -65,7 +65,7 @@ public class ListRightsProcessorTest {
     private FakeImapSession imapSession;
     private MailboxManager mailboxManager;
     private MailboxSession mailboxSession;
-    private MetaData metaData;
+    private MailboxMetaData metaData;
     private ListRightsRequest listRightsRequest;
     private ListRightsProcessor subject;
     private EntryKey user1Key;
@@ -83,14 +83,14 @@ public class ListRightsProcessorTest {
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USER_1);
         MessageManager messageManager = mock(MessageManager.class);
-        metaData = mock(MetaData.class);
+        metaData = mock(MailboxMetaData.class);
         responder = mock(Responder.class);
 
         argumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
-        when(messageManager.getMetaData(anyBoolean(), any(MailboxSession.class), any(MetaData.FetchGroup.class)))
+        when(messageManager.getMetaData(anyBoolean(), any(MailboxSession.class), any(MailboxMetaData.FetchGroup.class)))
             .thenReturn(metaData);
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);

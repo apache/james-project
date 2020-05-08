@@ -50,7 +50,7 @@ import org.apache.james.imap.message.response.SearchResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MetaData;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -104,7 +104,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
             final ModSeq highestModSeq;
             if (session.getAttribute(SEARCH_MODSEQ) != null) {
-                MetaData metaData = mailbox.getMetaData(false, msession, MessageManager.MetaData.FetchGroup.NO_COUNT);
+                MailboxMetaData metaData = mailbox.getMetaData(false, msession, MailboxMetaData.FetchGroup.NO_COUNT);
                 highestModSeq = findHighestModSeq(msession, mailbox, MessageRange.toRanges(uids), metaData.getHighestModSeq());
                 
                 // Enable CONDSTORE as this is a CONDSTORE enabling command

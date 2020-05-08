@@ -168,7 +168,7 @@ public interface QuotaMessageManagerContract<T extends MailboxManager> {
         }
 
         List<MessageUid> uids = provisionner.getMessageManager()
-            .getMetaData(true, provisionner.getSession(), MessageManager.MetaData.FetchGroup.UNSEEN_COUNT)
+            .getMetaData(true, provisionner.getSession(), MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT)
             .getRecent();
         provisionner.getMessageManager().delete(uids, provisionner.getSession());
         // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.
@@ -191,7 +191,7 @@ public interface QuotaMessageManagerContract<T extends MailboxManager> {
         }
 
         List<MessageUid> uids = provisionner.getMessageManager()
-            .getMetaData(true, provisionner.getSession(), MessageManager.MetaData.FetchGroup.UNSEEN_COUNT)
+            .getMetaData(true, provisionner.getSession(), MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT)
             .getRecent();
         provisionner.getMessageManager().delete(uids, provisionner.getSession());
         // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.

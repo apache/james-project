@@ -1498,28 +1498,28 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .build(message), session1);
 
             boolean resetRecent = false;
-            MessageManager.MetaData metaData = mailboxManager.getMailbox(inbox1, session2)
-                .getMetaData(resetRecent, session2, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT);
+            MessageManager.MailboxMetaData metaData = mailboxManager.getMailbox(inbox1, session2)
+                .getMetaData(resetRecent, session2, MessageManager.MailboxMetaData.FetchGroup.UNSEEN_COUNT);
 
             assertSoftly(
                 softly -> {
                     softly.assertThat(metaData)
-                        .extracting(MessageManager.MetaData::getHighestModSeq)
+                        .extracting(MessageManager.MailboxMetaData::getHighestModSeq)
                         .isEqualTo(ModSeq.first());
                     softly.assertThat(metaData)
-                        .extracting(MessageManager.MetaData::getUidNext)
+                        .extracting(MessageManager.MailboxMetaData::getUidNext)
                         .isEqualTo(MessageUid.MIN_VALUE);
                     softly.assertThat(metaData)
-                        .extracting(MessageManager.MetaData::getMessageCount)
+                        .extracting(MessageManager.MailboxMetaData::getMessageCount)
                         .isEqualTo(0L);
                     softly.assertThat(metaData)
-                        .extracting(MessageManager.MetaData::getUnseenCount)
+                        .extracting(MessageManager.MailboxMetaData::getUnseenCount)
                         .isEqualTo(0L);
                     softly.assertThat(metaData)
-                        .extracting(MessageManager.MetaData::getRecent)
+                        .extracting(MessageManager.MailboxMetaData::getRecent)
                         .isEqualTo(ImmutableList.of());
                     softly.assertThat(metaData)
-                        .extracting(MessageManager.MetaData::getPermanentFlags)
+                        .extracting(MessageManager.MailboxMetaData::getPermanentFlags)
                         .isEqualTo(new Flags());
                 });
         }

@@ -58,7 +58,7 @@ public abstract class AbstractMessageManagerTest {
         mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
         MessageManager messageManager = mailboxManager.getMailbox(INBOX_ALICE, aliceSession);
 
-        MessageManager.MetaData actual = messageManager.getMetaData(NO_RESET_RECENT, aliceSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
+        MessageManager.MailboxMetaData actual = messageManager.getMetaData(NO_RESET_RECENT, aliceSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT);
         assertThat(actual.getACL().getEntries()).containsKeys(MailboxACL.EntryKey.createUserEntryKey(BOB), MailboxACL.EntryKey.createUserEntryKey(CEDRIC));
     }
 
@@ -68,7 +68,7 @@ public abstract class AbstractMessageManagerTest {
         mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
         MessageManager messageManager = mailboxManager.getMailbox(INBOX_ALICE, aliceSession);
 
-        MessageManager.MetaData actual = messageManager.getMetaData(NO_RESET_RECENT, bobSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
+        MessageManager.MailboxMetaData actual = messageManager.getMetaData(NO_RESET_RECENT, bobSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT);
         assertThat(actual.getACL().getEntries()).containsOnlyKeys(MailboxACL.EntryKey.createUserEntryKey(BOB));
     }
 

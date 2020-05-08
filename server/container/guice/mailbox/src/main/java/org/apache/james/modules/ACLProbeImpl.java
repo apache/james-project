@@ -63,7 +63,7 @@ public class ACLProbeImpl implements GuiceProbe, ACLProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
 
         return mailboxManager.getMailbox(mailboxPath, mailboxSession)
-            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT)
+            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
     }
 }

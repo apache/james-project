@@ -38,8 +38,8 @@ import org.apache.james.imap.message.request.ExpungeRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MetaData;
-import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
@@ -68,7 +68,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
             final MailboxSession mailboxSession = session.getMailboxSession();
 
             int expunged = 0;
-            MetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
+            MailboxMetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
 
             if (!mdata.isWriteable()) {
                 no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);

@@ -54,7 +54,7 @@ import org.apache.james.imap.processor.base.AbstractChainedProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MetaData;
+import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
@@ -115,7 +115,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         responder.respond(new FlagsResponse(selected.getApplicableFlags()));
     }
 
-    protected void permanentFlags(Responder responder, MessageManager.MetaData metaData, SelectedMailbox selected) {
+    protected void permanentFlags(Responder responder, MailboxMetaData metaData, SelectedMailbox selected) {
         final Flags permanentFlags = metaData.getPermanentFlags();
         if (permanentFlags.contains(Flags.Flag.USER)) {
             permanentFlags.add(selected.getApplicableFlags());
@@ -197,7 +197,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         try {
             // To be lazily initialized only if needed, which is in minority of cases.
             MessageManager messageManager = null;
-            MetaData metaData = null;
+            MailboxMetaData metaData = null;
             final MailboxSession mailboxSession = session.getMailboxSession();
 
             // Check if we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
@@ -206,7 +206,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             if (selected.hasNewApplicableFlags()) {
                 messageManager = getMailbox(session, selected);
                 flags(responder, selected);
-                metaData = messageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
+                metaData = messageManager.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT);
 
                 permanentFlags(responder, metaData, selected);
                 selected.resetNewApplicableFlags();
@@ -219,7 +219,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                     messageManager = getMailbox(session, selected);
                 }
                 if (metaData == null) {
-                    metaData = messageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
+                    metaData = messageManager.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT);
                 }
                 boolean isModSeqPermanent = metaData.isModSeqPermanent();
                 while (ranges.hasNext()) {
@@ -281,7 +281,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         }
     }
 
-    protected void condstoreEnablingCommand(ImapSession session, Responder responder, MetaData metaData, boolean sendHighestModSeq) {
+    protected void condstoreEnablingCommand(ImapSession session, Responder responder, MailboxMetaData metaData, boolean sendHighestModSeq) {
         Set<Capability> enabled = EnableProcessor.getEnabledCapabilities(session);
         if (!enabled.contains(ImapConstants.SUPPORTS_CONDSTORE)) {
             if (sendHighestModSeq) {
@@ -537,7 +537,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     /**
      * Send VANISHED responses if needed. 
      */
-    protected void respondVanished(MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, long changedSince, MetaData metaData, Responder responder) throws MailboxException {
+    protected void respondVanished(MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, long changedSince, MailboxMetaData metaData, Responder responder) throws MailboxException {
         // RFC5162 4.2. Server Implementations Storing Minimal State
         //  
         //      A server that stores the HIGHESTMODSEQ value at the time of the last
