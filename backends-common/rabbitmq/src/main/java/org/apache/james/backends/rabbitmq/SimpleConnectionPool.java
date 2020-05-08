@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.rabbitmq;
 
-import static org.apache.james.util.ReactorUtils.transformAndPublishIfNotNull;
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -91,7 +91,8 @@ public class SimpleConnectionPool implements AutoCloseable {
     public Mono<RabbitMQServerVersion> version() {
         return getOpenConnection()
             .map(Connection::getServerProperties)
-            .handle(transformAndPublishIfNotNull(serverProperties -> serverProperties.get("version")))
+            .map(serverProperties -> Optional.ofNullable(serverProperties.get("version")))
+            .handle(publishIfPresent())
             .map(Object::toString)
             .map(RabbitMQServerVersion::of)
             .timeout(Duration.ofSeconds(1))
