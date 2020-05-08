@@ -80,6 +80,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+
 import reactor.rabbitmq.Sender;
 
 class DistributedTaskManagerTest implements TaskManagerContract {
@@ -169,7 +170,11 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         this.workQueueSupplier = new TrackedRabbitMQWorkQueueSupplier(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), taskSerializer);
         this.eventStore = eventStore;
         this.terminationSubscribers = new ArrayList<>();
-        this.eventSerializer = JsonEventSerializer.forModules(eventDtoModule).withoutNestedType();
+        this.eventSerializer = JsonEventSerializer.forModules(eventDtoModule)
+            .withNestedTypeModules(
+                Sets.union(
+                    ImmutableSet.of(ADDITIONAL_INFORMATION_MODULE),
+                    taskDTOModules));
     }
 
     @AfterEach
@@ -183,7 +188,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     EventSourcingTaskManager taskManager(Hostname hostname) {
-        RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), eventSerializer);
+        RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getSender(),
+            rabbitMQExtension.getReceiverProvider(),
+            eventSerializer);
         terminationSubscribers.add(terminationSubscriber);
         terminationSubscriber.start();
         return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, terminationSubscriber);
