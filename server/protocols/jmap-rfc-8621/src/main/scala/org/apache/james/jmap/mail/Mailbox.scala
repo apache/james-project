@@ -56,7 +56,7 @@ object MailboxNamespace {
 
 sealed trait MailboxNamespace
 
-case object PersonalNamespace extends MailboxNamespace
+case class PersonalNamespace() extends MailboxNamespace
 
 case class DelegatedNamespace(owner: Username) extends MailboxNamespace
 

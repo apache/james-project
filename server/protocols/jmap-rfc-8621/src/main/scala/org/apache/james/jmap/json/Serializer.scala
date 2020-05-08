@@ -22,11 +22,14 @@ package org.apache.james.jmap.json
 import java.io.InputStream
 import java.net.URL
 
-import org.apache.james.core.Username
+import org.apache.james.core.{Domain, Username}
+import org.apache.james.jmap.mail.{DelegatedNamespace, IsSubscribed, Mailbox, MailboxNamespace, MailboxRights, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
+import org.apache.james.mailbox.Role
+import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -126,6 +129,70 @@ class Serializer {
 
   private implicit val sessionWrites: Writes[Session] = Json.writes[Session]
 
+  private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
+  private implicit val roleWrites: Writes[Role] = role => JsString(role.serialize)
+  private implicit val sortOrderWrites: Writes[SortOrder] = Json.valueWrites[SortOrder]
+  private implicit val totalEmailsWrites: Writes[TotalEmails] = Json.valueWrites[TotalEmails]
+  private implicit val unreadEmailsWrites: Writes[UnreadEmails] = Json.valueWrites[UnreadEmails]
+  private implicit val totalThreadsWrites: Writes[TotalThreads] = Json.valueWrites[TotalThreads]
+  private implicit val unreadThreadsWrites: Writes[UnreadThreads] = Json.valueWrites[UnreadThreads]
+  private implicit val isSubscribedWrites: Writes[IsSubscribed] = Json.valueWrites[IsSubscribed]
+
+  private implicit val mayReadItemsWrites: Writes[MayReadItems] = Json.valueWrites[MayReadItems]
+  private implicit val mayAddItemsWrites: Writes[MayAddItems] = Json.valueWrites[MayAddItems]
+  private implicit val mayRemoveItemsWrites: Writes[MayRemoveItems] = Json.valueWrites[MayRemoveItems]
+  private implicit val maySetSeenWrites: Writes[MaySetSeen] = Json.valueWrites[MaySetSeen]
+  private implicit val maySetKeywordsWrites: Writes[MaySetKeywords] = Json.valueWrites[MaySetKeywords]
+  private implicit val mayCreateChildWrites: Writes[MayCreateChild] = Json.valueWrites[MayCreateChild]
+  private implicit val mayRenameWrites: Writes[MayRename] = Json.valueWrites[MayRename]
+  private implicit val mayDeleteWrites: Writes[MayDelete] = Json.valueWrites[MayDelete]
+  private implicit val maySubmitWrites: Writes[MaySubmit] = Json.valueWrites[MaySubmit]
+  private implicit val mailboxRightsWrites: Writes[MailboxRights] = Json.writes[MailboxRights]
+
+  private implicit val personalNamespaceWrites: Writes[PersonalNamespace] = namespace => JsString("Personal")
+  private implicit val delegatedNamespaceWrites: Writes[DelegatedNamespace] = namespace => JsString(s"Delegated[${namespace.owner.asString}]")
+  private implicit val mailboxNamespaceWrites: Writes[MailboxNamespace] = Json.writes[MailboxNamespace]
+
+  private implicit val mailboxACLWrites: Writes[MailboxACL.Right] = right => JsString(right.asCharacter.toString)
+
+  private implicit val rightWrites: Writes[Right] = Json.valueWrites[Right]
+  private implicit val rightsWrites: Writes[Rights] = Json.valueWrites[Rights]
+
+  private implicit def rightsMapWrites(implicit rightWriter: Writes[Seq[Right]]): Writes[Map[Username, Seq[Right]]] =
+    (m: Map[Username, Seq[Right]]) => {
+      m.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (username: Username, rights: Seq[Right]) = kv
+        jsObject.+(username.asString, rightWriter.writes(rights))
+      })
+    }
+
+  private implicit val domainWrites: Writes[Domain] = domain => JsString(domain.asString)
+  private implicit val quotaRootWrites: Writes[QuotaRoot] = Json.writes[QuotaRoot]
+  private implicit val quotaIdWrites: Writes[QuotaId] = Json.valueWrites[QuotaId]
+
+  private implicit val quotaValueWrites: Writes[Value] = Json.writes[Value]
+  private implicit val quotaWrites: Writes[Quota] = Json.valueWrites[Quota]
+
+  private implicit def quotaMapWrites(implicit valueWriter: Writes[Value]): Writes[Map[Quotas.Type, Value]] =
+    (m: Map[Quotas.Type, Value]) => {
+      m.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (quotaType: Quotas.Type, value: Value) = kv
+        jsObject.+(quotaType.toString, valueWriter.writes(value))
+      })
+    }
+
+  private implicit val quotasWrites: Writes[Quotas] = Json.valueWrites[Quotas]
+
+  private implicit def quotasMapWrites(implicit quotaWriter: Writes[Quota]): Writes[Map[QuotaId, Quota]] =
+    (m: Map[QuotaId, Quota]) => {
+      m.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (quotaId: QuotaId, quota: Quota) = kv
+        jsObject.+(quotaId.getName, quotaWriter.writes(quota))
+      })
+    }
+
+  private implicit val mailboxWrites: Writes[Mailbox] = Json.writes[Mailbox]
+
   def serialize(session: Session): JsValue = {
     Json.toJson(session)
   }
@@ -136,6 +203,10 @@ class Serializer {
 
   def serialize(responseObject: ResponseObject): JsValue = {
     Json.toJson(responseObject)
+  }
+
+  def serialize(mailbox: Mailbox): JsValue = {
+    Json.toJson(mailbox)
   }
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = {

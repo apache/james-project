@@ -58,7 +58,7 @@ class MailboxTest extends AnyWordSpec with Matchers {
           MayDelete(true),
           MaySubmit(true)),
         IsSubscribed(true),
-        MailboxNamespace.personal,
+        MailboxNamespace.personal(),
         Rights.EMPTY,
         Quotas(Map()))
         .hasRole(Role.INBOX) must be(false)
@@ -84,7 +84,7 @@ class MailboxTest extends AnyWordSpec with Matchers {
           MayDelete(true),
           MaySubmit(true)),
         IsSubscribed(true),
-        MailboxNamespace.personal,
+        MailboxNamespace.personal(),
         Rights.EMPTY,
         Quotas(Map()))
         .hasRole(Role.INBOX) must be(false)
@@ -110,7 +110,7 @@ class MailboxTest extends AnyWordSpec with Matchers {
           MayDelete(true),
           MaySubmit(true)),
         IsSubscribed(true),
-        MailboxNamespace.personal,
+        MailboxNamespace.personal(),
         Rights.EMPTY,
         Quotas(Map())).hasRole(Role.INBOX) must be(true)
     }
@@ -138,7 +138,7 @@ class MailboxTest extends AnyWordSpec with Matchers {
           MayDelete(true),
           MaySubmit(true)),
         IsSubscribed(true),
-        MailboxNamespace.personal,
+        MailboxNamespace.personal(),
         Rights.EMPTY,
         Quotas(Map()))
         .hasSystemRole must be(false)
@@ -164,7 +164,7 @@ class MailboxTest extends AnyWordSpec with Matchers {
           MayDelete(true),
           MaySubmit(true)),
         IsSubscribed(true),
-        MailboxNamespace.personal,
+        MailboxNamespace.personal(),
         Rights.EMPTY,
         Quotas(Map())).hasSystemRole must be(false)
     }
@@ -189,7 +189,7 @@ class MailboxTest extends AnyWordSpec with Matchers {
           MayDelete(true),
           MaySubmit(true)),
         IsSubscribed(true),
-        MailboxNamespace.personal,
+        MailboxNamespace.personal(),
         Rights.EMPTY,
         Quotas(Map())).hasSystemRole must be(true)
     }

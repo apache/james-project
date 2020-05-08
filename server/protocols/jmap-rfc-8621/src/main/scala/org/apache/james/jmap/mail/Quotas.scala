@@ -19,10 +19,19 @@
 
 package org.apache.james.jmap.mail
 
-import java.util.Optional
-
+import org.apache.james.core.Domain
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
-import org.apache.james.mailbox.model.QuotaRoot
+import org.apache.james.mailbox.model.{QuotaRoot => JavaQuotaRoot}
+
+import scala.compat.java8.OptionConverters._
+
+object QuotaRoot{
+  def fromJava(quotaRoot: JavaQuotaRoot) = QuotaRoot(quotaRoot.getValue, quotaRoot.getDomain.asScala)
+}
+
+case class QuotaRoot(value: String, domain: Option[Domain]) {
+  def asJava: JavaQuotaRoot = JavaQuotaRoot.quotaRoot(value, domain.asJava)
+}
 
 object Quotas {
   sealed trait Type
@@ -39,11 +48,11 @@ object QuotaId {
 }
 
 case class QuotaId(quotaRoot: QuotaRoot) extends AnyVal {
-  def getName: String = quotaRoot.getValue
+  def getName: String = quotaRoot.value
 }
 
 case class Quota(quota: Map[Quotas.Type, Value]) extends AnyVal
 
-case class Value(used: UnsignedInt, max: Optional[UnsignedInt])
+case class Value(used: UnsignedInt, max: Option[UnsignedInt])
 
 case class Quotas(quotas: Map[QuotaId, Quota]) extends AnyVal
