@@ -21,6 +21,7 @@ package org.apache.james.adapter.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,8 +50,9 @@ public class ReIndexerManagementTest {
     }
 
     @Test
-    void reIndexMailboxShouldWaitsForExecution() throws MailboxException {
+    void reIndexMailboxShouldWaitsForExecution() throws Exception {
         Task task = mock(Task.class);
+        doReturn(Task.Result.COMPLETED).when(task).run();
         String namespace = "namespace";
         String user = "user";
         String name = "name";
@@ -63,8 +65,9 @@ public class ReIndexerManagementTest {
     }
 
     @Test
-    void reIndexShouldWaitsForExecution() throws MailboxException {
+    void reIndexShouldWaitsForExecution() throws Exception {
         Task task = mock(Task.class);
+        doReturn(Task.Result.COMPLETED).when(task).run();
         when(reIndexer.reIndex()).thenReturn(task);
 
         assertThat(taskManager.list()).isEmpty();
