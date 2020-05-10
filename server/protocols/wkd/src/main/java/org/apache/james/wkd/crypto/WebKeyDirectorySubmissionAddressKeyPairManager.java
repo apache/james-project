@@ -75,7 +75,8 @@ public class WebKeyDirectorySubmissionAddressKeyPairManager {
 
     private void makeSureKeysAreLoaded()
         throws FileNotFoundException, IOException, PGPException, DomainListException {
-        if ((publicKeySubmissionAddress == null || privateKeySubmissionAddress == null) && configurationPrefix != null) {
+        if ((publicKeySubmissionAddress == null || privateKeySubmissionAddress == null)
+            && configurationPrefix != null) {
             File privateKey = fileSystem.getFile(configurationPrefix + "submission-address.key");
             if (privateKey.exists()) {
                 privateKeySubmissionAddress = readSecretKey(new FileInputStream(privateKey));
@@ -84,7 +85,8 @@ public class WebKeyDirectorySubmissionAddressKeyPairManager {
             } else {
                 generateAndSaveKeyPair();
             }
-        } else if((publicKeySubmissionAddress == null || privateKeySubmissionAddress == null) && configurationPrefix == null) {
+        } else if ((publicKeySubmissionAddress == null || privateKeySubmissionAddress == null)
+            && configurationPrefix == null) {
             LOGGER.info("configurationPrefix is null, generating key pair");
             generateAndSaveKeyPair();
         }

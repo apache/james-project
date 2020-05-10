@@ -46,8 +46,7 @@ import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
 
 public class WebKeyDirectoryServer implements Startable {
-    private static final Logger LOGGER = LoggerFactory
-        .getLogger(WebKeyDirectoryServer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebKeyDirectoryServer.class);
     private static final int RANDOM_PORT = 0;
 
     private final WebKeyDirectoryConfiguration configuration;
@@ -64,7 +63,8 @@ public class WebKeyDirectoryServer implements Startable {
         this.webKeyDirectoryRoutes = webKeyDirectoryRoutes;
         this.server = Optional.empty();
         this.fileSystem = fileSystem;
-        this.configurationPrefix = jamesConfiguration == null ? "" : jamesConfiguration.configurationPath();
+        this.configurationPrefix = jamesConfiguration == null ? ""
+            : jamesConfiguration.configurationPath();
     }
 
     public Port getPort() {
@@ -88,7 +88,7 @@ public class WebKeyDirectoryServer implements Startable {
     }
 
     private SslContextBuilder createSslContextBuilder() {
-        if(fileSystem == null) {
+        if (fileSystem == null) {
             LOGGER.error("fileSystem is not specified");
             return null;
         }

@@ -37,7 +37,7 @@ public class RSAGen {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RSAGen.class);
 
-    public final static PGPKeyRingGenerator generateKeyRingGenerator(String id, char[] pass) {
+    public static final PGPKeyRingGenerator generateKeyRingGenerator(String id, char[] pass) {
         return generateKeyRingGenerator(id, pass, 0xc0);
     }
 
@@ -54,7 +54,7 @@ public class RSAGen {
     // 0xff, or about 2 million iterations. I'll use 0xc0 as a default -- about
     // 130,000 iterations.
 
-    public final static PGPKeyRingGenerator generateKeyRingGenerator(String id, char[] pass,
+    public static final PGPKeyRingGenerator generateKeyRingGenerator(String id, char[] pass,
         int s2kcount) {
         try {
             // This object generates individual key-pairs.
@@ -67,11 +67,11 @@ public class RSAGen {
                 2048, 12));
 
             // First create the master (signing) key with the generator.
-            PGPKeyPair rsakp_sign;
-            rsakp_sign = new BcPGPKeyPair(PGPPublicKey.RSA_SIGN, kpg.generateKeyPair(), new Date());
+            PGPKeyPair rsakpSign;
+            rsakpSign = new BcPGPKeyPair(PGPPublicKey.RSA_SIGN, kpg.generateKeyPair(), new Date());
 
             // Then an encryption subkey.
-            PGPKeyPair rsakp_enc = new BcPGPKeyPair(PGPPublicKey.RSA_ENCRYPT, kpg.generateKeyPair(),
+            PGPKeyPair rsakpEnc = new BcPGPKeyPair(PGPPublicKey.RSA_ENCRYPT, kpg.generateKeyPair(),
                 new Date());
 
             // Add a self-signature on the id
@@ -112,13 +112,13 @@ public class RSAGen {
             // Finally, create the keyring itself. The constructor takes parameters that
             // allow it to generate the self signature.
             PGPKeyRingGenerator keyRingGen = new PGPKeyRingGenerator(
-                PGPSignature.POSITIVE_CERTIFICATION, rsakp_sign, id, sha1Calc,
+                PGPSignature.POSITIVE_CERTIFICATION, rsakpSign, id, sha1Calc,
                 signhashgen.generate(), null, new BcPGPContentSignerBuilder(
-                    rsakp_sign.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1),
+                    rsakpSign.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1),
                 pske);
 
             // Add our encryption subkey, together with its signature.
-            keyRingGen.addSubKey(rsakp_enc, enchashgen.generate(), null);
+            keyRingGen.addSubKey(rsakpEnc, enchashgen.generate(), null);
             return keyRingGen;
         } catch (PGPException e) {
             LOGGER.error("Could not generate Key Pair", e);
