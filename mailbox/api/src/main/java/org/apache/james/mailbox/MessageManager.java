@@ -392,6 +392,11 @@ public interface MessageManager {
             NO_COUNT
         }
 
+        /**
+         * Neutral MailboxMetaData to be safely displayed for mailboxes a user can Lookup without Read write.
+         *
+         * @return MailboxMetaData with default values for all fields
+         */
         public static MailboxMetaData sensibleInformationFree(MailboxACL resolvedAcl, UidValidity uidValidity, boolean writeable, boolean modSeqPermanent) throws MailboxException {
             ImmutableList<MessageUid> recents = ImmutableList.of();
             MessageUid uidNext = MessageUid.MIN_VALUE;
