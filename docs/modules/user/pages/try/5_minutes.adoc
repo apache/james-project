@@ -1,0 +1,114 @@
+= Try James in 5 minutes
+
+In this short tutorial, we will set up a runing James demo very quickly
+using a prepared Docker image.
+Then you will add a domain, and a user account within that domain.
+
+
+Requirements: 
+
+ * Docker
+
+== Set up the demo server
+
+To begin, run the James demo server using Docker:
+
+[source,bash]
+----
+docker run -d -p "25:25" -p "143:143" --name james linagora/james-jpa-sample:3.4.0
+----
+
+Explanation:
+
+ * `docker run` runs the provided image with the given parameters
+ * The `-d` parameter runs the container in "detached" mode
+ * `-p "25:25" -p "143:143"` attaches the image ports to the ports 25 (SMTP) and 143 (IMAP) on the host machine
+ * The `--name james` parameter gives the running container a name to make it easier to manipulate
+ * `linagora/james-jpa-sample:3.4.0` is the image that is used for this demo
+
+Docker will pull the image and start the container.
+
+== Connect via the CLI
+
+****
+To run commands using the James CLI, you can use the running container via Docker:
+
+----
+docker exec james java -jar /root/james-cli.jar \
+    -h \<<HOST>> -p \<<PORT>> \<<COMMAND>>
+----
+
+In this tutorial, we are using host 127.0.0.1 and port 9999, so every command looks like:
+
+----
+docker exec james java -jar /root/james-cli.jar \
+    -h 127.0.0.1 -p 9999 \<<COMMAND>>
+----
+
+Host 127.0.0.1 is of course localhost, and the use of port 9999 is completely arbitrary.
+****
+
+To make this tutorial a little easier, set this up as a bash script by copying and pasting this script:
+
+[source,bash]
+----
+printf '#!/bin/bash\n\ndocker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 $@' >> james ; chmod +x james
+----
+
+As an example, list all the domains currently in use by James:
+
+[source,bash]
+----
+./james listDomains
+----
+
+You should notice that a default domain, james.local, has been created
+
+List all the current users:
+
+[source,bash]
+----
+./james listUsers
+----
+
+You should see users ``user01@james.local``, ``user02@james.local``, and ``user03@james.local``.
+
+Create a new "test.local" domain:
+
+[source,bash]
+----
+./james addDomain test.local
+----
+
+List the domains again to ensure that "test.local" has successfully been added:
+
+[source,bash]
+----
+./james listDomains
+----
+
+Add the user "testuser" to the "test.local" domain with password "password":
+
+[source,bash]
+----
+./james addUser testuser@test.local password
+----
+
+You should now see your newly created user:
+
+[source,bash]
+----
+./james listUsers
+----
+
+And that's a wrap!
+
+== Stop the server
+
+To stop the demo:
+
+[source,bash]
+----
+docker stop james ; docker rm james
+----
+

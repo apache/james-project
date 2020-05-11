@@ -18,6 +18,6 @@ Operator Manual for additional information about James from different perspectiv
 
 == How to...
 
- * Try James in 5 minutes
- * Learn more about the architecture
- * Build your own custom mail server
+ * xref::try.adoc[Try James in 5 minutes]
+ * xref::build.adoc[Learn more about the architecture]
+ * xref::build.adoc[Build your own custom mail server]

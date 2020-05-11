@@ -1,0 +1,232 @@
+= Try James in 15 minutes
+
+In this tutorial, we will set up a runing James demo using a prepared Docker image.
+We will then test the server by connecting with an email client. Finally, we
+will connect to the server via the REST-based Admin API.
+
+
+Requirements: 
+
+ * Docker
+ * curl
+ * Thunderbird client (optional)
+
+== Set up the demo server
+
+Before starting the server, because we will be connecting to the Admin API we need to set some configuration parameters.
+We will create a `webadmin.properties` file that James will use in order to allow us to connect to the API.
+
+Run this command to create the `webadmin.properties` file:
+
+[source,bash]
+----
+printf 'enabled=true\nport=8000\nhost=localhost' >> webadmin.properties
+----
+
+Explanation:
+
+ * `enabled=true` instructs James to run the Admin API service
+ * `port=8000` configures the Admin API to be made available via port 8000
+ * `host=localhost` configures the Admin API to respond on localhost
+
+
+Now run the James demo server using this command:
+
+[source,bash]
+----
+docker run -d -p "25:25" -p "143:143" -p "127.0.0.1:8000:8000" -v $(pwd)/webadmin.properties:/root/conf/webadmin.properties --name james linagora/james-jpa-sample:3.4.0
+----
+
+Explanation:
+
+ * `docker run` runs the provided image with the given parameters
+ * The `-d` parameter runs the container in "detached" mode
+ * `-p "25:25" -p "143:143"` attaches the image ports to the ports 25 (SMTP) and 143 (IMAP) on the host machine
+ * `-p "127.0.0.1:8000:8000" attaches the port 8000 to localhost on the host machine to allow us to connect to the Admin API
+ * `-v $(pwd)/webadmin.properties:/root/conf/webadmin.properties` mounts the webadmin.properties file to configure the Admin API
+ * The `--name james` parameter gives the running container a name to make it easier to manipulate
+ * `linagora/james-jpa-sample:3.4.0` is the image that is used for this demo
+
+Docker will pull the image and start the container.
+
+****
+To run commands using the James CLI, you can use the running container via Docker:
+
+----
+docker exec james java -jar /root/james-cli.jar \
+    -h \<<HOST>> -p \<<PORT>> \<<COMMAND>>
+----
+
+In this tutorial, we are using host 127.0.0.1 and port 9999, so every command looks like:
+
+----
+docker exec james java -jar /root/james-cli.jar \
+    -h 127.0.0.1 -p 9999 \<<COMMAND>>
+----
+
+Host 127.0.0.1 is of course localhost, and the use of port 9999 is completely arbitrary.
+
+To make this tutorial a little easier, set this up as a bash script by copying and pasting this script:
+
+[source,bash]
+----
+printf '#!/bin/bash\n\ndocker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 $@' >> james ; chmod +x james
+----
+****
+
+As an example, list all the domains currently in use by James:
+
+[source,bash]
+----
+./james listDomains
+----
+
+You should notice that a default domain, james.local, has been created
+
+List all the current users:
+
+[source,bash]
+----
+./james listUsers
+----
+
+You should see users ``user01@james.local``, ``user02@james.local``, and ``user03@james.local``.
+
+Create a new "test.local" domain:
+
+[source,bash]
+----
+./james addDomain test.local
+----
+
+List the domains again to ensure that "test.local" has successfully been added:
+
+[source,bash]
+----
+./james listDomains
+----
+
+Add the user "testuser" to the "test.local" domain with password "password":
+
+[source,bash]
+----
+./james addUser testuser@test.local password
+----
+
+You should now see your newly created user:
+
+[source,bash]
+----
+./james listUsers
+----
+
+== Connect to the server with an email client
+
+****
+For this tutorial, we will use Thunderbird, as it is available in multiple languages
+on Windows, Mac, and Linux.
+
+Go to https://www.thunderbird.net to download Thunderbird.
+****
+
+After you have installed Thunderbird,
+https://support.mozilla.org/en-US/kb/manual-account-configuration[manually set up an account]
+for user01@james.local using the following parameters:
+
+ * Account name: user01
+ * Your name: User 01
+ * Email address: user01@james.local
+ * SMTP server name: localhost
+ * SMTP port: 25
+ * SMTP connection security: none
+ * SMTP authentication: password
+ * IMAP server name: localhost
+ * IMAP user name: user01@james.local
+ * IMAP port: 143
+ * IMAP connection security: none
+ * IMAP authentication: none
+
+Repeat the above for testuser@test.local:
+
+ * Account name: testuser
+ * Your name: Test User
+ * Email address: testuser@test.local
+ * SMTP server name: localhost
+ * SMTP port: 25
+ * SMTP connection security: none
+ * SMTP authentication: password
+ * IMAP server name: localhost
+ * IMAP user name: testuser@test.local
+ * IMAP port: 143
+ * IMAP connection security: none
+ * IMAP authentication: none
+
+Now have fun sending emails back and forth to yourself. :-)
+But don't spend all day doing this. You have too much work to do.
+
+== Connect to the server via the Admin API
+
+We will use curl to connect to localhost on port 8000, as the Admin API
+is made available on this port.
+
+List the available domains:
+
+[source,bash]
+----
+curl http://localhost:8000/domains
+----
+
+You should see a response similar to this:
+
+[source,json]
+----
+[
+  "edfce41c55e6",
+  "james.linagora.com",
+  "james.local",
+  "localhost",
+  "test.local",
+  "172.17.0.2"
+]
+----
+
+Test that a domain exists:
+
+[source,bash]
+----
+curl -I -X GET http://localhost:8000/domains/test.local
+----
+
+You should see an empty `204` response, which means "yes, this domain does exist".
+
+Delete our test domain:
+
+[source,bash]
+----
+curl -X DELETE http://localhost:8000/domains/test.local
+----
+
+Now retest `test.local`:
+
+[source,bash]
+----
+curl -I -X GET http://localhost:8000/domains/test.local
+----
+
+This time you will receive a `404` code because the `test.local` domain no longer exists.
+
+
+Documentation for the webadmin is available at: http://james.apache.org/server/manage-webadmin.html
+
+
+== Stop the demo
+
+To shutdown the server:
+
+[source]
+----
+docker stop james ; docker rm james
+----
+
+That's all, folks!
+
