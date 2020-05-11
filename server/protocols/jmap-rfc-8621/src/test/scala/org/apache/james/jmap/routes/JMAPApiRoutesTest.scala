@@ -1,4 +1,4 @@
-/** **************************************************************
+/****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -6,16 +6,16 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- * *
- * http://www.apache.org/licenses/LICENSE-2.0                 *
- * *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
+ ****************************************************************/
 package org.apache.james.jmap.routes
 
 import java.nio.charset.StandardCharsets
@@ -27,11 +27,9 @@ import io.restassured.builder.RequestSpecBuilder
 import io.restassured.config.EncoderConfig.encoderConfig
 import io.restassured.config.RestAssuredConfig.newConfig
 import io.restassured.http.ContentType
+import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
 import org.apache.james.jmap.JMAPUrls.JMAP
-import org.apache.james.jmap.json.Fixture._
-import org.apache.james.jmap.json.Serializer
-import org.apache.james.jmap.model.RequestObject
 import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version, VersionParser}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
@@ -48,13 +46,80 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   private val ROUTES_HANDLER: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, JMAP_API_ROUTE))
 
   private val REQUEST_OBJECT: String =
-    new Serializer().serialize(RequestObject(Seq(coreIdentifier), Seq(invocation1))).toString()
-
+    """{
+      |  "using": [
+      |    "urn:ietf:params:jmap:core"
+      |  ],
+      |  "methodCalls": [
+      |    [
+      |      "Core/echo",
+      |      {
+      |        "arg1": "arg1data",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c1"
+      |    ]
+      |  ]
+      |}""".stripMargin
   private val REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD: String =
-    new Serializer().serialize(RequestObject(Seq(coreIdentifier), Seq(invocation1, unsupportedInvocation))).toString()
+    """{
+      |  "using": [
+      |    "urn:ietf:params:jmap:core"
+      |  ],
+      |  "methodCalls": [
+      |    [
+      |      "Core/echo",
+      |      {
+      |        "arg1": "arg1data",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c1"
+      |    ],
+      |    [
+      |      "error",
+      |      {
+      |        "type": "Not implemented"
+      |      },
+      |      "notsupport"
+      |    ]
+      |  ]
+      |}""".stripMargin
 
-  private val RESPONSE_OBJECT: String = new Serializer().serialize(responseObject1).toString()
-  private val RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD: String = new Serializer().serialize(responseObjectWithUnsupportedMethod).toString()
+  private val RESPONSE_OBJECT: String =
+    """{
+      |  "sessionState": "75128aab4b1b",
+      |  "methodResponses": [
+      |    [
+      |      "Core/echo",
+      |      {
+      |        "arg1": "arg1data",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c1"
+      |    ]
+      |  ]
+      |}""".stripMargin
+  private val RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD: String =
+    """{
+      |  "sessionState": "75128aab4b1b",
+      |  "methodResponses": [
+      |    [
+      |      "Core/echo",
+      |      {
+      |        "arg1": "arg1data",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c1"
+      |    ],
+      |    [
+      |      "error",
+      |      {
+      |        "type": "Not implemented"
+      |      },
+      |      "notsupport"
+      |    ]
+      |  ]
+      |}""".stripMargin
 
   private val SUPPORTED_VERSIONS = ImmutableSet.of(Version.DRAFT, Version.RFC8621)
 
@@ -92,86 +157,86 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   "RFC-8621 version, GET" should "not supported and return 404 status" in {
     RestAssured
       .`given`()
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .when()
-        .get
+      .get
       .then
-        .statusCode(HttpStatus.SC_NOT_FOUND)
+      .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
   "RFC-8621 version, POST, without body" should "return 200 status" in {
     RestAssured
       .`given`()
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .when()
-        .post
+      .post
       .then
-        .statusCode(HttpStatus.SC_OK)
+      .statusCode(HttpStatus.SC_OK)
   }
 
   "RFC-8621 version, POST, methods include supported" should "return OK status" in {
     val response = RestAssured
       .`given`()
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(REQUEST_OBJECT)
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(REQUEST_OBJECT)
       .when()
-        .post()
+      .post()
       .then
-        .statusCode(HttpStatus.SC_OK)
-        .contentType(ContentType.JSON)
+      .statusCode(HttpStatus.SC_OK)
+      .contentType(ContentType.JSON)
       .extract()
-        .body()
-        .asString()
+      .body()
+      .asString()
 
-    response shouldBe (RESPONSE_OBJECT)
+    assertThatJson(response).isEqualTo(RESPONSE_OBJECT)
   }
 
   "RFC-8621 version, POST, with methods" should "return OK status, ResponseObject depend on method" in {
 
     val response = RestAssured
       .`given`()
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD)
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD)
       .when()
-        .post()
+      .post()
       .then
-        .statusCode(HttpStatus.SC_OK)
-        .contentType(ContentType.JSON)
+      .statusCode(HttpStatus.SC_OK)
+      .contentType(ContentType.JSON)
       .extract()
-        .body()
-        .asString()
+      .body()
+      .asString()
 
-    response shouldBe (RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD)
+    assertThatJson(response).isEqualTo(RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD)
   }
 
   "Draft version, GET" should "return 404 status" in {
     RestAssured
       .`given`()
-        .header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER)
+      .header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER)
       .when()
-        .get
+      .get
       .then
-        .statusCode(HttpStatus.SC_NOT_FOUND)
+      .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
   "Draft version, POST, without body" should "return 400 status" in {
     RestAssured
       .`given`()
-        .header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER)
+      .header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER)
       .when()
-        .post
+      .post
       .then
-        .statusCode(HttpStatus.SC_NOT_FOUND)
+      .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
   "RFC-8621 version, POST, with wrong requestObject body" should "return 400 status" in {
     RestAssured
       .`given`()
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(WRONG_OBJECT_REQUEST)
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(WRONG_OBJECT_REQUEST)
       .when()
-        .post
+      .post
       .then
-        .statusCode(HttpStatus.SC_BAD_REQUEST)
+      .statusCode(HttpStatus.SC_BAD_REQUEST)
   }
 }
