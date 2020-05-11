@@ -23,7 +23,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -419,7 +418,7 @@ public interface MessageManager {
         }
 
         private final long recentCount;
-        private final List<MessageUid> recent;
+        private final ImmutableList<MessageUid> recent;
         private final Flags permanentFlags;
         private final UidValidity uidValidity;
         private final MessageUid nextUid;
@@ -432,7 +431,7 @@ public interface MessageManager {
         private final MailboxACL acl;
 
         public MailboxMetaData(List<MessageUid> recent, Flags permanentFlags, UidValidity uidValidity, MessageUid uidNext, ModSeq highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
-            this.recent = Optional.ofNullable(recent).orElseGet(ArrayList::new);
+            this.recent = Optional.ofNullable(recent).map(ImmutableList::copyOf).orElseGet(ImmutableList::of);
             this.highestModSeq = highestModSeq;
             this.recentCount = this.recent.size();
 
