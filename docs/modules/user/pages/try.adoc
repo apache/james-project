@@ -1,27 +1,10 @@
-= Try James in 5 minutes
+= Try James
 :navtitle: Try
 
-Requirements: 
-
- * Docker
- * Docker-compose
-
-Retrieve the docker-compose file:
-
-    $ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
-
-Start:
-
-    $ docker-compose up
-
-When James is available:
-
-james           | Started : true
-
-A default domain, james.local, has been created. You can see this by running:
-
-    $ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 listdomains
-
-James will respond to IMAP port 143 and SMTP port 25.
-You have to create users before playing with james. You may also want to create other domains.
-Follow the 'Useful commands' section for more information about James CLI.
+ * xref:main:user:try/5_minutes.adoc[Try James in 5 minutes]
+   ** Set up a demo server
+   ** Create a new user with the CLI
+ * xref:main:user:try/15_minutes.adoc[Try James in 15 minutes]
+   ** Same steps as above
+   ** Interact with the server via the Admin API
+   ** Test the server with an email client
