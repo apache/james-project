@@ -46,6 +46,8 @@ import org.parboiled.support.ParsingResult;
 import com.google.common.annotations.VisibleForTesting;
 
 public class MDNReportParser {
+    private static final Parser PARSER = Parboiled.createParser(Parser.class);
+
     public MDNReportParser() {
     }
 
@@ -54,8 +56,8 @@ public class MDNReportParser {
     }
 
     public Optional<MDNReport> parse(String mdnReport) {
-        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
-        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionNotificationContent()).run(mdnReport);
+        ParsingResult<Object> result = new ReportingParseRunner<>(PARSER.dispositionNotificationContent())
+            .run(mdnReport);
         if (result.matched) {
             return Optional.of((MDNReport)result.resultValue);
         }
