@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.mailet.base;
+package org.apache.james.mailetcontainer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,6 +34,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Test;
 

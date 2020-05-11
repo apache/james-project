@@ -32,6 +32,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.mailetcontainer.AutomaticallySentMailDetectorImpl;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.james.mailetcontainer.api.MatcherLoader;
@@ -54,6 +55,7 @@ import org.apache.james.utils.SpoolerProbe;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
+import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,6 +89,9 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         bind(JamesMailetContext.class).in(Scopes.SINGLETON);
         bind(MailetContext.class).to(JamesMailetContext.class);
+
+        bind(AutomaticallySentMailDetectorImpl.class).in(Scopes.SINGLETON);
+        bind(AutomaticallySentMailDetector.class).to(AutomaticallySentMailDetectorImpl.class);
 
         bind(MailetLoader.class).to(GuiceMailetLoader.class);
         bind(MatcherLoader.class).to(GuiceMatcherLoader.class);

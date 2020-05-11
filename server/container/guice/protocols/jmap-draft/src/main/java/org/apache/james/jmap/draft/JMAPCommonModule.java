@@ -51,8 +51,6 @@ import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
-import org.apache.mailet.base.AutomaticallySentMailDetector;
-import org.apache.mailet.base.AutomaticallySentMailDetectorImpl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -73,7 +71,6 @@ public class JMAPCommonModule extends AbstractModule {
         bind(SignedTokenManager.class).in(Scopes.SINGLETON);
         bind(AccessTokenManagerImpl.class).in(Scopes.SINGLETON);
         bind(MailSpool.class).in(Scopes.SINGLETON);
-        bind(AutomaticallySentMailDetectorImpl.class).in(Scopes.SINGLETON);
         bind(MailboxFactory.class).in(Scopes.SINGLETON);
 
         bind(MessageFullViewFactory.class).in(Scopes.SINGLETON);
@@ -88,7 +85,6 @@ public class JMAPCommonModule extends AbstractModule {
         bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
         bind(SimpleTokenManager.class).to(SignedTokenManager.class);
         bind(SimpleTokenFactory.class).to(SignedTokenFactory.class);
-        bind(AutomaticallySentMailDetector.class).to(AutomaticallySentMailDetectorImpl.class);
 
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
