@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

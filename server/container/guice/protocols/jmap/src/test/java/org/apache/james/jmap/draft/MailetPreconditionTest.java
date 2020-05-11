@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.List;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.jmap.draft.JMAPModule;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;

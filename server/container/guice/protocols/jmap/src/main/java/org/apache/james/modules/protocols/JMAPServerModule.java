@@ -42,7 +42,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
-public class JMAPDraftServerModule extends AbstractModule {
+public class JMAPServerModule extends AbstractModule {
 
     @Override
     protected void configure() {

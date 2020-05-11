@@ -45,7 +45,7 @@ import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.metrics.CassandraMetricsModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
-import org.apache.james.modules.protocols.JMAPDraftServerModule;
+import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
@@ -107,7 +107,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new POP3ServerModule(),
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
-        new JMAPDraftServerModule(),
+        new JMAPServerModule(),
         WEBADMIN);
 
     public static final Module PLUGINS = Modules.combine(

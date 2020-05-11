@@ -49,7 +49,7 @@ import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
-public class MethodsModule extends AbstractModule {
+public class DraftMethodsModule extends AbstractModule {
 
     @Override
     protected void configure() {

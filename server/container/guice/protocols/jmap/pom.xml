@@ -26,10 +26,10 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-guice-jmap-draft</artifactId>
+    <artifactId>james-server-guice-jmap</artifactId>
 
-    <name>Apache James :: Server :: Guice :: JMAP (draft)</name>
-    <description>JMAP (draft) modules for Guice implementation of James server</description>
+    <name>Apache James :: Server :: Guice :: JMAP</name>
+    <description>JMAP (draft and RFC8621) modules for Guice implementation of James server</description>
 
     <dependencies>
         <dependency>
@@ -60,6 +60,10 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-jmap-draft</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-jmap-rfc-8621</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

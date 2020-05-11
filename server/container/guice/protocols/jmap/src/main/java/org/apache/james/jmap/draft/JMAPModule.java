@@ -38,6 +38,7 @@ import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.event.PropagateLookupRightListener;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
+import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.MailboxManager;
@@ -87,7 +88,8 @@ public class JMAPModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new JMAPCommonModule());
-        install(new MethodsModule());
+        install(new DraftMethodsModule());
+        install(new RFC8621MethodsModule());
         install(binder -> binder
             .bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
             .toInstance(DEFAULT_JMAP_PROCESSORS_CONFIGURATION_SUPPLIER));
@@ -109,6 +111,7 @@ public class JMAPModule extends AbstractModule {
 
         Multibinder<Version> supportedVersions = Multibinder.newSetBinder(binder(), Version.class);
         supportedVersions.addBinding().toInstance(Version.DRAFT);
+        supportedVersions.addBinding().toInstance(Version.RFC8621);
     }
 
     @Provides
