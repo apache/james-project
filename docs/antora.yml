@@ -1,0 +1,10 @@
+name: main
+title: Apache James Reference Book
+version: '3.5'
+prerelease: Alpha
+nav:
+- modules/user/nav.adoc
+- modules/ops/nav.adoc
+- modules/admin/nav.adoc
+- modules/dev/nav.adoc
+- modules/doc/nav.adoc
