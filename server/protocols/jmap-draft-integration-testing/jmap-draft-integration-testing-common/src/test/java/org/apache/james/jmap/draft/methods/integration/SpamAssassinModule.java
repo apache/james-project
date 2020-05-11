@@ -23,8 +23,12 @@ import java.util.Optional;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.BaseConfiguration;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
+import org.apache.james.mailbox.spamassassin.SpamAssassinListener;
 import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
+import org.apache.james.modules.mailbox.ListenerConfiguration;
+import org.apache.james.modules.mailbox.ListenersConfiguration;
 import org.apache.james.spamassassin.SpamAssassinExtension;
 import org.apache.james.util.Host;
 import org.apache.james.utils.MailetConfigurationOverride;
@@ -49,6 +53,10 @@ public class SpamAssassinModule extends AbstractModule {
                 new MailetConfigurationOverride(
                     org.apache.james.transport.mailets.SpamAssassin.class,
                     spamAssassinMailetConfig()));
+
+        bind(ListenersConfiguration.class)
+            .toInstance(ListenersConfiguration.of(
+                ListenerConfiguration.forClass(SpamAssassinListener.class.getCanonicalName())));
     }
 
     @Provides

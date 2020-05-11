@@ -25,8 +25,13 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 public class ListenersConfiguration {
+
+    public static ListenersConfiguration of(ListenerConfiguration... listenersConfiguration) {
+        return new ListenersConfiguration(ImmutableList.copyOf(listenersConfiguration));
+    }
 
     public static ListenersConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) {
         List<HierarchicalConfiguration<ImmutableNode>> listeners = configuration.configurationsAt("listener");
