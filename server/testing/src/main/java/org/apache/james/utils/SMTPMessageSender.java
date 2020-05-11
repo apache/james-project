@@ -35,11 +35,13 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.util.Port;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ExternalResource;
 
 import com.github.fge.lambdas.Throwing;
 
-public class SMTPMessageSender extends ExternalResource implements Closeable {
+public class SMTPMessageSender extends ExternalResource implements Closeable, AfterEachCallback {
 
     private static final String DEFAULT_PROTOCOL = "TLS";
     private static final String UTF_8_ENCODING = "UTF-8";
@@ -139,6 +141,11 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         message.writeTo(outputStream);
         return new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) {
+        after();
     }
 
     @Override
