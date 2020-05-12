@@ -175,7 +175,7 @@ public class DecoderUtilsLocaleDateTest {
         LocalDateTime localDateTime = DecoderUtils.decodeDateTime(input);
         assertThat(ZonedDateTime.of(localDateTime, ZoneId.systemDefault())
             .withZoneSameInstant(ZoneId.of("GMT"))
-            .format(DateTimeFormatter.ofPattern("dd MMM YYYY HH:mm:ss VV", Locale.US)))
+            .format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss VV", Locale.US)))
             .isEqualTo(expected);
     }
 }

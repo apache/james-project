@@ -159,7 +159,7 @@ class DecoderUtilsTest {
         LocalDateTime localDateTime = DecoderUtils.decodeDateTime(input);
         assertThat(ZonedDateTime.of(localDateTime, ZoneId.systemDefault())
                 .withZoneSameInstant(ZoneId.of("GMT"))
-                .format(DateTimeFormatter.ofPattern("dd MMM YYYY HH:mm:ss VV", Locale.US)))
+                .format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss VV", Locale.US)))
             .isEqualTo(parsed);
     }
 
@@ -168,7 +168,7 @@ class DecoderUtilsTest {
         LocalDateTime localDateTime = DecoderUtils.decodeDateTime("09-Apr-2008 15:17:51 +0200");
         assertThat(ZonedDateTime.of(localDateTime, ZoneId.systemDefault())
                 .withZoneSameInstant(ZoneId.of("GMT"))
-                .format(DateTimeFormatter.ofPattern("dd MMM YYYY HH:mm:ss VV", Locale.US)))
+                .format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss VV", Locale.US)))
             .isEqualTo("09 Apr 2008 13:17:51 GMT");
     }
 
