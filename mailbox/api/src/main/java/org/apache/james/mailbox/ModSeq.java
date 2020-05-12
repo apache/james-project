@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -74,6 +75,8 @@ public class ModSeq implements Comparable<ModSeq> {
     
     @Override
     public String toString() {
-        return "ModSeq{uid=" + modSeq + "}";
+        return MoreObjects.toStringHelper(this)
+            .add("value", modSeq)
+            .toString();
     }
 }
