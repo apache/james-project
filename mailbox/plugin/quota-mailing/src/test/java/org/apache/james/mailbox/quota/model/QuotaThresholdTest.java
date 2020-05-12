@@ -133,6 +133,7 @@ public class QuotaThresholdTest {
     }
 
     @Test
+    @SuppressWarnings("SelfComparison")
     public void compareToShouldReturnZeroWhenEquals() {
         assertThat(_75.compareTo(_75))
             .isEqualTo(0);

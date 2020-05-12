@@ -59,6 +59,7 @@ import com.google.common.collect.ImmutableMap;
  * 
  * @since Mailet API v3.2
  */
+@SuppressWarnings("EqualsHashCode")
 public interface Serializer<T> {
     JsonNode serialize(T object);
 

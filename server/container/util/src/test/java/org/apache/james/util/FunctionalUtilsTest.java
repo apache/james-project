@@ -40,6 +40,7 @@ class FunctionalUtilsTest {
         }
 
         @Test
+        @SuppressWarnings("ReturnValueIgnored")
         void toFunctionShouldCallConsumer() {
             Counter counter = new Counter(26);
             Consumer<Integer> consumer = counter::increment;
@@ -58,6 +59,7 @@ class FunctionalUtilsTest {
         }
 
         @Test
+        @SuppressWarnings("ReturnValueIgnored")
         void identityWithSideEffectShouldCallRunnable() {
             Counter counter = new Counter(26);
             Runnable runnable = () -> counter.increment(1);

@@ -72,6 +72,7 @@ class MailboxMessageResultImplTest {
 
 
     @Test
+    @SuppressWarnings("SelfComparison")
     void testCompareToReflexive() {
         assertThat(msgResultA.compareTo(msgResultA)).isEqualTo(0);
     }

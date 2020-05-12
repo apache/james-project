@@ -215,6 +215,7 @@ public class CriterionConverter {
         }
     }
 
+    @SuppressWarnings("ReturnValueIgnored")
     private BoolQueryBuilder convertToBoolQuery(Stream<QueryBuilder> stream, BiFunction<BoolQueryBuilder, QueryBuilder, BoolQueryBuilder> addCriterionToBoolQuery) {
         return stream.collect(Collector.of(QueryBuilders::boolQuery,
                 addCriterionToBoolQuery::apply,

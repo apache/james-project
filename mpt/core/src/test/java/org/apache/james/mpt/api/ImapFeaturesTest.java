@@ -62,13 +62,15 @@ public class ImapFeaturesTest {
     }
 
     @Test(expected = NullPointerException.class)
+    @SuppressWarnings("CheckReturnValue")
     public void supportsShouldThrowOnNullFeature() {
-        assertThat(ImapFeatures.of().supports((Feature)null));
+        ImapFeatures.of().supports((Feature)null);
     }
 
     @Test(expected = NullPointerException.class)
+    @SuppressWarnings("CheckReturnValue")
     public void supportsShouldThrowOnNullFeatureArray() {
-        assertThat(ImapFeatures.of().supports((Feature[])null));
+        ImapFeatures.of().supports((Feature[])null);
     }
 
     

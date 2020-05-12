@@ -158,9 +158,10 @@ public class MappingsImplTest {
 
     
     @Test(expected = NullPointerException.class)
+    @SuppressWarnings("CheckReturnValue")
     public void containsShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
-        assertThat(mappings.contains((Mapping.Type)null));
+        mappings.contains((Mapping.Type)null);
     }
     
     @Test
@@ -190,9 +191,10 @@ public class MappingsImplTest {
 
     
     @Test(expected = NullPointerException.class)
+    @SuppressWarnings("CheckReturnValue")
     public void selectShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
-        assertThat(mappings.select((Mapping.Type)null));
+        mappings.select((Mapping.Type)null);
     }
 
     @Test
@@ -221,9 +223,10 @@ public class MappingsImplTest {
 
     
     @Test(expected = NullPointerException.class)
+    @SuppressWarnings("CheckReturnValue")
     public void excludeShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
-        assertThat(mappings.exclude((Mapping.Type)null));
+        mappings.exclude((Mapping.Type)null);
     }
 
     @Test
