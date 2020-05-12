@@ -35,23 +35,24 @@ public class AttachmentAccessTokenTest {
     private static final String SIGNATURE = "signature";
 
     @Test
-    public void getAsStringShouldNotContainBlobId() throws Exception {
+    public void getAsStringShouldNotContainBlobId() {
         assertThat(new AttachmentAccessToken(USERNAME, BLOB_ID, EXPIRATION_DATE, SIGNATURE).serialize())
             .isEqualTo(USERNAME + AttachmentAccessToken.SEPARATOR + EXPIRATION_DATE_STRING + AttachmentAccessToken.SEPARATOR + SIGNATURE);
     }
 
     @Test
-    public void getPayloadShouldNotContainBlobId() throws Exception {
+    public void getPayloadShouldNotContainBlobId() {
         assertThat(new AttachmentAccessToken(USERNAME, BLOB_ID, EXPIRATION_DATE, SIGNATURE).getPayload())
             .isEqualTo(USERNAME + AttachmentAccessToken.SEPARATOR + EXPIRATION_DATE_STRING);
     }
 
     @Test
-    public void getSignedContentShouldContainBlobId() throws Exception {
+    public void getSignedContentShouldContainBlobId() {
         assertThat(new AttachmentAccessToken(USERNAME, BLOB_ID, EXPIRATION_DATE, SIGNATURE).getSignedContent())
             .isEqualTo(BLOB_ID + AttachmentAccessToken.SEPARATOR + USERNAME + AttachmentAccessToken.SEPARATOR + EXPIRATION_DATE_STRING);
     }
-    
+
+    @Test
     public void buildWithNullUsernameShouldThrow() {
         assertThatThrownBy(() -> AttachmentAccessToken.builder()
             .username(null)
@@ -59,6 +60,7 @@ public class AttachmentAccessTokenTest {
         ).isInstanceOf(NullPointerException.class);
     }
 
+    @Test
     public void buildWithNullBlobIdShouldThrow() {
         assertThatThrownBy(() -> AttachmentAccessToken.builder()
             .username(USERNAME)
@@ -67,6 +69,7 @@ public class AttachmentAccessTokenTest {
         ).isInstanceOf(NullPointerException.class);
     }
 
+    @Test
     public void buildWithNullExpirationDateShouldThrow() {
         assertThatThrownBy(() -> AttachmentAccessToken.builder()
             .username(USERNAME)
@@ -76,6 +79,7 @@ public class AttachmentAccessTokenTest {
         ).isInstanceOf(NullPointerException.class);
     }
 
+    @Test
     public void buildWithNullSignatureShouldThrow() {
         assertThatThrownBy(() -> AttachmentAccessToken.builder()
             .username(USERNAME)
@@ -86,6 +90,7 @@ public class AttachmentAccessTokenTest {
         ).isInstanceOf(NullPointerException.class);
     }
 
+    @Test
     public void buildWithValidArgumentsShouldBuild() {
         AttachmentAccessToken expected = new AttachmentAccessToken(USERNAME, BLOB_ID, EXPIRATION_DATE, SIGNATURE);
         AttachmentAccessToken actual = AttachmentAccessToken.builder()
