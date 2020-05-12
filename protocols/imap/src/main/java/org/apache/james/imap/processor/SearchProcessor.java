@@ -91,7 +91,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
         try {
 
-            final MessageManager mailbox = getSelectedMailbox(session);
+            MessageManager mailbox = getSelectedMailbox(session)
+                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
 
             final SearchQuery query = toQuery(searchKey, session);
             MailboxSession msession = session.getMailboxSession();

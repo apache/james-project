@@ -60,20 +60,17 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
     @Override
     protected void processRequest(FetchRequest request, ImapSession session, Responder responder) {
-        final boolean useUids = request.isUseUids();
-        final IdRange[] idSet = request.getIdSet();
-        final FetchData fetch = computeFetchData(request, session);
+        boolean useUids = request.isUseUids();
+        IdRange[] idSet = request.getIdSet();
+        FetchData fetch = computeFetchData(request, session);
 
         try {
             final long changedSince = fetch.getChangedSince();
 
-            final MessageManager mailbox = getSelectedMailbox(session);
+            MessageManager mailbox = getSelectedMailbox(session)
+                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
 
-            if (mailbox == null) {
-                throw new MailboxException("Session not in SELECTED state");
-            }
-
-            final boolean vanished = fetch.getVanished();
+            boolean vanished = fetch.getVanished();
             if (vanished && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
                 taggedBad(request, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
                 return;

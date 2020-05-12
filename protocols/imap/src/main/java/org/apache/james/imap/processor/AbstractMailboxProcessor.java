@@ -72,6 +72,8 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
 public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends AbstractChainedProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
 
@@ -397,16 +399,11 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         return factory;
     }
 
-    protected MessageManager getSelectedMailbox(ImapSession session) throws MailboxException {
-        MessageManager result;
-        final SelectedMailbox selectedMailbox = session.getSelected();
-        if (selectedMailbox == null) {
-            result = null;
-        } else {
-            final MailboxManager mailboxManager = getMailboxManager();
-            result = mailboxManager.getMailbox(selectedMailbox.getMailboxId(), session.getMailboxSession());
-        }
-        return result;
+    protected Optional<MessageManager> getSelectedMailbox(ImapSession session) throws MailboxException {
+        return Optional.ofNullable(session.getSelected())
+            .map(Throwing.<SelectedMailbox, MessageManager>function(selectedMailbox ->
+                getMailboxManager().getMailbox(selectedMailbox.getMailboxId(), session.getMailboxSession()))
+                .sneakyThrow());
     }
 
     /**

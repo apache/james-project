@@ -444,7 +444,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                     MailboxMetaData metaData  = null;
                     boolean send = false;
                     if (sm != null) {
-                        MessageManager mailbox = getSelectedMailbox(session);
+                        MessageManager mailbox = getSelectedMailbox(session)
+                            .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
                         metaData = mailbox.getMetaData(false, session.getMailboxSession(), FetchGroup.NO_COUNT);
                         send = true;
                     }

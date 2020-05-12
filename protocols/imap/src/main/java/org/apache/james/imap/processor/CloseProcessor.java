@@ -48,7 +48,8 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     @Override
     protected void processRequest(CloseRequest request, ImapSession session, Responder responder) {
         try {
-            MessageManager mailbox = getSelectedMailbox(session);
+            MessageManager mailbox = getSelectedMailbox(session)
+                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
             final MailboxSession mailboxSession = session.getMailboxSession();
             if (mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT).isWriteable()) {
                 mailbox.expunge(MessageRange.all(), mailboxSession);

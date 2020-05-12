@@ -77,19 +77,19 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
     @Override
     protected void processRequest(StoreRequest request, ImapSession session, Responder responder) {
-        final IdRange[] idSet = request.getIdSet();
-        final boolean useUids = request.isUseUids();
-        final long unchangedSince = request.getUnchangedSince();
-        ImapCommand imapCommand = request.getCommand();
-        
+        IdRange[] idSet = request.getIdSet();
+        boolean useUids = request.isUseUids();
+        long unchangedSince = request.getUnchangedSince();
+
         try {
-            final MessageManager mailbox = getSelectedMailbox(session);
-            final MailboxSession mailboxSession = session.getMailboxSession();
-            final Flags flags = request.getFlags();
-            
+            MessageManager mailbox = getSelectedMailbox(session)
+                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
+            MailboxSession mailboxSession = session.getMailboxSession();
+            Flags flags = request.getFlags();
+
             if (unchangedSince != -1) {
                 MailboxMetaData metaData = mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT);
-                if (metaData.isModSeqPermanent() == false) {
+                if (!metaData.isModSeqPermanent()) {
                     // Check if the mailbox did not support modsequences. If so return a tagged bad response.
                     // See RFC4551 3.1.2. NOMODSEQ Response Code 
                     taggedBad(request, responder, HumanReadableText.NO_MOD_SEQ);
@@ -120,9 +120,6 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 if (messageSet != null) {
 
                     if (unchangedSince != -1) {
-                        // Ok we have a CONDSTORE option so use the CONDSTORE_COMMAND
-                        imapCommand = CONDSTORE_COMMAND;
-
                         List<MessageUid> uids = new ArrayList<>();
 
                         MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroup.MINIMAL, mailboxSession);

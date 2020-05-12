@@ -64,8 +64,9 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
     @Override
     protected void processRequest(ExpungeRequest request, ImapSession session, Responder responder) {
         try {
-            final MessageManager mailbox = getSelectedMailbox(session);
-            final MailboxSession mailboxSession = session.getMailboxSession();
+            MessageManager mailbox = getSelectedMailbox(session)
+                .orElseThrow(() -> new MailboxException("Session not in SELECTED state"));
+            MailboxSession mailboxSession = session.getMailboxSession();
 
             int expunged = 0;
             MailboxMetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
