@@ -94,6 +94,13 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
         return this;
     }
 
+    public IMAPMessageReader create(String mailbox) throws IOException {
+        if (!imapClient.create(mailbox)) {
+            throw new RuntimeException(imapClient.getReplyString());
+        }
+        return this;
+    }
+
     public IMAPMessageReader delete(String mailbox) throws IOException {
         imapClient.delete(mailbox);
         return this;
@@ -105,7 +112,7 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
             .contains("OK FETCH completed");
     }
 
-    public IMAPMessageReader awaitMessage(ConditionFactory conditionFactory) throws IOException {
+    public IMAPMessageReader awaitMessage(ConditionFactory conditionFactory) {
         conditionFactory.until(this::hasAMessage);
         return this;
     }
@@ -127,7 +134,7 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
             .count();
     }
 
-    public IMAPMessageReader awaitNoMessage(ConditionFactory conditionFactory) throws IOException {
+    public IMAPMessageReader awaitNoMessage(ConditionFactory conditionFactory) {
         conditionFactory.until(this::userDoesNotReceiveMessage);
         return this;
     }
@@ -144,10 +151,10 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
             && Splitter.on(" ")
                 .splitToList(flags)
                 .stream()
-                .allMatch(s -> replyString.contains(s));
+                .allMatch(replyString::contains);
     }
 
-    public boolean userGetNotifiedForNewMessagesWhenSelectingMailbox(int numOfNewMessage) throws IOException {
+    public boolean userGetNotifiedForNewMessagesWhenSelectingMailbox(int numOfNewMessage) {
         return imapClient.getReplyString().contains("OK [UNSEEN " + numOfNewMessage + "]");
     }
 
