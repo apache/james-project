@@ -88,7 +88,7 @@ public abstract class AbstractBundleTracker implements BeanFactoryAware, BundleL
                     URL e = (URL) entrs.nextElement();
                     String file = e.getFile();
 
-                    String className = file.replaceAll("/", ".").replaceAll(".class", "").replaceFirst(".", "");
+                    String className = file.replaceAll("/", ".").replaceAll("\\.class", "").replaceFirst("\\.", "");
                     if (className.equals(configuredClass)) {
                         try {
 
