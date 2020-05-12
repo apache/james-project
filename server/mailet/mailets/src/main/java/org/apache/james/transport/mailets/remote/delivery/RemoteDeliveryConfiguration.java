@@ -225,7 +225,7 @@ public class RemoteDeliveryConfiguration {
         if (isBindUsed()) {
             // undocumented JavaMail 1.2 feature, smtp transport will use
             // our socket factory, which will also set the local address
-            props.put("mail.smtp.socketFactory.class", RemoteDeliverySocketFactory.class.getClass());
+            props.put("mail.smtp.socketFactory.class", RemoteDeliverySocketFactory.class);
             // Don't fallback to the standard socket factory on error, do throw an exception
             props.put("mail.smtp.socketFactory.fallback", "false");
         }
