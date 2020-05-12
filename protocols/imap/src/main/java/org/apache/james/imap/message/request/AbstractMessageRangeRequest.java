@@ -74,6 +74,6 @@ public abstract class AbstractMessageRangeRequest extends AbstractImapRequest {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(idSet, mailboxName, useUids);
+        return Objects.hashCode(Arrays.hashCode(idSet), mailboxName, useUids);
     }
 }
