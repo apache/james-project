@@ -113,10 +113,10 @@ public class UploadResponse {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         if (obj instanceof UploadResponse) {
             UploadResponse other = (UploadResponse) obj;
-            return Objects.equal(accountId, accountId)
+            return Objects.equal(accountId, other.accountId)
                 && Objects.equal(blobId, other.blobId)
                 && Objects.equal(type, other.type)
                 && Objects.equal(size, other.size)
@@ -126,7 +126,7 @@ public class UploadResponse {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hashCode(accountId, blobId, type, size, expires);
     }
 
