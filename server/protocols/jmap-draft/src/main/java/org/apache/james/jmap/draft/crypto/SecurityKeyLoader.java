@@ -55,9 +55,11 @@ public class SecurityKeyLoader {
         Preconditions.checkState(jmapDraftConfiguration.isEnabled(), "JMAP is not enabled");
 
         KeyStore keystore = KeyStore.getInstance(JKS);
-        InputStream fis = fileSystem.getResource(jmapDraftConfiguration.getKeystore());
-        char[] secret = jmapDraftConfiguration.getSecret().toCharArray();
-        keystore.load(fis, secret);
+        char[] secret;
+        try (InputStream fis = fileSystem.getResource(jmapDraftConfiguration.getKeystore())) {
+            secret = jmapDraftConfiguration.getSecret().toCharArray();
+            keystore.load(fis, secret);
+        }
         Certificate aliasCertificate = Optional
                 .ofNullable(keystore.getCertificate(ALIAS))
                 .orElseThrow(() -> new KeyStoreException("Alias '" + ALIAS + "' keystore can't be found"));

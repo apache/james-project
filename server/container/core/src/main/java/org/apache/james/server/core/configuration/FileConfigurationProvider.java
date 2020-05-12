@@ -57,6 +57,11 @@ public class FileConfigurationProvider implements ConfigurationProvider {
         XMLConfiguration xmlConfiguration = builder.getConfiguration();
         FileHandler fileHandler = new FileHandler(xmlConfiguration);
         fileHandler.load(configStream);
+        try {
+            configStream.close();
+        } catch (IOException ignored) {
+            // Ignored
+        }
 
         return xmlConfiguration;
     }

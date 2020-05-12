@@ -263,27 +263,24 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
 
         try (Connection conn = datasource.getConnection()) {
             // Initialise the sql strings.
-            InputStream sqlFile;
-            try {
-                sqlFile = fileSystem.getResource(sqlFileName);
+            try (InputStream sqlFile = fileSystem.getResource(sqlFileName)) {
+                LOGGER.debug("Reading SQL resources from file: {}, section {}.", sqlFileName, getClass().getName());
+
+                // Build the statement parameters
+                Map<String, String> sqlParameters = new HashMap<>();
+                if (tableName != null) {
+                    sqlParameters.put("table", tableName);
+                }
+                if (repositoryName != null) {
+                    sqlParameters.put("repository", repositoryName);
+                }
+
+                sqlQueries = new SqlResources();
+                sqlQueries.init(sqlFile, this.getClass().getName(), conn, sqlParameters);
             } catch (Exception e) {
                 LOGGER.error(e.getMessage(), e);
                 throw e;
             }
-
-            LOGGER.debug("Reading SQL resources from file: {}, section {}.", sqlFileName, getClass().getName());
-
-            // Build the statement parameters
-            Map<String, String> sqlParameters = new HashMap<>();
-            if (tableName != null) {
-                sqlParameters.put("table", tableName);
-            }
-            if (repositoryName != null) {
-                sqlParameters.put("repository", repositoryName);
-            }
-
-            sqlQueries = new SqlResources();
-            sqlQueries.init(sqlFile, this.getClass().getName(), conn, sqlParameters);
 
             // Check if the required table exists. If not, create it.
             DatabaseMetaData dbMetaData = conn.getMetaData();
