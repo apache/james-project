@@ -275,9 +275,9 @@ public class MaildirMessage implements Message {
 
     @Override
     public List<MessageAttachmentMetadata> getAttachments() {
-        try {
+        try (InputStream fullContent = getFullContent()) {
             AtomicInteger counter = new AtomicInteger(0);
-            return new MessageParser().retrieveAttachments(getFullContent())
+            return new MessageParser().retrieveAttachments(fullContent)
                 .stream()
                 .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
                     attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet())))
