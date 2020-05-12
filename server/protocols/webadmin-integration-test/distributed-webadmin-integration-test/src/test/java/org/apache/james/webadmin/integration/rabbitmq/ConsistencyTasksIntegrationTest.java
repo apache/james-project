@@ -32,16 +32,12 @@ import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Date;
-import java.util.Optional;
-import java.util.function.Supplier;
-
-import javax.mail.Flags;
 
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
@@ -52,16 +48,12 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.TestingSession;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
+import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.junit.categories.BasicFeature;
-import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
-import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
@@ -159,18 +151,11 @@ class ConsistencyTasksIntegrationTest {
     private static final String USERNAME = "username@" + DOMAIN;
     private static final String ALIAS_1 = "alias1@" + DOMAIN;
     private static final String ALIAS_2 = "alias2@" + DOMAIN;
-    private static final String MESSAGE_CONTENT = "Subject: test\r\n" +
+    private static final String MESSAGE = "Subject: test\r\n" +
         "\r\n" +
         "testmail";
-    private static final Date DATE = new Date();
-    private static final Flags FLAGS = new Flags(Flags.Flag.SEEN);
-    private static final Supplier<AppendCommand> APPEND_COMMAND = () -> AppendCommand.builder()
-        .withFlags(FLAGS)
-        .withInternalDate(DATE)
-        .notRecent()
-        .build(MESSAGE_CONTENT);
-    private static final int DAO_DENORMALIZATION_TOTAL_TRIES = 6;
     private static final String JAMES_SERVER_HOST = "127.0.0.1";
+    private static final String TEST_MAILBOX = "TEST";
 
     private DataProbe dataProbe;
 
@@ -181,8 +166,10 @@ class ConsistencyTasksIntegrationTest {
             .addDomain(DOMAIN)
             .addUser(ALICE.asString(), ALICE_PASSWORD)
             .addUser(BOB.asString(), BOB_PASSWORD);
-        WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
+        guiceJamesServer.getProbe(QuotaProbesImpl.class).setGlobalMaxMessageCount(QuotaCountLimit.count(50));
+
+        WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
             .build();
     }
@@ -229,18 +216,23 @@ class ConsistencyTasksIntegrationTest {
         .then()
             .body("status", is("completed"));
 
-        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
-
         server.getProbe(TestingSessionProbe.class)
             .getTestingSession().registerScenario(fail()
-            .times(DAO_DENORMALIZATION_TOTAL_TRIES)
+            .forever()
             .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase)"));
 
         try {
-            probe.createMailbox(MailboxPath.inbox(BOB));
+            imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(BOB, BOB_PASSWORD)
+                .create(TEST_MAILBOX);
         } catch (Exception e) {
-            // Failure is expected
+            // Error is expected
         }
+
+        server.getProbe(TestingSessionProbe.class)
+            .getTestingSession().registerScenario(executeNormally()
+            .forever()
+            .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase)"));
 
         String solveConsistenciesTaskId = with()
             .header("I-KNOW-WHAT-I-M-DOING", "ALL-SERVICES-ARE-OFFLINE")
@@ -253,27 +245,27 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(solveConsistenciesTaskId + "/await");
 
-        // The mailbox is removed as it is not in the mailboxDAO source of truth.
-        assertThat(probe.listUserMailboxes(BOB.asString()))
-            .isEmpty();
+        assertThatCode(() -> imapMessageReader.create(TEST_MAILBOX)).doesNotThrowAnyException();
     }
 
     @Test
-    void shouldRecomputeMailboxCounters(GuiceJamesServer server) throws MailboxException {
-        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
-        MailboxPath inbox = MailboxPath.inbox(BOB);
-        probe.createMailbox(inbox);
-
+    void shouldRecomputeMailboxCounters(GuiceJamesServer server) throws Exception {
         server.getProbe(TestingSessionProbe.class)
             .getTestingSession().registerScenario(fail()
-            .times(1)
-            .whenQueryStartsWith("INSERT INTO messageCounter (nextUid,mailboxId)"));
+            .forever()
+            .whenQueryStartsWith("UPDATE mailboxCounters SET count=count+1,unseen=unseen+1 WHERE mailboxId=:mailboxId;"));
 
-        try {
-            probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
-        } catch (Exception e) {
-            // Expected to fail
-        }
+        smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
+
+        Awaitility.await()
+            .untilAsserted(() -> assertThat(server.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(MailRepositoryUrl.from("cassandra://var/mail/error/"))).isEqualTo(1));
+
+        server.getProbe(TestingSessionProbe.class)
+            .getTestingSession().registerScenario(executeNormally()
+            .forever()
+            .whenQueryStartsWith("UPDATE mailboxCounters SET count=count+1,unseen=unseen+1 WHERE mailboxId=:mailboxId;"));
 
         String taskId = with()
             .basePath("/mailboxes")
@@ -286,18 +278,16 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        assertThat(probe.retrieveCounters(inbox).getCount()).isEqualTo(1);
+        //Each of the LocalDelivery retries leads to an email being created in BOB mailbox and leading to 4 emails in total
+        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB, BOB_PASSWORD)
+            .select(MailboxConstants.INBOX);
+
+        assertThat(imapMessageReader.getMessageCount(MailboxConstants.INBOX)).isEqualTo(4);
     }
 
     @Test
     void shouldRecomputeQuotas(GuiceJamesServer server) throws Exception {
-        dataProbe.fluent()
-            .addDomain(BOB.getDomainPart().get().asString())
-            .addUser(BOB.asString(), BOB_PASSWORD);
-        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
-        MailboxPath inbox = MailboxPath.inbox(BOB);
-        probe.createMailbox(inbox);
-
         Barrier barrier1 = new Barrier();
         Barrier barrier2 = new Barrier();
         String updatedQuotaQueryString = "UPDATE currentQuota SET messageCount=messageCount+?,storage=storage+? WHERE quotaRoot=?;";
@@ -312,7 +302,13 @@ class ConsistencyTasksIntegrationTest {
                     .times(1)
                     .whenQueryStartsWith(updatedQuotaQueryString));
 
-        probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
+        smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
+
+        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB, BOB_PASSWORD)
+            .select(MailboxConstants.INBOX)
+            .awaitMessage(Awaitility.await());
 
         // Await first execution
         barrier1.awaitCaller();
@@ -332,12 +328,9 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        QuotaProbesImpl quotaProbe = server.getProbe(QuotaProbesImpl.class);
-        assertThat(
-            quotaProbe.getMessageCountQuota(QuotaRoot.quotaRoot("#private&" + BOB.asString(), Optional.empty()))
-                .getUsed()
-                .asLong())
-            .isEqualTo(1);
+        assertThat(imapMessageReader.getQuotaRoot(MailboxConstants.INBOX))
+            .contains("* QUOTAROOT \"INBOX\" #private&bob@domain.tld\r\n" +
+                "* QUOTA #private&bob@domain.tld (MESSAGE 1 50)");
     }
 
     @Test
@@ -352,10 +345,6 @@ class ConsistencyTasksIntegrationTest {
         .then()
             .body("status", is("completed"));
 
-        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
-        MailboxPath inbox = MailboxPath.inbox(BOB);
-        probe.createMailbox(inbox);
-
         // Given BOB has a message partially denormalized in message projection
         TestingSessionProbe testingProbe = server.getProbe(TestingSessionProbe.class);
         testingProbe.getTestingSession().registerScenario(fail()
@@ -363,17 +352,17 @@ class ConsistencyTasksIntegrationTest {
             .whenQueryStartsWith("INSERT INTO messageIdTable"));
 
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE_CONTENT);
+            .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
 
         Awaitility.await()
-            .until(() -> server.getProbe(MailRepositoryProbeImpl.class)
-                .getRepositoryMailCount(MailRepositoryUrl.from("cassandra://var/mail/error/"))
-                == 1);
+            .untilAsserted(() -> assertThat(server.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(MailRepositoryUrl.from("cassandra://var/mail/error/"))).isEqualTo(1));
 
         // When we run solveInconsistenciesTask
         testingProbe.getTestingSession().registerScenario(executeNormally()
             .forever()
             .whenQueryStartsWith("INSERT INTO messageIdTable"));
+
         String solveInconsistenciesTaskId = with()
             .queryParam("task", "SolveInconsistencies")
             .post("/messages")
@@ -387,9 +376,9 @@ class ConsistencyTasksIntegrationTest {
         // Then BOB can access this mail in IMAP
         imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
-            .select(inbox.getName());
+            .select(MailboxConstants.INBOX);
 
-        assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
+        assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE);
     }
 
     @Test
@@ -418,7 +407,7 @@ class ConsistencyTasksIntegrationTest {
     }
 
     @Test
-    void solveMailboxesInconsistencyShouldSolveNothingWhenNoInconsistencies(GuiceJamesServer server) {
+    void solveMailboxesInconsistencyShouldSolveNothingWhenNoInconsistencies(GuiceJamesServer server) throws Exception {
         // schema version 6 or higher required to run solve mailbox inconsistencies task
         String upgradeTaskId = with().post(UPGRADE_TO_LATEST_VERSION)
             .jsonPath()
@@ -429,6 +418,10 @@ class ConsistencyTasksIntegrationTest {
         .then()
             .body("status", is("completed"));
 
+        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB, BOB_PASSWORD)
+            .create(TEST_MAILBOX);
+
         String solveInconsistenciesTaskId = with()
             .header("I-KNOW-WHAT-I-M-DOING", "ALL-SERVICES-ARE-OFFLINE")
             .queryParam("task", "SolveInconsistencies")
@@ -436,34 +429,23 @@ class ConsistencyTasksIntegrationTest {
             .jsonPath()
             .get("taskId");
 
-        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
-
-        try {
-            probe.createMailbox(MailboxPath.inbox(BOB));
-        } catch (Exception e) {
-            // Failure is expected
-        }
-
         with()
             .basePath(TasksRoutes.BASE)
             .get(solveInconsistenciesTaskId + "/await");
 
-        // The mailbox is removed as it is not in the mailboxDAO source of truth.
-        assertThat(probe.listUserMailboxes(BOB.asString()))
-            .containsOnly(MailboxConstants.INBOX);
+        assertThatCode(() -> imapMessageReader.create(TEST_MAILBOX))
+            .hasMessageContaining("Mailbox already exists");
     }
 
     @Test
-    void recomputeMailboxCountersShouldSolveNothingWhenNoInconsistencies(GuiceJamesServer server) throws MailboxException {
-        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
-        MailboxPath inbox = MailboxPath.inbox(BOB);
-        probe.createMailbox(inbox);
+    void recomputeMailboxCountersShouldSolveNothingWhenNoInconsistencies(GuiceJamesServer server) throws Exception {
+        smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
 
-        try {
-            probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
-        } catch (Exception e) {
-            // Expected to fail
-        }
+        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB, BOB_PASSWORD)
+            .select(MailboxConstants.INBOX)
+            .awaitMessage(Awaitility.await());
 
         String taskId = with()
             .basePath("/mailboxes")
@@ -476,28 +458,26 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
         .get(taskId + "/await");
 
-        assertThat(probe.retrieveCounters(inbox).getCount()).isEqualTo(1);
+        assertThat(imapMessageReader.getMessageCount(MailboxConstants.INBOX)).isEqualTo(1);
     }
 
     @Test
     void recomputeQuotasShouldSolveNothingWhenNoInconsistencies(GuiceJamesServer server) throws Exception {
-        dataProbe.fluent()
-            .addDomain(BOB.getDomainPart().get().asString())
-            .addUser(BOB.asString(), BOB_PASSWORD);
-        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
-        MailboxPath inbox = MailboxPath.inbox(BOB);
-        probe.createMailbox(inbox);
-
         Barrier barrier = new Barrier();
-        String updatedQuotaQueryString = "UPDATE currentQuota SET messageCount=messageCount+?,storage=storage+? WHERE quotaRoot=?;";
         server.getProbe(TestingSessionProbe.class)
             .getTestingSession().registerScenario(
                 awaitOn(barrier) // Event bus first execution
                     .thenExecuteNormally()
                     .times(1)
-                    .whenQueryStartsWith(updatedQuotaQueryString));
+                    .whenQueryStartsWith("UPDATE currentQuota SET messageCount=messageCount+?,storage=storage+? WHERE quotaRoot=?;"));
 
-        probe.appendMessage(BOB.asString(), inbox, APPEND_COMMAND.get());
+        smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
+
+        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB, BOB_PASSWORD)
+            .select(MailboxConstants.INBOX)
+            .awaitMessage(Awaitility.await());
 
         // Await first execution
         barrier.awaitCaller();
@@ -514,12 +494,9 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        QuotaProbesImpl quotaProbe = server.getProbe(QuotaProbesImpl.class);
-        assertThat(
-            quotaProbe.getMessageCountQuota(QuotaRoot.quotaRoot("#private&" + BOB.asString(), Optional.empty()))
-                .getUsed()
-                .asLong())
-            .isEqualTo(1);
+        assertThat(imapMessageReader.getQuotaRoot(MailboxConstants.INBOX))
+            .contains("* QUOTAROOT \"INBOX\" #private&bob@domain.tld\r\n" +
+                "* QUOTA #private&bob@domain.tld (MESSAGE 1 50)");
     }
 
     @Test
@@ -534,16 +511,12 @@ class ConsistencyTasksIntegrationTest {
             .then()
             .body("status", is("completed"));
 
-        MailboxPath inbox = MailboxPath.inbox(BOB);
-        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
-        probe.createMailbox(inbox);
-
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE_CONTENT);
+            .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
 
         imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
-            .select(inbox.getName())
+            .select(MailboxConstants.INBOX)
             .awaitMessage(Awaitility.await());
 
         String solveInconsistenciesTaskId = with()
@@ -556,6 +529,6 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(solveInconsistenciesTaskId + "/await");
 
-        assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
+        assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE);
     }
 }
