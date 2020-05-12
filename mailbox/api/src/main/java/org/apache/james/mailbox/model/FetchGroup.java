@@ -60,7 +60,7 @@ public class FetchGroup extends Profiles<FetchGroup> {
     }
 
     @VisibleForTesting
-    FetchGroup(Collection<Profile> content, ImmutableSet<PartContentDescriptor> partContentDescriptors) {
+    public FetchGroup(Collection<Profile> content, ImmutableSet<PartContentDescriptor> partContentDescriptors) {
         super(content);
         this.partContentDescriptors = partContentDescriptors;
     }

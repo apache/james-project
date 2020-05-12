@@ -21,13 +21,17 @@ package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.EnumSet;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.FetchGroup.Profile;
+import org.apache.james.mailbox.model.PartContentDescriptor;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.google.common.collect.ImmutableSet;
 
 class ResultUtilsTest {
     static Stream<Arguments> haveValidContent() {
@@ -37,7 +41,8 @@ class ResultUtilsTest {
             Arguments.of(FetchGroup.FULL_CONTENT),
             Arguments.of(FetchGroup.HEADERS),
             Arguments.of(FetchGroup.BODY_CONTENT),
-            Arguments.of(FetchGroup.BODY_CONTENT.with(Profile.HEADERS)));
+            Arguments.of(FetchGroup.BODY_CONTENT.with(Profile.HEADERS)),
+            Arguments.of(new FetchGroup(EnumSet.of(Profile.BODY_CONTENT), ImmutableSet.of(new PartContentDescriptor(null)))));
     }
 
     @ParameterizedTest

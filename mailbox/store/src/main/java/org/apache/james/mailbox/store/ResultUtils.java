@@ -216,9 +216,11 @@ public class ResultUtils {
     private static void addMimeBodyContent(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
             throws IOException, MimeException {
         int[] path = path(mimePath);
-        PartContentBuilder builder = build(path, message);
-        Content content = builder.getMimeBodyContent();
-        messageResult.setMimeBodyContent(mimePath, content);
+        if (path != null) {
+            PartContentBuilder builder = build(path, message);
+            Content content = builder.getMimeBodyContent();
+            messageResult.setMimeBodyContent(mimePath, content);
+        }
     }
 
     private static void addFullContent(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
