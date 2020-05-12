@@ -179,7 +179,7 @@ public class MessageContentExtractor {
             && part.getHeader().getField(CONTENT_ID) == null;
     }
 
-    public static class MessageContent {
+    public static final class MessageContent {
         private final Optional<String> textBody;
         private final Optional<String> htmlBody;
 
@@ -227,6 +227,11 @@ public class MessageContentExtractor {
                 .filter(s -> !Strings.isNullOrEmpty(s))
                 .map(Optional::of)
                 .orElse(textBody);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(textBody, htmlBody);
         }
 
         @Override
