@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.decode;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,9 +32,8 @@ import com.google.common.io.ByteStreams;
 /**
  * {@link ImapRequestLineReader} which use normal IO Streaming
  */
-public class ImapRequestStreamLineReader extends ImapRequestLineReader {
+public class ImapRequestStreamLineReader extends ImapRequestLineReader implements Closeable {
     private final InputStream input;
-
     private final OutputStream output;
 
     public ImapRequestStreamLineReader(InputStream input, OutputStream output) {
@@ -102,4 +102,12 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader {
         }
     }
 
+    @Override
+    public void close() throws IOException {
+        try {
+            input.close();
+        } finally {
+            output.close();
+        }
+    }
 }

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -28,7 +29,7 @@ import org.jboss.netty.channel.Channel;
 
 import com.google.common.io.ByteStreams;
 
-public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLineReader {
+public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLineReader implements Closeable {
 
     private final InputStream in;
 
@@ -96,7 +97,8 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
         
     }
 
-    public void dispose() throws IOException {
+    @Override
+    public void close() throws IOException {
         in.close();
     }
 
