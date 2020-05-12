@@ -80,9 +80,7 @@ public class ComputeMessageFastViewProjectionListener implements MailboxListener
     }
 
     private Mono<Void> handleAddedEvent(Added addedEvent, MailboxSession session) {
-        return Mono.fromCallable(() -> messageIdManager.getMessages(addedEvent.getMessageIds(), FetchGroup.FULL_CONTENT, session))
-            .subscribeOn(Schedulers.elastic())
-            .flatMapMany(Flux::fromIterable)
+        return Flux.from(messageIdManager.getMessagesReactive(addedEvent.getMessageIds(), FetchGroup.FULL_CONTENT, session))
             .flatMap(Throwing.function(messageResult -> Mono.fromCallable(
                 () -> Pair.of(messageResult.getMessageId(), computeFastViewPrecomputedProperties(messageResult)))
                     .subscribeOn(Schedulers.parallel())))
