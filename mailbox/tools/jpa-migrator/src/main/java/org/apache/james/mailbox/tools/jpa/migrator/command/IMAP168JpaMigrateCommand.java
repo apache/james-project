@@ -103,7 +103,7 @@ public class IMAP168JpaMigrateCommand implements JpaMigrateCommand {
                 mailboxName = name.substring(userName.length() + 1);
             } else {
                 // We don't have a mailbox name...
-                userName = name.substring(0);
+                userName = name;
                 mailboxName = "";
             }
             
