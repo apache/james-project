@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.inject.Inject;
@@ -109,7 +110,7 @@ public class JPASieveRepository implements SieveRepository {
                 rollbackTransactionIfActive(entityManager.getTransaction());
                 throw e;
             }
-        }).sneakyThrow(), throwStorageException("Unable to put script for user " + username.asString()));
+        }).sneakyThrow(), throwStorageExceptionConsumer("Unable to put script for user " + username.asString()));
     }
 
     @Override
@@ -171,7 +172,7 @@ public class JPASieveRepository implements SieveRepository {
                 rollbackTransactionIfActive(entityManager.getTransaction());
                 throw e;
             }
-        }).sneakyThrow(), throwStorageException("Unable to set active script " + name.getValue() + " for user " + username.asString()));
+        }).sneakyThrow(), throwStorageExceptionConsumer("Unable to set active script " + name.getValue() + " for user " + username.asString()));
     }
 
     private void switchOffActiveScript(Username username, EntityManager entityManager) throws StorageException {
@@ -224,7 +225,7 @@ public class JPASieveRepository implements SieveRepository {
                 throw new IsActiveException("Unable to delete active script " + name.getValue() + " for user " + username.asString());
             }
             entityManager.remove(sieveScriptToRemove);
-        }).sneakyThrow(), throwStorageException("Unable to delete script " + name.getValue() + " for user " + username.asString()));
+        }).sneakyThrow(), throwStorageExceptionConsumer("Unable to delete script " + name.getValue() + " for user " + username.asString()));
     }
 
     @Override
@@ -244,7 +245,7 @@ public class JPASieveRepository implements SieveRepository {
 
             JPASieveScript sieveScriptToRename = sieveScript.get();
             sieveScriptToRename.renameTo(newName);
-        }).sneakyThrow(), throwStorageException("Unable to rename script " + oldName.getValue() + " for user " + username.asString()));
+        }).sneakyThrow(), throwStorageExceptionConsumer("Unable to rename script " + oldName.getValue() + " for user " + username.asString()));
     }
 
     private void rollbackTransactionIfActive(EntityTransaction transaction) {
@@ -310,6 +311,12 @@ public class JPASieveRepository implements SieveRepository {
         }).sneakyThrow();
     }
 
+    private Consumer<PersistenceException> throwStorageExceptionConsumer(String message) {
+        return Throwing.<PersistenceException>consumer(e -> {
+            throw new StorageException(message, e);
+        }).sneakyThrow();
+    }
+
     private Optional<JPASieveQuota> findQuotaForUser(String username, EntityManager entityManager) {
         try {
             JPASieveQuota sieveQuota = entityManager.createNamedQuery("findByUsername", JPASieveQuota.class)
@@ -331,13 +338,13 @@ public class JPASieveRepository implements SieveRepository {
                 JPASieveQuota jpaSieveQuota = new JPASieveQuota(username, quota.asLong());
                 entityManager.persist(jpaSieveQuota);
             }
-        }), throwStorageException("Unable to set quota for user " + username));
+        }), throwStorageExceptionConsumer("Unable to set quota for user " + username));
     }
 
     private void removeQuotaForUser(String username) throws StorageException {
         transactionRunner.runAndHandleException(Throwing.consumer(entityManager -> {
             Optional<JPASieveQuota> quotaForUser = findQuotaForUser(username, entityManager);
             quotaForUser.ifPresent(entityManager::remove);
-        }), throwStorageException("Unable to remove quota for user " + username));
+        }), throwStorageExceptionConsumer("Unable to remove quota for user " + username));
     }
 }

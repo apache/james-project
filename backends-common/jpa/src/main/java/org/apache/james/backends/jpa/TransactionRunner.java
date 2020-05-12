@@ -76,8 +76,8 @@ public class TransactionRunner {
         }
     }
 
-    public <T> void runAndHandleException(Consumer<EntityManager> runnable,
-                                          Function<PersistenceException, T> errorHandler) {
+    public void runAndHandleException(Consumer<EntityManager> runnable,
+                                      Consumer<PersistenceException> errorHandler) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         EntityTransaction transaction = entityManager.getTransaction();
         try {
@@ -89,7 +89,7 @@ public class TransactionRunner {
             if (transaction.isActive()) {
                 transaction.rollback();
             }
-            errorHandler.apply(e);
+            errorHandler.accept(e);
         } finally {
             EntityManagerUtils.safelyClose(entityManager);
         }
