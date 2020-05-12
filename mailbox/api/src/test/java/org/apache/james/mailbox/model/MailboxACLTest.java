@@ -37,6 +37,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MailboxACLTest {
 
@@ -68,6 +69,16 @@ class MailboxACLTest {
 
         u1u2g1g2ACL = new MailboxACL(u1u2g1g2Properties);
 
+    }
+
+    @Test
+    void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(MailboxACL.class).verify();
+    }
+
+    @Test
+    void rfc4314RightsShouldRespectBeanContract() {
+        EqualsVerifier.forClass(MailboxACL.Rfc4314Rights.class).verify();
     }
 
     @Test
