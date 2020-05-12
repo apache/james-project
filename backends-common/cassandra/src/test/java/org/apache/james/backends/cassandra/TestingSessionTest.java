@@ -29,6 +29,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.Scenario.InjectedFailureException;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -40,7 +42,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 class TestingSessionTest {
@@ -222,7 +223,7 @@ class TestingSessionTest {
     }
 
     @Test
-    void statementShouldBeAppliedWhenBarrierIsReleased(CassandraCluster cassandra) {
+    void statementShouldBeAppliedWhenBarrierIsReleased(CassandraCluster cassandra) throws Exception {
         SchemaVersion originalSchemaVersion = new SchemaVersion(32);
         SchemaVersion newVersion = new SchemaVersion(36);
 
@@ -234,11 +235,12 @@ class TestingSessionTest {
                 .times(1)
                 .whenQueryStartsWith("INSERT INTO schemaVersion"));
 
-        Mono<Void> operation = dao.updateVersion(newVersion).cache();
+        CompletableFuture<Void> operation = dao.updateVersion(newVersion)
+            .subscribeOn(Schedulers.elastic())
+            .toFuture();
 
-        operation.subscribeOn(Schedulers.elastic()).subscribe();
         barrier.releaseCaller();
-        operation.block();
+        operation.get();
 
         assertThat(dao.getCurrentSchemaVersion().block())
             .contains(newVersion);
@@ -257,12 +259,13 @@ class TestingSessionTest {
                 .times(1)
                 .whenQueryStartsWith("INSERT INTO schemaVersion"));
 
-        Mono<Void> operation = dao.updateVersion(newVersion).cache();
+        CompletableFuture<Void> operation = dao.updateVersion(newVersion)
+            .subscribeOn(Schedulers.elastic())
+            .toFuture();
 
-        operation.subscribeOn(Schedulers.elastic()).subscribe();
         barrier.awaitCaller();
         barrier.releaseCaller();
-        operation.block();
+        operation.get();
 
         assertThat(dao.getCurrentSchemaVersion().block())
             .contains(newVersion);
@@ -281,13 +284,14 @@ class TestingSessionTest {
                 .times(1)
                 .whenQueryStartsWith("INSERT INTO schemaVersion"));
 
-        Mono<Void> operation = dao.updateVersion(newVersion).cache();
+        CompletableFuture<Void> operation = dao.updateVersion(newVersion)
+            .subscribeOn(Schedulers.elastic())
+            .toFuture();
 
-        operation.subscribeOn(Schedulers.elastic()).subscribe();
         barrier.awaitCaller();
         barrier.releaseCaller();
 
-        assertThatThrownBy(operation::block)
-            .isInstanceOf(InjectedFailureException.class);
+        assertThatThrownBy(operation::get)
+            .hasCauseInstanceOf(InjectedFailureException.class);
     }
 }

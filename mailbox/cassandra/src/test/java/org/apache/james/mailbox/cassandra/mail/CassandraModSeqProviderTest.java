@@ -24,16 +24,16 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTab
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.TABLE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.core.Username;
@@ -51,7 +51,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.fge.lambdas.Throwing;
 
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 class CassandraModSeqProviderTest {
@@ -113,15 +112,12 @@ class CassandraModSeqProviderTest {
                     .times(1)
                     .whenQueryStartsWith("SELECT nextModseq FROM modseq WHERE mailboxId=:mailboxId;"));
 
-        Mono<ModSeq> operation1 = modSeqProvider.nextModSeq(CASSANDRA_ID)
+        CompletableFuture<ModSeq> operation1 = modSeqProvider.nextModSeq(CASSANDRA_ID)
             .subscribeOn(Schedulers.elastic())
-            .cache();
-        Mono<ModSeq> operation2 = modSeqProvider.nextModSeq(CASSANDRA_ID)
+            .toFuture();
+        CompletableFuture<ModSeq> operation2 = modSeqProvider.nextModSeq(CASSANDRA_ID)
             .subscribeOn(Schedulers.elastic())
-            .cache();
-
-        operation1.subscribe();
-        operation2.subscribe();
+            .toFuture();
 
         insertBarrier.awaitCaller();
         insertBarrier.releaseCaller();
@@ -136,8 +132,8 @@ class CassandraModSeqProviderTest {
 
         retryBarrier.releaseCaller();
 
-        assertThatCode(() -> operation1.block(Duration.ofSeconds(1))).doesNotThrowAnyException();
-        assertThatCode(() -> operation2.block(Duration.ofSeconds(1))).doesNotThrowAnyException();
+        assertThatCode(() -> operation1.get(1, TimeUnit.SECONDS)).doesNotThrowAnyException();
+        assertThatCode(() -> operation2.get(1, TimeUnit.SECONDS)).doesNotThrowAnyException();
     }
 
     @Test

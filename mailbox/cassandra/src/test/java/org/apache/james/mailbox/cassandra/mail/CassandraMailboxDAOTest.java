@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -46,7 +47,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 class CassandraMailboxDAOTest {
@@ -139,16 +139,18 @@ class CassandraMailboxDAOTest {
             .times(2)
             .whenQueryStartsWith("UPDATE mailbox SET"));
 
-        Mono<Mailbox> readMailbox1 = testee.retrieveMailbox(CASSANDRA_ID_1).cache();
-        Mono<Mailbox> readMailbox2 = testee.retrieveMailbox(CASSANDRA_ID_1).cache();
-        readMailbox1.subscribeOn(Schedulers.elastic()).subscribe();
-        readMailbox2.subscribeOn(Schedulers.elastic()).subscribe();
+        CompletableFuture<Mailbox> readMailbox1 = testee.retrieveMailbox(CASSANDRA_ID_1)
+            .subscribeOn(Schedulers.elastic())
+            .toFuture();
+        CompletableFuture<Mailbox> readMailbox2 = testee.retrieveMailbox(CASSANDRA_ID_1)
+            .subscribeOn(Schedulers.elastic())
+            .toFuture();
 
         barrier.awaitCaller();
         barrier.releaseCaller();
 
-        assertThat(readMailbox1.block().getUidValidity())
-            .isEqualTo(readMailbox2.block().getUidValidity());
+        assertThat(readMailbox1.get().getUidValidity())
+            .isEqualTo(readMailbox2.get().getUidValidity());
     }
 
     @Test
