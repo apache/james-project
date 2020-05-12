@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -221,28 +222,29 @@ public final class FetchResponseBuilder {
         final Long numberOfOctets = fetchElement.getNumberOfOctets();
         final String name = fetchElement.getResponseName();
         final SectionType specifier = fetchElement.getSectionType();
-        final int[] path = fetchElement.getPath();
+        final Optional<MimePath> path = Optional.ofNullable(fetchElement.getPath())
+                .filter(paths -> paths.length > 0)
+                .map(MimePath::new);
         final Collection<String> names = fetchElement.getFieldNames();
-        final boolean isBase = (path == null || path.length == 0);
-        final FetchResponse.BodyElement fullResult = bodyContent(messageResult, name, specifier, path, names, isBase);
+        final FetchResponse.BodyElement fullResult = bodyContent(messageResult, name, specifier, path, names);
         return wrapIfPartialFetch(firstOctet, numberOfOctets, fullResult);
 
     }
 
-    private FetchResponse.BodyElement bodyContent(MessageResult messageResult, String name, SectionType specifier, int[] path, Collection<String> names, boolean isBase) throws MailboxException {
+    private FetchResponse.BodyElement bodyContent(MessageResult messageResult, String name, SectionType specifier, Optional<MimePath> path, Collection<String> names) throws MailboxException {
         switch (specifier) {
             case CONTENT:
-                return content(messageResult, name, path, isBase);
+                return content(messageResult, name, path);
             case HEADER_FIELDS:
-                return fields(messageResult, name, path, names, isBase);
+                return fields(messageResult, name, path, names);
             case HEADER_NOT_FIELDS:
-                return fieldsNot(messageResult, name, path, names, isBase);
+                return fieldsNot(messageResult, name, path, names);
             case MIME:
-                return mimeHeaders(messageResult, name, path, isBase);
+                return mimeHeaders(messageResult, name, path);
             case HEADER:
-                return headers(messageResult, name, path, isBase);
+                return headers(messageResult, name, path);
             case TEXT:
-                return text(messageResult, name, path, isBase);
+                return text(messageResult, name, path);
             default:
                 return null;
         }
@@ -263,18 +265,17 @@ public final class FetchResponseBuilder {
         return result;
     }
 
-    private FetchResponse.BodyElement text(MessageResult messageResult, String name, int[] path, boolean isBase) throws MailboxException {
+    private FetchResponse.BodyElement text(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
         final FetchResponse.BodyElement result;
         Content body;
-        if (isBase) {
+        if (!path.isPresent()) {
             try {
                 body = messageResult.getBody();
             } catch (IOException e) {
                 throw new MailboxException("Unable to get TEXT of body", e);
             }
         } else {
-            MimePath mimePath = new MimePath(path);
-            body = messageResult.getBody(mimePath);
+            body = messageResult.getBody(path.get());
         }
         if (body == null) {
             body = new EmptyContent();
@@ -283,15 +284,15 @@ public final class FetchResponseBuilder {
         return result;
     }
 
-    private FetchResponse.BodyElement mimeHeaders(MessageResult messageResult, String name, int[] path, boolean isBase) throws MailboxException {
+    private FetchResponse.BodyElement mimeHeaders(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
         final FetchResponse.BodyElement result;
-        final Iterator<Header> headers = getMimeHeaders(messageResult, path, isBase);
+        final Iterator<Header> headers = getMimeHeaders(messageResult, path);
         List<Header> lines = MessageResultUtils.getAll(headers);
         result = new MimeBodyElement(name, lines);
         return result;
     }
 
-    private HeaderBodyElement headerBodyElement(MessageResult messageResult, String name, List<Header> lines, int[] path, boolean isBase) throws MailboxException {
+    private HeaderBodyElement headerBodyElement(MessageResult messageResult, String name, List<Header> lines, Optional<MimePath> path) throws MailboxException {
         final HeaderBodyElement result = new HeaderBodyElement(name, lines);
         // if the size is 2 we had found not header and just want to write the empty line with CLRF terminated
         // so check if there is a content for it. If not we MUST NOT write the empty line in any case
@@ -300,15 +301,14 @@ public final class FetchResponseBuilder {
             // Check if its base as this can give use a more  correctly working check
             // to see if we need to write the newline out to the client. 
             // This is related to IMAP-298
-            if (isBase) {
+            if (!path.isPresent()) {
                 if (messageResult.getSize() - result.size() <= 0) {
                     // Seems like this mail has no body 
                     result.noBody();
                 }
-              
             } else {
                 try {
-                    if (content(messageResult, name, path, isBase).size() <= 0) {
+                    if (content(messageResult, name, path).size() <= 0) {
                         // Seems like this mail has no body
                         result.noBody();
                     }
@@ -320,8 +320,8 @@ public final class FetchResponseBuilder {
         return result;
     }
     
-    private FetchResponse.BodyElement headers(MessageResult messageResult, String name, int[] path, boolean isBase) throws MailboxException {      
-        if (isBase) {
+    private FetchResponse.BodyElement headers(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
+        if (!path.isPresent()) {
             // if its base we can just return the raw headers without parsing
             // them. See MAILBOX-311 and IMAP-?
             HeadersBodyElement element = new HeadersBodyElement(name, messageResult.getHeaders());
@@ -337,45 +337,43 @@ public final class FetchResponseBuilder {
             }
             return element;
         } else {
-            final Iterator<Header> headers = getHeaders(messageResult, path, isBase);
+            final Iterator<Header> headers = getHeaders(messageResult, path);
             List<Header> lines = MessageResultUtils.getAll(headers);
-            return headerBodyElement(messageResult, name, lines, path, isBase);
+            return headerBodyElement(messageResult, name, lines, path);
         }
     }
 
-    private FetchResponse.BodyElement fieldsNot(MessageResult messageResult, String name, int[] path, Collection<String> names, boolean isBase) throws MailboxException {
-        final Iterator<Header> headers = getHeaders(messageResult, path, isBase);
+    private FetchResponse.BodyElement fieldsNot(MessageResult messageResult, String name, Optional<MimePath> path, Collection<String> names) throws MailboxException {
+        final Iterator<Header> headers = getHeaders(messageResult, path);
         List<Header> lines = MessageResultUtils.getNotMatching(names, headers);
         
-        return headerBodyElement(messageResult, name, lines, path, isBase);
+        return headerBodyElement(messageResult, name, lines, path);
     }
 
-    private FetchResponse.BodyElement fields(MessageResult messageResult, String name, int[] path, Collection<String> names, boolean isBase) throws MailboxException {
-        final Iterator<Header> headers = getHeaders(messageResult, path, isBase);
+    private FetchResponse.BodyElement fields(MessageResult messageResult, String name, Optional<MimePath> path, Collection<String> names) throws MailboxException {
+        final Iterator<Header> headers = getHeaders(messageResult, path);
         List<Header> lines = MessageResultUtils.getMatching(names, headers);
-        return headerBodyElement(messageResult, name, lines, path, isBase);
+        return headerBodyElement(messageResult, name, lines, path);
     }
 
-    private Iterator<Header> getHeaders(MessageResult messageResult, int[] path, boolean isBase) throws MailboxException {
+    private Iterator<Header> getHeaders(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
         final Iterator<Header> headers;
-        if (isBase) {
+        if (!path.isPresent()) {
             headers = messageResult.getHeaders().headers();
         } else {
-            MimePath mimePath = new MimePath(path);
-            headers = messageResult.iterateHeaders(mimePath);
+            headers = messageResult.iterateHeaders(path.get());
         }
         return headers;
     }
 
-    private Iterator<Header> getMimeHeaders(MessageResult messageResult, int[] path, boolean isBase) throws MailboxException {
-        MimePath mimePath = new MimePath(path);
-        return messageResult.iterateMimeHeaders(mimePath);
+    private Iterator<Header> getMimeHeaders(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
+        return messageResult.iterateMimeHeaders(path.get());
     }
 
-    private FetchResponse.BodyElement content(MessageResult messageResult, String name, int[] path, boolean isBase) throws MailboxException {
+    private FetchResponse.BodyElement content(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
         final FetchResponse.BodyElement result;
         Content full;
-        if (isBase) {
+        if (!path.isPresent()) {
             try {
                 full = messageResult.getFullContent();
 
@@ -383,8 +381,7 @@ public final class FetchResponseBuilder {
                 throw new MailboxException("Unable to get content", e);
             }
         } else {
-            MimePath mimePath = new MimePath(path);
-            full = messageResult.getMimeBody(mimePath);
+            full = messageResult.getMimeBody(path.get());
         }
 
         if (full == null) {
