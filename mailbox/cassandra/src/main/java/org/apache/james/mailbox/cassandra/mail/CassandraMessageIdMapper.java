@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.mail.Flags;
 
@@ -251,7 +252,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                 LOGGER.info("Mailbox {} was deleted during flag update", mailboxId);
                 return Mono.empty();
             })
-            .flatMapMany(Flux::fromIterable)
+            .flux()
+            .flatMapIterable(Function.identity())
             .map(pair -> buildUpdatedFlags(pair.getRight(), pair.getLeft()));
     }
 

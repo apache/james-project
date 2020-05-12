@@ -34,7 +34,6 @@ import org.reactivestreams.Publisher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class EventSourcingFilteringManagement implements FilteringManagement {
@@ -65,6 +64,6 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
         FilteringAggregateId aggregateId = new FilteringAggregateId(username);
 
         return Mono.from(eventStore.getEventsOfAggregate(aggregateId))
-            .flatMapMany(history -> Flux.fromIterable(FilteringAggregate.load(aggregateId, history).listRules()));
+            .flatMapIterable(history -> FilteringAggregate.load(aggregateId, history).listRules());
     }
 }

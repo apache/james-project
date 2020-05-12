@@ -74,11 +74,12 @@ public class GetVacationResponseMethod implements Method {
 
         return Flux.from(metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
             process(mailboxSession)
-                .flatMapMany(response -> Flux.just(JmapResponse.builder()
+                .map(response -> JmapResponse.builder()
                     .methodCallId(methodCallId)
                     .responseName(RESPONSE_NAME)
                     .response(response)
-                    .build()))))
+                    .build())
+                .flux()))
             .subscriberContext(jmapAction("VACATION"));
     }
 
