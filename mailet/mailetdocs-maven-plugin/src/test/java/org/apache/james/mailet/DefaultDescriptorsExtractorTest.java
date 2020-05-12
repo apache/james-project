@@ -54,18 +54,20 @@ public class DefaultDescriptorsExtractorTest {
         List<MailetMatcherDescriptor> descriptors = testee.extract(mavenProject, log)
             .descriptors();
 
-        MailetMatcherDescriptor experimentalMailet = new MailetMatcherDescriptor();
-        experimentalMailet.setFullyQualifiedName("org.apache.james.mailet.experimental.ExperimentalMailet");
-        experimentalMailet.setName("ExperimentalMailet");
-        experimentalMailet.setInfo(null);
-        experimentalMailet.setType(Type.MAILET);
-        experimentalMailet.setExperimental(true);
-        MailetMatcherDescriptor nonExperimentalMailet = new MailetMatcherDescriptor();
-        nonExperimentalMailet.setFullyQualifiedName("org.apache.james.mailet.experimental.NonExperimentalMailet");
-        nonExperimentalMailet.setName("NonExperimentalMailet");
-        nonExperimentalMailet.setInfo(null);
-        nonExperimentalMailet.setType(Type.MAILET);
-        nonExperimentalMailet.setExperimental(false);
+        MailetMatcherDescriptor experimentalMailet = MailetMatcherDescriptor.builder()
+            .name("ExperimentalMailet")
+            .fullyQualifiedClassName("org.apache.james.mailet.experimental.ExperimentalMailet")
+            .type(Type.MAILET)
+            .noInfo()
+            .noClassDocs()
+            .isExperimental();
+        MailetMatcherDescriptor nonExperimentalMailet = MailetMatcherDescriptor.builder()
+            .name("NonExperimentalMailet")
+            .fullyQualifiedClassName("org.apache.james.mailet.experimental.NonExperimentalMailet")
+            .type(Type.MAILET)
+            .noInfo()
+            .noClassDocs()
+            .isNotExperimental();
 
         assertThat(descriptors).containsOnly(experimentalMailet, nonExperimentalMailet);
     }
@@ -78,12 +80,13 @@ public class DefaultDescriptorsExtractorTest {
         List<MailetMatcherDescriptor> descriptors = testee.extract(mavenProject, log)
             .descriptors();
 
-        MailetMatcherDescriptor notExcludedMailet = new MailetMatcherDescriptor();
-        notExcludedMailet.setFullyQualifiedName("org.apache.james.mailet.excluded.NotExcludedFromDocumentationMailet");
-        notExcludedMailet.setName("NotExcludedFromDocumentationMailet");
-        notExcludedMailet.setInfo(null);
-        notExcludedMailet.setType(Type.MAILET);
-        notExcludedMailet.setExperimental(false);
+        MailetMatcherDescriptor notExcludedMailet = MailetMatcherDescriptor.builder()
+            .name("NotExcludedFromDocumentationMailet")
+            .fullyQualifiedClassName("org.apache.james.mailet.excluded.NotExcludedFromDocumentationMailet")
+            .type(Type.MAILET)
+            .noInfo()
+            .noClassDocs()
+            .isNotExperimental();
 
         assertThat(descriptors).containsOnly(notExcludedMailet);
     }

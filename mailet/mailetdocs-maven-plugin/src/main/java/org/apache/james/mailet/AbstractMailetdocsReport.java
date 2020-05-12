@@ -31,7 +31,6 @@ import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Strings;
 
 /**
  * <p>
@@ -189,7 +188,7 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
             getSink().anchor_();
             getSink().sectionTitle2_();
 
-            if (descriptor.getInfo() != null) {
+            descriptor.getInfo().ifPresent(info -> {
                 getSink().paragraph();
                 if (descriptor.getType() == MailetMatcherDescriptor.Type.MAILET) {
                     getSink().text("Mailet Info: ");
@@ -199,17 +198,14 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
                     getSink().text("Info: ");
                 }
                 getSink().bold();
-                getSink().text(descriptor.getInfo());
+                getSink().text(descriptor.getInfo().orElse(""));
                 getSink().bold_();
                 getSink().lineBreak();
                 getSink().paragraph_();
-            }
+            });
 
             getSink().paragraph();
-            String classDocs = descriptor.getClassDocs();
-            if (!Strings.isNullOrEmpty(classDocs)) {
-                getSink().rawText(classDocs);
-            }
+            descriptor.getClassDocs().ifPresent(classDocs -> getSink().rawText(classDocs));
             getSink().paragraph_();
 
             getSink().section2_();

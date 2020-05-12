@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
@@ -154,36 +155,33 @@ public class DefaultDescriptorsExtractor {
     private MailetMatcherDescriptor describeMatcher(Log log,
             final JavaClass nextClass, String nameOfNextClass,
             final Class<?> klass) {
-        
-        final MailetMatcherDescriptor result = buildDescriptor(log, nextClass,
-                nameOfNextClass, klass, "getMatcherInfo", MailetMatcherDescriptor.Type.MATCHER);
+
+        MailetMatcherDescriptor result = MailetMatcherDescriptor.builder()
+                .name(nextClass.getName())
+                .fullyQualifiedClassName(nameOfNextClass)
+                .type(Type.MATCHER)
+                .info(fetchInfo(log, nameOfNextClass, klass, "getMatcherInfo", Type.MATCHER))
+                .classDocs(nextClass.getComment())
+                .experimental(isExperimental(nextClass));
         
         log.info("Found a Matcher: " + klass.getName());
         return result;
     }
 
 
-    private MailetMatcherDescriptor buildDescriptor(Log log, JavaClass nextClass,
-            final String nameOfClass, Class<?> klass,
-            final String infoMethodName, Type type) {
-        final MailetMatcherDescriptor result = new MailetMatcherDescriptor();
-        result.setName(nextClass.getName());
-        result.setFullyQualifiedName(nameOfClass);
-        result.setClassDocs(nextClass.getComment());
-        result.setType(type);
-        result.setExperimental(isExperimental(nextClass));
-
+    private Optional<String> fetchInfo(Log log, String nameOfClass, Class<?> klass, String infoMethodName, Type type) {
         try {
             final Object instance = klass.newInstance();
             final String info = (String) klass.getMethod(infoMethodName).invoke(instance);
             if (info != null && info.length() > 0) {
-                result.setInfo(info);
+                return Optional.of(info);
             }
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                 | InvocationTargetException | SecurityException | NoSuchMethodException e) {
             handleInfoLoadFailure(log, nameOfClass, type, e);
         }
-        return result;
+
+        return Optional.empty();
     }
 
 
@@ -212,8 +210,13 @@ public class DefaultDescriptorsExtractor {
             final JavaClass nextClass, String nameOfNextClass,
             final Class<?> klass) {
 
-        final MailetMatcherDescriptor result = buildDescriptor(log, nextClass,
-                nameOfNextClass, klass, "getMailetInfo", MailetMatcherDescriptor.Type.MAILET);
+        final MailetMatcherDescriptor result = MailetMatcherDescriptor.builder()
+                .name(nextClass.getName())
+                .fullyQualifiedClassName(nameOfNextClass)
+                .type(Type.MAILET)
+                .info(fetchInfo(log, nameOfNextClass, klass, "getMailetInfo", Type.MAILET))
+                .classDocs(nextClass.getComment())
+                .experimental(isExperimental(nextClass));
         
         log.info("Found a Mailet: " + klass.getName());
         return result;

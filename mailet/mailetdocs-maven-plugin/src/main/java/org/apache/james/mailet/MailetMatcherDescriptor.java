@@ -19,8 +19,11 @@
 
 package org.apache.james.mailet;
 
+import java.util.Optional;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 
 /**
  * Simple bean to describe a mailet or a matcher
@@ -56,64 +59,114 @@ public class MailetMatcherDescriptor {
         }
     }
 
-    private String fullyQualifiedClassName;
+    public interface Builder {
+        @FunctionalInterface
+        interface RequiresName {
+            RequiresFullyQualifiedClassName name(String name);
+        }
 
-    private String name;
+        @FunctionalInterface
+        interface RequiresFullyQualifiedClassName {
+            RequiresType fullyQualifiedClassName(String fullyQualifiedClassName);
+        }
 
-    private String info;
+        @FunctionalInterface
+        interface RequiresType {
+            RequiresInfo type(Type type);
+        }
 
-    private String classDocs;
+        @FunctionalInterface
+        interface RequiresInfo {
+            default RequiresClassDocs info(String info) {
+                if (Strings.isNullOrEmpty(info)) {
+                    return noInfo();
+                }
 
-    private Type type;
+                return info(Optional.of(info));
+            }
 
-    private boolean experimental;
+            default RequiresClassDocs noInfo() {
+                return info(Optional.empty());
+            }
+
+            RequiresClassDocs info(Optional<String> info);
+        }
+
+        @FunctionalInterface
+        interface RequiresClassDocs {
+            default RequiresExperimental classDocs(String classDocs) {
+                if (Strings.isNullOrEmpty(classDocs)) {
+                    return noClassDocs();
+                }
+
+                return classDocs(Optional.of(classDocs));
+            }
+
+            default RequiresExperimental noClassDocs() {
+                return classDocs(Optional.empty());
+            }
+
+            RequiresExperimental classDocs(Optional<String> classDocs);
+        }
+
+        @FunctionalInterface
+        interface RequiresExperimental {
+            default MailetMatcherDescriptor isExperimental() {
+                return experimental(true);
+            }
+
+            default MailetMatcherDescriptor isNotExperimental() {
+                return experimental(false);
+            }
+
+            MailetMatcherDescriptor experimental(boolean experimental);
+        }
+
+    }
+
+    public static Builder.RequiresName builder() {
+        return name -> fullyQualifiedClassName -> type -> info -> classDocs -> experimental ->
+            new MailetMatcherDescriptor(name, fullyQualifiedClassName, type, info, classDocs, experimental);
+    }
+
+    private final String name;
+    private final String fullyQualifiedClassName;
+    private final Type type;
+    private final Optional<String> info;
+    private final Optional<String> classDocs;
+    private final boolean experimental;
+
+    private MailetMatcherDescriptor(String name, String fullyQualifiedClassName, Type type, Optional<String> info, Optional<String> classDocs, boolean experimental) {
+        this.name = name;
+        this.fullyQualifiedClassName = fullyQualifiedClassName;
+        this.type = type;
+        this.info = info;
+        this.classDocs = classDocs;
+        this.experimental = experimental;
+    }
 
     public String getFullyQualifiedName() {
         return fullyQualifiedClassName;
-    }
-
-    public void setFullyQualifiedName(String fqName) {
-        this.fullyQualifiedClassName = fqName;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getInfo() {
+    public Optional<String> getInfo() {
         return info;
     }
 
-    public void setInfo(String info) {
-        this.info = info;
-    }
-
-    public String getClassDocs() {
+    public Optional<String> getClassDocs() {
         return classDocs;
-    }
-
-    public void setClassDocs(String classDocs) {
-        this.classDocs = classDocs;
     }
 
     public Type getType() {
         return type;
     }
 
-    public void setType(Type type) {
-        this.type = type;
-    }
-
     public boolean isExperimental() {
         return experimental;
-    }
-
-    public void setExperimental(boolean experimental) {
-        this.experimental = experimental;
     }
 
     @Override
@@ -128,11 +181,17 @@ public class MailetMatcherDescriptor {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public final int hashCode() {
+        return Objects.hashCode(fullyQualifiedClassName, name, info, classDocs, type, experimental);
+    }
+
+    @Override
+    public final boolean equals(Object obj) {
         if (obj instanceof MailetMatcherDescriptor) {
             MailetMatcherDescriptor other = (MailetMatcherDescriptor) obj;
             return Objects.equal(this.fullyQualifiedClassName, other.fullyQualifiedClassName)
                 && Objects.equal(this.name, other.name)
+                && Objects.equal(this.classDocs, other.classDocs)
                 && Objects.equal(this.info, other.info)
                 && Objects.equal(this.type, other.type)
                 && Objects.equal(this.experimental, other.experimental);
