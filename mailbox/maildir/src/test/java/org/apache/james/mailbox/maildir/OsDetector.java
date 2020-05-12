@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.maildir;
 
 import java.util.Locale;
+import java.util.Optional;
 
 public class OsDetector {
 
@@ -29,8 +30,10 @@ public class OsDetector {
      * @return windows
      */
     public static boolean isWindows() {
-        String os = System.getProperty("os.name").toLowerCase(Locale.US);
-        return (os.contains("win"));
+        return Optional.ofNullable(System.getProperty("os.name"))
+            .orElse("")
+            .toLowerCase(Locale.US)
+            .contains("win");
     }
     
     
