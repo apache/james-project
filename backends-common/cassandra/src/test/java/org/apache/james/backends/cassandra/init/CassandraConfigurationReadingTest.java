@@ -43,7 +43,7 @@ class CassandraConfigurationReadingTest {
         FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
             .configure(new Parameters()
                 .fileBased()
-                .setURL(ClassLoader.getSystemResource("cassandra.properties")));
+                .setURL(ClassLoader.getSystemResource("configuration-reader-test/cassandra.properties")));
 
         CassandraConfiguration configuration = CassandraConfiguration.from(builder.getConfiguration());
 
