@@ -35,19 +35,13 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.FetchGroup;
-import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.probe.MailboxProbe;
-import org.apache.james.util.streams.Iterators;
 import org.apache.james.utils.GuiceProbe;
-
-import com.github.steveash.guavate.Guavate;
 
 public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     private final MailboxManager mailboxManager;
@@ -143,11 +137,6 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         }
     }
 
-    public MailboxCounters retrieveCounters(MailboxPath path) throws MailboxException {
-        MailboxSession systemSession = mailboxManager.createSystemSession(path.getUser());
-        return mailboxManager.getMailbox(path, systemSession).getMailboxCounters(systemSession);
-    }
-
     @Override
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags)
             throws MailboxException {
@@ -163,17 +152,6 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(username));
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
         return messageManager.appendMessage(appendCommand, mailboxSession).getId();
-    }
-
-    public List<ComposedMessageId> listMessages(MailboxId mailboxId, Username username) {
-        MailboxSession session = mailboxManager.createSystemSession(username);
-        try {
-            return Iterators.toStream(mailboxManager.getMailbox(mailboxId, session).getMessages(MessageRange.all(), FetchGroup.MINIMAL, session))
-                .map(messageResult -> new ComposedMessageId(mailboxId, messageResult.getMessageId(), messageResult.getUid()))
-                .collect(Guavate.toImmutableList());
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
