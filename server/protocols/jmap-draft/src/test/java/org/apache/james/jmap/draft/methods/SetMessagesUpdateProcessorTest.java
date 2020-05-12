@@ -257,7 +257,7 @@ public class SetMessagesUpdateProcessorTest {
         SetMessagesResponse result = sut.process(requestWithInvalidUpdate, null);
 
         // Then
-        assertThat(result.getNotUpdated()).isNotEmpty().describedAs("NotUpdated should not be empty");
+        assertThat(result.getNotUpdated()).describedAs("NotUpdated should not be empty").isNotEmpty();
         assertThat(result.getNotUpdated()).containsKey(requestMessageId);
         assertThat(result.getNotUpdated().get(requestMessageId).getProperties()).isPresent();
         assertThat(result.getNotUpdated().get(requestMessageId).getProperties().get()).contains(invalidProperty);
