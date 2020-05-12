@@ -232,7 +232,7 @@ class QuotaThresholdNoticeTest {
             .withConfiguration(DEFAULT_CONFIGURATION)
             .sizeQuota(Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
                 .used(QuotaSizeUsage.size(801 * 1024 * 1024))
-                .computedLimit(QuotaSizeLimit.size((2 * 1024 * 1024 * 1024) - 1))
+                .computedLimit(QuotaSizeLimit.size((2L * 1024 * 1024 * 1024) - 1))
                 .build())
             .countQuota(Counts._72_PERCENT)
             .sizeThreshold(HistoryEvolution.higherThresholdReached(sizeThresholdChange, NotAlreadyReachedDuringGracePeriod))
