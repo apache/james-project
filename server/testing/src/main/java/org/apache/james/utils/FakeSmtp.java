@@ -25,7 +25,7 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
@@ -89,8 +89,8 @@ public class FakeSmtp implements TestRule {
         return container.apply(statement, description);
     }
 
-    public void assertEmailReceived(Function<ValidatableResponse, ValidatableResponse> expectations) {
-        expectations.apply(
+    public void assertEmailReceived(Consumer<ValidatableResponse> expectations) {
+        expectations.accept(
             given(requestSpecification(), RESPONSE_SPECIFICATION)
                 .get("/api/email")
             .then()
