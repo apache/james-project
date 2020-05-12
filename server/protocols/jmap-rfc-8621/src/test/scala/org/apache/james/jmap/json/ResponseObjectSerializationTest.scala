@@ -21,10 +21,16 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.json.Fixture._
+import org.apache.james.jmap.json.ResponseObjectSerializationTest.SERIALIZER
 import org.apache.james.jmap.model.ResponseObject
+import org.apache.james.mailbox.model.TestId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
+
+object ResponseObjectSerializationTest {
+  private val SERIALIZER: Serializer = new Serializer(new TestId.Factory)
+}
 
 class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
   "Deserialize ResponseObject" should {
@@ -33,7 +39,7 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
         sessionState = "75128aab4b1b",
         methodResponses = Seq(invocation1))
 
-      new Serializer().deserializeResponseObject(
+      SERIALIZER.deserializeResponseObject(
         """
           |{
           |  "methodResponses": [
@@ -52,7 +58,7 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
         sessionState = "75128aab4b1b",
         methodResponses = Seq(invocation1, invocation2))
 
-      new Serializer().deserializeResponseObject(
+      SERIALIZER.deserializeResponseObject(
         """
           |{
           |  "sessionState": "75128aab4b1b",
@@ -90,7 +96,7 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin))
 
-      new Serializer().serialize(responseObject) should be(Json.parse(expectedJson))
+      SERIALIZER.serialize(responseObject) should be(Json.parse(expectedJson))
     }
   }
 }

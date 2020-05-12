@@ -46,9 +46,9 @@ object SessionRoutes {
 }
 
 @Inject
-class SessionRoutes(val authenticator: Authenticator,
-                    val sessionSupplier: SessionSupplier = new SessionSupplier(),
-                    val serializer: Serializer = new Serializer()) extends JMAPRoutes {
+class SessionRoutes(val serializer: Serializer,
+                    val authenticator: Authenticator,
+                    val sessionSupplier: SessionSupplier = new SessionSupplier()) extends JMAPRoutes {
 
   private val generateSession: JMAPRoute.Action =
     (request, response) => SMono.fromPublisher(authenticator.authenticate(request))

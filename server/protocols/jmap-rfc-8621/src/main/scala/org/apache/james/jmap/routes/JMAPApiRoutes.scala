@@ -27,6 +27,7 @@ import eu.timepit.refined.auto._
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.OK
+import javax.inject.Inject
 import org.apache.http.HttpStatus.SC_BAD_REQUEST
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
@@ -35,14 +36,13 @@ import org.apache.james.jmap.method.CoreEcho
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{Invocation, RequestObject, ResponseObject}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
-import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
-class JMAPApiRoutes extends JMAPRoutes {
+class JMAPApiRoutes @Inject() (serializer: Serializer) extends JMAPRoutes {
   private val coreEcho = new CoreEcho
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
@@ -72,7 +72,7 @@ class JMAPApiRoutes extends JMAPRoutes {
   }
 
   private def parseRequestObject(inputStream: InputStream): SMono[RequestObject] =
-    new Serializer().deserializeRequestObject(inputStream) match {
+    serializer.deserializeRequestObject(inputStream) match {
       case JsSuccess(requestObject, _) => SMono.just(requestObject)
       case JsError(_) => SMono.raiseError(new IllegalArgumentException("Invalid RequestObject"))
     }
@@ -88,7 +88,7 @@ class JMAPApiRoutes extends JMAPRoutes {
           .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
           .sendString(
             SMono.fromCallable(() =>
-              new Serializer().serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations)).toString()),
+              serializer.serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations)).toString),
             StandardCharsets.UTF_8
           ).`then`())
       )

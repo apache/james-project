@@ -22,8 +22,9 @@ package org.apache.james.jmap.json
 import java.io.InputStream
 import java.net.URL
 
+import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
-import org.apache.james.jmap.mail.{DelegatedNamespace, IsSubscribed, Mailbox, MailboxNamespace, MailboxRights, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
+import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxRights, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
@@ -33,7 +34,10 @@ import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-class Serializer {
+import scala.util.Try
+
+@Inject
+class Serializer(mailboxIdFactory: MailboxId.Factory) {
   // CreateIds
   private implicit val clientIdFormat: Format[ClientId] = Json.valueFormat[ClientId]
   private implicit val serverIdFormat: Format[ServerId] = Json.valueFormat[ServerId]
@@ -130,6 +134,11 @@ class Serializer {
   private implicit val sessionWrites: Writes[Session] = Json.writes[Session]
 
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
+  private implicit val mailboxIdReads: Reads[MailboxId] = {
+    case JsString(serializedMailboxId) => Try(JsSuccess(mailboxIdFactory.fromString(serializedMailboxId))).getOrElse(JsError())
+    case _ => JsError()
+  }
+
   private implicit val roleWrites: Writes[Role] = role => JsString(role.serialize)
   private implicit val sortOrderWrites: Writes[SortOrder] = Json.valueWrites[SortOrder]
   private implicit val totalEmailsWrites: Writes[TotalEmails] = Json.valueWrites[TotalEmails]
@@ -193,6 +202,13 @@ class Serializer {
 
   private implicit val mailboxWrites: Writes[Mailbox] = Json.writes[Mailbox]
 
+  private implicit val idsRead: Reads[Ids] = Json.valueReads[Ids]
+  private implicit val propertiesRead: Reads[Properties] = Json.valueReads[Properties]
+  private implicit val mailboxGetRequest: Reads[MailboxGetRequest] = Json.reads[MailboxGetRequest]
+
+  private implicit val notFoundWrites: Writes[NotFound] = Json.valueWrites[NotFound]
+  private implicit val mailboxGetResponseWrites: Writes[MailboxGetResponse] = Json.writes[MailboxGetResponse]
+
   def serialize(session: Session): JsValue = {
     Json.toJson(session)
   }
@@ -209,6 +225,10 @@ class Serializer {
     Json.toJson(mailbox)
   }
 
+  def serialize(mailboxGetResponse: MailboxGetResponse): JsValue = {
+    Json.toJson(mailboxGetResponse)
+  }
+
   def deserializeRequestObject(input: String): JsResult[RequestObject] = {
     Json.parse(input).validate[RequestObject]
   }
@@ -219,5 +239,9 @@ class Serializer {
 
   def deserializeResponseObject(input: String): JsResult[ResponseObject] = {
     Json.parse(input).validate[ResponseObject]
+  }
+
+  def deserializeMailboxGetRequest(input: String): JsResult[MailboxGetRequest] = {
+    Json.parse(input).validate[MailboxGetRequest]
   }
 }

@@ -67,7 +67,7 @@ object MailboxSerializationTest {
       Quotas.Message -> Value(14L, Some(43L)),
       Quotas.Storage -> Value(19L, None)))))
 
-  private val MAILBOX: Mailbox = Mailbox(
+  val MAILBOX: Mailbox = Mailbox(
     id = MAILBOX_ID,
     name = MAILBOX_NAME,
     parentId = PARENT_ID,
@@ -129,7 +129,7 @@ class MailboxSerializationTest extends AnyWordSpec with Matchers {
           |  }
           |}""".stripMargin)
 
-      assertThatJson(new Serializer().serialize(MAILBOX)).isEqualTo(expectedJson)
+      assertThatJson(new Serializer(new TestId.Factory).serialize(MAILBOX)).isEqualTo(expectedJson)
     }
   }
 }

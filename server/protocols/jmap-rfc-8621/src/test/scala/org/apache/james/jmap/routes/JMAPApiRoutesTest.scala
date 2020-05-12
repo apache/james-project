@@ -30,19 +30,22 @@ import io.restassured.http.ContentType
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
 import org.apache.james.jmap.JMAPUrls.JMAP
-import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version, VersionParser}
+import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap._
+import org.apache.james.mailbox.model.TestId
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
+  private val SERIALIZER: Serializer = new Serializer(new TestId.Factory)
 
   private val TEST_CONFIGURATION: JMAPConfiguration = JMAPConfiguration.builder().enable().randomPort().build()
   private val ACCEPT_JMAP_VERSION_HEADER = "application/json; jmapVersion="
   private val ACCEPT_DRAFT_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.DRAFT.asString()
   private val ACCEPT_RFC8621_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.RFC8621.asString()
 
-  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes()
+  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(SERIALIZER)
   private val ROUTES_HANDLER: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, JMAP_API_ROUTE))
 
   private val REQUEST_OBJECT: String =

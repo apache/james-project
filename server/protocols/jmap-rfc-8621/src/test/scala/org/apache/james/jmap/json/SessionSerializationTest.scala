@@ -26,10 +26,10 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.json.SessionSerializationTest.SESSION
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.CoreCapabilityProperties.CollationAlgorithm
-import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model._
+import org.apache.james.mailbox.model.TestId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
@@ -205,7 +205,7 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
           |  "eventSourceUrl": "http://james.org",
           |  "state": "fda9342jcm"
           |}""".stripMargin)
-      new Serializer().serialize(SESSION) should equal(json)
+      new Serializer(new TestId.Factory).serialize(SESSION) should equal(json)
     }
   }
 }
