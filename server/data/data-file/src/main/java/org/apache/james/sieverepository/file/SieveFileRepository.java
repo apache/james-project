@@ -32,11 +32,13 @@ import java.io.Writer;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -54,6 +56,8 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
+
+import com.github.steveash.guavate.Guavate;
 
 /**
  * <code>SieveFileRepository</code> manages sieve scripts stored on the file system.
@@ -199,25 +203,25 @@ public class SieveFileRepository implements SieveRepository {
 
     @Override
     public List<ScriptSummary> listScripts(Username username) throws StorageException {
-        File[] files = getUserDirectory(username).listFiles();
-        List<ScriptSummary> summaries = new ArrayList<>(files.length);
         File activeFile = null;
         try {
             activeFile = getActiveFile(username);
         } catch (ScriptNotFoundException ex) {
             // no op
         }
-        for (File file : files) {
-            if (!SYSTEM_FILES.contains(file.getName())) {
-                summaries.add(new ScriptSummary(new ScriptName(file.getName()), isActive(file, activeFile)));
-            }
-        }
-        return summaries;
+
+        Predicate<File> isActive = isActiveValidator(activeFile);
+        return Stream.of(Optional.ofNullable(getUserDirectory(username).listFiles()).orElse(new File[]{}))
+            .filter(file -> !SYSTEM_FILES.contains(file.getName()))
+            .map(file -> new ScriptSummary(new ScriptName(file.getName()), isActive.test(file)))
+            .collect(Guavate.toImmutableList());
     }
 
-    private boolean isActive(File file, File activeFile) {
-        return null != activeFile
-            && activeFile.equals(file);
+    private Predicate<File> isActiveValidator(File activeFile) {
+        if (activeFile != null) {
+            return activeFile::equals;
+        }
+        return file -> false;
     }
 
     @Override

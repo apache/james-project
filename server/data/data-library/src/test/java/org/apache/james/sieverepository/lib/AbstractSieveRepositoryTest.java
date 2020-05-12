@@ -130,7 +130,7 @@ public abstract class AbstractSieveRepositoryTest {
     }
 
     @Test
-    public void listScriptsShouldThrowIfUserNotFound() throws Exception {
+    public void listScriptsShouldReturnAnEmptyListIfUserNotFound() throws Exception {
         assertThat(sieveRepository.listScripts(USERNAME)).isEmpty();
     }
 
