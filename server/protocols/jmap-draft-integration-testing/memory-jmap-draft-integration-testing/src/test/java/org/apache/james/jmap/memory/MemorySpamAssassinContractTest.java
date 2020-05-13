@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.jmap.memory;
 
-import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_20_MESSAGES;
-
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -40,7 +38,7 @@ class MemorySpamAssassinContractTest implements SpamAssassinContract {
         .extension(new SpamAssassinModuleExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(TestJMAPServerModule.maximumMessages(LIMIT_TO_20_MESSAGES))
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class)))
         .build();

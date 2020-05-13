@@ -31,7 +31,7 @@ class CassandraLdapJmapJamesServerTest implements JmapJamesServerContract {
         .extension(new LdapTestExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraLdapJamesServerMain.MODULES)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();
 }

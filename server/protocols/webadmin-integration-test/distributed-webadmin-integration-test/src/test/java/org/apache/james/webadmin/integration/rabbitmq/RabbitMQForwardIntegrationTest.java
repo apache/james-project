@@ -42,7 +42,7 @@ class RabbitMQForwardIntegrationTest extends ForwardIntegrationTest {
         .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 }

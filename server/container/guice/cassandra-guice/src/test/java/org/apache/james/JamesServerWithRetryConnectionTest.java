@@ -55,7 +55,7 @@ class JamesServerWithRetryConnectionTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(TestJMAPServerModule.limitToTenMessages()))
+            .overrideWith(new TestJMAPServerModule()))
         .disableAutoStart()
         .build();
 

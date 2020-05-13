@@ -50,7 +50,7 @@ class GuiceLifecycleHeathCheckTest {
         return new JamesServerBuilder()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(TestJMAPServerModule.limitToTenMessages())
+                .overrideWith(new TestJMAPServerModule())
                 .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
                     .toInstance(WebAdminConfiguration.TEST_CONFIGURATION)));
     }

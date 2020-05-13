@@ -33,7 +33,7 @@ class CassandraWithTikaTest implements JamesServerContract {
             .extension(new DockerElasticSearchExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-                .overrideWith(TestJMAPServerModule.limitToTenMessages())
+                .overrideWith(new TestJMAPServerModule())
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
             .build();
 }

@@ -34,7 +34,7 @@ class MemoryForwardIntegrationTest extends ForwardIntegrationTest {
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 }

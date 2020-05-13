@@ -29,7 +29,7 @@ public class CassandraRabbitMQJamesServerFixture {
         configuration -> GuiceJamesServer
             .forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
 
     public static JamesServerBuilder baseExtensionBuilder() {

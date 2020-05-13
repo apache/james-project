@@ -19,8 +19,6 @@
 
 package org.apache.james.mailets;
 
-import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_3_MESSAGES;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -148,7 +146,7 @@ public class TemporaryJamesServer {
             .combineWith(serverBaseModule)
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(additionalModules)
-            .overrideWith(TestJMAPServerModule.maximumMessages(LIMIT_TO_3_MESSAGES))
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith((binder) -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
 
         jamesServer.start();

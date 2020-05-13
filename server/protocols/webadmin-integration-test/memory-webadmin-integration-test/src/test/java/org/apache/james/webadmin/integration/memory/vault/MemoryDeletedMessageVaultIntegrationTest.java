@@ -36,7 +36,7 @@ class MemoryDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegr
         .extension(new ClockExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();

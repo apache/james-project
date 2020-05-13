@@ -79,7 +79,7 @@ class CacheSessionTest {
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE, new CassandraCacheSessionModule())
-            .overrideWith(TestJMAPServerModule.limitToTenMessages()))
+            .overrideWith(new TestJMAPServerModule()))
         .overrideServerModule(binder -> Multibinder.newSetBinder(binder, CassandraModule.class, Names.named(InjectionNames.CACHE))
             .addBinding()
             .toInstance(CassandraModule.table(TABLE_NAME)

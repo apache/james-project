@@ -38,7 +38,7 @@ class WebAdminRoutesExtensionTest {
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
                 .toInstance(WebAdminConfiguration.builder()
                     .additionalRoute(MyRoute.class.getCanonicalName())

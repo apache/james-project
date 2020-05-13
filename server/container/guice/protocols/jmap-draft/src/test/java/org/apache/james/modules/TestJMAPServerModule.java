@@ -20,7 +20,6 @@
 package org.apache.james.modules;
 
 import java.io.FileNotFoundException;
-import java.time.Duration;
 import java.util.Optional;
 
 import javax.inject.Singleton;
@@ -29,7 +28,6 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.apache.james.jmap.draft.methods.GetMessageListMethod;
-import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.modules.mailbox.FastRetryBackoffModule;
 
 import com.google.inject.AbstractModule;
@@ -37,17 +35,23 @@ import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
 public class TestJMAPServerModule extends AbstractModule {
+    public static class SearchModule extends AbstractModule {
+        public static final long LIMIT_TO_3_MESSAGES = 3;
 
-    public static final long LIMIT_TO_10_MESSAGES = 10;
-    public static final long LIMIT_TO_3_MESSAGES = 3;
-    public static final int LIMIT_TO_20_MESSAGES = 20;
+        public static SearchModule maximumMessages(long maximumLimit) {
+            return new SearchModule(maximumLimit);
+        }
 
-    public static TestJMAPServerModule limitToTenMessages() {
-        return new TestJMAPServerModule(LIMIT_TO_10_MESSAGES);
-    }
+        private final long maximumLimit;
 
-    public static TestJMAPServerModule maximumMessages(long maximumLimit) {
-        return new TestJMAPServerModule(maximumLimit);
+        public SearchModule(long maximumLimit) {
+            this.maximumLimit = maximumLimit;
+        }
+
+        @Override
+        protected void configure() {
+            bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(maximumLimit);
+        }
     }
 
     private static final String PUBLIC_PEM_KEY =
@@ -101,17 +105,9 @@ public class TestJMAPServerModule extends AbstractModule {
                 .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY));
     }
 
-    private final long maximumLimit;
-
-    private TestJMAPServerModule(long maximumLimit) {
-        this.maximumLimit = maximumLimit;
-    }
-
     @Override
     protected void configure() {
         install(new FastRetryBackoffModule());
-
-        bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(maximumLimit);
     }
 
     @Provides

@@ -56,7 +56,7 @@ class RabbitMQJamesServerReprocessingTest {
         .server(configuration -> GuiceJamesServer
             .forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();

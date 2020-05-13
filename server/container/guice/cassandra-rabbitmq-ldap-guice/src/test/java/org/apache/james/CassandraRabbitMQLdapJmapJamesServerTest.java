@@ -93,7 +93,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
             .extension(new LdapTestExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQLdapJamesServerMain.MODULES)
-                .overrideWith(TestJMAPServerModule.limitToTenMessages())
+                .overrideWith(new TestJMAPServerModule())
                 .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
     }
 }

@@ -78,7 +78,7 @@ public class CassandraStepdefs {
 
         mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(new TestDockerESMetricReporterModule(elasticSearch.getDockerEs().getHttpHost()))
             .overrideWith(elasticSearch.getModule())
             .overrideWith(cassandraServer.getModule())

@@ -46,7 +46,7 @@ public class RabbitMQAwsS3SendMDNMethodTest extends SendMDNMethodTest {
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(TestJMAPServerModule.limitToTenMessages()))
+                .overrideWith(new TestJMAPServerModule()))
             .build();
 
     @Override

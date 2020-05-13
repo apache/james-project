@@ -73,7 +73,7 @@ public class CassandraRabbitMQAwsS3JmapTestRule implements TestRule {
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
             .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
                 .toInstance(BlobStoreChoosingConfiguration.objectStorage()))
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestJMAPServerModule())
             .overrideWith(new TestDockerESMetricReporterModule(dockerElasticSearchRule.getDockerEs().getHttpHost()))
             .overrideWith(guiceModuleTestRule.getModule())
             .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()))
