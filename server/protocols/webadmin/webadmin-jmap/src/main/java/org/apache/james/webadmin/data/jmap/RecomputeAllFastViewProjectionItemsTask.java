@@ -86,14 +86,21 @@ public class RecomputeAllFastViewProjectionItemsTask implements Task {
 
     public static class RecomputeAllFastViewTaskDTO implements TaskDTO {
         private final String type;
+        private final Optional<RunningOptionsDTO> runningOptions;
 
-        public RecomputeAllFastViewTaskDTO(@JsonProperty("type") String type) {
+        public RecomputeAllFastViewTaskDTO(@JsonProperty("type") String type,
+                                           @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
             this.type = type;
+            this.runningOptions = runningOptions;
         }
 
         @Override
         public String getType() {
             return type;
+        }
+
+        public Optional<RunningOptionsDTO> getRunningOptions() {
+            return runningOptions;
         }
     }
 
@@ -101,23 +108,36 @@ public class RecomputeAllFastViewProjectionItemsTask implements Task {
         return DTOModule
             .forDomainObject(RecomputeAllFastViewProjectionItemsTask.class)
             .convertToDTO(RecomputeAllFastViewTaskDTO.class)
-            .toDomainObjectConverter(dto -> new RecomputeAllFastViewProjectionItemsTask(corrector))
-            .toDTOConverter((task, type) -> new RecomputeAllFastViewTaskDTO(type))
+            .toDomainObjectConverter(dto -> asTask(corrector, dto))
+            .toDTOConverter(RecomputeAllFastViewProjectionItemsTask::asDTO)
             .typeName(TASK_TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }
 
+    private static RecomputeAllFastViewTaskDTO asDTO(RecomputeAllFastViewProjectionItemsTask task, String type) {
+        return new RecomputeAllFastViewTaskDTO(type, Optional.of(RunningOptionsDTO.asDTO(task.runningOptions)));
+    }
+
+    private static RecomputeAllFastViewProjectionItemsTask asTask(MessageFastViewProjectionCorrector corrector, RecomputeAllFastViewTaskDTO dto) {
+        return new RecomputeAllFastViewProjectionItemsTask(corrector,
+            dto.getRunningOptions()
+                .map(RunningOptionsDTO::asDomainObject)
+                .orElse(RunningOptions.DEFAULT));
+    }
+
     private final MessageFastViewProjectionCorrector corrector;
     private final MessageFastViewProjectionCorrector.Progress progress;
+    private final RunningOptions runningOptions;
 
-    RecomputeAllFastViewProjectionItemsTask(MessageFastViewProjectionCorrector corrector) {
+    RecomputeAllFastViewProjectionItemsTask(MessageFastViewProjectionCorrector corrector, RunningOptions runningOptions) {
         this.corrector = corrector;
+        this.runningOptions = runningOptions;
         this.progress = new MessageFastViewProjectionCorrector.Progress();
     }
 
     @Override
     public Result run() {
-        return corrector.correctAllProjectionItems(progress, RunningOptions.DEFAULT)
+        return corrector.correctAllProjectionItems(progress, runningOptions)
             .subscribeOn(Schedulers.elastic())
             .block();
     }

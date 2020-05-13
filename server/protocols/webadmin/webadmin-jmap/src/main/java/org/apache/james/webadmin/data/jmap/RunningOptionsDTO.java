@@ -19,16 +19,32 @@
 
 package org.apache.james.webadmin.data.jmap;
 
-import static org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
+import java.util.Optional;
 
-import javax.inject.Inject;
+import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
 
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class RecomputeAllFastViewProjectionItemsRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
-    @Inject
-    RecomputeAllFastViewProjectionItemsRequestToTask(MessageFastViewProjectionCorrector corrector) {
-        super(Constants.TASK_REGISTRATION_KEY,
-            request -> new RecomputeAllFastViewProjectionItemsTask(corrector, RunningOptions.DEFAULT));
+public class RunningOptionsDTO {
+    public static RunningOptionsDTO asDTO(RunningOptions domainObject) {
+        return new RunningOptionsDTO(Optional.of(domainObject.getMessageRatePerSecond()));
+    }
+
+    private final Optional<Integer> messageRatePerSecond;
+
+    @JsonCreator
+    public RunningOptionsDTO(
+            @JsonProperty("messageRatePerSecond") Optional<Integer> messageRatePerSecond) {
+        this.messageRatePerSecond = messageRatePerSecond;
+    }
+
+    public Optional<Integer> getMessageRatePerSecond() {
+        return messageRatePerSecond;
+    }
+
+    public RunningOptions asDomainObject() {
+        return messageRatePerSecond.map(RunningOptions::withMessageRatePerSecond)
+            .orElse(RunningOptions.DEFAULT);
     }
 }

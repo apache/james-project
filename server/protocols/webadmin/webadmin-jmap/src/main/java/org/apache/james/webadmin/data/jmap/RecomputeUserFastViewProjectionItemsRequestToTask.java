@@ -25,6 +25,7 @@ import org.apache.james.core.Username;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.eclipse.jetty.http.HttpStatus;
@@ -43,7 +44,7 @@ public class RecomputeUserFastViewProjectionItemsRequestToTask extends TaskFromR
     private static Task toTask(MessageFastViewProjectionCorrector corrector, UsersRepository usersRepository, Request request) throws UsersRepositoryException {
         Username username = Username.of(request.params("username"));
         if (usersRepository.contains(username)) {
-            return new RecomputeUserFastViewProjectionItemsTask(corrector, username);
+            return new RecomputeUserFastViewProjectionItemsTask(corrector, RunningOptions.DEFAULT, username);
         }
 
         throw ErrorResponder.builder()

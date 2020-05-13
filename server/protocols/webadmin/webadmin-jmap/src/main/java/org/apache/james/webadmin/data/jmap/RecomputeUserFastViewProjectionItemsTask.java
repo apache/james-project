@@ -82,12 +82,16 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
     public static class RecomputeUserFastViewTaskDTO implements TaskDTO {
         private final String type;
         private final String username;
+        private final Optional<RunningOptionsDTO> runningOptions;
 
         public RecomputeUserFastViewTaskDTO(
-            @JsonProperty("type") String type,
-            @JsonProperty("username") String username) {
+                @JsonProperty("type") String type,
+                @JsonProperty("username") String username,
+                @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
+
             this.type = type;
             this.username = username;
+            this.runningOptions = runningOptions;
         }
 
         @Override
@@ -98,31 +102,50 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
         public String getUsername() {
             return username;
         }
+
+        public Optional<RunningOptionsDTO> getRunningOptions() {
+            return runningOptions;
+        }
     }
 
     public static TaskDTOModule<RecomputeUserFastViewProjectionItemsTask, RecomputeUserFastViewTaskDTO> module(MessageFastViewProjectionCorrector corrector) {
         return DTOModule
             .forDomainObject(RecomputeUserFastViewProjectionItemsTask.class)
             .convertToDTO(RecomputeUserFastViewTaskDTO.class)
-            .toDomainObjectConverter(dto -> new RecomputeUserFastViewProjectionItemsTask(corrector, Username.of(dto.username)))
-            .toDTOConverter((task, type) -> new RecomputeUserFastViewTaskDTO(type, task.username.asString()))
+            .toDomainObjectConverter(dto -> asTask(corrector, dto))
+            .toDTOConverter(RecomputeUserFastViewProjectionItemsTask::asDTO)
             .typeName(TASK_TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }
 
+    private static RecomputeUserFastViewTaskDTO asDTO(RecomputeUserFastViewProjectionItemsTask task, String type) {
+        return new RecomputeUserFastViewTaskDTO(type, task.username.asString(),
+            Optional.of(RunningOptionsDTO.asDTO(task.runningOptions)));
+    }
+
+    private static RecomputeUserFastViewProjectionItemsTask asTask(MessageFastViewProjectionCorrector corrector, RecomputeUserFastViewTaskDTO dto) {
+        return new RecomputeUserFastViewProjectionItemsTask(corrector,
+            dto.getRunningOptions()
+                .map(RunningOptionsDTO::asDomainObject)
+                .orElse(RunningOptions.DEFAULT),
+            Username.of(dto.username));
+    }
+
     private final MessageFastViewProjectionCorrector corrector;
-    private final MessageFastViewProjectionCorrector.Progress progress;
+    private final RunningOptions runningOptions;
+    private final Progress progress;
     private final Username username;
 
-    RecomputeUserFastViewProjectionItemsTask(MessageFastViewProjectionCorrector corrector, Username username) {
+    RecomputeUserFastViewProjectionItemsTask(MessageFastViewProjectionCorrector corrector, RunningOptions runningOptions, Username username) {
         this.corrector = corrector;
+        this.runningOptions = runningOptions;
         this.username = username;
         this.progress = new MessageFastViewProjectionCorrector.Progress();
     }
 
     @Override
     public Result run() {
-        return corrector.correctUsersProjectionItems(progress, username, RunningOptions.DEFAULT)
+        return corrector.correctUsersProjectionItems(progress, username, runningOptions)
             .subscribeOn(Schedulers.elastic())
             .block();
     }

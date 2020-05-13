@@ -19,11 +19,14 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,8 +41,24 @@ class RecomputeUserFastViewProjectionItemsTaskSerializationTest {
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
         JsonSerializationVerifier.dtoModule(RecomputeUserFastViewProjectionItemsTask.module(corrector))
-            .bean(new RecomputeUserFastViewProjectionItemsTask(corrector, Username.of("bob")))
+            .bean(new RecomputeUserFastViewProjectionItemsTask(corrector,
+                RunningOptions.withMessageRatePerSecond(2),
+                Username.of("bob")))
             .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeUser.task.json"))
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeLegacy() throws Exception {
+        RecomputeUserFastViewProjectionItemsTask legacyTask = JsonGenericSerializer.forModules(RecomputeUserFastViewProjectionItemsTask.module(corrector))
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/recomputeUser.task.legacy.json"));
+
+        RecomputeUserFastViewProjectionItemsTask expected = new RecomputeUserFastViewProjectionItemsTask(corrector,
+            RunningOptions.DEFAULT,
+            Username.of("bob"));
+
+        assertThat(legacyTask)
+            .isEqualToComparingFieldByFieldRecursively(expected);
     }
 }

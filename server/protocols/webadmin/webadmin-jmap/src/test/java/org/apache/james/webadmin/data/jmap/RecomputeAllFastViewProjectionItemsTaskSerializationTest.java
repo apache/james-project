@@ -19,10 +19,13 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,8 +40,22 @@ class RecomputeAllFastViewProjectionItemsTaskSerializationTest {
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
         JsonSerializationVerifier.dtoModule(RecomputeAllFastViewProjectionItemsTask.module(corrector))
-            .bean(new RecomputeAllFastViewProjectionItemsTask(corrector))
+            .bean(new RecomputeAllFastViewProjectionItemsTask(corrector,
+                RunningOptions.withMessageRatePerSecond(2)))
             .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeAll.task.json"))
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeLegacy() throws Exception {
+        RecomputeAllFastViewProjectionItemsTask legacyTask = JsonGenericSerializer.forModules(RecomputeAllFastViewProjectionItemsTask.module(corrector))
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/recomputeAll.task.legacy.json"));
+
+        RecomputeAllFastViewProjectionItemsTask expected = new RecomputeAllFastViewProjectionItemsTask(corrector,
+            RunningOptions.DEFAULT);
+
+        assertThat(legacyTask)
+            .isEqualToComparingFieldByFieldRecursively(expected);
     }
 }
