@@ -19,14 +19,26 @@
 
 package org.apache.james.webadmin.data.jmap;
 
-import javax.inject.Inject;
+import java.util.Optional;
 
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
 
-public class RecomputeAllFastViewProjectionItemsRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
-    @Inject
-    RecomputeAllFastViewProjectionItemsRequestToTask(MessageFastViewProjectionCorrector corrector) {
-        super(Constants.TASK_REGISTRATION_KEY,
-            request -> new RecomputeAllFastViewProjectionItemsTask(corrector, RunningOptionsParser.parse(request)));
+import spark.Request;
+
+public class RunningOptionsParser {
+    public static RunningOptions parse(Request request) {
+        return intQueryParameter(request, "messageRatePerSecond")
+            .map(RunningOptions::withMessageRatePerSecond)
+            .orElse(RunningOptions.DEFAULT);
+    }
+
+    public static Optional<Integer> intQueryParameter(Request request, String queryParameter) {
+        try {
+            return Optional.ofNullable(request.queryParams(queryParameter))
+                .map(Integer::parseInt);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s', expecting a " +
+                "strictly positive optional integer", queryParameter), e);
+        }
     }
 }

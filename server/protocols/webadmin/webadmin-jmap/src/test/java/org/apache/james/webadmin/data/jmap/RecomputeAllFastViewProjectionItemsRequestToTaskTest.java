@@ -176,8 +176,61 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
     }
 
     @Test
+    void postShouldFailWhenMessageRatePerSecondIsNotAnInt() {
+        given()
+            .queryParam("action", "recomputeFastViewProjectionItems")
+            .queryParam("messageRatePerSecond", "abc")
+            .post()
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Invalid arguments supplied in the user request"))
+            .body("details", is("Illegal value supplied for query parameter 'messageRatePerSecond', expecting a strictly positive optional integer"));
+    }
+
+    @Test
+    void postShouldFailWhenMessageRatePerSecondIsNegative() {
+        given()
+            .queryParam("action", "recomputeFastViewProjectionItems")
+            .queryParam("messageRatePerSecond", "-1")
+            .post()
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Invalid arguments supplied in the user request"))
+            .body("details", is("'messageParallelism' must be strictly positive"));
+    }
+
+    @Test
+    void postShouldFailWhenMessageRatePerSecondIsZero() {
+        given()
+            .queryParam("action", "recomputeFastViewProjectionItems")
+            .queryParam("messageRatePerSecond", "0")
+            .post()
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Invalid arguments supplied in the user request"))
+            .body("details", is("'messageParallelism' must be strictly positive"));
+    }
+
+    @Test
     void postShouldCreateANewTask() {
         given()
+            .queryParam("action", "recomputeFastViewProjectionItems")
+            .post()
+        .then()
+            .statusCode(HttpStatus.CREATED_201)
+            .body("taskId", notNullValue());
+    }
+
+    @Test
+    void postShouldCreateANewTaskWhenConcurrencyParametersSpecified() {
+        given()
+            .queryParam("messageRatePerSecond", "1")
             .queryParam("action", "recomputeFastViewProjectionItems")
             .post()
         .then()
@@ -208,6 +261,25 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
+    }
+
+    @Test
+    void runningOptionsShouldBePartOfTaskDetails() {
+        String taskId = with()
+            .queryParam("action", "recomputeFastViewProjectionItems")
+            .queryParam("messageRatePerSecond", "20")
+            .post()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("taskId", is(taskId))
+            .body("type", is("RecomputeAllFastViewProjectionItemsTask"))
+            .body("additionalInformation.runningOptions.messageParallelism", is(20));
     }
 
     @Test
