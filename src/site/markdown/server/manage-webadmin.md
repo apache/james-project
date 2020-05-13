@@ -520,6 +520,17 @@ Will schedule a task for recomputing the fast message view projection for all ma
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
+An admin can specify the concurrency that should be used when running the task:
+
+ - `messageRatePerSecond` rate at which messages should be processed, per second. Defaults to 10.
+ 
+This optional parameter must have a strictly positive integer as a value and be passed as query parameters.
+
+Example:
+
+```
+curl -XPOST /mailboxes?task=recomputeFastViewProjectionItems&messageRatePerSecond=20
+```
 
 The scheduled task will have the following type `RecomputeAllPreviewsTask` and the following `additionalInformation`:
 
@@ -529,7 +540,10 @@ The scheduled task will have the following type `RecomputeAllPreviewsTask` and t
   "processedUserCount": 3,
   "processedMessageCount": 3,
   "failedUserCount": 2,
-  "failedMessageCount": 1
+  "failedMessageCount": 1,
+  "runningOptions": {
+    "messageRatePerSecond":20
+  }
 }
 ```
 
@@ -955,6 +969,17 @@ Will schedule a task for recomputing the fast message view projection for all ma
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
+An admin can specify the concurrency that should be used when running the task:
+
+ - `messageRatePerSecond` rate at which messages should be processed, per second. Defaults to 10.
+ 
+This optional parameter must have a strictly positive integer as a value and be passed as query parameters.
+
+Example:
+
+```
+curl -XPOST /mailboxes?task=recomputeFastViewProjectionItems&messageRatePerSecond=20
+```
 
 The scheduled task will have the following type `RecomputeAllPreviewsTask` and the following `additionalInformation`:
 
@@ -963,7 +988,10 @@ The scheduled task will have the following type `RecomputeAllPreviewsTask` and t
   "type":"RecomputeAllPreviewsTask",
   "username": "{usernameToBeUsed}",
   "processedMessageCount": 3,
-  "failedMessageCount": 1
+  "failedMessageCount": 1,
+  "runningOptions": {
+    "messageRatePerSecond":20
+  }
 }
 ```
 
