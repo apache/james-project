@@ -44,7 +44,7 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.matchers.SMTPIsAuthNetwork;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
 import org.junit.After;
@@ -61,7 +61,7 @@ public class SmtpContentTypeTest {
     @ClassRule
     public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
     @Rule
-    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     @Rule

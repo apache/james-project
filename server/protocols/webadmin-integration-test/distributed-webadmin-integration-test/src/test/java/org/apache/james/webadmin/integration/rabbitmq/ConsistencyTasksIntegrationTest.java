@@ -61,7 +61,7 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -140,7 +140,7 @@ class ConsistencyTasksIntegrationTest {
         .build();
 
     @RegisterExtension
-    IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    TestIMAPClient testIMAPClient = new TestIMAPClient();
 
     @RegisterExtension
     SMTPMessageSender smtpMessageSender = new SMTPMessageSender(DOMAIN);
@@ -222,7 +222,7 @@ class ConsistencyTasksIntegrationTest {
             .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase)"));
 
         try {
-            imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(BOB, BOB_PASSWORD)
                 .create(TEST_MAILBOX);
         } catch (Exception e) {
@@ -245,7 +245,7 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(solveConsistenciesTaskId + "/await");
 
-        assertThatCode(() -> imapMessageReader.create(TEST_MAILBOX)).doesNotThrowAnyException();
+        assertThatCode(() -> testIMAPClient.create(TEST_MAILBOX)).doesNotThrowAnyException();
     }
 
     @Test
@@ -279,11 +279,11 @@ class ConsistencyTasksIntegrationTest {
             .get(taskId + "/await");
 
         //Each of the LocalDelivery retries leads to an email being created in BOB mailbox and leading to 4 emails in total
-        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
             .select(MailboxConstants.INBOX);
 
-        assertThat(imapMessageReader.getMessageCount(MailboxConstants.INBOX)).isEqualTo(4);
+        assertThat(testIMAPClient.getMessageCount(MailboxConstants.INBOX)).isEqualTo(4);
     }
 
     @Test
@@ -305,7 +305,7 @@ class ConsistencyTasksIntegrationTest {
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
 
-        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
             .select(MailboxConstants.INBOX)
             .awaitMessage(Awaitility.await());
@@ -328,7 +328,7 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        assertThat(imapMessageReader.getQuotaRoot(MailboxConstants.INBOX))
+        assertThat(testIMAPClient.getQuotaRoot(MailboxConstants.INBOX))
             .contains("* QUOTAROOT \"INBOX\" #private&bob@domain.tld\r\n" +
                 "* QUOTA #private&bob@domain.tld (MESSAGE 1 50)");
     }
@@ -374,11 +374,11 @@ class ConsistencyTasksIntegrationTest {
             .get(solveInconsistenciesTaskId + "/await");
 
         // Then BOB can access this mail in IMAP
-        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
             .select(MailboxConstants.INBOX);
 
-        assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE);
+        assertThat(testIMAPClient.readFirstMessage()).contains(MESSAGE);
     }
 
     @Test
@@ -418,7 +418,7 @@ class ConsistencyTasksIntegrationTest {
         .then()
             .body("status", is("completed"));
 
-        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
             .create(TEST_MAILBOX);
 
@@ -433,7 +433,7 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(solveInconsistenciesTaskId + "/await");
 
-        assertThatCode(() -> imapMessageReader.create(TEST_MAILBOX))
+        assertThatCode(() -> testIMAPClient.create(TEST_MAILBOX))
             .hasMessageContaining("Mailbox already exists");
     }
 
@@ -442,7 +442,7 @@ class ConsistencyTasksIntegrationTest {
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
 
-        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
             .select(MailboxConstants.INBOX)
             .awaitMessage(Awaitility.await());
@@ -458,7 +458,7 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
         .get(taskId + "/await");
 
-        assertThat(imapMessageReader.getMessageCount(MailboxConstants.INBOX)).isEqualTo(1);
+        assertThat(testIMAPClient.getMessageCount(MailboxConstants.INBOX)).isEqualTo(1);
     }
 
     @Test
@@ -474,7 +474,7 @@ class ConsistencyTasksIntegrationTest {
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
 
-        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
             .select(MailboxConstants.INBOX)
             .awaitMessage(Awaitility.await());
@@ -494,7 +494,7 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        assertThat(imapMessageReader.getQuotaRoot(MailboxConstants.INBOX))
+        assertThat(testIMAPClient.getQuotaRoot(MailboxConstants.INBOX))
             .contains("* QUOTAROOT \"INBOX\" #private&bob@domain.tld\r\n" +
                 "* QUOTA #private&bob@domain.tld (MESSAGE 1 50)");
     }
@@ -514,7 +514,7 @@ class ConsistencyTasksIntegrationTest {
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
 
-        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
             .select(MailboxConstants.INBOX)
             .awaitMessage(Awaitility.await());
@@ -529,6 +529,6 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(solveInconsistenciesTaskId + "/await");
 
-        assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE);
+        assertThat(testIMAPClient.readFirstMessage()).contains(MESSAGE);
     }
 }

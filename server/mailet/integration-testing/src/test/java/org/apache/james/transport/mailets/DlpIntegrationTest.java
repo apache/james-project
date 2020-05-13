@@ -41,7 +41,7 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.transport.matchers.dlp.Dlp;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -63,7 +63,7 @@ public class DlpIntegrationTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Rule
-    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
@@ -271,11 +271,11 @@ public class DlpIntegrationTest {
             .sendMessageWithHeaders(FROM, RECIPIENT,
                 ClassLoaderUtils.getSystemResourceAsString("eml/dlp_read_mail_with_attachment.eml"));
 
-        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
-            .select(IMAPMessageReader.INBOX)
+            .select(TestIMAPClient.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(imapMessageReader.readFirstMessage()).containsSequence("dlp subject");
+        assertThat(testIMAPClient.readFirstMessage()).containsSequence("dlp subject");
 
     }
 

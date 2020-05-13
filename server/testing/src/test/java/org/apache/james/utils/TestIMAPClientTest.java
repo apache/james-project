@@ -21,12 +21,12 @@ package org.apache.james.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.utils.IMAPMessageReader.Utf8IMAPClient;
+import org.apache.james.utils.TestIMAPClient.Utf8IMAPClient;
 import org.junit.jupiter.api.Test;
 
-class IMAPMessageReaderTest {
+class TestIMAPClientTest {
     static final Utf8IMAPClient NULL_IMAP_CLIENT = null;
-    IMAPMessageReader testee = new IMAPMessageReader(NULL_IMAP_CLIENT);
+    TestIMAPClient testee = new TestIMAPClient(NULL_IMAP_CLIENT);
 
     @Test
     void userReceivedMessageWithFlagsInMailboxShouldReturnTrueWhenSingleFlag() throws Exception {

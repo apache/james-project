@@ -41,7 +41,7 @@ import org.junit.rules.ExternalResource;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
-public class IMAPMessageReader extends ExternalResource implements Closeable, AfterEachCallback {
+public class TestIMAPClient extends ExternalResource implements Closeable, AfterEachCallback {
 
     public static class Utf8IMAPClient extends IMAPClient {
         private static String UTF8_ENCODING = "UTF-8";
@@ -62,46 +62,46 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
 
 
     @VisibleForTesting
-    IMAPMessageReader(Utf8IMAPClient imapClient) {
+    TestIMAPClient(Utf8IMAPClient imapClient) {
         this.imapClient = imapClient;
     }
 
-    public IMAPMessageReader() {
+    public TestIMAPClient() {
         this(new Utf8IMAPClient());
     }
 
-    public IMAPMessageReader connect(String host, int port) throws IOException {
+    public TestIMAPClient connect(String host, int port) throws IOException {
         imapClient.connect(host, port);
         return this;
     }
 
-    public IMAPMessageReader disconnect() throws IOException {
+    public TestIMAPClient disconnect() throws IOException {
         imapClient.disconnect();
         return this;
     }
 
-    public IMAPMessageReader login(String user, String password) throws IOException {
+    public TestIMAPClient login(String user, String password) throws IOException {
         imapClient.login(user, password);
         return this;
     }
 
-    public IMAPMessageReader login(Username user, String password) throws IOException {
+    public TestIMAPClient login(Username user, String password) throws IOException {
         return login(user.asString(), password);
     }
 
-    public IMAPMessageReader select(String mailbox) throws IOException {
+    public TestIMAPClient select(String mailbox) throws IOException {
         imapClient.select(mailbox);
         return this;
     }
 
-    public IMAPMessageReader create(String mailbox) throws IOException {
+    public TestIMAPClient create(String mailbox) throws IOException {
         if (!imapClient.create(mailbox)) {
             throw new RuntimeException(imapClient.getReplyString());
         }
         return this;
     }
 
-    public IMAPMessageReader delete(String mailbox) throws IOException {
+    public TestIMAPClient delete(String mailbox) throws IOException {
         imapClient.delete(mailbox);
         return this;
     }
@@ -112,12 +112,12 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
             .contains("OK FETCH completed");
     }
 
-    public IMAPMessageReader awaitMessage(ConditionFactory conditionFactory) {
+    public TestIMAPClient awaitMessage(ConditionFactory conditionFactory) {
         conditionFactory.until(this::hasAMessage);
         return this;
     }
 
-    public IMAPMessageReader awaitMessageCount(ConditionFactory conditionFactory, int messageCount) {
+    public TestIMAPClient awaitMessageCount(ConditionFactory conditionFactory, int messageCount) {
         conditionFactory.untilAsserted(() -> {
             imapClient.fetch("1:*", "UID");
             Assertions.assertThat(countFetchedEntries()).isEqualTo(messageCount);
@@ -134,7 +134,7 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
             .count();
     }
 
-    public IMAPMessageReader awaitNoMessage(ConditionFactory conditionFactory) {
+    public TestIMAPClient awaitNoMessage(ConditionFactory conditionFactory) {
         conditionFactory.until(this::userDoesNotReceiveMessage);
         return this;
     }

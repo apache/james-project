@@ -45,7 +45,7 @@ import org.apache.james.mailbox.Role;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.spamassassin.SpamAssassinExtension;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SpoolerProbe;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
@@ -170,12 +170,12 @@ public interface SpamAssassinContract {
 
 
         // Alice is copying this message to Spam -> learning in SpamAssassin
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        try (TestIMAPClient testIMAPClient = new TestIMAPClient()) {
+            testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(ALICE, ALICE_PASSWORD)
-                .select(IMAPMessageReader.INBOX);
+                .select(TestIMAPClient.INBOX);
 
-            imapMessageReader.copyFirstMessage("Spam");
+            testIMAPClient.copyFirstMessage("Spam");
         }
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
@@ -206,12 +206,12 @@ public interface SpamAssassinContract {
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
 
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        try (TestIMAPClient testIMAPClient = new TestIMAPClient()) {
+            testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(ALICE, ALICE_PASSWORD)
-                .select(IMAPMessageReader.INBOX);
+                .select(TestIMAPClient.INBOX);
 
-            imapMessageReader.moveFirstMessage("Spam");
+            testIMAPClient.moveFirstMessage("Spam");
         }
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
@@ -398,12 +398,12 @@ public interface SpamAssassinContract {
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Alice is moving this message out of Spam -> forgetting in SpamAssassin
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        try (TestIMAPClient testIMAPClient = new TestIMAPClient()) {
+            testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(ALICE, ALICE_PASSWORD)
                 .select("Spam");
 
-            imapMessageReader.moveFirstMessage(IMAPMessageReader.INBOX);
+            testIMAPClient.moveFirstMessage(TestIMAPClient.INBOX);
         }
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
 
@@ -460,13 +460,13 @@ public interface SpamAssassinContract {
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Alice is deleting this message
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        try (TestIMAPClient testIMAPClient = new TestIMAPClient()) {
+            testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(ALICE, ALICE_PASSWORD)
                 .select("Spam");
 
-            imapMessageReader.setFlagsForAllMessagesInMailbox("\\Deleted");
-            imapMessageReader.expunge();
+            testIMAPClient.setFlagsForAllMessagesInMailbox("\\Deleted");
+            testIMAPClient.expunge();
         }
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 0));
 

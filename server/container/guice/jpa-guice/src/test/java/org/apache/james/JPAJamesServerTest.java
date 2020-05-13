@@ -26,7 +26,7 @@ import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
@@ -54,12 +54,12 @@ class JPAJamesServerTest implements JamesServerContract {
     private static final String USER = "toto@" + DOMAIN;
     private static final String PASSWORD = "123456";
 
-    private IMAPMessageReader imapMessageReader;
+    private TestIMAPClient testIMAPClient;
     private SMTPMessageSender smtpMessageSender;
 
     @BeforeEach
     void setUp() {
-        this.imapMessageReader = new IMAPMessageReader();
+        this.testIMAPClient = new TestIMAPClient();
         this.smtpMessageSender = new SMTPMessageSender(DOMAIN);
     }
     
@@ -75,15 +75,15 @@ class JPAJamesServerTest implements JamesServerContract {
         int imapPort = jamesServer.getProbe(ImapGuiceProbe.class).getImapPort();
         smtpMessageSender.connect(JAMES_SERVER_HOST, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(USER, USER, "header: toto\\r\\n\\r\\n" + Strings.repeat("0123456789\n", 1024));
-        AWAIT.until(() -> imapMessageReader.connect(JAMES_SERVER_HOST, imapPort)
+        AWAIT.until(() -> testIMAPClient.connect(JAMES_SERVER_HOST, imapPort)
             .login(USER, PASSWORD)
-            .select(IMAPMessageReader.INBOX)
+            .select(TestIMAPClient.INBOX)
             .hasAMessage());
 
         assertThat(
-            imapMessageReader.connect(JAMES_SERVER_HOST, imapPort)
+            testIMAPClient.connect(JAMES_SERVER_HOST, imapPort)
                 .login(USER, PASSWORD)
-                .getQuotaRoot(IMAPMessageReader.INBOX))
+                .getQuotaRoot(TestIMAPClient.INBOX))
             .startsWith("* QUOTAROOT \"INBOX\" #private&toto@james.local\r\n" +
                 "* QUOTA #private&toto@james.local (STORAGE 12 50)\r\n")
             .endsWith("OK GETQUOTAROOT completed.\r\n");

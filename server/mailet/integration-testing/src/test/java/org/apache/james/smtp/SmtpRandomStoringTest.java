@@ -50,7 +50,7 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.mailets.RandomStoring;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
 import org.awaitility.Duration;
@@ -91,7 +91,7 @@ public class SmtpRandomStoringTest {
 
     private TemporaryJamesServer jamesServer;
     private ImapGuiceProbe imapProbe;
-    private Collection<IMAPMessageReader> connections;
+    private Collection<TestIMAPClient> connections;
 
     @Before
     public void setUp() throws Exception {
@@ -156,7 +156,7 @@ public class SmtpRandomStoringTest {
 
     @After
     public void tearDown() {
-        connections.forEach(Throwing.consumer(IMAPMessageReader::close).sneakyThrow());
+        connections.forEach(Throwing.consumer(TestIMAPClient::close).sneakyThrow());
         jamesServer.shutdown();
     }
 
@@ -182,9 +182,9 @@ public class SmtpRandomStoringTest {
             .untilAsserted(() -> checkMailboxesHaveBeenFilled(connections));
     }
 
-    private IMAPMessageReader createIMAPConnection(String username) {
+    private TestIMAPClient createIMAPConnection(String username) {
         try {
-            IMAPMessageReader reader = new IMAPMessageReader();
+            TestIMAPClient reader = new TestIMAPClient();
             reader
                 .connect(LOCALHOST_IP, imapProbe.getImapPort())
                 .login(username, PASSWORD);
@@ -194,7 +194,7 @@ public class SmtpRandomStoringTest {
         }
     }
 
-    private void checkNumberOfMessages(Collection<IMAPMessageReader> connections) {
+    private void checkNumberOfMessages(Collection<TestIMAPClient> connections) {
         assertThat(connections
             .stream()
             .flatMapToLong(this::numberOfAUserMessages)
@@ -202,28 +202,28 @@ public class SmtpRandomStoringTest {
             .isBetween(NUMBER_OF_MAILS * 4L, NUMBER_OF_MAILS * 8L);
     }
 
-    private void checkMailboxesHaveBeenFilled(Collection<IMAPMessageReader> connections) {
+    private void checkMailboxesHaveBeenFilled(Collection<TestIMAPClient> connections) {
         connections
             .stream()
             .forEach(this::checkUserMailboxes);
     }
 
-    private LongStream numberOfAUserMessages(IMAPMessageReader imapMessageReader) {
+    private LongStream numberOfAUserMessages(TestIMAPClient testIMAPClient) {
         return MAILBOXES
             .stream()
-            .mapToLong(mailbox -> numberOfMessagesInMailbox(imapMessageReader, mailbox));
+            .mapToLong(mailbox -> numberOfMessagesInMailbox(testIMAPClient, mailbox));
     }
 
-    private void checkUserMailboxes(IMAPMessageReader imapMessageReader) {
+    private void checkUserMailboxes(TestIMAPClient testIMAPClient) {
         assertThat(MAILBOXES
             .stream()
-            .map(mailbox -> numberOfMessagesInMailbox(imapMessageReader, mailbox)))
+            .map(mailbox -> numberOfMessagesInMailbox(testIMAPClient, mailbox)))
             .allMatch(numberOfMessages -> numberOfMessages > 0, "Some mailboxes are empty");
     }
 
-    private Long numberOfMessagesInMailbox(IMAPMessageReader imapMessageReader, String mailbox) {
+    private Long numberOfMessagesInMailbox(TestIMAPClient testIMAPClient, String mailbox) {
         try {
-            return imapMessageReader
+            return testIMAPClient
                 .getMessageCount(mailbox);
         } catch (IOException e) {
             throw new RuntimeException(e);

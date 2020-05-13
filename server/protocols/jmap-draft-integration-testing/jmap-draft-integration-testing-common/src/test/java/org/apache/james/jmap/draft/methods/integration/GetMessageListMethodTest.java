@@ -89,7 +89,7 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.awaitility.Duration;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -2305,7 +2305,7 @@ public abstract class GetMessageListMethodTest {
                         .setSubject("test 2")
                         .setBody("content 2", StandardCharsets.UTF_8)));
 
-        try (IMAPMessageReader imap = new IMAPMessageReader()) {
+        try (TestIMAPClient imap = new TestIMAPClient()) {
             imap.connect(LOCALHOST, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(ALICE, ALICE_PASSWORD)
             .select("mailbox")

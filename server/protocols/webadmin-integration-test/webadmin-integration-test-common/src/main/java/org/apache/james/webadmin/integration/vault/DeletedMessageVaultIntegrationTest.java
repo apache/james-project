@@ -65,7 +65,7 @@ import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -139,7 +139,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         .exportTo(HOMER)
         .query(MATCH_ALL_QUERY);
 
-    private IMAPMessageReader imapMessageReader;
+    private TestIMAPClient testIMAPClient;
     private AccessToken homerAccessToken;
     private AccessToken bartAccessToken;
     private AccessToken jackAccessToken;
@@ -167,7 +167,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         bartAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(BART), BOB_PASSWORD);
         jackAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(JACK), PASSWORD);
 
-        imapMessageReader = new IMAPMessageReader();
+        testIMAPClient = new TestIMAPClient();
 
         webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
             .config(WebAdminUtils.defaultConfig()
@@ -177,7 +177,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     @AfterEach
     void tearDown() throws IOException {
-        imapMessageReader.close();
+        testIMAPClient.close();
     }
 
     protected abstract void awaitSearchUpToDate();
@@ -212,11 +212,11 @@ public abstract class DeletedMessageVaultIntegrationTest {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
-        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(HOMER, PASSWORD)
-            .select(IMAPMessageReader.INBOX)
+            .select(TestIMAPClient.INBOX)
             .setFlagsForAllMessagesInMailbox("\\Deleted");
-        imapMessageReader.expunge();
+        testIMAPClient.expunge();
 
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
@@ -241,13 +241,13 @@ public abstract class DeletedMessageVaultIntegrationTest {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
-        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(HOMER, PASSWORD)
-            .select(IMAPMessageReader.INBOX);
+            .select(TestIMAPClient.INBOX);
 
-        imapMessageReader.moveFirstMessage(MAILBOX_NAME);
+        testIMAPClient.moveFirstMessage(MAILBOX_NAME);
 
-        imapMessageReader.delete(MAILBOX_NAME);
+        testIMAPClient.delete(MAILBOX_NAME);
 
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
@@ -351,11 +351,11 @@ public abstract class DeletedMessageVaultIntegrationTest {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
-        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(HOMER, PASSWORD)
-            .select(IMAPMessageReader.INBOX);
+            .select(TestIMAPClient.INBOX);
 
-        imapMessageReader.moveFirstMessage(MAILBOX_NAME);
+        testIMAPClient.moveFirstMessage(MAILBOX_NAME);
 
         //Moved messages should not be moved to the vault
         restoreAllMessagesOfHomer();
@@ -504,11 +504,11 @@ public abstract class DeletedMessageVaultIntegrationTest {
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
         String messageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(0);
 
-        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(HOMER, PASSWORD)
-            .select(IMAPMessageReader.INBOX)
+            .select(TestIMAPClient.INBOX)
             .setFlagsForAllMessagesInMailbox("\\Deleted");
-        imapMessageReader.expunge();
+        testIMAPClient.expunge();
 
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
@@ -527,13 +527,13 @@ public abstract class DeletedMessageVaultIntegrationTest {
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
         String messageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(0);
 
-        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(HOMER, PASSWORD)
-            .select(IMAPMessageReader.INBOX);
+            .select(TestIMAPClient.INBOX);
 
-        imapMessageReader.moveFirstMessage(MAILBOX_NAME);
+        testIMAPClient.moveFirstMessage(MAILBOX_NAME);
 
-        imapMessageReader.delete(MAILBOX_NAME);
+        testIMAPClient.delete(MAILBOX_NAME);
 
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 

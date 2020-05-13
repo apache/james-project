@@ -43,7 +43,7 @@ import org.apache.james.transport.matchers.HasMailAttribute;
 import org.apache.james.transport.matchers.SenderIsLocal;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
@@ -58,7 +58,7 @@ public class SMIMESignIntegrationTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
-    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
@@ -113,11 +113,11 @@ public class SMIMESignIntegrationTest {
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
-            .select(IMAPMessageReader.INBOX);
-        awaitAtMostOneMinute.until(imapMessageReader::hasAMessage);
-        assertThat(imapMessageReader.readFirstMessage())
+            .select(TestIMAPClient.INBOX);
+        awaitAtMostOneMinute.until(testIMAPClient::hasAMessage);
+        assertThat(testIMAPClient.readFirstMessage())
             .containsSequence("Content-Description: S/MIME Cryptographic Signature");
     }
 
@@ -126,11 +126,11 @@ public class SMIMESignIntegrationTest {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
             .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
-            .select(IMAPMessageReader.INBOX);
-        awaitAtMostOneMinute.until(imapMessageReader::hasAMessage);
-        assertThat(imapMessageReader.readFirstMessage())
+            .select(TestIMAPClient.INBOX);
+        awaitAtMostOneMinute.until(testIMAPClient::hasAMessage);
+        assertThat(testIMAPClient.readFirstMessage())
             .doesNotContain("Content-Description: S/MIME Cryptographic Signature");
     }
 

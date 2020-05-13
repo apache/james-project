@@ -29,7 +29,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SpoolerProbe;
 import org.awaitility.Awaitility;
@@ -49,7 +49,7 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
     private IMAPClient imapClient = new IMAPClient();
 
     @RegisterExtension
-    IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    TestIMAPClient testIMAPClient = new TestIMAPClient();
     SMTPMessageSender messageSender = new SMTPMessageSender(Domain.LOCALHOST.asString());
 
     @RegisterExtension
@@ -77,7 +77,7 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
 
         calmlyAwait.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
-        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(JAMES_USER, PASSWORD)
             .select("INBOX")
             .awaitMessage(calmlyAwait);

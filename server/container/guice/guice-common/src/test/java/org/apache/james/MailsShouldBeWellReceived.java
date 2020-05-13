@@ -22,21 +22,16 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Properties;
 import java.util.UUID;
 
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Store;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.FlagTerm;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -45,7 +40,7 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SpoolerProbe;
 import org.apache.mailet.base.test.FakeMail;
@@ -105,11 +100,11 @@ interface MailsShouldBeWellReceived {
 
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
-        try (IMAPMessageReader reader = new IMAPMessageReader()) {
+        try (TestIMAPClient reader = new TestIMAPClient()) {
             int imapPort = server.getProbe(ImapGuiceProbe.class).getImapPort();
             reader.connect(JAMES_SERVER_HOST, imapPort)
                 .login(JAMES_USER, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
+                .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
 
             assertThat(reader.readFirstMessage())
@@ -141,10 +136,10 @@ interface MailsShouldBeWellReceived {
 
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
-        try (IMAPMessageReader reader = new IMAPMessageReader()) {
+        try (TestIMAPClient reader = new TestIMAPClient()) {
             reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(JAMES_USER, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
+                .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
         }
 
@@ -177,10 +172,10 @@ interface MailsShouldBeWellReceived {
 
         CALMLY_AWAIT_FIVE_MINUTE.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
-        try (IMAPMessageReader reader = new IMAPMessageReader()) {
+        try (TestIMAPClient reader = new TestIMAPClient()) {
             reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(JAMES_USER, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
+                .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, messageCount);
         }
     }

@@ -54,7 +54,7 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.awaitility.Duration;
@@ -81,7 +81,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         .query(MATCH_ALL_QUERY);
 
     @RegisterExtension
-    IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    TestIMAPClient testIMAPClient = new TestIMAPClient();
 
     private AccessToken homerAccessToken;
     private AccessToken bartAccessToken;
@@ -138,11 +138,11 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
-        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(HOMER, HOMER_PASSWORD)
-            .select(IMAPMessageReader.INBOX)
+            .select(TestIMAPClient.INBOX)
             .setFlagsForAllMessagesInMailbox("\\Deleted");
-        imapMessageReader.expunge();
+        testIMAPClient.expunge();
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
 
@@ -179,11 +179,11 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
-        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+        testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(HOMER, HOMER_PASSWORD)
-            .select(IMAPMessageReader.INBOX)
+            .select(TestIMAPClient.INBOX)
             .setFlagsForAllMessagesInMailbox("\\Deleted");
-        imapMessageReader.expunge();
+        testIMAPClient.expunge();
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
 
