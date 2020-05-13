@@ -39,8 +39,9 @@ public class RecomputeAllFastViewProjectionItemsTask implements Task {
     static final TaskType TASK_TYPE = TaskType.of("RecomputeAllFastViewProjectionItemsTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private static AdditionalInformation from(MessageFastViewProjectionCorrector.Progress progress) {
-            return new AdditionalInformation(
+        private static AdditionalInformation from(MessageFastViewProjectionCorrector.Progress progress,
+                                                  RunningOptions runningOptions) {
+            return new AdditionalInformation(runningOptions,
                 progress.getProcessedUserCount(),
                 progress.getProcessedMessageCount(),
                 progress.getFailedUserCount(),
@@ -48,13 +49,15 @@ public class RecomputeAllFastViewProjectionItemsTask implements Task {
                 Clock.systemUTC().instant());
         }
 
+        private final RunningOptions runningOptions;
         private final long processedUserCount;
         private final long processedMessageCount;
         private final long failedUserCount;
         private final long failedMessageCount;
         private final Instant timestamp;
 
-        public AdditionalInformation(long processedUserCount, long processedMessageCount, long failedUserCount, long failedMessageCount, Instant timestamp) {
+        public AdditionalInformation(RunningOptions runningOptions, long processedUserCount, long processedMessageCount, long failedUserCount, long failedMessageCount, Instant timestamp) {
+            this.runningOptions = runningOptions;
             this.processedUserCount = processedUserCount;
             this.processedMessageCount = processedMessageCount;
             this.failedUserCount = failedUserCount;
@@ -76,6 +79,10 @@ public class RecomputeAllFastViewProjectionItemsTask implements Task {
 
         public long getFailedMessageCount() {
             return failedMessageCount;
+        }
+
+        public RunningOptions getRunningOptions() {
+            return runningOptions;
         }
 
         @Override
@@ -149,6 +156,6 @@ public class RecomputeAllFastViewProjectionItemsTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(AdditionalInformation.from(progress));
+        return Optional.of(AdditionalInformation.from(progress, runningOptions));
     }
 }

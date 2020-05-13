@@ -279,7 +279,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
         .then()
             .body("taskId", is(taskId))
             .body("type", is("RecomputeAllFastViewProjectionItemsTask"))
-            .body("additionalInformation.runningOptions.messageParallelism", is(20));
+            .body("additionalInformation.runningOptions.messageRatePerSecond", is(20));
     }
 
     @Test

@@ -20,10 +20,12 @@
 package org.apache.james.webadmin.data.jmap;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
+import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
@@ -32,21 +34,33 @@ public class RecomputeAllFastViewTaskAdditionalInformationDTO implements Additio
     public static final AdditionalInformationDTOModule<RecomputeAllFastViewProjectionItemsTask.AdditionalInformation, RecomputeAllFastViewTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
         DTOModule.forDomainObject(RecomputeAllFastViewProjectionItemsTask.AdditionalInformation.class)
             .convertToDTO(RecomputeAllFastViewTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(dto -> new RecomputeAllFastViewProjectionItemsTask.AdditionalInformation(
-                dto.getProcessedUserCount(),
-                dto.getProcessedMessageCount(),
-                dto.getFailedUserCount(),
-                dto.getFailedMessageCount(),
-                dto.timestamp))
-            .toDTOConverter((details, type) -> new RecomputeAllFastViewTaskAdditionalInformationDTO(
-                type,
-                details.timestamp(),
-                details.getProcessedUserCount(),
-                details.getProcessedMessageCount(),
-                details.getFailedUserCount(),
-                details.getFailedMessageCount()))
+            .toDomainObjectConverter(RecomputeAllFastViewTaskAdditionalInformationDTO::toDomainObject)
+            .toDTOConverter(RecomputeAllFastViewTaskAdditionalInformationDTO::toDTO)
             .typeName(RecomputeAllFastViewProjectionItemsTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+
+    private static RecomputeAllFastViewProjectionItemsTask.AdditionalInformation toDomainObject(RecomputeAllFastViewTaskAdditionalInformationDTO dto) {
+        return new RecomputeAllFastViewProjectionItemsTask.AdditionalInformation(
+            dto.getRunningOptions()
+                .map(RunningOptionsDTO::asDomainObject)
+                .orElse(RunningOptions.DEFAULT),
+            dto.getProcessedUserCount(),
+            dto.getProcessedMessageCount(),
+            dto.getFailedUserCount(),
+            dto.getFailedMessageCount(),
+            dto.timestamp);
+    }
+
+    private static RecomputeAllFastViewTaskAdditionalInformationDTO toDTO(RecomputeAllFastViewProjectionItemsTask.AdditionalInformation details, String type) {
+        return new RecomputeAllFastViewTaskAdditionalInformationDTO(
+            type,
+            details.timestamp(),
+            details.getProcessedUserCount(),
+            details.getProcessedMessageCount(),
+            details.getFailedUserCount(),
+            details.getFailedMessageCount(),
+            Optional.of(RunningOptionsDTO.asDTO(details.getRunningOptions())));
+    }
 
     private final String type;
     private final Instant timestamp;
@@ -54,6 +68,7 @@ public class RecomputeAllFastViewTaskAdditionalInformationDTO implements Additio
     private final long processedMessageCount;
     private final long failedUserCount;
     private final long failedMessageCount;
+    private final Optional<RunningOptionsDTO> runningOptions;
 
     @VisibleForTesting
     RecomputeAllFastViewTaskAdditionalInformationDTO(@JsonProperty("type") String type,
@@ -61,13 +76,15 @@ public class RecomputeAllFastViewTaskAdditionalInformationDTO implements Additio
                                                      @JsonProperty("processedUserCount") long processedUserCount,
                                                      @JsonProperty("processedMessageCount") long processedMessageCount,
                                                      @JsonProperty("failedUserCount") long failedUserCount,
-                                                     @JsonProperty("failedMessageCount") long failedMessageCount) {
+                                                     @JsonProperty("failedMessageCount") long failedMessageCount,
+                                                     @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
         this.type = type;
         this.timestamp = timestamp;
         this.processedUserCount = processedUserCount;
         this.processedMessageCount = processedMessageCount;
         this.failedUserCount = failedUserCount;
         this.failedMessageCount = failedMessageCount;
+        this.runningOptions = runningOptions;
     }
 
     @Override
@@ -94,5 +111,9 @@ public class RecomputeAllFastViewTaskAdditionalInformationDTO implements Additio
 
     public long getFailedMessageCount() {
         return failedMessageCount;
+    }
+
+    public Optional<RunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
     }
 }

@@ -19,15 +19,25 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
 import org.junit.jupiter.api.Test;
 
 class RecomputeAllFastViewProjectionItemsTaskAdditionalInformationDTOTest {
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
-    private static final RecomputeAllFastViewProjectionItemsTask.AdditionalInformation DOMAIN_OBJECT = new RecomputeAllFastViewProjectionItemsTask.AdditionalInformation(1, 2, 3, 4, INSTANT);
+    private static final RecomputeAllFastViewProjectionItemsTask.AdditionalInformation DOMAIN_OBJECT = new RecomputeAllFastViewProjectionItemsTask.AdditionalInformation(
+        RunningOptions.withMessageRatePerSecond(20),
+        1,
+        2,
+        3,
+        4,
+        INSTANT);
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
@@ -35,5 +45,23 @@ class RecomputeAllFastViewProjectionItemsTaskAdditionalInformationDTOTest {
             .bean(DOMAIN_OBJECT)
             .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeAll.additionalInformation.json"))
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeLegacy() throws Exception {
+        RecomputeAllFastViewProjectionItemsTask.AdditionalInformation legacyDetails = JsonGenericSerializer.forModules(RecomputeAllFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/recomputeAll.additionalInformation.legacy.json"));
+
+        RecomputeAllFastViewProjectionItemsTask.AdditionalInformation expected = new RecomputeAllFastViewProjectionItemsTask.AdditionalInformation(
+            RunningOptions.DEFAULT,
+            1,
+            2,
+            3,
+            4,
+            INSTANT);
+
+        assertThat(legacyDetails)
+            .isEqualToComparingFieldByFieldRecursively(expected);
     }
 }

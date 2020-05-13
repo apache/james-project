@@ -19,16 +19,20 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
 class RecomputeUserFastViewProjectionItemsTaskAdditionalInformationDTOTest {
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
     private static final RecomputeUserFastViewProjectionItemsTask.AdditionalInformation DOMAIN_OBJECT = new RecomputeUserFastViewProjectionItemsTask.AdditionalInformation(
+        MessageFastViewProjectionCorrector.RunningOptions.withMessageRatePerSecond(20),
         Username.of("bob"), 2, 3, INSTANT);
 
     @Test
@@ -37,5 +41,23 @@ class RecomputeUserFastViewProjectionItemsTaskAdditionalInformationDTOTest {
             .bean(DOMAIN_OBJECT)
             .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeUser.additionalInformation.json"))
             .verify();
+    }
+
+
+    @Test
+    void shouldDeserializeLegacy() throws Exception {
+        RecomputeUserFastViewProjectionItemsTask.AdditionalInformation legacyDetails = JsonGenericSerializer.forModules(RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/recomputeUser.additionalInformation.legacy.json"));
+
+        RecomputeUserFastViewProjectionItemsTask.AdditionalInformation expected = new RecomputeUserFastViewProjectionItemsTask.AdditionalInformation(
+            MessageFastViewProjectionCorrector.RunningOptions.DEFAULT,
+            Username.of("bob"),
+            2,
+            3,
+            INSTANT);
+
+        assertThat(legacyDetails)
+            .isEqualToComparingFieldByFieldRecursively(expected);
     }
 }

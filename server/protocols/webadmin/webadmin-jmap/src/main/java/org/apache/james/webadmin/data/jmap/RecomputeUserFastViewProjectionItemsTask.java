@@ -42,23 +42,29 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
     static final TaskType TASK_TYPE = TaskType.of("RecomputeUserFastViewProjectionItemsTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private static AdditionalInformation from(Progress progress, Username username) {
-            return new AdditionalInformation(username,
+        private static AdditionalInformation from(Progress progress, RunningOptions runningOptions, Username username) {
+            return new AdditionalInformation(runningOptions, username,
                 progress.getProcessedMessageCount(),
                 progress.getFailedMessageCount(),
                 Clock.systemUTC().instant());
         }
 
+        private final RunningOptions runningOptions;
         private final Username username;
         private final long processedMessageCount;
         private final long failedMessageCount;
         private final Instant timestamp;
 
-        public AdditionalInformation(Username username, long processedMessageCount, long failedMessageCount, Instant timestamp) {
+        public AdditionalInformation(RunningOptions runningOptions, Username username, long processedMessageCount, long failedMessageCount, Instant timestamp) {
+            this.runningOptions = runningOptions;
             this.username = username;
             this.processedMessageCount = processedMessageCount;
             this.failedMessageCount = failedMessageCount;
             this.timestamp = timestamp;
+        }
+
+        public RunningOptions getRunningOptions() {
+            return runningOptions;
         }
 
         public long getProcessedMessageCount() {
@@ -157,6 +163,6 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(AdditionalInformation.from(progress, username));
+        return Optional.of(AdditionalInformation.from(progress, runningOptions, username));
     }
 }

@@ -4,8 +4,5 @@
   "processedUserCount":1,
   "processedMessageCount":2,
   "failedUserCount":3,
-  "failedMessageCount":4,
-  "runningOptions": {
-    "messageRatePerSecond":20
-  }
+  "failedMessageCount":4
 }
