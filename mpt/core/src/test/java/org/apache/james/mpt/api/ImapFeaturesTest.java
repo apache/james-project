@@ -19,68 +19,71 @@
 package org.apache.james.mpt.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mpt.api.ImapFeatures.Feature;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ImapFeaturesTest {
 
     @Test
-    public void supportedFeaturesShouldReturnEmptySetWhenNoFeatures() {
+    void supportedFeaturesShouldReturnEmptySetWhenNoFeatures() {
         assertThat(ImapFeatures.of().supportedFeatures()).isEmpty();
     }
 
     @Test
-    public void supportedFeaturesShouldReturnNamespaceInSetWhenNamespaceSupported() {
+    void supportedFeaturesShouldReturnNamespaceInSetWhenNamespaceSupported() {
         assertThat(ImapFeatures.of(Feature.NAMESPACE_SUPPORT).supportedFeatures()).containsExactly(Feature.NAMESPACE_SUPPORT);
     }
 
     @Test
-    public void supportsShouldReturnFalseOnNamespaceWhenNamespaceIsNotSupported() {
+    void supportsShouldReturnFalseOnNamespaceWhenNamespaceIsNotSupported() {
         assertThat(ImapFeatures.of().supports(Feature.NAMESPACE_SUPPORT)).isFalse();
     }
 
     @Test
-    public void supportsShouldReturnTrueOnNamespaceWhenNamespaceIsSupported() {
+    void supportsShouldReturnTrueOnNamespaceWhenNamespaceIsSupported() {
         assertThat(ImapFeatures.of(Feature.NAMESPACE_SUPPORT).supports(Feature.NAMESPACE_SUPPORT)).isTrue();
     }
 
     @Test
-    public void supportsShouldReturnTrueOnDuplicateNamespaceEntryWhenNamespaceIsSupported() {
+    void supportsShouldReturnTrueOnDuplicateNamespaceEntryWhenNamespaceIsSupported() {
         assertThat(ImapFeatures.of(Feature.NAMESPACE_SUPPORT).supports(Feature.NAMESPACE_SUPPORT, Feature.NAMESPACE_SUPPORT)).isTrue();
     }
 
     
     @Test
-    public void supportsShouldReturnTrueOnEmptyListWhenNamespaceIsSupported() {
+    void supportsShouldReturnTrueOnEmptyListWhenNamespaceIsSupported() {
         assertThat(ImapFeatures.of(Feature.NAMESPACE_SUPPORT).supports()).isTrue();
     }
 
     @Test
-    public void supportsShouldReturnTrueOnEmptyListWhenNoFeatures() {
+    void supportsShouldReturnTrueOnEmptyListWhenNoFeatures() {
         assertThat(ImapFeatures.of().supports()).isTrue();
     }
 
-    @Test(expected = NullPointerException.class)
-    @SuppressWarnings("CheckReturnValue")
-    public void supportsShouldThrowOnNullFeature() {
-        ImapFeatures.of().supports((Feature)null);
+    @Test
+    void supportsShouldThrowOnNullFeature() {
+        assertThatThrownBy(() -> ImapFeatures.of().supports((Feature)null))
+            .isInstanceOf(NullPointerException.class);
     }
 
-    @Test(expected = NullPointerException.class)
-    @SuppressWarnings("CheckReturnValue")
-    public void supportsShouldThrowOnNullFeatureArray() {
-        ImapFeatures.of().supports((Feature[])null);
+    @Test
+    void supportsShouldThrowOnNullFeatureArray() {
+        assertThatThrownBy(() -> ImapFeatures.of().supports((Feature[])null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     
-    @Test(expected = NullPointerException.class)
-    public void ofShouldThrowOnNullFeature() {
-        ImapFeatures.of((Feature)null);
+    @Test
+    void ofShouldThrowOnNullFeature() {
+        assertThatThrownBy(() -> ImapFeatures.of((Feature)null))
+            .isInstanceOf(NullPointerException.class);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void ofShouldThrowOnNullFeatureArray() {
-        ImapFeatures.of((Feature[])null);
+    @Test
+    void ofShouldThrowOnNullFeatureArray() {
+        assertThatThrownBy(() -> ImapFeatures.of((Feature[])null))
+            .isInstanceOf(NullPointerException.class);
     }
 }
