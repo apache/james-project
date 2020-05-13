@@ -24,7 +24,7 @@ class PolicyRoutesTest {
 
 		policyRoute.get(null, response);
 		
-		verify(response.header(CONTENT_TYPE, "text/plain"));
+		verify(response).header(CONTENT_TYPE, "text/plain");
 	}
 
 }
