@@ -76,9 +76,9 @@ public class WebKeyDirectoryMailet extends GenericMailet {
                 if (bodyPart.isMimeType("application/pgp-encrypted")) {
                     byte[] publicKeyBytesArmored = decryptBodyPartWithPublicKey(
                         bodyPart.getInputStream());
-                    PGPPublicKey pgpPublicKey = getKeyFromArmoredBytes(publicKeyBytesArmored);
+                    JcaPGPPublicKeyRingCollection pgpPub = new JcaPGPPublicKeyRingCollection(new ByteArrayInputStream(publicKeyBytesArmored));
                     ByteArrayOutputStream boas = new ByteArrayOutputStream();
-                    pgpPublicKey.encode(boas);
+                    pgpPub.encode(boas);
                     PublicKeyEntry publicKeyEntry = new PublicKeyEntry(
                         mail.getMaybeSender().get().getLocalPart(), boas.toByteArray());
                     webKeyDirectoryStore.put(publicKeyEntry);
@@ -163,7 +163,7 @@ public class WebKeyDirectoryMailet extends GenericMailet {
 
         JcaPGPPublicKeyRingCollection pgpPub = new JcaPGPPublicKeyRingCollection(in);
         in.close();
-
+        
         PGPPublicKey key = null;
         Iterator<PGPPublicKeyRing> rIt = pgpPub.getKeyRings();
         while (key == null && rIt.hasNext()) {
