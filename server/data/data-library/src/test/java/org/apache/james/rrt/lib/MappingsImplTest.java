@@ -26,14 +26,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 public class MappingsImplTest {
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void fromRawStringShouldThrowWhenNull() {
-        MappingsImpl.fromRawString(null);
+        assertThatThrownBy(() -> MappingsImpl.fromRawString(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -157,11 +158,11 @@ public class MappingsImplTest {
     }
 
     
-    @Test(expected = NullPointerException.class)
-    @SuppressWarnings("CheckReturnValue")
+    @Test
     public void containsShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
-        mappings.contains((Mapping.Type)null);
+        assertThatThrownBy(() -> mappings.contains((Mapping.Type)null))
+            .isInstanceOf(NullPointerException.class);
     }
     
     @Test
@@ -190,11 +191,11 @@ public class MappingsImplTest {
     }
 
     
-    @Test(expected = NullPointerException.class)
-    @SuppressWarnings("CheckReturnValue")
+    @Test
     public void selectShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
-        mappings.select((Mapping.Type)null);
+        assertThatThrownBy(() -> mappings.select((Mapping.Type)null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -222,11 +223,11 @@ public class MappingsImplTest {
     }
 
     
-    @Test(expected = NullPointerException.class)
-    @SuppressWarnings("CheckReturnValue")
+    @Test
     public void excludeShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
-        mappings.exclude((Mapping.Type)null);
+        assertThatThrownBy(() -> mappings.exclude((Mapping.Type)null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -245,9 +246,10 @@ public class MappingsImplTest {
         assertThat(optional.isPresent()).isFalse();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void unionShouldThrowWhenMappingsNull() {
-        MappingsImpl.empty().union(null);
+        assertThatThrownBy(() -> MappingsImpl.empty().union(null))
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
