@@ -180,17 +180,6 @@ public class BayesianAnalysis extends GenericMailet {
     }
 
     /**
-     * Setter for property maxSize.
-     * 
-     * @param maxSize
-     *            New value of property maxSize.
-     */
-    public void setMaxSize(int maxSize) {
-
-        this.maxSize = maxSize;
-    }
-
-    /**
      * Getter for property lastCorpusLoadTime.
      * 
      * @return Value of property lastCorpusLoadTime.
@@ -244,7 +233,7 @@ public class BayesianAnalysis extends GenericMailet {
 
         String maxSizeParam = getInitParameter("maxSize");
         if (maxSizeParam != null) {
-            setMaxSize(Integer.parseInt(maxSizeParam));
+            this.maxSize = Integer.parseInt(maxSizeParam);
         }
         LOGGER.debug("maxSize: {}", getMaxSize());
 
