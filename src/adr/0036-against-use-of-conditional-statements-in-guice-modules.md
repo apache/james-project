@@ -82,6 +82,9 @@ The following modules perform conditional statements upon injection time:
  - BlobStoreChoosingModule::provideBlobStore: Choice of BlobStore technology: Cassandra, ObjectStorage or Hybrid
  - [Cached blob store](https://github.com/linagora/james-project/pull/3319) represents a similar problem: should the 
  blobStore be wrapped by a caching layer?
+ 
+Cassandra and Distributed products are furthermore duplicated to offer a version supporting LDAP authentication. JPA 
+product does not offer LDAP support.
 
 ## Decision
 
@@ -112,3 +115,7 @@ The following conditional statements in guice modules needs to be removed :
  - [S3 native blobStore implementation](https://github.com/linagora/james-project/pull/3099) along side with S3 endpoints
  support as part of Swift removes the need to select the Object Storage implementation.
  - Follow up work needs to be plan concerning `BlobExportMechanismModule` and `TikaMailboxModule::provideTextExtractor`.
+ 
+We furthermore need to enable a module choice for LDAP on top of other existing products. We should remove LDAP variations
+for LDAP products. Corresponding docker image will be based on their non LDAP version, overriding the `usersrepository.xml`
+configuration file, be marked as deprecated and eventually removed.
