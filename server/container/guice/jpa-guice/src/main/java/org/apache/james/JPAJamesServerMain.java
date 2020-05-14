@@ -99,7 +99,10 @@ public class JPAJamesServerMain implements JamesServerMain {
             .useWorkingDirectoryEnvProperty()
             .build();
 
-        JamesServerMain.main(configuration, JPA_MODULE_AGGREGATE, new JMXServerModule());
+        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(JPA_MODULE_AGGREGATE, new JMXServerModule());
+
+        JamesServerMain.main(server);
     }
 
 }

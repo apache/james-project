@@ -19,14 +19,8 @@
 
 package org.apache.james;
 
-import org.apache.james.server.core.configuration.Configuration;
-
-import com.google.inject.Module;
-
 public interface JamesServerMain {
-    static void main(Configuration configuration, Module... modules) throws Exception {
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(modules);
+    static void main(GuiceJamesServer server) throws Exception {
         server.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));

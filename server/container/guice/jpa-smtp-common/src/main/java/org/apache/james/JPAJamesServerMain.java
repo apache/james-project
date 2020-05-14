@@ -64,7 +64,10 @@ public class JPAJamesServerMain implements JamesServerMain {
             .useWorkingDirectoryEnvProperty()
             .build();
 
-        JamesServerMain.main(configuration, JPA_SERVER_MODULE,  PROTOCOLS, new DKIMMailetModule());
+        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(JPA_SERVER_MODULE,  PROTOCOLS, new DKIMMailetModule());
+
+        JamesServerMain.main(server);
     }
 
 }

@@ -138,10 +138,13 @@ public class MemoryJamesServerMain implements JamesServerMain {
             .useWorkingDirectoryEnvProperty()
             .build();
 
-        JamesServerMain.main(configuration,
-                IN_MEMORY_SERVER_AGGREGATE_MODULE,
+
+        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE,
                 new FakeSearchMailboxModule(),
                 new JMXServerModule());
+
+        JamesServerMain.main(server);
     }
 
 }

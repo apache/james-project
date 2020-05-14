@@ -38,7 +38,10 @@ public class CassandraLdapJamesServerMain implements JamesServerMain {
             .useWorkingDirectoryEnvProperty()
             .build();
 
-        JamesServerMain.main(configuration, MODULES, new JMXServerModule());
+        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(MODULES, new JMXServerModule());
+
+        JamesServerMain.main(server);
     }
 
 }

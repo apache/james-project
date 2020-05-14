@@ -167,7 +167,10 @@ public class CassandraJamesServerMain implements JamesServerMain {
             .useWorkingDirectoryEnvProperty()
             .build();
 
-        JamesServerMain.main(configuration, ALL_BUT_JMX_CASSANDRA_MODULE, new JMXServerModule());
+        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE, new JMXServerModule());
+
+        JamesServerMain.main(server);
     }
 
 }

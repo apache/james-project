@@ -49,8 +49,10 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
 
         Module baseModule = modules(blobStoreConfiguration);
 
-        JamesServerMain.main(configuration,
-            baseModule, new JMXServerModule());
+        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(baseModule, new JMXServerModule());
+
+        JamesServerMain.main(server);
     }
 
     public static Module modules(BlobStoreConfiguration blobStoreConfiguration) {
