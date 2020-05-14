@@ -72,7 +72,8 @@ public class BlobStoreConfiguration {
     static final String BLOBSTORE_IMPLEMENTATION_PROPERTY = "implementation";
 
     public static BlobStoreConfiguration parse(org.apache.james.server.core.configuration.Configuration configuration) throws ConfigurationException {
-        PropertiesProvider propertiesProvider = new PropertiesProvider(new FileSystemImpl(configuration.directories()), configuration);
+        PropertiesProvider propertiesProvider = new PropertiesProvider(new FileSystemImpl(configuration.directories()),
+            configuration.configurationPath());
 
         return parse(propertiesProvider);
     }

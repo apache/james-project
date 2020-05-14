@@ -42,7 +42,7 @@ public class PropertiesProviderFromEnvVariablesTest {
             .configurationFromClasspath()
             .build();
         FileSystemImpl fileSystem = new FileSystemImpl(configuration.directories());
-        testee = new PropertiesProvider(fileSystem, configuration);
+        testee = new PropertiesProvider(fileSystem, configuration.configurationPath());
     }
 
     @Test

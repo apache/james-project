@@ -48,9 +48,9 @@ public class PropertiesProvider {
     private final String configurationPrefix;
 
     @Inject
-    public PropertiesProvider(FileSystem fileSystem, org.apache.james.server.core.configuration.Configuration configuration) {
+    public PropertiesProvider(FileSystem fileSystem, String configurationPrefix) {
         this.fileSystem = fileSystem;
-        this.configurationPrefix = configuration.configurationPath();
+        this.configurationPrefix = configurationPrefix;
     }
 
     public Configuration getConfigurations(String... filenames) throws FileNotFoundException, ConfigurationException {

@@ -34,7 +34,8 @@ public class FailingPropertiesProvider extends PropertiesProvider {
     public FailingPropertiesProvider(FileSystem fileSystem) throws FileNotFoundException {
         super(fileSystem, Configuration.builder()
             .workingDirectory(fileSystem.getBasedir().getAbsolutePath())
-            .build());
+            .build()
+            .configurationPath());
     }
 
     @Override

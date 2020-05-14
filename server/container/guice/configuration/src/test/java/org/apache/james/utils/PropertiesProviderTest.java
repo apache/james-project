@@ -24,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.FileNotFoundException;
 
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +39,7 @@ class PropertiesProviderTest {
             .configurationFromClasspath()
             .build();
         FileSystemImpl fileSystem = new FileSystemImpl(configuration.directories());
-        testee = new PropertiesProvider(fileSystem, configuration);
+        testee = new PropertiesProvider(fileSystem, configuration.configurationPath());
     }
 
     @Test

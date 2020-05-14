@@ -26,7 +26,6 @@ import java.util.Optional;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.common.collect.ImmutableMap;
@@ -40,7 +39,8 @@ public class FakePropertiesProvider extends PropertiesProvider {
     public FakePropertiesProvider(ImmutableMap<String, Configuration> configurations) {
         super(NULL_FILE_SYSTEM, org.apache.james.server.core.configuration.Configuration.builder()
             .workingDirectory("fakePath")
-            .build());
+            .build()
+            .configurationPath());
         this.configurations = configurations;
     }
 

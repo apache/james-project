@@ -28,7 +28,6 @@ import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
@@ -41,11 +40,11 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             .with(new RabbitMQModule(), new RabbitMQEventBusModule(), new TaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
+        CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();
 
-        BlobStoreConfiguration blobStoreConfiguration = BlobStoreConfiguration.parse(configuration);
+        BlobStoreConfiguration blobStoreConfiguration = configuration.blobstoreconfiguration();
 
         Module baseModule = modules(blobStoreConfiguration);
 
