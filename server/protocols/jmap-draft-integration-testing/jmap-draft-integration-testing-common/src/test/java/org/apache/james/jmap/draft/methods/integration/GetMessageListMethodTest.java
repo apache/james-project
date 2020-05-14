@@ -94,6 +94,7 @@ import org.awaitility.Duration;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -656,6 +657,46 @@ public abstract class GetMessageListMethodTest {
             .body("[[\"getMessageList\", {\"filter\": {\"inMailboxes\": [\""+ mailboxId.serialize() +"\"], \"isUnread\":\"true\"}}, \"#0\"]]")
 
         .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", allOf(
+                    containsInAnyOrder(messageNotSeenNotFlagged.getMessageId().serialize(), messageNotSeenFlagged.getMessageId().serialize()),
+                    not(containsInAnyOrder(messageSeenNotFlagged.getMessageId().serialize(),
+                            messageSeenFlagged.getMessageId().serialize(),
+                            messageSeenInOtherMailbox.getMessageId().serialize(),
+                            messageNotSeenFlaggedInOtherMailbox.getMessageId().serialize()))));
+    }
+
+    @Ignore("To fix in JAMES-3182")
+    @Category(BasicFeature.class)
+    @Test
+    public void getMessageListShouldFetchUnreadMessagesInMailboxUsingACombinationOfFilter() throws Exception {
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "othermailbox");
+
+        ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        ComposedMessageId messageNotSeenFlagged = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
+            ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.FLAGGED));
+        ComposedMessageId messageSeenNotFlagged = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
+            ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags(Flags.Flag.SEEN));
+        ComposedMessageId messageSeenFlagged = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
+            ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, FlagsBuilder.builder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build());
+
+        ComposedMessageId messageNotSeenFlaggedInOtherMailbox = mailboxProbe.appendMessage(ALICE.asString(), ALICE_OTHER_MAILBOX,
+                ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.FLAGGED));
+
+        ComposedMessageId messageSeenInOtherMailbox = mailboxProbe.appendMessage(ALICE.asString(), ALICE_OTHER_MAILBOX,
+                ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.SEEN));
+
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.asString())
+                .body("[[\"getMessageList\", {\"filter\":{\"operator\":\"AND\",\"conditions\":[{\"inMailboxes\": [\""+ mailboxId.serialize() +"\"]},{\"isUnread\":\"true\"}]}}, \"#0\"]]")
+                .when()
             .post("/jmap")
         .then()
             .statusCode(200)
