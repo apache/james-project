@@ -25,6 +25,8 @@ import java.time.ZoneId;
 
 import org.apache.commons.lang3.NotImplementedException;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class UpdatableTickingClock extends Clock {
     private Instant currentInstant;
 
@@ -32,6 +34,7 @@ public class UpdatableTickingClock extends Clock {
         this.currentInstant = currentInstant;
     }
 
+    @VisibleForTesting
     public void setInstant(Instant instant) {
         currentInstant = instant;
     }
