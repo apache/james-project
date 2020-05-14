@@ -272,7 +272,7 @@ public class ClamAVScan extends GenericMailet {
      */
     protected void initDebug() {
         String debugParam = getInitParameter("debug");
-        setDebug((debugParam == null) ? false : Boolean.parseBoolean(debugParam));
+        this.debug = (debugParam != null) && Boolean.parseBoolean(debugParam);
     }
 
     /**
@@ -282,15 +282,6 @@ public class ClamAVScan extends GenericMailet {
      */
     public boolean isDebug() {
         return this.debug;
-    }
-
-    /**
-     * Setter for property debug.
-     *
-     * @param debug New value of property debug.
-     */
-    public void setDebug(boolean debug) {
-        this.debug = debug;
     }
 
     /**
@@ -311,7 +302,6 @@ public class ClamAVScan extends GenericMailet {
      * @return Value of property host.
      */
     public String getHost() {
-
         return this.host;
     }
 
@@ -324,8 +314,7 @@ public class ClamAVScan extends GenericMailet {
      * @param host New value of property host.
      * @throws UnknownHostException if unable to resolve the host name, or if invalid
      */
-    public void setHost(String host) throws UnknownHostException {
-
+    private void setHost(String host) throws UnknownHostException {
         this.host = host;
 
         setAddresses(InetAddress.getAllByName(host));
