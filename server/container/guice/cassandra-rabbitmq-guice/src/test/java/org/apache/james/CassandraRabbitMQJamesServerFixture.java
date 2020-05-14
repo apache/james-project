@@ -26,19 +26,22 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 
 public class CassandraRabbitMQJamesServerFixture {
 
-    private static final JamesServerBuilder.ServerProvider CONFIGURATION_BUILDER =
-        configuration -> GuiceJamesServer
-            .forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
+    private static final JamesServerBuilder.ServerProvider<CassandraRabbitMQJamesConfiguration> CONFIGURATION_BUILDER =
+        configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
 
-    public static JamesServerBuilder baseExtensionBuilder() {
+    public static JamesServerBuilder<CassandraRabbitMQJamesConfiguration> baseExtensionBuilder() {
         return baseExtensionBuilder(new RabbitMQExtension());
     }
 
-    public static JamesServerBuilder baseExtensionBuilder(RabbitMQExtension rabbitMQExtension) {
-        return new JamesServerBuilder()
+    public static JamesServerBuilder<CassandraRabbitMQJamesConfiguration> baseExtensionBuilder(RabbitMQExtension rabbitMQExtension) {
+        return new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+            CassandraRabbitMQJamesConfiguration.builder()
+                .workingDirectory(tmpDir)
+                .configurationFromClasspath()
+                .blobStore(BlobStoreConfiguration.objectStorage())
+                .build())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(rabbitMQExtension)

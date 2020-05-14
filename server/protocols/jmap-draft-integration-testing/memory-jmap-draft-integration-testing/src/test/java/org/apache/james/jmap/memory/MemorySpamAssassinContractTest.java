@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class MemorySpamAssassinContractTest implements SpamAssassinContract {
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new SpamAssassinModuleExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)

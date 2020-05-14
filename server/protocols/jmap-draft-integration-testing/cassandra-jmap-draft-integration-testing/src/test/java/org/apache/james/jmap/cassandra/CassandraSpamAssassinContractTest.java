@@ -37,7 +37,7 @@ class CassandraSpamAssassinContractTest implements SpamAssassinContract {
     private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(spamAssassinExtension)

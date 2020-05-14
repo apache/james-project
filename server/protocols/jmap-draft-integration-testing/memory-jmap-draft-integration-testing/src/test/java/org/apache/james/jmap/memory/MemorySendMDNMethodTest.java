@@ -38,7 +38,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class MemorySendMDNMethodTest extends SendMDNMethodTest {
 
     @RegisterExtension
-    JamesServerExtension testExtension = new JamesServerBuilder()
+    JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule())

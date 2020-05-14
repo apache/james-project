@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.time.Duration;
 
 import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
@@ -122,13 +123,17 @@ class ConsistencyTasksIntegrationTest {
     }
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+        CassandraRabbitMQJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .blobStore(BlobStoreConfiguration.objectStorage())
+            .build())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new WebadminIntegrationTestModule())
             // Enforce a single eventBus retry. Required as Current Quotas are handled by the eventBus.
             .overrideWith(binder -> binder.bind(RetryBackoffConfiguration.class)

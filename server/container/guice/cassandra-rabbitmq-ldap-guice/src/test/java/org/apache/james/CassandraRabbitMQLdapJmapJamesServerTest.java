@@ -80,7 +80,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
     }
 
     JamesServerBuilder baseJamesServerExtensionBuilder(BlobStoreConfiguration blobStoreConfiguration) {
-        return new JamesServerBuilder()
+        return new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())

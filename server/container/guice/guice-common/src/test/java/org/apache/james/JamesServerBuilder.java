@@ -20,7 +20,6 @@
 package org.apache.james;
 
 import java.io.File;
-import java.io.UncheckedIOException;
 import java.util.Optional;
 
 import org.apache.james.server.core.configuration.Configuration;
@@ -30,78 +29,73 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 
-public class JamesServerBuilder {
+public class JamesServerBuilder<T extends Configuration> {
     private static final boolean DEFAULT_AUTO_START = true;
 
     @FunctionalInterface
-    public interface ConfigurationProvider {
-        Configuration buildConfiguration(File tempDirectory);
+    public interface ConfigurationProvider<T extends Configuration> {
+        T buildConfiguration(File tempDirectory);
     }
 
     @FunctionalInterface
-    public interface ServerProvider {
-        GuiceJamesServer buildServer(Configuration configuration);
+    public interface ServerProvider<T extends Configuration>  {
+        GuiceJamesServer buildServer(T configuration);
+    }
+
+
+    public static ConfigurationProvider<Configuration.Basic> defaultConfigurationProvider() {
+        return tmpDir ->
+            Configuration.builder()
+                .workingDirectory(tmpDir)
+                .configurationFromClasspath()
+                .build();
     }
 
     private final ImmutableList.Builder<GuiceModuleTestExtension> extensions;
     private final TemporaryFolderRegistrableExtension folderRegistrableExtension;
     private final ImmutableList.Builder<Module> overrideModules;
     private ServerProvider server;
-    private Optional<ConfigurationProvider> configuration;
+    private ConfigurationProvider configuration;
     private Optional<Boolean> autoStart;
 
-    public JamesServerBuilder() {
-        configuration = Optional.empty();
+    public JamesServerBuilder(ConfigurationProvider configurationProvider) {
+        configuration = configurationProvider;
         extensions = ImmutableList.builder();
         folderRegistrableExtension = new TemporaryFolderRegistrableExtension();
         autoStart = Optional.empty();
         overrideModules = ImmutableList.builder();
     }
 
-    public JamesServerBuilder extensions(GuiceModuleTestExtension... extensions) {
+    public JamesServerBuilder<T> extensions(GuiceModuleTestExtension... extensions) {
         this.extensions.add(extensions);
         return this;
     }
 
-    public JamesServerBuilder extension(GuiceModuleTestExtension extension) {
+    public JamesServerBuilder<T> extension(GuiceModuleTestExtension extension) {
         return this.extensions(extension);
     }
 
-    public JamesServerBuilder configuration(ConfigurationProvider configuration) throws UncheckedIOException {
-        this.configuration = Optional.of(configuration);
-        return this;
-    }
-
-    public JamesServerBuilder server(ServerProvider server) {
+    public JamesServerBuilder<T> server(ServerProvider<T> server) {
         this.server = server;
         return this;
     }
 
-    public JamesServerBuilder overrideServerModule(Module module) {
+    public JamesServerBuilder<T> overrideServerModule(Module module) {
         this.overrideModules.add(module);
         return this;
     }
 
-    public JamesServerBuilder disableAutoStart() {
+    public JamesServerBuilder<T> disableAutoStart() {
         this.autoStart = Optional.of(false);
         return this;
     }
 
     public JamesServerExtension build() {
         Preconditions.checkNotNull(server);
-        ConfigurationProvider configuration = this.configuration.orElse(defaultConfigurationProvider());
         JamesServerExtension.AwaitCondition awaitCondition = () -> extensions.build().forEach(GuiceModuleTestExtension::await);
 
         return new JamesServerExtension(buildAggregateJunitExtension(), file -> overrideServerWithExtensionsModules(file, configuration),
             awaitCondition, autoStart.orElse(DEFAULT_AUTO_START));
-    }
-
-    private ConfigurationProvider defaultConfigurationProvider() {
-        return tmpDir ->
-            Configuration.builder()
-                .workingDirectory(tmpDir)
-                .configurationFromClasspath()
-                .build();
     }
 
     private AggregateJunitExtension buildAggregateJunitExtension() {

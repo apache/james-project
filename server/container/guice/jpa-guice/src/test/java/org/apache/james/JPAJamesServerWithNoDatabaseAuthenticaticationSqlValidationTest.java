@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class JPAJamesServerWithNoDatabaseAuthenticaticationSqlValidationTest extends JPAJamesServerWithSqlValidationTest {
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(JPAJamesServerMain.JPA_MODULE_AGGREGATE)
             .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.NoDatabaseAuthentication(), DOMAIN_LIST_CONFIGURATION_MODULE))

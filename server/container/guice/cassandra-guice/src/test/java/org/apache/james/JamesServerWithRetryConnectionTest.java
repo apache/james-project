@@ -49,7 +49,7 @@ class JamesServerWithRetryConnectionTest {
     private static final CassandraExtension dockerCassandra = new CassandraExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(dockerElasticSearch)
         .extension(dockerCassandra)
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

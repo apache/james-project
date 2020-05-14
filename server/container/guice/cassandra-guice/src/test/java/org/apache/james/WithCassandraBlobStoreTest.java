@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class WithCassandraBlobStoreTest implements JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new SpamAssassinModuleExtension())

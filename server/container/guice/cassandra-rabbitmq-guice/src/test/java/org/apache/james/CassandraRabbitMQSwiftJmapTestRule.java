@@ -29,7 +29,6 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
-import org.apache.james.server.core.configuration.Configuration;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -61,13 +60,13 @@ public class CassandraRabbitMQSwiftJmapTestRule implements TestRule {
     }
 
     public GuiceJamesServer jmapServer(Module... additionals) throws IOException {
-        Configuration configuration = Configuration.builder()
+        CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
+            .blobStore(BlobStoreConfiguration.objectStorage())
             .build();
 
-        return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
+        return CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
             .overrideWith(new DockerSwiftTestRule().getModule())

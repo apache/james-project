@@ -49,7 +49,7 @@ class CassandraImapErrorTest {
     private final CassandraExtension cassandraExtension = new CassandraExtension();
 
     @RegisterExtension
-    JamesServerExtension serverExtension = new JamesServerBuilder()
+    JamesServerExtension serverExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(cassandraExtension)
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

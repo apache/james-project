@@ -33,6 +33,7 @@ import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import java.util.List;
 
 import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
@@ -80,20 +81,21 @@ class RabbitMQReindexingWithEventDeadLettersTest {
     private static final DockerElasticSearchExtension dockerElasticSearch =
         new DockerElasticSearchExtension().withRequestTimeout(java.time.Duration.ofSeconds(5));
 
-    private static final JamesServerBuilder.ServerProvider CONFIGURATION_BUILDER = configuration -> GuiceJamesServer
-        .forConfiguration(configuration)
-        .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
-        .overrideWith(new TestJMAPServerModule())
-        .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE)
-        .overrideWith(new WebadminIntegrationTestModule());
-
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+        CassandraRabbitMQJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .blobStore(BlobStoreConfiguration.objectStorage())
+            .build())
         .extension(dockerElasticSearch)
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension(PayloadCodecFactory.AES256))
-        .server(CONFIGURATION_BUILDER)
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule())
+            .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE)
+            .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 
     private RequestSpecification webAdminApi;

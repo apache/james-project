@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class MemoryForwardIntegrationTest extends ForwardIntegrationTest {
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule())

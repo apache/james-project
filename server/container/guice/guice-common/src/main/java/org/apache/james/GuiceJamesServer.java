@@ -19,6 +19,7 @@
 package org.apache.james;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.PreDestroy;
@@ -67,7 +68,11 @@ public class GuiceJamesServer {
     }
     
     public GuiceJamesServer combineWith(Module... modules) {
-        return new GuiceJamesServer(isStartedProbe, Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
+        return combineWith(Arrays.asList(modules));
+    }
+
+    public GuiceJamesServer combineWith(Collection<Module> modules) {
+        return new GuiceJamesServer(isStartedProbe, Modules.combine(Iterables.concat(Arrays.asList(module), modules)));
     }
 
     public GuiceJamesServer overrideWith(Module... overrides) {

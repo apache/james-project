@@ -29,7 +29,7 @@ class LinshareBlobExportMechanismProvidingTest {
     private static final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(linshareGuiceExtension)
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE))

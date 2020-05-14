@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class CassandraSendMDNMethodTest extends SendMDNMethodTest {
 
     @RegisterExtension
-    JamesServerExtension testExtension = new JamesServerBuilder()
+    JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

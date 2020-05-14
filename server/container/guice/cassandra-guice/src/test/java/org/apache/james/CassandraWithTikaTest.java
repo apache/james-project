@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraWithTikaTest implements JamesServerContract {
     @RegisterExtension
     static JamesServerExtension testExtension =
-        new JamesServerBuilder()
+        new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new CassandraExtension())
             .extension(new  TikaExtension())
             .extension(new DockerElasticSearchExtension())

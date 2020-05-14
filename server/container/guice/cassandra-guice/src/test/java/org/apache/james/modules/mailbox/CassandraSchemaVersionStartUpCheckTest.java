@@ -60,7 +60,7 @@ class CassandraSchemaVersionStartUpCheckTest {
     private static CassandraSchemaVersionDAO versionDAO = mock(CassandraSchemaVersionDAO.class);
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

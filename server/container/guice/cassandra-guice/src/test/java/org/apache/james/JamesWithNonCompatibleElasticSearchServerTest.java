@@ -40,7 +40,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
     static DockerElasticSearch dockerES2 = new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_2);
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension(dockerES2))
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

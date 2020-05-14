@@ -25,11 +25,11 @@ import javax.inject.Inject;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.DockerElasticSearchRule;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.draft.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.draft.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -42,7 +42,6 @@ import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.server.CassandraTruncateTableTask;
-import org.apache.james.server.core.configuration.Configuration;
 import org.junit.rules.TemporaryFolder;
 
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
@@ -78,14 +77,14 @@ public class RabbitMQAwsS3Stepdefs {
 
         temporaryFolder.create();
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
-        Configuration configuration = Configuration.builder()
-                .workingDirectory(temporaryFolder.newFolder())
-                .configurationFromClasspath()
-                .build();
+        CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()
+            .workingDirectory(temporaryFolder.newFolder())
+            .configurationFromClasspath()
+            .blobStore(BlobStoreConfiguration.objectStorage())
+            .build();
 
-        mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.objectStorage()))
-                .overrideWith(new TestJMAPServerModule())
+        mainStepdefs.jmapServer = CassandraRabbitMQJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule())
                 .overrideWith(new TestDockerESMetricReporterModule(elasticSearch.getDockerEs().getHttpHost()))
                 .overrideWith(new TestRabbitMQModule(rabbitMQServer.dockerRabbitMQ()))
                 .overrideWith(swiftServer.getModule())

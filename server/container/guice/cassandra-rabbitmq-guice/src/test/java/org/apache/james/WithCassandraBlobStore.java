@@ -37,13 +37,16 @@ public class WithCassandraBlobStore implements BeforeAllCallback, AfterAllCallba
     private final JamesServerExtension jamesServerExtension;
 
     WithCassandraBlobStore() {
-        jamesServerExtension = new JamesServerBuilder()
+        jamesServerExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+            CassandraRabbitMQJamesConfiguration.builder()
+                .workingDirectory(tmpDir)
+                .configurationFromClasspath()
+                .blobStore(BlobStoreConfiguration.cassandra())
+                .build())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
-            .server(configuration -> GuiceJamesServer
-                .forConfiguration(configuration)
-                .combineWith(CassandraRabbitMQJamesServerMain.modules(BlobStoreConfiguration.cassandra()))
+            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
                 .overrideWith(TestJMAPServerModule.limitToTenMessages())
                 .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
             .build();

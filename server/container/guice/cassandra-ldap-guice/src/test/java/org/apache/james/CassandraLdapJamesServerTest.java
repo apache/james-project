@@ -53,7 +53,7 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
     SMTPMessageSender messageSender = new SMTPMessageSender(Domain.LOCALHOST.asString());
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new LdapTestExtension())

@@ -35,7 +35,7 @@ class KeyspaceCreationTest {
     @Nested
     class CreateWhenKeyspaceExists {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder()
+        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
@@ -58,7 +58,7 @@ class KeyspaceCreationTest {
     @Nested
     class CreateWhenDoesNotExistAndHasRights {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder()
+        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
@@ -87,7 +87,7 @@ class KeyspaceCreationTest {
     @Nested
     class CreateWhenDoesNotExistAndDoNotHaveRights {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder()
+        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
@@ -116,7 +116,7 @@ class KeyspaceCreationTest {
     @Nested
     class StartWhenKeyspaceDoesNotExist {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder()
+        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

@@ -40,7 +40,7 @@ import com.google.common.base.Strings;
 class JPAJamesServerTest implements JamesServerContract {
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(JPAJamesServerMain.JPA_MODULE_AGGREGATE)
             .overrideWith(new TestJPAConfigurationModule(), DOMAIN_LIST_CONFIGURATION_MODULE))

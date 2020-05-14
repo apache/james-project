@@ -112,7 +112,7 @@ class GuiceJamesServerStartUpCheckTest {
     }
 
     private static JamesServerBuilder extensionBuilder() {
-        return new JamesServerBuilder()
+        return new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
                 .overrideWith(new TestJMAPServerModule()))
