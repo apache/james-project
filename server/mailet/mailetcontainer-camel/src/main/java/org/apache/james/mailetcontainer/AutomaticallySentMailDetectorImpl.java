@@ -116,10 +116,9 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             @Override
             public void body(BodyDescriptor bodyDescriptor, InputStream inputStream) throws MimeException, IOException {
                 if (bodyDescriptor.getMimeType().equalsIgnoreCase("message/disposition-notification")) {
-                    resultCollector.setResult(new MDNReportParser()
-                        .parse(inputStream, bodyDescriptor.getCharset())
+                    resultCollector.setResult(MDNReportParser.parse(inputStream, bodyDescriptor.getCharset())
                         .map(report -> report.getDispositionField().getSendingMode() == DispositionSendingMode.Automatic)
-                        .orElse(false));
+                        .getOrElse(() -> false));
                 }
             }
         };

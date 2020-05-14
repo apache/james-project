@@ -21,6 +21,7 @@ package org.apache.james.jmap.mailet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,6 +55,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
+import scala.util.Try;
 
 /**
  * This mailet handles MDN messages and define a header X-JAMES-MDN-JMAP-MESSAGE-ID referencing
@@ -118,8 +120,14 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
 
     private Optional<MDNReport> parseReport(Entity report) {
         LOGGER.debug("Parsing report");
-        try {
-            return new MDNReportParser().parse(((SingleBody)report.getBody()).getInputStream(), report.getCharset());
+        try (InputStream inputStream = ((SingleBody) report.getBody()).getInputStream()) {
+            Try<MDNReport> result = MDNReportParser.parse(inputStream, report.getCharset());
+            if (result.isSuccess()) {
+                return Optional.of(result.get());
+            } else {
+                LOGGER.error("unable to parse MESSAGE_DISPOSITION_NOTIFICATION part", result.failed().get());
+                return Optional.empty();
+            }
         } catch (IOException e) {
             LOGGER.error("unable to parse MESSAGE_DISPOSITION_NOTIFICATION part", e);
             return Optional.empty();
