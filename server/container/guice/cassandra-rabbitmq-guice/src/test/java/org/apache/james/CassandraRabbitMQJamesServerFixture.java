@@ -26,7 +26,7 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 
 public class CassandraRabbitMQJamesServerFixture {
 
-    private static final JamesServerBuilder.ServerProvider<CassandraRabbitMQJamesConfiguration> CONFIGURATION_BUILDER =
+    private static final JamesServerBuilder.ServerProvider<CassandraRabbitMQJamesConfiguration> SERVER_PROVIDER =
         configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
@@ -45,6 +45,6 @@ public class CassandraRabbitMQJamesServerFixture {
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(rabbitMQExtension)
-            .server(CONFIGURATION_BUILDER);
+            .server(SERVER_PROVIDER);
     }
 }

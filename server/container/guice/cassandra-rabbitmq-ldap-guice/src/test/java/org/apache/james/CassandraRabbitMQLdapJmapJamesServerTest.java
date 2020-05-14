@@ -80,13 +80,17 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
     }
 
     JamesServerBuilder baseJamesServerExtensionBuilder(BlobStoreConfiguration blobStoreConfiguration) {
-        return new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        return new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+            CassandraRabbitMQJamesConfiguration.builder()
+                .workingDirectory(tmpDir)
+                .configurationFromClasspath()
+                .blobStore(blobStoreConfiguration)
+                .build())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .extension(new LdapTestExtension())
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(CassandraRabbitMQLdapJamesServerMain.baseModule(blobStoreConfiguration))
+            .server(configuration -> CassandraRabbitMQLdapJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule())
                 .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
     }

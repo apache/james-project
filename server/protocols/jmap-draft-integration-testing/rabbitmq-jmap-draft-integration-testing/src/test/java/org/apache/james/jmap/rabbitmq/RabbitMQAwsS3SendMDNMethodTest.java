@@ -45,14 +45,14 @@ public class RabbitMQAwsS3SendMDNMethodTest extends SendMDNMethodTest {
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.objectStorage())
             .build())
-            .extension(new DockerElasticSearchExtension())
-            .extension(new CassandraExtension())
-            .extension(new AwsS3BlobStoreExtension())
-            .extension(new RabbitMQExtension())
-            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(new TestJMAPServerModule()))
-            .build();
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(new RabbitMQExtension())
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule()))
+        .build();
 
     @Override
     protected MessageId randomMessageId() {

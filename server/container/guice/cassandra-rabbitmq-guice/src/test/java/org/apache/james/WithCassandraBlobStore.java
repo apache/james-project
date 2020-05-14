@@ -47,7 +47,7 @@ public class WithCassandraBlobStore implements BeforeAllCallback, AfterAllCallba
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-                .overrideWith(TestJMAPServerModule.limitToTenMessages())
+                .overrideWith(new TestJMAPServerModule())
                 .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
             .build();
     }
