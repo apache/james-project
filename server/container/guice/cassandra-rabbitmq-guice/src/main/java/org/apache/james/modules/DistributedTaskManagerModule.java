@@ -22,6 +22,7 @@ package org.apache.james.modules;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.modules.server.HostnameModule;
+import org.apache.james.modules.server.TaskSerializationModule;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
@@ -45,6 +46,8 @@ public class DistributedTaskManagerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new HostnameModule());
+        install(new TaskSerializationModule());
+
         bind(CassandraTaskExecutionDetailsProjection.class).in(Scopes.SINGLETON);
         bind(EventSourcingTaskManager.class).in(Scopes.SINGLETON);
         bind(RabbitMQWorkQueueSupplier.class).in(Scopes.SINGLETON);

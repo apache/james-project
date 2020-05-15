@@ -28,6 +28,8 @@ import com.google.inject.multibindings.Multibinder;
 public class MailQueueRoutesModule extends AbstractModule {
     @Override
     protected void configure() {
+        install(new MailQueueTaskSerializationModule());
+
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultibinder.addBinding().to(MailQueueRoutes.class);
     }

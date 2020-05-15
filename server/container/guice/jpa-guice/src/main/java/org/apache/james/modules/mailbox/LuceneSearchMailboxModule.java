@@ -39,6 +39,8 @@ public class LuceneSearchMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new ReIndexingTaskSerializationModule());
+
         bind(LuceneMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(LuceneMessageSearchIndex.class);

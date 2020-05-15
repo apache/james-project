@@ -44,6 +44,8 @@ public class MailboxRoutesModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new WebadminMailboxTaskSerializationModule());
+
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultibinder.addBinding().to(DomainQuotaRoutes.class);
         routesMultibinder.addBinding().to(EventDeadLettersRoutes.class);

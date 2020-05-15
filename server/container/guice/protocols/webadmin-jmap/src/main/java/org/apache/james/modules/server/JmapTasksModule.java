@@ -32,6 +32,8 @@ import com.google.inject.name.Names;
 public class JmapTasksModule extends AbstractModule {
     @Override
     protected void configure() {
+        install(new JmapTaskSerializationModule());
+
         Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
             .addBinding().to(RecomputeAllFastViewProjectionItemsRequestToTask.class);
 

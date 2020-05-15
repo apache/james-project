@@ -22,7 +22,7 @@ package org.apache.james;
 import static org.apache.james.CassandraJamesServerMain.REQUIRE_TASK_MANAGER_MODULE;
 
 import org.apache.james.modules.DistributedTaskManagerModule;
-import org.apache.james.modules.TaskSerializationModule;
+import org.apache.james.modules.DistributedTaskSerializationModule;
 import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
@@ -37,7 +37,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
     protected static final Module MODULES =
         Modules
             .override(Modules.combine(REQUIRE_TASK_MANAGER_MODULE, new DistributedTaskManagerModule()))
-            .with(new RabbitMQModule(), new RabbitMQEventBusModule(), new TaskSerializationModule());
+            .with(new RabbitMQModule(), new RabbitMQEventBusModule(), new DistributedTaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
         CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()

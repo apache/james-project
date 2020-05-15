@@ -28,6 +28,8 @@ import com.google.inject.multibindings.Multibinder;
 public class MailRepositoriesRoutesModule extends AbstractModule {
     @Override
     protected void configure() {
+        install(new MailRepositoryTaskSerializationModule());
+
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultibinder.addBinding().to(MailRepositoriesRoutes.class);
     }

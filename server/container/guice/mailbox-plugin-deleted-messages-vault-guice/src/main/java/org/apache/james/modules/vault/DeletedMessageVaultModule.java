@@ -30,6 +30,7 @@ public class DeletedMessageVaultModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new DeletedMessageVaultRetentionModule());
+        install(new VaultTaskSerializationModule());
 
         bind(BucketNameGenerator.class).in(Scopes.SINGLETON);
         bind(BlobStoreDeletedMessageVault.class).in(Scopes.SINGLETON);

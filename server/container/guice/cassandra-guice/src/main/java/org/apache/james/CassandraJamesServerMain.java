@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
+import org.apache.james.modules.CassandraConsistencyTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
@@ -139,6 +140,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);
 
     public static final Module CASSANDRA_MAILBOX_MODULE = Modules.combine(
+        new CassandraConsistencyTaskSerializationModule(),
         new CassandraMailboxModule(),
         new CassandraDeletedMessageVaultModule(),
         new ElasticSearchClientModule(),
