@@ -89,7 +89,7 @@ class MailboxSerializationTest extends AnyWordSpec with Matchers {
   "Serialize Mailbox" should {
     "succeed " in {
 
-      val expectedJson = Json.parse(
+      val expectedJson: String =
         """{
           |  "id":"2",
           |  "name":"inbox",
@@ -127,9 +127,9 @@ class MailboxSerializationTest extends AnyWordSpec with Matchers {
           |      "Storage":{"used":19}
           |    }
           |  }
-          |}""".stripMargin)
+          |}""".stripMargin
 
-      assertThatJson(new Serializer(new TestId.Factory).serialize(MAILBOX)).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(new Serializer(new TestId.Factory).serialize(MAILBOX))).isEqualTo(expectedJson)
     }
   }
 }

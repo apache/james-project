@@ -158,7 +158,7 @@ class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
         list = List(MAILBOX),
         notFound = NotFound(List(MAILBOX_ID_1, MAILBOX_ID_2)))
 
-      val expectedJson = Json.parse(
+      val expectedJson: String =
         """
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
@@ -203,9 +203,9 @@ class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
           |  }],
           |  "notFound": ["1", "2"]
           |}
-          |""".stripMargin)
+          |""".stripMargin
 
-      assertThatJson(SERIALIZER.serialize(actualValue)).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue))).isEqualTo(expectedJson)
     }
   }
 }

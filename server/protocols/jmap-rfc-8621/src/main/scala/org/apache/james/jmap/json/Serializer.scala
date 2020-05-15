@@ -158,9 +158,10 @@ class Serializer(mailboxIdFactory: MailboxId.Factory) {
   private implicit val maySubmitWrites: Writes[MaySubmit] = Json.valueWrites[MaySubmit]
   private implicit val mailboxRightsWrites: Writes[MailboxRights] = Json.writes[MailboxRights]
 
-  private implicit val personalNamespaceWrites: Writes[PersonalNamespace] = namespace => JsString("Personal")
-  private implicit val delegatedNamespaceWrites: Writes[DelegatedNamespace] = namespace => JsString(s"Delegated[${namespace.owner.asString}]")
-  private implicit val mailboxNamespaceWrites: Writes[MailboxNamespace] = Json.writes[MailboxNamespace]
+  private implicit val mailboxNamespaceWrites: Writes[MailboxNamespace] = {
+    case personal: PersonalNamespace => JsString("Personal")
+    case delegated: DelegatedNamespace => JsString(s"Delegated[${delegated.owner.asString}]")
+  }
 
   private implicit val mailboxACLWrites: Writes[MailboxACL.Right] = right => JsString(right.asCharacter.toString)
 
