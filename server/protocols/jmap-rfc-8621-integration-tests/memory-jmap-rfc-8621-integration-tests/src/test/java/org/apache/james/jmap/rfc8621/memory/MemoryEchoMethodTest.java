@@ -20,7 +20,6 @@
 package org.apache.james.jmap.rfc8621.memory;
 
 import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
-import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_20_MESSAGES;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
@@ -34,6 +33,6 @@ public class MemoryEchoMethodTest implements EchoMethodContract {
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(TestJMAPServerModule.maximumMessages(LIMIT_TO_20_MESSAGES)))
+            .overrideWith(new TestJMAPServerModule()))
         .build();
 }
