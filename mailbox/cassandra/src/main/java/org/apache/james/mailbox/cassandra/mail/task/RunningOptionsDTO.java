@@ -17,21 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.routes;
+package org.apache.james.mailbox.cassandra.mail.task;
 
-import javax.inject.Inject;
+import java.util.Optional;
 
-import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.RunningOptions;
-import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTask;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
-public class SolveMessageInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
-    private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("SolveInconsistencies");
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    @Inject
-    public SolveMessageInconsistenciesRequestToTask(SolveMessageInconsistenciesService service) {
-        super(REGISTRATION_KEY, request -> new SolveMessageInconsistenciesTask(service, RunningOptions.DEFAULT));
+public class RunningOptionsDTO {
+    public static RunningOptionsDTO asDTO(SolveMessageInconsistenciesService.RunningOptions domainObject) {
+        return new RunningOptionsDTO(Optional.of(domainObject.getMessagesPerSecond()));
+    }
+
+    private final Optional<Integer> messagesPerSecond;
+
+    @JsonCreator
+    public RunningOptionsDTO(@JsonProperty("messagesPerSecond") Optional<Integer> messagesPerSecond) {
+        this.messagesPerSecond = messagesPerSecond;
+    }
+
+    public Optional<Integer> getMessagesPerSecond() {
+        return messagesPerSecond;
+    }
+
+    public RunningOptions asDomainObject() {
+        return new RunningOptions(messagesPerSecond.orElse(RunningOptions.DEFAULT.getMessagesPerSecond()));
     }
 }

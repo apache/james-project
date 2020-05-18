@@ -1,3 +1,6 @@
 {
-  "type":"solve-message-inconsistencies"
+  "type":"solve-message-inconsistencies",
+  "runningOptions":{
+    "messagesPerSecond":2
+  }
 }

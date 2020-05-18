@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.Context;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.Context.Snapshot;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.RunningOptions;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
@@ -45,11 +46,12 @@ public class SolveMessageInconsistenciesTask implements Task {
         private final long addedMessageIdEntries;
         private final long updatedMessageIdEntries;
         private final long removedMessageIdEntries;
+        private final RunningOptions runningOptions;
         private final ImmutableList<MessageInconsistenciesEntry> fixedInconsistencies;
         private final ImmutableList<MessageInconsistenciesEntry> errors;
 
         public Details(Instant instant, long processedImapUidEntries, long processedMessageIdEntries,
-                       long addedMessageIdEntries, long updatedMessageIdEntries, long removedMessageIdEntries,
+                       long addedMessageIdEntries, long updatedMessageIdEntries, long removedMessageIdEntries, RunningOptions runningOptions,
                        ImmutableList<MessageInconsistenciesEntry> fixedInconsistencies, ImmutableList<MessageInconsistenciesEntry> errors) {
             this.instant = instant;
             this.processedImapUidEntries = processedImapUidEntries;
@@ -57,6 +59,7 @@ public class SolveMessageInconsistenciesTask implements Task {
             this.addedMessageIdEntries = addedMessageIdEntries;
             this.updatedMessageIdEntries = updatedMessageIdEntries;
             this.removedMessageIdEntries = removedMessageIdEntries;
+            this.runningOptions = runningOptions;
             this.fixedInconsistencies = fixedInconsistencies;
             this.errors = errors;
         }
@@ -91,6 +94,11 @@ public class SolveMessageInconsistenciesTask implements Task {
             return removedMessageIdEntries;
         }
 
+        @JsonProperty("runningOptions")
+        public RunningOptions getRunningOptions() {
+            return runningOptions;
+        }
+
         @JsonProperty("fixedInconsistencies")
         public ImmutableList<MessageInconsistenciesEntry> getFixedInconsistencies() {
             return fixedInconsistencies;
@@ -104,15 +112,17 @@ public class SolveMessageInconsistenciesTask implements Task {
 
     private final SolveMessageInconsistenciesService service;
     private Context context;
+    private RunningOptions runningOptions;
 
-    public SolveMessageInconsistenciesTask(SolveMessageInconsistenciesService service) {
+    public SolveMessageInconsistenciesTask(SolveMessageInconsistenciesService service, RunningOptions runningOptions) {
         this.service = service;
+        this.runningOptions = runningOptions;
         this.context = new Context();
     }
 
     @Override
     public Result run() {
-        return service.fixMessageInconsistencies(context)
+        return service.fixMessageInconsistencies(context, runningOptions)
             .block();
     }
 
@@ -121,11 +131,15 @@ public class SolveMessageInconsistenciesTask implements Task {
         return SOLVE_MESSAGE_INCONSISTENCIES;
     }
 
+    public RunningOptions getRunningOptions() {
+        return this.runningOptions;
+    }
+
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         Snapshot snapshot = context.snapshot();
         return Optional.of(new Details(Clock.systemUTC().instant(), snapshot.getProcessedImapUidEntries(), snapshot.getProcessedMessageIdEntries(),
-            snapshot.getAddedMessageIdEntries(), snapshot.getUpdatedMessageIdEntries(), snapshot.getRemovedMessageIdEntries(),
+            snapshot.getAddedMessageIdEntries(), snapshot.getUpdatedMessageIdEntries(), snapshot.getRemovedMessageIdEntries(), runningOptions,
             snapshot.getFixedInconsistencies().stream()
                 .map(this::toMessageInconsistenciesEntry)
                 .collect(Guavate.toImmutableList()),

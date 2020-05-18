@@ -19,11 +19,14 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.json.JsonGenericSerializer;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.RunningOptions;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTask.Details;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
@@ -33,7 +36,8 @@ import com.google.common.collect.ImmutableList;
 public class SolveMessageInconsistenciesTaskSerializationTest {
 
     private static final SolveMessageInconsistenciesService SERVICE = mock(SolveMessageInconsistenciesService.class);
-    private static final SolveMessageInconsistenciesTask TASK = new SolveMessageInconsistenciesTask(SERVICE);
+    private static final SolveMessageInconsistenciesTask TASK = new SolveMessageInconsistenciesTask(SERVICE, new RunningOptions(2));
+    private static final SolveMessageInconsistenciesTask LEGACY_TASK = new SolveMessageInconsistenciesTask(SERVICE, RunningOptions.DEFAULT);
 
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
     private static final String MAILBOX_ID = "551f0580-82fb-11ea-970e-f9c83d4cf8c2";
@@ -57,7 +61,7 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
         .messageId(MESSAGE_ID_3)
         .messageUid(MESSAGE_UID_3);
 
-    private static final Details DETAILS = new SolveMessageInconsistenciesTask.Details(INSTANT, 2, 1, 1, 0, 1, ImmutableList.of(MESSAGE_1, MESSAGE_2), ImmutableList.of(MESSAGE_3));
+    private static final Details DETAILS = new SolveMessageInconsistenciesTask.Details(INSTANT, 2, 1, 1, 0, 1, new SolveMessageInconsistenciesService.RunningOptions(2), ImmutableList.of(MESSAGE_1, MESSAGE_2), ImmutableList.of(MESSAGE_3));
 
     @Test
     void taskShouldBeSerializable() throws Exception {
@@ -68,6 +72,20 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
     }
 
     @Test
+    void legacyTaskShouldBeDeserializable() throws Exception {
+        SolveMessageInconsistenciesService service = mock(SolveMessageInconsistenciesService.class);
+
+        SolveMessageInconsistenciesTask legacyTask = JsonGenericSerializer.forModules(SolveMessageInconsistenciesTaskDTO.module(service))
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/solveMessageInconsistencies.task.legacy.json"));
+
+        SolveMessageInconsistenciesTask expected = new SolveMessageInconsistenciesTask(service, RunningOptions.DEFAULT);
+
+        assertThat(legacyTask)
+            .isEqualToComparingFieldByFieldRecursively(expected);
+    }
+
+    @Test
     void additionalInformationShouldBeSerializable() throws Exception {
         JsonSerializationVerifier.dtoModule(SolveMessageInconsistenciesTaskAdditionalInformationDTO.MODULE)
             .bean(DETAILS)
@@ -75,4 +93,25 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
             .verify();
     }
 
+    @Test
+    void legacyAdditionalInformationShouldBeDeserializable() throws Exception {
+        SolveMessageInconsistenciesTask.Details legacyDetails = JsonGenericSerializer.forModules(SolveMessageInconsistenciesTaskAdditionalInformationDTO.MODULE)
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/solveMessageInconsistencies.additionalInformation.legacy.json"));
+
+        SolveMessageInconsistenciesTask.Details expected = new SolveMessageInconsistenciesTask.Details(
+            INSTANT,
+            2,
+            1,
+            1,
+            0,
+            1,
+            RunningOptions.DEFAULT,
+            ImmutableList.of(MESSAGE_1, MESSAGE_2),
+            ImmutableList.of(MESSAGE_3)
+            );
+
+        assertThat(legacyDetails)
+            .isEqualToComparingFieldByFieldRecursively(expected);
+    }
 }

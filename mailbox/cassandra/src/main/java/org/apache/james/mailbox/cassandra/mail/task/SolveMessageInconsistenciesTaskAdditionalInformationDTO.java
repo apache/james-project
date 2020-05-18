@@ -22,8 +22,10 @@ package org.apache.james.mailbox.cassandra.mail.task;
 import static org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTask.SOLVE_MESSAGE_INCONSISTENCIES;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.RunningOptions;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTask.Details;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -42,6 +44,7 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
             details.getAddedMessageIdEntries(),
             details.getUpdatedMessageIdEntries(),
             details.getRemovedMessageIdEntries(),
+            Optional.of(RunningOptionsDTO.asDTO(details.getRunningOptions())),
             details.getFixedInconsistencies(),
             details.getErrors());
     }
@@ -62,6 +65,7 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
     private final long addedMessageIdEntries;
     private final long updatedMessageIdEntries;
     private final long removedMessageIdEntries;
+    private final Optional<RunningOptionsDTO> runningOptions;
     private final ImmutableList<MessageInconsistenciesEntry> fixedInconsistencies;
     private final ImmutableList<MessageInconsistenciesEntry> errors;
 
@@ -71,6 +75,7 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
                                                                    @JsonProperty("addedMessageIdEntries") long addedMessageIdEntries,
                                                                    @JsonProperty("updatedMessageIdEntries") long updatedMessageIdEntries,
                                                                    @JsonProperty("removedMessageIdEntries")long removedMessageIdEntries,
+                                                                   @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions,
                                                                    @JsonProperty("fixedInconsistencies") ImmutableList<MessageInconsistenciesEntry> fixedInconsistencies,
                                                                    @JsonProperty("errors") ImmutableList<MessageInconsistenciesEntry> errors) {
         this.timestamp = timestamp;
@@ -80,6 +85,7 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
         this.addedMessageIdEntries = addedMessageIdEntries;
         this.updatedMessageIdEntries = updatedMessageIdEntries;
         this.removedMessageIdEntries = removedMessageIdEntries;
+        this.runningOptions = runningOptions;
         this.fixedInconsistencies = fixedInconsistencies;
         this.errors = errors;
     }
@@ -102,6 +108,10 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
 
     public long getRemovedMessageIdEntries() {
         return removedMessageIdEntries;
+    }
+
+    public Optional<RunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
     }
 
     public ImmutableList<MessageInconsistenciesEntry> getFixedInconsistencies() {
@@ -129,6 +139,9 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
             addedMessageIdEntries,
             updatedMessageIdEntries,
             removedMessageIdEntries,
+            runningOptions
+                .map(RunningOptionsDTO::asDomainObject)
+                .orElse(RunningOptions.DEFAULT),
             fixedInconsistencies,
             errors);
     }

@@ -6,9 +6,6 @@
   "addedMessageIdEntries": 1,
   "updatedMessageIdEntries": 0,
   "removedMessageIdEntries": 1,
-  "runningOptions":{
-      "messagesPerSecond": 2
-  },
   "fixedInconsistencies": [
     {
       "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",

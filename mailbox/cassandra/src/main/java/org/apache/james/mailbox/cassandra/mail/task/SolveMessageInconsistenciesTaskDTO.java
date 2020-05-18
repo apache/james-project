@@ -21,7 +21,10 @@ package org.apache.james.mailbox.cassandra.mail.task;
 
 import static org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTask.SOLVE_MESSAGE_INCONSISTENCIES;
 
+import java.util.Optional;
+
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.RunningOptions;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 
@@ -30,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SolveMessageInconsistenciesTaskDTO implements TaskDTO {
 
     private static SolveMessageInconsistenciesTaskDTO toDTO(SolveMessageInconsistenciesTask domainObject, String typeName) {
-        return new SolveMessageInconsistenciesTaskDTO(typeName);
+        return new SolveMessageInconsistenciesTaskDTO(typeName, Optional.of(RunningOptionsDTO.asDTO(domainObject.getRunningOptions())));
     }
 
     public static TaskDTOModule<SolveMessageInconsistenciesTask, SolveMessageInconsistenciesTaskDTO> module(SolveMessageInconsistenciesService service) {
@@ -44,17 +47,27 @@ public class SolveMessageInconsistenciesTaskDTO implements TaskDTO {
     }
 
     private final String type;
+    private final Optional<RunningOptionsDTO> runningOptions;
 
-    public SolveMessageInconsistenciesTaskDTO(@JsonProperty("type") String type) {
+    public SolveMessageInconsistenciesTaskDTO(@JsonProperty("type") String type,
+                                              @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
         this.type = type;
+        this.runningOptions = runningOptions;
     }
 
     private SolveMessageInconsistenciesTask toDomainObject(SolveMessageInconsistenciesService service) {
-        return new SolveMessageInconsistenciesTask(service);
+        return new SolveMessageInconsistenciesTask(service,
+            runningOptions
+                .map(RunningOptionsDTO::asDomainObject)
+                .orElse(RunningOptions.DEFAULT));
     }
 
     @Override
     public String getType() {
         return type;
+    }
+
+    public Optional<RunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
     }
 }
