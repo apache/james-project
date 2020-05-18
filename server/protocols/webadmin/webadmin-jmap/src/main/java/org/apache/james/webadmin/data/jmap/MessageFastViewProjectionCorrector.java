@@ -118,6 +118,22 @@ public class MessageFastViewProjectionCorrector {
             failedMessageCount = new AtomicLong();
         }
 
+        private void incrementProcessedUserCount() {
+            processedUserCount.incrementAndGet();
+        }
+
+        private void incrementProcessedMessageCount() {
+            processedMessageCount.incrementAndGet();
+        }
+
+        private void incrementFailedUserCount() {
+            failedUserCount.incrementAndGet();
+        }
+
+        private void incrementFailedMessageCount() {
+            failedMessageCount.incrementAndGet();
+        }
+
         long getProcessedUserCount() {
             return processedUserCount.get();
         }
@@ -163,7 +179,7 @@ public class MessageFastViewProjectionCorrector {
         try {
             return Iterators.toFlux(usersRepository.list())
                 .map(mailboxManager::createSystemSession)
-                .doOnNext(any -> progress.processedUserCount.incrementAndGet())
+                .doOnNext(any -> progress.incrementProcessedUserCount())
                 .flatMap(session -> listUserMailboxMessages(progress, session));
         } catch (UsersRepositoryException e) {
             return Flux.error(e);
@@ -178,7 +194,7 @@ public class MessageFastViewProjectionCorrector {
                     .map(message -> new ProjectionEntry(messageManager, message.getUid(), session))));
         } catch (MailboxException e) {
             LOGGER.error("JMAP fastview re-computation aborted for {} as we failed listing user mailboxes", session.getUser(), e);
-            progress.failedUserCount.incrementAndGet();
+            progress.incrementFailedUserCount();
             return Flux.empty();
         }
     }
@@ -187,14 +203,14 @@ public class MessageFastViewProjectionCorrector {
         return retrieveContent(entry.getMessageManager(), entry.getSession(), entry.getUid())
             .map(this::computeProjectionEntry)
             .flatMap(this::storeProjectionEntry)
-            .doOnSuccess(any -> progress.processedMessageCount.incrementAndGet())
+            .doOnSuccess(any -> progress.incrementProcessedMessageCount())
             .thenReturn(Result.COMPLETED)
             .onErrorResume(e -> {
                 LOGGER.error("JMAP fastview re-computation aborted for {} - {} - {}",
                     entry.getSession().getUser(),
                     entry.getMessageManager().getId(),
                     entry.getUid(), e);
-                progress.failedMessageCount.incrementAndGet();
+                progress.incrementFailedMessageCount();
                 return Mono.just(Result.PARTIAL);
             });
     }
