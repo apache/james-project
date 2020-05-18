@@ -19,6 +19,9 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.Progress;
+import static org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
@@ -39,7 +42,7 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
     static final TaskType TASK_TYPE = TaskType.of("RecomputeUserFastViewProjectionItemsTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private static AdditionalInformation from(MessageFastViewProjectionCorrector.Progress progress, Username username) {
+        private static AdditionalInformation from(Progress progress, Username username) {
             return new AdditionalInformation(username,
                 progress.getProcessedMessageCount(),
                 progress.getFailedMessageCount(),
@@ -119,7 +122,7 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
 
     @Override
     public Result run() {
-        corrector.correctUsersProjectionItems(progress, username)
+        corrector.correctUsersProjectionItems(progress, username, RunningOptions.DEFAULT)
             .subscribeOn(Schedulers.elastic())
             .block();
 

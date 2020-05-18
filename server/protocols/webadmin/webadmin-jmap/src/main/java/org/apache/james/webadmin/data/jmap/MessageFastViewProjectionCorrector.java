@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.data.jmap;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
@@ -31,6 +32,7 @@ import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -45,13 +47,61 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 public class MessageFastViewProjectionCorrector {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageFastViewProjectionCorrector.class);
+    
+    private static final Duration DELAY = Duration.ZERO;
+    private static final Duration PERIOD = Duration.ofSeconds(1);
+
+    public static class RunningOptions {
+        public static RunningOptions withMessageRatePerSecond(int messageRatePerSecond) {
+            return new RunningOptions(messageRatePerSecond);
+        }
+
+        public static RunningOptions DEFAULT = new RunningOptions(10);
+
+        private final int messageRatePerSecond;
+
+        public RunningOptions(int messageRatePerSecond) {
+            Preconditions.checkArgument(messageRatePerSecond > 0, "'messageParallelism' must be strictly positive");
+
+            this.messageRatePerSecond = messageRatePerSecond;
+        }
+
+        public int getMessageRatePerSecond() {
+            return messageRatePerSecond;
+        }
+    }
+
+    private static class ProjectionEntry {
+        private final MessageManager messageManager;
+        private final MessageUid uid;
+        private final MailboxSession session;
+
+        private ProjectionEntry(MessageManager messageManager, MessageUid uid, MailboxSession session) {
+            this.messageManager = messageManager;
+            this.uid = uid;
+            this.session = session;
+        }
+
+        private MessageManager getMessageManager() {
+            return messageManager;
+        }
+
+        private MessageUid getUid() {
+            return uid;
+        }
+
+        private MailboxSession getSession() {
+            return session;
+        }
+    }
 
     static class Progress {
         private final AtomicLong processedUserCount;
@@ -102,46 +152,64 @@ public class MessageFastViewProjectionCorrector {
         this.projectionItemFactory = projectionItemFactory;
     }
 
-    Mono<Void> correctAllProjectionItems(Progress progress) {
+    Mono<Void> correctAllProjectionItems(Progress progress, RunningOptions runningOptions) {
+        return correctProjection(listAllMailboxMessages(progress), runningOptions, progress);
+    }
+
+    Mono<Void> correctUsersProjectionItems(Progress progress, Username username, RunningOptions runningOptions) {
+        MailboxSession session = mailboxManager.createSystemSession(username);
+        return correctProjection(listUserMailboxMessages(progress, session), runningOptions, progress);
+    }
+
+    private Flux<ProjectionEntry> listAllMailboxMessages(Progress progress) {
         try {
             return Iterators.toFlux(usersRepository.list())
-                .concatMap(username -> correctUsersProjectionItems(progress, username))
-                .then();
+                .map(mailboxManager::createSystemSession)
+                .doOnNext(any -> progress.processedUserCount.incrementAndGet())
+                .flatMap(session -> listUserMailboxMessages(progress, session));
         } catch (UsersRepositoryException e) {
-            return Mono.error(e);
+            return Flux.error(e);
         }
     }
 
-    Mono<Void> correctUsersProjectionItems(Progress progress, Username username) {
+    private Flux<ProjectionEntry> listUserMailboxMessages(Progress progress, MailboxSession session) {
         try {
-            MailboxSession session = mailboxManager.createSystemSession(username);
             return listUsersMailboxes(session)
-                .concatMap(mailboxMetadata -> retrieveMailbox(session, mailboxMetadata))
-                .concatMap(Throwing.function(messageManager -> correctMailboxProjectionItems(progress, messageManager, session)))
-                .doOnComplete(progress.processedUserCount::incrementAndGet)
-                .onErrorContinue((error, o) -> {
-                    LOGGER.error("JMAP fastview re-computation aborted for {}", username, error);
-                    progress.failedUserCount.incrementAndGet();
-                })
-                .then();
+                .flatMap(mailboxMetadata -> retrieveMailbox(session, mailboxMetadata))
+                .flatMap(Throwing.function(messageManager -> listAllMailboxMessages(messageManager, session)
+                    .map(message -> new ProjectionEntry(messageManager, message.getUid(), session))));
         } catch (MailboxException e) {
-            LOGGER.error("JMAP fastview re-computation aborted for {} as we failed listing user mailboxes", username, e);
+            LOGGER.error("JMAP fastview re-computation aborted for {} as we failed listing user mailboxes", session.getUser(), e);
             progress.failedUserCount.incrementAndGet();
-            return Mono.empty();
+            return Flux.empty();
         }
     }
 
-    private Mono<Void> correctMailboxProjectionItems(Progress progress, MessageManager messageManager, MailboxSession session) throws MailboxException {
-        return listAllMailboxMessages(messageManager, session)
-            .concatMap(messageResult -> retrieveContent(messageManager, session, messageResult))
+    private Mono<Void> correctProjection(ProjectionEntry entry, Progress progress) {
+        return retrieveContent(entry.getMessageManager(), entry.getSession(), entry.getUid())
             .map(this::computeProjectionEntry)
-            .concatMap(pair -> storeProjectionEntry(pair)
-                .doOnSuccess(any -> progress.processedMessageCount.incrementAndGet()))
-            .onErrorContinue((error, triggeringValue) -> {
-                LOGGER.error("JMAP fastview re-computation aborted for {} - {}", session.getUser(), triggeringValue, error);
+            .flatMap(this::storeProjectionEntry)
+            .doOnSuccess(any -> progress.processedMessageCount.incrementAndGet())
+            .onErrorResume(e -> {
+                LOGGER.error("JMAP fastview re-computation aborted for {} - {} - {}",
+                    entry.getSession().getUser(),
+                    entry.getMessageManager().getId(),
+                    entry.getUid(), e);
                 progress.failedMessageCount.incrementAndGet();
-            })
+                return Mono.empty();
+            });
+    }
+
+    private Mono<Void> correctProjection(Flux<ProjectionEntry> entries, RunningOptions runningOptions, Progress progress) {
+        return throttleWithRate(entries, runningOptions)
+            .flatMap(entry -> correctProjection(entry, progress))
             .then();
+    }
+
+    private Flux<ProjectionEntry> throttleWithRate(Flux<ProjectionEntry> entries, RunningOptions runningOptions) {
+        return entries.windowTimeout(runningOptions.getMessageRatePerSecond(), Duration.ofSeconds(1))
+            .zipWith(Flux.interval(DELAY, PERIOD))
+            .flatMap(Tuple2::getT1);
     }
 
     private Flux<MailboxMetaData> listUsersMailboxes(MailboxSession session) throws MailboxException {
@@ -156,11 +224,12 @@ public class MessageFastViewProjectionCorrector {
         return Iterators.toFlux(messageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, session));
     }
 
-    private Flux<MessageResult> retrieveContent(MessageManager messageManager, MailboxSession session, MessageResult messageResult) {
+    private Mono<MessageResult> retrieveContent(MessageManager messageManager, MailboxSession session, MessageUid uid) {
         try {
-            return Iterators.toFlux(messageManager.getMessages(MessageRange.one(messageResult.getUid()), FetchGroup.FULL_CONTENT, session));
+            return Iterators.toFlux(messageManager.getMessages(MessageRange.one(uid), FetchGroup.FULL_CONTENT, session))
+                .next();
         } catch (MailboxException e) {
-            return Flux.error(e);
+            return Mono.error(e);
         }
     }
 
