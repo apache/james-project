@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -33,6 +34,7 @@ import java.time.ZonedDateTime;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.methods.ValueWithId.MessageWithId;
+import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;
@@ -51,6 +53,7 @@ import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.TextBody;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
+import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.stream.Field;
 import org.assertj.core.data.Index;
@@ -917,6 +920,122 @@ class MIMEMessageConverterTest {
             assertThat(typedResult.getBodyParts())
                 .extracting(Entity::getDispositionType)
                 .anySatisfy(contentDisposition -> assertThat(contentDisposition).isEqualTo("attachment"));
+        }
+
+        @Test
+        void convertToMimeShouldNotThrowWhenNameInContentTypeFieldAndAttachmentMetadata() throws Exception {
+            MIMEMessageConverter sut = new MIMEMessageConverter(attachmentContentLoader);
+
+            CreationMessage testMessage = CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
+
+            String text = "123456";
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
+                .name("fgh.png")
+                .attachment(AttachmentMetadata.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .size(text.getBytes().length)
+                    .type("image/png; name=abc.png")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(false)
+                .build();
+            when(attachmentContentLoader.load(attachment.getAttachment(), session))
+                .thenReturn(new ByteArrayInputStream(text.getBytes()));
+
+            assertThatCode(() -> sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void attachmentNameShouldBeOverriddenWhenSpecified() throws Exception {
+            MIMEMessageConverter sut = new MIMEMessageConverter(attachmentContentLoader);
+
+            String text = "123456";
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
+                .name("fgh.png")
+                .attachment(AttachmentMetadata.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .size(text.getBytes().length)
+                    .type("image/png; name=abc.png; charset=\"iso-8859-1\"")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(false)
+                .build();
+            when(attachmentContentLoader.load(attachment.getAttachment(), session))
+                .thenReturn(new ByteArrayInputStream(text.getBytes()));
+
+            assertThat(sut.contentTypeField(attachment).getBody())
+                .isEqualTo("image/png; charset=iso-8859-1; name=\"=?US-ASCII?Q?fgh.png?=\"");
+        }
+
+        @Test
+        void nameShouldBeAddedToContentTypeWhenSpecified() throws Exception {
+            MIMEMessageConverter sut = new MIMEMessageConverter(attachmentContentLoader);
+
+            String text = "123456";
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
+                .name("fgh.png")
+                .attachment(AttachmentMetadata.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .size(text.getBytes().length)
+                    .type("image/png")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(false)
+                .build();
+            when(attachmentContentLoader.load(attachment.getAttachment(), session))
+                .thenReturn(new ByteArrayInputStream(text.getBytes()));
+
+            assertThat(sut.contentTypeField(attachment).getBody())
+                .isEqualTo("image/png; name=\"=?US-ASCII?Q?fgh.png?=\"");
+        }
+
+        @Test
+        void attachmentNameShouldBePreservedWhenNameNotSpecified() throws Exception {
+            MIMEMessageConverter sut = new MIMEMessageConverter(attachmentContentLoader);
+
+            String text = "123456";
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
+                .attachment(AttachmentMetadata.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .size(text.getBytes().length)
+                    .type("image/png; name=abc.png")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(false)
+                .build();
+            when(attachmentContentLoader.load(attachment.getAttachment(), session))
+                .thenReturn(new ByteArrayInputStream(text.getBytes()));
+
+            assertThat(sut.contentTypeField(attachment).getBody())
+                .isEqualTo("image/png; name=abc.png");
+        }
+
+        @Test
+        void attachmentNameShouldBeUnspecifiedWhenNone() throws Exception {
+            MIMEMessageConverter sut = new MIMEMessageConverter(attachmentContentLoader);
+
+            String text = "123456";
+            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
+                .attachment(AttachmentMetadata.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .size(text.getBytes().length)
+                    .type("image/png")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(false)
+                .build();
+            when(attachmentContentLoader.load(attachment.getAttachment(), session))
+                .thenReturn(new ByteArrayInputStream(text.getBytes()));
+
+            assertThat(sut.contentTypeField(attachment).getBody())
+                .isEqualTo("image/png");
         }
 
         @Test

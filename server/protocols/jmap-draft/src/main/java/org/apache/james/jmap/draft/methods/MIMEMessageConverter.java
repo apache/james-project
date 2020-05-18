@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.function.Consumer;
@@ -327,16 +328,25 @@ public class MIMEMessageConverter {
         }
     }
 
-    private ContentTypeField contentTypeField(MessageAttachmentMetadata att) {
+    @VisibleForTesting
+    ContentTypeField contentTypeField(MessageAttachmentMetadata att) {
         ContentTypeField typeAsField =  att.getAttachment().getType().asMime4J();
         if (att.getName().isPresent()) {
             return Fields.contentType(typeAsField.getMimeType(),
                 ImmutableMap.<String, String>builder()
-                    .putAll(typeAsField.getParameters())
+                    .putAll(parametersWithoutName(typeAsField))
                     .put("name", encode(att.getName().get()))
                     .build());
         }
         return typeAsField;
+    }
+
+    private ImmutableMap<String, String> parametersWithoutName(ContentTypeField typeAsField) {
+        return typeAsField.getParameters()
+            .entrySet()
+            .stream()
+            .filter(entry -> !entry.getKey().equals("name"))
+            .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private String encode(String name) {
