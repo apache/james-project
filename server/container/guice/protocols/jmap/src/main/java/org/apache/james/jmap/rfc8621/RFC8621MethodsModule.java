@@ -22,11 +22,13 @@ package org.apache.james.jmap.rfc8621;
 
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
+import org.apache.james.jmap.json.Serializer;
 import org.apache.james.jmap.method.CoreEcho;
 import org.apache.james.jmap.method.Method;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
@@ -34,6 +36,8 @@ public class RFC8621MethodsModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(Serializer.class).in(Scopes.SINGLETON);
+
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEcho.class);
     }

@@ -36,8 +36,7 @@ import play.api.libs.json._
 
 import scala.util.Try
 
-@Inject
-class Serializer(mailboxIdFactory: MailboxId.Factory) {
+class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   // CreateIds
   private implicit val clientIdFormat: Format[ClientId] = Json.valueFormat[ClientId]
   private implicit val serverIdFormat: Format[ServerId] = Json.valueFormat[ServerId]
