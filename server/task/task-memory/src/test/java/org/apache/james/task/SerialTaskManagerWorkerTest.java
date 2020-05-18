@@ -225,6 +225,10 @@ class SerialTaskManagerWorkerTest {
 
         resultMono.block(Duration.ofSeconds(10));
 
+        // Due to the use of signals, cancellation cannot be instantaneous
+        // Let a grace period for the cancellation to complete to increase test stability
+        Thread.sleep(50);
+
         verify(listener, atLeastOnce()).cancelled(id, Optional.empty());
         verifyNoMoreInteractions(listener);
     }
