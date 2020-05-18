@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail.task;
 
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,10 +42,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 public class SolveMessageInconsistenciesService {
 
@@ -159,6 +162,23 @@ public class SolveMessageInconsistenciesService {
             LOGGER.info("Inconsistency fixed for orphan message in MessageId: {}", message.getComposedMessageId());
             context.incrementRemovedMessageIdEntries();
             context.addFixedInconsistency(message.getComposedMessageId());
+        }
+    }
+
+    public static class RunningOptions {
+
+        public static final RunningOptions DEFAULT = new RunningOptions(100);
+
+        private final int messagesPerSecond;
+
+        public RunningOptions(int messagesPerSecond) {
+            Preconditions.checkArgument(messagesPerSecond > 0, "'messagesPerSecond' must be strictly positive");
+
+            this.messagesPerSecond = messagesPerSecond;
+        }
+
+        public int getMessagesPerSecond() {
+            return this.messagesPerSecond;
         }
     }
 
@@ -332,8 +352,8 @@ public class SolveMessageInconsistenciesService {
         }
 
         private Context(AtomicLong processedImapUidEntries, AtomicLong processedMessageIdEntries, AtomicLong addedMessageIdEntries,
-                        AtomicLong updatedMessageIdEntries, AtomicLong removedMessageIdEntries, Collection<ComposedMessageId> fixedInconsistencies,
-                        Collection<ComposedMessageId> errors) {
+                        AtomicLong updatedMessageIdEntries, AtomicLong removedMessageIdEntries,
+                        Collection<ComposedMessageId> fixedInconsistencies, Collection<ComposedMessageId> errors) {
             this.processedImapUidEntries = processedImapUidEntries;
             this.processedMessageIdEntries = processedMessageIdEntries;
             this.addedMessageIdEntries = addedMessageIdEntries;
@@ -383,7 +403,9 @@ public class SolveMessageInconsistenciesService {
         }
     }
 
-    public static final Logger LOGGER = LoggerFactory.getLogger(SolveMessageInconsistenciesService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SolveMessageInconsistenciesService.class);
+    private static final Duration DELAY = Duration.ZERO;
+    private static final Duration PERIOD = Duration.ofSeconds(1);
 
     private final CassandraMessageIdToImapUidDAO messageIdToImapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
@@ -394,18 +416,24 @@ public class SolveMessageInconsistenciesService {
         this.messageIdDAO = messageIdDAO;
     }
 
-    Mono<Task.Result> fixMessageInconsistencies(Context context) {
+    Mono<Task.Result> fixMessageInconsistencies(Context context, RunningOptions runningOptions) {
         return Flux.concat(
-                fixInconsistenciesInMessageId(context),
-                fixInconsistenciesInImapUid(context))
+                fixInconsistenciesInMessageId(context, runningOptions),
+                fixInconsistenciesInImapUid(context, runningOptions))
             .reduce(Task.Result.COMPLETED, Task::combine);
     }
 
-    private Flux<Task.Result> fixInconsistenciesInImapUid(Context context) {
-        return messageIdToImapUidDAO.retrieveAllMessages()
+    private Flux<Task.Result> fixInconsistenciesInImapUid(Context context, RunningOptions runningOptions) {
+        return throttle(messageIdToImapUidDAO.retrieveAllMessages(), runningOptions)
             .doOnNext(any -> context.incrementProcessedImapUidEntries())
-            .concatMap(this::detectInconsistencyInImapUid)
-            .concatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO));
+            .flatMap(this::detectInconsistencyInImapUid)
+            .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO));
+    }
+
+    private Flux<ComposedMessageIdWithMetaData> throttle(Flux<ComposedMessageIdWithMetaData> messages, RunningOptions runningOptions) {
+        return messages.windowTimeout(runningOptions.getMessagesPerSecond(), Duration.ofSeconds(1))
+            .zipWith(Flux.interval(DELAY, PERIOD))
+            .flatMap(Tuple2::getT1);
     }
 
     private Mono<Inconsistency> detectInconsistencyInImapUid(ComposedMessageIdWithMetaData message) {
@@ -445,11 +473,14 @@ public class SolveMessageInconsistenciesService {
             .switchIfEmpty(Mono.just(NO_INCONSISTENCY));
     }
 
-    private Flux<Task.Result> fixInconsistenciesInMessageId(Context context) {
+    private Flux<Task.Result> fixInconsistenciesInMessageId(Context context, RunningOptions runningOptions) {
         return messageIdDAO.retrieveAllMessages()
             .doOnNext(any -> context.incrementMessageIdEntries())
-            .concatMap(this::detectInconsistencyInMessageId)
-            .concatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO));
+            .windowTimeout(runningOptions.getMessagesPerSecond(), Duration.ofSeconds(1))
+            .zipWith(Flux.interval(Duration.ofSeconds(1)))
+            .flatMap(Tuple2::getT1)
+            .flatMap(this::detectInconsistencyInMessageId)
+            .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO));
     }
 
     private Mono<Inconsistency> detectInconsistencyInMessageId(ComposedMessageIdWithMetaData message) {
