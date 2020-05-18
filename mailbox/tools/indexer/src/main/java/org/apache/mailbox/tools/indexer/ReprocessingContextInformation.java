@@ -26,8 +26,6 @@ import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.TaskExecutionDetails;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 public class ReprocessingContextInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
 
     private final int successfullyReprocessedMailCount;
@@ -56,7 +54,6 @@ public class ReprocessingContextInformation implements TaskExecutionDetails.Addi
     }
 
     @Override
-    @JsonIgnore
     public ReIndexingExecutionFailures failures() {
         return failures;
     }

@@ -25,8 +25,6 @@ import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.TaskExecutionDetails;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 public class EventDeadLettersRedeliveryTaskAdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
     private final long successfulRedeliveriesCount;
     private final long failedRedeliveriesCount;
@@ -54,12 +52,10 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformation implements Task
         return failedRedeliveriesCount;
     }
 
-    @JsonInclude(JsonInclude.Include.NON_ABSENT)
     public Optional<String> getGroup() {
         return group.map(Group::asString);
     }
 
-    @JsonInclude(JsonInclude.Include.NON_ABSENT)
     public Optional<String> getInsertionId() {
         return insertionId.map(insertionId -> insertionId.getId().toString());
     }

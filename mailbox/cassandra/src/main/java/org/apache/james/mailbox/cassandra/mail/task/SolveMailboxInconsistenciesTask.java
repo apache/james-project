@@ -30,7 +30,6 @@ import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
@@ -62,27 +61,22 @@ public class SolveMailboxInconsistenciesTask implements Task {
             return instant;
         }
 
-        @JsonProperty("processedMailboxEntries")
         long getProcessedMailboxEntries() {
             return processedMailboxEntries;
         }
 
-        @JsonProperty("processedMailboxPathEntries")
         long getProcessedMailboxPathEntries() {
             return processedMailboxPathEntries;
         }
 
-        @JsonProperty("fixedInconsistencies")
         ImmutableList<String> getFixedInconsistencies() {
             return fixedInconsistencies;
         }
 
-        @JsonProperty("conflictingEntries")
         ImmutableList<ConflictingEntry> getConflictingEntries() {
             return conflictingEntries;
         }
 
-        @JsonProperty("errors")
         long getErrors() {
             return errors;
         }
