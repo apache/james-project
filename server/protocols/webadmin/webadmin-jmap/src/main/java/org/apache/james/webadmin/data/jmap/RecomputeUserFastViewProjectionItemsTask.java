@@ -122,14 +122,9 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
 
     @Override
     public Result run() {
-        corrector.correctUsersProjectionItems(progress, username, RunningOptions.DEFAULT)
+        return corrector.correctUsersProjectionItems(progress, username, RunningOptions.DEFAULT)
             .subscribeOn(Schedulers.elastic())
             .block();
-
-        if (progress.failed()) {
-            return Result.PARTIAL;
-        }
-        return Result.COMPLETED;
     }
 
     @Override

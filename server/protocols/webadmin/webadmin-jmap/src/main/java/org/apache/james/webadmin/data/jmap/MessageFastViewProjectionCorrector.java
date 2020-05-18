@@ -40,6 +40,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.task.Task;
+import org.apache.james.task.Task.Result;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.streams.Iterators;
@@ -131,10 +133,6 @@ public class MessageFastViewProjectionCorrector {
         long getFailedMessageCount() {
             return failedMessageCount.get();
         }
-
-        boolean failed() {
-            return failedMessageCount.get() > 0 || failedUserCount.get() > 0;
-        }
     }
 
     private final UsersRepository usersRepository;
@@ -152,11 +150,11 @@ public class MessageFastViewProjectionCorrector {
         this.projectionItemFactory = projectionItemFactory;
     }
 
-    Mono<Void> correctAllProjectionItems(Progress progress, RunningOptions runningOptions) {
+    Mono<Result> correctAllProjectionItems(Progress progress, RunningOptions runningOptions) {
         return correctProjection(listAllMailboxMessages(progress), runningOptions, progress);
     }
 
-    Mono<Void> correctUsersProjectionItems(Progress progress, Username username, RunningOptions runningOptions) {
+    Mono<Result> correctUsersProjectionItems(Progress progress, Username username, RunningOptions runningOptions) {
         MailboxSession session = mailboxManager.createSystemSession(username);
         return correctProjection(listUserMailboxMessages(progress, session), runningOptions, progress);
     }
@@ -185,25 +183,27 @@ public class MessageFastViewProjectionCorrector {
         }
     }
 
-    private Mono<Void> correctProjection(ProjectionEntry entry, Progress progress) {
+    private Mono<Result> correctProjection(ProjectionEntry entry, Progress progress) {
         return retrieveContent(entry.getMessageManager(), entry.getSession(), entry.getUid())
             .map(this::computeProjectionEntry)
             .flatMap(this::storeProjectionEntry)
             .doOnSuccess(any -> progress.processedMessageCount.incrementAndGet())
+            .thenReturn(Result.COMPLETED)
             .onErrorResume(e -> {
                 LOGGER.error("JMAP fastview re-computation aborted for {} - {} - {}",
                     entry.getSession().getUser(),
                     entry.getMessageManager().getId(),
                     entry.getUid(), e);
                 progress.failedMessageCount.incrementAndGet();
-                return Mono.empty();
+                return Mono.just(Result.PARTIAL);
             });
     }
 
-    private Mono<Void> correctProjection(Flux<ProjectionEntry> entries, RunningOptions runningOptions, Progress progress) {
+    private Mono<Result> correctProjection(Flux<ProjectionEntry> entries, RunningOptions runningOptions, Progress progress) {
         return throttleWithRate(entries, runningOptions)
             .flatMap(entry -> correctProjection(entry, progress))
-            .then();
+            .reduce(Task::combine)
+            .switchIfEmpty(Mono.just(Result.COMPLETED));
     }
 
     private Flux<ProjectionEntry> throttleWithRate(Flux<ProjectionEntry> entries, RunningOptions runningOptions) {
