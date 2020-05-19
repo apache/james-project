@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.DockerCassandraSingleton;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.mailbox.KeyspacesConfiguration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,8 +36,7 @@ class KeyspaceCreationTest {
         JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
-            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule()))
+            .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandraSingleton.singleton.configurationBuilder()
                     .createKeyspace()
@@ -59,8 +57,7 @@ class KeyspaceCreationTest {
         JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
-            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule()))
+            .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(KeyspacesConfiguration.class).toInstance(KeyspacesConfiguration.builder()
                 .keyspace("non_existing_keyspace")
                 .cacheKeyspace("cache_non_existing_keyspace")
@@ -87,8 +84,7 @@ class KeyspaceCreationTest {
         JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
-            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule()))
+            .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandraSingleton.singleton.configurationBuilder()
                     .createKeyspace()
@@ -115,8 +111,7 @@ class KeyspaceCreationTest {
         JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
-            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule()))
+            .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandraSingleton.singleton.configurationBuilder()
                     .build()))

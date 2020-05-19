@@ -25,9 +25,6 @@ import javax.inject.Inject;
 
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.MessageIdManager;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
-import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.utils.InitializationOperation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -40,8 +37,6 @@ class CassandraMessageIdManagerInjectionTest {
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> Multibinder.newSetBinder(binder, InitializationOperation.class)
                 .addBinding()
                 .to(CallMe.class)))

@@ -23,8 +23,6 @@ import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -53,7 +51,6 @@ class CassandraMailRepositoryIntegrationTest {
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule()))
         .build();
 

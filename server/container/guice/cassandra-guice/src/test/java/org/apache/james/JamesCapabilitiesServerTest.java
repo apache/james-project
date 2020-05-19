@@ -28,8 +28,6 @@ import java.util.EnumSet;
 
 import org.apache.james.jmap.draft.JMAPModule;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,7 +40,6 @@ class JamesCapabilitiesServerTest {
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager)))
         .disableAutoStart()
