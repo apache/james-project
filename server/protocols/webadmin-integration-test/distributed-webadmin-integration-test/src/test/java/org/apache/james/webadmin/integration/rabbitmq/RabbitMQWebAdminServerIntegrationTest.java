@@ -232,6 +232,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
             .body("additionalInformation.addedMessageIdEntries", is(0))
             .body("additionalInformation.updatedMessageIdEntries", is(0))
             .body("additionalInformation.removedMessageIdEntries", is(0))
+            .body("additionalInformation.runningOptions.messagesPerSecond", is(100))
             .body("additionalInformation.fixedInconsistencies", hasSize(0))
             .body("additionalInformation.errors", hasSize(0));
     }

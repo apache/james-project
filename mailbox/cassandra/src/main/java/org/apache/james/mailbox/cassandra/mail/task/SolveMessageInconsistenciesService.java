@@ -182,7 +182,7 @@ public class SolveMessageInconsistenciesService {
         }
     }
 
-    static class Context {
+    public static class Context {
         static class Snapshot {
             public static Builder builder() {
                 return new Builder();
@@ -416,7 +416,7 @@ public class SolveMessageInconsistenciesService {
         this.messageIdDAO = messageIdDAO;
     }
 
-    Mono<Task.Result> fixMessageInconsistencies(Context context, RunningOptions runningOptions) {
+    public Mono<Task.Result> fixMessageInconsistencies(Context context, RunningOptions runningOptions) {
         return Flux.concat(
                 fixInconsistenciesInMessageId(context, runningOptions),
                 fixInconsistenciesInImapUid(context, runningOptions))

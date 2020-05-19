@@ -19,24 +19,26 @@
 
 package org.apache.james.webadmin.routes;
 
-import javax.inject.Inject;
+import java.util.Optional;
 
-import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService;
-import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTask;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskRegistrationKey;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.RunningOptions;
 
 import spark.Request;
 
-public class SolveMessageInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
-    private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("SolveInconsistencies");
-
-    @Inject
-    public SolveMessageInconsistenciesRequestToTask(SolveMessageInconsistenciesService service) {
-        super(REGISTRATION_KEY, request -> toTask(request, service));
+public class RunningOptionsParser {
+    public static RunningOptions parse(Request request) {
+        return intQueryParameter(request, "messagesPerSecond")
+            .map(RunningOptions::new)
+            .orElse(RunningOptions.DEFAULT);
     }
 
-    private static SolveMessageInconsistenciesTask toTask(Request request, SolveMessageInconsistenciesService service) {
-        return new SolveMessageInconsistenciesTask(service, RunningOptionsParser.parse(request));
+    public static Optional<Integer> intQueryParameter(Request request, String queryParameter) {
+        try {
+            return Optional.ofNullable(request.queryParams(queryParameter))
+                .map(Integer::parseInt);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s', expecting a " +
+                "strictly positive optional integer", queryParameter), e);
+        }
     }
 }

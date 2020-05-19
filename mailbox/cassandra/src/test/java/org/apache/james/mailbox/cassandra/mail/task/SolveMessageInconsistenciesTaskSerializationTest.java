@@ -37,7 +37,6 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
 
     private static final SolveMessageInconsistenciesService SERVICE = mock(SolveMessageInconsistenciesService.class);
     private static final SolveMessageInconsistenciesTask TASK = new SolveMessageInconsistenciesTask(SERVICE, new RunningOptions(2));
-    private static final SolveMessageInconsistenciesTask LEGACY_TASK = new SolveMessageInconsistenciesTask(SERVICE, RunningOptions.DEFAULT);
 
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
     private static final String MAILBOX_ID = "551f0580-82fb-11ea-970e-f9c83d4cf8c2";
