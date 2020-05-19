@@ -21,23 +21,23 @@ package org.apache.james.filesystem.api;
 public interface JamesDirectoriesProvider {
 
     /**
-     * Return the configuration directory of the application
-     * 
-     * @return confDir
+     * Return the absolute directory of the application
+     *
+     * @return absolute
      */
     String getAbsoluteDirectory();
 
     /**
-     * Return the var directory of the application
-     * 
-     * @return var
+     * Return the configuration directory of the application
+     *
+     * @return confDir
      */
     String getConfDirectory();
 
     /**
-     * Return the absolute directory of the application
-     * 
-     * @return absolute
+     * Return the var directory of the application
+     *
+     * @return var
      */
     String getVarDirectory();
 
