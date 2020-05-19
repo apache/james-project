@@ -23,10 +23,6 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.draft.methods.integration.SpamAssassinContract;
 import org.apache.james.jmap.draft.methods.integration.SpamAssassinModuleExtension;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
-import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -35,8 +31,6 @@ class MemorySpamAssassinContractTest implements SpamAssassinContract {
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new SpamAssassinModuleExtension())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule())
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class)))
+            .overrideWith(new TestJMAPServerModule()))
         .build();
 }

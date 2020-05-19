@@ -25,23 +25,16 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.draft.methods.integration.SendMDNMethodTest;
-import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
-import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class MemorySendMDNMethodTest extends SendMDNMethodTest {
-
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule())
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class)))
+            .overrideWith(new TestJMAPServerModule()))
         .build();
 
     @Override

@@ -26,6 +26,10 @@ import java.io.IOException;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.draft.methods.integration.GetMessageListMethodTest;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -38,7 +42,9 @@ public class MemoryGetMessageListMethodTest extends GetMessageListMethodTest {
 
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
-        return memoryJmap.jmapServer(new TestJMAPServerModule(), TestJMAPServerModule.SearchModule.maximumMessages(LIMIT_TO_3_MESSAGES));
+        return memoryJmap.jmapServer(TestJMAPServerModule.SearchModule.maximumMessages(LIMIT_TO_3_MESSAGES),
+            binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class),
+            binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class));
     }
     
     @Override
