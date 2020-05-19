@@ -30,8 +30,6 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.DockerElasticSearchRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
@@ -155,7 +153,6 @@ public class RabbitMQJmapExtension implements BeforeAllCallback, AfterAllCallbac
             .build();
 
         return CassandraRabbitMQJamesServerMain.createServer(configuration)
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(new TestDockerESMetricReporterModule(elasticSearchRule.getDockerEs().getHttpHost()))
                 .overrideWith(cassandra.getModule())
                 .overrideWith(elasticSearchRule.getModule())

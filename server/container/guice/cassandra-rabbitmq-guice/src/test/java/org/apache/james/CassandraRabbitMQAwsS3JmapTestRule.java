@@ -22,8 +22,6 @@ package org.apache.james;
 import java.io.IOException;
 
 import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
@@ -68,7 +66,6 @@ public class CassandraRabbitMQAwsS3JmapTestRule implements TestRule {
             .build();
 
         return CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new TestDockerESMetricReporterModule(dockerElasticSearchRule.getDockerEs().getHttpHost()))

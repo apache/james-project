@@ -27,9 +27,7 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.draft.methods.integration.SendMDNMethodTest;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -50,7 +48,6 @@ public class RabbitMQAwsS3SendMDNMethodTest extends SendMDNMethodTest {
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule()))
         .build();
 
