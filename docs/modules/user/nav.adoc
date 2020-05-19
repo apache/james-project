@@ -3,4 +3,4 @@
 *** xref:try/5_minutes.adoc[]
 *** xref:try/15_minutes.adoc[]
 ** xref:learn.adoc[]
-** xref:build.adoc[]
+** xref:run.adoc[]
