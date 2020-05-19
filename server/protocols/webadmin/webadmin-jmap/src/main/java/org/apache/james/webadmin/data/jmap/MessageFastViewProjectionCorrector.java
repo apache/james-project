@@ -68,16 +68,16 @@ public class MessageFastViewProjectionCorrector {
 
         public static RunningOptions DEFAULT = new RunningOptions(10);
 
-        private final int messageRatePerSecond;
+        private final int messagesPerSecond;
 
-        public RunningOptions(int messageRatePerSecond) {
-            Preconditions.checkArgument(messageRatePerSecond > 0, "'messageParallelism' must be strictly positive");
+        public RunningOptions(int messagesPerSecond) {
+            Preconditions.checkArgument(messagesPerSecond > 0, "'messagesPerSecond' must be strictly positive");
 
-            this.messageRatePerSecond = messageRatePerSecond;
+            this.messagesPerSecond = messagesPerSecond;
         }
 
-        public int getMessageRatePerSecond() {
-            return messageRatePerSecond;
+        public int getMessagesPerSecond() {
+            return messagesPerSecond;
         }
     }
 
@@ -223,7 +223,7 @@ public class MessageFastViewProjectionCorrector {
     }
 
     private Flux<ProjectionEntry> throttleWithRate(Flux<ProjectionEntry> entries, RunningOptions runningOptions) {
-        return entries.windowTimeout(runningOptions.getMessageRatePerSecond(), Duration.ofSeconds(1))
+        return entries.windowTimeout(runningOptions.getMessagesPerSecond(), Duration.ofSeconds(1))
             .zipWith(Flux.interval(DELAY, PERIOD))
             .flatMap(Tuple2::getT1);
     }

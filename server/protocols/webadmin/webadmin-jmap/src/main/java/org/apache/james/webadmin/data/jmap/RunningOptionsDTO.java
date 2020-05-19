@@ -28,23 +28,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RunningOptionsDTO {
     public static RunningOptionsDTO asDTO(RunningOptions domainObject) {
-        return new RunningOptionsDTO(Optional.of(domainObject.getMessageRatePerSecond()));
+        return new RunningOptionsDTO(Optional.of(domainObject.getMessagesPerSecond()));
     }
 
-    private final Optional<Integer> messageRatePerSecond;
+    private final Optional<Integer> messagesPerSecond;
 
     @JsonCreator
     public RunningOptionsDTO(
-            @JsonProperty("messageRatePerSecond") Optional<Integer> messageRatePerSecond) {
-        this.messageRatePerSecond = messageRatePerSecond;
+            @JsonProperty("messagesPerSecond") Optional<Integer> messagesPerSecond) {
+        this.messagesPerSecond = messagesPerSecond;
     }
 
-    public Optional<Integer> getMessageRatePerSecond() {
-        return messageRatePerSecond;
+    public Optional<Integer> getMessagesPerSecond() {
+        return messagesPerSecond;
     }
 
     public RunningOptions asDomainObject() {
-        return messageRatePerSecond.map(RunningOptions::withMessageRatePerSecond)
+        return messagesPerSecond.map(RunningOptions::withMessageRatePerSecond)
             .orElse(RunningOptions.DEFAULT);
     }
 }

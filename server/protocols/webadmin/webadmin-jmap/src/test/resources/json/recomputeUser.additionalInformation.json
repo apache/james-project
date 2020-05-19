@@ -5,6 +5,6 @@
   "processedMessageCount":2,
   "failedMessageCount":3,
   "runningOptions": {
-    "messageRatePerSecond":20
+    "messagesPerSecond":20
   }
 }

@@ -1,6 +1,6 @@
 {
   "type":"RecomputeAllFastViewProjectionItemsTask",
   "runningOptions": {
-    "messageRatePerSecond":2
+    "messagesPerSecond":2
   }
 }

@@ -27,7 +27,7 @@ import spark.Request;
 
 public class RunningOptionsParser {
     public static RunningOptions parse(Request request) {
-        return intQueryParameter(request, "messageRatePerSecond")
+        return intQueryParameter(request, "messagesPerSecond")
             .map(RunningOptions::withMessageRatePerSecond)
             .orElse(RunningOptions.DEFAULT);
     }

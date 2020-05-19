@@ -176,45 +176,45 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
     }
 
     @Test
-    void postShouldFailWhenMessageRatePerSecondIsNotAnInt() {
+    void postShouldFailWhenMessagesPerSecondIsNotAnInt() {
         given()
             .queryParam("action", "recomputeFastViewProjectionItems")
-            .queryParam("messageRatePerSecond", "abc")
+            .queryParam("messagesPerSecond", "abc")
             .post()
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("Invalid arguments supplied in the user request"))
-            .body("details", is("Illegal value supplied for query parameter 'messageRatePerSecond', expecting a strictly positive optional integer"));
+            .body("details", is("Illegal value supplied for query parameter 'messagesPerSecond', expecting a strictly positive optional integer"));
     }
 
     @Test
-    void postShouldFailWhenMessageRatePerSecondIsNegative() {
+    void postShouldFailWhenMessagesPerSecondIsNegative() {
         given()
             .queryParam("action", "recomputeFastViewProjectionItems")
-            .queryParam("messageRatePerSecond", "-1")
+            .queryParam("messagesPerSecond", "-1")
             .post()
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("Invalid arguments supplied in the user request"))
-            .body("details", is("'messageParallelism' must be strictly positive"));
+            .body("details", is("'messagesPerSecond' must be strictly positive"));
     }
 
     @Test
-    void postShouldFailWhenMessageRatePerSecondIsZero() {
+    void postShouldFailWhenMessagesPerSecondIsZero() {
         given()
             .queryParam("action", "recomputeFastViewProjectionItems")
-            .queryParam("messageRatePerSecond", "0")
+            .queryParam("messagesPerSecond", "0")
             .post()
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("Invalid arguments supplied in the user request"))
-            .body("details", is("'messageParallelism' must be strictly positive"));
+            .body("details", is("'messagesPerSecond' must be strictly positive"));
     }
 
     @Test
@@ -230,7 +230,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
     @Test
     void postShouldCreateANewTaskWhenConcurrencyParametersSpecified() {
         given()
-            .queryParam("messageRatePerSecond", "1")
+            .queryParam("messagesPerSecond", "1")
             .queryParam("action", "recomputeFastViewProjectionItems")
             .post()
         .then()
@@ -267,7 +267,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
     void runningOptionsShouldBePartOfTaskDetails() {
         String taskId = with()
             .queryParam("action", "recomputeFastViewProjectionItems")
-            .queryParam("messageRatePerSecond", "20")
+            .queryParam("messagesPerSecond", "20")
             .post()
             .jsonPath()
             .get("taskId");
@@ -279,7 +279,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
         .then()
             .body("taskId", is(taskId))
             .body("type", is("RecomputeAllFastViewProjectionItemsTask"))
-            .body("additionalInformation.runningOptions.messageRatePerSecond", is(20));
+            .body("additionalInformation.runningOptions.messagesPerSecond", is(20));
     }
 
     @Test

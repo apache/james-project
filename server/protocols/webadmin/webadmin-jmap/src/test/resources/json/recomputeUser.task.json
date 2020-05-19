@@ -2,6 +2,6 @@
   "type":"RecomputeUserFastViewProjectionItemsTask",
   "username": "bob",
   "runningOptions": {
-    "messageRatePerSecond":2
+    "messagesPerSecond":2
   }
 }
