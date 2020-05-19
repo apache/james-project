@@ -19,7 +19,6 @@
 
 package org.apache.james.modules;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.james.filesystem.api.FileSystem;
@@ -40,8 +39,7 @@ import com.google.inject.Provides;
 import com.google.inject.multibindings.Multibinder;
 
 public class CommonServicesModule extends AbstractModule {
-    
-    public static final String CONFIGURATION_PATH = "configurationPath";
+
     private final Configuration configuration;
     private final FileSystemImpl fileSystem;
 
@@ -74,8 +72,7 @@ public class CommonServicesModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named(CONFIGURATION_PATH)
-    public String configurationPath() {
+    public Configuration.ConfigurationPath configurationPath() {
         return configuration.configurationPath();
     }
 

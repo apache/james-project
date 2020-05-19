@@ -37,11 +37,12 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
     public static class Builder {
         private Optional<BlobStoreConfiguration> blobStoreConfiguration;
         private Optional<String> rootDirectory;
-        private Optional<String> configurationPath;
+        private Optional<ConfigurationPath> configurationPath;
 
         private Builder() {
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
+            blobStoreConfiguration = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -62,13 +63,13 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             return this;
         }
 
-        public Builder configurationPath(String path) {
+        public Builder configurationPath(ConfigurationPath path) {
             configurationPath = Optional.of(path);
             return this;
         }
 
         public Builder configurationFromClasspath() {
-            configurationPath = Optional.of(FileSystem.CLASSPATH_PROTOCOL);
+            configurationPath = Optional.of(new ConfigurationPath(FileSystem.CLASSPATH_PROTOCOL));
             return this;
         }
 
@@ -78,7 +79,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         }
 
         public CassandraRabbitMQJamesConfiguration build() {
-            String configurationPath = this.configurationPath.orElse(FileSystem.FILE_PROTOCOL_AND_CONF);
+            ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
                 .orElseThrow(() -> new MissingArgumentException("Server needs a working.directory env entry")));
 
@@ -95,18 +96,18 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         return new Builder();
     }
 
-    private final String configurationPath;
+    private final ConfigurationPath configurationPath;
     private final JamesDirectoriesProvider directories;
     private final BlobStoreConfiguration blobStoreConfiguration;
 
-    public CassandraRabbitMQJamesConfiguration(String configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration) {
+    public CassandraRabbitMQJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.blobStoreConfiguration = blobStoreConfiguration;
     }
 
     @Override
-    public String configurationPath() {
+    public ConfigurationPath configurationPath() {
         return configurationPath;
     }
 

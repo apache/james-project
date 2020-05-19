@@ -34,6 +34,7 @@ import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.server.core.configuration.Configuration.ConfigurationPath;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -45,10 +46,10 @@ public class PropertiesProvider {
     private static final String COMMA_STRING = ",";
 
     private final FileSystem fileSystem;
-    private final String configurationPrefix;
+    private final ConfigurationPath configurationPrefix;
 
     @Inject
-    public PropertiesProvider(FileSystem fileSystem, String configurationPrefix) {
+    public PropertiesProvider(FileSystem fileSystem, ConfigurationPath configurationPrefix) {
         this.fileSystem = fileSystem;
         this.configurationPrefix = configurationPrefix;
     }
@@ -84,7 +85,7 @@ public class PropertiesProvider {
 
     private Optional<File> getConfigurationFile(String fileName) {
         try {
-            return Optional.of(fileSystem.getFile(configurationPrefix + fileName + ".properties"))
+            return Optional.of(fileSystem.getFile(configurationPrefix.asString() + fileName + ".properties"))
                 .filter(File::exists);
         } catch (FileNotFoundException e) {
             return Optional.empty();

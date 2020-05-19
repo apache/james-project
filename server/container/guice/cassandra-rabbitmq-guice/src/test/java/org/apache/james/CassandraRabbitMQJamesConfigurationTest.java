@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.server.core.configuration.Configuration.ConfigurationPath;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -48,12 +49,12 @@ class CassandraRabbitMQJamesConfigurationTest {
     void buildShouldReturnConfigurationWithSuppliedValues() {
         Configuration configuration = CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory("/path")
-            .configurationPath("file://myconf/")
+            .configurationPath(new ConfigurationPath("file://myconf/"))
             .build();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(configuration.directories().getRootDirectory()).isEqualTo("/path");
-            softly.assertThat(configuration.configurationPath()).isEqualTo("file://myconf/");
+            softly.assertThat(configuration.configurationPath().asString()).isEqualTo("file://myconf/");
         });
     }
 
@@ -66,7 +67,7 @@ class CassandraRabbitMQJamesConfigurationTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(configuration.directories().getRootDirectory()).isEqualTo("/path");
-            softly.assertThat(configuration.configurationPath()).isEqualTo("classpath:");
+            softly.assertThat(configuration.configurationPath().asString()).isEqualTo("classpath:");
         });
     }
 
@@ -78,7 +79,7 @@ class CassandraRabbitMQJamesConfigurationTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(configuration.directories().getRootDirectory()).isEqualTo("/path");
-            softly.assertThat(configuration.configurationPath()).isEqualTo("file://conf/");
+            softly.assertThat(configuration.configurationPath().asString()).isEqualTo("file://conf/");
         });
     }
 

@@ -26,9 +26,17 @@ import org.apache.james.server.core.MissingArgumentException;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class BasicConfigurationTest {
     @Test
-    void buildShouldThrowWhenWorkingDirectoryMissing() {
+    void configurationPathShouldMatchBeanContract() {
+        EqualsVerifier.forClass(Configuration.ConfigurationPath.class)
+            .verify();
+    }
+
+    @Test
+    void buildShouldThrowWhenWorkingDirectoryIsMissing() {
         assertThatThrownBy(() -> Configuration.builder().build())
             .isInstanceOf(MissingArgumentException.class)
             .hasMessage("Server needs a working.directory env entry");
@@ -47,12 +55,12 @@ class BasicConfigurationTest {
     void buildShouldReturnConfigurationWithSuppliedValues() {
         Configuration.Basic configuration = Configuration.builder()
             .workingDirectory("/path")
-            .configurationPath("file://myconf/")
+            .configurationPath(new Configuration.ConfigurationPath("file://myconf/"))
             .build();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(configuration.directories().getRootDirectory()).isEqualTo("/path");
-            softly.assertThat(configuration.configurationPath()).isEqualTo("file://myconf/");
+            softly.assertThat(configuration.configurationPath().asString()).isEqualTo("file://myconf/");
         });
     }
 
@@ -65,7 +73,7 @@ class BasicConfigurationTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(configuration.directories().getRootDirectory()).isEqualTo("/path");
-            softly.assertThat(configuration.configurationPath()).isEqualTo("classpath:");
+            softly.assertThat(configuration.configurationPath().asString()).isEqualTo("classpath:");
         });
     }
 
@@ -77,7 +85,7 @@ class BasicConfigurationTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(configuration.directories().getRootDirectory()).isEqualTo("/path");
-            softly.assertThat(configuration.configurationPath()).isEqualTo("file://conf/");
+            softly.assertThat(configuration.configurationPath().asString()).isEqualTo("file://conf/");
         });
     }
 
