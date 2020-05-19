@@ -1,6 +1,6 @@
-= Try James in 15 minutes
+= Long Demo
 
-In this tutorial, we will set up a runing James demo using a prepared Docker image.
+In this demo (~15 minutes), we will set up a runing James demo using a prepared Docker image.
 We will then test the server by connecting with an email client. Finally, we
 will connect to the server via the REST-based Admin API.
 
@@ -57,7 +57,7 @@ docker exec james java -jar /root/james-cli.jar \
     -h \<<HOST>> -p \<<PORT>> \<<COMMAND>>
 ----
 
-In this tutorial, we are using host 127.0.0.1 and port 9999, so every command looks like:
+In this demo, we are using host 127.0.0.1 and port 9999, so every command looks like:
 
 ----
 docker exec james java -jar /root/james-cli.jar \
@@ -66,7 +66,7 @@ docker exec james java -jar /root/james-cli.jar \
 
 Host 127.0.0.1 is of course localhost, and the use of port 9999 is completely arbitrary.
 
-To make this tutorial a little easier, set this up as a bash script by copying and pasting this script:
+To make this demo a little easier to use, set this up as a bash script by copying and pasting this script:
 
 [source,bash]
 ----
@@ -123,7 +123,7 @@ You should now see your newly created user:
 == Connect to the server with an email client
 
 ****
-For this tutorial, we will use Thunderbird, as it is available in multiple languages
+For this demo, we will use Thunderbird, as it is available in multiple languages
 on Windows, Mac, and Linux.
 
 Go to https://www.thunderbird.net to download Thunderbird.

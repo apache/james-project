@@ -1,0 +1,16 @@
+= Transmission Protocols
+:navtitle: Protocols 
+
+The true value of emails is that any one party can communicate with any
+other party located virtually anywhere. All they need are a common understanding
+of a xref:mail/messages/index.adoc[message format], and a means of
+transmitting the message.
+
+Transmitting email messages between parties requires a mutually-known standard. 
+It turns out that there are several standard protocols used for the 
+transmission of email messages, each with a different purpose:
+
+ ** xref:mail/protocols/smtp.adoc[Message Transport]
+ ** xref:mail/protocols/pop.adoc[Electronic Post]
+ ** xref:mail/protocols/imap.adoc[Remote Message Access]
+ ** xref:mail/protocols/jmap.adoc[Application Data Transfer]

@@ -1,4 +1,0 @@
-= Learn more about the architecture
-:navtitle: Learn
-
-You can read about James in the https://james.apache.org/documentation.html[Documentation] section on the James website.
