@@ -21,7 +21,6 @@ package org.apache.james.jmap.memory.cucumber;
 
 import javax.inject.Inject;
 
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.draft.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.draft.methods.integration.cucumber.MainStepdefs;
@@ -59,8 +58,7 @@ public class MemoryStepdefs {
             .build();
 
         mainStepdefs.messageIdFactory = new InMemoryMessageId.Factory();
-        mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+        mainStepdefs.jmapServer = MemoryJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule(),
                         (binder) -> binder.bind(MessageId.Factory.class).toInstance(mainStepdefs.messageIdFactory));
         mainStepdefs.init();

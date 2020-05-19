@@ -139,12 +139,15 @@ public class MemoryJamesServerMain implements JamesServerMain {
             .build();
 
 
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE,
-                new FakeSearchMailboxModule(),
-                new JMXServerModule());
+        GuiceJamesServer server = createServer(configuration)
+            .combineWith(new FakeSearchMailboxModule(), new JMXServerModule());
 
         JamesServerMain.main(server);
+    }
+
+    public static GuiceJamesServer createServer(Configuration configuration) {
+        return GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE);
     }
 
 }

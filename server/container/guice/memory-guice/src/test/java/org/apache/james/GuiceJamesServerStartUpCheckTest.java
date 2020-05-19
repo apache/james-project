@@ -113,8 +113,7 @@ class GuiceJamesServerStartUpCheckTest {
 
     private static JamesServerBuilder extensionBuilder() {
         return new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .server(configuration -> MemoryJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()))
             .disableAutoStart();
     }
