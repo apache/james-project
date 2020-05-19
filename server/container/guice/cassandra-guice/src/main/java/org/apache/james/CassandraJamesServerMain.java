@@ -155,7 +155,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         PLUGINS,
         new DKIMMailetModule());
 
-    public static Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
+    protected static Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
         new CassandraBlobStoreModule(),
         REQUIRE_TASK_MANAGER_MODULE,
         new TaskManagerModule(),
@@ -167,10 +167,14 @@ public class CassandraJamesServerMain implements JamesServerMain {
             .useWorkingDirectoryEnvProperty()
             .build();
 
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE, new JMXServerModule());
+        GuiceJamesServer server = createServer(configuration)
+            .combineWith(new JMXServerModule());
 
         JamesServerMain.main(server);
     }
 
+    public static GuiceJamesServer createServer(Configuration configuration) {
+        return GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE);
+    }
 }

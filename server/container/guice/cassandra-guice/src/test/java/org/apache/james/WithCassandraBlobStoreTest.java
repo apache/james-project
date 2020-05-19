@@ -31,9 +31,7 @@ class WithCassandraBlobStoreTest implements JmapJamesServerContract, MailsShould
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new SpamAssassinModuleExtension())
-        .server(configuration -> GuiceJamesServer
-            .forConfiguration(configuration)
-            .combineWith(CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE)
+        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();

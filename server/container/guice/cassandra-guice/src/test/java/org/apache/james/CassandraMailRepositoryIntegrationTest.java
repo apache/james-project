@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 
 import java.util.concurrent.TimeUnit;
@@ -53,8 +52,7 @@ class CassandraMailRepositoryIntegrationTest {
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule()))
         .build();

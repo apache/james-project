@@ -19,8 +19,6 @@
 
 package org.apache.james;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
-
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
@@ -32,8 +30,7 @@ class CassandraJmapJamesServerTest implements JmapJamesServerContract {
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))

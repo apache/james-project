@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -32,6 +31,7 @@ import java.nio.charset.Charset;
 import java.util.Optional;
 
 import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
@@ -63,8 +63,7 @@ class CassandraSchemaVersionStartUpCheckTest {
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(CassandraSchemaVersionDAO.class)

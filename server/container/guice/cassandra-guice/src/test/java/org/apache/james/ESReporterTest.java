@@ -21,7 +21,6 @@ package org.apache.james;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.awaitility.Awaitility.await;
@@ -67,8 +66,7 @@ class ESReporterTest {
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(elasticSearchExtension)
         .extension(new CassandraExtension())
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new TestDockerESMetricReporterModule(elasticSearchExtension.getDockerES().getHttpHost())))

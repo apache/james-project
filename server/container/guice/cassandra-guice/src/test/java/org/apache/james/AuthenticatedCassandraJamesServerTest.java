@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.apache.james.JamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -47,8 +46,7 @@ class AuthenticatedCassandraJamesServerTest {
         JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(new TestJMAPServerModule())
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
@@ -67,8 +65,7 @@ class AuthenticatedCassandraJamesServerTest {
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .disableAutoStart()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(new TestJMAPServerModule())
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
@@ -95,8 +92,7 @@ class AuthenticatedCassandraJamesServerTest {
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .disableAutoStart()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(new TestJMAPServerModule())
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))

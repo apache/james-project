@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -45,8 +44,7 @@ class CassandraNodeConfTest {
         return new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()))
             .disableAutoStart();
     }

@@ -19,18 +19,16 @@
 
 package org.apache.james.jmap.cassandra.cucumber;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
-
 import java.util.Arrays;
 
 import javax.inject.Inject;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.DockerElasticSearchRule;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.draft.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.draft.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -76,8 +74,7 @@ public class CassandraStepdefs {
             .configurationFromClasspath()
             .build();
 
-        mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+        mainStepdefs.jmapServer = CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new TestDockerESMetricReporterModule(elasticSearch.getDockerEs().getHttpHost()))
             .overrideWith(elasticSearch.getModule())

@@ -20,7 +20,6 @@
 package org.apache.james;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -77,8 +76,8 @@ class CacheSessionTest {
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE, new CassandraCacheSessionModule())
+        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
+            .combineWith(new CassandraCacheSessionModule())
             .overrideWith(new TestJMAPServerModule()))
         .overrideServerModule(binder -> Multibinder.newSetBinder(binder, CassandraModule.class, Names.named(InjectionNames.CACHE))
             .addBinding()
