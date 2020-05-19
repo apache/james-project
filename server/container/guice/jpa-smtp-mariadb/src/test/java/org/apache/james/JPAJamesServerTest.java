@@ -65,8 +65,7 @@ public class JPAJamesServerTest {
             .configurationFromClasspath()
             .build();
 
-        return GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
+        return JPAJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJPAConfigurationModule(mariaDBUrl));
     }
 

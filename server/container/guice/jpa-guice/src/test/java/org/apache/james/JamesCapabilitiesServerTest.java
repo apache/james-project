@@ -41,8 +41,7 @@ class JamesCapabilitiesServerTest {
 
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPAJamesServerMain.JPA_MODULE_AGGREGATE)
+        .server(configuration -> JPAJamesServerMain.createServer(configuration)
             .overrideWith(new TestJPAConfigurationModule())
             .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager())))
         .build();

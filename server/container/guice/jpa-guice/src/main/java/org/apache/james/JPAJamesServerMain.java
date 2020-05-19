@@ -56,7 +56,7 @@ import com.google.inject.util.Modules;
 
 public class JPAJamesServerMain implements JamesServerMain {
 
-    public static final Module WEBADMIN = Modules.combine(
+    private static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
         new DataRoutesModules(),
         new InconsistencyQuotasSolvingRoutesModule(),
@@ -67,7 +67,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         new SwaggerRoutesModule(),
         new SieveRoutesModule());
 
-    public static final Module PROTOCOLS = Modules.combine(
+    private static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
@@ -76,7 +76,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         new SMTPServerModule(),
         WEBADMIN);
 
-    public static final Module JPA_SERVER_MODULE = Modules.combine(
+    private static final Module JPA_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new DefaultProcessorsConfigurationProviderModule(),
         new ElasticSearchMetricReporterModule(),
@@ -92,17 +92,22 @@ public class JPAJamesServerMain implements JamesServerMain {
         new MemoryDeadLetterModule(),
         new SpamAssassinListenerModule());
 
-    public static final Module JPA_MODULE_AGGREGATE = Modules.combine(JPA_SERVER_MODULE, PROTOCOLS);
+    private static final Module JPA_MODULE_AGGREGATE = Modules.combine(JPA_SERVER_MODULE, PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();
 
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPA_MODULE_AGGREGATE, new JMXServerModule());
+        GuiceJamesServer server = createServer(configuration)
+            .combineWith(new JMXServerModule());
 
         JamesServerMain.main(server);
+    }
+
+    static GuiceJamesServer createServer(Configuration configuration) {
+        return GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(JPA_MODULE_AGGREGATE);
     }
 
 }
