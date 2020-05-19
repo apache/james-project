@@ -1,6 +1,6 @@
-= Try James in 5 minutes
+= Short Demo
 
-In this short tutorial, we will set up a runing James demo very quickly
+In this short demo (~5 minutes), we will set up a runing James demo very quickly
 using a prepared Docker image.
 Then you will add a domain, and a user account within that domain.
 
@@ -38,7 +38,7 @@ docker exec james java -jar /root/james-cli.jar \
     -h \<<HOST>> -p \<<PORT>> \<<COMMAND>>
 ----
 
-In this tutorial, we are using host 127.0.0.1 and port 9999, so every command looks like:
+In this demo, we are using host 127.0.0.1 and port 9999, so every command looks like:
 
 ----
 docker exec james java -jar /root/james-cli.jar \
@@ -48,7 +48,7 @@ docker exec james java -jar /root/james-cli.jar \
 Host 127.0.0.1 is of course localhost, and the use of port 9999 is completely arbitrary.
 ****
 
-To make this tutorial a little easier, set this up as a bash script by copying and pasting this script:
+To make this demo a little easier to use, set this up as a bash script by copying and pasting this script:
 
 [source,bash]
 ----

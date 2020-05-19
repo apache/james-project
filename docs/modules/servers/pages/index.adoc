@@ -1,0 +1,84 @@
+= Apache James Mail Servers
+:navtitle: Servers
+
+James offers a number of ready-made Mail Servers. The servers are intended 
+for those with typcial use cases, and can be used out-of-the-box. These 
+servers have been tested and verified so you can get set up quickly with 
+a production-grade Mail Server that you can use with confidence.
+
+The available James Servers are:
+
+ * <<demo,James Demo Mail Server>>
+ * <<local,James Local Mail Server>>
+ * <<redundant,James Redundant Mail Server>>
+ * <<distributed,James Distributed Mail Server>>
+
+
+[#demo]
+== James Demo Server
+The xref:demo.adoc[James Server Demo] is intended for those who just want 
+to give James a quick spin on their local machine.
+
+
+[#local]
+== James Local Mail Server
+
+If you are not sure which server you should be using, then
+you probably ought to be using the xref:local.adoc[*Local Server*].
+This server uses the local file system to store emails, which tends
+to considerably simplify the system. To safeguard your emails, you
+only need a simple generic backup solution that works with a data
+volume.
+
+This server is intended to be the simplest to set up and use in production.
+It has the least amount of dependencies and complexities. If you do not yet
+have a huge amount of emails to process, then usually the simplicity is
+well worth the loss of some functionality. The last thing you need is
+to have to resolve difficult issues on a production server when you have not
+yet acquired the requisite knowledge to deal with those issues. Using the
+xref:local.adoc[*Local Server*] will help you reduce the risk of running into 
+production issues.
+
+This server is:
+
+ * Suggested for use with smaller deployments
+ * Appropriate for use by most operators
+ * The preferred choice for most installations
+ * Endowed with fewer dependencies, which makes it simpler and less risky to use in production
+ * Only dependent on your local file system for data storage, so very easy to manage
+
+
+
+
+[#redundant]
+== James Redundant Mail Server
+
+When your requirements start to get a little more serious 
+(let's say in the tens of millions of emails), then you may want to
+start to consider using the xref:redundant.adoc[*Redundant Server*].
+
+This server provides data redundancy so that it can stay live at
+all times, even in the rare case that your data gets corrupted.
+
+This server is:
+
+ * Intended for use by experienced operators only
+ * Used for mid-sized to large deployments
+ * More performant than the Minimal and Basic Server, but also more complex
+
+
+
+
+[#distributed]
+== James Distributed Mail Server 
+
+The xref:distributed.adoc[*Distributed Server*] is a heavy-duty industrial 
+enterprise mail server.
+
+This server is:
+
+ * Intended for use by experts only
+ * Use for large-scale distributed deployments
+ * The most feature-rich server, but also by far the most complex
+
+

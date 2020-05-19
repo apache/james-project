@@ -1,4 +1,0 @@
-= Apache James Developer Resources
-:navtitle: Developer Resources
-
-(TODO)

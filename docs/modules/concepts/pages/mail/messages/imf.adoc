@@ -1,0 +1,83 @@
+= Internet Message Format
+:navtitle: IMF
+
+== Overview
+
+What people casually call "email" actually refers more specifically to a
+text message written in a specified format called
+https://en.wikipedia.org/wiki/Email["Internet Message Format"] or "IMF".
+After the first IMF specification was published in 1982 there was no looking back.
+Email took the world by storm. Today it is arguably the most prevalent means of 
+communicating with a distant party.
+
+IMF is very basic, and is limited to only specifying a syntax for text messages.  
+For the transmission of images, audio, or other types of data we need to make
+use of the xref:mail/messages/mime.adoc[MIME] specification. 
+Although IMF forms the base standard upon which
+email is based, email today is rarely used without MIME. We therefore consider
+for practical purposes that an email message is essentially the equivalent of
+a MIME message.
+
+
+
+== Specifications
+
+The specifications for Internet Message Format (IMF) form the basis of what we commonly
+call "email".
+
+=== RFC822
+
+https://tools.ietf.org/html/rfc822[RFC822] ("Standard for the Format of ARPA Internet Text Messages")
+was the original standard that defined the format of an email. It was obsoleted by
+<<RFC2822>>. The definition of an email under this standard was an attempt to take the lessons
+learned from the ARPANET and extend the use of text messaging to a broader context.
+
+Electronic mail messages are defined as having contents and an envelope. The contents
+consist of header fields and, optionally, a body. The body is nothing more than
+a (potentially empty) sequence of lines of text.
+
+Although this sounds like a an extremely simple concept, to get two completely separate systems
+to agree and understand each other is a surprisingly complex problem that most people
+today take for granted. Most of RFC822 deals with the nitty-gritty of formatting and parsing
+this type of text message.
+
+This specification deals with the headers, additionally relating them to the sending and
+forwarding of messages. The body content is dealt with in <<RFC2045>>
+
+
+
+=== RFC2822
+
+https://tools.ietf.org/html/rfc2822[RFC2822] ("Internet Message Format")
+obsoletes <<RFC822>>, and was obsoleted by <<RFC5322>>.
+
+The standard builds on RFC822, but limits its scope to only the sytax of the 
+message, and obsoletes much of what was defined by RFC822. The envelope was
+split into a separate specification, <<RFC2821>>.
+
+
+
+
+=== RFC5322
+
+https://tools.ietf.org/html/rfc5322[RFC5322] ("Internet Message Format")
+was published in 2008.
+It obsoletes <<RFC2822>> and is currently the specification still actually in use.
+
+It builds on RFC2822, updating it to the then-current context and obsoleting
+outdated parts of RFC2822.
+
+
+
+
+== James Model 
+
+While the general description of IMF is not sufficient for building a complex 
+system like James, the technical specifications are unfortunately
+very messy and overly-complex due to their history and the context in which
+they were developed.
+
+Since modern-day messaging almost always requires MIME, and since the
+separation between IMF and MIME is not really useful from a usage perspective,
+James considers an "email" to be both IMF- an MIME-compliant. For all intents
+and purposes, James does not consider the concept of IMF in its domain model.

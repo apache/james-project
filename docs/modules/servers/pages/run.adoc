@@ -1,0 +1,94 @@
+= Run James in Production
+:navtitle: Run
+
+James provides a number of *profiles* out of the box.
+These profiles have been tested and verified so you can
+get set up quickly with a production mail server that you
+can use with confidence.
+
+The available profiles are:
+
+ * <<minimal,James Minimal Profile>>
+ * <<basic,James Basic Profile>>
+ * <<advanced,James Advanced Profile>>
+ * <<distributed,James Distributed Profile>>
+
+
+
+[#minimal]
+== James Minimal Profile
+
+If you are not sure which profile you should be using, then
+you probably ought to be using the *James Minimal Profile*.
+
+This profile is intended to be the simplest to set up and use in production.
+It has the least amount of dependencies and complexities. If you do not yet
+have a huge amount of emails to process, then usually the simplicity is
+well worth the loss of some functionality. The last thing you need is
+to have to resolve difficult issues on a production server when you have not
+yet acquired the requisite knowledge to deal with those issues. Using the
+*James Minimal Profile* will help you reduce the risk of running into 
+production issues.
+
+This profile is:
+
+ * Suggested for use with smaller deployments
+ * Appropriate for use by most operators
+ * The preferred choice for most installations
+ * Endowed with fewer dependencies, which makes it simpler and less risky to use in production
+ * Only dependent on your local file system for data storage, so very easy to manage
+
+(TODO: Add link to details page)
+
+
+[#basic]
+== James Basic Profile
+
+This profile is intended to be relatively easy to use, but provides additional features with regards
+to data storage and management. Of course, these additional features come at the cost of more
+operational complexity. You will have to now deal with a relational database and all the fun
+that comes with it. However, if you are already an expert at relational database management,
+then this profile should be a natural choice for you.
+
+This profile is:
+
+ * Suggested for smaller deployments that require data persisted in a relational database
+ * Appropriate for most operators provided that you understand relational databases and data indexing
+ * Less complex than most profiles, but also less performant
+
+(TODO: Add link to details page)
+
+
+[#advanced]
+== James Advanced Profile
+
+When your requirements start to get a little more serious 
+(let's say in the tens of millions of emails), then you may want to
+start to consider using the *James Advanced Profile*.
+
+This profile is:
+
+ * Intended for use by experienced operators only
+ * Used for mid-sized to large deployments
+ * More performant than the Minimal and Basic Profiles, but also more complex
+
+
+(TODO: Add link to details page)
+
+
+
+[#distributed]
+== James Distributed Profile
+
+The *James Distributed Profile* is a heavy-duty industrial enterprise mail server.
+
+This profile is:
+
+ * Intended for use by experts only
+ * Use for large-scale distributed deployments
+ * The most feature-rich profile, but also by far the most complex
+
+
+(TODO: Add link to details page)
+
+

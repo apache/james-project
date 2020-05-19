@@ -1,1 +1,1 @@
-* Apache James Reference Book
+* Apache James Reference Documentation

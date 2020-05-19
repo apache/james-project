@@ -1,15 +1,31 @@
 = Welcome
 
-Welcome to the Apache James Reference Book! This Book is for version {page-version} of James.
+Welcome to the Apache James Reference Documentation! These documents are for version {page-version} of James.
 
-Apache James is the **J**ava **A**pache **M**ail **E**nterprise **S**erver. It boasts of a modular architecture based on a rich set of components that run on the JVM. With James, you can create your own custom enterprise email solution.
+Apache James is a flexible email platform that provides out-of-the-box mail servers that you can start
+using in production immediately.
+James runs on the JVM and is highly customizable.
 
 This Reference Book is divided into the following Parts:
 
-* xref:main:user:index.adoc[User Manual]
-* xref:main:ops:index.adoc[Operator Manual]
-* xref:main:admin:index.adoc[Administrator Guide]
-* xref:main:dev:index.adoc[Developer Resources]
-* xref:main:doc:index.adoc[About this documentation]
+* xref:main:concepts:index.adoc[James Core Concepts]
+**    These are the core concepts that describe what James is all about.
+    Start here if you want to learn more about what James can do
+    and how it is designed.
+* xref:main:servers:index.adoc[James Servers]
+**    We provide a few out-of-the-box servers that you can 
+    choose from depending on your needs. Start here if you just
+    want to get up and running quickly with a working production-grade mail server.
+* xref:main:customization:index.adoc[Customization]
+**    Shows how you can customize any James server with the 
+    functionalities that you need.
+    Check out this section if you have special business or technical
+    needs and are interested in a custom solution.
+* xref:main:development:index.adoc[James Developer Guide]
+**    A guide aimed at experienced developers, describing 
+    how you can assemble your own specialized server.
+* xref:main:community:index.adoc[James Community]
+**    All about the Apache James community, and how you can be 
+    part of this active and dynamic group, too!
 
-Please note that this Reference Book is a **living document**. It is subject to change. You are currently reading version {page-version}. If you find anything that is unclear, unfinished, or confusing, please do not hestiate to xref:main:doc:index.adoc[lend us a hand].
+Please note that this Reference Documentation is a **living document**. It is subject to change. You are currently reading version {page-version}. If you find anything that is unclear, unfinished, or confusing, please do not hestiate to xref:main:community:index.adoc[lend us a hand].

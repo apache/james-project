@@ -1,0 +1,29 @@
+= Apache James Core Concepts
+:navtitle: Concepts
+
+The core domain of Apache James is intimitely related to email communications.
+Therefore this section is divided into two parts:
+
+ * <<emails,The James Model of the Email Messaging Domain>>
+ * <<processing,The James Model of Email Processing>>
+
+[#emails]
+== Email Messaging Domain
+
+Electronic Mail (often written as "e-mail" or "email") is a means of
+exchanging messages over a data network. In our context, it is obvious
+that we mean "electronic mail" and not "postal mail", so we usually just
+write "mail".
+
+Building a complex system like James requires a clear and consistent 
+xref:mail/index.adoc[domain model for email].
+
+
+[#processing]
+== James Email Processing
+
+There are many ways to peel a potato. James has its own particular
+xref:processing/index.adoc[model for processing mail],
+based mostly on the concept of a "Mailet". The idea of Mailet-based
+processing was heavily inspired by the https://en.wikipedia.org/wiki/Java_servlet[Servlet]
+concept.

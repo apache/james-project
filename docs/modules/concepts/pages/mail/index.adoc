@@ -1,0 +1,15 @@
+= All About Emails
+:navtitle: Emails
+
+The https://en.wikipedia.org/wiki/History_of_email[history of email] has resulted
+in a convoluted patchwork of standards and practices, which can be very difficult
+to understand and decipher. Fortunately, James has your back.
+
+We have built up our own view of emails that allows us to process messages in a
+consistent and comprehensible way.
+
+To help you understand how James approaches emails, we have divided this section
+up into the following parts:
+
+ * xref:mail/messages/index.adoc[]
+ * xref:mail/protocols/index.adoc[]
