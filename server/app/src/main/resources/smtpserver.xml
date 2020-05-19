@@ -247,17 +247,6 @@
                 <whitelistedNetworks>127.0.0.0/8</whitelistedNetworks>
             </handler>
              -->
-            
-            <!-- Tarpitting is a method to insert a small sleep after each rcpt. For more -->
-            <!-- infos read this: http://www.palomine.net/qmail/tarpit.html . -->
-            <!-- Default is set to 0 (disabled). -->
-            <!-- You can also configure the time to sleep in milliseconds -->
-            <!--
-            <handler class="org.apache.james.smtpserver.fastfail.TarpitHandler">
-                <tarpitRcptCount>5</tarpitRcptCount>
-                <tarpitSleepTime>5000</tarpitSleepTime>
-            </handler>
-             -->
          
             <!-- This handler ignore duplicated recipients per session. So the email will get only send on time even -->
             <!-- if the recipient is specified more then once -->
