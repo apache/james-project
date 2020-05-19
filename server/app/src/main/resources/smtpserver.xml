@@ -255,7 +255,7 @@
             <!-- Normally the MailQueue will just handles Mails in FIFO manner -->
             <!-- Valid priority values are 1,5,9 where 9 is the highest-->
             <!-- 
-            <handler class="org.apache.james.smtpserver.MailPriortyHandler">
+            <handler class="org.apache.james.smtpserver.MailPriorityHandler">
                 <priorityEntries>
                     <priorityEntry>
                         <domain>yourdomain1</domain>
