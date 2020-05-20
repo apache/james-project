@@ -27,7 +27,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
-import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -47,6 +46,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.Registration;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -61,6 +61,8 @@ import org.junit.Test;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Mono;
 
 
 public class SelectedMailboxImplTest {
@@ -152,7 +154,7 @@ public class SelectedMailboxImplTest {
         };
     }
 
-    private Answer<Iterator<MessageUid>> generateEmitEventAnswer(AtomicInteger success) {
+    private Answer<Mono<Registration>> generateEmitEventAnswer(AtomicInteger success) {
         return invocation -> {
             Object[] args = invocation.getArguments();
             MailboxListener mailboxListener = (MailboxListener) args[0];
@@ -164,7 +166,7 @@ public class SelectedMailboxImplTest {
                     LOGGER.error("Error while processing event on a concurrent thread", e);
                 }
             });
-            return null;
+            return Mono.just(() -> {});
         };
     }
 

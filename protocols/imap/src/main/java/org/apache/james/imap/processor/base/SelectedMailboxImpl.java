@@ -52,6 +52,9 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 
 import com.github.steveash.guavate.Guavate;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 /**
  * Default implementation of {@link SelectedMailbox}
  */
@@ -89,7 +92,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
         mailboxId = messageManager.getId();
 
-        registration = eventBus.register(this, new MailboxIdRegistrationKey(mailboxId));
+        registration = Mono.from(eventBus.register(this, new MailboxIdRegistrationKey(mailboxId)))
+            .subscribeOn(Schedulers.elastic())
+            .block();
 
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
         try (Stream<MessageUid> stream = messageManager.search(new SearchQuery(SearchQuery.all()), mailboxSession)) {

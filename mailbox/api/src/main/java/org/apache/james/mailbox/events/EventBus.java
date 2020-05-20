@@ -21,6 +21,8 @@ package org.apache.james.mailbox.events;
 
 import java.util.Set;
 
+import org.reactivestreams.Publisher;
+
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
@@ -44,11 +46,11 @@ public interface EventBus {
         }
     }
 
-    default Registration register(MailboxListener listener, RegistrationKey key) {
+    default Publisher<Registration> register(MailboxListener listener, RegistrationKey key) {
         return register(MailboxListener.wrapReactive(listener), key);
     }
 
-    Registration register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key);
+    Publisher<Registration> register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key);
 
     Registration register(MailboxListener.ReactiveMailboxListener listener, Group group) throws GroupAlreadyRegistered;
 

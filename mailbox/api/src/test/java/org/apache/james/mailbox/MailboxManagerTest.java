@@ -719,7 +719,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         @Test
         void deleteMailboxShouldFireMailboxDeletionEvent() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -737,7 +737,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         @Test
         void deleteMailboxByIdShouldFireMailboxDeletionEvent() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
 
             mailboxManager.deleteMailbox(inboxId, session);
 
@@ -792,7 +792,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
         @Test
         void addingMessageShouldFireAddedEvent() throws Exception {
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
             inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                     .build(message), session);
 
@@ -810,7 +810,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
             inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
             inboxManager.expunge(MessageRange.all(), session);
 
             assertThat(listener.getEvents())
@@ -827,7 +827,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             ComposedMessageId messageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session).getId();
             inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
             inboxManager.delete(ImmutableList.of(messageId.getUid()), session);
 
             assertThat(listener.getEvents())
@@ -843,7 +843,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         void setFlagsShouldFireFlagsUpdatedEvent() throws Exception {
             inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
             inboxManager.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
 
             assertThat(listener.getEvents())
@@ -861,7 +861,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()))).block();
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -879,7 +879,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -896,7 +896,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()))).block();
             mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -915,7 +915,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getId();
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()))).block();
             mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -933,7 +933,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
             mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -948,7 +948,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getId();
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()))).block();
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -966,7 +966,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(newPath, session);
             ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getId();
 
-            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())

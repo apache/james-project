@@ -372,7 +372,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 void dispatchShouldWorkAfterNetworkIssuesForOldRegistrationAndKey() {
                     rabbitMQEventBusWithNetWorkIssue.start();
                     MailboxListener listener = newListener();
-                    rabbitMQEventBusWithNetWorkIssue.register(listener, KEY_1);
+                    Mono.from(rabbitMQEventBusWithNetWorkIssue.register(listener, KEY_1)).block();
 
                     rabbitMQNetWorkIssueExtension.getRabbitMQ().pause();
 
@@ -454,7 +454,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             void dispatchShouldWorkAfterRestartForOldKeyRegistration() throws Exception {
                 eventBus.start();
                 MailboxListener listener = newListener();
-                eventBus.register(listener, KEY_1);
+                Mono.from(eventBus.register(listener, KEY_1)).block();
 
                 rabbitMQExtension.getRabbitMQ().restart();
 
@@ -466,7 +466,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             void dispatchedMessagesShouldSurviveARabbitMQRestart() throws Exception {
                 eventBusWithKeyHandlerNotStarted.startWithoutStartingKeyRegistrationHandler();
                 MailboxListener listener = newAsyncListener();
-                eventBusWithKeyHandlerNotStarted.register(listener, KEY_1);
+                Mono.from(eventBusWithKeyHandlerNotStarted.register(listener, KEY_1)).block();
                 Mono<Void> dispatch = eventBusWithKeyHandlerNotStarted.dispatch(EVENT, KEY_1);
                 dispatch.block();
 
@@ -484,7 +484,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
                 rabbitMQExtension.getRabbitMQ().restart();
 
-                eventBus.register(listener, KEY_1);
+                Mono.from(eventBus.register(listener, KEY_1)).block();
 
                 eventBus.dispatch(EVENT, KEY_1).block();
                 assertThatListenerReceiveOneEvent(listener);
@@ -530,7 +530,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBus.start();
                 MailboxListener listener = newListener();
                 when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
-                eventBus.register(listener, KEY_1);
+                Mono.from(eventBus.register(listener, KEY_1)).block();
 
                 rabbitMQExtension.getRabbitMQ().pause();
 
@@ -558,7 +558,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
                 rabbitMQExtension.getRabbitMQ().unpause();
 
-                eventBus.register(listener, KEY_1);
+                Mono.from(eventBus.register(listener, KEY_1)).block();
                 eventBus.dispatch(EVENT, KEY_1).block();
                 assertThatListenerReceiveOneEvent(listener);
             }
@@ -757,7 +757,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         void dispatchShouldPersistEventWhenDispatchingWithKeysGetError() {
             EventCollector eventCollector = eventCollector();
             eventBus().register(eventCollector, GROUP_A);
-            eventBus().register(eventCollector, KEY_1);
+            Mono.from(eventBus().register(eventCollector, KEY_1)).block();
 
             rabbitMQExtension.getRabbitMQ().pause();
 

@@ -55,9 +55,9 @@ public class InVMEventBus implements EventBus {
     }
 
     @Override
-    public Registration register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
+    public Mono<Registration> register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
         registrations.put(key, listener);
-        return () -> registrations.remove(key, listener);
+        return Mono.just(() -> registrations.remove(key, listener));
     }
 
     @Override

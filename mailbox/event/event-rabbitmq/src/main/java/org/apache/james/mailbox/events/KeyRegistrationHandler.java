@@ -125,20 +125,25 @@ class KeyRegistrationHandler {
             .block();
     }
 
-    Registration register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
+    Mono<Registration> register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
         LocalListenerRegistry.LocalRegistration registration = localListenerRegistry.addListener(key, listener);
+
+        return registerIfNeeded(key, registration)
+            .thenReturn(new KeyRegistration(() -> {
+                if (registration.unregister().lastListenerRemoved()) {
+                    registrationBinder.unbind(key)
+                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
+                        .block();
+                }
+            }));
+    }
+
+    private Mono<Void> registerIfNeeded(RegistrationKey key, LocalListenerRegistry.LocalRegistration registration) {
         if (registration.isFirstListener()) {
-            registrationBinder.bind(key)
-                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
-                .block();
+            return registrationBinder.bind(key)
+                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()));
         }
-        return new KeyRegistration(() -> {
-            if (registration.unregister().lastListenerRemoved()) {
-                registrationBinder.unbind(key)
-                    .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
-                    .block();
-            }
-        });
+        return Mono.empty();
     }
 
     private Mono<Void> handleDelivery(Delivery delivery) {

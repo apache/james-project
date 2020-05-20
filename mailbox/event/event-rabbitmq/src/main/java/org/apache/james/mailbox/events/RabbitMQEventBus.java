@@ -121,7 +121,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
     }
 
     @Override
-    public Registration register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
+    public Mono<Registration> register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
         return keyRegistrationHandler.register(listener, key);
     }

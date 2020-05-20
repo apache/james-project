@@ -44,6 +44,8 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Mono;
+
 interface ErrorHandlingContract extends EventBusContract {
 
     class ThrowingListener implements MailboxListener {
@@ -82,7 +84,7 @@ interface ErrorHandlingContract extends EventBusContract {
         doThrow(new RuntimeException())
             .when(eventCollector).event(EVENT);
 
-        eventBus().register(eventCollector, KEY_1);
+        Mono.from(eventBus().register(eventCollector, KEY_1)).block();
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
         assertThat(eventCollector.getEvents())
@@ -232,7 +234,7 @@ interface ErrorHandlingContract extends EventBusContract {
             .doCallRealMethod()
             .when(eventCollector).event(EVENT);
 
-        eventBus().register(eventCollector, KEY_1);
+        Mono.from(eventBus().register(eventCollector, KEY_1)).block();
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
         TimeUnit.SECONDS.sleep(1);
@@ -352,7 +354,7 @@ interface ErrorHandlingContract extends EventBusContract {
         EventCollector eventCollector2 = eventCollector();
 
         eventBus().register(eventCollector, GROUP_A);
-        eventBus().register(eventCollector2, KEY_1);
+        Mono.from(eventBus().register(eventCollector2, KEY_1)).block();
         eventBus().reDeliver(GROUP_A, EVENT).block();
 
         getSpeedProfile().longWaitCondition()

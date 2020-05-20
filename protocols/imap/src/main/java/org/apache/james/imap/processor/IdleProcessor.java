@@ -53,6 +53,9 @@ import org.apache.james.util.concurrent.NamedThreadFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_IDLE);
     public static final int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
@@ -88,7 +91,9 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         SelectedMailbox sm = session.getSelected();
         Registration registration;
         if (sm != null) {
-            registration = eventBus.register(new IdleMailboxListener(session, responder), new MailboxIdRegistrationKey(sm.getMailboxId()));
+            registration = Mono.from(eventBus.register(new IdleMailboxListener(session, responder), new MailboxIdRegistrationKey(sm.getMailboxId())))
+                .subscribeOn(Schedulers.elastic())
+                .block();
         } else {
             registration = null;
         }
