@@ -474,11 +474,8 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Flux<Task.Result> fixInconsistenciesInMessageId(Context context, RunningOptions runningOptions) {
-        return messageIdDAO.retrieveAllMessages()
+        return throttle(messageIdDAO.retrieveAllMessages(), runningOptions)
             .doOnNext(any -> context.incrementMessageIdEntries())
-            .windowTimeout(runningOptions.getMessagesPerSecond(), Duration.ofSeconds(1))
-            .zipWith(Flux.interval(Duration.ofSeconds(1)))
-            .flatMap(Tuple2::getT1)
             .flatMap(this::detectInconsistencyInMessageId)
             .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO));
     }
