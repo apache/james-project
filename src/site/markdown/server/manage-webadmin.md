@@ -750,6 +750,18 @@ The message is UNSEEN via IMAP
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
+An admin can specify the concurrency that should be used when running the task:
+
+ - `messagesPerSecond` rate of messages to be processed per second. Default is 100.
+
+This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
+
+Example:
+
+```
+curl -XPOST /messages?task=SolveInconsistencies&messagesPerSecond=200
+```
+
 Response codes:
 
  - 201: Success. Corresponding task id is returned.
@@ -766,6 +778,9 @@ The scheduled task will have the following type `solve-message-inconsistencies` 
   "addedMessageIdEntries": 1,
   "updatedMessageIdEntries": 0,
   "removedMessageIdEntries": 1,
+  "runningOptions":{
+    "messagesPerSecond": 200
+  },
   "fixedInconsistencies": [
     {
       "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
