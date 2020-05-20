@@ -21,16 +21,16 @@ package org.apache.james.jmap.mail
 
 import org.apache.james.core.Domain
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
-import org.apache.james.mailbox.model.{QuotaRoot => JavaQuotaRoot}
+import org.apache.james.mailbox.model.{QuotaRoot => ModelQuotaRoot}
 
 import scala.compat.java8.OptionConverters._
 
 object QuotaRoot{
-  def fromJava(quotaRoot: JavaQuotaRoot) = QuotaRoot(quotaRoot.getValue, quotaRoot.getDomain.asScala)
+  def toJmap(quotaRoot: ModelQuotaRoot) = QuotaRoot(quotaRoot.getValue, quotaRoot.getDomain.asScala)
 }
 
 case class QuotaRoot(value: String, domain: Option[Domain]) {
-  def asJava: JavaQuotaRoot = JavaQuotaRoot.quotaRoot(value, domain.asJava)
+  def toModel: ModelQuotaRoot = ModelQuotaRoot.quotaRoot(value, domain.asJava)
 }
 
 object Quotas {
@@ -49,6 +49,10 @@ object QuotaId {
 
 case class QuotaId(quotaRoot: QuotaRoot) extends AnyVal {
   def getName: String = quotaRoot.value
+}
+
+object Quota {
+  def from(quota: Map[Quotas.Type, Value]) = new Quota(quota)
 }
 
 case class Quota(quota: Map[Quotas.Type, Value]) extends AnyVal
