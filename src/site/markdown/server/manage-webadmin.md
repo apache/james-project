@@ -522,17 +522,17 @@ Will schedule a task for recomputing the fast message view projection for all ma
 
 An admin can specify the concurrency that should be used when running the task:
 
- - `messageRatePerSecond` rate at which messages should be processed, per second. Defaults to 10.
+ - `messagesPerSecond` rate at which messages should be processed, per second. Defaults to 10.
  
 This optional parameter must have a strictly positive integer as a value and be passed as query parameters.
 
 Example:
 
 ```
-curl -XPOST /mailboxes?task=recomputeFastViewProjectionItems&messageRatePerSecond=20
+curl -XPOST /mailboxes?task=recomputeFastViewProjectionItems&messagesPerSecond=20
 ```
 
-The scheduled task will have the following type `RecomputeAllPreviewsTask` and the following `additionalInformation`:
+The scheduled task will have the following type `RecomputeAllFastViewProjectionItemsTask` and the following `additionalInformation`:
 
 ```
 {
@@ -542,7 +542,7 @@ The scheduled task will have the following type `RecomputeAllPreviewsTask` and t
   "failedUserCount": 2,
   "failedMessageCount": 1,
   "runningOptions": {
-    "messageRatePerSecond":20
+    "messagesPerSecond":20
   }
 }
 ```
@@ -971,26 +971,26 @@ Will schedule a task for recomputing the fast message view projection for all ma
 
 An admin can specify the concurrency that should be used when running the task:
 
- - `messageRatePerSecond` rate at which messages should be processed, per second. Defaults to 10.
+ - `messagesPerSecond` rate at which messages should be processed, per second. Defaults to 10.
  
 This optional parameter must have a strictly positive integer as a value and be passed as query parameters.
 
 Example:
 
 ```
-curl -XPOST /mailboxes?task=recomputeFastViewProjectionItems&messageRatePerSecond=20
+curl -XPOST /mailboxes?task=recomputeFastViewProjectionItems&messagesPerSecond=20
 ```
 
-The scheduled task will have the following type `RecomputeAllPreviewsTask` and the following `additionalInformation`:
+The scheduled task will have the following type `RecomputeUserFastViewProjectionItemsTask` and the following `additionalInformation`:
 
 ```
 {
-  "type":"RecomputeAllPreviewsTask",
+  "type":"RecomputeUserFastViewProjectionItemsTask",
   "username": "{usernameToBeUsed}",
   "processedMessageCount": 3,
   "failedMessageCount": 1,
   "runningOptions": {
-    "messageRatePerSecond":20
+    "messagesPerSecond":20
   }
 }
 ```
