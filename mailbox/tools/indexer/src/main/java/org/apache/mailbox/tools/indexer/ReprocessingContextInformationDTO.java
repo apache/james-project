@@ -22,10 +22,12 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -65,8 +67,9 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
                 @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
                 @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
                 @JsonProperty("failures") List<ReindexingFailureDTO> failures,
-                @JsonProperty("timestamp") Instant timestamp) {
-                super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
+                @JsonProperty("timestamp") Instant timestamp,
+                @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
+                super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp, runningOptions);
             }
         }
 
@@ -77,19 +80,28 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
                     dto.successfullyReprocessedMailCount,
                     dto.failedReprocessedMailCount,
                     deserializeFailures(mailboxIdFactory, dto.failures),
-                    dto.getTimestamp()))
+                    dto.getTimestamp(),
+                    dto.getRunningOptions()
+                        .map(RunningOptionsDTO::toDomainObject)
+                        .orElse(RunningOptions.DEFAULT)
+                    ))
                 .toDTOConverter((details, type) -> new DTO(
                     type,
                     details.getSuccessfullyReprocessedMailCount(),
                     details.getFailedReprocessedMailCount(),
                     serializeFailures(details.failures()),
-                    details.timestamp()))
+                    details.timestamp(),
+                    Optional.of(RunningOptionsDTO.toDTO(details.getRunningOptions()))))
                 .typeName(ErrorRecoveryIndexationTask.PREVIOUS_FAILURES_INDEXING.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
-        ReprocessingContextInformationForErrorRecoveryIndexationTask(int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures, Instant timestamp) {
-            super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
+        ReprocessingContextInformationForErrorRecoveryIndexationTask(int successfullyReprocessedMailCount,
+                                                                     int failedReprocessedMailCount,
+                                                                     ReIndexingExecutionFailures failures,
+                                                                     Instant timestamp,
+                                                                     RunningOptions runningOptions) {
+            super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp, runningOptions);
         }
     }
 
@@ -101,27 +113,40 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
                 @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
                 @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
                 @JsonProperty("failures") List<ReindexingFailureDTO> failures,
-                @JsonProperty("timestamp") Instant timestamp) {
-                super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
+                @JsonProperty("timestamp") Instant timestamp,
+                @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
+                super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp, runningOptions);
             }
         }
 
         public static AdditionalInformationDTOModule<ReprocessingContextInformationForFullReindexingTask, DTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
             return DTOModule.forDomainObject(ReprocessingContextInformationForFullReindexingTask.class)
                 .convertToDTO(DTO.class)
-                .toDomainObjectConverter(dto -> new ReprocessingContextInformationForFullReindexingTask(dto.successfullyReprocessedMailCount, dto.failedReprocessedMailCount, deserializeFailures(mailboxIdFactory, dto.failures), dto.getTimestamp()))
+                .toDomainObjectConverter(dto -> new ReprocessingContextInformationForFullReindexingTask(
+                    dto.successfullyReprocessedMailCount,
+                    dto.failedReprocessedMailCount,
+                    deserializeFailures(mailboxIdFactory, dto.failures),
+                    dto.getTimestamp(),
+                    dto.getRunningOptions()
+                        .map(RunningOptionsDTO::toDomainObject)
+                        .orElse(RunningOptions.DEFAULT)))
                 .toDTOConverter((details, type) -> new DTO(
                     type,
                     details.getSuccessfullyReprocessedMailCount(),
                     details.getFailedReprocessedMailCount(),
                     serializeFailures(details.failures()),
-                    details.timestamp()))
+                    details.timestamp(),
+                    Optional.of(RunningOptionsDTO.toDTO(details.getRunningOptions()))))
                 .typeName(FullReindexingTask.FULL_RE_INDEXING.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
-        ReprocessingContextInformationForFullReindexingTask(int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures, Instant timestamp) {
-            super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
+        ReprocessingContextInformationForFullReindexingTask(int successfullyReprocessedMailCount,
+                                                            int failedReprocessedMailCount,
+                                                            ReIndexingExecutionFailures failures,
+                                                            Instant timestamp,
+                                                            RunningOptions runningOptions) {
+            super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp, runningOptions);
         }
     }
 
@@ -142,7 +167,6 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
             .map(uid ->
                 new ReIndexingExecutionFailures.ReIndexingFailure(mailboxIdFactory.fromString(failuresForMailbox.mailboxId), MessageUid.of(uid)));
     }
-
 
     static List<ReindexingFailureDTO> serializeFailures(ReIndexingExecutionFailures failures) {
         ImmutableListMultimap<MailboxId, ReIndexingExecutionFailures.ReIndexingFailure> failuresByMailbox = failures.failures()
@@ -173,18 +197,21 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
     protected final int failedReprocessedMailCount;
     protected final List<ReindexingFailureDTO> failures;
     protected final Instant timestamp;
-
+    protected final Optional<RunningOptionsDTO> runningOptions;
 
     ReprocessingContextInformationDTO(@JsonProperty("type") String type,
                                       @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
                                       @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
                                       @JsonProperty("failures") List<ReindexingFailureDTO> failures,
-                                      @JsonProperty("timestamp") Instant timestamp) {
+                                      @JsonProperty("timestamp") Instant timestamp,
+                                      @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions
+                                      ) {
         this.type = type;
         this.successfullyReprocessedMailCount = successfullyReprocessedMailCount;
         this.failedReprocessedMailCount = failedReprocessedMailCount;
         this.failures = failures;
         this.timestamp = timestamp;
+        this.runningOptions = runningOptions;
     }
 
     public int getSuccessfullyReprocessedMailCount() {
@@ -201,6 +228,10 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
 
     public Instant getTimestamp() {
         return timestamp;
+    }
+
+    public Optional<RunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
     }
 
     @Override

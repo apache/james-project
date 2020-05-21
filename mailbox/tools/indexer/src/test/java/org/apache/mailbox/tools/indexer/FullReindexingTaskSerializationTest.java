@@ -18,12 +18,15 @@
  ****************************************************************/
 package org.apache.mailbox.tools.indexer;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask;
@@ -43,8 +46,11 @@ class FullReindexingTaskSerializationTest {
     private final int successfullyReprocessedMailCount = 42;
     private final int failedReprocessedMailCount = 2;
 
-    private final String serializedFullReindexingTask = "{\"type\": \"full-reindexing\"}";
-    private final String serializedAdditionalInformation = "{\"type\": \"full-reindexing\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String serializedFullReindexingTask = "{\"type\":\"full-reindexing\", \"runningOptions\":{\"messagesPerSecond\":50}}";
+    private final String legacySerializedFullReindexingTask = "{\"type\":\"full-reindexing\"}";
+
+    private final String serializedAdditionalInformation = "{\"type\": \"full-reindexing\", \"runningOptions\":{\"messagesPerSecond\":50}, \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String legacySerializedAdditionalInformation = "{\"type\": \"full-reindexing\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
     private ReIndexerPerformer reIndexerPerformer;
@@ -60,20 +66,50 @@ class FullReindexingTaskSerializationTest {
 
     @Test
     void fullReindexingShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(FullReindexingTask.module(reIndexerPerformer))
-            .bean(new FullReindexingTask(reIndexerPerformer))
+        JsonSerializationVerifier.dtoModule(FullReindexingTaskDTO.module(reIndexerPerformer))
+            .bean(new FullReindexingTask(reIndexerPerformer, RunningOptions.DEFAULT))
             .json(serializedFullReindexingTask)
             .verify();
     }
 
     @Test
+    void legacyTaskshouldBeDeserializable() throws Exception {
+        FullReindexingTask legacyTask = JsonGenericSerializer.forModules(FullReindexingTaskDTO.module(reIndexerPerformer))
+            .withoutNestedType()
+            .deserialize(legacySerializedFullReindexingTask);
+
+        FullReindexingTask expected = new FullReindexingTask(reIndexerPerformer, RunningOptions.DEFAULT);
+
+        assertThat(legacyTask)
+            .isEqualToComparingFieldByFieldRecursively(expected);
+    }
+
+    @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        ReprocessingContextInformationForFullReindexingTask details = new ReprocessingContextInformationForFullReindexingTask(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP);
+        ReprocessingContextInformationForFullReindexingTask details = new ReprocessingContextInformationForFullReindexingTask(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP, RunningOptions.DEFAULT);
 
         JsonSerializationVerifier.dtoModule(ReprocessingContextInformationForFullReindexingTask.serializationModule(new TestId.Factory()))
             .bean(details)
             .json(serializedAdditionalInformation)
             .verify();
+    }
+
+    @Test
+    void legacyAdditionalInformationShouldBeDeserializable() throws Exception {
+        ReprocessingContextInformationForFullReindexingTask legacyAdditionalInformation = JsonGenericSerializer.forModules(ReprocessingContextInformationForFullReindexingTask.serializationModule(new TestId.Factory()))
+            .withoutNestedType()
+            .deserialize(legacySerializedAdditionalInformation);
+
+        ReprocessingContextInformationForFullReindexingTask expected = new ReprocessingContextInformationForFullReindexingTask(
+            42,
+            2,
+            reIndexingExecutionFailures,
+            TIMESTAMP,
+            RunningOptions.DEFAULT
+        );
+
+        assertThat(legacyAdditionalInformation)
+            .isEqualToComparingFieldByFieldRecursively(expected);
     }
 }
 

@@ -100,7 +100,7 @@ import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRestoreTaskAdd
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRestoreTaskDTO;
 import org.apache.mailbox.tools.indexer.ErrorRecoveryIndexationTask;
 import org.apache.mailbox.tools.indexer.ErrorRecoveryIndexationTaskDTO;
-import org.apache.mailbox.tools.indexer.FullReindexingTask;
+import org.apache.mailbox.tools.indexer.FullReindexingTaskDTO;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexingTask;
 import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskDTO;
@@ -258,7 +258,7 @@ public class TaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> fullReindexTask(ReIndexerPerformer performer) {
-        return FullReindexingTask.module(performer);
+        return FullReindexingTaskDTO.module(performer);
     }
 
     @ProvidesIntoSet
