@@ -19,12 +19,14 @@
 
 package org.apache.mailbox.tools.indexer;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
@@ -57,23 +59,29 @@ public class ErrorRecoveryIndexationTask implements Task {
         }
 
         public ErrorRecoveryIndexationTask create(ErrorRecoveryIndexationTaskDTO dto) {
-            return new ErrorRecoveryIndexationTask(reIndexerPerformer, new ReIndexingExecutionFailures(failuresFromDTO(dto.getPreviousFailures())));
+            return new ErrorRecoveryIndexationTask(reIndexerPerformer,
+                new ReIndexingExecutionFailures(failuresFromDTO(dto.getPreviousFailures())),
+                dto.getRunningOptions()
+                    .map(RunningOptionsDTO::toDomainObject)
+                    .orElse(RunningOptions.DEFAULT));
         }
     }
 
     private final ReIndexerPerformer reIndexerPerformer;
     private final ReprocessingContext reprocessingContext;
     private final ReIndexingExecutionFailures previousFailures;
+    private final RunningOptions runningOptions;
 
-    public ErrorRecoveryIndexationTask(ReIndexerPerformer reIndexerPerformer, ReIndexingExecutionFailures previousFailures) {
+    public ErrorRecoveryIndexationTask(ReIndexerPerformer reIndexerPerformer, ReIndexingExecutionFailures previousFailures, RunningOptions runningOptions) {
         this.reIndexerPerformer = reIndexerPerformer;
         this.previousFailures = previousFailures;
         this.reprocessingContext = new ReprocessingContext();
+        this.runningOptions = runningOptions;
     }
 
     @Override
     public Result run() {
-        return reIndexerPerformer.reIndex(reprocessingContext, previousFailures).block();
+        return reIndexerPerformer.reIndex(reprocessingContext, previousFailures, runningOptions).block();
     }
 
     @Override
@@ -85,8 +93,17 @@ public class ErrorRecoveryIndexationTask implements Task {
         return previousFailures;
     }
 
+    public RunningOptions getRunningOptions() {
+        return runningOptions;
+    }
+
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(ReprocessingContextInformation.forErrorRecoveryIndexationTask(reprocessingContext));
+        return Optional.of(new ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask(
+            reprocessingContext.successfullyReprocessedMailCount(),
+            reprocessingContext.failedReprocessingMailCount(),
+            reprocessingContext.failures(),
+            Clock.systemUTC().instant(),
+            runningOptions));
     }
 }

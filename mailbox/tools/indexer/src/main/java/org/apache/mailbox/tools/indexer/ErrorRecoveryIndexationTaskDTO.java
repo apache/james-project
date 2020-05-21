@@ -21,6 +21,7 @@ package org.apache.mailbox.tools.indexer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.james.json.DTOModule;
@@ -57,7 +58,7 @@ public class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
             .stream()
             .map(ErrorRecoveryIndexationTaskDTO::failuresByMailboxToReindexingFailureDTO)
             .collect(Guavate.toImmutableList());
-        return new ErrorRecoveryIndexationTaskDTO(type, failureDTOs);
+        return new ErrorRecoveryIndexationTaskDTO(type, failureDTOs, Optional.of(RunningOptionsDTO.toDTO(task.getRunningOptions())));
     }
 
     private static ReindexingFailureDTO failuresByMailboxToReindexingFailureDTO(Map.Entry<MailboxId,
@@ -92,10 +93,14 @@ public class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
 
     private final String type;
     private final List<ReindexingFailureDTO> previousFailures;
+    private final Optional<RunningOptionsDTO> runningOptions;
 
-    private ErrorRecoveryIndexationTaskDTO(@JsonProperty("type") String type, @JsonProperty("previousFailures") List<ReindexingFailureDTO> previousFailures) {
+    private ErrorRecoveryIndexationTaskDTO(@JsonProperty("type") String type,
+                                           @JsonProperty("previousFailures") List<ReindexingFailureDTO> previousFailures,
+                                           @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
         this.type = type;
         this.previousFailures = previousFailures;
+        this.runningOptions = runningOptions;
     }
 
     @Override
@@ -107,4 +112,7 @@ public class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
         return previousFailures;
     }
 
+    public Optional<RunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
+    }
 }
