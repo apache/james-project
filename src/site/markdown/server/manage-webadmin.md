@@ -1281,13 +1281,28 @@ go out of sync, leading to inconsistent results being returned to the client.
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
+An admin can specify the concurrency that should be used when running the task:
+
+ - `usersPerSecond` rate at which users quotas should be reprocessed, per second. Defaults to 1.
+ 
+This optional parameter must have a strictly positive integer as a value and be passed as query parameters.
+
+Example:
+
+```
+curl -XPOST /quota/users?task=RecomputeCurrentQuotas&usersPerSecond=20
+```
+
 The scheduled task will have the following type `recompute-current-quotas` and the following `additionalInformation`:
 
 ```
 {
   "type":"recompute-current-quotas",
   "processedQuotaRoots": 3,
-  "failedQuotaRoots": ["#private&bob@localhost"]
+  "failedQuotaRoots": ["#private&bob@localhost"],
+  "runningOptions": {
+    "usersPerSecond":20
+  }
 }
 ```
 
