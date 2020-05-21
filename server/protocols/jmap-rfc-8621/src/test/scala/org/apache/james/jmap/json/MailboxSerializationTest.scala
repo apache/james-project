@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.json.MailboxSerializationTest.MAILBOX
-import org.apache.james.jmap.mail.Mailbox.MailboxName
+import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.{IsSubscribed, Mailbox, MailboxNamespace, MailboxRights, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.{MailboxId, TestId}

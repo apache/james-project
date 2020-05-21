@@ -19,11 +19,12 @@
 
 package org.apache.james.jmap.mail
 
+import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.core.Username
-import org.apache.james.jmap.mail.Mailbox.MailboxName
+import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
@@ -38,15 +39,29 @@ case class MayRename(value: Boolean) extends AnyVal
 case class MayDelete(value: Boolean) extends AnyVal
 case class MaySubmit(value: Boolean) extends AnyVal
 
+object MailboxRights {
+  val FULL: MailboxRights = MailboxRights(
+    mayReadItems = MayReadItems(true),
+    mayAddItems = MayAddItems(true),
+    mayRemoveItems = MayRemoveItems(true),
+    maySetSeen = MaySetSeen(true),
+    maySetKeywords = MaySetKeywords(true),
+    mayCreateChild = MayCreateChild(true),
+    mayRename = MayRename(true),
+    mayDelete = MayDelete(true),
+    maySubmit = MaySubmit(true),
+  )
+}
+
 case class MailboxRights(mayReadItems: MayReadItems,
-                               mayAddItems: MayAddItems,
-                               mayRemoveItems: MayRemoveItems,
-                               maySetSeen: MaySetSeen,
-                               maySetKeywords: MaySetKeywords,
-                               mayCreateChild: MayCreateChild,
-                               mayRename: MayRename,
-                               mayDelete: MayDelete,
-                               maySubmit: MaySubmit)
+                         mayAddItems: MayAddItems,
+                         mayRemoveItems: MayRemoveItems,
+                         maySetSeen: MaySetSeen,
+                         maySetKeywords: MaySetKeywords,
+                         mayCreateChild: MayCreateChild,
+                         mayRename: MayRename,
+                         mayDelete: MayDelete,
+                         maySubmit: MaySubmit)
 
 object MailboxNamespace {
   def delegated(owner: Username) = DelegatedNamespace(owner)
@@ -61,6 +76,8 @@ case class PersonalNamespace() extends MailboxNamespace
 case class DelegatedNamespace(owner: Username) extends MailboxNamespace
 
 object SortOrder {
+  val defaultSortOrder: SortOrder = SortOrder(1000L)
+
   private val defaultSortOrders = Map(
       Role.INBOX -> SortOrder(10L),
       Role.ARCHIVE -> SortOrder(20L),
@@ -71,7 +88,7 @@ object SortOrder {
       Role.SPAM -> SortOrder(70L),
       Role.TEMPLATES -> SortOrder(80L),
       Role.RESTORED_MESSAGES -> SortOrder(90L))
-    .withDefaultValue(SortOrder(1000L))
+    .withDefaultValue(defaultSortOrder)
 
   def getSortOrder(role: Role): SortOrder = defaultSortOrders(role)
 }
@@ -97,8 +114,15 @@ sealed trait QuotasExtension extends MailboxExtensionAdditionalFields {
   def quotas: Quotas
 }
 
-object Mailbox {
-  type MailboxName = String Refined NonEmpty
+object MailboxName {
+  type MailboxNameConstraint = NonEmpty
+  type MailboxName = String Refined MailboxNameConstraint
+
+  def liftOrThrow(value: String): MailboxName =
+    refined.refineV[MailboxNameConstraint](value) match {
+      case scala.util.Right(value) => value
+      case Left(error) => throw new IllegalArgumentException(error)
+    }
 }
 
 case class Mailbox(id: MailboxId,
