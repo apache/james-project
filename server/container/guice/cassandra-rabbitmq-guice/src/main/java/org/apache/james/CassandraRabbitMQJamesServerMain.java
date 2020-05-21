@@ -23,6 +23,7 @@ import static org.apache.james.CassandraJamesServerMain.REQUIRE_TASK_MANAGER_MOD
 
 import org.apache.james.modules.DistributedTaskManagerModule;
 import org.apache.james.modules.TaskSerializationModule;
+import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
@@ -54,6 +55,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
 
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MODULES)
-            .combineWith(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration));
+            .combineWith(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration))
+            .combineWith(BlobStoreCacheModulesChooser.chooseModules(blobStoreConfiguration));
     }
 }

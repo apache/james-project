@@ -28,8 +28,8 @@ import javax.inject.Singleton;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.blob.cassandra.cache.CachedBlobStore;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
 import org.apache.james.blob.union.HybridBlobStore;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
@@ -50,7 +50,7 @@ public class BlobStoreModulesChooser {
         protected void configure() {
             install(new CassandraBlobStoreDependenciesModule());
             bind(BlobStore.class)
-                .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
+                .annotatedWith(Names.named(CachedBlobStore.BACKEND))
                 .to(CassandraBlobStore.class);
         }
     }
@@ -60,7 +60,7 @@ public class BlobStoreModulesChooser {
         protected void configure() {
             install(new ObjectStorageDependenciesModule());
             bind(BlobStore.class)
-                .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
+                .annotatedWith(Names.named(CachedBlobStore.BACKEND))
                 .to(ObjectStorageBlobStore.class);
         }
     }
@@ -85,7 +85,7 @@ public class BlobStoreModulesChooser {
         }
 
         @Provides
-        @Named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION)
+        @Named(CachedBlobStore.BACKEND)
         @Singleton
         BlobStore providesHybridBlobStore(HybridBlobStore.Configuration hybridBlobStoreConfiguration,
                                           CassandraBlobStore cassandraBlobStore,

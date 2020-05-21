@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -98,12 +99,15 @@ public class CachedBlobStore implements BlobStore {
 
     }
 
+    public static final String BACKEND = "blobStoreBackend";
+
     private final BlobStoreCache cache;
     private final BlobStore backend;
     private final Integer sizeThresholdInBytes;
 
     @Inject
-    public CachedBlobStore(BlobStoreCache cache, BlobStore backend,
+    public CachedBlobStore(BlobStoreCache cache,
+                           @Named(BACKEND) BlobStore backend,
                            CassandraCacheConfiguration cacheConfiguration) {
         this.cache = cache;
         this.backend = backend;

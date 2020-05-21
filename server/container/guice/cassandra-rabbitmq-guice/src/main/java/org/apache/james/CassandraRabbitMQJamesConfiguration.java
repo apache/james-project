@@ -116,7 +116,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         return directories;
     }
 
-    public BlobStoreConfiguration blobstoreconfiguration() {
+    public BlobStoreConfiguration blobStoreConfiguration() {
         return blobStoreConfiguration;
     }
 }

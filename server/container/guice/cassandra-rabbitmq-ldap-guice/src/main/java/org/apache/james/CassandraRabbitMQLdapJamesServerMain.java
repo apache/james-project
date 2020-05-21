@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.data.LdapUsersRepositoryModule;
+import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
 import org.apache.james.modules.server.JMXServerModule;
@@ -48,6 +49,7 @@ public class CassandraRabbitMQLdapJamesServerMain implements JamesServerMain {
 
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MODULES)
-            .combineWith(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration));
+            .combineWith(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration))
+            .combineWith(BlobStoreCacheModulesChooser.chooseModules(blobStoreConfiguration));
     }
 }

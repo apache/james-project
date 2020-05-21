@@ -35,7 +35,9 @@ import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.ID;
 import java.nio.ByteBuffer;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.slf4j.Logger;
@@ -62,7 +64,7 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
 
     @Inject
     @VisibleForTesting
-    CassandraBlobStoreCache(Session session, CassandraCacheConfiguration cacheConfiguration) {
+    CassandraBlobStoreCache(@Named(InjectionNames.CACHE) Session session, CassandraCacheConfiguration cacheConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insertStatement = prepareInsert(session);
         this.selectStatement = prepareSelect(session);
