@@ -84,6 +84,14 @@ public class MailboxesRoutes implements Routes {
                 example = "?task=reIndex",
                 value = "Compulsory. Only supported value is `reIndex`"),
             @ApiImplicitParam(
+                required = false,
+                name = "messagesPerSecond",
+                paramType = "query parameter",
+                dataType = "Integer",
+                defaultValue = "none",
+                example = "?messagesPerSecond=100",
+                value = "If present, determine the number of messages being processed in one second."),
+            @ApiImplicitParam(
                 name = "reIndexFailedMessagesOf",
                 paramType = "query parameter",
                 dataType = "String",
@@ -101,9 +109,10 @@ public class MailboxesRoutes implements Routes {
             boolean indexingCorrection = !Strings.isNullOrEmpty(request.queryParams(RE_INDEX_FAILED_MESSAGES_QUERY_PARAM));
             if (indexingCorrection) {
                 IndexingDetailInformation indexingDetailInformation = retrieveIndexingExecutionDetails(previousReIndexingService, request);
-                return reIndexer.reIndex(indexingDetailInformation.failures());
+                return reIndexer.reIndex(indexingDetailInformation.failures(), RunningOptionsParser.parse(request));
             }
-            return reIndexer.reIndex();
+
+            return reIndexer.reIndex(RunningOptionsParser.parse(request));
         }
 
         private static IndexingDetailInformation retrieveIndexingExecutionDetails(PreviousReIndexingService previousReIndexingService, Request request) {
@@ -161,6 +170,14 @@ public class MailboxesRoutes implements Routes {
                 example = "?task=reIndex",
                 value = "Compulsory. Only supported value is `reIndex`"),
             @ApiImplicitParam(
+                required = false,
+                name = "messagesPerSecond",
+                paramType = "query parameter",
+                dataType = "Integer",
+                defaultValue = "none",
+                example = "?messagesPerSecond=100",
+                value = "If present, determine the number of messages being processed in one second."),
+            @ApiImplicitParam(
                 required = true,
                 name = "mailboxId",
                 paramType = "path parameter",
@@ -174,7 +191,7 @@ public class MailboxesRoutes implements Routes {
             @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
         })
         private static TaskFromRequest toTask(ReIndexer reIndexer, MailboxId.Factory mailboxIdFactory) {
-            return wrap(request -> reIndexer.reIndex(extractMailboxId(mailboxIdFactory, request)));
+            return wrap(request -> reIndexer.reIndex(extractMailboxId(mailboxIdFactory, request), RunningOptionsParser.parse(request)));
         }
     }
 
