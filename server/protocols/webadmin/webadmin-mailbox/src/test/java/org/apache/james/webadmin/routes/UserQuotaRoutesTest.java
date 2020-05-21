@@ -28,6 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -51,6 +54,7 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.webadmin.utils.ErrorResponder;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -1256,5 +1260,153 @@ class UserQuotaRoutesTest {
             softly.assertAll();
         }
 
+    }
+
+    @Nested
+    @ExtendWith(ScanningQuotaSearchExtension.class)
+    class PostRecomputeQuotas {
+        @Test
+        void actionRequestParameterShouldBeCompulsory() {
+            when()
+                .post("/quota/users")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("'task' query parameter is compulsory. Supported values are [RecomputeCurrentQuotas]"));
+        }
+
+        @Test
+        void postShouldFailUponEmptyAction() {
+            given()
+                .queryParam("task", "")
+                .post("/quota/users")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("'task' query parameter cannot be empty or blank. Supported values are [RecomputeCurrentQuotas]"));
+        }
+
+        @Test
+        void postShouldFailUponInvalidAction() {
+            given()
+                .queryParam("task", "invalid")
+                .post("/quota/users")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("Invalid value supplied for query parameter 'task': invalid. Supported values are [RecomputeCurrentQuotas]"));
+        }
+
+        @Test
+        void postShouldFailWhenUsersPerSecondIsNotAnInt() {
+            given()
+                .queryParam("task", "RecomputeCurrentQuotas")
+                .queryParam("usersPerSecond", "abc")
+                .post("/quota/users")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("Illegal value supplied for query parameter 'usersPerSecond', expecting a strictly positive optional integer"));
+        }
+
+        @Test
+        void postShouldFailWhenUsersPerSecondIsNegative() {
+            given()
+                .queryParam("task", "RecomputeCurrentQuotas")
+                .queryParam("usersPerSecond", "-1")
+                .post("/quota/users")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("'usersPerSecond' needs to be strictly positive"));
+        }
+
+        @Test
+        void postShouldFailWhenUsersPerSecondIsZero() {
+            given()
+                .queryParam("task", "RecomputeCurrentQuotas")
+                .queryParam("usersPerSecond", "0")
+                .post("/quota/users")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("'usersPerSecond' needs to be strictly positive"));
+        }
+
+        @Test
+        void postShouldCreateANewTask() {
+            given()
+                .queryParam("task", "RecomputeCurrentQuotas")
+                .post("/quota/users")
+            .then()
+                .statusCode(HttpStatus.CREATED_201)
+                .body("taskId", notNullValue());
+        }
+
+        @Test
+        void postShouldCreateANewTaskWhenConcurrencyParametersAreSpecified() {
+            given()
+                .queryParam("task", "RecomputeCurrentQuotas")
+                .queryParam("usersPerSecond", "1")
+                .post("/quota/users")
+            .then()
+                .statusCode(HttpStatus.CREATED_201)
+                .body("taskId", notNullValue());
+        }
+
+        @Test
+        void recomputeAllShouldCompleteWhenNoUser() {
+            String taskId = with()
+                .queryParam("task", "RecomputeCurrentQuotas")
+                .post("/quota/users")
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("taskId", is(taskId))
+                .body("type", is("recompute-current-quotas"))
+                .body("additionalInformation.processedQuotaRoots", is(0))
+                .body("additionalInformation.failedQuotaRoots", hasSize(0))
+                .body("additionalInformation.runningOptions.usersPerSecond", is(1))
+                .body("startedDate", is(notNullValue()))
+                .body("submitDate", is(notNullValue()))
+                .body("completedDate", is(notNullValue()));
+        }
+
+        @Test
+        void runningOptionsShouldBePartOfTaskDetails() {
+            String taskId = with()
+                .queryParam("task", "RecomputeCurrentQuotas")
+                .queryParam("usersPerSecond", "20")
+                .post("/quota/users")
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("taskId", is(taskId))
+                .body("type", is("recompute-current-quotas"))
+                .body("additionalInformation.runningOptions.usersPerSecond", is(20));
+        }
     }
 }

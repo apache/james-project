@@ -89,9 +89,27 @@ public class UserQuotaRoutes implements Routes {
     public static final String USER_QUOTAS_OPERATIONS_INJECTION_KEY = "userQuotasOperations";
 
     public static class RecomputeCurrentQuotasRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+        private static final String USERS_PER_SECOND = "usersPerSecond";
+
         @Inject
         public RecomputeCurrentQuotasRequestToTask(RecomputeCurrentQuotasService service) {
-            super(RECOMPUTE_CURRENT_QUOTAS, request -> new RecomputeCurrentQuotasTask(service, RunningOptions.DEFAULT));
+            super(RECOMPUTE_CURRENT_QUOTAS, request -> new RecomputeCurrentQuotasTask(service,parseRunningOptions(request)));
+        }
+
+        private static RunningOptions parseRunningOptions(Request request) {
+            return intQueryParameter(request)
+                .map(RunningOptions::withUsersPerSecond)
+                .orElse(RunningOptions.DEFAULT);
+        }
+
+        private static Optional<Integer> intQueryParameter(Request request) {
+            try {
+                return Optional.ofNullable(request.queryParams(USERS_PER_SECOND))
+                    .map(Integer::parseInt);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s', expecting a " +
+                    "strictly positive optional integer", USERS_PER_SECOND), e);
+            }
         }
     }
 
