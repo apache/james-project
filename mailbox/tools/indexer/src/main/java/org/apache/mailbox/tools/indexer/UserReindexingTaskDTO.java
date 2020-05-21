@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.mailbox.tools.indexer;
 
+import java.util.Optional;
+
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -25,6 +27,10 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserReindexingTaskDTO implements TaskDTO {
+
+    private static UserReindexingTaskDTO of(UserReindexingTask task, String type) {
+        return new UserReindexingTaskDTO(type, task.getUsername().asString(), Optional.of(RunningOptionsDTO.toDTO(task.getRunningOptions())));
+    }
 
     public static TaskDTOModule<UserReindexingTask, UserReindexingTaskDTO> module(UserReindexingTask.Factory factory) {
         return DTOModule
@@ -36,16 +42,16 @@ public class UserReindexingTaskDTO implements TaskDTO {
             .withFactory(TaskDTOModule::new);
     }
 
-    public static UserReindexingTaskDTO of(UserReindexingTask task, String type) {
-        return new UserReindexingTaskDTO(type, task.getUsername().asString());
-    }
-
     private final String type;
     private final String username;
+    private final Optional<RunningOptionsDTO> runningOptions;
 
-    private UserReindexingTaskDTO(@JsonProperty("type") String type, @JsonProperty("username") String username) {
+    private UserReindexingTaskDTO(@JsonProperty("type") String type,
+                                  @JsonProperty("username") String username,
+                                  @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
         this.type = type;
         this.username = username;
+        this.runningOptions = runningOptions;
     }
 
     @Override
@@ -57,4 +63,7 @@ public class UserReindexingTaskDTO implements TaskDTO {
         return username;
     }
 
+    public Optional<RunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
+    }
 }
