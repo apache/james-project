@@ -42,6 +42,7 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasTask;
 import org.apache.james.quota.search.Limit;
 import org.apache.james.quota.search.Offset;
@@ -90,7 +91,7 @@ public class UserQuotaRoutes implements Routes {
     public static class RecomputeCurrentQuotasRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
         @Inject
         public RecomputeCurrentQuotasRequestToTask(RecomputeCurrentQuotasService service) {
-            super(RECOMPUTE_CURRENT_QUOTAS, request -> new RecomputeCurrentQuotasTask(service));
+            super(RECOMPUTE_CURRENT_QUOTAS, request -> new RecomputeCurrentQuotasTask(service, RunningOptions.DEFAULT));
         }
     }
 

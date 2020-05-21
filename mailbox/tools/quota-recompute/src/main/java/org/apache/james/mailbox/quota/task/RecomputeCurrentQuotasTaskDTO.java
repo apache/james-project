@@ -19,7 +19,10 @@
 
 package org.apache.james.mailbox.quota.task;
 
+import java.util.Optional;
+
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 
@@ -27,7 +30,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RecomputeCurrentQuotasTaskDTO implements TaskDTO {
     private static RecomputeCurrentQuotasTaskDTO toDTO(RecomputeCurrentQuotasTask domainObject, String typeName) {
-        return new RecomputeCurrentQuotasTaskDTO(typeName);
+        return new RecomputeCurrentQuotasTaskDTO(typeName,
+            Optional.of(RunningOptionsDTO.asDTO(domainObject.getRunningOptions())));
     }
 
     public static TaskDTOModule<RecomputeCurrentQuotasTask, RecomputeCurrentQuotasTaskDTO> module(RecomputeCurrentQuotasService service) {
@@ -41,13 +45,21 @@ public class RecomputeCurrentQuotasTaskDTO implements TaskDTO {
     }
 
     private final String type;
+    private final Optional<RunningOptionsDTO> runningOptions;
 
-    public RecomputeCurrentQuotasTaskDTO(@JsonProperty("type") String type) {
+    public RecomputeCurrentQuotasTaskDTO(@JsonProperty("type") String type,
+                                         @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
         this.type = type;
+        this.runningOptions = runningOptions;
     }
 
     private RecomputeCurrentQuotasTask toDomainObject(RecomputeCurrentQuotasService service) {
-        return new RecomputeCurrentQuotasTask(service);
+        return new RecomputeCurrentQuotasTask(service,
+            runningOptions.map(RunningOptionsDTO::asDomainObject).orElse(RunningOptions.DEFAULT));
+    }
+
+    public Optional<RunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
     }
 
     @Override

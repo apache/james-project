@@ -20,8 +20,10 @@
 package org.apache.james.mailbox.quota.task;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
@@ -34,6 +36,7 @@ public class RecomputeCurrentQuotasTaskAdditionalInformationDTO implements Addit
             type,
             details.getProcessedQuotaRoots(),
             details.getFailedQuotaRoots(),
+            Optional.of(RunningOptionsDTO.asDTO(details.getRunningOptions())),
             details.timestamp());
     }
 
@@ -49,15 +52,18 @@ public class RecomputeCurrentQuotasTaskAdditionalInformationDTO implements Addit
     private final String type;
     private final long processedQuotaRoots;
     private final ImmutableList<String> failedQuotaRoots;
+    private final Optional<RunningOptionsDTO> runningOptions;
     private final Instant timestamp;
 
     public RecomputeCurrentQuotasTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                               @JsonProperty("processedQuotaRoots") long processedQuotaRoots,
                                                               @JsonProperty("failedQuotaRoots") ImmutableList<String> failedQuotaRoots,
+                                                              @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions,
                                                               @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.processedQuotaRoots = processedQuotaRoots;
         this.failedQuotaRoots = failedQuotaRoots;
+        this.runningOptions = runningOptions;
         this.timestamp = timestamp;
     }
 
@@ -79,9 +85,14 @@ public class RecomputeCurrentQuotasTaskAdditionalInformationDTO implements Addit
         return type;
     }
 
+    public Optional<RunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
+    }
+
     private RecomputeCurrentQuotasTask.Details toDomainObject() {
         return new RecomputeCurrentQuotasTask.Details(timestamp,
             processedQuotaRoots,
-            failedQuotaRoots);
+            failedQuotaRoots,
+            runningOptions.map(RunningOptionsDTO::asDomainObject).orElse(RunningOptions.DEFAULT));
     }
 }

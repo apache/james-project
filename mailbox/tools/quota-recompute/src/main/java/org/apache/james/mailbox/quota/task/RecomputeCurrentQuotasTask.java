@@ -44,11 +44,13 @@ public class RecomputeCurrentQuotasTask implements Task {
         private final Instant instant;
         private final long processedQuotaRoots;
         private final ImmutableList<String> failedQuotaRoots;
+        private final RunningOptions runningOptions;
 
-        Details(Instant instant, long processedQuotaRoots, ImmutableList<String> failedQuotaRoots) {
+        Details(Instant instant, long processedQuotaRoots, ImmutableList<String> failedQuotaRoots, RunningOptions runningOptions) {
             this.instant = instant;
             this.processedQuotaRoots = processedQuotaRoots;
             this.failedQuotaRoots = failedQuotaRoots;
+            this.runningOptions = runningOptions;
         }
 
         @Override
@@ -65,14 +67,19 @@ public class RecomputeCurrentQuotasTask implements Task {
         ImmutableList<String> getFailedQuotaRoots() {
             return failedQuotaRoots;
         }
+
+        public RunningOptions getRunningOptions() {
+            return runningOptions;
+        }
     }
 
     private final RecomputeCurrentQuotasService service;
+    private final RunningOptions runningOptions;
+    private final Context context;
 
-    private Context context;
-
-    public RecomputeCurrentQuotasTask(RecomputeCurrentQuotasService service) {
+    public RecomputeCurrentQuotasTask(RecomputeCurrentQuotasService service, RunningOptions runningOptions) {
         this.service = service;
+        this.runningOptions = runningOptions;
         this.context = new Context();
     }
 
@@ -88,6 +95,10 @@ public class RecomputeCurrentQuotasTask implements Task {
         return RECOMPUTE_CURRENT_QUOTAS;
     }
 
+    public RunningOptions getRunningOptions() {
+        return runningOptions;
+    }
+
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         Snapshot snapshot = context.snapshot();
@@ -97,6 +108,6 @@ public class RecomputeCurrentQuotasTask implements Task {
             snapshot.getFailedQuotaRoots()
                 .stream()
                 .map(QuotaRoot::asString)
-                .collect(Guavate.toImmutableList())));
+                .collect(Guavate.toImmutableList()), runningOptions));
     }
 }
