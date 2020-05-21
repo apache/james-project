@@ -56,29 +56,29 @@ public class ReIndexerImpl implements ReIndexer {
     }
 
     @Override
-    public Task reIndex(MailboxPath path) throws MailboxException {
+    public Task reIndex(MailboxPath path, RunningOptions runningOptions) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
 
         MailboxId mailboxId = mailboxManager.getMailbox(path, mailboxSession).getId();
 
-        return new SingleMailboxReindexingTask(reIndexerPerformer, mailboxId);
+        return new SingleMailboxReindexingTask(reIndexerPerformer, mailboxId, runningOptions);
     }
 
     @Override
-    public Task reIndex(MailboxId mailboxId) throws MailboxException {
+    public Task reIndex(MailboxId mailboxId, RunningOptions runningOptions) throws MailboxException {
         validateIdExists(mailboxId);
 
-        return new SingleMailboxReindexingTask(reIndexerPerformer, mailboxId);
+        return new SingleMailboxReindexingTask(reIndexerPerformer, mailboxId, runningOptions);
     }
 
     @Override
-    public Task reIndex() {
-        return new FullReindexingTask(reIndexerPerformer);
+    public Task reIndex(RunningOptions runningOptions) {
+        return new FullReindexingTask(reIndexerPerformer, runningOptions);
     }
 
     @Override
-    public Task reIndex(Username username) {
-        return new UserReindexingTask(reIndexerPerformer, username);
+    public Task reIndex(Username username, RunningOptions runningOptions) {
+        return new UserReindexingTask(reIndexerPerformer, username, runningOptions);
     }
 
     @Override
@@ -98,8 +98,8 @@ public class ReIndexerImpl implements ReIndexer {
     }
 
     @Override
-    public Task reIndex(ReIndexingExecutionFailures previousFailures) {
-        return new ErrorRecoveryIndexationTask(reIndexerPerformer, previousFailures);
+    public Task reIndex(ReIndexingExecutionFailures previousFailures, RunningOptions runningOptions) {
+        return new ErrorRecoveryIndexationTask(reIndexerPerformer, previousFailures, runningOptions);
     }
 
     private void validateIdExists(MailboxId mailboxId) throws MailboxException {

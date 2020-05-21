@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -78,7 +79,7 @@ public class ReIndexerImplTest {
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                 systemSession).getId();
 
-        reIndexer.reIndex(INBOX).run();
+        reIndexer.reIndex(INBOX, RunningOptions.DEFAULT).run();
 
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
         ArgumentCaptor<MailboxId> mailboxCaptor1 = ArgumentCaptor.forClass(MailboxId.class);
@@ -105,7 +106,7 @@ public class ReIndexerImplTest {
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                 systemSession).getId();
 
-        reIndexer.reIndex().run();
+        reIndexer.reIndex(RunningOptions.DEFAULT).run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
         ArgumentCaptor<MailboxId> mailboxCaptor1 = ArgumentCaptor.forClass(MailboxId.class);
         ArgumentCaptor<Mailbox> mailboxCaptor2 = ArgumentCaptor.forClass(Mailbox.class);
@@ -131,7 +132,7 @@ public class ReIndexerImplTest {
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                 systemSession).getId();
 
-        reIndexer.reIndex(USERNAME).run();
+        reIndexer.reIndex(USERNAME, RunningOptions.DEFAULT).run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
         ArgumentCaptor<MailboxId> mailboxCaptor1 = ArgumentCaptor.forClass(MailboxId.class);
         ArgumentCaptor<Mailbox> mailboxCaptor2 = ArgumentCaptor.forClass(Mailbox.class);
@@ -223,7 +224,7 @@ public class ReIndexerImplTest {
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                 systemSession).getId();
 
-        reIndexer.reIndex(mailboxId).run();
+        reIndexer.reIndex(mailboxId, RunningOptions.DEFAULT).run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
         ArgumentCaptor<MailboxId> mailboxIdCaptor = ArgumentCaptor.forClass(MailboxId.class);
         ArgumentCaptor<Mailbox> mailboxCaptor = ArgumentCaptor.forClass(Mailbox.class);
@@ -245,7 +246,7 @@ public class ReIndexerImplTest {
         MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
         MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
-        reIndexer.reIndex(mailboxId).run();
+        reIndexer.reIndex(mailboxId, RunningOptions.DEFAULT).run();
         ArgumentCaptor<MailboxId> mailboxCaptor = ArgumentCaptor.forClass(MailboxId.class);
 
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor.capture());
@@ -258,7 +259,7 @@ public class ReIndexerImplTest {
     void mailboxIdReIndexShouldFailWhenMailboxNotFound() {
         MailboxId mailboxId = InMemoryId.of(42);
 
-        assertThatThrownBy(() -> reIndexer.reIndex(mailboxId))
+        assertThatThrownBy(() -> reIndexer.reIndex(mailboxId, RunningOptions.DEFAULT))
             .isInstanceOf(MailboxNotFoundException.class);
     }
 }

@@ -97,7 +97,7 @@ public class CassandraReIndexerImplTest {
             .runSuccessfullyWithin(Duration.ofMinutes(10));
 
         // When We re-index
-        reIndexer.reIndex(INBOX).run();
+        reIndexer.reIndex(INBOX, ReIndexer.RunningOptions.DEFAULT).run();
 
         // The indexer is called for each message
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), any(MailboxId.class));

@@ -28,18 +28,32 @@ import org.apache.james.task.Task;
 
 public interface ReIndexer {
 
-    Task reIndex(Username username) throws MailboxException;
+    class RunningOptions {
+        public static final RunningOptions DEFAULT = new RunningOptions(50);
 
-    Task reIndex(MailboxPath path) throws MailboxException;
+        private final int messagesPerSecond;
 
-    Task reIndex(MailboxId mailboxId) throws MailboxException;
+        public RunningOptions(int messagesPerSecond) {
+            this.messagesPerSecond = messagesPerSecond;
+        }
 
-    Task reIndex() throws MailboxException;
+        public int getMessagesPerSecond() {
+            return messagesPerSecond;
+        }
+    }
+
+    Task reIndex(Username username, RunningOptions runningOptions) throws MailboxException;
+
+    Task reIndex(MailboxPath path, RunningOptions runningOptions) throws MailboxException;
+
+    Task reIndex(MailboxId mailboxId, RunningOptions runningOptions) throws MailboxException;
+
+    Task reIndex(RunningOptions runningOptions) throws MailboxException;
 
     Task reIndex(MailboxPath path, MessageUid uid) throws MailboxException;
 
     Task reIndex(MailboxId mailboxId, MessageUid uid) throws MailboxException;
 
-    Task reIndex(ReIndexingExecutionFailures previousFailures) throws MailboxException;
+    Task reIndex(ReIndexingExecutionFailures previousFailures, RunningOptions runningOptions) throws MailboxException;
 
 }

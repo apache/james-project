@@ -25,6 +25,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
@@ -53,8 +54,8 @@ public class ReIndexerPerformer {
     private static final int MESSAGE_CONCURRENCY = 50;
     private static final String RE_INDEXING = "re-indexing";
     private static final Username RE_INDEXER_PERFORMER_USER = Username.of(RE_INDEXING);
-    public static final int NO_CONCURRENCY = 1;
-    public static final int NO_PREFETCH = 1;
+    private static final int NO_CONCURRENCY = 1;
+    private static final int NO_PREFETCH = 1;
 
     private final MailboxManager mailboxManager;
     private final ListeningMessageSearchIndex messageSearchIndex;
@@ -69,30 +70,30 @@ public class ReIndexerPerformer {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
 
-    Mono<Result> reIndex(MailboxId mailboxId, ReprocessingContext reprocessingContext) {
+    Mono<Result> reIndex(MailboxId mailboxId, ReprocessingContext reprocessingContext, RunningOptions runningOptions) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
 
         return mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
             .findMailboxByIdReactive(mailboxId)
-            .flatMap(mailbox -> reIndex(reprocessingContext, mailboxSession, mailbox));
+            .flatMap(mailbox -> reIndex(reprocessingContext, mailboxSession, mailbox, runningOptions));
     }
 
-    private Mono<Result> reIndex(ReprocessingContext reprocessingContext, MailboxSession mailboxSession, Mailbox mailbox) {
+    Mono<Result> reIndex(ReprocessingContext reprocessingContext, ReIndexingExecutionFailures previousReIndexingFailures, RunningOptions runningOptions) {
+        return Flux.fromIterable(previousReIndexingFailures.failures())
+            .flatMap(previousFailure -> reIndex(reprocessingContext, previousFailure), runningOptions.getMessagesPerSecond())
+            .reduce(Task::combine)
+            .switchIfEmpty(Mono.just(Result.COMPLETED));
+    }
+
+    private Mono<Result> reIndex(ReprocessingContext reprocessingContext, MailboxSession mailboxSession, Mailbox mailbox, RunningOptions runningOptions) {
         LOGGER.info("Attempt to reindex mailbox with mailboxId {}", mailbox.getMailboxId().serialize());
         return messageSearchIndex.deleteAll(mailboxSession, mailbox.getMailboxId())
             .then(mailboxSessionMapperFactory.getMessageMapper(mailboxSession)
                 .listAllMessageUids(mailbox)
-                .flatMap(uid -> handleMessageReIndexing(mailboxSession, mailbox, uid, reprocessingContext), MESSAGE_CONCURRENCY)
+                .flatMap(uid -> handleMessageReIndexing(mailboxSession, mailbox, uid, reprocessingContext), runningOptions.getMessagesPerSecond())
                 .reduce(Task::combine)
                 .switchIfEmpty(Mono.just(Result.COMPLETED))
                 .doFinally(any -> LOGGER.info("Finish to reindex mailbox with mailboxId {}", mailbox.getMailboxId().serialize())));
-    }
-
-    Mono<Result> reIndex(ReprocessingContext reprocessingContext, ReIndexingExecutionFailures previousReIndexingFailures) {
-        return Flux.fromIterable(previousReIndexingFailures.failures())
-            .flatMap(previousFailure -> reIndex(reprocessingContext, previousFailure), MESSAGE_CONCURRENCY)
-            .reduce(Task::combine)
-            .switchIfEmpty(Mono.just(Result.COMPLETED));
     }
 
     private Mono<Result> reIndex(ReprocessingContext reprocessingContext, ReIndexingExecutionFailures.ReIndexingFailure previousReIndexingFailure) {
@@ -107,17 +108,17 @@ public class ReIndexerPerformer {
             });
     }
 
-    Mono<Result> reIndex(ReprocessingContext reprocessingContext) {
+    Mono<Result> reIndex(ReprocessingContext reprocessingContext, RunningOptions runningOptions) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
         LOGGER.info("Starting a full reindex");
         return mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).list()
-            .flatMap(mailbox -> reIndex(reprocessingContext, mailboxSession, mailbox), NO_CONCURRENCY, NO_PREFETCH)
+            .flatMap(mailbox -> reIndex(reprocessingContext, mailboxSession, mailbox, runningOptions), NO_CONCURRENCY, NO_PREFETCH)
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED))
             .doFinally(any -> LOGGER.info("Full reindex finished"));
     }
 
-    Mono<Result> reIndex(Username username, ReprocessingContext reprocessingContext) {
+    Mono<Result> reIndex(Username username, ReprocessingContext reprocessingContext, RunningOptions runningOptions) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         LOGGER.info("Starting a reindex for user {}", username.asString());
 
@@ -125,7 +126,7 @@ public class ReIndexerPerformer {
 
         return mailboxManager.searchReactive(mailboxQuery, mailboxSession)
             .map(MailboxMetaData::getId)
-            .flatMap(id -> reIndex(id, reprocessingContext), NO_CONCURRENCY, NO_PREFETCH)
+            .flatMap(id -> reIndex(id, reprocessingContext, runningOptions), NO_CONCURRENCY, NO_PREFETCH)
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED))
             .doFinally(any -> LOGGER.info("User {} reindex finished", username.asString()));
