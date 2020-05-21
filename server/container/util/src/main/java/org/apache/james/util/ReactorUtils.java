@@ -22,6 +22,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -32,10 +33,18 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SynchronousSink;
 import reactor.util.context.Context;
+import reactor.util.function.Tuple2;
 
 public class ReactorUtils {
 
     public static final String MDC_KEY_PREFIX = "MDC-";
+    private static final Duration DELAY = Duration.ZERO;
+
+    public static <T> Flux<T> throttle(Flux<T> flux, Duration windowDuration, int windowMaxSize) {
+        return flux.windowTimeout(windowMaxSize, windowDuration)
+            .zipWith(Flux.interval(DELAY, windowDuration))
+            .flatMap(Tuple2::getT1);
+    }
 
     public static <T> Mono<T> executeAndEmpty(Runnable runnable) {
         return Mono.fromRunnable(runnable).then(Mono.empty());

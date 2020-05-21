@@ -25,9 +25,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -35,6 +36,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
@@ -44,6 +47,28 @@ import reactor.core.scheduler.Schedulers;
 
 class ReactorUtilsTest {
     static final int BUFFER_SIZE = 5;
+    
+    @Nested
+    class Throttling {
+        @Test
+        void throttleShouldApplyMaxSize() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(100);
+
+            Stopwatch stopwatch = Stopwatch.createUnstarted();
+
+            Flux<Integer> originalFlux = Flux.range(0, 10);
+            ImmutableList<Long> windowMembership = ReactorUtils.throttle(originalFlux, windowDuration, windowMaxSize)
+                .doOnSubscribe(signal -> stopwatch.start())
+                .map(i -> stopwatch.elapsed(TimeUnit.MILLISECONDS))
+                .map(i -> i / 100)
+                .collect(Guavate.toImmutableList())
+                .block();
+
+            assertThat(windowMembership)
+                .containsExactly(0L, 0L, 0L, 1L, 1L, 1L, 2L, 2L, 2L, 3L);
+        }
+    }
 
     @Nested
     class ExecuteAndEmpty {

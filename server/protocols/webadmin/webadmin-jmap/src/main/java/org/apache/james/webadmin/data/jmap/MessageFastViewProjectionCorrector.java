@@ -44,6 +44,7 @@ import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,6 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 public class MessageFastViewProjectionCorrector {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageFastViewProjectionCorrector.class);
@@ -216,16 +216,10 @@ public class MessageFastViewProjectionCorrector {
     }
 
     private Mono<Result> correctProjection(Flux<ProjectionEntry> entries, RunningOptions runningOptions, Progress progress) {
-        return throttleWithRate(entries, runningOptions)
+        return ReactorUtils.throttle(entries, PERIOD, runningOptions.getMessagesPerSecond())
             .flatMap(entry -> correctProjection(entry, progress))
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED));
-    }
-
-    private Flux<ProjectionEntry> throttleWithRate(Flux<ProjectionEntry> entries, RunningOptions runningOptions) {
-        return entries.windowTimeout(runningOptions.getMessagesPerSecond(), Duration.ofSeconds(1))
-            .zipWith(Flux.interval(DELAY, PERIOD))
-            .flatMap(Tuple2::getT1);
     }
 
     private Flux<MailboxMetaData> listUsersMailboxes(MailboxSession session) throws MailboxException {
