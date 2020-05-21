@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.quota.task;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -37,17 +38,40 @@ import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class RecomputeCurrentQuotasService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecomputeCurrentQuotasService.class);
+
+    public static class RunningOptions {
+        public static RunningOptions withUsersPerSecond(int usersPerSecond) {
+            return new RunningOptions(usersPerSecond);
+        }
+
+        public static final RunningOptions DEFAULT = withUsersPerSecond(1);
+
+        private final int usersPerSecond;
+
+        private RunningOptions(int usersPerSecond) {
+            Preconditions.checkArgument(usersPerSecond > 0, "'usersPerSecond' needs to be strictly positive");
+
+            this.usersPerSecond = usersPerSecond;
+        }
+
+        public int getUsersPerSecond() {
+            return usersPerSecond;
+        }
+    }
 
     public static class Context {
         static class Snapshot {
@@ -138,11 +162,12 @@ public class RecomputeCurrentQuotasService {
         this.sessionProvider = sessionProvider;
     }
 
-    public Mono<Task.Result> recomputeCurrentQuotas(Context context) {
+    public Mono<Task.Result> recomputeCurrentQuotas(Context context, RunningOptions runningOptions) {
         try {
             Flux<Username> users = Iterators.toFlux(usersRepository.list());
-            return ReactorUtils.throttle(users, Duration.ofSeconds(1), runningOptions.getUsersPerSecond())
-                .flatMap(username -> recomputeUserCurrentQuotas(context, username), runningOptions.getUsersPerSecond())
+            return ReactorUtils.Throttler.<Username, Task.Result>forOperation(username -> recomputeUserCurrentQuotas(context, username))
+                .window(runningOptions.getUsersPerSecond(), Duration.ofSeconds(1))
+                .throttle(users)
                 .reduce(Task.Result.COMPLETED, Task::combine);
         } catch (UsersRepositoryException e) {
             LOGGER.error("Error while accessing users from repository", e);

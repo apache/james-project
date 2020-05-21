@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.Context;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.Context.Snapshot;
+import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -77,7 +78,7 @@ public class RecomputeCurrentQuotasTask implements Task {
 
     @Override
     public Task.Result run() {
-        return service.recomputeCurrentQuotas(context)
+        return service.recomputeCurrentQuotas(context, RunningOptions.DEFAULT)
             .subscribeOn(Schedulers.elastic())
             .block();
     }

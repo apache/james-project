@@ -37,6 +37,7 @@ import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
@@ -132,7 +133,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
             .times(1)
             .whenQueryStartsWith("UPDATE currentQuota SET"));
 
-        assertThat(testee().recomputeCurrentQuotas(new RecomputeCurrentQuotasService.Context()).block())
+        assertThat(testee().recomputeCurrentQuotas(new RecomputeCurrentQuotasService.Context(), RunningOptions.DEFAULT).block())
             .isEqualTo(Task.Result.PARTIAL);
     }
 
@@ -151,7 +152,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
             .whenQueryStartsWith("UPDATE currentQuota SET"));
 
         RecomputeCurrentQuotasService.Context context = new RecomputeCurrentQuotasService.Context();
-        testee().recomputeCurrentQuotas(context).block();
+        testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
         assertThat(context.snapshot())
             .isEqualTo(new RecomputeCurrentQuotasService.Context(0L,

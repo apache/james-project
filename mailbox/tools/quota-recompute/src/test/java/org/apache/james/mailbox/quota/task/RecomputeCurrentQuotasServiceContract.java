@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.Context;
+import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
@@ -61,7 +62,7 @@ public interface RecomputeCurrentQuotasServiceContract {
 
     @Test
     default void recomputeCurrentQuotasShouldReturnCompleteWhenNoData() {
-        assertThat(testee().recomputeCurrentQuotas(new Context()).block())
+        assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
             .isEqualTo(Task.Result.COMPLETED);
     }
 
@@ -69,7 +70,7 @@ public interface RecomputeCurrentQuotasServiceContract {
     default void recomputeCurrentQuotasShouldReturnCompleteWhenUserWithNoMessage() throws Exception {
         usersRepository().addUser(USER_1, PASSWORD);
 
-        assertThat(testee().recomputeCurrentQuotas(new Context()).block())
+        assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
             .isEqualTo(Task.Result.COMPLETED);
     }
 
@@ -77,7 +78,7 @@ public interface RecomputeCurrentQuotasServiceContract {
     default void recomputeCurrentQuotasShouldComputeEmptyQuotasWhenUserWithNoMessage() throws Exception {
         usersRepository().addUser(USER_1, PASSWORD);
 
-        testee().recomputeCurrentQuotas(new Context()).block();
+        testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block();
 
         assertThat(Mono.from(currentQuotaManager().getCurrentQuotas(userQuotaRootResolver().forUser(USER_1))).block())
             .isEqualTo(CurrentQuotas.emptyQuotas());
@@ -93,7 +94,7 @@ public interface RecomputeCurrentQuotasServiceContract {
         MessageManager messageManager = mailboxManager().getMailbox(MAILBOX_PATH, session);
         appendAMessageForUser(messageManager, session);
 
-        assertThat(testee().recomputeCurrentQuotas(new Context()).block())
+        assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
             .isEqualTo(Task.Result.COMPLETED);
     }
 
@@ -107,7 +108,7 @@ public interface RecomputeCurrentQuotasServiceContract {
         MessageManager messageManager = mailboxManager().getMailbox(MAILBOX_PATH, session);
         appendAMessageForUser(messageManager, session);
 
-        testee().recomputeCurrentQuotas(new Context()).block();
+        testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block();
 
         assertThat(Mono.from(currentQuotaManager().getCurrentQuotas(userQuotaRootResolver().forUser(USER_1))).block())
             .isEqualTo(EXPECTED_QUOTAS);
@@ -128,7 +129,7 @@ public interface RecomputeCurrentQuotasServiceContract {
         QuotaOperation operation = new QuotaOperation(quotaRoot, QuotaCountUsage.count(3L), QuotaSizeUsage.size(390L));
         Mono.from(currentQuotaManager().increase(operation)).block();
 
-        testee().recomputeCurrentQuotas(new Context()).block();
+        testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block();
 
         assertThat(Mono.from(currentQuotaManager().getCurrentQuotas(userQuotaRootResolver().forUser(USER_1))).block())
             .isEqualTo(EXPECTED_QUOTAS);
@@ -137,7 +138,7 @@ public interface RecomputeCurrentQuotasServiceContract {
     @Test
     default void recomputeCurrentQuotasShouldNotUpdateContextWhenNoData() {
         Context context = new Context();
-        testee().recomputeCurrentQuotas(context).block();
+        testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
         assertThat(context.snapshot()).isEqualToComparingFieldByFieldRecursively(new Context().snapshot());
     }
@@ -147,7 +148,7 @@ public interface RecomputeCurrentQuotasServiceContract {
         usersRepository().addUser(USER_1, PASSWORD);
 
         Context context = new Context();
-        testee().recomputeCurrentQuotas(context).block();
+        testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
         assertThat(context.snapshot())
             .isEqualTo(new Context(1L, ImmutableList.of()).snapshot());
@@ -164,7 +165,7 @@ public interface RecomputeCurrentQuotasServiceContract {
         appendAMessageForUser(messageManager, session);
 
         Context context = new Context();
-        testee().recomputeCurrentQuotas(context).block();
+        testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
         assertThat(context.snapshot())
             .isEqualTo(new Context(1L, ImmutableList.of()).snapshot());
@@ -187,7 +188,7 @@ public interface RecomputeCurrentQuotasServiceContract {
         Mono.from(currentQuotaManager().increase(operation)).block();
 
         Context context = new Context();
-        testee().recomputeCurrentQuotas(context).block();
+        testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
         assertThat(context.snapshot())
             .isEqualTo(new Context(2L, ImmutableList.of()).snapshot());
