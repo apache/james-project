@@ -28,6 +28,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
@@ -52,8 +53,8 @@ public class ReindexCommandIntegrationTest {
     @Before
     public void setUp() throws Exception {
         reIndexer = mock(ReIndexer.class);
-        when(reIndexer.reIndex()).thenReturn(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
-        when(reIndexer.reIndex(any(MailboxPath.class))).thenReturn(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        when(reIndexer.reIndex(any(RunningOptions.class))).thenReturn(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        when(reIndexer.reIndex(any(MailboxPath.class), any(RunningOptions.class))).thenReturn(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
         guiceJamesServer = memoryJmap.jmapServer(new JMXServerModule(),
             binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)))
             .overrideWith(binder -> binder.bind(ReIndexer.class)
@@ -70,7 +71,7 @@ public class ReindexCommandIntegrationTest {
     public void reindexAllShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "reindexall"});
 
-        verify(reIndexer).reIndex();
+        verify(reIndexer).reIndex(ReIndexer.RunningOptions.DEFAULT);
     }
 
     @Test
@@ -78,7 +79,7 @@ public class ReindexCommandIntegrationTest {
         String mailbox = "mailbox";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "reindexmailbox", MailboxConstants.USER_NAMESPACE, USER, mailbox});
 
-        verify(reIndexer).reIndex(MailboxPath.forUser(Username.of(USER), mailbox));
+        verify(reIndexer).reIndex(MailboxPath.forUser(Username.of(USER), mailbox), ReIndexer.RunningOptions.DEFAULT);
     }
 
 }
