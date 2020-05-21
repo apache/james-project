@@ -35,6 +35,8 @@ import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Mono;
+
 class InMemoryCurrentQuotaCalculatorTest {
     static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
     static final CurrentQuotas CURRENT_QUOTAS = new CurrentQuotas(
@@ -53,7 +55,7 @@ class InMemoryCurrentQuotaCalculatorTest {
     @Test
     void getCurrentMessageCountShouldReturnRecalculateMessageCountWhenEntryIsNotInitialized() throws Exception {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
+            .thenReturn(Mono.just(CURRENT_QUOTAS));
 
         assertThat(testee.getCurrentMessageCount(QUOTA_ROOT).block()).isEqualTo(QuotaCountUsage.count(18));
     }
@@ -61,7 +63,7 @@ class InMemoryCurrentQuotaCalculatorTest {
     @Test
     void getCurrentStorageShouldReturnRecalculateSizeWhenEntryIsNotInitialized() throws Exception {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
+            .thenReturn(Mono.just(CURRENT_QUOTAS));
 
         assertThat(testee.getCurrentStorage(QUOTA_ROOT).block()).isEqualTo(QuotaSizeUsage.size(512));
     }
@@ -69,7 +71,7 @@ class InMemoryCurrentQuotaCalculatorTest {
     @Test
     void getCurrentStorageShouldReRetrieveStoredQuotasWhenCalculateOnUnknownQuotaIsTrue() throws Exception {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
+            .thenReturn(Mono.just(CURRENT_QUOTAS));
 
         QuotaOperation quotaOperation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
         testee.increase(quotaOperation).block();
@@ -81,7 +83,7 @@ class InMemoryCurrentQuotaCalculatorTest {
     @Test
     void getCurrentQuotasShouldReturnRecalculateQuotasWhenEntryIsNotInitialized() throws Exception {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
+            .thenReturn(Mono.just(CURRENT_QUOTAS));
 
         assertThat(testee.getCurrentQuotas(QUOTA_ROOT).block()).isEqualTo(CURRENT_QUOTAS);
     }
@@ -89,7 +91,7 @@ class InMemoryCurrentQuotaCalculatorTest {
     @Test
     void getCurrentQuotasShouldReRetrieveStoredQuotasWhenCalculateOnUnknownQuotaIsTrue() throws Exception {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
-            .thenReturn(CURRENT_QUOTAS);
+            .thenReturn(Mono.just(CURRENT_QUOTAS));
 
         QuotaOperation quotaOperation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(100));
         testee.increase(quotaOperation).block();

@@ -21,25 +21,23 @@ package org.apache.james.mailbox.store.quota;
 
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
-import java.util.Iterator;
-import java.util.List;
-
 import javax.inject.Inject;
 
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.CurrentQuotas;
-import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CurrentQuotaCalculator {
+    private static final int NO_CONCURRENCY = 1;
 
     private final MailboxSessionMapperFactory factory;
     private final QuotaRootResolver quotaRootResolver;
@@ -51,18 +49,12 @@ public class CurrentQuotaCalculator {
         this.quotaRootResolver = quotaRootResolver;
     }
 
-    public CurrentQuotas recalculateCurrentQuotas(QuotaRoot quotaRoot, MailboxSession session) throws MailboxException {
-        List<Mailbox> mailboxes = quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, session);
+    public Mono<CurrentQuotas> recalculateCurrentQuotas(QuotaRoot quotaRoot, MailboxSession session) {
         MessageMapper mapper = factory.getMessageMapper(session);
-        long messagesSizes = 0;
-        long messageCount = 0;
-        for (Mailbox mailbox : mailboxes) {
-            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED);
-            messageCount += mapper.countMessagesInMailbox(mailbox);
-            while (messages.hasNext()) {
-                messagesSizes +=  messages.next().getFullContentOctets();
-            }
-        }
-        return new CurrentQuotas(QuotaCountUsage.count(messageCount), QuotaSizeUsage.size(messagesSizes));
+
+        return Flux.from(quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, session))
+            .flatMap(mailbox -> mapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED), NO_CONCURRENCY)
+            .map(message -> new CurrentQuotas(QuotaCountUsage.count(1), QuotaSizeUsage.size(message.getFullContentOctets())))
+            .reduce(CurrentQuotas.emptyQuotas(), CurrentQuotas::increase);
     }
 }

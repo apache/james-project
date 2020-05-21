@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.quota;
 
-import java.util.List;
-
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -43,5 +41,5 @@ public interface QuotaRootResolver extends QuotaRootDeserializer {
 
     Publisher<QuotaRoot> getQuotaRootReactive(MailboxId mailboxId);
 
-    List<Mailbox> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException;
+    Publisher<Mailbox> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession);
 }

@@ -95,14 +95,15 @@ class DefaultUserQuotaRootResolverTest {
         when(mockedFactory.getMailboxMapper(MAILBOX_SESSION)).thenReturn(mockedMapper);
         when(mockedMapper.findMailboxWithPathLike(any())).thenReturn(Flux.just(MAILBOX, MAILBOX_2));
 
-        assertThat(testee.retrieveAssociatedMailboxes(QUOTA_ROOT, MAILBOX_SESSION)).containsOnly(MAILBOX, MAILBOX_2);
+        assertThat(testee.retrieveAssociatedMailboxes(QUOTA_ROOT, MAILBOX_SESSION).collectList().block()).containsOnly(MAILBOX, MAILBOX_2);
     }
 
     @Test
     void retrieveAssociatedMailboxesShouldThrowWhenQuotaRootContainsSeparator2Times() throws Exception {
         assertThatThrownBy(() -> testee.retrieveAssociatedMailboxes(
-                QuotaRoot.quotaRoot("#private&be&nwa", Optional.empty()), MAILBOX_SESSION))
-            .isInstanceOf(MailboxException.class);
+                    QuotaRoot.quotaRoot("#private&be&nwa", Optional.empty()), MAILBOX_SESSION)
+                .collectList().block())
+            .hasCauseInstanceOf(MailboxException.class);
     }
 
     @Test

@@ -179,7 +179,7 @@ public class RecomputeCurrentQuotasService {
         MailboxSession session = sessionProvider.createSystemSession(username);
         QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
 
-        return Mono.fromCallable(() -> currentQuotaCalculator.recalculateCurrentQuotas(quotaRoot, session))
+        return currentQuotaCalculator.recalculateCurrentQuotas(quotaRoot, session)
             .map(recalculatedQuotas -> QuotaOperation.from(quotaRoot, recalculatedQuotas))
             .flatMap(quotaOperation -> Mono.from(storeCurrentQuotaManager.setCurrentQuotas(quotaOperation)))
             .then(Mono.just(Task.Result.COMPLETED))

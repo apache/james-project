@@ -58,7 +58,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Flux;
 
 public class GetQuotaProcessorTest {
 
@@ -102,7 +102,7 @@ public class GetQuotaProcessorTest {
         GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
 
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
-            .thenReturn(ImmutableList.of(mailbox));
+            .thenReturn(Flux.just(mailbox));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(MESSAGE_QUOTA);
@@ -129,7 +129,7 @@ public class GetQuotaProcessorTest {
         GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
 
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
-            .thenReturn(ImmutableList.of(mailbox));
+            .thenReturn(Flux.just((mailbox)));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenThrow(new MailboxException());
@@ -151,7 +151,7 @@ public class GetQuotaProcessorTest {
         GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
 
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
-            .thenReturn(ImmutableList.of(mailbox));
+            .thenReturn(Flux.just((mailbox)));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(false);
 

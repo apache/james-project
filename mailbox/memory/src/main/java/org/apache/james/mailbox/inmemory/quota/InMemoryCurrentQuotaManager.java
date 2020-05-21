@@ -40,6 +40,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
 
@@ -47,12 +48,19 @@ public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
 
     @Inject
     public InMemoryCurrentQuotaManager(CurrentQuotaCalculator quotaCalculator, SessionProvider sessionProvider) {
-        this.quotaCache = CacheBuilder.newBuilder().build(new CacheLoader<QuotaRoot, AtomicReference<CurrentQuotas>>() {
+        this.quotaCache = CacheBuilder.newBuilder().build(new CacheLoader<>() {
             @Override
-            public AtomicReference<CurrentQuotas> load(QuotaRoot quotaRoot) throws Exception {
-                return new AtomicReference<>(quotaCalculator.recalculateCurrentQuotas(quotaRoot, sessionProvider.createSystemSession(Username.of(quotaRoot.getValue()))));
+            public AtomicReference<CurrentQuotas> load(QuotaRoot quotaRoot) {
+                return new AtomicReference<>(
+                    loadQuotas(quotaRoot, quotaCalculator, sessionProvider));
             }
         });
+    }
+
+    public CurrentQuotas loadQuotas(QuotaRoot quotaRoot, CurrentQuotaCalculator quotaCalculator, SessionProvider sessionProvider) {
+        return quotaCalculator.recalculateCurrentQuotas(quotaRoot, sessionProvider.createSystemSession(Username.of(quotaRoot.getValue())))
+            .subscribeOn(Schedulers.elastic())
+            .block();
     }
 
     @Override
@@ -68,19 +76,22 @@ public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
     @Override
     public Mono<QuotaCountUsage> getCurrentMessageCount(QuotaRoot quotaRoot) {
         return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get().count())
-            .onErrorMap(this::wrapAsMailboxException);
+            .onErrorMap(this::wrapAsMailboxException)
+            .subscribeOn(Schedulers.elastic());
     }
 
     @Override
     public Mono<QuotaSizeUsage> getCurrentStorage(QuotaRoot quotaRoot) {
         return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get().size())
-            .onErrorMap(this::wrapAsMailboxException);
+            .onErrorMap(this::wrapAsMailboxException)
+            .subscribeOn(Schedulers.elastic());
     }
 
     @Override
     public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
         return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get())
-            .onErrorMap(this::wrapAsMailboxException);
+            .onErrorMap(this::wrapAsMailboxException)
+            .subscribeOn(Schedulers.elastic());
     }
 
     @Override
@@ -88,7 +99,8 @@ public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
         return getCurrentQuotas(quotaOperation.quotaRoot())
             .filter(storedQuotas -> !storedQuotas.equals(CurrentQuotas.from(quotaOperation)))
             .flatMap(storedQuotas -> decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size()))
-                .then(increase(quotaOperation)));
+                .then(increase(quotaOperation)))
+            .subscribeOn(Schedulers.elastic());
     }
 
     private Mono<Void> updateQuota(QuotaRoot quotaRoot, UnaryOperator<CurrentQuotas> quotaFunction) {

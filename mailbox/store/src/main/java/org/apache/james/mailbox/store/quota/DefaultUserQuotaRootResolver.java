@@ -41,6 +41,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
@@ -115,17 +116,20 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     }
 
     @Override
-    public List<Mailbox> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException {
-        List<String> parts = QUOTA_ROOT_DESERIALIZER.toParts(quotaRoot.getValue());
-        String namespace = parts.get(0);
-        String user = parts.get(1);
-        return factory.getMailboxMapper(mailboxSession)
-            .findMailboxWithPathLike(MailboxQuery.builder()
-                .namespace(namespace)
-                .user(Username.of(user))
-                .matchesAllMailboxNames()
-                .build()
-                .asUserBound())
-            .collectList().block();
+    public Flux<Mailbox> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) {
+        try {
+            List<String> parts = QUOTA_ROOT_DESERIALIZER.toParts(quotaRoot.getValue());
+            String namespace = parts.get(0);
+            String user = parts.get(1);
+            return factory.getMailboxMapper(mailboxSession)
+                .findMailboxWithPathLike(MailboxQuery.builder()
+                    .namespace(namespace)
+                    .user(Username.of(user))
+                    .matchesAllMailboxNames()
+                    .build()
+                    .asUserBound());
+        } catch (MailboxException e) {
+            return Flux.error(e);
+        }
     }
 }
