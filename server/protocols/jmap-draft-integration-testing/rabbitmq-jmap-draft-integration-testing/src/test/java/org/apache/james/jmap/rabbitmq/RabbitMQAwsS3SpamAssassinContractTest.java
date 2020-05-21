@@ -42,7 +42,7 @@ class RabbitMQAwsS3SpamAssassinContractTest implements SpamAssassinContract {
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.objectStorage())
+            .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
             .build())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())

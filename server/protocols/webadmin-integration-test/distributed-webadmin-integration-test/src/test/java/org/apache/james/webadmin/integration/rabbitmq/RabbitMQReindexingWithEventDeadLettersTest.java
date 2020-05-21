@@ -86,7 +86,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.objectStorage())
+            .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
             .build())
         .extension(dockerElasticSearch)
         .extension(new CassandraExtension())

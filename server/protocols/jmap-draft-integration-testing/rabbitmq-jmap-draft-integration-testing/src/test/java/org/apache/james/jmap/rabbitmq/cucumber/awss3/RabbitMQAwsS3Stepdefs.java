@@ -80,7 +80,7 @@ public class RabbitMQAwsS3Stepdefs {
         CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.objectStorage())
+            .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
             .build();
 
         mainStepdefs.jmapServer = CassandraRabbitMQJamesServerMain.createServer(configuration)

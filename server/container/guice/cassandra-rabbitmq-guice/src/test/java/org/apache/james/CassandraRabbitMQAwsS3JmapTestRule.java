@@ -64,7 +64,7 @@ public class CassandraRabbitMQAwsS3JmapTestRule implements TestRule {
         CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.objectStorage())
+            .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
             .build();
 
         return CassandraRabbitMQJamesServerMain.createServer(configuration)

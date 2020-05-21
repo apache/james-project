@@ -97,7 +97,7 @@ class BlobStoreConfigurationTest {
             .build();
 
         assertThat(parse(propertyProvider))
-            .isEqualTo(BlobStoreConfiguration.objectStorage());
+            .isEqualTo(BlobStoreConfiguration.objectStorage().disableCache());
     }
 
     @Test
@@ -222,5 +222,34 @@ class BlobStoreConfigurationTest {
                 .getImplementation()
                 .getName())
             .isEqualTo(CASSANDRA);
+    }
+
+    @Test
+    void cacheEnabledShouldBeTrueWhenSpecified() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("cache.enable", true);
+
+        assertThat(BlobStoreConfiguration.from(configuration).cacheEnabled())
+            .isTrue();
+    }
+
+    @Test
+    void cacheEnabledShouldBeFalseWhenSpecified() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("cache.enable", false);
+
+        assertThat(BlobStoreConfiguration.from(configuration).cacheEnabled())
+            .isFalse();
+    }
+
+    @Test
+    void cacheEnabledShouldDefaultToFalse() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+
+        assertThat(BlobStoreConfiguration.from(configuration).cacheEnabled())
+            .isFalse();
     }
 }

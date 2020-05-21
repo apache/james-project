@@ -39,6 +39,22 @@ import com.google.common.base.MoreObjects;
 public class BlobStoreConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreConfiguration.class);
 
+    public static class CacheChoice {
+        private final  BlobStoreImplName implementation;
+
+        private CacheChoice(BlobStoreImplName implementation) {
+            this.implementation = implementation;
+        }
+
+        public BlobStoreConfiguration enableCache() {
+            return new BlobStoreConfiguration(implementation, CACHE_ENABLED);
+        }
+
+        public BlobStoreConfiguration disableCache() {
+            return new BlobStoreConfiguration(implementation, !CACHE_ENABLED);
+        }
+    }
+
     public enum BlobStoreImplName {
         CASSANDRA("cassandra"),
         OBJECTSTORAGE("objectstorage"),
@@ -70,6 +86,8 @@ public class BlobStoreConfiguration {
     }
 
     static final String BLOBSTORE_IMPLEMENTATION_PROPERTY = "implementation";
+    static final String CACHE_ENABLE_PROPERTY = "cache.enable";
+    static final boolean CACHE_ENABLED = true;
 
     public static BlobStoreConfiguration parse(org.apache.james.server.core.configuration.Configuration configuration) throws ConfigurationException {
         PropertiesProvider propertiesProvider = new PropertiesProvider(new FileSystemImpl(configuration.directories()),
@@ -96,25 +114,33 @@ public class BlobStoreConfiguration {
             .orElseThrow(() -> new IllegalStateException(String.format("%s property is missing please use one of " +
                 "supported values in: %s", BLOBSTORE_IMPLEMENTATION_PROPERTY, BlobStoreImplName.supportedImplNames())));
 
-        return new BlobStoreConfiguration(blobStoreImplName);
+        boolean cacheEnabled = configuration.getBoolean(CACHE_ENABLE_PROPERTY, false);
+
+        return new BlobStoreConfiguration(blobStoreImplName, cacheEnabled);
     }
 
     public static BlobStoreConfiguration cassandra() {
-        return new BlobStoreConfiguration(BlobStoreImplName.CASSANDRA);
+        return new BlobStoreConfiguration(BlobStoreImplName.CASSANDRA, !CACHE_ENABLED);
     }
 
-    public static BlobStoreConfiguration objectStorage() {
-        return new BlobStoreConfiguration(BlobStoreImplName.OBJECTSTORAGE);
+    public static CacheChoice objectStorage() {
+        return new CacheChoice(BlobStoreImplName.OBJECTSTORAGE);
     }
 
     public static BlobStoreConfiguration hybrid() {
-        return new BlobStoreConfiguration(BlobStoreImplName.HYBRID);
+        return new BlobStoreConfiguration(BlobStoreImplName.HYBRID, !CACHE_ENABLED);
     }
 
     private final BlobStoreImplName implementation;
+    private final boolean cacheEnabled;
 
-    BlobStoreConfiguration(BlobStoreImplName implementation) {
-       this.implementation = implementation;
+    BlobStoreConfiguration(BlobStoreImplName implementation, boolean cacheEnabled) {
+        this.implementation = implementation;
+        this.cacheEnabled = cacheEnabled;
+    }
+
+    public boolean cacheEnabled() {
+        return cacheEnabled;
     }
 
     BlobStoreImplName getImplementation() {
@@ -126,20 +152,22 @@ public class BlobStoreConfiguration {
         if (o instanceof BlobStoreConfiguration) {
             BlobStoreConfiguration that = (BlobStoreConfiguration) o;
 
-            return Objects.equals(this.implementation, that.implementation);
+            return Objects.equals(this.implementation, that.implementation)
+                && Objects.equals(this.cacheEnabled, that.cacheEnabled);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(implementation);
+        return Objects.hash(implementation, cacheEnabled);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("implementation", implementation)
+            .add("cacheEnabled", cacheEnabled)
             .toString();
     }
 }
