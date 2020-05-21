@@ -44,7 +44,7 @@ public class CassandraRabbitMQLdapJamesServerMain implements JamesServerMain {
     }
 
     public static GuiceJamesServer createServer(CassandraRabbitMQJamesConfiguration configuration) {
-        BlobStoreConfiguration blobStoreConfiguration = configuration.blobstoreconfiguration();
+        BlobStoreConfiguration blobStoreConfiguration = configuration.blobStoreConfiguration();
 
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MODULES)
