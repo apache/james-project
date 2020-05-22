@@ -1,0 +1,6 @@
+The xref:dev:domain/core/index.adoc[core component]s of James are:
+
+ * xref:domain/core/server.adoc[Server]
+ * xref:domain/core/mailets.adoc[Mailets]
+ * xref:domain/core/mailbox.adoc[Mailbox]
+ * xref:domain/core/protocolsadoc[Protocols]

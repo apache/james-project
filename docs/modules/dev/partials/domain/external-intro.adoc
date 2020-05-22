@@ -1,0 +1,12 @@
+There are a number of xref:dev:domain/external/index.adoc[external components] that, 
+although not part of the core, are essential to make the 
+James system work as a whole:
+
+ * Mailet implementations
+ * Protocol-based applications
+ * Administration tools
+ * Storage implementations
+ * Mime4j
+ * jSieve
+ * jSFP
+ * jDKIM

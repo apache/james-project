@@ -1,0 +1,16 @@
+= Apache James Domain Model
+:navtitle: Domain Model
+
+Apache James uses the xref:architecture/index.adoc[hexagonal architecture] to 
+distinguish the xref:dev:domain/core/index.adoc[core elements] of its domain 
+from xref:dev:domain/external/index.adoc[everything else]. This section
+describes the core domain model in some detail, and how the core components
+interact with external components.
+
+== Core domain model
+
+include::partial$domain/core-intro.adoc[]
+
+== Relationship with external components
+
+include::partial$domain/external-intro.adoc[]

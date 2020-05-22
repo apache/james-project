@@ -1,4 +1,12 @@
 = Apache James Developer Resources
 :navtitle: Developer Resources
 
-(TODO)
+This section is aimed at developers, meaning anybody who needs to interact
+with the source code in any way.
+
+The resources available in this section are:
+
+ * xref:architecture/index.adoc[The system architecture]
+ * xref:domain/index.adoc[The domain model]
+ * xref:code/index.adoc[The code base]
+

@@ -1,0 +1,4 @@
+= Apache James External Components
+:navtitle: External
+
+include::partial$domain/external-intro.adoc[]

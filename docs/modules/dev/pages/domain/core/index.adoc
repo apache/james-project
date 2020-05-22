@@ -1,0 +1,4 @@
+= Apache James Core Domain Model
+:navtitle: Domain Core
+
+include::partial$domain/core-intro.adoc[]
