@@ -216,8 +216,9 @@ public class MessageFastViewProjectionCorrector {
     }
 
     private Mono<Result> correctProjection(Flux<ProjectionEntry> entries, RunningOptions runningOptions, Progress progress) {
-        return ReactorUtils.throttle(entries, PERIOD, runningOptions.getMessagesPerSecond())
-            .flatMap(entry -> correctProjection(entry, progress))
+        return ReactorUtils.Throttler.<ProjectionEntry, Result>forOperation(entry -> correctProjection(entry, progress))
+            .window(runningOptions.getMessagesPerSecond(), PERIOD)
+            .throttle(entries)
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED));
     }

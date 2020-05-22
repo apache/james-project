@@ -19,6 +19,7 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -29,11 +30,14 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.james.util.ReactorUtils.Throttler;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
 import org.slf4j.MDC;
 
 import com.github.steveash.guavate.Guavate;
@@ -51,6 +55,34 @@ class ReactorUtilsTest {
     @Nested
     class Throttling {
         @Test
+        void windowShouldThrowWhenMaxSizeIsNegative() {
+            assertThatThrownBy(() -> Throttler.forOperation(Mono::just)
+                    .window(-1, Duration.ofSeconds(1)))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void windowShouldThrowWhenMaxSizeIsZero() {
+            assertThatThrownBy(() -> Throttler.forOperation(Mono::just)
+                    .window(0, Duration.ofSeconds(1)))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void windowShouldThrowWhenDurationIsNegative() {
+            assertThatThrownBy(() -> Throttler.forOperation(Mono::just)
+                    .window(1, Duration.ofSeconds(-1)))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void windowShouldThrowWhenDurationIsZero() {
+            assertThatThrownBy(() -> Throttler.forOperation(Mono::just)
+                    .window(1, Duration.ZERO))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
         void throttleShouldApplyMaxSize() {
             int windowMaxSize = 3;
             Duration windowDuration = Duration.ofMillis(100);
@@ -58,15 +90,40 @@ class ReactorUtilsTest {
             Stopwatch stopwatch = Stopwatch.createUnstarted();
 
             Flux<Integer> originalFlux = Flux.range(0, 10);
-            ImmutableList<Long> windowMembership = ReactorUtils.throttle(originalFlux, windowDuration, windowMaxSize)
+            ImmutableList<Long> windowMembership = Throttler.<Integer, Long>forOperation(
+                    i -> Mono.fromCallable(() -> stopwatch.elapsed(TimeUnit.MILLISECONDS)))
+                .window(windowMaxSize, windowDuration)
+                .throttle(originalFlux)
                 .doOnSubscribe(signal -> stopwatch.start())
-                .map(i -> stopwatch.elapsed(TimeUnit.MILLISECONDS))
                 .map(i -> i / 100)
                 .collect(Guavate.toImmutableList())
                 .block();
 
             assertThat(windowMembership)
                 .containsExactly(0L, 0L, 0L, 1L, 1L, 1L, 2L, 2L, 2L, 3L);
+        }
+
+        @Test
+        void throttleDownStreamConcurrencyShouldNotExceedWindowMaxSize() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(100);
+
+            AtomicInteger ongoingProcessing = new AtomicInteger();
+
+            Flux<Integer> originalFlux = Flux.range(0, 10);
+            Function<Integer, Publisher<Integer>> longRunningOperation =
+                any -> Mono.fromCallable(ongoingProcessing::incrementAndGet)
+                    .flatMap(i -> Mono.delay(windowDuration.multipliedBy(2)).thenReturn(i))
+                    .flatMap(i -> Mono.fromRunnable(ongoingProcessing::decrementAndGet).thenReturn(i));
+
+            ImmutableList<Integer> ongoingProcessingUponComputationStart = Throttler.forOperation(longRunningOperation)
+                .window(windowMaxSize, windowDuration)
+                .throttle(originalFlux)
+                .collect(Guavate.toImmutableList())
+                .block();
+
+            assertThat(ongoingProcessingUponComputationStart)
+                .allSatisfy(processingCount -> assertThat(processingCount).isLessThanOrEqualTo(windowMaxSize));
         }
     }
 
