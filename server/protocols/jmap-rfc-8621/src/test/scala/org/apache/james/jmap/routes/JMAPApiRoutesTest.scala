@@ -37,6 +37,7 @@ import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap._
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy}
 import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.method.{CoreEchoMethod, Method}
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
 import org.apache.james.mailbox.MailboxManager
 import org.apache.james.mailbox.extension.PreDeletionHook
@@ -67,7 +68,10 @@ object JMAPApiRoutesTest {
   private val mailboxManager: MailboxManager = MemoryMailboxManagerProvider.provideMailboxManager(empty_set)
   private val authenticationStrategy: BasicAuthenticationStrategy = new BasicAuthenticationStrategy(usersRepository, mailboxManager)
   private val AUTHENTICATOR: Authenticator = Authenticator.of(new RecordingMetricFactory, authenticationStrategy)
-  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, SERIALIZER)
+
+  private val JMAP_METHODS: Set[Method] = Set(new CoreEchoMethod)
+
+  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, SERIALIZER, JMAP_METHODS)
   private val ROUTES_HANDLER: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, JMAP_API_ROUTE))
 
   private val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))

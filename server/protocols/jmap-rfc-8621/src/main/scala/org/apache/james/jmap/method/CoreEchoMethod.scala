@@ -22,11 +22,12 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.model.Invocation
 import org.apache.james.jmap.model.Invocation.MethodName
+import org.apache.james.mailbox.MailboxSession
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
-class CoreEcho extends Method {
+class CoreEchoMethod extends Method {
   override val methodName = MethodName("Core/echo")
 
-  override def process(invocation: Invocation): Publisher[Invocation] = SMono.just(invocation)
+  override def process(invocation: Invocation, mailboxSession: MailboxSession): Publisher[Invocation] = SMono.just(invocation)
 }

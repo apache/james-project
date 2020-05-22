@@ -27,7 +27,7 @@ import org.apache.james.jmap.http.BasicAuthenticationStrategy;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.json.Serializer;
 import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
-import org.apache.james.jmap.method.CoreEcho;
+import org.apache.james.jmap.method.CoreEchoMethod;
 import org.apache.james.jmap.method.Method;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
 import org.apache.james.metrics.api.MetricFactory;
@@ -47,7 +47,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         bind(Serializer.class).in(Scopes.SINGLETON);
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
-        methods.addBinding().to(CoreEcho.class);
+        methods.addBinding().to(CoreEchoMethod.class);
     }
 
     @ProvidesIntoSet

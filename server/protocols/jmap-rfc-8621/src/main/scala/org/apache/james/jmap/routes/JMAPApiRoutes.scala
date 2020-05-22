@@ -35,10 +35,11 @@ import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.Serializer
-import org.apache.james.jmap.method.CoreEcho
+import org.apache.james.jmap.method.Method
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{Invocation, RequestObject, ResponseObject}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
+import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import reactor.core.publisher.Mono
@@ -46,13 +47,25 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
+import scala.collection.mutable
+import scala.jdk.CollectionConverters._
+
 object JMAPApiRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[JMAPApiRoutes])
 }
 
-class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
-                               val serializer: Serializer) extends JMAPRoutes {
-  private val coreEcho = new CoreEcho
+class JMAPApiRoutes (val authenticator: Authenticator,
+                     serializer: Serializer,
+                     methods: Set[Method]) extends JMAPRoutes {
+
+  private val methodsByName: Map[MethodName, Method] = methods.map(method => method.methodName -> method).toMap
+
+  @Inject
+  def this(@Named(InjectionKeys.RFC_8621) authenticator: Authenticator,
+           serializer: Serializer,
+           javaMethods: java.util.Set[Method]) {
+    this(authenticator, serializer, javaMethods.asScala.toSet)
+  }
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
     JMAPRoute.builder
@@ -66,8 +79,8 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
 
   private def post(httpServerRequest: HttpServerRequest, httpServerResponse: HttpServerResponse): Mono[Void] =
     SMono(authenticator.authenticate(httpServerRequest))
-      .flatMap(_ => this.requestAsJsonStream(httpServerRequest)
-        .flatMap(requestObject => this.process(requestObject, httpServerResponse)))
+      .flatMap((mailboxSession: MailboxSession) => this.requestAsJsonStream(httpServerRequest)
+        .flatMap(requestObject => this.process(requestObject, httpServerResponse, mailboxSession)))
       .onErrorResume(throwable => handleError(throwable, httpServerResponse))
       .subscribeOn(Schedulers.elastic)
       .asJava()
@@ -87,10 +100,12 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
       case JsError(_) => SMono.raiseError(new IllegalArgumentException("Invalid RequestObject"))
     }
 
-  private def process(requestObject: RequestObject, httpServerResponse: HttpServerResponse): SMono[Void] =
+  private def process(requestObject: RequestObject,
+                      httpServerResponse: HttpServerResponse,
+                      mailboxSession: MailboxSession): SMono[Void] =
     requestObject
       .methodCalls
-      .map(this.processMethodWithMatchName)
+      .map(invocation => this.processMethodWithMatchName(invocation, mailboxSession))
       .foldLeft(SFlux.empty[Invocation]) { (flux: SFlux[Invocation], mono: SMono[Invocation]) => flux.mergeWith(mono) }
       .collectSeq()
       .flatMap((invocations: Seq[Invocation]) =>
@@ -103,13 +118,13 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
           ).`then`())
       )
 
-  private def processMethodWithMatchName(invocation: Invocation): SMono[Invocation] = invocation.methodName match {
-    case coreEcho.methodName => SMono.fromPublisher(coreEcho.process(invocation))
-    case _ => SMono.just(new Invocation(
-      MethodName("error"),
-      Arguments(Json.obj("type" -> "Not implemented")),
-      invocation.methodCallId))
-  }
+  private def processMethodWithMatchName(invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
+    SMono.justOrEmpty(methodsByName.get(invocation.methodName))
+      .flatMap(method => SMono.fromPublisher(method.process(invocation, mailboxSession)))
+      .switchIfEmpty(SMono.just(new Invocation(
+        MethodName("error"),
+        Arguments(Json.obj("type" -> "Not implemented")),
+        invocation.methodCallId)))
 
   private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = throwable match {
     case exception: IllegalArgumentException => SMono.fromPublisher(httpServerResponse.status(SC_BAD_REQUEST)
