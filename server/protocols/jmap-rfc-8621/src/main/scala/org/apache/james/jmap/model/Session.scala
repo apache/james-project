@@ -75,7 +75,7 @@ final case class Account private(accountId: AccountId,
                                  accountCapabilities: Set[_ <: Capability])
 
 object State {
-  private[model] val INSTANCE: State = "000001"
+  val INSTANCE: State = "000001"
 
   type State = String Refined NonEmpty
 }

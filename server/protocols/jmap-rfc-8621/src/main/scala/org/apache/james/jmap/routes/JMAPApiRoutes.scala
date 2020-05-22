@@ -47,7 +47,6 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
-import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
 object JMAPApiRoutes {
@@ -130,7 +129,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
     case exception: IllegalArgumentException => SMono.fromPublisher(httpServerResponse.status(SC_BAD_REQUEST)
       .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
       .sendString(SMono.fromCallable(() => exception.getMessage), StandardCharsets.UTF_8)
-      .`then`())
+      .`then`)
     case exception: UnauthorizedException => SMono(handleAuthenticationFailure(httpServerResponse, JMAPApiRoutes.LOGGER, exception))
     case _ => SMono.fromPublisher(handleInternalError(httpServerResponse, throwable))
   }

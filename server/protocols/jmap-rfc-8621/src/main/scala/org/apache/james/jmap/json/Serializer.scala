@@ -244,4 +244,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   def deserializeMailboxGetRequest(input: String): JsResult[MailboxGetRequest] = {
     Json.parse(input).validate[MailboxGetRequest]
   }
+
+  def deserializeMailboxGetRequest(input: JsValue): JsResult[MailboxGetRequest] = {
+    Json.fromJson[MailboxGetRequest](input)
+  }
 }
