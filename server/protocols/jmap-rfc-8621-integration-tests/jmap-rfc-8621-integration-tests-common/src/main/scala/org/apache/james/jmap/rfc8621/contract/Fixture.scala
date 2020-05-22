@@ -69,8 +69,10 @@ object Fixture {
   val DOMAIN_WITH_SPACE: Domain = Domain.of("dom ain.tld")
   val _2_DOT_DOMAIN: Domain = Domain.of("do.main.tld")
   val BOB: Username = Username.fromLocalPartWithDomain("bob", DOMAIN)
+  val ANDRE: Username = Username.fromLocalPartWithDomain("andre", DOMAIN)
   val ALICE: Username = Username.fromLocalPartWithDomain("alice", _2_DOT_DOMAIN)
   val BOB_PASSWORD: String = "bobpassword"
+  val ANDRE_PASSWORD: String = "andrepassword"
   val ALICE_PASSWORD: String = "alicepassword"
 
   val BOB_BASIC_AUTH_HEADER: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${BOB.asString}:$BOB_PASSWORD")}")
