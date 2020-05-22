@@ -26,6 +26,7 @@ import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.BasicAuthenticationStrategy;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.json.Serializer;
+import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
 import org.apache.james.jmap.method.CoreEcho;
 import org.apache.james.jmap.method.Method;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
@@ -57,7 +58,12 @@ public class RFC8621MethodsModule extends AbstractModule {
     @Provides
     @Singleton
     @Named(InjectionKeys.RFC_8621)
-    Authenticator provideAuthenticator(MetricFactory metricFactory, BasicAuthenticationStrategy basicAuthenticationStrategy) {
-        return Authenticator.of(metricFactory, basicAuthenticationStrategy);
+    Authenticator provideAuthenticator(MetricFactory metricFactory,
+                                       BasicAuthenticationStrategy basicAuthenticationStrategy,
+                                       JWTAuthenticationStrategy jwtAuthenticationStrategy) {
+        return Authenticator.of(
+            metricFactory,
+            basicAuthenticationStrategy,
+            jwtAuthenticationStrategy);
     }
 }

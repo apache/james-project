@@ -16,14 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.http;
+package org.apache.james.jmap.jwt;
 
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
+import org.apache.james.jmap.exceptions.MailboxSessionCreationException;
+import org.apache.james.jmap.http.AuthenticationStrategy;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -37,14 +38,15 @@ import reactor.netty.http.server.HttpServerRequest;
 
 public class JWTAuthenticationStrategy implements AuthenticationStrategy {
 
-    @VisibleForTesting static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
+    @VisibleForTesting
+    public static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
     private final JwtTokenVerifier tokenManager;
     private final MailboxManager mailboxManager;
     private final UsersRepository usersRepository;
 
     @Inject
     @VisibleForTesting
-    JWTAuthenticationStrategy(JwtTokenVerifier tokenManager, MailboxManager mailboxManager, UsersRepository usersRepository) {
+    public JWTAuthenticationStrategy(JwtTokenVerifier tokenManager, MailboxManager mailboxManager, UsersRepository usersRepository) {
         this.tokenManager = tokenManager;
         this.mailboxManager = mailboxManager;
         this.usersRepository = usersRepository;

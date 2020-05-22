@@ -46,8 +46,8 @@ import org.apache.james.jmap.draft.methods.SetVacationResponseMethod;
 import org.apache.james.jmap.http.AccessTokenAuthenticationStrategy;
 import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.InjectionKeys;
-import org.apache.james.jmap.http.JWTAuthenticationStrategy;
 import org.apache.james.jmap.http.QueryParameterAccessTokenAuthenticationStrategy;
+import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
 import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.inject.AbstractModule;
