@@ -87,7 +87,7 @@ public class UserReindexingTask implements Task {
 
     @Override
     public Result run() {
-        return reIndexerPerformer.reIndex(username, reprocessingContext, runningOptions)
+        return reIndexerPerformer.reIndexUserMailboxes(username, reprocessingContext, runningOptions)
             .onErrorResume(e -> Mono.just(Result.PARTIAL))
             .block();
     }

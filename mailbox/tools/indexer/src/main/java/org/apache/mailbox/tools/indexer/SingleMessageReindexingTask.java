@@ -96,7 +96,7 @@ public class SingleMessageReindexingTask implements Task {
 
     @Override
     public Result run() {
-        return reIndexerPerformer.handleMessageReIndexing(mailboxId, uid, new ReprocessingContext())
+        return reIndexerPerformer.reIndexSingleMessage(mailboxId, uid, new ReprocessingContext())
             .onErrorResume(e -> {
                 LOGGER.warn("Error encountered while reindexing {} : {}", mailboxId, uid, e);
                 return Mono.just(Result.PARTIAL);

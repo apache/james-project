@@ -48,7 +48,7 @@ public class FullReindexingTask implements Task {
 
     @Override
     public Result run() {
-        return reIndexerPerformer.reIndex(reprocessingContext, runningOptions)
+        return reIndexerPerformer.reIndexAllMessages(reprocessingContext, runningOptions)
             .onErrorResume(e -> Mono.just(Result.PARTIAL))
             .block();
     }
