@@ -133,6 +133,7 @@ class KeyRegistrationHandler {
                 if (registration.unregister().lastListenerRemoved()) {
                     registrationBinder.unbind(key)
                         .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
+                        .subscribeOn(Schedulers.elastic())
                         .block();
                 }
             }));
