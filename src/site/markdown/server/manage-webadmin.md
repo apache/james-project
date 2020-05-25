@@ -579,10 +579,26 @@ curl -XPOST http://ip:port/mailboxes?task=reIndex
 
 Will schedule a task for reIndexing all the mails stored on this James server.
 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+An admin can specify the concurrency that should be used when running the task:
+
+ - `messagesPerSecond` rate at which messages should be processed per second. Default is 50.
+
+This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
+
+Example:
+
+curl -XPOST http://ip:port/mailboxes?task=reIndex&messagesPerSecond=200
+
 The scheduled task will have the following type `full-reindexing` and the following `additionalInformation`:
 
 ```
 {
+  "type":"full-reindexing",
+  "runningOptions":{
+    "messagesPerSecond":200
+  },
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "failures": {
@@ -594,16 +610,36 @@ The scheduled task will have the following type `full-reindexing` and the follow
 
 ##### Fixing previously failed ReIndexing
 
+Will schedule a task for reIndexing all the mails which had failed to be indexed from the ReIndexingAllMails task.
+
 Given `bbdb69c9-082a-44b0-a85a-6e33e74287a5` being a `taskId` generated for a reIndexing tasks
 
 ```
 curl -XPOST 'http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5'
 ```
 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+An admin can specify the concurrency that should be used when running the task:
+
+ - `messagesPerSecond` rate at which messages should be processed per second. Default is 50.
+
+This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
+
+Example:
+
+```
+curl -XPOST http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5&messagesPerSecond=200
+```
+
 The scheduled task will have the following type `error-recovery-indexation` and the following `additionalInformation`:
 
 ```
 {
+  "type":"error-recovery-indexation"
+  "runningOptions":{
+    "messagesPerSecond":200
+  },
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "failures": {
@@ -630,6 +666,18 @@ Note that 'mailboxId' path parameter needs to be a (implementation dependent) va
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
+An admin can specify the concurrency that should be used when running the task:
+
+ - `messagesPerSecond` rate at which messages should be processed per second. Default is 50.
+
+This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
+
+Example:
+
+```
+curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex&messagesPerSecond=200
+```
+
 Response codes:
 
  - 201: Success. Corresponding task id is returned.
@@ -639,6 +687,10 @@ The scheduled task will have the following type `mailbox-reindexing` and the fol
 
 ```
 {
+  "type":"mailbox-reindexing",
+  "runningOptions":{
+    "messagesPerSecond":200
+  },   
   "mailboxId":"{mailboxId}",
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
@@ -939,6 +991,18 @@ Will schedule a task for reIndexing all the mails in "user@domain.com" mailboxes
  
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
  
+An admin can specify the concurrency that should be used when running the task:
+
+ - `messagesPerSecond` rate at which messages should be processed per second. Default is 50.
+
+This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
+
+Example:
+
+```
+curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes?task=reIndex&messagesPerSecond=200
+```
+
 Response codes:
  
  - 201: Success. Corresponding task id is returned.
@@ -948,6 +1012,10 @@ The scheduled task will have the following type `user-reindexing` and the follow
 
 ```
 {
+  "type":"user-reindexing",
+  "runningOptions":{
+    "messagesPerSecond":200
+  }, 
   "user":"user@domain.com",
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
