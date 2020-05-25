@@ -491,7 +491,7 @@ Rerunning the task will *eventually* provide the consistent result. As such we a
 In order to ensure being offline, stop the traffic on SMTP, JMAP and IMAP ports, for example via re-configuration or 
 firewall rules.
 
-`trustMessageProjection` query parameter can be set to `true`. Cpntent of `messageIdTable` (listing messages by their 
+`trustMessageProjection` query parameter can be set to `true`. Content of `messageIdTable` (listing messages by their 
 mailbox context) table will be trusted and not compared against content of `imapUidTable` table (listing messages by their
 messageId mailbox independent identifier). This will result in a better performance running the
 task at the cost of safety in the face of message denormalization inconsistencies. 
