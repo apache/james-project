@@ -168,7 +168,8 @@ public class MailboxFactory {
                          QuotaLoader quotaLoader,
                          MailboxSession mailboxSession) throws MailboxException {
         boolean isOwner = mailboxPath.belongsTo(mailboxSession);
-        Optional<Role> role = Role.from(mailboxPath.getName());
+        Optional<Role> role = Role.from(mailboxPath.getName())
+            .filter(any -> mailboxPath.belongsTo(mailboxSession));
 
         Rights rights = Rights.fromACL(resolvedAcl)
             .removeEntriesFor(mailboxPath.getUser());
