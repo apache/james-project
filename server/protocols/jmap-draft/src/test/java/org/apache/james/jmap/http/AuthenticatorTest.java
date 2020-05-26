@@ -84,6 +84,14 @@ public class AuthenticatorTest {
     }
 
     @Test
+    public void filterShouldReturnUnauthorizedWhenNoAuthenticationStrategy() {
+        Authenticator testee = Authenticator.of(new RecordingMetricFactory());
+
+        assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
+            .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
     public void authenticationStrategiesShouldNotBeEagerlySubScribed() {
         AtomicBoolean called = new AtomicBoolean(false);
 

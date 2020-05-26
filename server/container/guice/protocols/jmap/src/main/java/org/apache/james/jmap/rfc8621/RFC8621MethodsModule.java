@@ -22,15 +22,22 @@ package org.apache.james.jmap.rfc8621;
 
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
+import org.apache.james.jmap.http.Authenticator;
+import org.apache.james.jmap.http.BasicAuthenticationStrategy;
+import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.json.Serializer;
 import org.apache.james.jmap.method.CoreEcho;
 import org.apache.james.jmap.method.Method;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
+import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
+import com.google.inject.name.Named;
 
 public class RFC8621MethodsModule extends AbstractModule {
 
@@ -45,5 +52,12 @@ public class RFC8621MethodsModule extends AbstractModule {
     @ProvidesIntoSet
     JMAPRoutesHandler routesHandler(JMAPApiRoutes jmapApiRoutes) {
         return new JMAPRoutesHandler(Version.RFC8621, jmapApiRoutes);
+    }
+
+    @Provides
+    @Singleton
+    @Named(InjectionKeys.RFC_8621)
+    Authenticator provideAuthenticator(MetricFactory metricFactory, BasicAuthenticationStrategy basicAuthenticationStrategy) {
+        return Authenticator.of(metricFactory, basicAuthenticationStrategy);
     }
 }

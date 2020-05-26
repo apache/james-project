@@ -40,6 +40,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.Endpoint;
@@ -86,7 +87,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
     private final Authenticator authenticator;
 
     @Inject
-    public AuthenticationRoutes(UsersRepository usersRepository, SimpleTokenManager simpleTokenManager, AccessTokenManager accessTokenManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory, Authenticator authenticator) {
+    public AuthenticationRoutes(UsersRepository usersRepository, SimpleTokenManager simpleTokenManager, AccessTokenManager accessTokenManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory, @Named(InjectionKeys.DRAFT) Authenticator authenticator) {
         this.mapper = new MultipleObjectMapperBuilder()
             .registerClass(ContinuationTokenRequest.UNIQUE_JSON_PATH, ContinuationTokenRequest.class)
             .registerClass(AccessTokenRequest.UNIQUE_JSON_PATH, AccessTokenRequest.class)

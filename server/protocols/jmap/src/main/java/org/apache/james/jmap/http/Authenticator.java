@@ -20,8 +20,6 @@ package org.apache.james.jmap.http;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
@@ -38,14 +36,13 @@ import reactor.netty.http.server.HttpServerRequest;
 public class Authenticator {
     private static final Logger LOGGER = LoggerFactory.getLogger(Authenticator.class);
 
-    static Authenticator of(MetricFactory metricFactory, AuthenticationStrategy... authenticationStrategies) {
+    public static Authenticator of(MetricFactory metricFactory, AuthenticationStrategy... authenticationStrategies) {
         return new Authenticator(ImmutableList.copyOf(authenticationStrategies), metricFactory);
     }
 
     private final List<AuthenticationStrategy> authMethods;
     private final MetricFactory metricFactory;
 
-    @Inject
     @VisibleForTesting
     Authenticator(List<AuthenticationStrategy> authMethods, MetricFactory metricFactory) {
         this.authMethods = authMethods;

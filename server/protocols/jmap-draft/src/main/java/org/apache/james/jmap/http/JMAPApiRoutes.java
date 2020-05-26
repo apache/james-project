@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
@@ -69,7 +70,7 @@ public class JMAPApiRoutes implements JMAPRoutes {
     private final DefaultMailboxesProvisioner defaultMailboxesProvisioner;
 
     @Inject
-    public JMAPApiRoutes(RequestHandler requestHandler, MetricFactory metricFactory, Authenticator authenticator, UserProvisioner userProvisioner, DefaultMailboxesProvisioner defaultMailboxesProvisioner) {
+    public JMAPApiRoutes(RequestHandler requestHandler, MetricFactory metricFactory, @Named(InjectionKeys.DRAFT) Authenticator authenticator, UserProvisioner userProvisioner, DefaultMailboxesProvisioner defaultMailboxesProvisioner) {
         this.requestHandler = requestHandler;
         this.metricFactory = metricFactory;
         this.authenticator = authenticator;

@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
@@ -72,7 +73,7 @@ public class UploadRoutes implements JMAPRoutes {
     private final ObjectMapper objectMapper;
 
     @Inject
-    private UploadRoutes(MetricFactory metricFactory, Authenticator authenticator, AttachmentManager attachmentManager, ObjectMapper objectMapper) {
+    private UploadRoutes(MetricFactory metricFactory, @Named(InjectionKeys.DRAFT) Authenticator authenticator, AttachmentManager attachmentManager, ObjectMapper objectMapper) {
         this.metricFactory = metricFactory;
         this.authenticator = authenticator;
         this.attachmentManager = attachmentManager;

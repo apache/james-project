@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
@@ -86,7 +87,7 @@ public class DownloadRoutes implements JMAPRoutes {
 
     @Inject
     @VisibleForTesting
-    DownloadRoutes(BlobManager blobManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory, Authenticator authenticator) {
+    DownloadRoutes(BlobManager blobManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory, @Named(InjectionKeys.DRAFT) Authenticator authenticator) {
         this.blobManager = blobManager;
         this.simpleTokenFactory = simpleTokenFactory;
         this.metricFactory = metricFactory;

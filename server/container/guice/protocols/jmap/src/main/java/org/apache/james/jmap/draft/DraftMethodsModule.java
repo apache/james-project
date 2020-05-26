@@ -43,10 +43,18 @@ import org.apache.james.jmap.draft.methods.SetMessagesMethod;
 import org.apache.james.jmap.draft.methods.SetMessagesProcessor;
 import org.apache.james.jmap.draft.methods.SetMessagesUpdateProcessor;
 import org.apache.james.jmap.draft.methods.SetVacationResponseMethod;
+import org.apache.james.jmap.http.AccessTokenAuthenticationStrategy;
+import org.apache.james.jmap.http.Authenticator;
+import org.apache.james.jmap.http.InjectionKeys;
+import org.apache.james.jmap.http.JWTAuthenticationStrategy;
+import org.apache.james.jmap.http.QueryParameterAccessTokenAuthenticationStrategy;
+import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 public class DraftMethodsModule extends AbstractModule {
@@ -87,4 +95,15 @@ public class DraftMethodsModule extends AbstractModule {
         setMessagesProcessors.addBinding().to(SendMDNProcessor.class);
     }
 
+    @Provides
+    @Named(InjectionKeys.DRAFT)
+    Authenticator provideAuthenticator(MetricFactory metricFactory,
+                                       AccessTokenAuthenticationStrategy accessTokenAuthenticationStrategy,
+                                       JWTAuthenticationStrategy jwtAuthenticationStrategy,
+                                       QueryParameterAccessTokenAuthenticationStrategy queryParameterAuthenticationStrategy) {
+        return Authenticator.of(metricFactory,
+            accessTokenAuthenticationStrategy,
+            jwtAuthenticationStrategy,
+            queryParameterAuthenticationStrategy);
+    }
 }

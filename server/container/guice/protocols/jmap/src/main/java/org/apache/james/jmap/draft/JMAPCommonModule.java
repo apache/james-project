@@ -18,10 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.draft;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import javax.inject.Singleton;
 
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
@@ -40,10 +37,6 @@ import org.apache.james.jmap.draft.model.message.view.MessageHeaderViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageMetadataViewFactory;
 import org.apache.james.jmap.draft.send.MailSpool;
 import org.apache.james.jmap.event.ComputeMessageFastViewProjectionListener;
-import org.apache.james.jmap.http.AccessTokenAuthenticationStrategy;
-import org.apache.james.jmap.http.AuthenticationStrategy;
-import org.apache.james.jmap.http.JWTAuthenticationStrategy;
-import org.apache.james.jmap.http.QueryParameterAccessTokenAuthenticationStrategy;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
@@ -52,9 +45,7 @@ import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
@@ -95,19 +86,6 @@ public class JMAPCommonModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), StartUpCheck.class)
             .addBinding().to(JMAPConfigurationStartUpCheck.class);
-    }
-
-    @Provides
-    @Singleton
-    public List<AuthenticationStrategy> authStrategies(
-            AccessTokenAuthenticationStrategy accessTokenAuthenticationStrategy,
-            JWTAuthenticationStrategy jwtAuthenticationStrategy,
-            QueryParameterAccessTokenAuthenticationStrategy queryParameterAuthenticationStrategy) {
-
-        return ImmutableList.of(
-                jwtAuthenticationStrategy,
-                accessTokenAuthenticationStrategy,
-                queryParameterAuthenticationStrategy);
     }
 
     @ProvidesIntoSet
