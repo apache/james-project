@@ -19,6 +19,7 @@
 package org.apache.james.jmap.routes
 
 import java.nio.charset.StandardCharsets
+import java.util.Base64
 
 import com.google.common.collect.ImmutableSet
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
@@ -26,28 +27,51 @@ import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import io.restassured.config.EncoderConfig.encoderConfig
 import io.restassured.config.RestAssuredConfig.newConfig
-import io.restassured.http.ContentType
+import io.restassured.http.{ContentType, Header, Headers}
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
+import org.apache.james.core.{Domain, Username}
+import org.apache.james.dnsservice.api.DNSService
+import org.apache.james.domainlist.memory.MemoryDomainList
 import org.apache.james.jmap.JMAPUrls.JMAP
-import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap._
+import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy}
+import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.routes.JMAPApiRoutesTest._
+import org.apache.james.mailbox.MailboxManager
+import org.apache.james.mailbox.extension.PreDeletionHook
+import org.apache.james.mailbox.inmemory.MemoryMailboxManagerProvider
 import org.apache.james.mailbox.model.TestId
+import org.apache.james.metrics.tests.RecordingMetricFactory
+import org.apache.james.user.memory.MemoryUsersRepository
+import org.mockito.Mockito.mock
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
+object JMAPApiRoutesTest {
   private val SERIALIZER: Serializer = new Serializer(new TestId.Factory)
-
   private val TEST_CONFIGURATION: JMAPConfiguration = JMAPConfiguration.builder().enable().randomPort().build()
   private val ACCEPT_JMAP_VERSION_HEADER = "application/json; jmapVersion="
   private val ACCEPT_DRAFT_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.DRAFT.asString()
   private val ACCEPT_RFC8621_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.RFC8621.asString()
 
-  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(SERIALIZER)
+  private val empty_set: ImmutableSet[PreDeletionHook] = ImmutableSet.of()
+  private val dnsService = mock(classOf[DNSService])
+  private val domainList = new MemoryDomainList(dnsService)
+  domainList.addDomain(Domain.of("james.org"))
+
+  private val usersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList)
+  usersRepository.addUser(Username.of("user1"), "password")
+
+  private val mailboxManager: MailboxManager = MemoryMailboxManagerProvider.provideMailboxManager(empty_set)
+  private val authenticationStrategy: BasicAuthenticationStrategy = new BasicAuthenticationStrategy(usersRepository, mailboxManager)
+  private val AUTHENTICATOR: Authenticator = Authenticator.of(new RecordingMetricFactory, authenticationStrategy)
+  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, SERIALIZER)
   private val ROUTES_HANDLER: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, JMAP_API_ROUTE))
 
+  private val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))
+  
   private val REQUEST_OBJECT: String =
     """{
       |  "using": [
@@ -136,6 +160,9 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       |    }
       |}
       |""".stripMargin
+}
+
+class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
 
   var jmapServer: JMAPServer = _
 
@@ -158,88 +185,121 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   }
 
   "RFC-8621 version, GET" should "not supported and return 404 status" in {
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
+
     RestAssured
       .`given`()
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .headers(headers)
       .when()
-      .get
+        .get
       .then
-      .statusCode(HttpStatus.SC_NOT_FOUND)
+        .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
   "RFC-8621 version, POST, without body" should "return 200 status" in {
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
+
     RestAssured
       .`given`()
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .headers(headers)
       .when()
-      .post
+        .post
       .then
-      .statusCode(HttpStatus.SC_OK)
+        .statusCode(HttpStatus.SC_OK)
   }
 
   "RFC-8621 version, POST, methods include supported" should "return OK status" in {
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
+
     val response = RestAssured
       .`given`()
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(REQUEST_OBJECT)
+        .headers(headers)
+        .body(REQUEST_OBJECT)
       .when()
-      .post()
+        .post()
       .then
-      .statusCode(HttpStatus.SC_OK)
-      .contentType(ContentType.JSON)
+        .statusCode(HttpStatus.SC_OK)
+        .contentType(ContentType.JSON)
       .extract()
-      .body()
-      .asString()
+        .body()
+        .asString()
 
     assertThatJson(response).isEqualTo(RESPONSE_OBJECT)
   }
 
   "RFC-8621 version, POST, with methods" should "return OK status, ResponseObject depend on method" in {
 
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
+
     val response = RestAssured
       .`given`()
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD)
+        .headers(headers)
+        .body(REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD)
       .when()
-      .post()
+        .post()
       .then
-      .statusCode(HttpStatus.SC_OK)
-      .contentType(ContentType.JSON)
+        .statusCode(HttpStatus.SC_OK)
+        .contentType(ContentType.JSON)
       .extract()
-      .body()
-      .asString()
+        .body()
+        .asString()
 
     assertThatJson(response).isEqualTo(RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD)
   }
 
   "Draft version, GET" should "return 404 status" in {
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
+
     RestAssured
       .`given`()
-      .header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER)
+        .headers(headers)
       .when()
-      .get
+        .get
       .then
-      .statusCode(HttpStatus.SC_NOT_FOUND)
+        .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
   "Draft version, POST, without body" should "return 400 status" in {
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
     RestAssured
       .`given`()
-      .header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER)
+        .headers(headers)
       .when()
-      .post
+        .post
       .then
-      .statusCode(HttpStatus.SC_NOT_FOUND)
+        .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
   "RFC-8621 version, POST, with wrong requestObject body" should "return 400 status" in {
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
     RestAssured
       .`given`()
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(WRONG_OBJECT_REQUEST)
+        .headers(headers)
+        .body(WRONG_OBJECT_REQUEST)
       .when()
-      .post
+        .post
       .then
-      .statusCode(HttpStatus.SC_BAD_REQUEST)
+        .statusCode(HttpStatus.SC_BAD_REQUEST)
   }
 }

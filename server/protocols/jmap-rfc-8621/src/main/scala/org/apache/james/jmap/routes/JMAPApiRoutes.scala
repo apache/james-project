@@ -27,22 +27,31 @@ import eu.timepit.refined.auto._
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.OK
-import javax.inject.Inject
+import javax.inject.{Inject, Named}
 import org.apache.http.HttpStatus.SC_BAD_REQUEST
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
+import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.http.Authenticator
+import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.CoreEcho
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{Invocation, RequestObject, ResponseObject}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
-class JMAPApiRoutes @Inject() (serializer: Serializer) extends JMAPRoutes {
+object JMAPApiRoutes {
+  val LOGGER: Logger = LoggerFactory.getLogger(classOf[JMAPApiRoutes])
+}
+
+class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
+                               val serializer: Serializer) extends JMAPRoutes {
   private val coreEcho = new CoreEcho
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
@@ -56,8 +65,9 @@ class JMAPApiRoutes @Inject() (serializer: Serializer) extends JMAPRoutes {
       .corsHeaders())
 
   private def post(httpServerRequest: HttpServerRequest, httpServerResponse: HttpServerResponse): Mono[Void] =
-    this.requestAsJsonStream(httpServerRequest)
-      .flatMap(requestObject => this.process(requestObject, httpServerResponse))
+    SMono(authenticator.authenticate(httpServerRequest))
+      .flatMap(_ => this.requestAsJsonStream(httpServerRequest)
+        .flatMap(requestObject => this.process(requestObject, httpServerResponse)))
       .onErrorResume(throwable => handleError(throwable, httpServerResponse))
       .subscribeOn(Schedulers.elastic)
       .asJava()
@@ -101,14 +111,12 @@ class JMAPApiRoutes @Inject() (serializer: Serializer) extends JMAPRoutes {
       invocation.methodCallId))
   }
 
-  private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = {
-    if (throwable.isInstanceOf[IllegalArgumentException]) {
-      return SMono.fromPublisher(httpServerResponse.status(SC_BAD_REQUEST)
-        .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-        .sendString(SMono.fromCallable(() => throwable.getMessage), StandardCharsets.UTF_8)
-        .`then`())
-    }
-
-    SMono.fromPublisher(handleInternalError(httpServerResponse, throwable))
+  private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = throwable match {
+    case exception: IllegalArgumentException => SMono.fromPublisher(httpServerResponse.status(SC_BAD_REQUEST)
+      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+      .sendString(SMono.fromCallable(() => exception.getMessage), StandardCharsets.UTF_8)
+      .`then`())
+    case exception: UnauthorizedException => SMono(handleAuthenticationFailure(httpServerResponse, JMAPApiRoutes.LOGGER, exception))
+    case _ => SMono.fromPublisher(handleInternalError(httpServerResponse, throwable))
   }
 }

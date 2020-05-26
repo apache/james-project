@@ -18,41 +18,20 @@
  ****************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
-import java.nio.charset.StandardCharsets
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
-import io.restassured.RestAssured
-import io.restassured.builder.RequestSpecBuilder
-import io.restassured.config.EncoderConfig.encoderConfig
-import io.restassured.config.RestAssuredConfig.newConfig
-import io.restassured.http.ContentType
+import io.restassured.RestAssured._
+import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.http.HttpStatus
+import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
-import org.apache.james.jmap.JMAPUrls.JMAP
-import org.apache.james.jmap.draft.JmapGuiceProbe
+import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EchoMethodContract._
+import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
+import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
 object EchoMethodContract {
-
-  private val REQUEST_OBJECT: String =
-    """{
-      |  "using": [
-      |    "urn:ietf:params:jmap:core"
-      |  ],
-      |  "methodCalls": [
-      |    [
-      |      "Core/echo",
-      |      {
-      |        "arg1": "arg1data",
-      |        "arg2": "arg2data"
-      |      },
-      |      "c1"
-      |    ]
-      |  ]
-      |}""".stripMargin
   private val REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD: String =
     """{
       |  "using": [
@@ -77,20 +56,6 @@ object EchoMethodContract {
       |  ]
       |}""".stripMargin
 
-  private val RESPONSE_OBJECT: String =
-    """{
-      |  "sessionState": "75128aab4b1b",
-      |  "methodResponses": [
-      |    [
-      |      "Core/echo",
-      |      {
-      |        "arg1": "arg1data",
-      |        "arg2": "arg2data"
-      |      },
-      |      "c1"
-      |    ]
-      |  ]
-      |}""".stripMargin
   private val RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD: String =
     """{
       |  "sessionState": "75128aab4b1b",
@@ -112,55 +77,51 @@ object EchoMethodContract {
       |    ]
       |  ]
       |}""".stripMargin
-
-  private val ACCEPT_RFC8621_VERSION_HEADER: String = """application/json; jmapVersion=rfc-8621"""
 }
 
 trait EchoMethodContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
-    RestAssured.requestSpecification = new RequestSpecBuilder()
-      .setContentType(ContentType.JSON)
-      .setAccept(ContentType.JSON)
-      .setConfig(newConfig.encoderConfig(encoderConfig.defaultContentCharset(StandardCharsets.UTF_8)))
-      .setPort(server.getProbe(classOf[JmapGuiceProbe])
-        .getJmapPort
-        .getValue)
-      .setBasePath(JMAP)
+    server.getProbe(classOf[DataProbeImpl])
+      .fluent()
+      .addDomain(DOMAIN.asString())
+      .addUser(BOB.asString(), BOB_PASSWORD)
+
+    requestSpecification = baseRequestSpecBuilder(server)
+        .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
       .build
   }
 
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def echoMethodShouldRespondOKWithRFC8621VersionAndSupportedMethod(): Unit = {
-    val response: String = RestAssured
-      .`given`()
+
+    val response: String = `given`()
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(REQUEST_OBJECT)
+        .body(ECHO_REQUEST_OBJECT)
       .when()
         .post()
       .then
-        .statusCode(HttpStatus.SC_OK)
-        .contentType(ContentType.JSON)
+        .statusCode(SC_OK)
+        .contentType(JSON)
       .extract()
         .body()
         .asString()
 
-    assertThatJson(response).isEqualTo(RESPONSE_OBJECT)
+    assertThatJson(response).isEqualTo(ECHO_RESPONSE_OBJECT)
   }
 
   @Test
   def echoMethodShouldRespondWithRFC8621VersionAndUnsupportedMethod(): Unit = {
-    val response: String = RestAssured
-      .`given`()
+    val response: String = `given`()
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD)
       .when()
         .post()
       .then
-        .statusCode(HttpStatus.SC_OK)
-        .contentType(ContentType.JSON)
+        .statusCode(SC_OK)
+        .contentType(JSON)
       .extract()
         .body()
         .asString()
