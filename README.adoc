@@ -260,6 +260,7 @@ Where :
 - HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
 Webadmin port binding is restricted to loopback as users are not authenticated by default on webadmin server. Thus you should avoid exposing it in production.
+Note that the above example assumes `127.0.0.1` is your loopback interface for convenience but you should change it if this is not the case on your machine.
 
 If you want to pass additional options to the underlying java command, you can configure a _JVM_OPTIONS_ env variable, for example add:
 
@@ -341,6 +342,7 @@ Where :
 - HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
 Webadmin port binding is restricted to loopback as users are not authenticated by default on webadmin server. Thus you should avoid exposing it in production.
+Note that the above example assumes `127.0.0.1` is your loopback interface for convenience but you should change it if this is not the case on your machine.
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
@@ -387,6 +389,7 @@ To run this container :
 HOSTNAME is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
 Webadmin port binding is restricted to loopback as users are not authenticated by default on webadmin server. Thus you should avoid exposing it in production.
+Note that the above example assumes `127.0.0.1` is your loopback interface for convenience but you should change it if this is not the case on your machine.
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
