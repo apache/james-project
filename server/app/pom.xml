@@ -457,14 +457,6 @@
             <artifactId>james-server-spring</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>org.springframework.osgi</groupId>
-                    <artifactId>spring-osgi-extender</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.osgi</groupId>
-                    <artifactId>org.osgi.core</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>javax.mail</groupId>
                     <artifactId>mail</artifactId>
                 </exclusion>
