@@ -25,6 +25,8 @@ import org.apache.james.mailbox.MailboxSession
 import org.reactivestreams.Publisher
 
 trait Method {
+  val JMAP_RFC8621_PREFIX: String = "JMAP-RFC8621-"
+
   val methodName: MethodName
 
   def process(invocation: Invocation, mailboxSession: MailboxSession): Publisher[Invocation]
