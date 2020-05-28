@@ -19,6 +19,7 @@
 
 package org.apache.james.smtpserver;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,6 +43,7 @@ import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler;
 import org.apache.james.protocols.smtp.core.DataLineFilter;
+import org.apache.james.protocols.smtp.core.SMTPMDCContextFactory;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
@@ -77,7 +79,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         MimeMessageInputStreamSource mmiss = session.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction)
             .orElseThrow(() -> new RuntimeException("'" + SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE.asString() + "' has not been filled."));
 
-        try {
+        try (Closeable closeable = SMTPMDCContextFactory.forSession(session).build()) {
             OutputStream out = mmiss.getWritableOutputStream();
 
             // 46 is "."

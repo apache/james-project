@@ -69,11 +69,15 @@ public interface ProtocolMDCContextFactory {
         return Optional.ofNullable(o)
             .filter(object -> object instanceof ProtocolSession)
             .map(object -> (ProtocolSession) object)
-            .map(protocolSession -> MDCBuilder.create()
-                .addContext(MDCBuilder.SESSION_ID, protocolSession.getSessionID())
-                .addContext(MDCBuilder.CHARSET, protocolSession.getCharset().displayName())
-                .addContext(MDCBuilder.USER, protocolSession.getUsername()))
+            .map(ProtocolMDCContextFactory::forSession)
             .orElse(MDCBuilder.create());
+    }
+
+    static MDCBuilder forSession(ProtocolSession protocolSession) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.SESSION_ID, protocolSession.getSessionID())
+            .addContext(MDCBuilder.CHARSET, protocolSession.getCharset().displayName())
+            .addContext(MDCBuilder.USER, protocolSession.getUsername());
     }
 
 }

@@ -38,14 +38,24 @@ public class SMTPMDCContextFactory implements ProtocolMDCContextFactory {
             .build();
     }
 
+    public static MDCBuilder forSession(SMTPSession smtpSession) {
+        return MDCBuilder.create()
+            .addContext(ProtocolMDCContextFactory.forSession(smtpSession))
+            .addContext(forSMTPSession(smtpSession));
+    }
+
     private MDCBuilder from(Object o) {
         return Optional.ofNullable(o)
             .filter(object -> object instanceof SMTPSession)
             .map(object -> (SMTPSession) object)
-            .map(protocolSession -> MDCBuilder.create()
-                .addContext("ehlo", protocolSession.getAttachment(SMTPSession.CURRENT_HELO_NAME, ProtocolSession.State.Connection))
-                .addContext("sender", protocolSession.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction))
-                .addContext("recipients", protocolSession.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)))
+            .map(SMTPMDCContextFactory::forSMTPSession)
             .orElse(MDCBuilder.create());
+    }
+
+    private static MDCBuilder forSMTPSession(SMTPSession smtpSession) {
+        return MDCBuilder.create()
+            .addContext("ehlo", smtpSession.getAttachment(SMTPSession.CURRENT_HELO_NAME, ProtocolSession.State.Connection))
+            .addContext("sender", smtpSession.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction))
+            .addContext("recipients", smtpSession.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction));
     }
 }
