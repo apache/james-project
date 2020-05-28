@@ -29,14 +29,22 @@ import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.util.MDCBuilder;
 import org.jboss.netty.channel.ChannelHandlerContext;
 
-public class ProtocolMDCContext {
-    public static Closeable from(Protocol protocol, ChannelHandlerContext ctx) {
+public interface ProtocolMDCContextFactory {
+    class Standard implements ProtocolMDCContextFactory {
+        @Override
+        public Closeable from(Protocol protocol, ChannelHandlerContext ctx) {
+            return mdcContext(protocol, ctx).build();
+        }
+    }
+
+    Closeable from(Protocol protocol, ChannelHandlerContext ctx);
+
+    static MDCBuilder mdcContext(Protocol protocol, ChannelHandlerContext ctx) {
         return MDCBuilder.create()
             .addContext(from(ctx.getAttachment()))
             .addContext(MDCBuilder.PROTOCOL, protocol.getName())
             .addContext(MDCBuilder.IP, retrieveIp(ctx))
-            .addContext(MDCBuilder.HOST, retrieveHost(ctx))
-            .build();
+            .addContext(MDCBuilder.HOST, retrieveHost(ctx));
     }
 
     private static String retrieveIp(ChannelHandlerContext ctx) {

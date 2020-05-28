@@ -100,7 +100,7 @@ public class NettyServer extends AbstractAsyncServer {
     }
     
     protected ChannelUpstreamHandler createCoreHandler() {
-        return new BasicChannelUpstreamHandler(protocol, secure);
+        return new BasicChannelUpstreamHandler(new ProtocolMDCContextFactory.Standard(), protocol, secure);
     }
     
     @Override

@@ -27,6 +27,7 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.BasicChannelUpstreamHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
+import org.apache.james.protocols.netty.ProtocolMDCContextFactory;
 import org.apache.james.protocols.pop3.POP3Protocol;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 
@@ -75,7 +76,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
     protected void preInit() throws Exception {
         super.preInit();
         POP3Protocol protocol = new POP3Protocol(getProtocolHandlerChain(), theConfigData);
-        coreHandler = new BasicChannelUpstreamHandler(protocol, getEncryption());
+        coreHandler = new BasicChannelUpstreamHandler(new ProtocolMDCContextFactory.Standard(), protocol, getEncryption());
     }
 
     @Override
