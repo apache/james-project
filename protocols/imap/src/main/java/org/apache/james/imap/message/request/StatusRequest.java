@@ -22,6 +22,8 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.StatusDataItems;
 
+import com.google.common.base.MoreObjects;
+
 public class StatusRequest extends AbstractImapRequest {
     private final String mailboxName;
 
@@ -39,5 +41,13 @@ public class StatusRequest extends AbstractImapRequest {
 
     public final StatusDataItems getStatusDataItems() {
         return statusDataItems;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxName", mailboxName)
+            .add("statusDataItems", statusDataItems)
+            .toString();
     }
 }

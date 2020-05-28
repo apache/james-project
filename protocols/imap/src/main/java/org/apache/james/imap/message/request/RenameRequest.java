@@ -21,6 +21,8 @@ package org.apache.james.imap.message.request;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
+import com.google.common.base.MoreObjects;
+
 public class RenameRequest extends AbstractImapRequest {
     private final String existingName;
     private final String newName;
@@ -37,5 +39,13 @@ public class RenameRequest extends AbstractImapRequest {
 
     public final String getNewName() {
         return newName;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("existingName", existingName)
+            .add("newName", newName)
+            .toString();
     }
 }

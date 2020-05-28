@@ -24,6 +24,8 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.Capability;
 
+import com.google.common.base.MoreObjects;
+
 public class EnableRequest extends AbstractImapRequest {
 
     private final List<Capability> capabilities;
@@ -40,5 +42,12 @@ public class EnableRequest extends AbstractImapRequest {
      */
     public List<Capability> getCapabilities() {
         return capabilities;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("capabilities", capabilities)
+            .toString();
     }
 }

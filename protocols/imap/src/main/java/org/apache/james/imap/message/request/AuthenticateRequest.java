@@ -21,6 +21,8 @@ package org.apache.james.imap.message.request;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
+import com.google.common.base.MoreObjects;
+
 public class AuthenticateRequest extends AbstractImapRequest {
     private final String authType;
 
@@ -31,5 +33,12 @@ public class AuthenticateRequest extends AbstractImapRequest {
 
     public final String getAuthType() {
         return authType;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("authType", authType)
+            .toString();
     }
 }

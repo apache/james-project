@@ -23,6 +23,8 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
 
+import com.google.common.base.MoreObjects;
+
 public class FetchRequest extends AbstractImapRequest {
     private final boolean useUids;
     private final IdRange[] idSet;
@@ -47,4 +49,12 @@ public class FetchRequest extends AbstractImapRequest {
         return useUids;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("useUids", useUids)
+            .add("idSet", idSet)
+            .add("fetch", fetch)
+            .toString();
+    }
 }

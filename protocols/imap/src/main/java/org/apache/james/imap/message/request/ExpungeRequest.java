@@ -23,6 +23,8 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * {@link ImapRequest} which requests expunge of deleted messages
  */
@@ -44,4 +46,10 @@ public class ExpungeRequest extends AbstractImapRequest {
         return uidRange;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("uidRange", uidRange)
+            .toString();
+    }
 }

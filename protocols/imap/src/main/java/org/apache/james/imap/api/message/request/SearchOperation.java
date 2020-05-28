@@ -46,6 +46,7 @@ public final class SearchOperation {
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("key", key)
+            .add("options", options)
             .toString();
     }
  

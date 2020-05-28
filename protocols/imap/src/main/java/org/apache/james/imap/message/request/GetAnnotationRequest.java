@@ -26,6 +26,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -149,5 +150,15 @@ public class GetAnnotationRequest extends AbstractImapRequest {
 
             throw new IllegalArgumentException("Cannot lookup Depth data for: " + code);
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxName", mailboxName)
+            .add("keys", keys)
+            .add("maxsize", maxsize)
+            .add("depth", depth)
+            .toString();
     }
 }

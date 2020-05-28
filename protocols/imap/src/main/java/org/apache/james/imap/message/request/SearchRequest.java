@@ -22,6 +22,8 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.SearchOperation;
 
+import com.google.common.base.MoreObjects;
+
 public class SearchRequest extends AbstractImapRequest {
     private final SearchOperation operation;
     private final boolean useUids;
@@ -38,5 +40,13 @@ public class SearchRequest extends AbstractImapRequest {
 
     public final boolean isUseUids() {
         return useUids;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("operation", operation)
+            .add("useUids", useUids)
+            .toString();
     }
 }

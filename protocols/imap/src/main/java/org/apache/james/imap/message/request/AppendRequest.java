@@ -27,6 +27,8 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * {@link ImapRequest} which request the append of a message to a mailbox
  */
@@ -80,4 +82,13 @@ public class AppendRequest extends AbstractImapRequest {
         return message;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxName", mailboxName)
+            .add("flags", flags)
+            .add("datetime", datetime)
+            .add("message", message)
+            .toString();
+    }
 }

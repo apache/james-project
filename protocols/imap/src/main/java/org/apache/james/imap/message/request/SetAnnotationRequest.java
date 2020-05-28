@@ -25,6 +25,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 public class SetAnnotationRequest extends AbstractImapRequest {
@@ -45,4 +46,11 @@ public class SetAnnotationRequest extends AbstractImapRequest {
         return mailboxAnnotations;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxName", mailboxName)
+            .add("mailboxAnnotations", mailboxAnnotations)
+            .toString();
+    }
 }

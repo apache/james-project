@@ -21,8 +21,16 @@ package org.apache.james.imap.message.request;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
+import com.google.common.base.MoreObjects;
+
 public class UnselectRequest extends AbstractImapRequest {
     public UnselectRequest(Tag tag) {
         super(tag, ImapConstants.UNSELECT_COMMAND);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .toString();
     }
 }

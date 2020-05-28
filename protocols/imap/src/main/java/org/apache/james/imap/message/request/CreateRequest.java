@@ -22,6 +22,8 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * {@link ImapRequest} which request the creation of a mailbox
  */
@@ -40,5 +42,12 @@ public class CreateRequest extends AbstractImapRequest {
      */
     public final String getMailboxName() {
         return mailboxName;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxName", mailboxName)
+            .toString();
     }
 }

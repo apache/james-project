@@ -23,6 +23,8 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * {@link ImapRequest} which requests the login of a user
  */
@@ -53,5 +55,12 @@ public class LoginRequest extends AbstractImapRequest {
      */
     public final Username getUserid() {
         return userid;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("userid", userid)
+            .toString();
     }
 }

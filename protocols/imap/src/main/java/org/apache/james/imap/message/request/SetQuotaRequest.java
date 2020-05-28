@@ -79,4 +79,12 @@ public class SetQuotaRequest extends AbstractImapRequest {
     public String getQuotaRoot() {
         return quotaRoot;
     }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("quotaRoot", quotaRoot)
+            .add("resourceLimits", resourceLimits)
+            .toString();
+    }
 }

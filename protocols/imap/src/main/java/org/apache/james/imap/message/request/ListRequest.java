@@ -21,6 +21,8 @@ package org.apache.james.imap.message.request;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
+import com.google.common.base.MoreObjects;
+
 public class ListRequest extends AbstractImapRequest {
     private final String baseReferenceName;
 
@@ -38,5 +40,13 @@ public class ListRequest extends AbstractImapRequest {
 
     public final String getMailboxPattern() {
         return mailboxPattern;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("baseReferenceName", baseReferenceName)
+            .add("mailboxPattern", mailboxPattern)
+            .toString();
     }
 }

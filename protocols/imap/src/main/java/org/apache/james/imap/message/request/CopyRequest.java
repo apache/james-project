@@ -23,11 +23,22 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * {@link ImapRequest} which request the copy of messages
  */
 public class CopyRequest extends AbstractMessageRangeRequest {
     public CopyRequest(IdRange[] idSet, String mailboxName, boolean useUids, Tag tag) {
         super(ImapConstants.COPY_COMMAND, idSet, mailboxName, useUids, tag);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("idSet", getIdSet())
+            .add("mailboxName", getMailboxName())
+            .add("useUids", isUseUids())
+            .toString();
     }
 }

@@ -22,6 +22,8 @@ package org.apache.james.imap.message.request;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * LISTRIGHTS Request.
  */
@@ -43,4 +45,11 @@ public class ListRightsRequest extends AbstractImapRequest {
         return mailboxName;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("identifier", identifier)
+            .add("mailboxName", mailboxName)
+            .toString();
+    }
 }
