@@ -38,6 +38,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.task.Task;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 public class SolveMessageInconsistenciesService {
 
@@ -424,16 +424,11 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Flux<Task.Result> fixInconsistenciesInImapUid(Context context, RunningOptions runningOptions) {
-        return throttle(messageIdToImapUidDAO.retrieveAllMessages(), runningOptions)
+        return ReactorUtils.Throttler.forOperation(this::detectInconsistencyInImapUid)
+            .window(runningOptions.getMessagesPerSecond(), PERIOD)
+            .throttle(messageIdToImapUidDAO.retrieveAllMessages())
             .doOnNext(any -> context.incrementProcessedImapUidEntries())
-            .flatMap(this::detectInconsistencyInImapUid)
             .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO));
-    }
-
-    private Flux<ComposedMessageIdWithMetaData> throttle(Flux<ComposedMessageIdWithMetaData> messages, RunningOptions runningOptions) {
-        return messages.windowTimeout(runningOptions.getMessagesPerSecond(), Duration.ofSeconds(1))
-            .zipWith(Flux.interval(DELAY, PERIOD))
-            .flatMap(Tuple2::getT1);
     }
 
     private Mono<Inconsistency> detectInconsistencyInImapUid(ComposedMessageIdWithMetaData message) {
@@ -474,9 +469,10 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Flux<Task.Result> fixInconsistenciesInMessageId(Context context, RunningOptions runningOptions) {
-        return throttle(messageIdDAO.retrieveAllMessages(), runningOptions)
+        return ReactorUtils.Throttler.forOperation(this::detectInconsistencyInMessageId)
+            .window(runningOptions.getMessagesPerSecond(), PERIOD)
+            .throttle(messageIdDAO.retrieveAllMessages())
             .doOnNext(any -> context.incrementMessageIdEntries())
-            .flatMap(this::detectInconsistencyInMessageId)
             .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO));
     }
 
