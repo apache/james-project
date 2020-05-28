@@ -64,6 +64,7 @@ public class IMAPMDCContext {
             ImapSession imapSession = (ImapSession) o;
 
             return MDCBuilder.create()
+                .addContext("sessionId", imapSession.sessionId().asString())
                 .addContext(MDCBuilder.USER, Optional.ofNullable(imapSession.getUserName())
                     .map(Username::asString))
                 .addContext(from(Optional.ofNullable(imapSession.getSelected())));

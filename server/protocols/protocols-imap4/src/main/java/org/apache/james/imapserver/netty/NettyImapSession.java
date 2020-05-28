@@ -43,13 +43,20 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private final Channel channel;
     private int handlerCount;
     private final boolean plainAuthDisallowed;
+    private final SessionId sessionId;
 
-    public NettyImapSession(Channel channel, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed) {
+    public NettyImapSession(Channel channel, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed, SessionId sessionId) {
         this.channel = channel;
         this.sslContext = sslContext;
         this.enabledCipherSuites = enabledCipherSuites;
         this.compress = compress;
         this.plainAuthDisallowed = plainAuthDisallowed;
+        this.sessionId = sessionId;
+    }
+
+    @Override
+    public SessionId sessionId() {
+        return sessionId;
     }
 
     @Override

@@ -29,6 +29,7 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.api.process.ImapSession.SessionId;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
@@ -93,9 +94,10 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
 
     @Override
     public void channelBound(final ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        ImapSession imapsession = new NettyImapSession(ctx.getChannel(), context, enabledCipherSuites, compress, plainAuthDisallowed,
+            SessionId.generate());
+        attributes.set(ctx.getChannel(), imapsession);
         try (Closeable closeable = IMAPMDCContext.from(ctx, attributes)) {
-            ImapSession imapsession = new NettyImapSession(ctx.getChannel(), context, enabledCipherSuites, compress, plainAuthDisallowed);
-            attributes.set(ctx.getChannel(), imapsession);
             super.channelBound(ctx, e);
         }
     }
