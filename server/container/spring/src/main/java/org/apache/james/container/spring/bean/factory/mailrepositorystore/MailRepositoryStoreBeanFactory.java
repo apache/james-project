@@ -75,6 +75,11 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
         this.configuration = configuration;
     }
 
+    @Override
+    public Optional<Protocol> defaultProtocol() {
+        return Optional.of(new Protocol("file"));
+    }
+
     @PostConstruct
     @SuppressWarnings("unchecked")
     public void init() throws Exception {

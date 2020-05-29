@@ -32,6 +32,8 @@ public interface MailRepositoryStore {
      */
     MailRepository select(MailRepositoryUrl url) throws MailRepositoryStoreException;
 
+    Optional<Protocol> defaultProtocol();
+
     /**
      * Create the {@link MailRepository} for the given url and return it. If the repository already exists,
      * then no new repository is created, the old one will be returned.

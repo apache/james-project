@@ -66,6 +66,11 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable
         this.perProtocolMailRepositoryDefaultConfiguration = new HashMap<>();
     }
 
+    @Override
+    public Optional<Protocol> defaultProtocol() {
+        return configuration.getDefaultProtocol();
+    }
+
     public void init() throws Exception {
         LOGGER.info("JamesMailStore init... {}", this);
 
