@@ -1,4 +1,4 @@
-# 29. Distributed blob garbage collector
+# 39. Distributed blob garbage collector
 
 Date: 2020-02-18
 

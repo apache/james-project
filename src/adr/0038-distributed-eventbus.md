@@ -1,4 +1,4 @@
-# 37. Distributed Event bus
+# 38. Distributed Event bus
 
 Date: 2020-05-25
 
@@ -8,7 +8,7 @@ Accepted (lazy consensus)
 
 ## Context
 
-Read [Event Bus ADR](0036-eventbus.md) for context.
+Read [Event Bus ADR](0037-eventbus.md) for context.
 
 Given several James servers, we need them to share a common EventBus.
 

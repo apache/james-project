@@ -19,7 +19,7 @@ The distributed James server then declares a queue upon start for each one of th
 binds to the main event exchange. 
 
 More information about this component, and its distributed, RabbitMQ based implementation, can be found in 
-[ADR 0036](0036-eventbus.md).
+[ADR 0036](0037-eventbus.md).
 
 If the user unconfigures the listener, the queue and the binding are still present but not consumed. This results in 
 unbounded queue growth eventually causing RabbitMQ resource exhaustion and failure.

@@ -1,4 +1,4 @@
-# 36. Event bus
+# 37. Event bus
 
 Date: 2020-05-05
 
@@ -48,7 +48,7 @@ key it is registered to, in an at least once fashion.
 
 We need to provide an `In VM` implementation of the EventBus for single server deployments.
 
-We also need to provide [a distributed event bus implementation](0037-distributed-eventbus.md).
+We also need to provide [a distributed event bus implementation](0038-distributed-eventbus.md).
 
 ## Current usages
 
