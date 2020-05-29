@@ -63,7 +63,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
   private def asMailboxGetRequest(arguments: Arguments): SMono[MailboxGetRequest] = {
     serializer.deserializeMailboxGetRequest(arguments.value) match {
       case JsSuccess(mailboxGetRequest, _) => SMono.just(mailboxGetRequest)
-      case JsError(errors) => SMono.raiseError(new IllegalArgumentException("Invalid MailboxGetRequest")) //FIXME MOB
+      case errors: JsError => SMono.raiseError(new IllegalArgumentException(serializer.serialize(errors).toString))
     }
   }
 

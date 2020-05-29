@@ -34,6 +34,7 @@ import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
+import scala.collection.{Seq => LegacySeq}
 import scala.util.Try
 
 class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
@@ -158,7 +159,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val mailboxRightsWrites: Writes[MailboxRights] = Json.writes[MailboxRights]
 
   private implicit val mailboxNamespaceWrites: Writes[MailboxNamespace] = {
-    case personal: PersonalNamespace => JsString("Personal")
+    case _: PersonalNamespace => JsString("Personal")
     case delegated: DelegatedNamespace => JsString(s"Delegated[${delegated.owner.asString}]")
   }
 
@@ -209,43 +210,44 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val notFoundWrites: Writes[NotFound] = Json.valueWrites[NotFound]
   private implicit val mailboxGetResponseWrites: Writes[MailboxGetResponse] = Json.writes[MailboxGetResponse]
 
-  def serialize(session: Session): JsValue = {
-    Json.toJson(session)
-  }
+  private implicit val jsonValidationErrorWrites: Writes[JsonValidationError] = error => JsString(error.message)
 
-  def serialize(requestObject: RequestObject): JsValue = {
-    Json.toJson(requestObject)
-  }
+  private implicit def jsonValidationErrorsWrites(implicit jsonValidationErrorWrites: Writes[JsonValidationError]): Writes[LegacySeq[JsonValidationError]] =
+    (errors: LegacySeq[JsonValidationError]) => {
+      JsArray(errors.map(error => jsonValidationErrorWrites.writes(error)).toArray[JsValue])
+    }
 
-  def serialize(responseObject: ResponseObject): JsValue = {
-    Json.toJson(responseObject)
-  }
+  private implicit def errorsWrites(implicit jsonValidationErrorsWrites: Writes[LegacySeq[JsonValidationError]]): Writes[LegacySeq[(JsPath, LegacySeq[JsonValidationError])]] =
+    (errors: LegacySeq[(JsPath, LegacySeq[JsonValidationError])]) => {
+      errors.foldLeft(JsArray.empty)((jsArray, jsError) => {
+        val (path: JsPath, list: LegacySeq[JsonValidationError]) = jsError
+        jsArray:+ JsObject(Seq(
+          "path" -> JsString(path.toJsonString),
+          "messages" -> jsonValidationErrorsWrites.writes(list)))
+      })
+    }
 
-  def serialize(mailbox: Mailbox): JsValue = {
-    Json.toJson(mailbox)
-  }
+  private implicit def jsErrorWrites: Writes[JsError] = Json.writes[JsError]
 
-  def serialize(mailboxGetResponse: MailboxGetResponse): JsValue = {
-    Json.toJson(mailboxGetResponse)
-  }
+  def serialize(session: Session): JsValue = Json.toJson(session)
 
-  def deserializeRequestObject(input: String): JsResult[RequestObject] = {
-    Json.parse(input).validate[RequestObject]
-  }
+  def serialize(requestObject: RequestObject): JsValue = Json.toJson(requestObject)
 
-  def deserializeRequestObject(input: InputStream): JsResult[RequestObject] = {
-    Json.parse(input).validate[RequestObject]
-  }
+  def serialize(responseObject: ResponseObject): JsValue = Json.toJson(responseObject)
 
-  def deserializeResponseObject(input: String): JsResult[ResponseObject] = {
-    Json.parse(input).validate[ResponseObject]
-  }
+  def serialize(mailbox: Mailbox): JsValue = Json.toJson(mailbox)
 
-  def deserializeMailboxGetRequest(input: String): JsResult[MailboxGetRequest] = {
-    Json.parse(input).validate[MailboxGetRequest]
-  }
+  def serialize(mailboxGetResponse: MailboxGetResponse): JsValue = Json.toJson(mailboxGetResponse)
 
-  def deserializeMailboxGetRequest(input: JsValue): JsResult[MailboxGetRequest] = {
-    Json.fromJson[MailboxGetRequest](input)
-  }
+  def serialize(errors: JsError): JsValue = Json.toJson(errors)
+
+  def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
+
+  def deserializeRequestObject(input: InputStream): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
+
+  def deserializeResponseObject(input: String): JsResult[ResponseObject] = Json.parse(input).validate[ResponseObject]
+
+  def deserializeMailboxGetRequest(input: String): JsResult[MailboxGetRequest] = Json.parse(input).validate[MailboxGetRequest]
+
+  def deserializeMailboxGetRequest(input: JsValue): JsResult[MailboxGetRequest] = Json.fromJson[MailboxGetRequest](input)
 }
