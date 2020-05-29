@@ -35,6 +35,8 @@ import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CanSendFromImpl implements CanSendFrom {
 
@@ -43,7 +45,9 @@ public class CanSendFromImpl implements CanSendFrom {
         List<Domain> fetch(Username user);
     }
 
-    public static final EnumSet<Mapping.Type> ALIAS_TYPES_ACCEPTED_IN_FROM = EnumSet.of(Alias, DomainAlias);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CanSendFromImpl.class);
+    private static final EnumSet<Mapping.Type> ALIAS_TYPES_ACCEPTED_IN_FROM = EnumSet.of(Alias, DomainAlias);
+
     private final RecipientRewriteTable recipientRewriteTable;
     private final AliasReverseResolver aliasReverseResolver;
 
@@ -58,6 +62,9 @@ public class CanSendFromImpl implements CanSendFrom {
         try {
             return connectedUser.equals(fromUser) || emailIsAnAliasOfTheConnectedUser(connectedUser, fromUser);
         } catch (RecipientRewriteTableException | RecipientRewriteTable.ErrorMappingException e) {
+            LOGGER.warn("Error upon {} mapping resolution for {}. You might want to audit mapping content for this mapping entry. ",
+                fromUser.asString(),
+                connectedUser.asString());
             return false;
         }
     }
