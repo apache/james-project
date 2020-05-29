@@ -20,6 +20,8 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.nio.charset.StandardCharsets.UTF_8
+import java.util.Base64
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.authentication.PreemptiveBasicAuthScheme
@@ -51,6 +53,10 @@ object Fixture {
     authScheme
   }
 
+  def toBase64(stringValue: String): String = {
+    Base64.getEncoder.encodeToString(stringValue.getBytes(UTF_8))
+  }
+
   def getHeadersWith(authHeader: Header): Headers = {
     new Headers(
       new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
@@ -66,6 +72,8 @@ object Fixture {
   val ALICE: Username = Username.fromLocalPartWithDomain("alice", _2_DOT_DOMAIN)
   val BOB_PASSWORD: String = "bobpassword"
   val ALICE_PASSWORD: String = "alicepassword"
+
+  val BOB_BASIC_AUTH_HEADER: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${BOB.asString}:$BOB_PASSWORD")}")
 
   val ECHO_REQUEST_OBJECT: String =
     """{

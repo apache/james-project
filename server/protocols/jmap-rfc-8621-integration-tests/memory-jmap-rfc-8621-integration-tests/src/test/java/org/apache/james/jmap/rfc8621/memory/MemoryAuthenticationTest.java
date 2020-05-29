@@ -24,11 +24,11 @@ import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.jmap.rfc8621.contract.BasicAuthenticationContract;
+import org.apache.james.jmap.rfc8621.contract.AuthenticationContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryAuthenticationTest implements BasicAuthenticationContract {
+class MemoryAuthenticationTest implements AuthenticationContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

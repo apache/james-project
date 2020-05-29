@@ -25,14 +25,14 @@ import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.jmap.rfc8621.contract.JWTAuthenticationContract;
+import org.apache.james.jmap.rfc8621.contract.AuthenticationContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DistributedJWTAuthenticationTest implements JWTAuthenticationContract {
+class DistributedAuthenticationTest implements AuthenticationContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
         CassandraRabbitMQJamesConfiguration.builder()
