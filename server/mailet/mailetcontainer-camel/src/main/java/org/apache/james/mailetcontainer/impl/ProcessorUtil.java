@@ -47,13 +47,13 @@ public class ProcessorUtil {
      * @param nextState
      *            the next state to set
      */
-    public static void handleException(Exception me, Mail mail, String offendersName, String nextState, Logger logger) {
+    public static void handleException(Throwable me, Mail mail, String offendersName, String nextState, Logger logger) {
         mail.setState(nextState);
         StringWriter sout = new StringWriter();
         PrintWriter out = new PrintWriter(sout, true);
         String exceptionBuffer = "Exception calling " + offendersName + ": " + me.getMessage();
         out.println(exceptionBuffer);
-        Exception e = me;
+        Throwable e = me;
         while (e != null) {
             e.printStackTrace(out);
             if (e instanceof MessagingException) {

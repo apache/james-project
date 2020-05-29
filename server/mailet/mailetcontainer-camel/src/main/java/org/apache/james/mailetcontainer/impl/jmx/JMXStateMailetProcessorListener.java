@@ -61,7 +61,7 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
     }
 
     @Override
-    public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
+    public void afterMailet(Mailet m, String mailName, String state, long processTime, Throwable e) {
         MailetManagement mgmt = mailetMap.get(m);
         if (mgmt != null) {
             mgmt.update(processTime, e == null);

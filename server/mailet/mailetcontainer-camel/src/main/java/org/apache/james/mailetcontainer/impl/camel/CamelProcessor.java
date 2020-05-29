@@ -61,7 +61,7 @@ public class CamelProcessor {
     public void process(Mail mail) throws Exception {
         long start = System.currentTimeMillis();
         TimeMetric timeMetric = metricFactory.timer(mailet.getClass().getSimpleName());
-        Exception ex = null;
+        Throwable ex = null;
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, "MAILET")
@@ -75,7 +75,7 @@ public class CamelProcessor {
                      .build()) {
             MailetPipelineLogging.logBeginOfMailetProcess(mailet, mail);
             mailet.service(mail);
-        } catch (Exception me) {
+        } catch (Exception | NoClassDefFoundError me) {
             ex = me;
             String onMailetException = null;
 
