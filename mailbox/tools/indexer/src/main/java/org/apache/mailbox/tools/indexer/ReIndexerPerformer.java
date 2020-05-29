@@ -279,10 +279,10 @@ public class ReIndexerPerformer {
     }
 
     private Mono<Task.Result> reIndexMessages(Flux<Either<Failure, ReIndexingEntry>> entriesToIndex, RunningOptions runningOptions, ReprocessingContext reprocessingContext) {
-        return ReactorUtils.Throttler.<Either<Failure, ReIndexingEntry>, Task.Result>forOperation(
-                entry -> reIndex(entry, reprocessingContext))
-            .window(runningOptions.getMessagesPerSecond(), Duration.ofSeconds(1))
-            .throttle(entriesToIndex)
+        return entriesToIndex.transform(ReactorUtils.<Either<Failure, ReIndexingEntry>, Task.Result>throttle()
+                .elements(runningOptions.getMessagesPerSecond())
+                .per(Duration.ofSeconds(1))
+                .forOperation(entry -> reIndex(entry, reprocessingContext)))
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED));
     }

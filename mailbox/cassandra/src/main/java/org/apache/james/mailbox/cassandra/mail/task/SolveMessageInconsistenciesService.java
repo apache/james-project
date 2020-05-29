@@ -423,11 +423,13 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Flux<Task.Result> fixInconsistenciesInImapUid(Context context, RunningOptions runningOptions) {
-        return ReactorUtils.Throttler.forOperation(this::detectInconsistencyInImapUid)
-            .window(runningOptions.getMessagesPerSecond(), PERIOD)
-            .throttle(messageIdToImapUidDAO.retrieveAllMessages())
-            .doOnNext(any -> context.incrementProcessedImapUidEntries())
-            .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO));
+        return messageIdToImapUidDAO.retrieveAllMessages()
+            .transform(ReactorUtils.<ComposedMessageIdWithMetaData, Task.Result>throttle()
+                .elements(runningOptions.getMessagesPerSecond())
+                .per(PERIOD)
+                .forOperation(metaData -> detectInconsistencyInImapUid(metaData)
+                    .doOnNext(any -> context.incrementProcessedImapUidEntries())
+                    .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO))));
     }
 
     private Mono<Inconsistency> detectInconsistencyInImapUid(ComposedMessageIdWithMetaData message) {
@@ -468,11 +470,13 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Flux<Task.Result> fixInconsistenciesInMessageId(Context context, RunningOptions runningOptions) {
-        return ReactorUtils.Throttler.forOperation(this::detectInconsistencyInMessageId)
-            .window(runningOptions.getMessagesPerSecond(), PERIOD)
-            .throttle(messageIdDAO.retrieveAllMessages())
-            .doOnNext(any -> context.incrementMessageIdEntries())
-            .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO));
+        return messageIdDAO.retrieveAllMessages()
+            .transform(ReactorUtils.<ComposedMessageIdWithMetaData, Task.Result>throttle()
+                .elements(runningOptions.getMessagesPerSecond())
+                .per(PERIOD)
+                .forOperation(metadata -> detectInconsistencyInMessageId(metadata)
+                    .doOnNext(any -> context.incrementMessageIdEntries())
+                    .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO))));
     }
 
     private Mono<Inconsistency> detectInconsistencyInMessageId(ComposedMessageIdWithMetaData message) {

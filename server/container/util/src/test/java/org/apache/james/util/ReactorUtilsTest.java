@@ -19,6 +19,7 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
@@ -34,7 +35,6 @@ import java.util.function.Function;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.james.util.ReactorUtils.Throttler;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
@@ -56,29 +56,37 @@ class ReactorUtilsTest {
     class Throttling {
         @Test
         void windowShouldThrowWhenMaxSizeIsNegative() {
-            assertThatThrownBy(() -> Throttler.forOperation(Mono::just)
-                    .window(-1, Duration.ofSeconds(1)))
+            assertThatThrownBy(() -> ReactorUtils.<Integer, Integer>throttle()
+                    .elements(-1)
+                    .per(Duration.ofSeconds(1))
+                    .forOperation(Mono::just))
                 .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         void windowShouldThrowWhenMaxSizeIsZero() {
-            assertThatThrownBy(() -> Throttler.forOperation(Mono::just)
-                    .window(0, Duration.ofSeconds(1)))
+            assertThatThrownBy(() -> ReactorUtils.throttle()
+                    .elements(0)
+                    .per(Duration.ofSeconds(1))
+                    .forOperation(Mono::just))
                 .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         void windowShouldThrowWhenDurationIsNegative() {
-            assertThatThrownBy(() -> Throttler.forOperation(Mono::just)
-                    .window(1, Duration.ofSeconds(-1)))
+            assertThatThrownBy(() -> ReactorUtils.throttle()
+                    .elements(1)
+                    .per(Duration.ofSeconds(-1))
+                    .forOperation(Mono::just))
                 .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         void windowShouldThrowWhenDurationIsZero() {
-            assertThatThrownBy(() -> Throttler.forOperation(Mono::just)
-                    .window(1, Duration.ZERO))
+            assertThatThrownBy(() -> ReactorUtils.throttle()
+                    .elements(1)
+                    .per(Duration.ofSeconds(0))
+                    .forOperation(Mono::just))
                 .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -89,18 +97,34 @@ class ReactorUtilsTest {
 
             Stopwatch stopwatch = Stopwatch.createUnstarted();
 
-            Flux<Integer> originalFlux = Flux.range(0, 10);
-            ImmutableList<Long> windowMembership = Throttler.<Integer, Long>forOperation(
-                    i -> Mono.fromCallable(() -> stopwatch.elapsed(TimeUnit.MILLISECONDS)))
-                .window(windowMaxSize, windowDuration)
-                .throttle(originalFlux)
-                .doOnSubscribe(signal -> stopwatch.start())
+            ImmutableList<Long> windowMembership = Flux.range(0, 10)
+                .transform(ReactorUtils.<Integer, Long>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(i -> Mono.fromCallable(() -> stopwatch.elapsed(TimeUnit.MILLISECONDS))))
                 .map(i -> i / 100)
+                .doOnSubscribe(signal -> stopwatch.start())
                 .collect(Guavate.toImmutableList())
                 .block();
 
             assertThat(windowMembership)
                 .containsExactly(0L, 0L, 0L, 1L, 1L, 1L, 2L, 2L, 2L, 3L);
+        }
+
+        @Test
+        void largeWindowShouldNotOverrunIntermediateBuffers() {
+            // windowMaxSize exceeds Queues.SMALL_BUFFER_SIZE & Queues.SMALL_BUFFER_SIZE (256 by default)
+            // Combined with slow operations, this ensures we are not filling up intermediate buffers.
+            int windowMaxSize = 3_000;
+            Duration windowDuration = Duration.ofMillis(100);
+
+            assertThatCode(() -> Flux.range(0, 10_000)
+                    .transform(ReactorUtils.<Integer, Long>throttle()
+                        .elements(windowMaxSize)
+                        .per(windowDuration)
+                        .forOperation(i -> Mono.delay(windowDuration.multipliedBy(2))))
+                    .blockLast())
+                .doesNotThrowAnyException();
         }
 
         @Test
@@ -116,9 +140,11 @@ class ReactorUtilsTest {
                     .flatMap(i -> Mono.delay(windowDuration.multipliedBy(2)).thenReturn(i))
                     .flatMap(i -> Mono.fromRunnable(ongoingProcessing::decrementAndGet).thenReturn(i));
 
-            ImmutableList<Integer> ongoingProcessingUponComputationStart = Throttler.forOperation(longRunningOperation)
-                .window(windowMaxSize, windowDuration)
-                .throttle(originalFlux)
+            ImmutableList<Integer> ongoingProcessingUponComputationStart = originalFlux
+                .transform(ReactorUtils.<Integer, Integer>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(longRunningOperation))
                 .collect(Guavate.toImmutableList())
                 .block();
 

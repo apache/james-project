@@ -47,7 +47,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class RecomputeCurrentQuotasService {
@@ -164,10 +163,11 @@ public class RecomputeCurrentQuotasService {
 
     public Mono<Task.Result> recomputeCurrentQuotas(Context context, RunningOptions runningOptions) {
         try {
-            Flux<Username> users = Iterators.toFlux(usersRepository.list());
-            return ReactorUtils.Throttler.<Username, Task.Result>forOperation(username -> recomputeUserCurrentQuotas(context, username))
-                .window(runningOptions.getUsersPerSecond(), Duration.ofSeconds(1))
-                .throttle(users)
+            return Iterators.toFlux(usersRepository.list())
+                .transform(ReactorUtils.<Username, Task.Result>throttle()
+                    .elements(runningOptions.getUsersPerSecond())
+                    .per(Duration.ofSeconds(1))
+                    .forOperation(username -> recomputeUserCurrentQuotas(context, username)))
                 .reduce(Task.Result.COMPLETED, Task::combine);
         } catch (UsersRepositoryException e) {
             LOGGER.error("Error while accessing users from repository", e);
