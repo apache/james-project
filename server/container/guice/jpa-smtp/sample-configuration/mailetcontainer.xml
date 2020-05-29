@@ -27,6 +27,7 @@
 
     <spooler>
         <threads>20</threads>
+        <errorRepository>file://var/mail/error/</errorRepository>
     </spooler>
 
     <processors>

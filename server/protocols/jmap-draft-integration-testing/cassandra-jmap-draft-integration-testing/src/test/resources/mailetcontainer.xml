@@ -27,6 +27,7 @@
 
     <spooler>
         <threads>2</threads>
+        <errorRepository>cassandra://var/mail/error/</errorRepository>
     </spooler>
 
     <processors>
