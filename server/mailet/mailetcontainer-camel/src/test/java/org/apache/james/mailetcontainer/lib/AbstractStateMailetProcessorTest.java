@@ -85,7 +85,7 @@ public abstract class AbstractStateMailetProcessorTest {
             }
 
             @Override
-            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Throwable e) {
                 // check for class name as the terminating  mailet will kick in too
 
                 if (MockMailet.class.equals(m.getClass())) {
@@ -130,7 +130,7 @@ public abstract class AbstractStateMailetProcessorTest {
             }
 
             @Override
-            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Throwable e) {
                 // check for class name as the terminating  mailet will kick in too
 
                 if (MockMailet.class.equals(m.getClass())) {
@@ -177,7 +177,7 @@ public abstract class AbstractStateMailetProcessorTest {
             }
 
             @Override
-            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Throwable e) {
                 throw new RuntimeException("Should not call any mailet!");
             }
         });
@@ -212,7 +212,7 @@ public abstract class AbstractStateMailetProcessorTest {
             }
 
             @Override
-            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Throwable e) {
                 throw new RuntimeException("Should not call any mailet!");
             }
         });
@@ -249,7 +249,7 @@ public abstract class AbstractStateMailetProcessorTest {
             }
 
             @Override
-            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Throwable e) {
                 if (ExceptionThrowingMailet.class.equals(m.getClass())) {
                     // the name should be not the same as we have a part match
                     assertThat(mail.getName()).isNotEqualTo(mailName);
