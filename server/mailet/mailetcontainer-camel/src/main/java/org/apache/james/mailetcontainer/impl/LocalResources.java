@@ -37,12 +37,15 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 
 class LocalResources {
     private static final EnumSet<Mapping.Type> ALIAS_TYPES = EnumSet.of(Mapping.Type.Alias, Mapping.Type.DomainAlias);
+    public static final Logger LOGGER = LoggerFactory.getLogger(LocalResources.class);
 
     private final UsersRepository localUsers;
     private final DomainList domains;
@@ -130,6 +133,9 @@ class LocalResources {
             .asStream()
             .map(mapping -> mapping.asMailAddress()
                 .orElseThrow(() -> new IllegalStateException(String.format("Can not compute address for mapping %s", mapping.asString()))))
-            .anyMatch(Throwing.predicate(this::isLocaluser).sneakyThrow());
+            .filter(Throwing.predicate(this::isLocaluser).sneakyThrow())
+            .peek(ownerAddress -> LOGGER.debug("{} belongs to {} local user", mailAddress.asString(), ownerAddress.asString()))
+            .findFirst()
+            .isPresent();
     }
 }
