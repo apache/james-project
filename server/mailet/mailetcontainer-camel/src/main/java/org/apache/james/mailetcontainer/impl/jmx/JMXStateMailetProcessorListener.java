@@ -69,7 +69,7 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
     }
 
     @Override
-    public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> rcpts, Collection<MailAddress> matches, long processTime, Exception e) {
+    public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> rcpts, Collection<MailAddress> matches, long processTime, Throwable e) {
         MatcherManagement mgmt = matcherMap.get(m);
 
         if (mgmt != null) {

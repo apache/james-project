@@ -73,7 +73,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
             @Override
             public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
-                                     Collection<MailAddress> matches, long processTime, Exception e) {
+                                     Collection<MailAddress> matches, long processTime, Throwable e) {
                 if (MockMatcher.class.equals(m.getClass())) {
                     assertThat(mailName).isEqualTo(mail.getName());
                     // match one recipient
@@ -118,7 +118,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
             @Override
             public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
-                                     Collection<MailAddress> matches, long processTime, Exception e) {
+                                     Collection<MailAddress> matches, long processTime, Throwable e) {
                 if (MockMatcher.class.equals(m.getClass())) {
                     assertThat(mailName).isEqualTo(mail.getName());
                     // match all recipient
@@ -165,7 +165,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
             @Override
             public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
-                                     Collection<MailAddress> matches, long processTime, Exception e) {
+                                     Collection<MailAddress> matches, long processTime, Throwable e) {
                 if (ExceptionThrowingMatcher.class.equals(m.getClass())) {
                     assertThat(mailName).isEqualTo(mail.getName());
                     // match no recipient because of the error
@@ -204,7 +204,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
             @Override
             public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
-                                     Collection<MailAddress> matches, long processTime, Exception e) {
+                                     Collection<MailAddress> matches, long processTime, Throwable e) {
                 if (ExceptionThrowingMatcher.class.equals(m.getClass())) {
                     latch.countDown();
                 }
@@ -237,7 +237,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
             @Override
             public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
-                                     Collection<MailAddress> matches, long processTime, Exception e) {
+                                     Collection<MailAddress> matches, long processTime, Throwable e) {
                 if (MockMatcher.class.equals(m.getClass())) {
                     assertThat(mailName).isEqualTo(mail.getName());
                     // match one recipient

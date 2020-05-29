@@ -90,7 +90,7 @@ public class MatcherSplitter {
         Collection<MailAddress> matchedRcpts = null;
         Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
         long start = System.currentTimeMillis();
-        Exception ex = null;
+        Throwable ex = null;
         TimeMetric timeMetric = metricFactory.timer(matcher.getClass().getSimpleName());
 
         try {
@@ -121,7 +121,7 @@ public class MatcherSplitter {
                     ProcessorUtil.verifyMailAddresses(matchedRcpts);
                 }
 
-            } catch (Exception me) {
+            } catch (Exception | NoClassDefFoundError me) {
                 ex = me;
                 if (onMatchException.equalsIgnoreCase("nomatch")) {
                     // In case the matcher returned null, create an empty
