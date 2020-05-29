@@ -414,7 +414,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
          * @param e
          *            or null if no Exception was thrown
          */
-        void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients, Collection<MailAddress> matches, long processTime, Exception e);
+        void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients, Collection<MailAddress> matches, long processTime, Throwable e);
 
     }
 
