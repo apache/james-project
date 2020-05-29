@@ -19,17 +19,18 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.mail.MessagingException;
-
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMatcher;
+import org.apache.mailet.base.GenericMailet;
 
-public class RuntimeErrorMatcher extends GenericMatcher {
+public class OneThreadSuicideMailet extends GenericMailet {
+    private final AtomicInteger callCount = new AtomicInteger(0);
+
     @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        throw new RuntimeException();
+    public void service(Mail mail) {
+        if (callCount.getAndIncrement() == 0) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

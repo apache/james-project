@@ -19,14 +19,17 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Collection;
+
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.GenericMatcher;
 
-public class RuntimeErrorMailet extends GenericMailet {
+public class RuntimeExceptionMatcher extends GenericMatcher {
     @Override
-    public void service(Mail mail) throws MessagingException {
-        throw new Error();
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        throw new RuntimeException();
     }
 }

@@ -19,14 +19,20 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
-public class RuntimeErrorMailet extends GenericMailet {
+public class OneRuntimeErrorMailet extends GenericMailet {
+    private final AtomicInteger callCount = new AtomicInteger(0);
+
     @Override
     public void service(Mail mail) throws MessagingException {
-        throw new Error();
+        if (callCount.getAndIncrement() == 0) {
+            throw new Error();
+        }
     }
 }
