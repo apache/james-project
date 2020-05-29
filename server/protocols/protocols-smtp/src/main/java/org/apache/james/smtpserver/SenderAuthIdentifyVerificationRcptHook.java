@@ -32,11 +32,15 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handler which check if the authenticated user is incorrect
  */
 public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthIdentifyVerificationRcptHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SenderAuthIdentifyVerificationRcptHook.class);
+
     private final DomainList domains;
     private final UsersRepository users;
     private final CanSendFrom canSendFrom;
@@ -78,6 +82,12 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
 
     @Override
     protected boolean isSenderAllowed(Username connectedUser, Username sender) {
-        return canSendFrom.userCanSendFrom(connectedUser, sender);
+        boolean allowed = canSendFrom.userCanSendFrom(connectedUser, sender);
+        if (allowed) {
+            LOGGER.debug("{} is allowed to send a mail using {} identity", connectedUser.asString(), sender.asString());
+        } else {
+            LOGGER.info("{} is not allowed to send a mail using {} identity", connectedUser.asString(), sender.asString());
+        }
+        return allowed;
     }
 }

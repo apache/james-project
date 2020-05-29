@@ -198,8 +198,9 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     void assertUserCanSendFrom(Username connectedUser, Optional<Username> fromUser) throws MailboxSendingNotAllowedException {
         if (!fromUser.filter(from -> canSendFrom.userCanSendFrom(connectedUser, from))
             .isPresent()) {
-            String allowedSender = connectedUser.asString();
-            throw new MailboxSendingNotAllowedException(allowedSender);
+            throw new MailboxSendingNotAllowedException(connectedUser, fromUser);
+        } else {
+            LOGGER.debug("{} is allowed to send a mail using {} identity", connectedUser.asString(), fromUser);
         }
     }
 

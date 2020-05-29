@@ -19,18 +19,27 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import java.util.Optional;
+
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 
 public class MailboxSendingNotAllowedException extends MailboxException {
 
-    private String allowedFrom;
+    private final Username connectedUser;
+    private final Optional<Username> fromField;
 
-    public MailboxSendingNotAllowedException(String allowedFrom) {
+    public MailboxSendingNotAllowedException(Username connectedUser, Optional<Username> fromField) {
         super();
-        this.allowedFrom = allowedFrom;
+        this.connectedUser = connectedUser;
+        this.fromField = fromField;
     }
-    
-    public String getAllowedFrom() {
-        return allowedFrom;
+
+    public Optional<Username> getFromField() {
+        return fromField;
+    }
+
+    public Username getConnectedUser() {
+        return connectedUser;
     }
 }

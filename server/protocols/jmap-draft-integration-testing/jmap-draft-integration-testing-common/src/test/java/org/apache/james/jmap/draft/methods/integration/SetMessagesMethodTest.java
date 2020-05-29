@@ -2651,7 +2651,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
             .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("invalidProperties"))
-            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description", equalTo("Invalid 'from' field. Must be " + USERNAME.asString()));
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description", equalTo("Invalid 'from' field. One accepted value is " + USERNAME.asString()));
     }
 
     @Test
@@ -2999,7 +2999,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("invalidProperties"))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].properties", hasSize(1))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].properties", contains("from"))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", endsWith("Invalid 'from' field. Must be username@domain.tld"))
+            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", endsWith("Invalid 'from' field. One accepted value is username@domain.tld"))
             .body(ARGUMENTS + ".created", aMapWithSize(0));
     }
 
