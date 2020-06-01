@@ -2,28 +2,63 @@
 :navtitle: Concepts
 
 The core domain of Apache James is intimitely related to email communications.
-Therefore this section is divided into two parts:
+Therefore this section is divided into topics that deal with the various
+aspect of email systems.
 
- * <<emails,The James Model of the Email Messaging Domain>>
- * <<processing,The James Model of Email Processing>>
+ * <<emails>>
+ * <<protocols>>
+ * <<mailbox>>
+ * <<processing>>
 
 [#emails]
-== Email Messaging Domain
+== Email Messages
 
 Electronic Mail (often written as "e-mail" or "email") is a means of
 exchanging messages over a data network. In our context, it is obvious
 that we mean "electronic mail" and not "postal mail", so we usually just
 write "mail".
 
-Building a complex system like James requires a clear and consistent 
-xref:mail/index.adoc[domain model for email].
+xref:mail/index.adoc[Email messages] are based on a few specifications
+that are not easy to digest, so we make an effort to provide a simplified
+model.
+
+
+
+
+[#protocols]
+== Transmission Protocols
+
+Emails are only useful because people can communicate with each other.
+To allow for this, obviously there must be a means of transmitting messages
+from one user to another. A number of different protocols have emerged to
+handle the various different requirements of using email in a practical 
+manner. The most common xref:protocols/index.adoc[transmission protocols]
+are SMTP, POP, and IMAP. More recently JMAP is an interesting protocol
+that merits attention.
+
+
+
+
+
+[#mailbox]
+== Mailbox and Email Storage
+
+Email would not be very useful if, like in https://www.youtube.com/watch?v=0TiqXFssKMY[Mission Impossible], 
+a message would self-destruct immediately after being read.
+For those of us who are not secret agents, we generally prefer to keep
+a record of those messages that we receive. For this reason we need a means
+of xref:storage/index.adoc[storing messages].
+
+
+
 
 
 [#processing]
-== James Email Processing
+== Email Processing
 
 There are many ways to peel a potato. James has its own particular
 xref:processing/index.adoc[model for processing mail],
 based mostly on the concept of a "Mailet". The idea of Mailet-based
 processing was heavily inspired by the https://en.wikipedia.org/wiki/Java_servlet[Servlet]
 concept.
+

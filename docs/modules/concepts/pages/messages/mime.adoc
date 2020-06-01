@@ -3,7 +3,7 @@
 
 == Overview
 
-The base format of an email message is xref:mail/messages/imf.adoc[Internet Message Format"],
+The base format of an email message is xref:messages/imf.adoc[Internet Message Format"],
 but most contemporary messages use a format called
 https://en.wikipedia.org/wiki/MIME["Multipurpose Internet Mail Extensions"].
 MIME specifies how to extend a valid IMF message, dealing with character encodings, 

@@ -1,0 +1,56 @@
+= Glossary
+
+Email Client::
+Any software application that acts as a POP Client or an IMAP Client.
+
+xref:messages/imf.adoc[IMF]::
+*Internet Message Format* (IMF) is the base specification that defines the
+syntax of an email message.
+
+Email Server::
+Any host that contains a sofware application that acts as a POP Server, an
+Email Server, or an MTA.
+
+IMAP::
+
+IMAP Client::
+One of the main actors in an email system that implements the IMAP protocol. The client
+acts as a slave, in that it mirrors the state of the IMAP Server.
+
+IMAP Server::
+One of the main actors in an email system that implements the IMAP protocol. The server
+acts as the master, in that it dictates the state that will be seen on each of the
+IMAP Clients.
+
+JMAP::
+
+xref:messages/mime.adoc[MIME]::
+*Multipurpose Internet Mail Extension* (MIME) is a specification that extends
+IMF, defining most of the "advanced" features of email.
+
+MTA::
+A *Mail Transfer Agent* (MTA) is a host that is capable of providing a mail
+transport service compliant with the SMTP protocol.
+
+MUA::
+A *Mail User Agent* (MUA) is either an agent that hands over a message to an initial
+MTA on the originating side of a transmission, or receives the message from the
+final MTA on the terminating side of a transmission. It is in some respects similar to
+an MTA, but is local in scope and does not necessarily follow a known specification.
+
+xref:protocols/smtp.adoc[SMTP]::
+*Simple Mail Transfer Protocol* (SMTP) is a protocol that specifies how to transmit
+a valid email message from one MTA to another.
+
+POP::
+
+POP Client::
+One of the main actors in an email system that implements the POP protocol. The client
+is on the host that is closest to the user from a logical perspective, and is the host
+to which messages are delivered from the POP Server.
+
+POP Server::
+One of the main actors in an email system that implements the POP protocol. The server
+is part of the host that is logically farthest from the user. It is the host on which
+the messages are initially delivered, and where they temporarily await collection by
+the POP Client.

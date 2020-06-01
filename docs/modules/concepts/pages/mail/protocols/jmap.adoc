@@ -1,4 +1,0 @@
-= Application Data Transfer (JMAP)
-:navtitle: JMAP
-
-(TODO)

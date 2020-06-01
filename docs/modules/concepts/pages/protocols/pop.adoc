@@ -1,0 +1,141 @@
+= Post Office Protocol (POP)
+:navtitle: POP
+
+== Overview
+
+The https://en.wikipedia.org/wiki/Post_Office_Protocol[Post Office Protocol], 
+or POP, is described in the original specification
+as being "a simple method for workstations to dynamically access mail from 
+a xref:storage/index.adoc[mailbox server]" (though interestingly "mailbox server" 
+is never actually defined in this specification nor in later specifications. 🤔)
+
+POP was proposed as the first non-xref:protocols/smtp.adoc[SMTP] protocol aimed
+at users for the purpose of retrieving emails stored remotely for local consumption.
+POP was developed in pre-spam days, so was inherently a non-secure protocol.
+It has been updated several times to address several issues, including lack of
+security, so that POP3 is now the current specification.
+
+As the name suggests, the protocol is modeled after a post office. The analogy being:
+
+ * The various SMTP servers along the transmission chain are like post offices
+ * The user's mail server is the local post office that will dispatch the mail to the recipient
+ * The postman is, ummm, well no analogy is perfect 😬
+ * The mail gets dropped into the user's mailbox (though just to make the analogy even 
+    muddier there is an option to leave a copy on the server)
+
+Analogies aside, the protocol worked quite well for most users, and is still widely
+in use today.
+
+POP requires essentially two pieces, the POP Client and the POP Server. How the
+message gets initially delivered to the POP Server and how a message is managed
+once delivered to the POP Client is out of scope of the POP protocol.
+
+
+== Specifications
+
+=== POP
+
+POP has been around since the early days of email. The original specification
+<<RFC918>> was published in 1984. 
+
+
+==== RFC918
+
+https://tools.ietf.org/html/rfc918[RFC918] ("Post Office Protocol") was the original
+specification published in 1984. The RFC "suggests a simple method for workstations 
+to dynamically access mail from a mailbox server."
+Like xref:protocols/smtp.adoc[SMTP] that came before it, POP is a session-based
+protocol with a handful of defined commands.
+This RFC was obsoleted shortly after its publication by <<RFC937>>.
+
+
+
+
+=== POP2
+
+==== RFC937
+
+https://tools.ietf.org/html/rfc937[RFC937] ("Post Office Protocol - Version 2") or more
+commonly "POP2" was a revision of the original <<RFC918>> specification. POP2 specifies
+connection over port 109, and clarifies that "it is important for the mailbox to be on 
+an 'always up' machine and that a workstation may be frequently powered down, or
+otherwise unavailable as an SMTP server." In other words, as the Internet continued to
+evolve, this specification was an attempt to evolve with it.
+
+POP2 was replaced by POP3, which was first published as <<RFC1081>>.
+
+
+
+=== POP3
+
+==== RFC1081
+
+https://tools.ietf.org/html/rfc1081[RFC1081] ("Post Office Protocol - Version 3")
+was the first published version of POP3,
+made available in 1988. It adds additional functionality for managing mail, and
+perhaps most importantly, it adds an authentication mechanism. This version was
+obsoleted by <<RFC1225>>.
+
+
+==== RFC1225
+
+https://tools.ietf.org/html/rfc1225[RFC1225] ("Post Office Protocol - Version 3")
+obsoleted <<RFC1081>>. It is described as being a "republication" of <<RFC1081>>,
+and does not appear to add anything significant. It was obsoleted by
+<<RFC1460>>.
+
+
+==== RFC1460
+
+https://tools.ietf.org/html/rfc1460[RFC1460] ("Post Office Protocol - Version 3")
+provided some relatively minor updates to <<RFC1225>>, and was itself obsoleted
+about one year later by <<RFC1725>>.
+
+
+==== RFC1725
+
+https://tools.ietf.org/html/rfc1725[RFC1725] ("Post Office Protocol - Version 3")
+was again a relatively minor update of <<RFC1460>>, and was itself obsoleted
+about two years later by <<RFC1939>>.
+
+
+==== RFC1939
+
+https://tools.ietf.org/html/rfc1939[RFC1939] ("Post Office Protocol - Version 3")
+is the most recent specification of POP3, and is the version in use today. 
+
+This specification seems to imply that POP3 is used for "simple" transactions,
+and for more "advanced" transactions xref:protocols/imap.adoc[IMAP] is available.
+
+
+
+=== POP4
+
+Although there was development on the http://www.pop4.org/[POP4] specification,
+development appears to have stalled for several years, making POP3 the
+still-current protocol.
+
+
+
+== Related Concepts
+
+POP relates to...
+
+ * *xref:protocols/imap.adoc[IMAP]* as a "competing" protocol
+ * *Email clients*, in that the client acts as a POP Client
+ * *xref:storage/index.adoc[Storage]* in that messages are stored temporarily on
+   a ????  while awaiting transfer to the client
+ * *xref:protocols/smtp.adoc[SMTP]*, in that messages will normally be
+   delivered to the IMAP Server via SMTP.
+
+
+== James Model
+
+(TODO)
+
+
+== Try It!
+
+(TODO)
+
+

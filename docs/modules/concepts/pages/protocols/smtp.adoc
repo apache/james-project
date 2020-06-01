@@ -5,7 +5,7 @@
 
 When the original specification for Simple Mail Transfer Protocol, or SMTP, 
 was published almost 40 years ago together with 
-xref:mail/messages/imf.adoc[IMF], Email as we know it today was born.
+xref:messages/imf.adoc[IMF], email as we know it today was born.
 
 
 
@@ -17,22 +17,21 @@ https://tools.ietf.org/html/rfc821[RFC821] ("Simple Mail Transfer Protocol")
 was the original SMTP specification published in 1982. 
 It was obsoleted by <<RFC2821>> in 2001.
 
-== RFC2821
+=== RFC2821
 
 https://tools.ietf.org/html/rfc2821[RFC2821] ("Simple Mail Transfer Protocol") replaced
 <<RFC821>>. It was itself replaced by <<RFC5321>> in 2008.
 
-== RFC 5321
+=== RFC 5321
 
 https://tools.ietf.org/html/rfc5321[RFC5321] is the currently used standard for
 "Simple Mail Transfer Protocol", or "SMTP". It is "a specification of the basic 
 protocol for Internet electronic mail transport". If you are interested in all
 the gory details, we recommend that you read this document.
 
-This specification has many dependencies with xref:mail/messages/imf.adoc[IMF],
-xref:mail/messages/mime.adoc[MIME], and other technical concepts, which can quickly
+This specification has many dependencies with xref:messages/imf.adoc[IMF],
+xref:messages/mime.adoc[MIME], and other technical concepts, which can quickly
 become utterly confusing.
-
 Here, we provide a very short and simplified description of those portions of the 
 specification that we felt were interesting enough to repeat here.
 
@@ -51,6 +50,16 @@ which establishes a two-way channel to an SMTP server. The session must either
 close successful (or with a failure message), else delivery is considered to
 have failed.
 
+
+
+== Related Concepts
+
+SMTP relates to:
+
+ * *xref:messages/index.adoc[Email messages]*, in that the SMTP protocol exists to transfer
+   messages from one host to another
+ * *MTA*, in that the very nature of SMTP is about specifying how a message
+   gets transferred from one MTA to another
 
 
 == James Model
