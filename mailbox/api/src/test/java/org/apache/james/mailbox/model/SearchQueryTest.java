@@ -20,29 +20,14 @@
 
 package org.apache.james.mailbox.model;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class SearchQueryTest {
-
     @Test
     void searchQueryShouldRespectBeanContract() {
         EqualsVerifier.forClass(SearchQuery.class)
-            .withOnlyTheseFields("criterias")
             .verify();
     }
-
-    @Test
-    void equalsShouldCompareCriteria() {
-        SearchQuery searchQuery1 = new SearchQuery();
-        SearchQuery searchQuery2 = new SearchQuery();
-        searchQuery1.andCriteria(SearchQuery.all());
-        searchQuery2.andCriteria(SearchQuery.all());
-
-        assertThat(searchQuery1).isEqualTo(searchQuery2);
-    }
-
 }

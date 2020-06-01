@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableSet;
 
 class MultimailboxesSearchQueryTest {
 
-    private static final SearchQuery EMPTY_QUERY = new SearchQuery();
+    private static final SearchQuery EMPTY_QUERY = SearchQuery.matchAll();
     private static final TestId.Factory FACTORY = new TestId.Factory();
     private static final MailboxId ID_1 = FACTORY.fromString("1");
     private static final MailboxId ID_2 = FACTORY.fromString("2");

@@ -135,7 +135,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
      *         <code>false</code> otherwise
      */
     private boolean isMatch(MailboxMessage message) throws MailboxException {
-        final List<SearchQuery.Criterion> criteria = query.getCriterias();
+        final List<SearchQuery.Criterion> criteria = query.getCriteria();
         final Collection<MessageUid> recentMessageUids = query.getRecentMessageUids();
         if (criteria != null) {
             for (SearchQuery.Criterion criterion : criteria) {

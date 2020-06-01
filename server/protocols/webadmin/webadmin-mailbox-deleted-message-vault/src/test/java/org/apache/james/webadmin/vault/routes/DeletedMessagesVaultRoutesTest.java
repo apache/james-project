@@ -2262,7 +2262,7 @@ class DeletedMessagesVaultRoutesTest {
         MailboxSession session = mailboxManager.createSystemSession(username);
         int limitToOneMessage = 1;
 
-        return !Flux.from(mailboxManager.search(MultimailboxesSearchQuery.from(new SearchQuery()).build(), session, limitToOneMessage))
+        return !Flux.from(mailboxManager.search(MultimailboxesSearchQuery.from(SearchQuery.of()).build(), session, limitToOneMessage))
             .collectList().block()
             .isEmpty();
     }

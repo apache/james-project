@@ -124,7 +124,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
 
         final SortedSet<MailboxMessage> hitSet = new TreeSet<>();
 
-        UidCriterion uidCrit = findConjugatedUidCriterion(query.getCriterias());
+        UidCriterion uidCrit = findConjugatedUidCriterion(query.getCriteria());
         if (uidCrit != null) {
             // if there is a conjugated uid range criterion in the query tree we can optimize by
             // only fetching this uid range

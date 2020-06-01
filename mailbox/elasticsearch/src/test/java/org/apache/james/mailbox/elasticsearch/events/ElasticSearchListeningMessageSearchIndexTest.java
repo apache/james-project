@@ -195,7 +195,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.add(session, mailbox, MESSAGE_1).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .containsExactly(MESSAGE_1.getUid());
     }
@@ -206,7 +206,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .containsExactly(MESSAGE_WITH_ATTACHMENT.getUid());
     }
@@ -218,7 +218,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .containsExactly(MESSAGE_1.getUid());
     }
@@ -230,7 +230,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .containsExactly(MESSAGE_1.getUid(), MESSAGE_2.getUid());
     }
@@ -248,7 +248,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .containsExactly(MESSAGE_WITH_ATTACHMENT.getUid());
     }
@@ -272,7 +272,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .isEmpty();
     }
@@ -287,7 +287,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .containsExactly(MESSAGE_2.getUid());
     }
@@ -302,7 +302,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1, MESSAGE_UID_2)).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .isEmpty();
     }
@@ -316,7 +316,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .isEmpty();
     }
@@ -354,7 +354,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
         assertThat(testee.search(session, mailbox, query))
             .containsExactly(MESSAGE_1.getUid());
     }
@@ -375,7 +375,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
         assertThat(testee.search(session, mailbox, query))
             .isEmpty();
     }
@@ -397,7 +397,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
         assertThat(testee.search(session, mailbox, query))
             .containsExactly(MESSAGE_1.getUid());
     }
@@ -431,7 +431,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.deleteAll(session, mailbox.getMailboxId()).block();
         elasticSearch.awaitForElasticSearch();
 
-        SearchQuery query = new SearchQuery(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query))
             .isEmpty();
     }

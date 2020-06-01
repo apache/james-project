@@ -90,7 +90,7 @@ public class ReferenceUpdater {
     private void updateFlag(String messageId, MailboxSession session, Flags flag) throws MailboxException {
         int limit = 2;
         MultimailboxesSearchQuery searchByRFC822MessageId = MultimailboxesSearchQuery
-            .from(new SearchQuery(SearchQuery.mimeMessageID(messageId)))
+            .from(SearchQuery.of(SearchQuery.mimeMessageID(messageId)))
             .build();
         List<MessageId> references = Flux.from(mailboxManager.search(searchByRFC822MessageId, session, limit))
             .collectList().block();

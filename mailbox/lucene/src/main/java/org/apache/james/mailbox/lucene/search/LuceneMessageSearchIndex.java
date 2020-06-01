@@ -490,7 +490,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             // Not return flags documents
             query.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST_NOT);
 
-            List<Criterion> crits = searchQuery.getCriterias();
+            List<Criterion> crits = searchQuery.getCriteria();
             for (Criterion crit : crits) {
                 query.add(createQuery(crit, inMailboxes, searchQuery.getRecentMessageUids()), BooleanClause.Occur.MUST);
             }

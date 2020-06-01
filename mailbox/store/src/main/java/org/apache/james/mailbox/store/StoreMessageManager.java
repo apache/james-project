@@ -123,6 +123,7 @@ public class StoreMessageManager implements MessageManager {
      * later!</strong>
      */
     protected static final Flags MINIMAL_PERMANET_FLAGS;
+    private static final SearchQuery LIST_ALL_QUERY = SearchQuery.of(SearchQuery.all());
 
     private static class MediaType {
         final String mediaType;
@@ -694,7 +695,7 @@ public class StoreMessageManager implements MessageManager {
 
     @Override
     public Stream<MessageUid> search(SearchQuery query, MailboxSession mailboxSession) throws MailboxException {
-        if (query.equals(new SearchQuery(SearchQuery.all()))) {
+        if (query.equals(LIST_ALL_QUERY)) {
             return listAllMessageUids(mailboxSession);
         }
         return index.search(mailboxSession, getMailboxEntity(), query);

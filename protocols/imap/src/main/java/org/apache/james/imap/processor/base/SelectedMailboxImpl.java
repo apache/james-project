@@ -97,7 +97,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
             .block();
 
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
-        try (Stream<MessageUid> stream = messageManager.search(new SearchQuery(SearchQuery.all()), mailboxSession)) {
+        try (Stream<MessageUid> stream = messageManager.search(SearchQuery.of(SearchQuery.all()), mailboxSession)) {
             uidMsnConverter.addAll(stream.collect(Guavate.toImmutableList()));
         }
     }

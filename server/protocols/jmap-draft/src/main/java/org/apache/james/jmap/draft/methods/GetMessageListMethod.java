@@ -38,7 +38,7 @@ import org.apache.james.jmap.draft.model.GetMessageListResponse;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.Number;
-import org.apache.james.jmap.draft.utils.FilterToSearchQuery;
+import org.apache.james.jmap.draft.utils.FilterToCriteria;
 import org.apache.james.jmap.draft.utils.SortConverter;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -167,17 +167,19 @@ public class GetMessageListMethod implements Method {
                 "implemented. Review your search request.");
         }
 
-        SearchQuery searchQuery = messageListRequest.getFilter()
-                .map(filter -> new FilterToSearchQuery().convert(filter))
-                .orElse(new SearchQuery());
+        SearchQuery.Builder searchQueryBuilder = SearchQuery.builder();
+
+            messageListRequest.getFilter()
+                .map(filter -> new FilterToCriteria().convert(filter).collect(Guavate.toImmutableList()))
+                .ifPresent(searchQueryBuilder::andCriteria);
         Set<MailboxId> inMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getInMailboxes);
         Set<MailboxId> notInMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getNotInMailboxes);
         List<SearchQuery.Sort> sorts = SortConverter.convertToSorts(messageListRequest.getSort());
         if (!sorts.isEmpty()) {
-            searchQuery.setSorts(sorts);
+            searchQueryBuilder.sorts(sorts);
         }
         return MultimailboxesSearchQuery
-                .from(searchQuery)
+                .from(searchQueryBuilder.build())
                 .inMailboxes(inMailboxes)
                 .notInMailboxes(notInMailboxes)
                 .build();

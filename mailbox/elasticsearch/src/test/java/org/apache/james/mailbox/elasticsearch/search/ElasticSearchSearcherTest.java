@@ -147,7 +147,7 @@ class ElasticSearchSearcherTest {
         elasticSearch.awaitForElasticSearch();
 
         MultimailboxesSearchQuery multimailboxesSearchQuery = MultimailboxesSearchQuery
-            .from(new SearchQuery(SearchQuery.all()))
+            .from(SearchQuery.of(SearchQuery.all()))
             .inMailboxes(mailboxIds)
             .build();
         List<MessageId> expectedMessageIds = composedMessageIds

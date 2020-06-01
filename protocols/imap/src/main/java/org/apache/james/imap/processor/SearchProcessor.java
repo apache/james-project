@@ -263,16 +263,15 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         return highestModSeq;
     }
 
-
     private SearchQuery toQuery(SearchKey key, ImapSession session) throws MessageRangeException {
-        final SearchQuery result = new SearchQuery();
-        final SelectedMailbox selected = session.getSelected();
+        SearchQuery.Criterion criterion = toCriterion(key, session);
+        SearchQuery.Builder builder = SearchQuery.builder();
+        SelectedMailbox selected = session.getSelected();
         if (selected != null) {
-            result.addRecentMessageUids(selected.getRecent());
+            builder.addRecentMessageUids(selected.getRecent());
         }
-        final SearchQuery.Criterion criterion = toCriterion(key, session);
-        result.andCriteria(criterion);
-        return result;
+        return builder.andCriteria(criterion)
+            .build();
     }
 
     private SearchQuery.Criterion toCriterion(SearchKey key, ImapSession session) throws MessageRangeException {

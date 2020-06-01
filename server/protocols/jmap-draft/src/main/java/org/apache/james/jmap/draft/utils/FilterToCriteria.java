@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.utils;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.mail.Flags.Flag;
 
@@ -36,23 +37,21 @@ import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
-public class FilterToSearchQuery {
+public class FilterToCriteria {
 
-    public SearchQuery convert(Filter filter) {
+    public Stream<Criterion> convert(Filter filter) {
         if (filter instanceof FilterCondition) {
             return convertCondition((FilterCondition) filter);
         }
         if (filter instanceof FilterOperator) {
-            SearchQuery searchQuery = new SearchQuery();
-            searchQuery.andCriteria(convertOperator((FilterOperator) filter));
-            return searchQuery;
+            return Stream.of(convertOperator((FilterOperator) filter));
         }
         throw new RuntimeException("Unknown filter: " + filter.getClass());
     }
 
-    private SearchQuery convertCondition(FilterCondition filter) {
-        SearchQuery searchQuery = new SearchQuery();
-        filter.getText().ifPresent(text -> searchQuery.andCriteria(
+    private Stream<Criterion> convertCondition(FilterCondition filter) {
+        ImmutableList.Builder<Criterion> builder = ImmutableList.builder();
+        filter.getText().ifPresent(text -> builder.add(
                 SearchQuery.or(ImmutableList.of(
                         SearchQuery.address(AddressType.From, text),
                         SearchQuery.address(AddressType.To, text),
@@ -63,29 +62,29 @@ public class FilterToSearchQuery {
                         SearchQuery.bodyContains(text),
                         SearchQuery.attachmentFileName(text)))
                 ));
-        filter.getFrom().ifPresent(from -> searchQuery.andCriteria(SearchQuery.address(AddressType.From, from)));
-        filter.getTo().ifPresent(to -> searchQuery.andCriteria(SearchQuery.address(AddressType.To, to)));
-        filter.getCc().ifPresent(cc -> searchQuery.andCriteria(SearchQuery.address(AddressType.Cc, cc)));
-        filter.getBcc().ifPresent(bcc -> searchQuery.andCriteria(SearchQuery.address(AddressType.Bcc, bcc)));
-        filter.getSubject().ifPresent(subject -> searchQuery.andCriteria(SearchQuery.headerContains("Subject", subject)));
-        filter.getAttachments().ifPresent(attachments ->  searchQuery.andCriteria(SearchQuery.attachmentContains(attachments)));
-        filter.getBody().ifPresent(body ->  searchQuery.andCriteria(SearchQuery.bodyContains(body)));
-        filter.getAfter().ifPresent(after -> searchQuery.andCriteria(SearchQuery.sentDateAfter(Date.from(after.toInstant()), DateResolution.Second)));
-        filter.getBefore().ifPresent(before -> searchQuery.andCriteria(SearchQuery.sentDateBefore(Date.from(before.toInstant()), DateResolution.Second)));
-        filter.getHeader().ifPresent(header -> searchQuery.andCriteria(SearchQuery.headerContains(header.getName(), header.getValue().orElse(null))));
-        filter.getIsAnswered().ifPresent(isAnswered -> searchQuery.andCriteria(SearchQuery.flag(Flag.ANSWERED, isAnswered)));
-        filter.getIsDraft().ifPresent(isDraft -> searchQuery.andCriteria(SearchQuery.flag(Flag.DRAFT, isDraft)));
-        filter.getIsFlagged().ifPresent(isFlagged -> searchQuery.andCriteria(SearchQuery.flag(Flag.FLAGGED, isFlagged)));
-        filter.getIsUnread().ifPresent(isUnread -> searchQuery.andCriteria(SearchQuery.flag(Flag.SEEN, !isUnread)));
-        filter.getIsForwarded().ifPresent(isForwarded -> searchQuery.andCriteria(SearchQuery.flagSet(Keyword.FORWARDED.getFlagName(), isForwarded)));
-        filter.getMaxSize().ifPresent(maxSize -> searchQuery.andCriteria(SearchQuery.sizeLessThan(maxSize.asLong())));
-        filter.getMinSize().ifPresent(minSize -> searchQuery.andCriteria(SearchQuery.sizeGreaterThan(minSize.asLong())));
-        filter.getHasAttachment().ifPresent(hasAttachment -> searchQuery.andCriteria(SearchQuery.hasAttachment(hasAttachment)));
-        filter.getHasKeyword().ifPresent(hasKeyword -> keywordQuery(hasKeyword, true).ifPresent(searchQuery::andCriteria));
-        filter.getNotKeyword().ifPresent(notKeyword -> keywordQuery(notKeyword, false).ifPresent(searchQuery::andCriteria));
-        filter.getAttachmentFileName().ifPresent(attachmentFileName -> searchQuery.andCriteria(SearchQuery.attachmentFileName(attachmentFileName)));
+        filter.getFrom().ifPresent(from -> builder.add(SearchQuery.address(AddressType.From, from)));
+        filter.getTo().ifPresent(to -> builder.add(SearchQuery.address(AddressType.To, to)));
+        filter.getCc().ifPresent(cc -> builder.add(SearchQuery.address(AddressType.Cc, cc)));
+        filter.getBcc().ifPresent(bcc -> builder.add(SearchQuery.address(AddressType.Bcc, bcc)));
+        filter.getSubject().ifPresent(subject -> builder.add(SearchQuery.headerContains("Subject", subject)));
+        filter.getAttachments().ifPresent(attachments ->  builder.add(SearchQuery.attachmentContains(attachments)));
+        filter.getBody().ifPresent(body ->  builder.add(SearchQuery.bodyContains(body)));
+        filter.getAfter().ifPresent(after -> builder.add(SearchQuery.sentDateAfter(Date.from(after.toInstant()), DateResolution.Second)));
+        filter.getBefore().ifPresent(before -> builder.add(SearchQuery.sentDateBefore(Date.from(before.toInstant()), DateResolution.Second)));
+        filter.getHeader().ifPresent(header -> builder.add(SearchQuery.headerContains(header.getName(), header.getValue().orElse(null))));
+        filter.getIsAnswered().ifPresent(isAnswered -> builder.add(SearchQuery.flag(Flag.ANSWERED, isAnswered)));
+        filter.getIsDraft().ifPresent(isDraft -> builder.add(SearchQuery.flag(Flag.DRAFT, isDraft)));
+        filter.getIsFlagged().ifPresent(isFlagged -> builder.add(SearchQuery.flag(Flag.FLAGGED, isFlagged)));
+        filter.getIsUnread().ifPresent(isUnread -> builder.add(SearchQuery.flag(Flag.SEEN, !isUnread)));
+        filter.getIsForwarded().ifPresent(isForwarded -> builder.add(SearchQuery.flagSet(Keyword.FORWARDED.getFlagName(), isForwarded)));
+        filter.getMaxSize().ifPresent(maxSize -> builder.add(SearchQuery.sizeLessThan(maxSize.asLong())));
+        filter.getMinSize().ifPresent(minSize -> builder.add(SearchQuery.sizeGreaterThan(minSize.asLong())));
+        filter.getHasAttachment().ifPresent(hasAttachment -> builder.add(SearchQuery.hasAttachment(hasAttachment)));
+        filter.getHasKeyword().ifPresent(hasKeyword -> keywordQuery(hasKeyword, true).ifPresent(builder::add));
+        filter.getNotKeyword().ifPresent(notKeyword -> keywordQuery(notKeyword, false).ifPresent(builder::add));
+        filter.getAttachmentFileName().ifPresent(attachmentFileName -> builder.add(SearchQuery.attachmentFileName(attachmentFileName)));
 
-        return searchQuery;
+        return builder.build().stream();
     }
 
     private Optional<Criterion> keywordQuery(String stringKeyword, boolean isSet) {
@@ -119,8 +118,7 @@ public class FilterToSearchQuery {
 
     private ImmutableList<Criterion> convertCriterias(FilterOperator filter) {
         return filter.getConditions().stream()
-            .map(this::convert)
-            .flatMap(sq -> sq.getCriterias().stream())
+            .flatMap(this::convert)
             .collect(Guavate.toImmutableList());
     }
 }

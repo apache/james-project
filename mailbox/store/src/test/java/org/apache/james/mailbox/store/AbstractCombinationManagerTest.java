@@ -107,8 +107,7 @@ public abstract class AbstractCombinationManagerTest {
 
     @Test
     void searchFromMessageManagerShouldReturnMessagesUsingSetInMailboxesFromMessageIdManager() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
 
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
             .getId().getMessageId();
@@ -120,8 +119,7 @@ public abstract class AbstractCombinationManagerTest {
 
     @Test
     void searchFromMessageManagerShouldReturnMessagesUsingSetInMailboxesFromMessageIdManagerWhenSearchByMailboxQueryWithMailboxPath() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
 
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
             .getId().getMessageId();
@@ -139,8 +137,7 @@ public abstract class AbstractCombinationManagerTest {
 
     @Test
     void searchFromMessageManagerShouldReturnMessagesUsingSetInMailboxesFromMessageIdManagerWhenSearchByMailboxQueryWithUsername() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
 
         ComposedMessageId composedMessageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session).getId();
 
@@ -153,8 +150,7 @@ public abstract class AbstractCombinationManagerTest {
 
     @Test
     void searchFromMailboxManagerShouldReturnMessagesUsingSetInMailboxesFromMessageIdManagerWhenSearchByMultiMailboxes() throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(SearchQuery.all());
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
 
         MultimailboxesSearchQuery.Builder builder = MultimailboxesSearchQuery.from(query);
         builder.inMailboxes(mailbox1.getMailboxId(), mailbox2.getMailboxId());
@@ -511,7 +507,7 @@ public abstract class AbstractCombinationManagerTest {
             .get()
             .getUid();
 
-        SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());
         assertThat(messageManager2.search(searchQuery, session))
             .hasSize(1)
             .containsOnly(uid2);
@@ -525,7 +521,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
-        SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());
         assertThat(messageManager1.search(searchQuery, session)).isEmpty();
     }
 
@@ -540,7 +536,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session);
 
-        SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());
         assertThat(messageManager1.search(searchQuery, session)).isEmpty();
     }
 

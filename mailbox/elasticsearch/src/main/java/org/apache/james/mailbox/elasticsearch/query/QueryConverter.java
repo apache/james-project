@@ -56,7 +56,7 @@ public class QueryConverter {
     }
 
     private QueryBuilder generateQueryBuilder(SearchQuery searchQuery) {
-        List<SearchQuery.Criterion> criteria = searchQuery.getCriterias();
+        List<SearchQuery.Criterion> criteria = searchQuery.getCriteria();
         if (criteria.isEmpty()) {
             return criterionConverter.convertCriterion(SearchQuery.all());
         } else if (criteria.size() == 1) {

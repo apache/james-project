@@ -135,7 +135,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThat(messageManager.search(new SearchQuery(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session))
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session))
             .containsExactly(composedMessageId.getUid());
     }
 
@@ -154,7 +154,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThat(messageManager.search(new SearchQuery(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session))
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session))
             .containsExactly(composedMessageId.getUid());
     }
 
@@ -173,7 +173,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThat(messageManager.search(new SearchQuery(SearchQuery.bodyContains("0123456789")), session))
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("0123456789")), session))
             .containsExactly(composedMessageId.getUid());
     }
 
@@ -192,7 +192,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThat(messageManager.search(new SearchQuery(SearchQuery.bodyContains("matchMe")), session))
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("matchMe")), session))
             .containsExactly(composedMessageId.getUid());
     }
 
@@ -212,7 +212,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThat(messageManager.search(new SearchQuery(SearchQuery.bodyContains(reasonableLongTerm)), session))
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.bodyContains(reasonableLongTerm)), session))
             .containsExactly(composedMessageId.getUid());
     }
 
@@ -236,7 +236,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThat(messageManager.search(new SearchQuery(SearchQuery.headerExists("Custom-header")), session))
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.headerExists("Custom-header")), session))
             .containsExactly(customDateHeaderMessageId.getUid(), customStringHeaderMessageId.getUid());
     }
 
@@ -260,7 +260,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThat(messageManager.search(new SearchQuery(SearchQuery.all()), session))
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.all()), session))
             .contains(customStringHeaderMessageId.getUid());
     }
 }

@@ -1205,7 +1205,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .getId().getMessageId();
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .build();
 
 
@@ -1236,7 +1236,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 sessionFromDelegater);
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .build();
 
             assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
@@ -1264,7 +1264,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 sessionFromDelegater);
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .build();
 
             assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
@@ -1285,7 +1285,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             otherMailboxManager.appendMessage(AppendCommand.from(message), sessionFromDelegater);
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .build();
 
             assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
@@ -1306,7 +1306,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             otherMessageManager.appendMessage(AppendCommand.from(message), sessionFromDelegater);
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(otherMailboxId)
                 .build();
 
@@ -1327,7 +1327,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             otherMessageManager.appendMessage(AppendCommand.from(message), session);
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .notInMailboxes(otherMailboxId)
                 .build();
 
@@ -1348,7 +1348,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             otherMessageManager.appendMessage(AppendCommand.from(message), session);
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(otherMailboxId)
                 .notInMailboxes(otherMailboxId)
                 .build();
@@ -1379,7 +1379,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .getId().getMessageId();
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(searchedMailboxId)
                 .build();
 
@@ -1852,12 +1852,12 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.moveMessages(MessageRange.all(), inbox, otherMailbox, session);
 
             MultimailboxesSearchQuery inboxQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(inboxId)
                 .build();
 
             MultimailboxesSearchQuery otherMailboxQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(otherMailboxId)
                 .build();
 
@@ -1895,12 +1895,12 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.moveMessages(MessageRange.one(composedMessageId1.getUid()), inbox, otherMailbox, session);
 
             MultimailboxesSearchQuery inboxQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(inboxId)
                 .build();
 
             MultimailboxesSearchQuery otherMailboxQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(otherMailboxId)
                 .build();
 
@@ -1989,12 +1989,12 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.copyMessages(MessageRange.all(), inbox, otherMailbox, session);
 
             MultimailboxesSearchQuery inboxQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(inboxId)
                 .build();
 
             MultimailboxesSearchQuery otherMailboxQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(otherMailboxId)
                 .build();
 
@@ -2033,12 +2033,12 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.copyMessages(MessageRange.one(composedMessageId1.getUid()), inbox, otherMailbox, session);
 
             MultimailboxesSearchQuery inboxQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(inboxId)
                 .build();
 
             MultimailboxesSearchQuery otherMailboxQuery = MultimailboxesSearchQuery
-                .from(new SearchQuery())
+                .from(SearchQuery.matchAll())
                 .inMailboxes(otherMailboxId)
                 .build();
 

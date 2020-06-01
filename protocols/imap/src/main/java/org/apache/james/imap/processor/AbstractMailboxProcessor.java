@@ -546,7 +546,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         //      as above.  In the case where there have been no expunges, the server
         //      can ignore this data.
         if (metaData.getHighestModSeq().asLong() > changedSince) {
-            SearchQuery searchQuery = new SearchQuery();
+            SearchQuery.Builder searchQuery = SearchQuery.builder();
             SearchQuery.UidRange[] nRanges = new SearchQuery.UidRange[ranges.size()];
             Set<MessageUid> vanishedUids = new HashSet<>();
             for (int i = 0; i < ranges.size(); i++) {
@@ -568,7 +568,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             }
             searchQuery.andCriteria(SearchQuery.uid(nRanges));
             searchQuery.andCriteria(SearchQuery.modSeqGreaterThan(changedSince));
-            try (Stream<MessageUid> uids = mailbox.search(searchQuery, session)) {
+            try (Stream<MessageUid> uids = mailbox.search(searchQuery.build(), session)) {
                 uids.forEach(vanishedUids::remove);
             }
             UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));

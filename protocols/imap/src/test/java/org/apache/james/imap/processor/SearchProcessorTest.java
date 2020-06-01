@@ -457,8 +457,7 @@ public class SearchProcessorTest {
    
     private void check(SearchKey key, SearchQuery.Criterion criterion)
             throws Exception {
-        SearchQuery query = new SearchQuery();
-        query.andCriteria(criterion);
+        SearchQuery query = SearchQuery.of(criterion);
         check(key, query);
     }
 
