@@ -102,8 +102,8 @@ public class DraftMethodsModule extends AbstractModule {
                                        JWTAuthenticationStrategy jwtAuthenticationStrategy,
                                        QueryParameterAccessTokenAuthenticationStrategy queryParameterAuthenticationStrategy) {
         return Authenticator.of(metricFactory,
-            accessTokenAuthenticationStrategy,
             jwtAuthenticationStrategy,
+            accessTokenAuthenticationStrategy,
             queryParameterAuthenticationStrategy);
     }
 }
