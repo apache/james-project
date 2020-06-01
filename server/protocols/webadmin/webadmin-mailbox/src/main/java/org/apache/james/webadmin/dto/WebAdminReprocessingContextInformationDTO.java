@@ -19,15 +19,19 @@
 package org.apache.james.webadmin.dto;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.mailbox.tools.indexer.ErrorRecoveryIndexationTask;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
+
+import com.github.steveash.guavate.Guavate;
 
 public class WebAdminReprocessingContextInformationDTO implements AdditionalInformationDTO {
     public static class WebAdminErrorRecoveryIndexationDTO extends WebAdminReprocessingContextInformationDTO {
@@ -41,14 +45,14 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
                     type,
                     details.getSuccessfullyReprocessedMailCount(),
                     details.getFailedReprocessedMailCount(),
-                    SerializableReIndexingExecutionFailures.from(details.failures()),
+                    details.failures(),
                     details.timestamp()))
                 .typeName(ErrorRecoveryIndexationTask.PREVIOUS_FAILURES_INDEXING.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
         WebAdminErrorRecoveryIndexationDTO(String type, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
-                                           SerializableReIndexingExecutionFailures failures, Instant timestamp) {
+                                           ReIndexingExecutionFailures failures, Instant timestamp) {
             super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
         }
     }
@@ -64,14 +68,14 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
                     type,
                     details.getSuccessfullyReprocessedMailCount(),
                     details.getFailedReprocessedMailCount(),
-                    SerializableReIndexingExecutionFailures.from(details.failures()),
+                    details.failures(),
                     details.timestamp()))
                 .typeName(FullReindexingTask.FULL_RE_INDEXING.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
         WebAdminFullIndexationDTO(String type, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
-                                  SerializableReIndexingExecutionFailures failures, Instant timestamp) {
+                                  ReIndexingExecutionFailures failures, Instant timestamp) {
             super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
         }
 
@@ -80,16 +84,21 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
     protected final String type;
     protected final int successfullyReprocessedMailCount;
     protected final int failedReprocessedMailCount;
-    protected final SerializableReIndexingExecutionFailures failures;
+    protected final SerializableReIndexingExecutionFailures messageFailures;
+    private final List<String> mailboxFailures;
     protected final Instant timestamp;
 
 
     WebAdminReprocessingContextInformationDTO(String type, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
-                                              SerializableReIndexingExecutionFailures failures, Instant timestamp) {
+                                              ReIndexingExecutionFailures failures,
+                                              Instant timestamp) {
         this.type = type;
         this.successfullyReprocessedMailCount = successfullyReprocessedMailCount;
         this.failedReprocessedMailCount = failedReprocessedMailCount;
-        this.failures = failures;
+        this.messageFailures = SerializableReIndexingExecutionFailures.from(failures);
+        this.mailboxFailures = failures.mailboxFailures().stream()
+            .map(MailboxId::serialize)
+            .collect(Guavate.toImmutableList());
         this.timestamp = timestamp;
     }
 
@@ -102,7 +111,11 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
     }
 
     public SerializableReIndexingExecutionFailures getFailures() {
-        return failures;
+        return messageFailures;
+    }
+
+    public List<String> getMailboxFailures() {
+        return mailboxFailures;
     }
 
     public Instant getTimestamp() {

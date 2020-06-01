@@ -26,6 +26,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.service.ClearMailRepositoryTask;
 import org.apache.james.webadmin.service.ClearMailRepositoryTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ClearMailRepositoryTaskDTO;
@@ -34,9 +35,11 @@ import org.apache.james.webadmin.service.ReprocessingAllMailsTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingOneMailTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingOneMailTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingService;
+import org.apache.james.webadmin.service.WebAdminClearMailRepositoryTaskAdditionalInformationDTO;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.ProvidesIntoSet;
+import com.google.inject.name.Named;
 
 public class MailRepositoryTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
@@ -59,13 +62,31 @@ public class MailRepositoryTaskSerializationModule extends AbstractModule {
         return ClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminClearMailRepositoryAdditionalInformation() {
+        return WebAdminClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> reprocessingAllMailsAdditionalInformation() {
         return ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminReprocessingAllMailsAdditionalInformation() {
+        return ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> reprocessingOneMailAdditionalInformation() {
+        return ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminReprocessingOneMailAdditionalInformation() {
         return ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 }

@@ -24,12 +24,14 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.service.ExportService;
 import org.apache.james.webadmin.service.MailboxesExportTask;
 import org.apache.james.webadmin.service.MailboxesExportTaskAdditionalInformationDTO;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.ProvidesIntoSet;
+import com.google.inject.name.Named;
 
 public class WebadminMailboxExportTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
@@ -39,6 +41,12 @@ public class WebadminMailboxExportTaskSerializationModule extends AbstractModule
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> mailboxesExportAdditionalInformation() {
+        return MailboxesExportTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminMailboxesExportAdditionalInformation() {
         return MailboxesExportTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 }

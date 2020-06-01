@@ -47,6 +47,7 @@ import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
+import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.server.core.configuration.Configuration;
@@ -65,7 +66,8 @@ public class JPAJamesServerMain implements JamesServerMain {
         new MailRepositoriesRoutesModule(),
         new ReIndexingModule(),
         new SwaggerRoutesModule(),
-        new SieveRoutesModule());
+        new SieveRoutesModule(),
+        new WebAdminReIndexingTaskSerializationModule());
 
     private static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),

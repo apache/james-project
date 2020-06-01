@@ -19,16 +19,17 @@
 package org.apache.james.webadmin.dto;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.mailbox.tools.indexer.UserReindexingTask;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class WebAdminUserReindexingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
@@ -43,7 +44,7 @@ public class WebAdminUserReindexingTaskAdditionalInformationDTO implements Addit
                 details.getUsername(),
                 details.getSuccessfullyReprocessedMailCount(),
                 details.getFailedReprocessedMailCount(),
-                SerializableReIndexingExecutionFailures.from(details.failures()),
+                details.failures(),
                 details.timestamp()))
             .typeName(UserReindexingTask.USER_RE_INDEXING.asString())
             .withFactory(AdditionalInformationDTOModule::new);
@@ -53,12 +54,12 @@ public class WebAdminUserReindexingTaskAdditionalInformationDTO implements Addit
     private final String username;
 
     @JsonCreator
-    private WebAdminUserReindexingTaskAdditionalInformationDTO(@JsonProperty("type") String type,
-                                                               @JsonProperty("username") String username,
-                                                               @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
-                                                               @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
-                                                               @JsonProperty("failures") SerializableReIndexingExecutionFailures failures,
-                                                               @JsonProperty("timestamp") Instant timestamp) {
+    private WebAdminUserReindexingTaskAdditionalInformationDTO(String type,
+                                                               String username,
+                                                               int successfullyReprocessedMailCount,
+                                                               int failedReprocessedMailCount,
+                                                               ReIndexingExecutionFailures failures,
+                                                               Instant timestamp) {
         this.username = username;
         this.reprocessingContextInformationDTO = new WebAdminReprocessingContextInformationDTO(
             type,
@@ -89,5 +90,9 @@ public class WebAdminUserReindexingTaskAdditionalInformationDTO implements Addit
 
     public SerializableReIndexingExecutionFailures getFailures() {
         return reprocessingContextInformationDTO.getFailures();
+    }
+
+    public List<String> getMailboxFailures() {
+        return reprocessingContextInformationDTO.getMailboxFailures();
     }
 }

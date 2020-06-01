@@ -69,6 +69,7 @@ import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
+import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
@@ -100,6 +101,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new SieveRoutesModule(),
         new SwaggerRoutesModule(),
         new WebAdminServerModule(),
+        new WebAdminReIndexingTaskSerializationModule(),
         new MessagesRoutesModule());
 
     public static final Module PROTOCOLS = Modules.combine(

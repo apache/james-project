@@ -19,7 +19,6 @@
 package org.apache.james.webadmin.dto;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
@@ -29,6 +28,7 @@ import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
 import org.junit.jupiter.api.Test;
@@ -39,8 +39,20 @@ import com.google.common.collect.ImmutableList;
 class WebAdminReprocessingContextInformationDTOTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
 
-    private final String serializedErrorRecoveryAdditionalInformation = "{\"type\":\"error-recovery-indexation\",\"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]},\"timestamp\":\"2018-11-13T12:00:55Z\"}";
-    private final String serializedFullAdditionalInformation = "{\"type\":\"full-reindexing\",\"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]},\"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String serializedErrorRecoveryAdditionalInformation = "{" +
+        "  \"type\":\"error-recovery-indexation\"," +
+        "  \"successfullyReprocessedMailCount\":42," +
+        "  \"failedReprocessedMailCount\":2," +
+        "  \"failures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
+        "  \"mailboxFailures\":[\"3\", \"4\"]," +
+        "  \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String serializedFullAdditionalInformation = "{" +
+        "  \"type\":\"full-reindexing\"," +
+        "  \"successfullyReprocessedMailCount\":42," +
+        "  \"failedReprocessedMailCount\":2," +
+        "  \"failures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
+        "  \"mailboxFailures\":[\"3\", \"4\"]," +
+        "  \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
@@ -48,8 +60,9 @@ class WebAdminReprocessingContextInformationDTOTest {
     private final TestId mailboxId2 = TestId.of(2L);
     private final MessageUid messageUid2 = MessageUid.of(20L);
     private final ReIndexingExecutionFailures.ReIndexingFailure indexingFailure2 = new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId2, messageUid2);
-    private final List<ReIndexingExecutionFailures.ReIndexingFailure> failures = ImmutableList.of(indexingFailure, indexingFailure2);
-    private final ReIndexingExecutionFailures executionFailures = new ReIndexingExecutionFailures(failures);
+    private final List<ReIndexingExecutionFailures.ReIndexingFailure> messageFailures = ImmutableList.of(indexingFailure, indexingFailure2);
+    private final ImmutableList<MailboxId> mailboxFailures = ImmutableList.of(TestId.of(3), TestId.of(4));
+    private final ReIndexingExecutionFailures executionFailures = new ReIndexingExecutionFailures(messageFailures, mailboxFailures);
 
     @Test
     void shouldSerializeErrorRecoveryAdditionalInformation() throws Exception {
