@@ -27,7 +27,6 @@ import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.TaskExecutionDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingContextInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
 
@@ -60,11 +59,6 @@ public class ReprocessingContextInformation implements TaskExecutionDetails.Addi
     @JsonIgnore
     public ReIndexingExecutionFailures failures() {
         return failures;
-    }
-
-    @JsonProperty("failures")
-    public SerializableReIndexingExecutionFailures failuresAsJson() {
-        return SerializableReIndexingExecutionFailures.from(failures());
     }
 
     @Override

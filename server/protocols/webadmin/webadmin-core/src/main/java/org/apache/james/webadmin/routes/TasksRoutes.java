@@ -31,6 +31,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.json.DTOConverter;
+import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
@@ -60,14 +62,17 @@ import spark.Service;
 @Produces("application/json")
 public class TasksRoutes implements Routes {
     private static final Duration MAXIMUM_AWAIT_TIMEOUT = Duration.ofDays(365);
-    private final TaskManager taskManager;
-    private final JsonTransformer jsonTransformer;
     public static final String BASE = "/tasks";
 
+    private final TaskManager taskManager;
+    private final JsonTransformer jsonTransformer;
+    private final DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationDTOConverter;
+
     @Inject
-    public TasksRoutes(TaskManager taskManager, JsonTransformer jsonTransformer) {
+    public TasksRoutes(TaskManager taskManager, JsonTransformer jsonTransformer, DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationDTOConverter) {
         this.taskManager = taskManager;
         this.jsonTransformer = jsonTransformer;
+        this.additionalInformationDTOConverter = additionalInformationDTOConverter;
     }
 
     @Override
@@ -105,7 +110,7 @@ public class TasksRoutes implements Routes {
     })
     public Object list(Request req, Response response) {
         try {
-            return ExecutionDetailsDto.from(
+            return ExecutionDetailsDto.from(additionalInformationDTOConverter,
                 Optional.ofNullable(req.queryParams("status"))
                 .map(TaskManager.Status::fromString)
                 .map(taskManager::list)
@@ -153,7 +158,7 @@ public class TasksRoutes implements Routes {
     private Object respondStatus(TaskId taskId, Supplier<TaskExecutionDetails> executionDetailsSupplier) {
         try {
             TaskExecutionDetails executionDetails = executionDetailsSupplier.get();
-            return ExecutionDetailsDto.from(executionDetails);
+            return ExecutionDetailsDto.from(additionalInformationDTOConverter, executionDetails);
         } catch (TaskNotFoundException e) {
             throw ErrorResponder.builder()
                 .message("%s can not be found", taskId.getValue())

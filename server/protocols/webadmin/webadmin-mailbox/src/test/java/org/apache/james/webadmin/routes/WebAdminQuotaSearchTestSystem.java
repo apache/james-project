@@ -23,7 +23,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasTaskAdditionalInformationDTO;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
@@ -60,7 +62,8 @@ public class WebAdminQuotaSearchTestSystem {
         TaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         RecomputeCurrentQuotasService mock = mock(RecomputeCurrentQuotasService.class);
         when(mock.recomputeCurrentQuotas(any(), any())).thenReturn(Mono.just(Task.Result.COMPLETED));
-        TasksRoutes tasksRoutes = new TasksRoutes(taskManager, new JsonTransformer());
+        TasksRoutes tasksRoutes = new TasksRoutes(taskManager, new JsonTransformer(),
+            DTOConverter.of(RecomputeCurrentQuotasTaskAdditionalInformationDTO.MODULE));
         UserQuotaRoutes userQuotaRoutes = new UserQuotaRoutes(quotaSearchTestSystem.getUsersRepository(),
             userQuotaService,
             jsonTransformer,

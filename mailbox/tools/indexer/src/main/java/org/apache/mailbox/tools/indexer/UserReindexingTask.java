@@ -32,6 +32,8 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import reactor.core.publisher.Mono;
 
 public class UserReindexingTask implements Task {
@@ -41,7 +43,8 @@ public class UserReindexingTask implements Task {
     public static class AdditionalInformation extends ReprocessingContextInformation {
         private final Username username;
 
-        AdditionalInformation(Username username, int successfullyReprocessedMailCount,
+        @VisibleForTesting
+        public AdditionalInformation(Username username, int successfullyReprocessedMailCount,
                               int failedReprocessedMailCount, ReIndexingExecutionFailures failures,
                               Instant timestamp, RunningOptions runningOptions) {
             super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp, runningOptions);

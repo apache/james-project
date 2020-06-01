@@ -71,7 +71,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-tools-indexer</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

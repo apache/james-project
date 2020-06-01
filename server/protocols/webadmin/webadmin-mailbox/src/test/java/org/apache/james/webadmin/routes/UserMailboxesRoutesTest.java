@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.james.core.Username;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -71,6 +72,7 @@ import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.dto.WebAdminUserReindexingTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
@@ -103,7 +105,7 @@ class UserMailboxesRoutesTest {
     private ListeningMessageSearchIndex searchIndex;
     private MemoryTaskManager taskManager;
 
-    private void createServer(MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory) throws Exception {
+    private void createServer(MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory, MailboxId.Factory mailboxIdFactory) throws Exception {
         usersRepository = mock(UsersRepository.class);
         when(usersRepository.contains(USERNAME)).thenReturn(true);
 
@@ -125,7 +127,8 @@ class UserMailboxesRoutesTest {
                 new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository), new JsonTransformer(),
                     taskManager,
                     ImmutableSet.of(new UserMailboxesRoutes.UserReIndexingTaskRegistration(reIndexer))),
-                new TasksRoutes(taskManager, new JsonTransformer()))
+                new TasksRoutes(taskManager, new JsonTransformer(),
+                    DTOConverter.of(WebAdminUserReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory))))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
@@ -145,7 +148,7 @@ class UserMailboxesRoutesTest {
         @BeforeEach
         void setUp() throws Exception {
             InMemoryMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-            createServer(mailboxManager, mailboxManager.getMapperFactory());
+            createServer(mailboxManager, mailboxManager.getMapperFactory(), new InMemoryId.Factory());
         }
 
         @Test
@@ -854,7 +857,7 @@ class UserMailboxesRoutesTest {
             mailboxManager = mock(MailboxManager.class);
             when(mailboxManager.createSystemSession(any())).thenReturn(MailboxSessionUtil.create(USERNAME));
 
-            createServer(mailboxManager, mock(MailboxSessionMapperFactory.class));
+            createServer(mailboxManager, mock(MailboxSessionMapperFactory.class), new InMemoryId.Factory());
         }
 
         @Test
@@ -1112,7 +1115,7 @@ class UserMailboxesRoutesTest {
         @BeforeEach
         void setUp() throws Exception {
             mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-            createServer(mailboxManager, mailboxManager.getMapperFactory());
+            createServer(mailboxManager, mailboxManager.getMapperFactory(), new InMemoryId.Factory());
         }
 
         @Nested
@@ -1176,9 +1179,9 @@ class UserMailboxesRoutesTest {
 
                 given()
                     .basePath(TasksRoutes.BASE)
-                    .when()
+                .when()
                     .get(taskId + "/await")
-                    .then()
+                .then()
                     .body("status", Matchers.is("completed"))
                     .body("taskId", Matchers.is(notNullValue()))
                     .body("type", Matchers.is(UserReindexingTask.USER_RE_INDEXING.asString()))

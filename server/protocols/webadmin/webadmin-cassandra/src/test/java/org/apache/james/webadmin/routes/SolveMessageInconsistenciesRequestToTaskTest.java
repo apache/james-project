@@ -27,7 +27,9 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
+import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTaskAdditionalInformationDTO;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.task.Task;
@@ -89,7 +91,7 @@ public class SolveMessageInconsistenciesRequestToTaskTest {
         Mockito.when(service.fixMessageInconsistencies(any(), any())).thenReturn(Mono.just(Task.Result.COMPLETED));
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-            new TasksRoutes(taskManager, jsonTransformer),
+            new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(SolveMessageInconsistenciesTaskAdditionalInformationDTO.MODULE)),
             new JMAPRoutes(
                 service,
                 taskManager))

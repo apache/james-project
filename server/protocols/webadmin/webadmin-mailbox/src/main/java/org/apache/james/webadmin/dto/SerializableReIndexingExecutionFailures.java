@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.mailbox.tools.indexer;
+package org.apache.james.webadmin.dto;
 
 import java.util.List;
 

@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import org.apache.james.core.Username;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
@@ -48,6 +49,7 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexingTask;
+import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -85,7 +87,9 @@ class MessageRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new TasksRoutes(taskManager, jsonTransformer),
+                new TasksRoutes(taskManager, jsonTransformer,
+                    DTOConverter.of(
+                        MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(mailboxManager.getMessageIdFactory()))),
                 new MessagesRoutes(taskManager,
                     new InMemoryMessageId.Factory(),
                     new MessageIdReIndexerImpl(reIndexerPerformer),

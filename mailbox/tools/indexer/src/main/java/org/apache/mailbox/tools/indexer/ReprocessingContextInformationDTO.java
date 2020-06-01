@@ -36,6 +36,7 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 
@@ -101,7 +102,8 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
-        ReprocessingContextInformationForErrorRecoveryIndexationTask(int successfullyReprocessedMailCount,
+        @VisibleForTesting
+        public ReprocessingContextInformationForErrorRecoveryIndexationTask(int successfullyReprocessedMailCount,
                                                                      int failedReprocessedMailCount,
                                                                      ReIndexingExecutionFailures failures,
                                                                      Instant timestamp,
@@ -150,7 +152,8 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
-        ReprocessingContextInformationForFullReindexingTask(int successfullyReprocessedMailCount,
+        @VisibleForTesting
+        public ReprocessingContextInformationForFullReindexingTask(int successfullyReprocessedMailCount,
                                                             int failedReprocessedMailCount,
                                                             ReIndexingExecutionFailures failures,
                                                             Instant timestamp,

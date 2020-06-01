@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.nullValue;
 
 import org.apache.james.core.Username;
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
@@ -59,6 +60,9 @@ import org.apache.james.webadmin.service.EventDeadLettersRedeliverAllTask;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverGroupTask;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverOneTask;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverService;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForAll;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForGroup;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForOne;
 import org.apache.james.webadmin.service.EventDeadLettersService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -123,7 +127,10 @@ class EventDeadLettersRoutesTest {
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new EventDeadLettersRoutes(service, eventSerializer, taskManager, jsonTransformer),
-                new TasksRoutes(taskManager, jsonTransformer))
+                new TasksRoutes(taskManager, jsonTransformer,
+                    DTOConverter.of(EventDeadLettersRedeliveryTaskAdditionalInformationForOne.MODULE,
+                        EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.MODULE,
+                        EventDeadLettersRedeliveryTaskAdditionalInformationForAll.MODULE)))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();

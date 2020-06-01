@@ -32,6 +32,8 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class SingleMailboxReindexingTask implements Task {
 
     public static final TaskType MAILBOX_RE_INDEXING = TaskType.of("mailbox-reindexing");
@@ -39,7 +41,8 @@ public class SingleMailboxReindexingTask implements Task {
     public static class AdditionalInformation extends ReprocessingContextInformation {
         private final MailboxId mailboxId;
 
-        AdditionalInformation(MailboxId mailboxId, int successfullyReprocessedMailCount,
+        @VisibleForTesting
+        public AdditionalInformation(MailboxId mailboxId, int successfullyReprocessedMailCount,
                               int failedReprocessedMailCount, ReIndexingExecutionFailures failures,
                               Instant timestamp, RunningOptions runningOptions) {
             super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp, runningOptions);

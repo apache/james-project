@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.task.Hostname;
@@ -65,7 +66,7 @@ class UserMailboxesRoutesNoIndexationTest {
             new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository), new JsonTransformer(),
                 taskManager,
                 ImmutableSet.of()),
-            new TasksRoutes(taskManager, new JsonTransformer()))
+            new TasksRoutes(taskManager, new JsonTransformer(), DTOConverter.of()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

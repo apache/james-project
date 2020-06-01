@@ -49,6 +49,7 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.core.builder.MimeMessageBuilder.BodyPartBuilder;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -71,10 +72,14 @@ import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.ClearMailRepositoryTask;
+import org.apache.james.webadmin.service.ClearMailRepositoryTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
+import org.apache.james.webadmin.service.ReprocessingAllMailsTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingOneMailTask;
+import org.apache.james.webadmin.service.ReprocessingOneMailTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingService;
+import org.apache.james.webadmin.service.WebAdminClearMailRepositoryTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailet.Attribute;
@@ -125,7 +130,10 @@ public class MailRepositoriesRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new MailRepositoriesRoutes(repositoryStoreService,
                     jsonTransformer, reprocessingService, taskManager),
-            new TasksRoutes(taskManager, jsonTransformer))
+            new TasksRoutes(taskManager, jsonTransformer,
+                DTOConverter.of(ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
+                    ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
+                    WebAdminClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE)))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

@@ -21,6 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.when;
 
+import org.apache.james.json.DTOConverter;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
@@ -49,7 +50,7 @@ class MailboxesRoutesNoTasksTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new TasksRoutes(taskManager, jsonTransformer),
+                new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of()),
                 new MailboxesRoutes(taskManager,
                     jsonTransformer,
                     NO_ADDITIONAL_REGISTRATION,

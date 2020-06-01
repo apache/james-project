@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.nullValue;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.james.json.DTOConverter;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.MemoryTaskManager;
@@ -50,8 +51,8 @@ import org.junit.jupiter.api.Test;
 import io.restassured.RestAssured;
 
 class TasksRoutesTest {
+    private static final String HOSTNAME = "foo";
 
-    public static final String HOSTNAME = "foo";
     private MemoryTaskManager taskManager;
     private WebAdminServer webAdminServer;
     private CountDownLatch waitingForResultLatch;
@@ -60,7 +61,8 @@ class TasksRoutesTest {
     void setUp() {
         taskManager = new MemoryTaskManager(new Hostname(HOSTNAME));
 
-        webAdminServer = WebAdminUtils.createWebAdminServer(new TasksRoutes(taskManager, new JsonTransformer()))
+        webAdminServer = WebAdminUtils.createWebAdminServer(new TasksRoutes(taskManager, new JsonTransformer(),
+            DTOConverter.of()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

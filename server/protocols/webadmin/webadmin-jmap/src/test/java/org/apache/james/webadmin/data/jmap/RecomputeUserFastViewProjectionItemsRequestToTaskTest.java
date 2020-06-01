@@ -35,6 +35,7 @@ import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
@@ -133,7 +134,8 @@ class RecomputeUserFastViewProjectionItemsRequestToTaskTest {
         Preview.Factory previewFactory = new Preview.Factory(messageContentExtractor, htmlTextExtractor);
         MessageFastViewPrecomputedProperties.Factory projectionItemFactory = new MessageFastViewPrecomputedProperties.Factory(previewFactory);
         webAdminServer = WebAdminUtils.createWebAdminServer(
-            new TasksRoutes(taskManager, jsonTransformer),
+            new TasksRoutes(taskManager, jsonTransformer,
+                DTOConverter.of(RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE)),
             new JMAPRoutes(
                 new MessageFastViewProjectionCorrector(usersRepository, mailboxManager, messageFastViewProjection, projectionItemFactory),
                 taskManager, usersRepository))

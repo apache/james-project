@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.Mails;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -49,7 +50,10 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.ClearMailQueueTask;
+import org.apache.james.webadmin.service.ClearMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTask;
+import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
@@ -91,7 +95,9 @@ class MailQueueRoutesTest {
 
         return WebAdminUtils.createWebAdminServer(
                 new MailQueueRoutes(mailQueueFactory, jsonTransformer, taskManager),
-                new TasksRoutes(taskManager, jsonTransformer))
+                new TasksRoutes(taskManager, jsonTransformer,
+                    DTOConverter.of(WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE,
+                        ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE)))
             .start();
     }
 

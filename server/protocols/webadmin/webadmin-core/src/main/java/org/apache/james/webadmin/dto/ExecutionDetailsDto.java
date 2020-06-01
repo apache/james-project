@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.apache.james.json.DTOConverter;
+import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.TaskExecutionDetails;
 
@@ -32,20 +34,28 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.steveash.guavate.Guavate;
 
 public class ExecutionDetailsDto {
-    public static List<ExecutionDetailsDto> from(List<TaskExecutionDetails> tasksDetails) {
+    public static List<ExecutionDetailsDto> from(DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
+                                                 List<TaskExecutionDetails> tasksDetails) {
         return tasksDetails.stream()
-            .map(ExecutionDetailsDto::new)
+            .map(details -> ExecutionDetailsDto.from(additionalInformationConverter, details))
             .collect(Guavate.toImmutableList());
     }
 
-    public static ExecutionDetailsDto from(TaskExecutionDetails taskDetails) {
-        return new ExecutionDetailsDto(taskDetails);
+    public static ExecutionDetailsDto from(DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
+                                           TaskExecutionDetails taskDetails) {
+
+        return new ExecutionDetailsDto(taskDetails,
+            taskDetails.getAdditionalInformation()
+                .flatMap(additionalInformationConverter::toDTO));
     }
 
     private final TaskExecutionDetails executionDetails;
+    private final Optional<AdditionalInformationDTO> additionalInformation;
 
-    private ExecutionDetailsDto(TaskExecutionDetails executionDetails) {
+    private ExecutionDetailsDto(TaskExecutionDetails executionDetails,
+                                Optional<AdditionalInformationDTO> additionalInformation) {
         this.executionDetails = executionDetails;
+        this.additionalInformation = additionalInformation;
     }
 
     public UUID getTaskId() {
@@ -74,8 +84,8 @@ public class ExecutionDetailsDto {
             .map(Hostname::asString);
     }
 
-    public Optional<TaskExecutionDetails.AdditionalInformation> getAdditionalInformation() {
-        return executionDetails.getAdditionalInformation();
+    public Optional<AdditionalInformationDTO> getAdditionalInformation() {
+        return additionalInformation;
     }
 
     @JsonInclude(JsonInclude.Include.NON_ABSENT)

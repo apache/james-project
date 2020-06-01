@@ -37,6 +37,7 @@ import java.util.Optional;
 
 import org.apache.james.blob.export.file.FileSystemExtension;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.backup.ZipAssert;
@@ -111,7 +112,8 @@ class MailboxesExportRequestToTaskTest {
 
         JsonTransformer jsonTransformer = new JsonTransformer();
         webAdminServer = WebAdminUtils.createWebAdminServer(
-            new TasksRoutes(taskManager, jsonTransformer),
+            new TasksRoutes(taskManager, jsonTransformer,
+                DTOConverter.of(MailboxesExportTaskAdditionalInformationDTO.SERIALIZATION_MODULE)),
             new ExportRoutes(
                 new ExportService(testSystem.backup, testSystem.blobStore, testSystem.blobExport, testSystem.usersRepository),
                 taskManager, testSystem.usersRepository))
