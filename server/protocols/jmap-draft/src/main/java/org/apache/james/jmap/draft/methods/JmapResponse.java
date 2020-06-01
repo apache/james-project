@@ -81,12 +81,6 @@ public class JmapResponse {
             this.responseName = ErrorResponse.ERROR_METHOD;
             return this;
         }
-
-        public Builder error(String message) {
-            this.response = ErrorResponse.builder().type(message).build();
-            this.responseName = ErrorResponse.ERROR_METHOD;
-            return this;
-        }
         
         public Builder error(ErrorResponse error) {
             this.response = error;
