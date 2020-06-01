@@ -94,7 +94,6 @@ import org.awaitility.Duration;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -669,12 +668,11 @@ public abstract class GetMessageListMethodTest {
                             messageNotSeenFlaggedInOtherMailbox.getMessageId().serialize()))));
     }
 
-    @Ignore("To fix in JAMES-3182")
-    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldFetchUnreadMessagesInMailboxUsingACombinationOfFilter() throws Exception {
-        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "othermailbox");
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(ALICE, "mailbox"));
+        mailboxProbe.createMailbox(MailboxPath.forUser(ALICE, "othermailbox"));
+        mailboxProbe.createMailbox(MailboxPath.inbox(ALICE));
 
         ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -700,13 +698,9 @@ public abstract class GetMessageListMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", allOf(
-                    containsInAnyOrder(messageNotSeenNotFlagged.getMessageId().serialize(), messageNotSeenFlagged.getMessageId().serialize()),
-                    not(containsInAnyOrder(messageSeenNotFlagged.getMessageId().serialize(),
-                            messageSeenFlagged.getMessageId().serialize(),
-                            messageSeenInOtherMailbox.getMessageId().serialize(),
-                            messageNotSeenFlaggedInOtherMailbox.getMessageId().serialize()))));
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type",  equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description",  equalTo("'inMailboxes' and 'notInMailboxes' wrapped within Filter Operators are not implemented. Review your search request."));
     }
 
     @Test

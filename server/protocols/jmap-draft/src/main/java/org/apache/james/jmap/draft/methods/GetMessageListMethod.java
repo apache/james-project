@@ -30,8 +30,10 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.draft.model.Filter;
 import org.apache.james.jmap.draft.model.FilterCondition;
+import org.apache.james.jmap.draft.model.FilterOperator;
 import org.apache.james.jmap.draft.model.GetMessageListRequest;
 import org.apache.james.jmap.draft.model.GetMessageListResponse;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
@@ -128,7 +130,15 @@ public class GetMessageListMethod implements Method {
                         .response(messageListResponse)
                         .responseName(RESPONSE_NAME)
                         .build()),
-                    processGetMessages(messageListRequest, messageListResponse, methodCallId, mailboxSession)));
+                    processGetMessages(messageListRequest, messageListResponse, methodCallId, mailboxSession)))
+                .onErrorResume(NotImplementedException.class, e -> Mono.just(JmapResponse.builder()
+                    .methodCallId(methodCallId)
+                    .responseName(RESPONSE_NAME)
+                    .error(ErrorResponse.builder()
+                        .type("invalidArguments")
+                        .description(e.getMessage())
+                        .build())
+                    .build()));
     }
 
     private Mono<GetMessageListResponse> getMessageListResponse(GetMessageListRequest messageListRequest, MailboxSession mailboxSession) {
@@ -145,6 +155,11 @@ public class GetMessageListMethod implements Method {
     }
 
     private MultimailboxesSearchQuery convertToSearchQuery(GetMessageListRequest messageListRequest) {
+        if (messageListRequest.getFilter().map(this::containsNestedMailboxFilters).orElse(false)) {
+            throw new NotImplementedException("'inMailboxes' and 'notInMailboxes' wrapped within Filter Operators are not " +
+                "implemented. Review your search request.");
+        }
+
         SearchQuery searchQuery = messageListRequest.getFilter()
                 .map(filter -> new FilterToSearchQuery().convert(filter))
                 .orElse(new SearchQuery());
@@ -159,6 +174,37 @@ public class GetMessageListMethod implements Method {
                 .inMailboxes(inMailboxes)
                 .notInMailboxes(notInMailboxes)
                 .build();
+    }
+
+    private boolean containsNestedMailboxFilters(Filter filter) {
+        if (filter instanceof FilterOperator) {
+            FilterOperator operator = (FilterOperator) filter;
+
+            return operator.getConditions()
+                .stream()
+                .anyMatch(this::containsMailboxFilters);
+        }
+        if (filter instanceof FilterCondition) {
+            // The condition is not nested
+            return false;
+        }
+        throw new RuntimeException("Unsupported Filter implementation " + filter);
+    }
+
+    private boolean containsMailboxFilters(Filter filter) {
+        if (filter instanceof FilterOperator) {
+            FilterOperator operator = (FilterOperator) filter;
+
+            return operator.getConditions()
+                .stream()
+                .anyMatch(this::containsMailboxFilters);
+        }
+        if (filter instanceof FilterCondition) {
+            FilterCondition condition = (FilterCondition) filter;
+
+            return condition.getInMailboxes().isPresent() || condition.getInMailboxes().isPresent();
+        }
+        throw new RuntimeException("Unsupported Filter implementation " + filter);
     }
 
     private Set<MailboxId> buildFilterMailboxesSet(Optional<Filter> maybeFilter, Function<FilterCondition, Optional<List<String>>> mailboxListExtractor) {
