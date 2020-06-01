@@ -150,7 +150,7 @@ public class UserMailboxesRoutes implements Routes {
                 LOGGER.info("Invalid get on user mailboxes", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.INVALID_ARGUMENT)
+                    .type(ErrorType.NOT_FOUND)
                     .message("Invalid get on user mailboxes")
                     .cause(e)
                     .haltError();
@@ -206,7 +206,7 @@ public class UserMailboxesRoutes implements Routes {
                 LOGGER.info("Invalid delete on user mailbox", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.INVALID_ARGUMENT)
+                    .type(ErrorType.NOT_FOUND)
                     .message("Invalid delete on user mailboxes")
                     .cause(e)
                     .haltError();
@@ -250,7 +250,7 @@ public class UserMailboxesRoutes implements Routes {
                 LOGGER.info("Invalid delete on user mailboxes", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.INVALID_ARGUMENT)
+                    .type(ErrorType.NOT_FOUND)
                     .message("Invalid delete on user mailboxes")
                     .cause(e)
                     .haltError();
@@ -280,15 +280,15 @@ public class UserMailboxesRoutes implements Routes {
                 } else {
                     throw ErrorResponder.builder()
                         .statusCode(HttpStatus.NOT_FOUND_404)
-                        .type(ErrorType.INVALID_ARGUMENT)
-                        .message("Invalid get on user mailboxes")
+                        .type(ErrorType.NOT_FOUND)
+                        .message("Mailbox does not exist")
                         .haltError();
                 }
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid get on user mailbox", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.INVALID_ARGUMENT)
+                    .type(ErrorType.NOT_FOUND)
                     .message("Invalid get on user mailboxes")
                     .cause(e)
                     .haltError();
@@ -327,7 +327,7 @@ public class UserMailboxesRoutes implements Routes {
                 LOGGER.info("Invalid put on user mailbox", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.INVALID_ARGUMENT)
+                    .type(ErrorType.NOT_FOUND)
                     .message("Invalid get on user mailboxes")
                     .cause(e)
                     .haltError();
