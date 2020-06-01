@@ -266,7 +266,7 @@ class ConsistencyTasksIntegrationTest {
 
         Awaitility.await()
             .untilAsserted(() -> assertThat(server.getProbe(MailRepositoryProbeImpl.class)
-                .getRepositoryMailCount(MailRepositoryUrl.from("cassandra://var/mail/error/"))).isEqualTo(1));
+                .getRepositoryMailCount(MailRepositoryUrl.from("cassandra://var/mail/error/"))).isGreaterThanOrEqualTo(1));
 
         server.getProbe(TestingSessionProbe.class)
             .getTestingSession().registerScenario(executeNormally()
