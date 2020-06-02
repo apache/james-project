@@ -235,6 +235,10 @@ class MailboxesExportRequestToTaskTest {
             .jsonPath()
             .get("taskId");
 
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
         String fileUrl = testSystem.mailetContext.getSentMails().get(0).getMsg().getHeader(CORRESPONDING_FILE_HEADER)[0];
         ZipAssert.assertThatZip(new FileInputStream(fileUrl))
             .hasNoEntry();
