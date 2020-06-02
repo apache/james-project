@@ -25,7 +25,7 @@ import java.util.Optional;
 import org.apache.commons.configuration2.Configuration;
 
 public class RabbitMQMailQueueConfiguration {
-    private static final boolean DEFAULT_SIZE_METRICS_ENABLED = true;
+    private static final boolean DEFAULT_SIZE_METRICS_DISABLED = false;
 
     public static class Builder {
         private Optional<Boolean> sizeMetricsEnabled;
@@ -41,7 +41,7 @@ public class RabbitMQMailQueueConfiguration {
         }
 
         public RabbitMQMailQueueConfiguration build() {
-            return new RabbitMQMailQueueConfiguration(sizeMetricsEnabled.orElse(DEFAULT_SIZE_METRICS_ENABLED));
+            return new RabbitMQMailQueueConfiguration(sizeMetricsEnabled.orElse(DEFAULT_SIZE_METRICS_DISABLED));
         }
     }
 

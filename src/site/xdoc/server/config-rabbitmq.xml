@@ -97,7 +97,7 @@
 
           <dt><strong>mailqueue.size.metricsEnabled</strong></dt>
           <dd>
-              By default, the metrics are enabled for the mail queue size.
+              By default, the metrics are disabled for the mail queue size.
               As computing the size of the mail queue is currently implemented on top of browse operation and thus have a linear complexity,
               sometimes it can get too big, making it impossible for the ES reporter to handle it correctly without crashing.
               It can be useful then to disable it.

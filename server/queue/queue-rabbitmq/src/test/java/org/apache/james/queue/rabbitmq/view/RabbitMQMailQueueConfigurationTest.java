@@ -37,7 +37,7 @@ class RabbitMQMailQueueConfigurationTest {
         RabbitMQMailQueueConfiguration actual = RabbitMQMailQueueConfiguration.from(new PropertiesConfiguration());
 
         assertThat(actual)
-            .isEqualTo(RabbitMQMailQueueConfiguration.sizeMetricsEnabled());
+            .isEqualTo(RabbitMQMailQueueConfiguration.sizeMetricsDisabled());
     }
 
     @Test

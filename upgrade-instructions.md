@@ -34,12 +34,26 @@ Change list:
  - [Tune Cassandra time serie tables options](#tune-cassandra-time-serie-tables-options)
  - [Log4J2 Adoption](#log4j2-adoption)
  - [Drop Cassandra schema version prior version 5](#drop-cassandra-schema-version-prior-version-5)
+ - [mailqueue.size.metricsEnabled now defaults to false](#mailqueuesizemetricsenabled-now-defaults-to-false)
+
+### mailqueue.size.metricsEnabled now defaults to false
+
+Date 03/06/2020
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2760
+
+Concerned product: Distributed James
+
+`mailqueue.size.metricsEnabled` is now false by default. If you previously used it, please be aware that it can have 
+some important performance penalty, and set it explicitly to `true` if you still need it.
 
 ### Drop Cassandra schema version prior version 5
 
 Date 06/04/2020
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-2997
+
+Concerned product: Distributed James, Cassandra-guice James server
 
 In an effort to simplify the code base, we dropped support for Cassandra schema version prior version 5.
 

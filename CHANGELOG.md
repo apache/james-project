@@ -37,6 +37,7 @@ of tasks being currently executed.
 - Linshare blob export configuration and mechanism change. See JAMES-3040.
 - Differentiation between domain alias and domain mapping. Read upgrade instructions.
 - JAMES-3122 Log4J2 adoption for Spring product. Log file configuration needs to be updated. See upgrade instructions.
+- JAMES-2760 mailqueue.size.metricsEnabled should be false by default
 
 ### Fixed
 - JAMES-2828 & JAMES-2929 bugs affecting JDBCMailRepository usage with PostgresSQL thanks to Jörg Thomas & Sergey B
