@@ -28,10 +28,16 @@ object UnsignedInt {
   type UnsignedIntConstraint = Closed[0L, 9007199254740992L]
   type UnsignedInt = Long Refined UnsignedIntConstraint
 
-  def liftOrThrow(value: Long): UnsignedInt =
+  def validate(value: Long): Either[NumberFormatException, UnsignedInt] =
     refined.refineV[UnsignedIntConstraint](value) match {
+      case Right(value) => Right(value)
+      case Left(error) => Left(new NumberFormatException(error))
+    }
+
+  def liftOrThrow(value: Long): UnsignedInt =
+    validate(value) match {
       case Right(value) => value
-      case Left(error) => throw new IllegalArgumentException(error)
+      case Left(error) => throw error
     }
 
 }

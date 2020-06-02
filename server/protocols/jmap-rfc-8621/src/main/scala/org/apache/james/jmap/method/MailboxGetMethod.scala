@@ -26,7 +26,7 @@ import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
 import org.apache.james.jmap.model.{Invocation, MailboxFactory}
-import org.apache.james.jmap.utils.quotas.QuotaLoaderWithPreloadedDefaultFactory
+import org.apache.james.jmap.utils.quotas.{QuotaLoader, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.model.MailboxMetaData
 import org.apache.james.mailbox.model.search.MailboxQuery
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
@@ -79,8 +79,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
         getAllMailboxesMetaData(mailboxSession).flatMapMany(mailboxesMetaData =>
           SFlux.fromIterable(mailboxesMetaData)
             .flatMap(mailboxMetaData =>
-              mailboxFactory.create(
-                mailboxMetaData = mailboxMetaData,
+              getMailboxOrThrow(mailboxMetaData = mailboxMetaData,
                 mailboxSession = mailboxSession,
                 allMailboxesMetadata = mailboxesMetaData,
                 quotaLoader = quotaLoader))))
@@ -89,4 +88,17 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
   private def getAllMailboxesMetaData(mailboxSession: MailboxSession): SMono[Seq[MailboxMetaData]] =
     SFlux.fromPublisher(mailboxManager.searchReactive(MailboxQuery.builder.matchesAllMailboxNames.build, mailboxSession))
       .collectSeq()
+
+  private def getMailboxOrThrow(mailboxSession: MailboxSession,
+                                allMailboxesMetadata: Seq[MailboxMetaData],
+                                mailboxMetaData: MailboxMetaData,
+                                quotaLoader: QuotaLoader): SMono[Mailbox] =
+    mailboxFactory.create(mailboxMetaData = mailboxMetaData,
+      mailboxSession = mailboxSession,
+      allMailboxesMetadata = allMailboxesMetadata,
+      quotaLoader = quotaLoader)
+      .flatMap {
+        case Left(error) => SMono.raiseError(error)
+        case scala.Right(mailbox) => SMono.just(mailbox)
+      }
 }

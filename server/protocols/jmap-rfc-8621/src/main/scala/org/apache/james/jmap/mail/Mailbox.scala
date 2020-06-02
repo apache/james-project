@@ -118,10 +118,10 @@ object MailboxName {
   type MailboxNameConstraint = NonEmpty
   type MailboxName = String Refined MailboxNameConstraint
 
-  def liftOrThrow(value: String): MailboxName =
+  def validate(value: String): Either[IllegalArgumentException, MailboxName] =
     refined.refineV[MailboxNameConstraint](value) match {
-      case scala.util.Right(value) => value
-      case Left(error) => throw new IllegalArgumentException(error)
+      case Left(error) => Left(new IllegalArgumentException(error))
+      case scala.Right(value) => scala.Right(value)
     }
 }
 

@@ -22,6 +22,7 @@ package org.apache.james.jmap.model
 import javax.inject.Inject
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail._
+import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.utils.quotas.QuotaLoader
 import org.apache.james.mailbox.model.MailboxACL.EntryKey
 import org.apache.james.mailbox.model.{MailboxCounters, MailboxId, MailboxMetaData, MailboxPath, MailboxACL => JavaMailboxACL}
@@ -31,23 +32,51 @@ import reactor.core.scala.publisher.SMono
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
-sealed trait MailboxConstructionOrder
+object MailboxValidation {
+  def validate(mailboxName: Either[IllegalArgumentException, MailboxName],
+               unreadEmails: Either[NumberFormatException, UnsignedInt],
+               unreadThreads: Either[NumberFormatException, UnsignedInt],
+               totalEmails: Either[NumberFormatException, UnsignedInt],
+               totalThreads: Either[NumberFormatException, UnsignedInt]): Either[Exception, MailboxValidation] = {
+    for {
+      validatedName <- mailboxName
+      validatedUnreadEmails <- unreadEmails.map(UnreadEmails)
+      validatedUnreadThreads <- unreadThreads.map(UnreadThreads)
+      validatedTotalEmails <- totalEmails.map(TotalEmails)
+      validatedTotalThreads <- totalThreads.map(TotalThreads)
+    } yield MailboxValidation(
+      mailboxName = validatedName,
+      unreadEmails = validatedUnreadEmails,
+      unreadThreads = validatedUnreadThreads,
+      totalEmails = validatedTotalEmails,
+      totalThreads = validatedTotalThreads)
+  }
+}
 
-class Factory
+case class MailboxValidation(mailboxName: MailboxName,
+                             unreadEmails: UnreadEmails,
+                             unreadThreads: UnreadThreads,
+                             totalEmails: TotalEmails,
+                             totalThreads: TotalThreads)
 
 class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager) {
+
+  private def retrieveMailboxName(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Either[IllegalArgumentException, MailboxName] =
+    mailboxPath.getName
+      .split(mailboxSession.getPathDelimiter)
+      .lastOption match {
+        case Some(name) => MailboxName.validate(name)
+        case None => Left(new IllegalArgumentException("No name for the mailbox found"))
+      }
 
   def create(mailboxMetaData: MailboxMetaData,
              mailboxSession: MailboxSession,
              allMailboxesMetadata: Seq[MailboxMetaData],
-             quotaLoader: QuotaLoader): SMono[Mailbox] = {
+             quotaLoader: QuotaLoader): SMono[Either[Exception, Mailbox]] = {
 
     val id: MailboxId = mailboxMetaData.getId
 
-    val name: MailboxName = MailboxName.liftOrThrow(mailboxMetaData.getPath
-      .getName
-      .split(mailboxSession.getPathDelimiter)
-      .last)
+    val name: Either[IllegalArgumentException, MailboxName] = retrieveMailboxName(mailboxMetaData.getPath, mailboxSession)
 
     val role: Option[Role] = Role.from(mailboxMetaData.getPath.getName)
       .filter(_ => mailboxMetaData.getPath.belongsTo(mailboxSession)).toScala
@@ -56,10 +85,10 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager) {
     val rights: Rights = Rights.fromACL(MailboxACL.fromJava(mailboxMetaData.getResolvedAcls))
 
     val sanitizedCounters: MailboxCounters = mailboxMetaData.getCounters.sanitize()
-    val unreadEmails: UnreadEmails = UnreadEmails(UnsignedInt.liftOrThrow(sanitizedCounters.getUnseen))
-    val unreadThreads: UnreadThreads = UnreadThreads(UnsignedInt.liftOrThrow(sanitizedCounters.getUnseen))
-    val totalEmails: TotalEmails = TotalEmails(UnsignedInt.liftOrThrow(sanitizedCounters.getCount))
-    val totalThreads: TotalThreads = TotalThreads(UnsignedInt.liftOrThrow(sanitizedCounters.getCount))
+    val unreadEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getUnseen)
+    val unreadThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getUnseen)
+    val totalEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getCount)
+    val totalThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getCount)
 
     val isOwner = mailboxMetaData.getPath.belongsTo(mailboxSession)
     val aclEntryKey: EntryKey = EntryKey.createUserEntryKey(mailboxSession.getUser)
@@ -105,21 +134,25 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager) {
       .subscriptions(mailboxSession)
       .contains(mailboxMetaData.getPath.getName))
 
-    SMono.fromPublisher(quotas)
-      .map(quotas => Mailbox(
-        id = id,
-        name = name,
-        parentId = parentId,
-        role = role,
-        sortOrder = sortOrder,
-        unreadEmails = unreadEmails,
-        totalEmails = totalEmails,
-        unreadThreads = unreadThreads,
-        totalThreads = totalThreads,
-        myRights = myRights,
-        namespace = namespace,
-        rights = rights,
-        quotas = quotas,
-        isSubscribed = retrieveIsSubscribed))
+    MailboxValidation.validate(name, unreadEmails, unreadThreads, totalEmails, totalThreads) match {
+      case Left(error) => SMono.just(Left(error))
+      case scala.Right(mailboxValidation) => SMono.fromPublisher(quotas)
+        .map(quotas => scala.Right(
+          Mailbox(
+            id = id,
+            name = mailboxValidation.mailboxName,
+            parentId = parentId,
+            role = role,
+            sortOrder = sortOrder,
+            unreadEmails = mailboxValidation.unreadEmails,
+            totalEmails = mailboxValidation.totalEmails,
+            unreadThreads = mailboxValidation.unreadThreads,
+            totalThreads = mailboxValidation.totalThreads,
+            myRights = myRights,
+            namespace = namespace,
+            rights = rights,
+            quotas = quotas,
+            isSubscribed = retrieveIsSubscribed)))
+    }
   }
 }
