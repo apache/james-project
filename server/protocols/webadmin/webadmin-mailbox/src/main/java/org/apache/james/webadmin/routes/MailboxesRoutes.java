@@ -109,10 +109,10 @@ public class MailboxesRoutes implements Routes {
             boolean indexingCorrection = !Strings.isNullOrEmpty(request.queryParams(RE_INDEX_FAILED_MESSAGES_QUERY_PARAM));
             if (indexingCorrection) {
                 IndexingDetailInformation indexingDetailInformation = retrieveIndexingExecutionDetails(previousReIndexingService, request);
-                return reIndexer.reIndex(indexingDetailInformation.failures(), RunningOptionsParser.parse(request));
+                return reIndexer.reIndex(indexingDetailInformation.failures(), new ReindexingRunningOptionsParser().parse(request));
             }
 
-            return reIndexer.reIndex(RunningOptionsParser.parse(request));
+            return reIndexer.reIndex(ReindexingRunningOptionsParser.parse(request));
         }
 
         private static IndexingDetailInformation retrieveIndexingExecutionDetails(PreviousReIndexingService previousReIndexingService, Request request) {
@@ -191,7 +191,7 @@ public class MailboxesRoutes implements Routes {
             @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
         })
         private static TaskFromRequest toTask(ReIndexer reIndexer, MailboxId.Factory mailboxIdFactory) {
-            return wrap(request -> reIndexer.reIndex(extractMailboxId(mailboxIdFactory, request), RunningOptionsParser.parse(request)));
+            return wrap(request -> reIndexer.reIndex(extractMailboxId(mailboxIdFactory, request), ReindexingRunningOptionsParser.parse(request)));
         }
     }
 

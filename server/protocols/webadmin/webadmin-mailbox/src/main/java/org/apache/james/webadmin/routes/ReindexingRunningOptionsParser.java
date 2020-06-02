@@ -25,7 +25,8 @@ import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 
 import spark.Request;
 
-public class RunningOptionsParser {
+public class ReindexingRunningOptionsParser {
+
     public static RunningOptions parse(Request request) {
         return intQueryParameter(request, "messagesPerSecond")
             .map(RunningOptions::new)

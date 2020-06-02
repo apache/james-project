@@ -74,7 +74,7 @@ public class UserMailboxesRoutes implements Routes {
     public static class UserReIndexingTaskRegistration extends TaskRegistration {
         @Inject
         public UserReIndexingTaskRegistration(ReIndexer reIndexer) {
-            super(RE_INDEX, request -> reIndexer.reIndex(getUsernameParam(request), RunningOptionsParser.parse(request)));
+            super(RE_INDEX, request -> reIndexer.reIndex(getUsernameParam(request), ReindexingRunningOptionsParser.parse(request)));
         }
     }
 
