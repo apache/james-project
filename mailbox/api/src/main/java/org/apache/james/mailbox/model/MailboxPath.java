@@ -159,9 +159,10 @@ public class MailboxPath {
         return this;
     }
 
-    public void assertAcceptable(char pathDelimiter) throws MailboxNameException {
+    public MailboxPath assertAcceptable(char pathDelimiter) throws MailboxNameException {
         if (hasEmptyNameInHierarchy(pathDelimiter)) {
-            throw new HasEmptyMailboxNameInHierarchyException(asString());
+            throw new HasEmptyMailboxNameInHierarchyException(
+                String.format("'%s' has an empty part within its mailbox name considering %s as a delimiter", asString(), pathDelimiter));
         }
         if (nameContainsForbiddenCharacters()) {
             throw new MailboxNameException(asString() + " contains one of the forbidden characters " + INVALID_CHARS);
@@ -169,6 +170,7 @@ public class MailboxPath {
         if (isMailboxNameTooLong()) {
             throw new TooLongMailboxNameException("Mailbox name exceeds maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
         }
+        return this;
     }
 
     private boolean nameContainsForbiddenCharacters() {

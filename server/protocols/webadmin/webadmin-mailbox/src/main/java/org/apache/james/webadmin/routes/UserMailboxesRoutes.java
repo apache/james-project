@@ -35,6 +35,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Constants;
@@ -217,12 +218,12 @@ public class UserMailboxesRoutes implements Routes {
                     .message("Attempt to delete a mailbox with children")
                     .cause(e)
                     .haltError();
-            } catch (IllegalArgumentException e) {
-                LOGGER.info("Attempt to create an invalid mailbox");
+            } catch (IllegalArgumentException | MailboxNameException e) {
+                LOGGER.info("Attempt to delete an invalid mailbox", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .type(ErrorType.INVALID_ARGUMENT)
-                    .message("Attempt to create an invalid mailbox")
+                    .message("Attempt to delete an invalid mailbox")
                     .cause(e)
                     .haltError();
             }
@@ -291,12 +292,12 @@ public class UserMailboxesRoutes implements Routes {
                     .message("Invalid get on user mailboxes")
                     .cause(e)
                     .haltError();
-            } catch (IllegalArgumentException e) {
-                LOGGER.info("Attempt to create an invalid mailbox");
+            } catch (IllegalArgumentException | MailboxNameException e) {
+                LOGGER.info("Attempt to test existence of an invalid mailbox", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .type(ErrorType.INVALID_ARGUMENT)
-                    .message("Attempt to create an invalid mailbox")
+                    .message("Attempt to test existence of an invalid mailbox")
                     .cause(e)
                     .haltError();
             }
@@ -330,8 +331,8 @@ public class UserMailboxesRoutes implements Routes {
                     .message("Invalid get on user mailboxes")
                     .cause(e)
                     .haltError();
-            } catch (IllegalArgumentException e) {
-                LOGGER.info("Attempt to create an invalid mailbox");
+            } catch (IllegalArgumentException | MailboxNameException e) {
+                LOGGER.info("Attempt to create an invalid mailbox", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .type(ErrorType.INVALID_ARGUMENT)

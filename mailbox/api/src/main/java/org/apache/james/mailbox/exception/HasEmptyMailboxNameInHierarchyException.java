@@ -20,16 +20,7 @@
 package org.apache.james.mailbox.exception;
 
 public class HasEmptyMailboxNameInHierarchyException extends MailboxNameException {
-    public HasEmptyMailboxNameInHierarchyException() {
-        super();
-    }
-
     public HasEmptyMailboxNameInHierarchyException(String message) {
         super(message);
     }
-
-    public HasEmptyMailboxNameInHierarchyException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
 }

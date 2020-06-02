@@ -64,9 +64,9 @@ public class UserMailboxesService {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         try {
-            mailboxManager.createMailbox(
-                MailboxPath.forUser(username, mailboxName.asString()),
-                mailboxSession);
+            MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
+                .assertAcceptable(mailboxSession.getPathDelimiter());
+            mailboxManager.createMailbox(mailboxPath, mailboxSession);
         } catch (MailboxExistsException e) {
             LOGGER.info("Attempt to create mailbox {} for user {} that already exists", mailboxName, username);
         }
@@ -91,16 +91,17 @@ public class UserMailboxesService {
     public boolean testMailboxExists(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        return Mono.from(mailboxManager.mailboxExists(
-            MailboxPath.forUser(username, mailboxName.asString()),
-            mailboxSession))
+        MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
+            .assertAcceptable(mailboxSession.getPathDelimiter());
+        return Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession))
             .block();
     }
 
     public void deleteMailbox(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException, MailboxHaveChildrenException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString());
+        MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
+            .assertAcceptable(mailboxSession.getPathDelimiter());
         listChildren(mailboxPath, mailboxSession)
             .forEach(Throwing.consumer(path -> deleteMailbox(mailboxSession, path)));
     }
