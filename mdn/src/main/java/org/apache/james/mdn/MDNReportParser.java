@@ -260,9 +260,26 @@ public class MDNReportParser {
             return Ch((char)0x22);
         }
 
+        //   obs-qtext       =   obs-NO-WS-CTL
+        Rule obsQtext() {
+            return obsNoWsCtl();
+        }
+
+        /*   qtext           =   %d33 /             ; Printable US-ASCII
+                                 %d35-91 /          ;  characters not including
+                                 %d93-126 /         ;  "\" or the quote character
+                                 obs-qtext  */
+        Rule qtext() {
+            return FirstOf(
+                (char)33,
+                CharRange((char)35, (char)91),
+                CharRange((char)93, (char)126),
+                obsQtext());
+        }
+
         //   qcontent        =   qtext / quoted-pair
         Rule qcontent() {
-            return FirstOf(qcontent(), quotedPair());
+            return FirstOf(qtext(), quotedPair());
         }
 
         //   domain          =   dot-atom / domain-literal / obs-domain
