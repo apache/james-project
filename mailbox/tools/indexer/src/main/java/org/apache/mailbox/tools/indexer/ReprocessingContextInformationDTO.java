@@ -169,7 +169,7 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
     }
 
     static List<ReindexingFailureDTO> serializeFailures(ReIndexingExecutionFailures failures) {
-        ImmutableListMultimap<MailboxId, ReIndexingExecutionFailures.ReIndexingFailure> failuresByMailbox = failures.failures()
+        ImmutableListMultimap<MailboxId, ReIndexingExecutionFailures.ReIndexingFailure> failuresByMailbox = failures.messageFailures()
             .stream()
             .collect(Guavate.toImmutableListMultimap(ReIndexingExecutionFailures.ReIndexingFailure::getMailboxId));
 

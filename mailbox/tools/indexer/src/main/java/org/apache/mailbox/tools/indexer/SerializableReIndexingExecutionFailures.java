@@ -52,7 +52,7 @@ public class SerializableReIndexingExecutionFailures {
 
     public static SerializableReIndexingExecutionFailures from(ReIndexingExecutionFailures reIndexingExecutionFailures) {
         return new SerializableReIndexingExecutionFailures(
-            reIndexingExecutionFailures.failures()
+            reIndexingExecutionFailures.messageFailures()
                 .stream()
                 .map(failure -> new SerializableReIndexingExecutionFailures.SerializableReIndexingFailure(failure.getMailboxId(), failure.getUid()))
                 .collect(Guavate.toImmutableList()));

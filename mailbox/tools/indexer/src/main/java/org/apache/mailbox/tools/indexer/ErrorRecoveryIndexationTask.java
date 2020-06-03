@@ -49,8 +49,8 @@ public class ErrorRecoveryIndexationTask implements Task {
             this.mailboxIdFactory = mailboxIdFactory;
         }
 
-        private List<ReIndexingExecutionFailures.ReIndexingFailure> failuresFromDTO(List<ErrorRecoveryIndexationTaskDTO.ReindexingFailureDTO> failureDTOs) {
-            return failureDTOs
+        private List<ReIndexingExecutionFailures.ReIndexingFailure> messageFailuresFromDTO(List<ErrorRecoveryIndexationTaskDTO.ReindexingFailureDTO> messageFailures) {
+            return messageFailures
                 .stream()
                 .flatMap(dto -> dto.getUids()
                     .stream()
@@ -58,9 +58,17 @@ public class ErrorRecoveryIndexationTask implements Task {
                 .collect(Guavate.toImmutableList());
         }
 
+        private List<MailboxId> mailboxFailuresFromDTO(Optional<List<String>> mailboxFailures) {
+            return mailboxFailures.map(mailboxIdList ->
+                    mailboxIdList.stream()
+                        .map(mailboxIdFactory::fromString)
+                        .collect(Guavate.toImmutableList()))
+                .orElse(ImmutableList.of());
+        }
+
         public ErrorRecoveryIndexationTask create(ErrorRecoveryIndexationTaskDTO dto) {
             return new ErrorRecoveryIndexationTask(reIndexerPerformer,
-                new ReIndexingExecutionFailures(failuresFromDTO(dto.getPreviousFailures())),
+                new ReIndexingExecutionFailures(messageFailuresFromDTO(dto.getPreviousFailures())),
                 dto.getRunningOptions()
                     .map(RunningOptionsDTO::toDomainObject)
                     .orElse(RunningOptions.DEFAULT));

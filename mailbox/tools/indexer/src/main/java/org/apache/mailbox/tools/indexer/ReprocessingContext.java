@@ -32,11 +32,13 @@ class ReprocessingContext {
     private final AtomicInteger successfullyReprocessedMails;
     private final AtomicInteger failedReprocessingMails;
     private final ConcurrentLinkedDeque<ReIndexingExecutionFailures.ReIndexingFailure> failures;
+    private final ConcurrentLinkedDeque<MailboxId> mailboxFailures;
 
     ReprocessingContext() {
         failedReprocessingMails = new AtomicInteger(0);
         successfullyReprocessedMails = new AtomicInteger(0);
         failures = new ConcurrentLinkedDeque<>();
+        mailboxFailures = new ConcurrentLinkedDeque<>();
     }
 
     void recordFailureDetailsForMessage(MailboxId mailboxId, MessageUid uid) {
@@ -48,6 +50,10 @@ class ReprocessingContext {
         successfullyReprocessedMails.incrementAndGet();
     }
 
+    void recordMailboxFailure(MailboxId mailboxId) {
+        mailboxFailures.add(mailboxId);
+    }
+
     int successfullyReprocessedMailCount() {
         return successfullyReprocessedMails.get();
     }
@@ -57,6 +63,6 @@ class ReprocessingContext {
     }
 
     ReIndexingExecutionFailures failures() {
-        return new ReIndexingExecutionFailures(ImmutableList.copyOf(failures));
+        return new ReIndexingExecutionFailures(ImmutableList.copyOf(failures), ImmutableList.copyOf(mailboxFailures));
     }
 }

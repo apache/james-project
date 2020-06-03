@@ -49,7 +49,7 @@ public class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
 
     public static ErrorRecoveryIndexationTaskDTO of(ErrorRecoveryIndexationTask task, String type) {
         Multimap<MailboxId, ReIndexingExecutionFailures.ReIndexingFailure> failuresByMailboxId = task.getPreviousFailures()
-            .failures()
+            .messageFailures()
             .stream()
             .collect(Guavate.toImmutableListMultimap(ReIndexingExecutionFailures.ReIndexingFailure::getMailboxId, Function.identity()));
 

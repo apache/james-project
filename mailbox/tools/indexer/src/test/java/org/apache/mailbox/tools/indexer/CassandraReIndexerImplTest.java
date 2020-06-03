@@ -19,6 +19,8 @@
 
 package org.apache.mailbox.tools.indexer;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -34,10 +36,14 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageManager.AppendCommand;
+import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManagerProvider;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures.ReIndexingFailure;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -45,10 +51,15 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+import org.apache.james.task.Task;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask;
+import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.google.common.base.Strings;
 
@@ -90,7 +101,7 @@ public class CassandraReIndexerImplTest {
         ConcurrentTestRunner.builder()
             .operation((a, b) -> mailbox
                 .appendMessage(
-                    MessageManager.AppendCommand.builder().build(bigBody),
+                    AppendCommand.builder().build(bigBody),
                     systemSession))
             .threadCount(threadCount)
             .operationCount(operationCount)
@@ -104,5 +115,235 @@ public class CassandraReIndexerImplTest {
         verify(messageSearchIndex, times(threadCount * operationCount))
             .add(any(MailboxSession.class), any(Mailbox.class),any(MailboxMessage.class));
         verifyNoMoreInteractions(messageSearchIndex);
+    }
+
+    @Nested
+    class FailureTesting {
+        @Test
+        void fullReindexingShouldReturnPartialUponFailure(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+
+            Task task = reIndexer.reIndex(ReIndexer.RunningOptions.DEFAULT);
+            Task.Result result = task.run();
+
+            assertThat(result).isEqualTo(Task.Result.PARTIAL);
+        }
+
+        @Test
+        void fullReindexingShouldUpdateDetailsUponFailure(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+
+            Task task = reIndexer.reIndex(ReIndexer.RunningOptions.DEFAULT);
+            task.run();
+
+            ReprocessingContextInformationForFullReindexingTask information = (ReprocessingContextInformationForFullReindexingTask) task.details().get();
+            assertThat(information.failures().mailboxFailures()).containsExactly(mailbox.getId());
+        }
+
+        @Test
+        void singleMailboxReindexingShouldReturnPartialUponFailure(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+
+            Task task = reIndexer.reIndex(mailbox.getId(), ReIndexer.RunningOptions.DEFAULT);
+            Task.Result result = task.run();
+
+            assertThat(result).isEqualTo(Task.Result.PARTIAL);
+        }
+
+        @Test
+        void singleMailboxReindexingShouldUpdateDetailsUponFailure(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+
+            Task task = reIndexer.reIndex(mailbox.getId(), ReIndexer.RunningOptions.DEFAULT);
+            task.run();
+
+            SingleMailboxReindexingTask.AdditionalInformation information = (SingleMailboxReindexingTask.AdditionalInformation) task.details().get();
+            assertThat(information.failures().mailboxFailures()).containsExactly(mailbox.getId());
+        }
+
+        @Test
+        void userMailboxReindexingShouldReturnPartialUponFailure(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+
+            Task task = reIndexer.reIndex(USERNAME, ReIndexer.RunningOptions.DEFAULT);
+            Task.Result result = task.run();
+
+            assertThat(result).isEqualTo(Task.Result.PARTIAL);
+        }
+
+        @Test
+        void userMailboxReindexingShouldUpdateDetailsUponFailure(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+
+            Task task = reIndexer.reIndex(USERNAME, ReIndexer.RunningOptions.DEFAULT);
+            task.run();
+
+            UserReindexingTask.AdditionalInformation information = (UserReindexingTask.AdditionalInformation) task.details().get();
+            assertThat(information.failures().mailboxFailures()).containsExactly(mailbox.getId());
+        }
+
+        @Test
+        void errorReindexingShouldReturnPartialUponFailure(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            AppendResult appendResult = mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+
+            Task task = reIndexer.reIndex(new ReIndexingExecutionFailures(
+                ImmutableList.of(new ReIndexingFailure(mailbox.getId(),
+                    appendResult.getId().getUid())),
+                ImmutableList.of(mailbox.getId())),
+                ReIndexer.RunningOptions.DEFAULT);
+            Task.Result result = task.run();
+
+            assertThat(result).isEqualTo(Task.Result.PARTIAL);
+        }
+
+        @Test
+        void errorReindexingShouldUpdateDetailsUponFailure(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            AppendResult appendResult = mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+
+            Task task = reIndexer.reIndex(new ReIndexingExecutionFailures(
+                ImmutableList.of(new ReIndexingFailure(mailbox.getId(),
+                    appendResult.getId().getUid())),
+                    ImmutableList.of(mailbox.getId())),
+                ReIndexer.RunningOptions.DEFAULT);
+            task.run();
+
+            ReprocessingContextInformationForErrorRecoveryIndexationTask information = (ReprocessingContextInformationForErrorRecoveryIndexationTask) task.details().get();
+            assertThat(information.failures().mailboxFailures()).containsExactly(mailbox.getId());
+        }
+
+        @Test
+        void errorReindexingShouldUpdateDetailsUponReadingMailboxError(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            AppendResult appendResult = mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;"));
+
+            Task task = reIndexer.reIndex(new ReIndexingExecutionFailures(
+                    ImmutableList.of(new ReIndexingFailure(mailbox.getId(),
+                        appendResult.getId().getUid())),
+                    ImmutableList.of()),
+                ReIndexer.RunningOptions.DEFAULT);
+            task.run();
+
+            ReprocessingContextInformationForErrorRecoveryIndexationTask information = (ReprocessingContextInformationForErrorRecoveryIndexationTask) task.details().get();
+            assertThat(information.failures().messageFailures()).containsExactly(new ReIndexingFailure(mailbox.getId(), appendResult.getId().getUid()));
+        }
+
+        @Test
+        void fullReindexingShouldUpdateDetailsUponSingleMessageFullReadError(CassandraCluster cassandra) throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            mailboxManager.createMailbox(INBOX, session);
+
+            MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+            AppendResult appendResult = mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("SELECT messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,textualLineCount,properties,attachments FROM messageV2 WHERE messageId=:messageId;"));
+
+            Task task = reIndexer.reIndex(ReIndexer.RunningOptions.DEFAULT);
+            task.run();
+
+            ReprocessingContextInformationForFullReindexingTask information = (ReprocessingContextInformationForFullReindexingTask) task.details().get();
+            assertThat(information.failures().messageFailures()).containsExactly(new ReIndexingFailure(mailbox.getId(), appendResult.getId().getUid()));
+        }
+    }
+
+    @Test
+    void errorReindexingShouldReindexPreviouslyFailedMailbox() throws Exception {
+        MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+        mailboxManager.createMailbox(INBOX, session);
+
+        MessageManager mailbox = mailboxManager.getMailbox(INBOX, session);
+        mailbox.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), session);
+
+        Task task = reIndexer.reIndex(new ReIndexingExecutionFailures(
+                ImmutableList.of(),
+                ImmutableList.of(mailbox.getId())),
+            ReIndexer.RunningOptions.DEFAULT);
+        task.run();
+
+        verify(messageSearchIndex).deleteAll(any(MailboxSession.class), any(MailboxId.class));
+        verify(messageSearchIndex, times(1))
+            .add(any(MailboxSession.class), any(Mailbox.class),any(MailboxMessage.class));
     }
 }

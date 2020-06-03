@@ -102,7 +102,7 @@ public class ReIndexerPerformer {
         LOGGER.info("Starting a full reindex");
 
         Flux<ReIndexingEntry> entriesToIndex = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).list()
-            .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession));
+            .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession, reprocessingContext));
 
         return reIndexMessages(entriesToIndex, runningOptions, reprocessingContext)
             .doFinally(any -> LOGGER.info("Full reindex finished"));
@@ -113,7 +113,7 @@ public class ReIndexerPerformer {
 
         Flux<ReIndexingEntry> entriesToIndex = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
             .findMailboxByIdReactive(mailboxId)
-            .flatMapMany(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession));
+            .flatMapMany(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession, reprocessingContext));
 
         return reIndexMessages(entriesToIndex, runningOptions, reprocessingContext);
     }
@@ -127,7 +127,7 @@ public class ReIndexerPerformer {
 
         try {
             Flux<ReIndexingEntry> entriesToIndex = mailboxMapper.findMailboxWithPathLike(mailboxQuery.asUserBound())
-                .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession));
+                .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession, reprocessingContext));
 
             return reIndexMessages(entriesToIndex, runningOptions, reprocessingContext)
                 .doFinally(any -> LOGGER.info("User {} reindex finished", username.asString()));
@@ -162,11 +162,27 @@ public class ReIndexerPerformer {
     }
 
     Mono<Result> reIndexErrors(ReprocessingContext reprocessingContext, ReIndexingExecutionFailures previousReIndexingFailures, RunningOptions runningOptions) {
-        return reIndexMessages(
-            Flux.fromIterable(previousReIndexingFailures.failures())
-                .flatMap(this::createReindexingEntryFromFailure),
-            runningOptions,
-            reprocessingContext);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
+
+        return Flux.merge(
+            reIndexMessages(Flux.fromIterable(previousReIndexingFailures.messageFailures())
+                    .flatMap(failure -> createReindexingEntryFromFailure(failure, reprocessingContext)),
+                runningOptions,
+                reprocessingContext),
+            reIndexMailboxes(Flux.fromIterable(previousReIndexingFailures.mailboxFailures())
+                    .flatMap(mapper::findMailboxByIdReactive),
+                mailboxSession,
+                reprocessingContext,
+                runningOptions))
+            .reduce(Task::combine);
+    }
+
+    private Mono<Result> reIndexMailboxes(Flux<Mailbox> mailboxes, MailboxSession session, ReprocessingContext reprocessingContext, RunningOptions runningOptions) {
+        Flux<ReIndexingEntry> entries = mailboxes
+            .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, session, reprocessingContext));
+
+        return reIndexMessages(entries, runningOptions, reprocessingContext);
     }
 
     private Mono<Result> reIndex(MailboxMessage mailboxMessage, MailboxSession session) {
@@ -186,22 +202,41 @@ public class ReIndexerPerformer {
             .next();
     }
 
-    private Mono<ReIndexingEntry> createReindexingEntryFromFailure(ReIndexingFailure failure) {
+    private Mono<ReIndexingEntry> createReindexingEntryFromFailure(ReIndexingFailure failure, ReprocessingContext reprocessingContext) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
 
         return mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
             .findMailboxByIdReactive(failure.getMailboxId())
             .flatMap(mailbox -> fullyReadMessage(mailboxSession, mailbox, failure.getUid())
-                .map(message -> new ReIndexingEntry(mailbox, mailboxSession, message)));
+                .map(message -> new ReIndexingEntry(mailbox, mailboxSession, message)))
+            .onErrorResume(e -> {
+                LOGGER.warn("ReIndexing failed for {}", failure, e);
+                reprocessingContext.recordFailureDetailsForMessage(failure.getMailboxId(), failure.getUid());
+                return Mono.empty();
+            });
     }
 
-    private Flux<ReIndexingEntry> reIndexingEntriesForMailbox(Mailbox mailbox, MailboxSession mailboxSession) {
+    private Flux<ReIndexingEntry> reIndexingEntriesForMailbox(Mailbox mailbox, MailboxSession mailboxSession, ReprocessingContext reprocessingContext) {
         MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(mailboxSession);
 
         return messageSearchIndex.deleteAll(mailboxSession, mailbox.getMailboxId())
             .thenMany(messageMapper.listAllMessageUids(mailbox))
-            .flatMap(uid -> messageMapper.findInMailboxReactive(mailbox, MessageRange.one(uid), MessageMapper.FetchType.Full, UNLIMITED))
-            .map(message -> new ReIndexingEntry(mailbox, mailboxSession, message));
+            .flatMap(uid -> reIndexingEntryForUid(mailbox, mailboxSession, reprocessingContext, messageMapper, uid))
+            .onErrorResume(e -> {
+                LOGGER.warn("ReIndexing failed for {}", mailbox.generateAssociatedPath(), e);
+                reprocessingContext.recordMailboxFailure(mailbox.getMailboxId());
+                return Mono.empty();
+            });
+    }
+
+    private Flux<ReIndexingEntry> reIndexingEntryForUid(Mailbox mailbox, MailboxSession mailboxSession, ReprocessingContext reprocessingContext, MessageMapper messageMapper, MessageUid uid) {
+        return messageMapper.findInMailboxReactive(mailbox, MessageRange.one(uid), MessageMapper.FetchType.Full, UNLIMITED)
+            .map(message -> new ReIndexingEntry(mailbox, mailboxSession, message))
+            .onErrorResume(e -> {
+                LOGGER.warn("ReIndexing failed for {} - {}", mailbox.getMailboxId(), uid, e);
+                reprocessingContext.recordFailureDetailsForMessage(mailbox.getMailboxId(), uid);
+                return Mono.empty();
+            });
     }
 
     private Mono<Task.Result> reIndexMessages(Flux<ReIndexingEntry> entriesToIndex, RunningOptions runningOptions, ReprocessingContext reprocessingContext) {
@@ -209,7 +244,12 @@ public class ReIndexerPerformer {
             .window(runningOptions.getMessagesPerSecond(), Duration.ofSeconds(1))
             .throttle(entriesToIndex)
             .reduce(Task::combine)
-            .switchIfEmpty(Mono.just(Result.COMPLETED));
+            .switchIfEmpty(Mono.fromSupplier(() -> {
+                if (reprocessingContext.failures().mailboxFailures().isEmpty()) {
+                    return Result.COMPLETED;
+                }
+                return Result.PARTIAL;
+            }));
     }
 
     private Mono<Task.Result> reIndexMessage(MailboxSession mailboxSession, Mailbox mailbox, ReprocessingContext reprocessingContext, MailboxMessage message) {

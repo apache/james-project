@@ -25,6 +25,7 @@ import java.util.Objects;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 public class ReIndexingExecutionFailures {
@@ -61,16 +62,29 @@ public class ReIndexingExecutionFailures {
             return Objects.hash(mailboxId, uid);
         }
 
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("mailboxId", mailboxId)
+                .add("uid", uid)
+                .toString();
+        }
     }
 
-    private final List<ReIndexingFailure> failures;
+    private final List<ReIndexingFailure> messageFailures;
+    private final List<MailboxId> mailboxFailures;
 
-    public ReIndexingExecutionFailures(List<ReIndexingFailure> failures) {
-        this.failures = failures;
+    public ReIndexingExecutionFailures(List<ReIndexingFailure> messageFailures, List<MailboxId> mailboxFailures) {
+        this.messageFailures = messageFailures;
+        this.mailboxFailures = mailboxFailures;
     }
 
-    public List<ReIndexingFailure> failures() {
-        return ImmutableList.copyOf(failures);
+    public List<ReIndexingFailure> messageFailures() {
+        return ImmutableList.copyOf(messageFailures);
+    }
+
+    public List<MailboxId> mailboxFailures() {
+        return ImmutableList.copyOf(mailboxFailures);
     }
 
     @Override
@@ -78,14 +92,14 @@ public class ReIndexingExecutionFailures {
         if (o instanceof ReIndexingExecutionFailures) {
             ReIndexingExecutionFailures that = (ReIndexingExecutionFailures) o;
 
-            return Objects.equals(this.failures, that.failures);
+            return Objects.equals(this.messageFailures, that.messageFailures)
+                && Objects.equals(this.mailboxFailures, that.mailboxFailures);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(failures);
+        return Objects.hash(messageFailures, mailboxFailures);
     }
-
 }
