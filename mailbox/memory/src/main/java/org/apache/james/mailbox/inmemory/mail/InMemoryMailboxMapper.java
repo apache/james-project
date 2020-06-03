@@ -21,6 +21,7 @@ package org.apache.james.mailbox.inmemory.mail;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -55,67 +56,61 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void delete(Mailbox mailbox) throws MailboxException {
-        mailboxesByPath.remove(mailbox.generateAssociatedPath());
+    public Mono<Void> delete(Mailbox mailbox) {
+        return Mono.fromRunnable(() -> mailboxesByPath.remove(mailbox.generateAssociatedPath()));
     }
 
-    public void deleteAll() throws MailboxException {
-        mailboxesByPath.clear();
+    public Mono<Void> deleteAll() {
+        return Mono.fromRunnable(mailboxesByPath::clear);
     }
 
     @Override
-    public synchronized Mono<Mailbox> findMailboxByPath(MailboxPath path) {
-        Mailbox result = mailboxesByPath.get(path);
-        return Mono.justOrEmpty(result)
+    public Mono<Mailbox> findMailboxByPath(MailboxPath path) {
+        return Mono.defer(() -> Mono.justOrEmpty(mailboxesByPath.get(path)))
             .map(Mailbox::new);
     }
 
     @Override
-    public synchronized Mailbox findMailboxById(MailboxId id) throws MailboxException {
-        InMemoryId mailboxId = (InMemoryId) id;
-        for (Mailbox mailbox: mailboxesByPath.values()) {
-            if (mailbox.getMailboxId().equals(mailboxId)) {
-                return new Mailbox(mailbox);
-            }
-        }
-        throw new MailboxNotFoundException(mailboxId);
+    public Mono<Mailbox> findMailboxById(MailboxId id) {
+        return Mono.fromCallable(mailboxesByPath::values)
+            .flatMapIterable(Function.identity())
+            .filter(mailbox -> mailbox.getMailboxId().equals(id))
+            .next()
+            .map(Mailbox::new)
+            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(id)));
     }
 
     @Override
     public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
-        return Flux.fromIterable(mailboxesByPath.values())
-            .filter(query::matches)
-            .map(Mailbox::new);
+        return Mono.fromCallable(mailboxesByPath::values)
+                .flatMapIterable(Function.identity())
+                .filter(query::matches)
+                .map(Mailbox::new);
     }
 
     @Override
-    public Mailbox create(MailboxPath mailboxPath, UidValidity uidValidity) throws MailboxException {
+    public Mono<Mailbox> create(MailboxPath mailboxPath, UidValidity uidValidity) {
         InMemoryId id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
         Mailbox mailbox = new Mailbox(mailboxPath, uidValidity, id);
 
-        saveMailbox(mailbox);
-
-        return mailbox;
+        return saveMailbox(mailbox)
+            .thenReturn(mailbox);
     }
 
     @Override
-    public MailboxId rename(Mailbox mailbox) throws MailboxException {
+    public Mono<MailboxId> rename(Mailbox mailbox) {
         Preconditions.checkNotNull(mailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
 
         InMemoryId id = (InMemoryId) mailbox.getMailboxId();
-        Mailbox mailboxWithPreviousName = findMailboxById(id);
-
-        saveMailbox(mailbox);
-        mailboxesByPath.remove(mailboxWithPreviousName.generateAssociatedPath());
-
-        return mailbox.getMailboxId();
+        return findMailboxById(id)
+            .flatMap(mailboxWithPreviousName -> saveMailbox(mailbox)
+                .then(Mono.fromCallable(() -> mailboxesByPath.remove(mailboxWithPreviousName.generateAssociatedPath()))))
+            .thenReturn(mailbox.getMailboxId());
     }
 
-    private void saveMailbox(Mailbox mailbox) throws MailboxException {
-        Mailbox previousMailbox = mailboxesByPath.putIfAbsent(mailbox.generateAssociatedPath(), mailbox);
-        if (previousMailbox != null) {
-            throw new MailboxExistsException(mailbox.getName());
-        }
+    private Mono<Void> saveMailbox(Mailbox mailbox) {
+        return Mono.defer(() -> Mono.justOrEmpty(mailboxesByPath.putIfAbsent(mailbox.generateAssociatedPath(), mailbox)))
+            .flatMap(ignored -> Mono.error(new MailboxExistsException(mailbox.getName())));
     }
 
     @Override
@@ -124,11 +119,12 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException {
+    public Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter) {
         String mailboxName = mailbox.getName() + delimiter;
-        return mailboxesByPath.values()
-            .stream()
-            .anyMatch(box -> belongsToSameUser(mailbox, box) && box.getName().startsWith(mailboxName));
+        return Mono.fromCallable(mailboxesByPath::values)
+            .flatMapIterable(Function.identity())
+            .filter(box -> belongsToSameUser(mailbox, box) && box.getName().startsWith(mailboxName))
+            .hasElements();
     }
 
     private boolean belongsToSameUser(Mailbox mailbox, Mailbox otherMailbox) {
@@ -138,7 +134,8 @@ public class InMemoryMailboxMapper implements MailboxMapper {
 
     @Override
     public Flux<Mailbox> list() {
-        return Flux.fromIterable(mailboxesByPath.values());
+        return Mono.fromCallable(mailboxesByPath::values)
+            .flatMapIterable(Function.identity());
     }
 
     @Override
@@ -147,23 +144,28 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-        MailboxACL oldACL = mailbox.getACL();
-        MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
-        mailboxesByPath.get(mailbox.generateAssociatedPath()).setACL(newACL);
-        return ACLDiff.computeDiff(oldACL, newACL);
+    public Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) {
+        return Mono.fromCallable(() -> {
+            MailboxACL oldACL = mailbox.getACL();
+            MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
+            mailboxesByPath.get(mailbox.generateAssociatedPath()).setACL(newACL);
+            return ACLDiff.computeDiff(oldACL, newACL);
+        });
     }
 
     @Override
-    public ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
-        MailboxACL oldMailboxAcl = mailbox.getACL();
-        mailboxesByPath.get(mailbox.generateAssociatedPath()).setACL(mailboxACL);
-        return ACLDiff.computeDiff(oldMailboxAcl, mailboxACL);
+    public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
+        return Mono.fromCallable(() -> {
+            MailboxACL oldMailboxAcl = mailbox.getACL();
+            mailboxesByPath.get(mailbox.generateAssociatedPath()).setACL(mailboxACL);
+            return ACLDiff.computeDiff(oldMailboxAcl, mailboxACL);
+        });
     }
 
     @Override
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
-        return Flux.fromIterable(mailboxesByPath.values())
+        return Mono.fromCallable(mailboxesByPath::values)
+            .flatMapIterable(Function.identity())
             .filter(mailbox -> hasRightOn(mailbox, userName, right));
     }
 

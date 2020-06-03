@@ -19,10 +19,11 @@
 
 package org.apache.james.modules;
 
+import static org.apache.james.mailbox.store.MailboxReactorUtils.block;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -42,6 +43,8 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.utils.GuiceProbe;
+
+import reactor.core.publisher.Flux;
 
 public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     private final MailboxManager mailboxManager;
@@ -102,11 +105,10 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         try {
             mailboxSession = mailboxManager.createSystemSession(Username.of(user));
             mailboxManager.startProcessingRequest(mailboxSession);
-            return searchUserMailboxes(mailboxSession)
-                    .stream()
+            return block(searchUserMailboxes(mailboxSession)
                     .map(MailboxMetaData::getPath)
                     .map(MailboxPath::getName)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         } finally {
@@ -114,7 +116,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         }
     }
 
-    private List<MailboxMetaData> searchUserMailboxes(MailboxSession session) throws MailboxException {
+    private Flux<MailboxMetaData> searchUserMailboxes(MailboxSession session) {
         return mailboxManager.search(
             MailboxQuery.privateMailboxesBuilder(session)
                 .expression(Wildcard.INSTANCE)

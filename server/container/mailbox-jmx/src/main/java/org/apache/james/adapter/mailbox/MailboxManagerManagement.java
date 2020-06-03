@@ -205,7 +205,9 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             MailboxQuery.privateMailboxesBuilder(session)
                 .matchesAllMailboxNames()
                 .build(),
-            session);
+            session)
+            .collect(Guavate.toImmutableList())
+            .block();
     }
 
     private void checkMailboxArguments(String namespace, String user, String name) {

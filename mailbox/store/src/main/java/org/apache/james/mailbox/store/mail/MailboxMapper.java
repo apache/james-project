@@ -22,8 +22,6 @@ import java.util.List;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -46,17 +44,17 @@ public interface MailboxMapper extends Mapper {
     /**
      * Create a {@link Mailbox} with the given {@link MailboxPath} and uid to the underlying storage
      */
-    Mailbox create(MailboxPath mailboxPath, UidValidity uidValidity) throws MailboxException;
+    Mono<Mailbox> create(MailboxPath mailboxPath, UidValidity uidValidity);
 
     /**
      * Rename the given {@link Mailbox} to the underlying storage
      */
-    MailboxId rename(Mailbox mailbox) throws MailboxException;
+    Mono<MailboxId> rename(Mailbox mailbox);
     
     /**
      * Delete the given {@link Mailbox} from the underlying storage
      */
-    void delete(Mailbox mailbox) throws MailboxException;
+    Mono<Void> delete(Mailbox mailbox);
 
   
     /**
@@ -68,35 +66,10 @@ public interface MailboxMapper extends Mapper {
         return findMailboxByPath(mailboxName).hasElement();
     }
 
-    default Mailbox findMailboxByPathBlocking(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
-        try {
-            return findMailboxByPath(mailboxPath)
-                .blockOptional()
-                .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));
-        } catch (Exception e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof MailboxException) {
-                throw (MailboxException) cause;
-            }
-            throw e;
-        }
-    }
-
     /**
      * Return the {@link Mailbox} for the given name
      */
-    Mailbox findMailboxById(MailboxId mailboxId)
-            throws MailboxException, MailboxNotFoundException;
-
-    default Mono<Mailbox> findMailboxByIdReactive(MailboxId id) {
-        try {
-            return Mono.justOrEmpty(findMailboxById(id));
-        } catch (MailboxNotFoundException e) {
-            return Mono.empty();
-        } catch (MailboxException e) {
-            return Mono.error(e);
-        }
-    }
+    Mono<Mailbox> findMailboxById(MailboxId mailboxId);
 
     /**
      * Return a List of {@link Mailbox} for the given userName and matching the right
@@ -106,8 +79,7 @@ public interface MailboxMapper extends Mapper {
     /**
      * Return a List of {@link Mailbox} which name is like the given name
      */
-    Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query)
-            throws MailboxException;
+    Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query);
 
     /**
      * Return if the given {@link Mailbox} has children
@@ -116,24 +88,22 @@ public interface MailboxMapper extends Mapper {
      * @param delimiter path delimiter
      * @return true when the mailbox has children, false otherwise
      */
-    boolean hasChildren(Mailbox mailbox, char delimiter)
-            throws MailboxException, MailboxNotFoundException;
+    Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter);
 
     /**
      * Update the ACL of the stored mailbox.
-     *
      * @param mailbox Mailbox for whom we want to update ACL
      * @param mailboxACLCommand Update to perform
      */
-    ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException;
+    Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand);
 
     /**
      * Reset the ACL of the stored mailbox.
-     *
-     * @param mailbox Mailbox for whom we want to update ACL
+     *  @param mailbox Mailbox for whom we want to update ACL
      * @param mailboxACL New value of the ACL for this mailbox
+     * @return
      */
-    ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException;
+    Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL);
 
     /**
      * Return a unmodifable {@link List} of all {@link Mailbox}

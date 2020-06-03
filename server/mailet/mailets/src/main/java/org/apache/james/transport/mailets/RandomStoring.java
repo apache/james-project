@@ -117,7 +117,7 @@ public class RandomStoring extends GenericMailet {
             MailboxSession session = mailboxManager.createSystemSession(username);
             return mailboxManager
                 .search(MailboxQuery.privateMailboxesBuilder(session).build(), session)
-                .stream()
+                .toStream()
                 .map(metaData -> new ReroutingInfos(metaData.getPath().getName(), username));
         } catch (Exception e) {
             throw new RuntimeException(e);

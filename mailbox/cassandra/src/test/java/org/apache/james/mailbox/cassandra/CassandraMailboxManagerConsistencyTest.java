@@ -90,7 +90,7 @@ class CassandraMailboxManagerConsistencyTest {
             cassandra.getConf().registerScenario(NOTHING);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                     .isEmpty();
                 softly.assertThat(testee.list(mailboxSession))
                     .isEmpty();
@@ -108,7 +108,7 @@ class CassandraMailboxManagerConsistencyTest {
             cassandra.getConf().registerScenario(NOTHING);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                     .isEmpty();
                 softly.assertThat(testee.list(mailboxSession))
                     .isEmpty();
@@ -142,7 +142,7 @@ class CassandraMailboxManagerConsistencyTest {
                 .get();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                     .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                         softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                         softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -185,7 +185,7 @@ class CassandraMailboxManagerConsistencyTest {
                 .get();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                     .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                         softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                         softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -213,7 +213,7 @@ class CassandraMailboxManagerConsistencyTest {
             cassandra.getConf().registerScenario(NOTHING);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                     .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                         softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                         softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -237,7 +237,7 @@ class CassandraMailboxManagerConsistencyTest {
             cassandra.getConf().registerScenario(NOTHING);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                     .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                         softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                         softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -265,7 +265,7 @@ class CassandraMailboxManagerConsistencyTest {
                 .get();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                     .hasSize(2)
                     .anySatisfy(mailboxMetaData -> {
                         softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
@@ -297,7 +297,7 @@ class CassandraMailboxManagerConsistencyTest {
                 .get();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                     .hasSize(2)
                     .anySatisfy(mailboxMetaData -> {
                         softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
@@ -349,7 +349,7 @@ class CassandraMailboxManagerConsistencyTest {
                 .get();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                     .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                         softly.assertThat(mailboxMetaData.getId()).isEqualTo(newMailboxId);
                         softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPathRenamed);
@@ -380,7 +380,7 @@ class CassandraMailboxManagerConsistencyTest {
                 cassandra.getConf().registerScenario(NOTHING);
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -405,7 +405,7 @@ class CassandraMailboxManagerConsistencyTest {
                 cassandra.getConf().registerScenario(NOTHING);
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -429,7 +429,7 @@ class CassandraMailboxManagerConsistencyTest {
                 cassandra.getConf().registerScenario(NOTHING);
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -453,7 +453,7 @@ class CassandraMailboxManagerConsistencyTest {
                 cassandra.getConf().registerScenario(NOTHING);
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -483,7 +483,7 @@ class CassandraMailboxManagerConsistencyTest {
                     .get();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -510,7 +510,7 @@ class CassandraMailboxManagerConsistencyTest {
                     .get();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -537,7 +537,7 @@ class CassandraMailboxManagerConsistencyTest {
                     .get();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -565,7 +565,7 @@ class CassandraMailboxManagerConsistencyTest {
                     .get();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -595,7 +595,7 @@ class CassandraMailboxManagerConsistencyTest {
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .isEmpty();
                     softly.assertThat(testee.list(mailboxSession))
                         .isEmpty();
@@ -618,7 +618,7 @@ class CassandraMailboxManagerConsistencyTest {
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .isEmpty();
                     softly.assertThat(testee.list(mailboxSession))
                         .isEmpty();
@@ -640,7 +640,7 @@ class CassandraMailboxManagerConsistencyTest {
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .isEmpty();
                     softly.assertThat(testee.list(mailboxSession))
                         .isEmpty();
@@ -663,7 +663,7 @@ class CassandraMailboxManagerConsistencyTest {
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .isEmpty();
                     softly.assertThat(testee.list(mailboxSession))
                         .isEmpty();
@@ -691,7 +691,7 @@ class CassandraMailboxManagerConsistencyTest {
                     .get();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -719,7 +719,7 @@ class CassandraMailboxManagerConsistencyTest {
                     .get();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -746,7 +746,7 @@ class CassandraMailboxManagerConsistencyTest {
                     .get();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
@@ -774,7 +774,7 @@ class CassandraMailboxManagerConsistencyTest {
                     .get();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession).toStream())
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);

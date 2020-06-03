@@ -29,6 +29,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -69,7 +70,9 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
 
     public MailboxId checkThenGetMailboxId(MailboxPath path, MailboxSession session) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = mailboxMapper.findMailboxByPathBlocking(path);
+        Mailbox mailbox = mailboxMapper.findMailboxByPath(path)
+            .blockOptional()
+            .orElseThrow(() -> new MailboxNotFoundException(path));
         if (!rightManager.hasRight(mailbox, Right.Read, session)) {
             throw new InsufficientRightsException("Not enough rights on " + path);
         }

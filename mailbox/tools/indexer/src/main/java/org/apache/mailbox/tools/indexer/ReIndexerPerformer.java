@@ -159,7 +159,7 @@ public class ReIndexerPerformer {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
 
         Flux<Either<Failure, ReIndexingEntry>> entriesToIndex = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
-            .findMailboxByIdReactive(mailboxId)
+            .findMailboxById(mailboxId)
             .flatMapMany(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession));
 
         return reIndexMessages(entriesToIndex, runningOptions, reprocessingContext);
@@ -188,7 +188,7 @@ public class ReIndexerPerformer {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
 
         return mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
-            .findMailboxByIdReactive(mailboxId)
+            .findMailboxById(mailboxId)
             .flatMap(mailbox -> fullyReadMessage(mailboxSession, mailbox, uid)
                 .map(message -> Either.<Failure, ReIndexingEntry>right(new ReIndexingEntry(mailbox, mailboxSession, message)))
                 .flatMap(entryOrFailure -> reIndex(entryOrFailure, reprocessingContext)))
@@ -217,7 +217,7 @@ public class ReIndexerPerformer {
             Flux.fromIterable(previousReIndexingFailures.messageFailures())
                 .flatMap(this::createReindexingEntryFromFailure),
             Flux.fromIterable(previousReIndexingFailures.mailboxFailures())
-                .flatMap(mailboxId -> mapper.findMailboxByIdReactive(mailboxId)
+                .flatMap(mailboxId -> mapper.findMailboxById(mailboxId)
                     .flatMapMany(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession))
                     .onErrorResume(e -> {
                         LOGGER.warn("Failed to re-index {}", mailboxId, e);
@@ -229,7 +229,7 @@ public class ReIndexerPerformer {
 
     private Mono<Result> reIndex(MailboxMessage mailboxMessage, MailboxSession session) {
         return mailboxSessionMapperFactory.getMailboxMapper(session)
-            .findMailboxByIdReactive(mailboxMessage.getMailboxId())
+            .findMailboxById(mailboxMessage.getMailboxId())
             .flatMap(mailbox -> messageSearchIndex.add(session, mailbox, mailboxMessage))
             .thenReturn(Result.COMPLETED)
             .onErrorResume(e -> {
@@ -248,7 +248,7 @@ public class ReIndexerPerformer {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
 
         return mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
-            .findMailboxByIdReactive(previousFailure.getMailboxId())
+            .findMailboxById(previousFailure.getMailboxId())
             .flatMap(mailbox -> fullyReadMessage(mailboxSession, mailbox, previousFailure.getUid())
                 .map(message -> Either.<Failure, ReIndexingEntry>right(new ReIndexingEntry(mailbox, mailboxSession, message))))
             .onErrorResume(e -> {

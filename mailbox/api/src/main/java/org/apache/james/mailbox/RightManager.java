@@ -109,9 +109,7 @@ public interface RightManager {
      *         {@code session.getUser()} is null.
      * @throws MailboxException in case of unknown mailbox or unsupported right
      */
-    Rfc4314Rights myRights(MailboxId mailboxId, MailboxSession session) throws MailboxException;
-
-    Publisher<Rfc4314Rights> myRightsReactive(MailboxId mailboxId, MailboxSession session);
+    Publisher<Rfc4314Rights> myRights(MailboxId mailboxId, MailboxSession session);
 
     /**
      * Update the Mailbox ACL of the designated mailbox. We can either ADD REPLACE or REMOVE entries.

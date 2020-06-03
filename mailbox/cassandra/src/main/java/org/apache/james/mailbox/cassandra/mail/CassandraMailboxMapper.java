@@ -40,6 +40,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,12 +86,11 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void delete(Mailbox mailbox) {
+    public Mono<Void> delete(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        deletePath(mailbox)
+        return deletePath(mailbox)
             .thenEmpty(mailboxDAO.delete(mailboxId)
-                .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF)))
-            .block();
+                .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF)));
     }
 
     private Flux<Void> deletePath(Mailbox mailbox) {
@@ -144,17 +144,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public Mailbox findMailboxById(MailboxId id) throws MailboxException {
+    public Mono<Mailbox> findMailboxById(MailboxId id) {
         CassandraId mailboxId = (CassandraId) id;
         return retrieveMailbox(mailboxId)
-            .blockOptional()
-            .orElseThrow(() -> new MailboxNotFoundException(id));
-    }
-
-    @Override
-    public Mono<Mailbox> findMailboxByIdReactive(MailboxId id) {
-        CassandraId mailboxId = (CassandraId) id;
-        return retrieveMailbox(mailboxId);
+            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(id)));
     }
 
     private Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
@@ -203,40 +196,26 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public Mailbox create(MailboxPath mailboxPath, UidValidity uidValidity) throws MailboxException {
+    public Mono<Mailbox> create(MailboxPath mailboxPath, UidValidity uidValidity) {
         CassandraId cassandraId = CassandraId.timeBased();
         Mailbox mailbox = new Mailbox(mailboxPath, uidValidity, cassandraId);
 
-        if (!tryCreate(mailbox, cassandraId).block()) {
-            throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
-        }
-        return mailbox;
-    }
-
-    private Mono<Boolean> tryCreate(Mailbox cassandraMailbox, CassandraId cassandraId) {
-        return mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
+        return mailboxPathV2DAO.save(mailbox.generateAssociatedPath(), cassandraId)
             .filter(isCreated -> isCreated)
-            .flatMap(mailboxHasCreated -> persistMailboxEntity(cassandraMailbox)
-                .thenReturn(true))
-            .defaultIfEmpty(false);
+            .flatMap(mailboxHasCreated -> persistMailboxEntity(mailbox)
+                .thenReturn(mailbox))
+            .switchIfEmpty(Mono.error(() -> new MailboxExistsException(mailbox.generateAssociatedPath().asString())));
     }
 
     @Override
-    public MailboxId rename(Mailbox mailbox) throws MailboxException {
+    public Mono<MailboxId> rename(Mailbox mailbox) {
         Preconditions.checkNotNull(mailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
 
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        try {
-            if (!tryRename(mailbox, cassandraId).block()) {
-                throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
-            }
-        } catch (RuntimeException e) {
-            if (e.getCause() instanceof MailboxNotFoundException) {
-                throw (MailboxNotFoundException)e.getCause();
-            }
-            throw e;
-        }
-        return cassandraId;
+        return tryRename(mailbox, cassandraId)
+            .filter(FunctionalUtils.identityPredicate())
+            .switchIfEmpty(Mono.error(() -> new MailboxExistsException(mailbox.generateAssociatedPath().asString())))
+            .thenReturn(cassandraId);
     }
 
     private Mono<Boolean> tryRename(Mailbox cassandraMailbox, CassandraId cassandraId) {
@@ -261,13 +240,12 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public boolean hasChildren(Mailbox mailbox, char delimiter) {
+    public Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter) {
         return Flux.merge(
                 mailboxPathDAO.listUserMailboxes(mailbox.getNamespace(), mailbox.getUser()),
                 mailboxPathV2DAO.listUserMailboxes(mailbox.getNamespace(), mailbox.getUser()))
             .filter(idAndPath -> isPathChildOfMailbox(idAndPath, mailbox, delimiter))
-            .hasElements()
-            .block();
+            .hasElements();
     }
 
     private boolean isPathChildOfMailbox(CassandraIdAndPath idAndPath, Mailbox mailbox, char delimiter) {
@@ -286,13 +264,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
+    public Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return cassandraACLMapper.updateACL(cassandraId, mailboxACLCommand);
     }
 
     @Override
-    public ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+    public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return cassandraACLMapper.setACL(cassandraId, mailboxACL);
     }

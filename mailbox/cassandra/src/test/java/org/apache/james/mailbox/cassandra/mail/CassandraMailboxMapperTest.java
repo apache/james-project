@@ -40,7 +40,6 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -140,8 +139,8 @@ class CassandraMailboxMapperTest {
         @Nested
         class Retries {
             @Test
-            void renameShouldRetryFailedDeleteMailboxPath(CassandraCluster cassandra) throws Exception {
-                Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+            void renameShouldRetryFailedDeleteMailboxPath(CassandraCluster cassandra) {
+                Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
                 MailboxId inboxId = inbox.getMailboxId();
                 Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -150,11 +149,11 @@ class CassandraMailboxMapperTest {
                         .times(1)
                         .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
-                testee.rename(inboxRenamed);
+                testee.rename(inboxRenamed).block();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly(softly)
-                        .assertThat(testee.findMailboxById(inboxId))
+                        .assertThat(testee.findMailboxById(inboxId).block())
                         .isEqualTo(inboxRenamed);
                     softly(softly)
                         .assertThat(testee.findMailboxByPath(inboxPathRenamed).block())
@@ -168,8 +167,8 @@ class CassandraMailboxMapperTest {
             }
 
             @Test
-            void renameShouldRetryFailedMailboxSaving(CassandraCluster cassandra) throws Exception {
-                Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+            void renameShouldRetryFailedMailboxSaving(CassandraCluster cassandra) {
+                Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
                 MailboxId inboxId = inbox.getMailboxId();
                 Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -178,11 +177,11 @@ class CassandraMailboxMapperTest {
                     .times(1)
                     .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
-                testee.rename(inboxRenamed);
+                testee.rename(inboxRenamed).block();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly(softly)
-                        .assertThat(testee.findMailboxById(inboxId))
+                        .assertThat(testee.findMailboxById(inboxId).block())
                         .isEqualTo(inboxRenamed);
                     softly(softly)
                         .assertThat(testee.findMailboxByPath(inboxPathRenamed).block())
@@ -196,17 +195,17 @@ class CassandraMailboxMapperTest {
             }
 
             @Test
-            void createShouldRetryFailedMailboxSaving(CassandraCluster cassandra) throws Exception {
+            void createShouldRetryFailedMailboxSaving(CassandraCluster cassandra) {
                 cassandra.getConf()
                     .registerScenario(fail()
                         .times(1)
                         .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
-                Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+                Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                     softly(softly)
-                        .assertThat(testee.findMailboxById(inbox.getMailboxId()))
+                        .assertThat(testee.findMailboxById(inbox.getMailboxId()).block())
                         .isEqualTo(inbox);
                     softly(softly)
                         .assertThat(testee.findMailboxByPath(inboxPath).block())
@@ -220,19 +219,19 @@ class CassandraMailboxMapperTest {
             }
 
             @Test
-            void deleteShouldRetryFailedMailboxDeletion(CassandraCluster cassandra) throws Exception {
-                Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+            void deleteShouldRetryFailedMailboxDeletion(CassandraCluster cassandra) {
+                Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
 
                 cassandra.getConf()
                     .registerScenario(fail()
                     .times(1)
                     .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
-                testee.delete(inbox);
+                testee.delete(inbox).block();
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThatThrownBy(() -> testee.findMailboxById(inbox.getMailboxId()))
-                        .isInstanceOf(MailboxNotFoundException.class);
+                    softly.assertThatThrownBy(() -> testee.findMailboxById(inbox.getMailboxId()).block())
+                        .hasCauseInstanceOf(MailboxNotFoundException.class);
                     softly.assertThat(testee.findMailboxByPath(inboxPath).blockOptional())
                         .isEmpty();
                     softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery)
@@ -249,7 +248,7 @@ class CassandraMailboxMapperTest {
                     .times(10)
                     .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
-            doQuietly(() -> testee.create(inboxPath, UID_VALIDITY));
+            doQuietly(() -> testee.create(inboxPath, UID_VALIDITY).block());
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(testee.findMailboxByPath(inboxPath).blockOptional())
@@ -264,8 +263,8 @@ class CassandraMailboxMapperTest {
         }
 
         @Test
-        void renameThenFailToRetrieveMailboxShouldBeConsistentWhenFindByInbox(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void renameThenFailToRetrieveMailboxShouldBeConsistentWhenFindByInbox(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -280,7 +279,7 @@ class CassandraMailboxMapperTest {
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
-                    .assertThat(testee.findMailboxById(inboxId))
+                    .assertThat(testee.findMailboxById(inboxId).block())
                     .isEqualTo(inbox);
                 softly(softly)
                     .assertThat(testee.findMailboxByPath(inboxPath).block())
@@ -295,8 +294,8 @@ class CassandraMailboxMapperTest {
 
         @Disabled("JAMES-3056 returning two mailboxes with same name and id")
         @Test
-        void renameThenFailToRetrieveMailboxShouldBeConsistentWhenFindAll(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void renameThenFailToRetrieveMailboxShouldBeConsistentWhenFindAll(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -305,21 +304,21 @@ class CassandraMailboxMapperTest {
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;"));
 
-            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed).block());
 
-            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            SoftAssertions.assertSoftly(Throwing.consumer(softly ->
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery)
                     .collectList().block())
                     .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
                         .assertThat(searchMailbox)
-                        .isEqualTo(inbox));
-            }));
+                        .isEqualTo(inbox))
+            ));
         }
 
         @Disabled("JAMES-3056 find by renamed name returns unexpected results")
         @Test
-        void renameThenFailToRetrieveMailboxShouldBeConsistentWhenFindByRenamedInbox(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void renameThenFailToRetrieveMailboxShouldBeConsistentWhenFindByRenamedInbox(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -328,10 +327,10 @@ class CassandraMailboxMapperTest {
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;"));
 
-            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed).block());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPathRenamed))
+                softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPathRenamed).block())
                     .isInstanceOf(MailboxNotFoundException.class);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxRenamedSearchQuery)
                     .collectList().block())
@@ -340,8 +339,8 @@ class CassandraMailboxMapperTest {
         }
 
         @Test
-        void renameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindByInbox(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void renameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindByInbox(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -350,11 +349,11 @@ class CassandraMailboxMapperTest {
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
-            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed).block());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
-                    .assertThat(testee.findMailboxById(inboxId))
+                    .assertThat(testee.findMailboxById(inboxId).block())
                     .isEqualTo(inbox);
                 softly(softly)
                     .assertThat(testee.findMailboxByPath(inboxPath).block())
@@ -369,8 +368,8 @@ class CassandraMailboxMapperTest {
 
         @Disabled("JAMES-3056 returning two mailboxes with same name and id")
         @Test
-        void renameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindAll(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void renameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindAll(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -379,21 +378,20 @@ class CassandraMailboxMapperTest {
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
-            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed).block());
 
-            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            SoftAssertions.assertSoftly(Throwing.consumer(softly ->
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery)
                     .collectList().block())
                     .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
                         .assertThat(searchMailbox)
-                        .isEqualTo(inbox));
-            }));
+                        .isEqualTo(inbox))));
         }
 
         @Disabled("JAMES-3056 find by renamed name returns unexpected results")
         @Test
-        void renameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindByRenamedInbox(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void renameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindByRenamedInbox(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -402,10 +400,10 @@ class CassandraMailboxMapperTest {
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
-            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed).block());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPathRenamed))
+                softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPathRenamed).block())
                     .isInstanceOf(MailboxNotFoundException.class);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxRenamedSearchQuery)
                     .collectList().block())
@@ -415,8 +413,8 @@ class CassandraMailboxMapperTest {
 
         @Disabled("JAMES-3056 find by mailbox name returns unexpected results")
         @Test
-        void deleteShouldBeConsistentWhenFailToDeleteMailbox(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void deleteShouldBeConsistentWhenFailToDeleteMailbox(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
 
             cassandra.getConf()
@@ -424,12 +422,12 @@ class CassandraMailboxMapperTest {
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
-            doQuietly(() -> testee.delete(inbox));
+            doQuietly(() -> testee.delete(inbox).block());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThatCode(() -> testee.findMailboxById(inboxId))
+                softly.assertThatCode(() -> testee.findMailboxById(inboxId).block())
                     .doesNotThrowAnyException();
-                softly.assertThatCode(() -> testee.findMailboxByPath(inboxPath))
+                softly.assertThatCode(() -> testee.findMailboxByPath(inboxPath).block())
                     .doesNotThrowAnyException();
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery)
                     .collectList().block())
@@ -446,8 +444,8 @@ class CassandraMailboxMapperTest {
 
         @Disabled("JAMES-3056 both mailboxes of the same user have 'INBOX' name")
         @Test
-        void missedMigrationShouldNotLeadToGhostMailbox() throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void missedMigrationShouldNotLeadToGhostMailbox() {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
             // simulate mailbox old data has not been migrated to v2
             mailboxPathDAO.save(inboxPath, inboxId).block();
@@ -457,23 +455,23 @@ class CassandraMailboxMapperTest {
             // => two mailboxes with same name but different ids
             CassandraId newId = CassandraId.timeBased();
             Mailbox mailboxHasSameNameWithInbox = new Mailbox(inboxPath, UID_VALIDITY, newId);
-            testee.rename(mailboxHasSameNameWithInbox);
+            testee.rename(mailboxHasSameNameWithInbox).block();
 
-            assertThat(testee.findMailboxById(newId).getName())
-                .isNotEqualTo(testee.findMailboxById(inboxId).getName());
+            assertThat(testee.findMailboxById(newId).block().getName())
+                .isNotEqualTo(testee.findMailboxById(inboxId).block().getName());
         }
 
         @Disabled("JAMES-3056 org.apache.james.mailbox.exception.MailboxNotFoundException: 'mailboxId' can not be found")
         @Test
-        void createAfterPreviousFailedCreateShouldCreateAMailbox(CassandraCluster cassandra) throws MailboxException {
+        void createAfterPreviousFailedCreateShouldCreateAMailbox(CassandraCluster cassandra) {
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
-            doQuietly(() -> testee.create(inboxPath, UID_VALIDITY));
+            doQuietly(() -> testee.create(inboxPath, UID_VALIDITY).block());
 
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -493,16 +491,16 @@ class CassandraMailboxMapperTest {
         }
 
         @Test
-        void createAfterPreviousDeleteOnFailedCreateShouldCreateAMailbox(CassandraCluster cassandra) throws MailboxException {
+        void createAfterPreviousDeleteOnFailedCreateShouldCreateAMailbox(CassandraCluster cassandra) {
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
-            doQuietly(() -> testee.create(inboxPath, UID_VALIDITY));
-            doQuietly(() -> testee.delete(new Mailbox(inboxPath, UID_VALIDITY, CassandraId.timeBased())));
+            doQuietly(() -> testee.create(inboxPath, UID_VALIDITY).block());
+            doQuietly(() -> testee.delete(new Mailbox(inboxPath, UID_VALIDITY, CassandraId.timeBased())).block());
 
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -522,8 +520,8 @@ class CassandraMailboxMapperTest {
         }
 
         @Test
-        void deleteAfterAFailedDeleteShouldDeleteTheMailbox(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void deleteAfterAFailedDeleteShouldDeleteTheMailbox(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
 
             cassandra.getConf()
@@ -531,13 +529,13 @@ class CassandraMailboxMapperTest {
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
-            doQuietly(() -> testee.delete(inbox));
+            doQuietly(() -> testee.delete(inbox).block());
 
-            doQuietly(() -> testee.delete(inbox));
+            doQuietly(() -> testee.delete(inbox).block());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThatThrownBy(() -> testee.findMailboxById(inboxId))
-                    .isInstanceOf(MailboxNotFoundException.class);
+                softly.assertThatThrownBy(() -> testee.findMailboxById(inboxId).block())
+                    .hasCauseInstanceOf(MailboxNotFoundException.class);
                     softly.assertThat(testee.findMailboxByPath(inboxPath).blockOptional())
                         .isEmpty();
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery)
@@ -552,8 +550,8 @@ class CassandraMailboxMapperTest {
         @Disabled("JAMES-3056 mailbox name is not updated to INBOX_RENAMED).isEqualTo(" +
             "findMailboxWithPathLike() returns a list with two same mailboxes")
         @Test
-        void renameAfterRenameFailOnRetrieveMailboxShouldRenameTheMailbox(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void renameAfterRenameFailOnRetrieveMailboxShouldRenameTheMailbox(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -562,13 +560,13 @@ class CassandraMailboxMapperTest {
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE id=:id;"));
 
-            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed).block());
 
-            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed).block());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
-                    .assertThat(testee.findMailboxById(inboxId))
+                    .assertThat(testee.findMailboxById(inboxId).block())
                     .isEqualTo(inboxRenamed);
                 softly(softly)
                     .assertThat(testee.findMailboxByPath(inboxPathRenamed).block())
@@ -591,8 +589,8 @@ class CassandraMailboxMapperTest {
 
         @Disabled("JAMES-3056 mailbox name is not updated to INBOX_RENAMED")
         @Test
-        void renameAfterRenameFailOnDeletePathShouldRenameTheMailbox(CassandraCluster cassandra) throws Exception {
-            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY);
+        void renameAfterRenameFailOnDeletePathShouldRenameTheMailbox(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
             CassandraId inboxId = (CassandraId) inbox.getMailboxId();
             Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
 
@@ -601,13 +599,13 @@ class CassandraMailboxMapperTest {
                     .times(TRY_COUNT_BEFORE_FAILURE)
                     .whenQueryStartsWith("DELETE FROM mailboxPathV2 WHERE namespace=:namespace AND user=:user AND mailboxName=:mailboxName IF EXISTS;"));
 
-            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed).block());
 
-            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed).block());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
-                    .assertThat(testee.findMailboxById(inboxId))
+                    .assertThat(testee.findMailboxById(inboxId).block())
                     .isEqualTo(inboxRenamed);
                 softly(softly)
                     .assertThat(testee.findMailboxByPath(inboxPathRenamed).block())
@@ -644,12 +642,12 @@ class CassandraMailboxMapperTest {
 
     @Disabled("JAMES-2514 Cassandra 3 supports long mailbox names. Hence we can not rely on this for failing")
     @Test
-    void renameShouldNotRemoveOldMailboxPathWhenCreatingTheNewMailboxPathFails() throws Exception {
-        testee.create(MAILBOX_PATH, UID_VALIDITY);
+    void renameShouldNotRemoveOldMailboxPathWhenCreatingTheNewMailboxPathFails() {
+        testee.create(MAILBOX_PATH, UID_VALIDITY).block();
         Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH).block();
 
         Mailbox newMailbox = new Mailbox(tooLongMailboxPath(mailbox.generateAssociatedPath()), UID_VALIDITY, mailbox.getMailboxId());
-        assertThatThrownBy(() -> testee.rename(newMailbox))
+        assertThatThrownBy(() -> testee.rename(newMailbox).block())
             .isInstanceOf(TooLongMailboxNameException.class);
 
         assertThat(mailboxPathV2DAO.retrieveId(MAILBOX_PATH).blockOptional())
@@ -667,7 +665,7 @@ class CassandraMailboxMapperTest {
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
 
-        testee.delete(MAILBOX);
+        testee.delete(MAILBOX).block();
 
         assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
             .isEmpty();
@@ -680,7 +678,7 @@ class CassandraMailboxMapperTest {
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
 
-        testee.delete(MAILBOX);
+        testee.delete(MAILBOX).block();
 
         assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
             .isEmpty();
@@ -733,7 +731,7 @@ class CassandraMailboxMapperTest {
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
 
-        testee.delete(MAILBOX);
+        testee.delete(MAILBOX).block();
 
         assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
             .isEmpty();
@@ -746,7 +744,7 @@ class CassandraMailboxMapperTest {
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
 
-        testee.delete(MAILBOX);
+        testee.delete(MAILBOX).block();
 
         assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
             .isEmpty();
@@ -759,7 +757,7 @@ class CassandraMailboxMapperTest {
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
 
-        testee.delete(MAILBOX);
+        testee.delete(MAILBOX).block();
 
         assertThat(testee.findMailboxByPath(MAILBOX_PATH).blockOptional())
             .isEmpty();
@@ -780,7 +778,7 @@ class CassandraMailboxMapperTest {
             .block();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
-    
+
         List<Mailbox> mailboxes = testee.findMailboxWithPathLike(MailboxQuery.builder()
             .privateNamespace()
             .username(USER)
@@ -818,7 +816,7 @@ class CassandraMailboxMapperTest {
             .block();
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
-    
+
         List<Mailbox> mailboxes = testee.findMailboxWithPathLike(MailboxQuery.builder()
             .privateNamespace()
             .username(USER)
@@ -844,7 +842,7 @@ class CassandraMailboxMapperTest {
         mailboxPathDAO.save(childMailboxPath, childMailboxId)
             .block();
     
-        boolean hasChildren = testee.hasChildren(MAILBOX, '.');
+        boolean hasChildren = testee.hasChildren(MAILBOX, '.').block();
 
         assertThat(hasChildren).isTrue();
     }
@@ -865,7 +863,7 @@ class CassandraMailboxMapperTest {
         mailboxPathDAO.save(childMailboxPath, childMailboxId)
             .block();
 
-        boolean hasChildren = testee.hasChildren(MAILBOX, '.');
+        boolean hasChildren = testee.hasChildren(MAILBOX, '.').block();
 
         assertThat(hasChildren).isTrue();
     }
@@ -884,7 +882,7 @@ class CassandraMailboxMapperTest {
         mailboxPathV2DAO.save(childMailboxPath, childMailboxId)
             .block();
     
-        boolean hasChildren = testee.hasChildren(MAILBOX, '.');
+        boolean hasChildren = testee.hasChildren(MAILBOX, '.').block();
     
         assertThat(hasChildren).isTrue();
     }

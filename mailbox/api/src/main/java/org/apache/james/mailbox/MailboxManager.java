@@ -243,9 +243,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param session
      *            the context for this call, not null
      */
-    List<MailboxMetaData> search(MailboxQuery expression, MailboxSession session) throws MailboxException;
-
-    Flux<MailboxMetaData> searchReactive(MailboxQuery expression, MailboxSession session);
+    Flux<MailboxMetaData> search(MailboxQuery expression, MailboxSession session);
 
     /**
      * Searches for messages matching the given query.

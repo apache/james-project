@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -33,6 +34,8 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import reactor.core.publisher.Flux;
 
 class SystemMailboxesProviderImplTest {
 
@@ -55,6 +58,7 @@ class SystemMailboxesProviderImplTest {
     void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() throws Exception {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
         when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
+        when(mailboxManager.search(any(), any())).thenReturn(Flux.empty());
 
         assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser())).isEmpty();
     }

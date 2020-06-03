@@ -77,19 +77,19 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
 
         if (event instanceof Added) {
             return factory.getMailboxMapper(session)
-                .findMailboxByIdReactive(mailboxId)
+                .findMailboxById(mailboxId)
                 .flatMap(mailbox -> handleAdded(session, mailbox, (Added) event));
         } else if (event instanceof Expunged) {
             Expunged expunged = (Expunged) event;
 
             return factory.getMailboxMapper(session)
-                .findMailboxByIdReactive(mailboxId)
+                .findMailboxById(mailboxId)
                 .flatMap(mailbox -> delete(session, mailbox, expunged.getUids()));
         } else if (event instanceof FlagsUpdated) {
             FlagsUpdated flagsUpdated = (FlagsUpdated) event;
 
             return factory.getMailboxMapper(session)
-                .findMailboxByIdReactive(mailboxId)
+                .findMailboxById(mailboxId)
                 .flatMap(mailbox -> update(session, mailbox, flagsUpdated.getUpdatedFlags()));
         } else if (event instanceof MailboxDeletion) {
             return deleteAll(session, mailboxId);

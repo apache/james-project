@@ -39,6 +39,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
+import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
@@ -48,7 +49,6 @@ import org.apache.james.util.FunctionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Multimap;
 
@@ -133,31 +133,18 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     @Override
     public void save(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
-        unbox(() -> mailboxMapper.findMailboxByIdReactive(mailboxId)
-            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxId)))
+        MailboxReactorUtils.block(mailboxMapper.findMailboxById(mailboxId)
+            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxId)))
             .then(messageDAO.save(mailboxMessage))
-            .thenEmpty(saveMessageMetadata(mailboxMessage, mailboxId))
-            .block());
+            .thenEmpty(saveMessageMetadata(mailboxMessage, mailboxId)));
     }
 
     @Override
     public void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
-        unbox(() -> mailboxMapper.findMailboxByIdReactive(mailboxId)
-            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxId)))
-            .then(saveMessageMetadata(mailboxMessage, mailboxId))
-            .block());
-    }
-
-    private void unbox(ThrowingRunnable runnable) throws MailboxNotFoundException {
-        try {
-            runnable.run();
-        } catch (RuntimeException e) {
-            if (e.getCause() instanceof MailboxNotFoundException) {
-                throw (MailboxNotFoundException) e.getCause();
-            }
-            throw e;
-        }
+        MailboxReactorUtils.block(mailboxMapper.findMailboxById(mailboxId)
+            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxId)))
+            .then(saveMessageMetadata(mailboxMessage, mailboxId)));
     }
 
     private Mono<Void> saveMessageMetadata(MailboxMessage mailboxMessage, CassandraId mailboxId) {

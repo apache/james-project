@@ -120,21 +120,19 @@ public class CassandraACLMapper {
         return deserializeACL(cassandraId, serializedACL);
     }
 
-    public ACLDiff updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) throws MailboxException {
-        MailboxACL replacement = MailboxACL.EMPTY.apply(command);
-        return updateAcl(cassandraId, aclWithVersion -> aclWithVersion.apply(command), replacement)
+    public Mono<ACLDiff> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
+        return Mono.fromCallable(() -> MailboxACL.EMPTY.apply(command))
+        .flatMap(replacement -> updateAcl(cassandraId, aclWithVersion -> aclWithVersion.apply(command), replacement))
             .flatMap(aclDiff -> userMailboxRightsDAO.update(cassandraId, aclDiff)
             .thenReturn(aclDiff))
-            .blockOptional()
-            .orElseThrow(() -> new MailboxException("Unable to update ACL"));
+            .switchIfEmpty(Mono.error(new MailboxException("Unable to update ACL")));
     }
 
-    public ACLDiff setACL(CassandraId cassandraId, MailboxACL mailboxACL) throws MailboxException {
+    public Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
         return updateAcl(cassandraId, acl -> new ACLWithVersion(acl.version, mailboxACL), mailboxACL)
             .flatMap(aclDiff -> userMailboxRightsDAO.update(cassandraId, aclDiff)
             .thenReturn(aclDiff))
-            .blockOptional()
-            .orElseThrow(() -> new MailboxException("Unable to update ACL"));
+            .switchIfEmpty(Mono.defer(() -> Mono.error(new MailboxException("Unable to update ACL"))));
     }
 
     private Mono<ACLDiff> updateAcl(CassandraId cassandraId, Function<ACLWithVersion, ACLWithVersion> aclTransformation, MailboxACL replacement) {

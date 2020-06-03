@@ -47,6 +47,11 @@ class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailbo
         protected void renameMailboxByIdShouldChangeTheMailboxPathOfAMailbox() {
         }
 
+        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
+        @Test
+        protected void renameMailboxShouldChangeTheMailboxPathOfTheChildMailbox() {
+        }
+
         @Disabled("MAILBOX-393 mailboxId support for mailDir is partial")
         @Test
         protected void user1ShouldBeAbleToDeleteSubmailboxByid() {

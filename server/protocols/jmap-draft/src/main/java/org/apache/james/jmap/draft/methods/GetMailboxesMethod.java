@@ -167,7 +167,7 @@ public class GetMailboxesMethod implements Method {
     }
 
     private Flux<MailboxMetaData> getAllMailboxesMetaData(MailboxSession mailboxSession) {
-        return mailboxManager.searchReactive(
+        return mailboxManager.search(
             MailboxQuery.builder()
                 .matchesAllMailboxNames()
                 .build(),

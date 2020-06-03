@@ -53,7 +53,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -151,7 +150,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(session);
 
         Flux<Mailbox> filteredMailboxes = Flux.fromIterable(mailboxIds)
-            .concatMap(Throwing.function(mailboxMapper::findMailboxByIdReactive).sneakyThrow());
+            .concatMap(mailboxMapper::findMailboxById);
 
         return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery), limit);
     }

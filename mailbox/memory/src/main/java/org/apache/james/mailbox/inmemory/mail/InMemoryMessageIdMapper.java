@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
+import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -81,7 +82,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
 
     @Override
     public void save(MailboxMessage mailboxMessage) throws MailboxException {
-        Mailbox mailbox = mailboxMapper.findMailboxById(mailboxMessage.getMailboxId());
+        Mailbox mailbox = MailboxReactorUtils.block(mailboxMapper.findMailboxById(mailboxMessage.getMailboxId()));
         messageMapper.save(mailbox, mailboxMessage);
     }
 
@@ -98,7 +99,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
         find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
             .forEach(Throwing.consumer(
                 message -> messageMapper.delete(
-                    mailboxMapper.findMailboxById(message.getMailboxId()),
+                    MailboxReactorUtils.block(mailboxMapper.findMailboxById(message.getMailboxId())),
                     message)));
     }
 
@@ -109,7 +110,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
             .filter(message -> mailboxIds.contains(message.getMailboxId()))
             .forEach(Throwing.consumer(
                 message -> messageMapper.delete(
-                    mailboxMapper.findMailboxById(message.getMailboxId()),
+                    MailboxReactorUtils.block(mailboxMapper.findMailboxById(message.getMailboxId())),
                     message)));
     }
 
@@ -140,7 +141,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
             }
             return Pair.of(message.getMailboxId(),
                 messageMapper.updateFlags(
-                    mailboxMapper.findMailboxById(message.getMailboxId()),
+                    MailboxReactorUtils.block(mailboxMapper.findMailboxById(message.getMailboxId())),
                     flagsUpdateCalculator,
                     message.getUid().toRange())
                     .next());

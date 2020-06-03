@@ -30,6 +30,7 @@ import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.task.Task;
 
@@ -104,6 +105,6 @@ public class ReIndexerImpl implements ReIndexer {
 
     private void validateIdExists(MailboxId mailboxId) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of("ReIndexingImap"));
-        mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
+        MailboxReactorUtils.block(mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId));
     }
 }

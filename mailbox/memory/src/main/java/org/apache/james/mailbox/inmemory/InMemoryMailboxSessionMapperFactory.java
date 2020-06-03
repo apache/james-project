@@ -87,7 +87,7 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
 
     public void deleteAll() throws MailboxException {
-        ((InMemoryMailboxMapper) mailboxMapper).deleteAll();
+        ((InMemoryMailboxMapper) mailboxMapper).deleteAll().block();
         ((InMemoryMessageMapper) messageMapper).deleteAll();
         ((InMemorySubscriptionMapper) subscriptionMapper).deleteAll();
     }

@@ -1003,7 +1003,9 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 MailboxQuery.privateMailboxesBuilder(session)
                     .matchesAllMailboxNames()
                     .build(),
-                session);
+                session)
+                .collectList()
+                .block();
             assertThat(metaDatas).hasSize(1);
             assertThat(metaDatas.get(0).getPath()).isEqualTo(MailboxPath.inbox(session));
         }
@@ -1025,7 +1027,9 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 MailboxQuery.privateMailboxesBuilder(session)
                     .matchesAllMailboxNames()
                     .build(),
-                session);
+                session)
+                .collectList()
+                .block();
             assertThat(metaDatas)
                 .hasSize(1)
                 .first()
@@ -1046,7 +1050,9 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 MailboxQuery.privateMailboxesBuilder(session)
                     .matchesAllMailboxNames()
                     .build(),
-                session);
+                session)
+                .collectList()
+                .block();
             assertThat(metaDatas).hasSize(1);
             assertThat(metaDatas.get(0).getPath()).isEqualTo(MailboxPath.inbox(session));
         }
@@ -1068,7 +1074,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .matchesAllMailboxNames()
                 .build();
 
-            assertThat(mailboxManager.search(mailboxQuery, session1))
+            assertThat(mailboxManager.search(mailboxQuery, session1).toStream())
                 .extracting(MailboxMetaData::getPath)
                 .hasSize(1)
                 .containsOnly(inbox1);
@@ -1092,7 +1098,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .matchesAllMailboxNames()
                 .build();
 
-            assertThat(mailboxManager.search(mailboxQuery, session2))
+            assertThat(mailboxManager.search(mailboxQuery, session2).toStream())
                 .extracting(MailboxMetaData::getPath)
                 .containsOnly(inbox1);
         }
@@ -1117,7 +1123,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .matchesAllMailboxNames()
                 .build();
 
-            assertThat(mailboxManager.search(mailboxQuery, session2))
+            assertThat(mailboxManager.search(mailboxQuery, session2).toStream())
                 .extracting(MailboxMetaData::getPath)
                 .containsOnly(inbox1, inbox2);
         }
@@ -1143,7 +1149,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .matchesAllMailboxNames()
                 .build();
 
-            assertThat(mailboxManager.search(mailboxQuery, session2))
+            assertThat(mailboxManager.search(mailboxQuery, session2).toStream())
                 .extracting(MailboxMetaData::getPath)
                 .containsOnly(inbox1);
         }
@@ -1176,7 +1182,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .matchesAllMailboxNames()
                 .build();
 
-            assertThat(mailboxManager.search(mailboxQuery, session2))
+            assertThat(mailboxManager.search(mailboxQuery, session2).toStream())
                 .extracting(MailboxMetaData::getPath)
                 .containsOnly(mailboxPath1);
         }
@@ -1413,7 +1419,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .matchesAllMailboxNames()
                 .build();
 
-            assertThat(mailboxManager.search(mailboxQuery, session2))
+            assertThat(mailboxManager.search(mailboxQuery, session2).toStream())
                 .isEmpty();
         }
     }
@@ -1559,6 +1565,22 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             assertThat(mailboxManager.getMailbox(mailboxId.get(), session).getMailboxPath())
                 .isEqualTo(mailboxPath2);
+        }
+
+        @Test
+        protected void renameMailboxShouldChangeTheMailboxPathOfTheChildMailbox() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath mailboxPath1 = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath mailboxPath2 = MailboxPath.forUser(USER_1, "mbx2");
+            mailboxManager.createMailbox(mailboxPath1, session);
+            MailboxPath mailboxPath1Child = MailboxPath.forUser(USER_1, "mbx1.child");
+            Optional<MailboxId> mailboxChildId = mailboxManager.createMailbox(mailboxPath1Child, session);
+
+            mailboxManager.renameMailbox(mailboxPath1, mailboxPath2, session);
+
+            assertThat(mailboxManager.getMailbox(mailboxChildId.get(), session).getMailboxPath())
+                    .isEqualTo(MailboxPath.forUser(USER_1, "mbx2.child"));
         }
 
         @Test

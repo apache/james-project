@@ -104,7 +104,7 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
         MailboxSession session = sessionProvider.createSystemSession(Username.of("DefaultUserQuotaRootResolver"));
 
         return factory.getMailboxMapper(session)
-            .findMailboxByIdReactive(mailboxId)
+            .findMailboxById(mailboxId)
             .map(Mailbox::generateAssociatedPath)
             .map(MailboxPath::getUser)
             .map(this::forUser);

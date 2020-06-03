@@ -20,7 +20,6 @@
 package org.apache.james.imap.processor;
 
 import java.io.Closeable;
-import java.util.List;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -131,18 +130,17 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
         MailboxPath basePath = computeBasePath(session, finalReferencename, isRelative);
 
-        List<MailboxMetaData> results = getMailboxManager().search(
+        getMailboxManager().search(
                 MailboxQuery.builder()
                     .userAndNamespaceFrom(basePath)
                     .expression(new PrefixedRegex(
                         basePath.getName(),
                         ModifiedUtf7.decodeModifiedUTF7(mailboxName),
                         mailboxSession.getPathDelimiter()))
-                    .build(), mailboxSession);
-
-        for (MailboxMetaData metaData : results) {
-            processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath()));
-        }
+                    .build(), mailboxSession)
+            .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath())))
+            .then()
+            .block();
     }
 
     private MailboxPath computeBasePath(ImapSession session, String finalReferencename, boolean isRelative) {

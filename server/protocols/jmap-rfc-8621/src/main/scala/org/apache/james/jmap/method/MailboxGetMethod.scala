@@ -86,7 +86,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
   }
 
   private def getAllMailboxesMetaData(mailboxSession: MailboxSession): SMono[Seq[MailboxMetaData]] =
-    SFlux.fromPublisher(mailboxManager.searchReactive(MailboxQuery.builder.matchesAllMailboxNames.build, mailboxSession))
+    SFlux.fromPublisher(mailboxManager.search(MailboxQuery.builder.matchesAllMailboxNames.build, mailboxSession))
       .collectSeq()
 
   private def getMailboxOrThrow(mailboxSession: MailboxSession,

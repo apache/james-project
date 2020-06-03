@@ -128,7 +128,7 @@ public class UserMailboxesService {
         return mailboxManager.search(
             MailboxQuery.privateMailboxesBuilder(mailboxSession).build(),
             mailboxSession)
-            .stream();
+            .toStream();
     }
 
 }

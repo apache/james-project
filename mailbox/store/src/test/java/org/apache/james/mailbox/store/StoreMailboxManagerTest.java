@@ -107,8 +107,8 @@ class StoreMailboxManagerTest {
     }
 
     @Test
-    void getMailboxShouldThrowWhenUnknownId() throws Exception {
-        when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(null);
+    void getMailboxShouldThrowWhenUnknownId() {
+        when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(Mono.error(new MailboxNotFoundException(MAILBOX_ID)));
 
         assertThatThrownBy(() -> storeMailboxManager.getMailbox(MAILBOX_ID, mockedMailboxSession))
             .isInstanceOf(MailboxNotFoundException.class);
@@ -120,7 +120,7 @@ class StoreMailboxManagerTest {
         when(mockedMailbox.generateAssociatedPath())
             .thenReturn(MailboxPath.forUser(CURRENT_USER, "mailboxName"));
         when(mockedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
-        when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(mockedMailbox);
+        when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(Mono.just(mockedMailbox));
 
         MessageManager expected = storeMailboxManager.getMailbox(MAILBOX_ID, mockedMailboxSession);
 
@@ -133,7 +133,7 @@ class StoreMailboxManagerTest {
         when(mockedMailbox.generateAssociatedPath())
             .thenReturn(MailboxPath.forUser(Username.of("uSEr"), "mailboxName"));
         when(mockedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
-        when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(mockedMailbox);
+        when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(Mono.just(mockedMailbox));
 
         MessageManager expected = storeMailboxManager.getMailbox(MAILBOX_ID, mockedMailboxSession);
 
@@ -141,7 +141,7 @@ class StoreMailboxManagerTest {
     }
 
     @Test
-    void getMailboxShouldThrowWhenMailboxDoesNotMatchUserWithoutRight() throws Exception {
+    void getMailboxShouldThrowWhenMailboxDoesNotMatchUserWithoutRight() {
         Username otherUser = Username.of("other.user");
         Mailbox mockedMailbox = mock(Mailbox.class);
         when(mockedMailbox.getACL()).thenReturn(new MailboxACL());
@@ -149,7 +149,7 @@ class StoreMailboxManagerTest {
             .thenReturn(MailboxPath.forUser(otherUser, "mailboxName"));
         when(mockedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
         when(mockedMailbox.getUser()).thenReturn(otherUser);
-        when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(mockedMailbox);
+        when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(Mono.just(mockedMailbox));
         when(mockedMailboxMapper.findMailboxByPath(any())).thenReturn(Mono.just(mockedMailbox));
 
         assertThatThrownBy(() -> storeMailboxManager.getMailbox(MAILBOX_ID, mockedMailboxSession))

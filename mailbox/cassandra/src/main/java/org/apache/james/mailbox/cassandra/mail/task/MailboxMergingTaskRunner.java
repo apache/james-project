@@ -41,6 +41,8 @@ import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Mono;
+
 public class MailboxMergingTaskRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxMergingTaskRunner.class);
 
@@ -64,7 +66,7 @@ public class MailboxMergingTaskRunner {
     public Task.Result run(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxMergingTask.Context context) {
         return moveMessages(oldMailboxId, newMailboxId, mailboxSession, context)
             .onComplete(
-                () -> mergeRights(oldMailboxId, newMailboxId),
+                () -> mergeRights(oldMailboxId, newMailboxId).block(),
                 () -> mailboxDAO.delete(oldMailboxId).block());
     }
 
@@ -88,20 +90,13 @@ public class MailboxMergingTaskRunner {
         }
     }
 
-    private void mergeRights(CassandraId oldMailboxId, CassandraId newMailboxId) {
-        try {
-            MailboxACL oldAcl = cassandraACLMapper.getACL(oldMailboxId)
-                .defaultIfEmpty(MailboxACL.EMPTY)
-                .block();
-            MailboxACL newAcl = cassandraACLMapper.getACL(newMailboxId)
-                .defaultIfEmpty(MailboxACL.EMPTY)
-                .block();
-            MailboxACL finalAcl = newAcl.union(oldAcl);
-
-            cassandraACLMapper.setACL(newMailboxId, finalAcl);
-            rightsDAO.update(oldMailboxId, ACLDiff.computeDiff(oldAcl, MailboxACL.EMPTY)).block();
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
+    private Mono<Void> mergeRights(CassandraId oldMailboxId, CassandraId newMailboxId) {
+            Mono<MailboxACL> oldAclMono = cassandraACLMapper.getACL(oldMailboxId)
+                    .defaultIfEmpty(MailboxACL.EMPTY);
+            Mono<MailboxACL> newAclMono = cassandraACLMapper.getACL(newMailboxId)
+                    .defaultIfEmpty(MailboxACL.EMPTY);
+        return Mono.zip(oldAclMono, newAclMono)
+            .flatMap(acls -> cassandraACLMapper.setACL(newMailboxId, acls.getT1())
+                .then(rightsDAO.update(oldMailboxId, ACLDiff.computeDiff(acls.getT2(), MailboxACL.EMPTY))));
     }
 }

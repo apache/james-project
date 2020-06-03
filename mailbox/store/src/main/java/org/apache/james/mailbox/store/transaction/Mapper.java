@@ -35,7 +35,7 @@ public interface Mapper {
      * Execute the given Transaction
      */
     <T> T execute(Transaction<T> transaction) throws MailboxException;
-        
+
     /**
      * Unit of work executed in a Transaction
      *

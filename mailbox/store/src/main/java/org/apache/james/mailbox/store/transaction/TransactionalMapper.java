@@ -21,6 +21,10 @@ package org.apache.james.mailbox.store.transaction;
 
 import org.apache.james.mailbox.exception.MailboxException;
 
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Mono;
+
 /**
  *
  * Run Transaction and handle begin, commit and rollback in the right order
@@ -39,7 +43,21 @@ public abstract class TransactionalMapper implements Mapper {
             throw e;
         }
     }
-    
+
+    public final <T> Mono<T> executeReactive(Mono<T> transaction) {
+        return Mono.fromRunnable(Throwing.runnable(this::begin).sneakyThrow())
+            .then(transaction)
+            .doOnNext(Throwing.consumer(ignored -> commit()).sneakyThrow())
+            .doOnError(MailboxException.class, Throwing.consumer(e -> rollback()).sneakyThrow());
+    }
+
+    public final Mono<Void> executeReactiveVoid(Mono<Void> transaction) {
+        return Mono.fromRunnable(Throwing.runnable(this::begin).sneakyThrow())
+                .then(transaction)
+                .thenEmpty(Mono.fromRunnable(Throwing.runnable(this::commit).sneakyThrow()))
+                .doOnError(MailboxException.class, Throwing.consumer(e -> rollback()).sneakyThrow());
+    }
+
     /**
      * Begin transaction
      */

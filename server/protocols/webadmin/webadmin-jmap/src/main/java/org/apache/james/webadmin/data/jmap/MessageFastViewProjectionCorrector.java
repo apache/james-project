@@ -187,16 +187,15 @@ public class MessageFastViewProjectionCorrector {
     }
 
     private Flux<ProjectionEntry> listUserMailboxMessages(Progress progress, MailboxSession session) {
-        try {
-            return listUsersMailboxes(session)
-                .flatMap(mailboxMetadata -> retrieveMailbox(session, mailboxMetadata), MAILBOX_CONCURRENCY)
-                .flatMap(Throwing.function(messageManager -> listAllMailboxMessages(messageManager, session)
-                    .map(message -> new ProjectionEntry(messageManager, message.getUid(), session))), MAILBOX_CONCURRENCY);
-        } catch (MailboxException e) {
-            LOGGER.error("JMAP fastview re-computation aborted for {} as we failed listing user mailboxes", session.getUser(), e);
-            progress.incrementFailedUserCount();
-            return Flux.empty();
-        }
+        return listUsersMailboxes(session)
+            .flatMap(mailboxMetadata -> retrieveMailbox(session, mailboxMetadata), MAILBOX_CONCURRENCY)
+            .flatMap(Throwing.function(messageManager -> listAllMailboxMessages(messageManager, session)
+                .map(message -> new ProjectionEntry(messageManager, message.getUid(), session))), MAILBOX_CONCURRENCY)
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.error("JMAP fastview re-computation aborted for {} as we failed listing user mailboxes", session.getUser(), e);
+                progress.incrementFailedUserCount();
+                return Flux.empty();
+            });
     }
 
     private Mono<Result> correctProjection(ProjectionEntry entry, Progress progress) {
@@ -223,8 +222,8 @@ public class MessageFastViewProjectionCorrector {
             .switchIfEmpty(Mono.just(Result.COMPLETED));
     }
 
-    private Flux<MailboxMetaData> listUsersMailboxes(MailboxSession session) throws MailboxException {
-        return Flux.fromIterable(mailboxManager.search(MailboxQuery.privateMailboxesBuilder(session).build(), session));
+    private Flux<MailboxMetaData> listUsersMailboxes(MailboxSession session) {
+        return mailboxManager.search(MailboxQuery.privateMailboxesBuilder(session).build(), session);
     }
 
     private Mono<MessageManager> retrieveMailbox(MailboxSession session, MailboxMetaData mailboxMetadata) {

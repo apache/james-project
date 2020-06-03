@@ -99,7 +99,7 @@ class DefaultUserQuotaRootResolverTest {
     }
 
     @Test
-    void retrieveAssociatedMailboxesShouldThrowWhenQuotaRootContainsSeparator2Times() throws Exception {
+    void retrieveAssociatedMailboxesShouldThrowWhenQuotaRootContainsSeparator2Times() {
         assertThatThrownBy(() -> testee.retrieveAssociatedMailboxes(
                     QuotaRoot.quotaRoot("#private&be&nwa", Optional.empty()), MAILBOX_SESSION)
                 .collectList().block())
@@ -110,7 +110,7 @@ class DefaultUserQuotaRootResolverTest {
     void getQuotaRootShouldReturnUserValueWhenCalledWithMailboxId() throws Exception {
         MailboxMapper mockedMapper = mock(MailboxMapper.class);
         when(mockedFactory.getMailboxMapper(any())).thenReturn(mockedMapper);
-        when(mockedMapper.findMailboxByIdReactive(MAILBOX_ID)).thenReturn(Mono.just(MAILBOX));
+        when(mockedMapper.findMailboxById(MAILBOX_ID)).thenReturn(Mono.just(MAILBOX));
 
         assertThat(testee.getQuotaRoot(MAILBOX_ID)).isEqualTo(QUOTA_ROOT);
     }

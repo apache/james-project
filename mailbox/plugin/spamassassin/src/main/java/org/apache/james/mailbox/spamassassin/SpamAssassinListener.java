@@ -102,9 +102,9 @@ public class SpamAssassinListener implements SpamEventListener {
         }
     }
 
-    private void handleAdded(Event event, MailboxSession session, Added addedEvent) throws MailboxException {
+    private void handleAdded(Event event, MailboxSession session, Added addedEvent) {
         if (isAppendedToInbox(addedEvent)) {
-            Mailbox mailbox = mapperFactory.getMailboxMapper(session).findMailboxById(addedEvent.getMailboxId());
+            Mailbox mailbox = mapperFactory.getMailboxMapper(session).findMailboxById(addedEvent.getMailboxId()).block();
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
             List<InputStream> contents = MessageRange.toRanges(addedEvent.getUids())

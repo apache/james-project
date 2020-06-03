@@ -353,7 +353,7 @@ public class MailboxFactoryTest {
                 .asAddition()),
             mailboxSession);
         MailboxMetaData metaData = mailboxManager.search(MailboxQuery.privateMailboxesBuilder(mailboxSession).build(), mailboxSession)
-            .stream()
+            .toStream()
             .filter(metadata -> metadata.getPath().equals(mailboxPath))
             .findFirst()
             .get();
