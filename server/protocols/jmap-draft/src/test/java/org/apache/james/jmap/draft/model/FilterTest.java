@@ -19,6 +19,9 @@
 package org.apache.james.jmap.draft.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.stream.IntStream;
 
 import org.apache.james.jmap.draft.json.ObjectMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -90,5 +93,80 @@ public class FilterTest {
                                 FilterCondition.builder().build()));
         Filter actual = parser.readValue(json, Filter.class);
         assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void flattenShouldNoopWhenCondition() {
+        FilterCondition condition = FilterCondition.builder()
+            .to("bob@domain.tld")
+            .build();
+
+        assertThat(condition.flatten(10))
+            .containsExactly(condition);
+    }
+
+    @Test
+    public void flattenShouldUnboxOneLevelOperator() {
+        FilterCondition condition1 = FilterCondition.builder()
+            .to("bob@domain.tld")
+            .build();
+        FilterCondition condition2 = FilterCondition.builder()
+            .to("alice@domain.tld")
+            .build();
+
+        assertThat(FilterOperator.and(condition1, condition2)
+                .flatten())
+            .containsExactly(condition1, condition2);
+    }
+
+    @Test
+    public void flattenShouldUnboxTwoLevelOperator() {
+        FilterCondition condition1 = FilterCondition.builder()
+            .to("bob@domain.tld")
+            .build();
+        FilterCondition condition2 = FilterCondition.builder()
+            .to("alice@domain.tld")
+            .build();
+        FilterCondition condition3 = FilterCondition.builder()
+            .to("cedric@domain.tld")
+            .build();
+
+        assertThat(FilterOperator.and(condition1, FilterOperator.and(condition2, condition3))
+                .flatten())
+            .containsExactly(condition1, condition2, condition3);
+    }
+
+    @Test
+    public void flattenShouldAllowUpToLimitNesting() {
+        FilterCondition condition = FilterCondition.builder()
+            .to("bob@domain.tld")
+            .build();
+
+        Filter nestedFilter = IntStream.range(0, 10).boxed().reduce(
+            (Filter) condition,
+            (filter, i) -> FilterOperator.and(filter),
+            (f1, f2) -> {
+                throw new RuntimeException("unsuported combinaison");
+            });
+
+        assertThat(nestedFilter.flatten())
+            .containsExactly(condition);
+    }
+
+    @Test
+    public void flattenShouldRejectDeepNesting() {
+        FilterCondition condition = FilterCondition.builder()
+            .to("bob@domain.tld")
+            .build();
+
+        Filter nestedFilter = IntStream.range(0, 11).boxed().reduce(
+            (Filter) condition,
+            (filter, i) -> FilterOperator.and(filter),
+            (f1, f2) -> {
+                throw new RuntimeException("unsuported combinaison");
+            });
+
+        assertThatThrownBy(nestedFilter::flatten)
+            .isInstanceOf(Filter.TooDeepFilterHierarchyException.class);
     }
 }

@@ -19,11 +19,44 @@
 
 package org.apache.james.jmap.draft.model;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 import org.apache.james.jmap.draft.json.FilterDeserializer;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github.steveash.guavate.Guavate;
 
 @JsonDeserialize(using = FilterDeserializer.class)
 public interface Filter {
+    class TooDeepFilterHierarchyException extends IllegalArgumentException {
+        TooDeepFilterHierarchyException() {
+            super("Filter depth is higher than maximum allowed value " + MAX_FILTER_DEPTH);
+        }
+    }
+
+    int MAX_FILTER_DEPTH = 10;
+
     String prettyPrint(String indentation);
+
+    default List<FilterCondition> flatten() {
+        return this.flatten(0)
+            .collect(Guavate.toImmutableList());
+    }
+
+    default Stream<FilterCondition> flatten(int depth) {
+        if (depth > MAX_FILTER_DEPTH) {
+            throw new TooDeepFilterHierarchyException();
+        }
+        if (this instanceof FilterOperator) {
+            FilterOperator operator = (FilterOperator) this;
+
+            return operator.getConditions().stream()
+                .flatMap(filter -> filter.flatten(depth + 1));
+        }
+        if (this instanceof FilterCondition) {
+            return Stream.of((FilterCondition) this);
+        }
+        throw new RuntimeException("Unsupported Filter implementation " + this);
+    }
 }

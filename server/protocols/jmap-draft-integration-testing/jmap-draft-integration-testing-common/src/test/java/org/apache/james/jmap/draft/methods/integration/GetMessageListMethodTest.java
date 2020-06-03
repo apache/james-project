@@ -669,7 +669,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldFetchUnreadMessagesInMailboxUsingACombinationOfFilter() throws Exception {
+    public void getMessageListShouldRejectNestedInMailboxClause() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(ALICE, "mailbox"));
         mailboxProbe.createMailbox(MailboxPath.forUser(ALICE, "othermailbox"));
         mailboxProbe.createMailbox(MailboxPath.inbox(ALICE));
@@ -701,6 +701,35 @@ public abstract class GetMessageListMethodTest {
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type",  equalTo("invalidArguments"))
             .body(ARGUMENTS + ".description",  equalTo("'inMailboxes' and 'notInMailboxes' wrapped within Filter Operators are not implemented. Review your search request."));
+    }
+
+    @Test
+    public void getMessageListShouldRejectTooDeepFilter() {
+        given()
+            .header("Authorization", aliceAccessToken.asString())
+                .body("[[\"getMessageList\", {\"filter\":" +
+                    "{\"operator\":\"AND\"," +
+                    " \"conditions\":[{\"operator\":\"AND\"," +
+                    "  \"conditions\":[{\"operator\":\"AND\"," +
+                    "   \"conditions\":[{\"operator\":\"AND\"," +
+                    "    \"conditions\":[{\"operator\":\"AND\"," +
+                    "     \"conditions\":[{\"operator\":\"AND\"," +
+                    "      \"conditions\":[{\"operator\":\"AND\"," +
+                    "       \"conditions\":[{\"operator\":\"AND\"," +
+                    "        \"conditions\":[{\"operator\":\"AND\"," +
+                    "         \"conditions\":[{\"operator\":\"AND\"," +
+                    "          \"conditions\":[{\"operator\":\"AND\"," +
+                    "           \"conditions\":[{\"operator\":\"AND\"," +
+                    "            \"conditions\":[{\"operator\":\"AND\"," +
+                    "             \"conditions\":[{\"isUnread\":\"true\"}" +
+                    "]}]}]}]}]}]}]}]}]}]}]}]}]}}, \"#0\"]]")
+                .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type",  equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description",  equalTo("Filter depth is higher than maximum allowed value 10"));
     }
 
     @Test
