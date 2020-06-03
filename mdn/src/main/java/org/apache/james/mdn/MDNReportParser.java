@@ -190,7 +190,7 @@ public class MDNReportParser {
             return Sequence(
                 "\\",
                 FirstOf(
-                    Ch((char)0xd0),
+                    Ch((char)0),
                     obsCtext(),
                     lf(),
                     cr()));
