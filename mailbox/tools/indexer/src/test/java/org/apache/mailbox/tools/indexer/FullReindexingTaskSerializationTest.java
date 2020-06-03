@@ -38,10 +38,11 @@ import com.google.common.collect.ImmutableList;
 class FullReindexingTaskSerializationTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
 
-    private final TestId mailboxId2 = TestId.of(2L);
-    private final MessageUid messageUid2 = MessageUid.of(20L);
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
+    private final TestId mailboxId2 = TestId.of(2L);
+    private final MessageUid messageUid2 = MessageUid.of(20L);
+    private final TestId mailboxId3 = TestId.of(3L);
 
     private final int successfullyReprocessedMailCount = 42;
     private final int failedReprocessedMailCount = 2;
@@ -49,7 +50,7 @@ class FullReindexingTaskSerializationTest {
     private final String serializedFullReindexingTask = "{\"type\":\"full-reindexing\", \"runningOptions\":{\"messagesPerSecond\":50}}";
     private final String legacySerializedFullReindexingTask = "{\"type\":\"full-reindexing\"}";
 
-    private final String serializedAdditionalInformation = "{\"type\": \"full-reindexing\", \"runningOptions\":{\"messagesPerSecond\":50}, \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String serializedAdditionalInformation = "{\"type\": \"full-reindexing\", \"runningOptions\":{\"messagesPerSecond\":50}, \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"messageFailures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"mailboxFailures\": [\"3\"],\"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private final String legacySerializedAdditionalInformation = "{\"type\": \"full-reindexing\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
@@ -60,8 +61,9 @@ class FullReindexingTaskSerializationTest {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
 
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
-            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
-            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId2, messageUid2)));
+                new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
+                new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId2, messageUid2)),
+            ImmutableList.of(mailboxId3));
     }
 
     @Test
@@ -103,7 +105,9 @@ class FullReindexingTaskSerializationTest {
         ReprocessingContextInformationForFullReindexingTask expected = new ReprocessingContextInformationForFullReindexingTask(
             42,
             2,
-            reIndexingExecutionFailures,
+            new ReIndexingExecutionFailures(ImmutableList.of(
+            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
+            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId2, messageUid2)), ImmutableList.of()),
             TIMESTAMP,
             RunningOptions.DEFAULT
         );

@@ -44,7 +44,7 @@ class SerializableReIndexingExecutionFailuresTest {
 
     @Test
     void failuresShouldBeSerializedAsEmptyArrayWhenNone() throws Exception {
-        ReIndexingExecutionFailures failures = new ReIndexingExecutionFailures(ImmutableList.of());
+        ReIndexingExecutionFailures failures = new ReIndexingExecutionFailures(ImmutableList.of(), ImmutableList.of());
 
         assertThatJson(objectMapper.writeValueAsString(SerializableReIndexingExecutionFailures.from(failures)))
             .when(Option.IGNORING_ARRAY_ORDER)
@@ -59,7 +59,7 @@ class SerializableReIndexingExecutionFailuresTest {
             new ReIndexingExecutionFailures.ReIndexingFailure(InMemoryId.of(44), MessageUid.of(31)),
             new ReIndexingExecutionFailures.ReIndexingFailure(InMemoryId.of(44), MessageUid.of(34)),
             new ReIndexingExecutionFailures.ReIndexingFailure(InMemoryId.of(41), MessageUid.of(18)),
-            new ReIndexingExecutionFailures.ReIndexingFailure(InMemoryId.of(16), MessageUid.of(24))));
+            new ReIndexingExecutionFailures.ReIndexingFailure(InMemoryId.of(16), MessageUid.of(24))), ImmutableList.of());
 
         assertThatJson(objectMapper.writeValueAsString(SerializableReIndexingExecutionFailures.from(failures)))
             .when(Option.IGNORING_ARRAY_ORDER)

@@ -34,6 +34,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class ErrorRecoveryIndexationTask implements Task {
     public static final TaskType PREVIOUS_FAILURES_INDEXING = TaskType.of("error-recovery-indexation");
@@ -68,7 +69,8 @@ public class ErrorRecoveryIndexationTask implements Task {
 
         public ErrorRecoveryIndexationTask create(ErrorRecoveryIndexationTaskDTO dto) {
             return new ErrorRecoveryIndexationTask(reIndexerPerformer,
-                new ReIndexingExecutionFailures(messageFailuresFromDTO(dto.getPreviousFailures())),
+                new ReIndexingExecutionFailures(messageFailuresFromDTO(dto.getPreviousMessageFailures()),
+                    mailboxFailuresFromDTO(dto.getPreviousMailboxFailures())),
                 dto.getRunningOptions()
                     .map(RunningOptionsDTO::toDomainObject)
                     .orElse(RunningOptions.DEFAULT));

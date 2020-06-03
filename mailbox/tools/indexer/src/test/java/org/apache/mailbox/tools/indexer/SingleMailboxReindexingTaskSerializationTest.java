@@ -42,10 +42,11 @@ class SingleMailboxReindexingTaskSerializationTest {
 
     private final String serializedMailboxReindexingTask = "{\"type\": \"mailbox-reindexing\", \"mailboxId\": \"1\", \"runningOptions\":{\"messagesPerSecond\":50}}";
     private final String legacySerializedMailboxReindexingTask = "{\"type\": \"mailbox-reindexing\", \"mailboxId\": \"1\"}";
-    private final String serializedAdditionalInformation = "{\"type\": \"mailbox-reindexing\", \"mailboxId\": \"1\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10, 20]}], \"timestamp\":\"2018-11-13T12:00:55Z\", \"runningOptions\":{\"messagesPerSecond\":50}}";
+    private final String serializedAdditionalInformation = "{\"type\": \"mailbox-reindexing\", \"mailboxId\": \"1\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"messageFailures\":[{\"mailboxId\":\"1\",\"uids\":[10, 20]}], \"mailboxFailures\": [\"2\"],\"timestamp\":\"2018-11-13T12:00:55Z\", \"runningOptions\":{\"messagesPerSecond\":50}}";
     private final String legacySerializedAdditionalInformation = "{\"type\": \"mailbox-reindexing\", \"mailboxId\": \"1\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10, 20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private final TestId mailboxId = TestId.of(1L);
+    private final TestId mailboxId2 = TestId.of(2L);
     private final MessageUid messageUid = MessageUid.of(10L);
     private final MessageUid messageUid2 = MessageUid.of(20L);
 
@@ -59,7 +60,8 @@ class SingleMailboxReindexingTaskSerializationTest {
         factory = new SingleMailboxReindexingTask.Factory(reIndexerPerformer, new TestId.Factory());
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
             new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
-            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid2)));
+            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid2)),
+        ImmutableList.of(mailboxId2));
     }
 
     @Test
@@ -102,7 +104,10 @@ class SingleMailboxReindexingTaskSerializationTest {
             mailboxId,
             42,
             2,
-            reIndexingExecutionFailures,
+            new ReIndexingExecutionFailures(ImmutableList.of(
+                new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
+                new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid2)),
+                ImmutableList.of()),
             TIMESTAMP,
             RunningOptions.DEFAULT
         );
