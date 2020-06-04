@@ -98,20 +98,22 @@ public class CachedBlobStore implements BlobStore {
             this.firstBytes = firstBytes;
             this.hasMore = hasMore;
         }
+
     }
 
     public static final String BACKEND = "blobStoreBackend";
-    public static final String BLOBSTORE_CACHED_LATENCY_METRIC_NAME = "blobstoreCachedLatency";
-    public static final String BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME = "blobstoreCachedHit";
-    public static final String BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME = "blobstoreCachedMiss";
 
+    public static final String BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME = "blobStoreCacheMisses";
+    public static final String BLOBSTORE_CACHED_LATENCY_METRIC_NAME = "blobStoreCacheLatency";
+    public static final String BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME = "blobStoreCacheHits";
+
+    private final MetricFactory metricFactory;
     private final Metric metricRetrieveHitCount;
     private final Metric metricRetrieveMissCount;
 
     private final BlobStoreCache cache;
     private final BlobStore backend;
     private final Integer sizeThresholdInBytes;
-    private final MetricFactory metricFactory;
 
     @Inject
     public CachedBlobStore(BlobStoreCache cache,
@@ -121,35 +123,46 @@ public class CachedBlobStore implements BlobStore {
         this.cache = cache;
         this.backend = backend;
         this.sizeThresholdInBytes = cacheConfiguration.getSizeThresholdInBytes();
+
         this.metricFactory = metricFactory;
-        metricRetrieveHitCount = metricFactory.generate(BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME);
-        metricRetrieveMissCount = metricFactory.generate(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME);
+        this.metricRetrieveMissCount = metricFactory.generate(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME);
+        this.metricRetrieveHitCount = metricFactory.generate(BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME);
     }
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         return Mono.just(bucketName)
             .filter(getDefaultBucketName()::equals)
-            .flatMap(ignored -> readFromCache(blobId)
-                .flatMap(this::toInputStream))
+            .flatMap(defaultBucket -> readInDefaultBucket(bucketName, blobId))
+            .switchIfEmpty(readFromBackend(bucketName, blobId))
+            .blockOptional()
+            .orElseThrow(() -> new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId.asString())));
+    }
+
+    private Mono<InputStream> readInDefaultBucket(BucketName bucketName, BlobId blobId) {
+        return readFromCache(blobId)
+            .flatMap(this::toInputStream)
             .switchIfEmpty(readFromBackend(bucketName, blobId)
                 .flatMap(inputStream ->
                     Mono.fromCallable(() -> ReadAheadInputStream.eager().of(inputStream).length(sizeThresholdInBytes))
                         .flatMap(readAheadInputStream -> putInCacheIfNeeded(bucketName, readAheadInputStream, blobId)
-                            .thenReturn(readAheadInputStream.in))))
-            .blockOptional()
-            .orElseThrow(() -> new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId)));
+                            .thenReturn(readAheadInputStream.in))));
     }
 
     @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.just(bucketName)
             .filter(getDefaultBucketName()::equals)
-            .flatMap(ignored -> readFromCache(blobId)
-                .switchIfEmpty(readBytesFromBackend(bucketName, blobId)
-                    .filter(this::isAbleToCache)
-                    .flatMap(bytes -> saveInCache(blobId, bytes).then(Mono.just(bytes)))))
+            .flatMap(deleteBucket -> readBytesInDefaultBucket(bucketName, blobId))
             .switchIfEmpty(readBytesFromBackend(bucketName, blobId));
+    }
+
+    private Mono<byte[]> readBytesInDefaultBucket(BucketName bucketName, BlobId blobId) {
+        return readFromCache(blobId)
+            .switchIfEmpty(readBytesFromBackend(bucketName, blobId)
+                .filter(this::isAbleToCache)
+                .doOnNext(any -> metricRetrieveMissCount.increment())
+                .flatMap(bytes -> saveInCache(blobId, bytes).then(Mono.just(bytes))));
     }
 
     @Override
@@ -213,6 +226,7 @@ public class CachedBlobStore implements BlobStore {
     private Mono<Void> putInCacheIfNeeded(BucketName bucketName, ReadAheadInputStream readAhead, BlobId blobId) {
         return Mono.justOrEmpty(readAhead.firstBytes)
             .filter(bytes -> isAbleToCache(readAhead, bucketName))
+            .doOnNext(any -> metricRetrieveMissCount.increment())
             .flatMap(bytes -> Mono.from(cache.cache(blobId, bytes)));
     }
 
@@ -244,16 +258,16 @@ public class CachedBlobStore implements BlobStore {
         return Mono.fromCallable(() -> new ByteArrayInputStream(bytes));
     }
 
+    private Mono<byte[]> readFromCache(BlobId blobId) {
+        return Mono.from(metricFactory.runPublishingTimerMetric(BLOBSTORE_CACHED_LATENCY_METRIC_NAME, cache.read(blobId)))
+            .doOnNext(any -> metricRetrieveHitCount.increment());
+    }
+
     private Mono<InputStream> readFromBackend(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> backend.read(bucketName, blobId));
     }
 
-    private Mono<byte[]> readFromCache(BlobId blobId) {
-        return Mono.from(metricFactory.runPublishingTimerMetric(BLOBSTORE_CACHED_LATENCY_METRIC_NAME, cache.read(blobId)))
-            .doOnNext(bytes -> metricRetrieveHitCount.increment());
-    }
-
     private Mono<byte[]> readBytesFromBackend(BucketName bucketName, BlobId blobId) {
-        return Mono.from(backend.readBytes(bucketName, blobId)).doOnNext(bytes -> metricRetrieveMissCount.increment());
+        return Mono.from(backend.readBytes(bucketName, blobId));
     }
 }

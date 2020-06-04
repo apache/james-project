@@ -64,7 +64,8 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
 
     @Inject
     @VisibleForTesting
-    CassandraBlobStoreCache(@Named(InjectionNames.CACHE) Session session, CassandraCacheConfiguration cacheConfiguration) {
+    CassandraBlobStoreCache(@Named(InjectionNames.CACHE) Session session,
+                            CassandraCacheConfiguration cacheConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insertStatement = prepareInsert(session);
         this.selectStatement = prepareSelect(session);
@@ -81,13 +82,11 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
 
     @Override
     public Mono<byte[]> read(BlobId blobId) {
-        return cassandraAsyncExecutor
-            .executeSingleRow(
+        return cassandraAsyncExecutor.executeSingleRow(
                 selectStatement.bind()
                     .setString(ID, blobId.asString())
                     .setConsistencyLevel(ONE)
-                    .setReadTimeoutMillis(readTimeOutFromDataBase)
-            )
+                    .setReadTimeoutMillis(readTimeOutFromDataBase))
             .map(this::toByteArray);
     }
 
