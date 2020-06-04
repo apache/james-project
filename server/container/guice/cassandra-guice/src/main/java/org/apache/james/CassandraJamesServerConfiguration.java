@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
-import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
@@ -33,18 +32,16 @@ import org.apache.james.utils.PropertiesProvider;
 
 import com.github.fge.lambdas.Throwing;
 
-public class CassandraRabbitMQJamesConfiguration implements Configuration {
+public class CassandraJamesServerConfiguration implements Configuration {
     public static class Builder {
         private Optional<SearchConfiguration> searchConfiguration;
-        private Optional<BlobStoreConfiguration> blobStoreConfiguration;
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
 
         private Builder() {
-            searchConfiguration = Optional.empty();
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
-            blobStoreConfiguration = Optional.empty();
+            searchConfiguration = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -75,50 +72,35 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             return this;
         }
 
-        public Builder blobStore(BlobStoreConfiguration blobStoreConfiguration) {
-            this.blobStoreConfiguration = Optional.of(blobStoreConfiguration);
-            return this;
-        }
-
         public Builder searchConfiguration(SearchConfiguration searchConfiguration) {
             this.searchConfiguration = Optional.of(searchConfiguration);
             return this;
         }
 
-
-        public CassandraRabbitMQJamesConfiguration build() {
+        public CassandraJamesServerConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
                 .orElseThrow(() -> new MissingArgumentException("Server needs a working.directory env entry")));
-
-            BlobStoreConfiguration blobStoreConfiguration = this.blobStoreConfiguration.orElseGet(Throwing.supplier(
-                () -> BlobStoreConfiguration.parse(
-                    new PropertiesProvider(new FileSystemImpl(directories), configurationPath))));
 
             SearchConfiguration searchConfiguration = this.searchConfiguration.orElseGet(Throwing.supplier(
                 () -> SearchConfiguration.parse(
                     new PropertiesProvider(new FileSystemImpl(directories), configurationPath))));
 
-            return new CassandraRabbitMQJamesConfiguration(
-                configurationPath,
-                directories,
-                blobStoreConfiguration, searchConfiguration);
+            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration);
         }
     }
 
-    public static CassandraRabbitMQJamesConfiguration.Builder builder() {
+    public static CassandraJamesServerConfiguration.Builder builder() {
         return new Builder();
     }
 
     private final ConfigurationPath configurationPath;
     private final JamesDirectoriesProvider directories;
-    private final BlobStoreConfiguration blobStoreConfiguration;
     private final SearchConfiguration searchConfiguration;
 
-    public CassandraRabbitMQJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration) {
+    private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, SearchConfiguration searchConfiguration) {
         this.configurationPath = configurationPath;
         this.directories = directories;
-        this.blobStoreConfiguration = blobStoreConfiguration;
         this.searchConfiguration = searchConfiguration;
     }
 
@@ -130,10 +112,6 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
     @Override
     public JamesDirectoriesProvider directories() {
         return directories;
-    }
-
-    public BlobStoreConfiguration blobStoreConfiguration() {
-        return blobStoreConfiguration;
     }
 
     public SearchConfiguration searchConfiguration() {

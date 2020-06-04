@@ -85,6 +85,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .blobStore(blobStoreConfiguration)
+                .searchConfiguration(SearchConfiguration.elasticSearch())
                 .build())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())

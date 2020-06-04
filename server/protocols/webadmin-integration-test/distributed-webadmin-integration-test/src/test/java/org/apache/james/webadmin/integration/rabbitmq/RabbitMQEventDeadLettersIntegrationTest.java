@@ -44,6 +44,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
 import org.apache.james.core.Username;
 import org.apache.james.junit.categories.BasicFeature;
@@ -205,6 +206,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())

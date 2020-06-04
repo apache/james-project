@@ -20,24 +20,8 @@
 package org.apache.james;
 
 import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
-import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-class CassandraJmapJamesServerTest implements JmapJamesServerContract {
-    @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-        CassandraJamesServerConfiguration.builder()
-            .workingDirectory(tmpDir)
-            .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.elasticSearch())
-            .build())
-        .extension(new DockerElasticSearchExtension())
-        .extension(new CassandraExtension())
-        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule())
-            .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
-        .build();
+@ExtendWith(WithScanningSearchExtension.class)
+class WithScanningSearchTest implements JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {
 }

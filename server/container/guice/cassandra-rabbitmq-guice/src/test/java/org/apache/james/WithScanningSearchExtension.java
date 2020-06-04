@@ -33,19 +33,18 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class WithCacheExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
+public class WithScanningSearchExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
     private final JamesServerExtension jamesServerExtension;
 
-    WithCacheExtension() {
+    WithScanningSearchExtension() {
         jamesServerExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
             CassandraRabbitMQJamesConfiguration.builder()
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
-                .blobStore(BlobStoreConfiguration.objectStorage().enableCache())
-                .searchConfiguration(SearchConfiguration.elasticSearch())
+                .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+                .searchConfiguration(SearchConfiguration.scanning())
                 .build())
-            .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .extension(new AwsS3BlobStoreExtension())

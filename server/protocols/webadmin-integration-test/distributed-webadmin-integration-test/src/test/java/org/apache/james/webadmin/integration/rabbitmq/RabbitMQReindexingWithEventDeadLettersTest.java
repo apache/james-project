@@ -39,6 +39,7 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.LocalHostURIBuilder;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
@@ -87,6 +88,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
         .extension(dockerElasticSearch)
         .extension(new CassandraExtension())
