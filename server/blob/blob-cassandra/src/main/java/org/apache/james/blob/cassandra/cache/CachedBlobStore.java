@@ -36,6 +36,8 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
@@ -96,22 +98,32 @@ public class CachedBlobStore implements BlobStore {
             this.firstBytes = firstBytes;
             this.hasMore = hasMore;
         }
-
     }
 
     public static final String BACKEND = "blobStoreBackend";
+    public static final String BLOBSTORE_CACHED_LATENCY_METRIC_NAME = "blobstoreCachedLatency";
+    public static final String BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME = "blobstoreCachedHit";
+    public static final String BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME = "blobstoreCachedMiss";
+
+    private final Metric metricRetrieveHitCount;
+    private final Metric metricRetrieveMissCount;
 
     private final BlobStoreCache cache;
     private final BlobStore backend;
     private final Integer sizeThresholdInBytes;
+    private final MetricFactory metricFactory;
 
     @Inject
     public CachedBlobStore(BlobStoreCache cache,
                            @Named(BACKEND) BlobStore backend,
-                           CassandraCacheConfiguration cacheConfiguration) {
+                           CassandraCacheConfiguration cacheConfiguration,
+                           MetricFactory metricFactory) {
         this.cache = cache;
         this.backend = backend;
         this.sizeThresholdInBytes = cacheConfiguration.getSizeThresholdInBytes();
+        this.metricFactory = metricFactory;
+        metricRetrieveHitCount = metricFactory.generate(BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME);
+        metricRetrieveMissCount = metricFactory.generate(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME);
     }
 
     @Override
@@ -237,10 +249,11 @@ public class CachedBlobStore implements BlobStore {
     }
 
     private Mono<byte[]> readFromCache(BlobId blobId) {
-        return Mono.from(cache.read(blobId));
+        return Mono.from(metricFactory.runPublishingTimerMetric(BLOBSTORE_CACHED_LATENCY_METRIC_NAME, cache.read(blobId)))
+            .doOnNext(bytes -> metricRetrieveHitCount.increment());
     }
 
     private Mono<byte[]> readBytesFromBackend(BucketName bucketName, BlobId blobId) {
-        return Mono.from(backend.readBytes(bucketName, blobId));
+        return Mono.from(backend.readBytes(bucketName, blobId)).doOnNext(bytes -> metricRetrieveMissCount.increment());
     }
 }

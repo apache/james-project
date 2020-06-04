@@ -23,6 +23,8 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.blob.api.BucketName.DEFAULT;
 import static org.apache.james.blob.cassandra.cache.BlobStoreCacheContract.EIGHT_KILOBYTES;
+import static org.apache.james.blob.cassandra.cache.CachedBlobStore.BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME;
+import static org.apache.james.blob.cassandra.cache.CachedBlobStore.BLOBSTORE_CACHED_LATENCY_METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,6 +44,7 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,6 +67,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
     private BlobStore testee;
     private BlobStore backend;
     private BlobStoreCache cache;
+    private RecordingMetricFactory metricFactory;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -73,7 +77,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
             .timeOut(Duration.ofSeconds(60))
             .build();
         cache = new CassandraBlobStoreCache(cassandra.getConf(), cacheConfig);
-        testee = new CachedBlobStore(cache, backend, cacheConfig);
+        metricFactory = new RecordingMetricFactory();
+        testee = new CachedBlobStore(cache, backend, cacheConfig, metricFactory);
     }
 
     @Override
@@ -273,5 +278,38 @@ public class CachedBlobStoreTest implements BlobStoreContract {
                 .hasSameContentAs(new ByteArrayInputStream(TWELVE_MEGABYTES));
             assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
         });
+    }
+
+    @Test
+    public void readBlobstoreCachedShouldPublishTimerMetrics() {
+        BlobId blobId = Mono.from(backend.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
+
+        testee.read(DEFAULT_BUCKETNAME, blobId);
+        testee.read(DEFAULT_BUCKETNAME, blobId);
+
+        assertThat(metricFactory.executionTimesFor(BLOBSTORE_CACHED_LATENCY_METRIC_NAME))
+            .hasSize(2);
+    }
+
+    @Test
+    public void readBlobstoreCachedShouldCountWhenHit() {
+        BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
+
+        testee.read(DEFAULT_BUCKETNAME, blobId);
+        testee.read(DEFAULT_BUCKETNAME, blobId);
+
+        assertThat(metricFactory.countFor(BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME))
+            .isEqualTo(2);
+    }
+
+    @Test
+    public void readBlobstoreCachedShouldCountWhenMissed() {
+        BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
+
+        testee.read(DEFAULT_BUCKETNAME, blobId);
+        testee.read(DEFAULT_BUCKETNAME, blobId);
+
+        assertThat(metricFactory.countFor(BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME))
+            .isEqualTo(2);
     }
 }
