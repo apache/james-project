@@ -1,4 +1,4 @@
-= Mail Processing Domain Model
+= Email Processing
 :navtitle: Processing
 
 (TODO)
