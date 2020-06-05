@@ -76,6 +76,7 @@ public class CassandraClusterExtension implements BeforeAllCallback, BeforeEachC
     @Override
     public void afterEach(ExtensionContext extensionContext) {
         cassandraCluster.clearTables();
+        cassandraCluster.getConf().registerScenario(Scenario.NOTHING);
     }
 
     @Override
