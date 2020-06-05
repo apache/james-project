@@ -109,7 +109,7 @@ public class MailboxesRoutes implements Routes {
             boolean indexingCorrection = !Strings.isNullOrEmpty(request.queryParams(RE_INDEX_FAILED_MESSAGES_QUERY_PARAM));
             if (indexingCorrection) {
                 IndexingDetailInformation indexingDetailInformation = retrieveIndexingExecutionDetails(previousReIndexingService, request);
-                return reIndexer.reIndex(indexingDetailInformation.failures(), new ReindexingRunningOptionsParser().parse(request));
+                return reIndexer.reIndex(indexingDetailInformation.failures(), ReindexingRunningOptionsParser.parse(request));
             }
 
             return reIndexer.reIndex(ReindexingRunningOptionsParser.parse(request));
