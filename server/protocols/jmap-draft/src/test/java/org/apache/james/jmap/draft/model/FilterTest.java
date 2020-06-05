@@ -101,12 +101,12 @@ public class FilterTest {
             .to("bob@domain.tld")
             .build();
 
-        assertThat(condition.flatten(10))
+        assertThat(condition.breadthFirstVisit(10))
             .containsExactly(condition);
     }
 
     @Test
-    public void flattenShouldUnboxOneLevelOperator() {
+    public void breadthFirstVisitShouldUnboxOneLevelOperator() {
         FilterCondition condition1 = FilterCondition.builder()
             .to("bob@domain.tld")
             .build();
@@ -115,12 +115,12 @@ public class FilterTest {
             .build();
 
         assertThat(FilterOperator.and(condition1, condition2)
-                .flatten())
+                .breadthFirstVisit())
             .containsExactly(condition1, condition2);
     }
 
     @Test
-    public void flattenShouldUnboxTwoLevelOperator() {
+    public void breadthFirstVisitShouldUnboxTwoLevelOperator() {
         FilterCondition condition1 = FilterCondition.builder()
             .to("bob@domain.tld")
             .build();
@@ -132,12 +132,32 @@ public class FilterTest {
             .build();
 
         assertThat(FilterOperator.and(condition1, FilterOperator.and(condition2, condition3))
-                .flatten())
-            .containsExactly(condition1, condition2, condition3);
+                .breadthFirstVisit())
+            .containsOnly(condition1, condition2, condition3);
     }
 
     @Test
-    public void flattenShouldAllowUpToLimitNesting() {
+    public void breadthFirstVisitShouldBeBreadthFirst() {
+        FilterCondition condition1 = FilterCondition.builder()
+            .to("bob@domain.tld")
+            .build();
+        FilterCondition condition2 = FilterCondition.builder()
+            .to("alice@domain.tld")
+            .build();
+        FilterCondition condition3 = FilterCondition.builder()
+            .to("cedric@domain.tld")
+            .build();
+        FilterCondition condition4 = FilterCondition.builder()
+            .to("david@domain.tld")
+            .build();
+
+        assertThat(FilterOperator.and(condition1, FilterOperator.and(condition2, condition3), condition4)
+                .breadthFirstVisit())
+            .containsOnly(condition1, condition2, condition3, condition4);
+    }
+
+    @Test
+    public void breadthFirstVisitShouldAllowUpToLimitNesting() {
         FilterCondition condition = FilterCondition.builder()
             .to("bob@domain.tld")
             .build();
@@ -146,15 +166,15 @@ public class FilterTest {
             (Filter) condition,
             (filter, i) -> FilterOperator.and(filter),
             (f1, f2) -> {
-                throw new RuntimeException("unsuported combinaison");
+                throw new RuntimeException("unsupported combination");
             });
 
-        assertThat(nestedFilter.flatten())
+        assertThat(nestedFilter.breadthFirstVisit())
             .containsExactly(condition);
     }
 
     @Test
-    public void flattenShouldRejectDeepNesting() {
+    public void breadthFirstVisitShouldRejectDeepNesting() {
         FilterCondition condition = FilterCondition.builder()
             .to("bob@domain.tld")
             .build();
@@ -163,10 +183,10 @@ public class FilterTest {
             (Filter) condition,
             (filter, i) -> FilterOperator.and(filter),
             (f1, f2) -> {
-                throw new RuntimeException("unsuported combinaison");
+                throw new RuntimeException("unsupported combination");
             });
 
-        assertThatThrownBy(nestedFilter::flatten)
+        assertThatThrownBy(nestedFilter::breadthFirstVisit)
             .isInstanceOf(Filter.TooDeepFilterHierarchyException.class);
     }
 }

@@ -39,12 +39,12 @@ public interface Filter {
 
     String prettyPrint(String indentation);
 
-    default List<FilterCondition> flatten() {
-        return this.flatten(0)
+    default List<FilterCondition> breadthFirstVisit() {
+        return this.breadthFirstVisit(0)
             .collect(Guavate.toImmutableList());
     }
 
-    default Stream<FilterCondition> flatten(int depth) {
+    default Stream<FilterCondition> breadthFirstVisit(int depth) {
         if (depth > MAX_FILTER_DEPTH) {
             throw new TooDeepFilterHierarchyException();
         }
@@ -52,7 +52,7 @@ public interface Filter {
             FilterOperator operator = (FilterOperator) this;
 
             return operator.getConditions().stream()
-                .flatMap(filter -> filter.flatten(depth + 1));
+                .flatMap(filter -> filter.breadthFirstVisit(depth + 1));
         }
         if (this instanceof FilterCondition) {
             return Stream.of((FilterCondition) this);

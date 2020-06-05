@@ -194,7 +194,7 @@ public class GetMessageListMethod implements Method {
     }
 
     private boolean containsMailboxFilters(Filter filter) {
-        return filter.flatten()
+        return filter.breadthFirstVisit()
             .stream()
             .anyMatch(this::hasMailboxClause);
     }
