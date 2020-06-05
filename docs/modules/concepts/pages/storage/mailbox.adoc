@@ -1,0 +1,131 @@
+= Mailboxes
+:navtitle: Mailboxes
+
+== Overview
+
+To (over)use the analogy once again of a postal system, we think of a mailbox
+as a place where a letter is placed to await pickup by its recipient. Although
+current methods have evolved considerably, the original idea used for the development
+of email was exactly that. The concept <<RFC196,has been around officially>> since
+at least 1971. The image of a mailbox is so prevalent that, although current
+systems have evolved to do so much more than just hold messages for processing,
+the industry continues to apply the concept.
+
+The more general term is "Email Storage". It is necessary to store email for
+many reasons:
+
+ * As a mailbox system &mdash; part of a queue to await processing
+ * As a persistance mechanism &mdash; a place where you can go back and predictably
+    locate a message that you may want to refer to again in the future
+ * As an archive &mdash; a place where you may want to store "deleted" emails so that
+    you can potentially retrieve them if you wish to change your mind later
+ * As a temporary step in a process &mdash; perhaps you have a "todo" folder where
+    you temporarily store an email that you intend to process soon
+
+There are numerous ways to store emails, just as there are numerous reasons for
+storing them:
+
+ * A <<Specifications,standardized>> "mailbox" format
+ * A relational database
+ * A custom file-based mechanism
+ * Etc.
+
+This section briefly describes how email storage is a core concept in an
+email system.
+
+
+
+== Specifications
+
+=== Electronic Mail Box
+
+==== RFC196
+
+The concept of an "electronic mail box" was 
+https://tools.ietf.org/html/rfc196[initially specified] way back in 1971.
+It is amusing to read the retro concepts in the initial description of this
+document:
+
+  The purpose of this protocol is to provide at each site a
+  standard mechanism to receive sequential files for immediate or
+  deferred printing or other uses.  The files for deferred printing
+  would probably be stored on intermediate disk files [...].
+  It is also assumed that there would be a program at the sending
+  site [...]. This program could probably be accessed as a subcommand 
+  of the Telnet program.
+
+This specification was obsoleted by <<RFC221>>.
+
+
+==== RFC221
+
+https://tools.ietf.org/html/rfc221[RFC221] ("A Mail Box Protocol, Version-2") was
+published in 1971. It added the possibility of using FTP in addition to the
+"Data Transfer Protocol" used in <<RFC196>>. This version was obsoleted by
+<<RFC278>>.
+
+
+
+==== RFC278
+
+https://tools.ietf.org/html/rfc278[RFC278] ("Revision of the Mail Box Protocol")
+was published in 1971. It provided a number of updates to <<RFC221>>.
+
+
+
+=== Maildir
+
+https://en.wikipedia.org/wiki/Maildir[Maildir] is a file-based storage format invented
+by https://en.wikipedia.org/wiki/Daniel_J._Bernstein[Dan Bernstein].
+A major design objective was apparently to delegate file locking to the operating system.
+
+
+
+=== Mbox
+
+The https://en.wikipedia.org/wiki/Mbox[mbox] email storage format was formally defined
+by https://tools.ietf.org/html/rfc4155[RFC4155]. It is a formalization of a _de facto_
+format used by UNIX-like operating systems.
+
+
+
+=== MIX
+
+The https://en.wikipedia.org/wiki/MIX_(email)[MIX] email storage format was developed by
+https://en.wikipedia.org/wiki/Mark_Crispin[Mark Crispin], the original author of the
+xref:protocols/imap.adoc[IMAP specification]. Its
+https://www.mail-archive.com/imap-uw@u.washington.edu/msg00540.html[design goals] were:
+
+* greater robustness against corruption caused by hardware or
+   software failures.  Many failures are "self-healing".
+* far fewer risky random-access I/O operations; a single false
+   pointer calculation in other formats will corrupt the mailbox.
+* greater ease to repair damaged mailboxes.
+* (much) greater performance.
+* extensibility for new IMAP capabilities such as annotations,
+   conditional store, or more aggressing caching.
+
+
+=== RFC5322
+
+https://tools.ietf.org/html/rfc5322[RFC5322] weighs in on how to describe a "mailbox":
+
+   A mailbox receives mail. It is a 'conceptual entity' that does not necessarily 
+   pertain to file storage. It further exemplifies that some sites may choose to 
+   print mail on a printer and deliver the output to the addressee's desk, much 
+   like a traditional fax transmission.
+
+
+
+== Related Concepts
+
+Email Storage is related to...
+
+ * *xref:protocols/pop.adoc[POP]*, as the POP protocol mandates interaction
+   with a user's "mailbox"
+ * *xref:protocols/imap.adoc[IMAP]*, as the IMAP protocol is all about storing
+   messages on an IMAP Server
+ * *xref:glossary.adoc#email_client[Email clients]*, as the client will store mail locally, usually in the form
+   of a "mailbox"
+ * *xref:protocols/smtp.adoc[SMTP]* as the protocol is related to transmitting
+   messages from one mailbox to another

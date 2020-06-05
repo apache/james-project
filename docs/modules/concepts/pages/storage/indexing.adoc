@@ -1,0 +1,10 @@
+= Indexing
+:navtitle: Indexing
+
+== Overview
+
+Once a system grows over time to contain many users or perhaps many messages
+stored in its xref:storage/mailbox.adoc[Mailbox] or xref:storage/users.adoc[User Directory],
+searching for the right user or email becomes increasingly difficult. At some point
+it becomes useful to use an https://en.wikipedia.org/wiki/Search_engine_indexing[indexing]
+system.

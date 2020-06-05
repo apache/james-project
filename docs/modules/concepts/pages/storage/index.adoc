@@ -1,4 +1,34 @@
-= Mailboxes and Email Storage
+= Storage
 :navtitle: Storage
 
-(TODO)
+== Overview
+
+Email is useful because any one person can send a message to any other person,
+anywhere in the world. The heart of email is the ability to transfer some message
+based on a  commonly-understood message format between two different systems that
+may have been developed entirely independently of each other. The concept is relatively
+simple, but the fact that email is so ubiquitious is simply a miracle.
+
+However, there is more to email than just the transfer of messages.
+
+Although it is possible to read a message, then discard it, never to be seen again,
+it is more common for people to archive a message. Some people even get creative and
+use their email for various other purposes, such as a kind of poor man's information archive.
+Many corporations use email for business purposes, which requires administration of
+users within the organization.
+Even individuals with a self-hosted email server want to ensure that their system does
+not get abused as an xref:concepts:glossary.adoc#open_relay[open relay].
+
+All of these types of concerns requires that the system maintain some kind of state,
+whether that be the messages themselves, information about the system's users,
+and even in some cases user credentials. Keeping state requires a storage system.
+The system of storage must work intimately with the various 
+xref:protocols/index.adoc[protocols].
+
+In this section, we describe the two principle types of storage that James manages:
+
+ * xref:storage/mailbox.adoc[Mailboxes] for email storage, and
+ * xref:storage/users.adoc[User Directory] for data about Mailbox users.
+
+James also optionally includes an
+xref:storage/indexing.adoc[optional indexer] for providing a better search experience.
