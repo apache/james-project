@@ -71,6 +71,67 @@ SMTP relates to:
 
 == Try It!
 
-Add a section to the demo, and connect manuall via an SMTP session
+You can connect manually to the James SMTP server using telnet.
 
+Requirements:
 
+ * Run the long demo (without stopping)
+ * Telnet
+
+Approximate duration: 5 minutes
+
+====
+Note: extra lines are inserted below to help show you what you need to type.
+====
+
+[source,telnet]
+----
+$ telnet 127.0.0.1 25 <1>
+
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+220 JAMES Linagora's SMTP awesome Server
+
+ehlo test <2>
+
+250-9a2fe463e592 Hello test [172.17.0.1])
+250-PIPELINING
+250-ENHANCEDSTATUSCODES
+250 8BITMIME
+
+mail from: <user02@james.local> <3>
+
+250 2.1.0 Sender <user02@james.local> OK
+
+rcpt to: <user01@james.local> <4>
+
+250 2.1.5 Recipient <user01@james.local> OK
+
+data <5>
+
+354 Ok Send data ending with <CRLF>.<CRLF>
+
+Subject: Test Message <5>
+<6>
+This is just a test. <7>
+. <8>
+
+250 2.6.0 Message received
+
+quit <9>
+----
+<1> Connect to the James server using the SMTP protocol via telnet.
+<2> Initiate the SMTP session.
+<3> Indicate that you want to send a mail from user02@james.local.
+<4> Indicate that the mail should be sent to user01@james.local.
+<5> Enter the subject.
+<6> Enter a blank line.
+<7> Enter some text. You can enter multiples lines if you like.
+<8> When you have completed the message, enter a line with only a "." and no other text.
+<9> End the session.
+
+If you set up Thunderbird to connect to the server, you can confirm that the mail
+has indeed arrived in the mailbox of user01@james.local.
+
+Pretty cool! Good thing we have James so we don't have to always send emails manually.

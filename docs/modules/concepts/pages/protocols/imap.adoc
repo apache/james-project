@@ -117,8 +117,73 @@ IMAP is related to...
 
 == Try It!
 
-(TODO)
+You can connect manually to the James IMAP server using telnet.
 
+Requirements:
 
+ * Run the long demo (without stopping)
+ * Telnet
 
+Approximate duration: 5 minutes
+
+====
+Note: extra lines are inserted below to help show you what you need to type.
+====
+
+[source,telnet]
+----
+$ telnet 127.0.0.1 143
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+* OK JAMES IMAP4rev1 Server  Server faef5a990fbb is ready.
+
+01 login user01@james.local 1234 <1>
+
+01 OK LOGIN completed.
+
+l list "" "*" <2>
+
+* LIST (\HasNoChildren) "." "INBOX"
+l OK LIST completed.
+
+s select INBOX <3>
+
+* FLAGS (\Answered \Deleted \Draft \Flagged \Seen)
+* 1 EXISTS
+* 1 RECENT
+* OK [UIDVALIDITY 749313882] UIDs valid
+* OK [UNSEEN 1] MailboxMessage 2 is first unseen
+* OK [PERMANENTFLAGS (\Answered \Deleted \Draft \Flagged \Seen \*)] Limited
+* OK [HIGHESTMODSEQ 5] Highest
+* OK [UIDNEXT 2] Predicted next UID
+s OK [READ-WRITE] SELECT completed.
+
+f FETCH 1:* (FLAGS BODY.PEEK[HEADER.FIELDS (SUBJECT)]) <4>
+
+* 1 FETCH (FLAGS (\Seen) BODY[HEADER.FIELDS (SUBJECT)] {75}
+Subject: Test Message
+
+)
+f OK FETCH completed.
+
+d store 1 +FLAGS (\Deleted) <5>
+
+* 1 FETCH (FLAGS (\Deleted \Seen))
+d OK STORE completed.
+
+e expunge <6>
+
+* 1 EXPUNGE
+e OK EXPUNGE completed.
+
+l logout <7>
+----
+<1> Login as user `user01@james.local`
+<2> List the contents of the Mailbox
+<3> Select `INBOX` as the current folder
+<4> Fetch the contents of the INBOX folder, showing only the subject
+<5> Mark the message for deletion
+<6> Epunge the INBOX by deleting mails marked for deletion
+<7> Exit the session
 
