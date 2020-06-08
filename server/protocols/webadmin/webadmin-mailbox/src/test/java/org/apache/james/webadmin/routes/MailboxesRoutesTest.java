@@ -27,7 +27,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -213,7 +212,7 @@ class MailboxesRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession).getId();
 
-                doThrow(new RuntimeException())
+                doReturn(Mono.error(new RuntimeException()))
                     .when(searchIndex)
                     .add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
 
@@ -401,7 +400,7 @@ class MailboxesRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession).getId();
 
-                doThrow(new RuntimeException())
+                doReturn(Mono.error(new RuntimeException()))
                     .when(searchIndex)
                     .add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
 
@@ -743,7 +742,7 @@ class MailboxesRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession);
 
-                doThrow(new RuntimeException()).when(searchIndex).add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
+                doReturn(Mono.error(new RuntimeException())).when(searchIndex).add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
 
                 String taskId = with()
                     .post("/mailboxes?task=reIndex")
@@ -787,7 +786,7 @@ class MailboxesRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession).getId();
 
-                doThrow(new RuntimeException())
+                doReturn(Mono.error(new RuntimeException()))
                     .when(searchIndex)
                     .add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
 
@@ -835,7 +834,7 @@ class MailboxesRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession).getId();
 
-                doThrow(new RuntimeException()).when(searchIndex).add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
+                doReturn(Mono.error(new RuntimeException())).when(searchIndex).add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
 
                 String taskId = with()
                     .post("/mailboxes?task=reIndex")

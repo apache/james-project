@@ -1231,7 +1231,7 @@ class UserMailboxesRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession).getId();
 
-                doThrow(new RuntimeException())
+                doReturn(Mono.error(new RuntimeException()))
                     .when(searchIndex)
                     .add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
 
