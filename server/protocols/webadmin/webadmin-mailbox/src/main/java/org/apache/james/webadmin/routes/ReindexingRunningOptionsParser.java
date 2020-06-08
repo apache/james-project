@@ -28,9 +28,10 @@ import spark.Request;
 public class ReindexingRunningOptionsParser {
 
     public static RunningOptions parse(Request request) {
-        return intQueryParameter(request, "messagesPerSecond")
-            .map(RunningOptions::new)
-            .orElse(RunningOptions.DEFAULT);
+        return RunningOptions.builder()
+            .messagesPerSeconds(intQueryParameter(request, "messagesPerSecond"))
+            .mode(modeQueryParameter(request, "mode"))
+            .build();
     }
 
     public static Optional<Integer> intQueryParameter(Request request, String queryParameter) {
@@ -41,5 +42,9 @@ public class ReindexingRunningOptionsParser {
             throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s', expecting a " +
                 "strictly positive optional integer", queryParameter), e);
         }
+    }
+
+    public static Optional<RunningOptions.Mode> modeQueryParameter(Request request, String queryParameter) {
+        return RunningOptions.parseMode(request.queryParams(queryParameter));
     }
 }

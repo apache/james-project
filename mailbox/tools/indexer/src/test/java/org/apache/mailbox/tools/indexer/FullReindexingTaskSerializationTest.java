@@ -47,10 +47,10 @@ class FullReindexingTaskSerializationTest {
     private final int successfullyReprocessedMailCount = 42;
     private final int failedReprocessedMailCount = 2;
 
-    private final String serializedFullReindexingTask = "{\"type\":\"full-reindexing\", \"runningOptions\":{\"messagesPerSecond\":50}}";
+    private final String serializedFullReindexingTask = "{\"type\":\"full-reindexing\", \"runningOptions\":{\"messagesPerSecond\":50, \"mode\":\"REBUILD_ALL\"}}";
     private final String legacySerializedFullReindexingTask = "{\"type\":\"full-reindexing\"}";
 
-    private final String serializedAdditionalInformation = "{\"type\": \"full-reindexing\", \"runningOptions\":{\"messagesPerSecond\":50}, \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"messageFailures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"mailboxFailures\": [\"3\"],\"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String serializedAdditionalInformation = "{\"type\": \"full-reindexing\", \"runningOptions\":{\"messagesPerSecond\":50, \"mode\":\"FIX_OUTDATED\"}, \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"messageFailures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"mailboxFailures\": [\"3\"],\"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private final String legacySerializedAdditionalInformation = "{\"type\": \"full-reindexing\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
@@ -88,7 +88,10 @@ class FullReindexingTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        ReprocessingContextInformationForFullReindexingTask details = new ReprocessingContextInformationForFullReindexingTask(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP, RunningOptions.DEFAULT);
+        RunningOptions runningOptions = RunningOptions.builder()
+            .mode(RunningOptions.Mode.FIX_OUTDATED)
+            .build();
+        ReprocessingContextInformationForFullReindexingTask details = new ReprocessingContextInformationForFullReindexingTask(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP, runningOptions);
 
         JsonSerializationVerifier.dtoModule(ReprocessingContextInformationForFullReindexingTask.module(new TestId.Factory()))
             .bean(details)

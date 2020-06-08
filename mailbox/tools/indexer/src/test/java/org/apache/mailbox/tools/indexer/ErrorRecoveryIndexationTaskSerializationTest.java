@@ -43,10 +43,11 @@ class ErrorRecoveryIndexationTaskSerializationTest {
     private final int successfullyReprocessedMailCount = 42;
     private final int failedReprocessedMailCount = 2;
     private final String serializedErrorRecoveryReindexingTask = "{\"type\": \"error-recovery-indexation\"," +
-        " \"previousMessageFailures\" : [{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"previousMailboxFailures\": [\"3\"], \"runningOptions\":{\"messagesPerSecond\":50}}";
+        " \"previousMessageFailures\" : [{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"previousMailboxFailures\": [\"3\"], \"runningOptions\":{\"messagesPerSecond\":50, \"mode\":\"REBUILD_ALL\"}}";
     private final String legacySerializedErrorRecoveryReindexingTask = "{\"type\": \"error-recovery-indexation\"," +
         " \"previousFailures\" : [{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
-    private final String serializedAdditionalInformation = "{\"type\": \"error-recovery-indexation\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"messageFailures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"mailboxFailures\":[\"3\"], \"timestamp\":\"2018-11-13T12:00:55Z\", \"runningOptions\":{\"messagesPerSecond\":50}}";
+    private final String serializedAdditionalInformation = "{\"type\": \"error-recovery-indexation\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"messageFailures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"mailboxFailures\":[\"3\"], \"timestamp\":\"2018-11-13T12:00:55Z\", \"runningOptions\":{\"messagesPerSecond\":50, \"mode\":\"REBUILD_ALL\"}}";
+    private final String serializedAdditionalInformationWithCorrectMode = "{\"type\": \"error-recovery-indexation\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"messageFailures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"mailboxFailures\":[\"3\"], \"timestamp\":\"2018-11-13T12:00:55Z\", \"runningOptions\":{\"messagesPerSecond\":50, \"mode\":\"FIX_OUTDATED\"}}";
     private final String legacySerializedAdditionalInformation = "{\"type\": \"error-recovery-indexation\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
@@ -93,6 +94,18 @@ class ErrorRecoveryIndexationTaskSerializationTest {
         JsonSerializationVerifier.dtoModule(ReprocessingContextInformationForErrorRecoveryIndexationTask.module(mailboxIdFactory))
             .bean(details)
             .json(serializedAdditionalInformation)
+            .verify();
+    }
+
+    @Test
+    void additionalInformationWithCorrectModeShouldBeSerializable() throws Exception {
+        RunningOptions runningOptions = RunningOptions.builder()
+            .mode(RunningOptions.Mode.FIX_OUTDATED)
+            .build();
+        ReprocessingContextInformationForErrorRecoveryIndexationTask details = new ReprocessingContextInformationForErrorRecoveryIndexationTask(successfullyReprocessedMailCount, failedReprocessedMailCount, executionFailures, TIMESTAMP, runningOptions);
+        JsonSerializationVerifier.dtoModule(ReprocessingContextInformationForErrorRecoveryIndexationTask.module(mailboxIdFactory))
+            .bean(details)
+            .json(serializedAdditionalInformationWithCorrectMode)
             .verify();
     }
 
