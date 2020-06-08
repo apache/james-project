@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.backends.cassandra;
 
-import static org.apache.james.backends.cassandra.Scenario.NOTHING;
-
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -85,7 +83,7 @@ public final class CassandraCluster implements AutoCloseable {
 
     @Override
     public void close() {
-        nonPrivilegedSession.registerScenario(NOTHING);
+        nonPrivilegedSession.resetInstrumentation();
         if (!nonPrivilegedCluster.isClosed()) {
             clearTables();
             closeCluster();

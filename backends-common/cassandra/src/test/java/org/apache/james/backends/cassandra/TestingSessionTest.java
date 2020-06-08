@@ -42,6 +42,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.datastax.driver.core.BoundStatement;
+
 import reactor.core.scheduler.Schedulers;
 
 class TestingSessionTest {
@@ -70,6 +72,46 @@ class TestingSessionTest {
 
         assertThatCode(() -> dao.getCurrentSchemaVersion().block())
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void recordStatementsShouldKeepTraceOfExecutedStatement(CassandraCluster cassandra) {
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandra.getConf().recordStatements(statementRecorder);
+
+        dao.getCurrentSchemaVersion().block();
+
+        assertThat(statementRecorder.listExecutedStatements())
+            .filteredOn(statement -> statement instanceof BoundStatement)
+            .extracting(BoundStatement.class::cast)
+            .extracting(statement -> statement.preparedStatement().getQueryString())
+            .containsExactly("SELECT value FROM schemaVersion;");
+    }
+
+    @Test
+    void recordStatementsShouldKeepTraceOfExecutedStatements(CassandraCluster cassandra) {
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandra.getConf().recordStatements(statementRecorder);
+
+        dao.updateVersion(new SchemaVersion(36)).block();
+        dao.getCurrentSchemaVersion().block();
+
+        assertThat(statementRecorder.listExecutedStatements())
+            .filteredOn(statement -> statement instanceof BoundStatement)
+            .extracting(BoundStatement.class::cast)
+            .extracting(statement -> statement.preparedStatement().getQueryString())
+            .containsExactly("INSERT INTO schemaVersion (key,value) VALUES (:key,:value);", "SELECT value FROM schemaVersion;");
+    }
+
+    @Test
+    void recordStatementsShouldNotKeepTraceOfExecutedStatementsBeforeRecording(CassandraCluster cassandra) {
+        dao.getCurrentSchemaVersion().block();
+
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandra.getConf().recordStatements(statementRecorder);
+
+        assertThat(statementRecorder.listExecutedStatements())
+            .isEmpty();
     }
 
     @Test

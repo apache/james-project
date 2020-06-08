@@ -20,6 +20,7 @@
 package org.apache.james.backends.cassandra;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.CloseFuture;
@@ -37,15 +38,27 @@ public class TestingSession implements Session {
     private final Session delegate;
     private volatile Scenario scenario;
     private volatile boolean printStatements;
+    private volatile Optional<StatementRecorder> statementRecorder;
 
     public TestingSession(Session delegate) {
         this.delegate = delegate;
         this.scenario = Scenario.NOTHING;
         this.printStatements = false;
+        this.statementRecorder = Optional.empty();
     }
 
     public void printStatements() {
         printStatements = true;
+    }
+
+    public void resetInstrumentation() {
+        stopRecordingStatements();
+        stopPrintingStatements();
+        registerScenario(Scenario.NOTHING);
+    }
+
+    public void stopPrintingStatements() {
+        printStatements = false;
     }
 
     public void registerScenario(Scenario scenario) {
@@ -54,6 +67,14 @@ public class TestingSession implements Session {
 
     public void registerScenario(Scenario.ExecutionHook... hooks) {
         this.scenario = Scenario.combine(hooks);
+    }
+
+    public void recordStatements(StatementRecorder statementRecorder) {
+        this.statementRecorder = Optional.of(statementRecorder);
+    }
+
+    public void stopRecordingStatements() {
+        this.statementRecorder = Optional.empty();
     }
 
     @Override
@@ -92,6 +113,7 @@ public class TestingSession implements Session {
     @Override
     public ResultSet execute(Statement statement) {
         printStatement(statement);
+        statementRecorder.ifPresent(recorder -> recorder.recordStatement(statement));
         return delegate.execute(statement);
     }
 
@@ -116,6 +138,7 @@ public class TestingSession implements Session {
     @Override
     public ResultSetFuture executeAsync(Statement statement) {
         printStatement(statement);
+        statementRecorder.ifPresent(recorder -> recorder.recordStatement(statement));
         return scenario
             .getCorrespondingBehavior(statement)
             .execute(delegate, statement);
