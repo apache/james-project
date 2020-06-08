@@ -22,21 +22,28 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Iterator;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
 import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import com.datastax.driver.core.BoundStatement;
 import com.github.fge.lambdas.Throwing;
 
 class CassandraMessageMapperTest extends MessageMapperTest {
@@ -46,6 +53,29 @@ class CassandraMessageMapperTest extends MessageMapperTest {
     @Override
     protected MapperProvider createMapperProvider() {
         return new CassandraMapperProvider(cassandraCluster.getCassandraCluster());
+    }
+
+    @Disabled("Currently generates a read to messageV2 per stored message despite the limit")
+    @Test
+    void findInMailboxLimitShouldLimitProjectionReadCassandraQueries(CassandraCluster cassandra) throws MailboxException {
+        saveMessages();
+
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandra.getConf().recordStatements(statementRecorder);
+
+        int limit = 2;
+        consume(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Full, limit));
+
+        assertThat(statementRecorder.listExecutedStatements())
+            .filteredOn(statement -> statement instanceof BoundStatement)
+            .extracting(BoundStatement.class::cast)
+            .extracting(statement -> statement.preparedStatement().getQueryString())
+            .filteredOn(statementString -> statementString.equals("SELECT messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,textualLineCount,properties,attachments FROM messageV2 WHERE messageId=:messageId;"))
+            .hasSize(limit);
+    }
+
+    private void consume(Iterator<MailboxMessage> inMailbox) {
+        ImmutableList.copyOf(inMailbox);
     }
 
     @Nested
@@ -65,7 +95,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                     .toIterable()
                     .isEmpty();
                 softly.assertThat(messageIdDAO.retrieveMessages((CassandraId) benwaInboxMailbox.getMailboxId(), MessageRange.all()).collectList().block())
@@ -88,7 +118,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                     .toIterable()
                     .isEmpty();
                 softly.assertThat(messageIdDAO.retrieveMessages((CassandraId) benwaInboxMailbox.getMailboxId(), MessageRange.all()).collectList().block())
@@ -111,7 +141,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                     .toIterable()
                     .isEmpty();
                 softly.assertThat(messageIdDAO.retrieveMessages((CassandraId) benwaInboxMailbox.getMailboxId(), MessageRange.all()).collectList().block())
@@ -134,7 +164,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                     .toIterable()
                     .isEmpty();
                 softly.assertThat(messageIdDAO.retrieveMessages((CassandraId) benwaInboxMailbox.getMailboxId(), MessageRange.all()).collectList().block())
@@ -158,7 +188,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), new CassandraMessageId.Factory());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+                softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                     .toIterable()
                     .isEmpty();
                 softly.assertThat(imapUidDAO.retrieve((CassandraMessageId) message1.getMessageId(), Optional.empty()).collectList().block())
@@ -175,7 +205,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             messageMapper.add(benwaInboxMailbox, message1);
 
-            assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, 1))
+            assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                 .toIterable()
                 .hasSize(1);
         }
