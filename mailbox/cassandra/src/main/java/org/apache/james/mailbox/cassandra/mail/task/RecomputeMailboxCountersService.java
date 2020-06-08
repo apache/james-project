@@ -39,6 +39,7 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
+import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -216,7 +217,7 @@ public class RecomputeMailboxCountersService {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         Counter counter = new Counter(mailboxId);
 
-        return imapUidToMessageIdDAO.retrieveMessages(mailboxId, MessageRange.all())
+        return imapUidToMessageIdDAO.retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited())
             .flatMap(message -> latestMetadata(mailboxId, message, options), MESSAGE_CONCURRENCY)
             .doOnNext(counter::process)
             .then(Mono.defer(() -> counterDAO.resetCounters(counter.snapshot())))

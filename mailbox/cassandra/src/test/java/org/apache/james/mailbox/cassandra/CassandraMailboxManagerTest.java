@@ -69,6 +69,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.streams.Iterators;
+import org.apache.james.util.streams.Limit;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -140,7 +141,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all()).collectList().block())
+                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
@@ -179,7 +180,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all()).collectList().block())
+                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
@@ -218,7 +219,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all()).collectList().block())
+                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
@@ -257,7 +258,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all()).collectList().block())
+                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
@@ -296,7 +297,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all()).collectList().block())
+                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
@@ -425,7 +426,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all()).collectList().block())
+                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
@@ -492,7 +493,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all()).collectList().block())
+                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
                 softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())

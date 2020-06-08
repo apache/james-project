@@ -51,6 +51,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.util.streams.Limit;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -137,7 +138,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
     }
 
     private Mono<Void> handleMailboxDeletion(CassandraId mailboxId) {
-        return messageIdDAO.retrieveMessages(mailboxId, MessageRange.all())
+        return messageIdDAO.retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited())
             .map(ComposedMessageIdWithMetaData::getComposedMessageId)
             .concatMap(metadata -> handleMessageDeletionAsPartOfMailboxDeletion((CassandraMessageId) metadata.getMessageId(), mailboxId)
                 .then(imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId))

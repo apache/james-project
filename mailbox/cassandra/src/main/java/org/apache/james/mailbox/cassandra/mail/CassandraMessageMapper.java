@@ -111,7 +111,7 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return messageIdDAO.retrieveMessages(cassandraId, MessageRange.all())
+        return messageIdDAO.retrieveMessages(cassandraId, MessageRange.all(), Limit.unlimited())
             .map(metaData -> metaData.getComposedMessageId().getUid());
     }
 
@@ -167,10 +167,11 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int limit) {
+    public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int limitAsInt) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return Limit.from(limit).applyOnFlux(messageIdDAO.retrieveMessages(mailboxId, messageRange))
+        Limit limit = Limit.from(limitAsInt);
+        return limit.applyOnFlux(messageIdDAO.retrieveMessages(mailboxId, messageRange, limit))
             .flatMap(id -> retrieveMessage(id, ftype), cassandraConfiguration.getMessageReadChunkSize())
             .sort(Comparator.comparing(MailboxMessage::getUid));
     }
@@ -291,7 +292,7 @@ public class CassandraMessageMapper implements MessageMapper {
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange range) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        Flux<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, range);
+        Flux<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited());
 
         FlagsUpdateStageResult firstResult = runUpdateStage(mailboxId, toBeUpdated, flagUpdateCalculator).block();
         FlagsUpdateStageResult finalResult = handleUpdatesStagedRetry(mailboxId, flagUpdateCalculator, firstResult);

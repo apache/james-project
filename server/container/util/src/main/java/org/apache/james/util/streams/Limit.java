@@ -61,6 +61,10 @@ public class Limit {
         return limit;
     }
 
+    public boolean isUnlimited() {
+        return !limit.isPresent();
+    }
+
     public <T> Stream<T> applyOnStream(Stream<T> stream) {
         return limit
             .map(stream::limit)

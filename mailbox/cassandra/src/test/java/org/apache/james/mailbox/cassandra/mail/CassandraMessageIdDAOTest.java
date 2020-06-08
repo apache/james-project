@@ -37,6 +37,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.util.streams.Limit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -395,8 +396,34 @@ class CassandraMessageIdDAOTest {
                 testee.insert(composedMessageIdWithMetaData2))
         .blockLast();
 
-        assertThat(testee.retrieveMessages(mailboxId, MessageRange.all()).toIterable())
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).toIterable())
             .containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
+    }
+
+    @Test
+    void retrieveMessagesShouldApplyLimitWhenRangeAll() {
+        CassandraMessageId messageId = messageIdFactory.generate();
+        CassandraMessageId messageId2 = messageIdFactory.generate();
+        CassandraId mailboxId = CassandraId.timeBased();
+        MessageUid messageUid = MessageUid.of(1);
+        MessageUid messageUid2 = MessageUid.of(2);
+
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
+                .flags(new Flags())
+                .modSeq(ModSeq.of(1))
+                .build();
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData2 = ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(new ComposedMessageId(mailboxId, messageId2, messageUid2))
+                .flags(new Flags())
+                .modSeq(ModSeq.of(1))
+                .build();
+        Flux.merge(testee.insert(composedMessageIdWithMetaData),
+                testee.insert(composedMessageIdWithMetaData2))
+            .blockLast();
+
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.all(), Limit.limit(1)).toIterable())
+            .containsOnly(composedMessageIdWithMetaData);
     }
 
     @Test
@@ -429,8 +456,41 @@ class CassandraMessageIdDAOTest {
                 testee.insert(composedMessageIdWithMetaData2))
         .blockLast();
 
-        assertThat(testee.retrieveMessages(mailboxId, MessageRange.from(messageUid2)).toIterable())
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.from(messageUid2), Limit.unlimited()).toIterable())
             .containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
+    }
+    @Test
+    void retrieveMessagesShouldAppluLimitWhenRangeFrom() {
+        CassandraMessageId messageId = messageIdFactory.generate();
+        CassandraMessageId messageId2 = messageIdFactory.generate();
+        CassandraMessageId messageId3 = messageIdFactory.generate();
+        CassandraId mailboxId = CassandraId.timeBased();
+        MessageUid messageUid = MessageUid.of(1);
+        MessageUid messageUid2 = MessageUid.of(2);
+        MessageUid messageUid3 = MessageUid.of(3);
+
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
+            .composedMessageId(new ComposedMessageId(mailboxId, messageId2, messageUid2))
+            .flags(new Flags())
+            .modSeq(ModSeq.of(1))
+            .build();
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData2 = ComposedMessageIdWithMetaData.builder()
+            .composedMessageId(new ComposedMessageId(mailboxId, messageId3, messageUid3))
+            .flags(new Flags())
+            .modSeq(ModSeq.of(1))
+            .build();
+        Flux.merge(testee.insert(
+            ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
+                .flags(new Flags())
+                .modSeq(ModSeq.of(1))
+                .build()),
+            testee.insert(composedMessageIdWithMetaData),
+            testee.insert(composedMessageIdWithMetaData2))
+            .blockLast();
+
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.from(messageUid2), Limit.limit(1)).toIterable())
+            .containsOnly(composedMessageIdWithMetaData);
     }
 
     @Test
@@ -472,8 +532,51 @@ class CassandraMessageIdDAOTest {
                     .build()))
         .blockLast();
 
-        assertThat(testee.retrieveMessages(mailboxId, MessageRange.range(messageUid2, messageUid3)).toIterable())
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.range(messageUid2, messageUid3), Limit.unlimited()).toIterable())
             .containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
+    }
+
+    @Test
+    void retrieveMessagesShouldApplyLimitWhenRange() {
+        CassandraMessageId messageId = messageIdFactory.generate();
+        CassandraMessageId messageId2 = messageIdFactory.generate();
+        CassandraMessageId messageId3 = messageIdFactory.generate();
+        CassandraMessageId messageId4 = messageIdFactory.generate();
+        CassandraId mailboxId = CassandraId.timeBased();
+        MessageUid messageUid = MessageUid.of(1);
+        MessageUid messageUid2 = MessageUid.of(2);
+        MessageUid messageUid3 = MessageUid.of(3);
+        MessageUid messageUid4 = MessageUid.of(4);
+
+        testee.insert(ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
+                .flags(new Flags())
+                .modSeq(ModSeq.of(1))
+            .build())
+            .block();
+
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
+            .composedMessageId(new ComposedMessageId(mailboxId, messageId2, messageUid2))
+            .flags(new Flags())
+            .modSeq(ModSeq.of(1))
+            .build();
+
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData2 = ComposedMessageIdWithMetaData.builder()
+            .composedMessageId(new ComposedMessageId(mailboxId, messageId3, messageUid3))
+            .flags(new Flags())
+            .modSeq(ModSeq.of(1))
+            .build();
+        Flux.merge(testee.insert(composedMessageIdWithMetaData),
+            testee.insert(composedMessageIdWithMetaData2),
+            testee.insert(ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(new ComposedMessageId(mailboxId, messageId4, messageUid4))
+                .flags(new Flags())
+                .modSeq(ModSeq.of(1))
+                .build()))
+            .blockLast();
+
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.range(messageUid2, messageUid3), Limit.limit(1)).toIterable())
+            .containsOnly(composedMessageIdWithMetaData);
     }
 
     @Test
@@ -505,7 +608,7 @@ class CassandraMessageIdDAOTest {
                     .build()))
         .blockLast();
 
-        assertThat(testee.retrieveMessages(mailboxId, MessageRange.one(messageUid2)).toIterable())
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.one(messageUid2), Limit.unlimited()).toIterable())
             .containsOnly(composedMessageIdWithMetaData);
     }
 }
