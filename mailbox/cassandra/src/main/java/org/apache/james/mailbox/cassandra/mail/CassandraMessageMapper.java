@@ -170,10 +170,8 @@ public class CassandraMessageMapper implements MessageMapper {
     public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int limit) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return Limit.from(limit).applyOnFlux(
-            messageIdDAO.retrieveMessages(mailboxId, messageRange)
-                .flatMap(id -> retrieveMessage(id, ftype), cassandraConfiguration.getMessageReadChunkSize()))
-            .map(MailboxMessage.class::cast)
+        return Limit.from(limit).applyOnFlux(messageIdDAO.retrieveMessages(mailboxId, messageRange))
+            .flatMap(id -> retrieveMessage(id, ftype), cassandraConfiguration.getMessageReadChunkSize())
             .sort(Comparator.comparing(MailboxMessage::getUid));
     }
 
