@@ -24,6 +24,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -119,5 +121,17 @@ public class ElasticSearchIndexer {
 
     private void checkArgument(String content) {
         Preconditions.checkArgument(content != null, "content should be provided");
+    }
+
+    public Mono<GetResponse> get(DocumentId id, RoutingKey routingKey) {
+        return Mono.fromRunnable(() -> {
+                Preconditions.checkNotNull(id);
+                Preconditions.checkNotNull(routingKey);
+            })
+            .then(client.get(new GetRequest(aliasName.getValue())
+                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                    .id(id.asString())
+                    .routing(routingKey.asString()),
+                RequestOptions.DEFAULT));
     }
 }

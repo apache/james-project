@@ -30,6 +30,7 @@ import java.io.IOException;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -263,5 +264,30 @@ class ElasticSearchIndexerTest {
     void deleteMessagesShouldNotThrowWhenEmptyList() {
         assertThatCode(() -> testee.delete(ImmutableList.of(), ROUTING).block())
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void getShouldWork() {
+        DocumentId documentId = DocumentId.fromString("1");
+        String content = "{\"message\":\"trying out Elasticsearch\"}";
+
+        testee.index(documentId, content, useDocumentId(documentId)).block();
+        elasticSearch.awaitForElasticSearch();
+
+        GetResponse getResponse = testee.get(documentId, useDocumentId(documentId)).block();
+
+        assertThat(getResponse.getSourceAsString()).isEqualTo(content);
+    }
+
+    @Test
+    void getShouldThrowWhenIdIsNull() {
+        assertThatThrownBy(() -> testee.get(null, ROUTING).block())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void getShouldThrowWhenRoutingKeyIsNull() {
+        assertThatThrownBy(() -> testee.get(DOCUMENT_ID, null).block())
+            .isInstanceOf(NullPointerException.class);
     }
 }

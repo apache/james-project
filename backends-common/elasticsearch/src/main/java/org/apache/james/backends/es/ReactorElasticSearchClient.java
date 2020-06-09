@@ -37,6 +37,8 @@ import org.elasticsearch.action.explain.ExplainRequest;
 import org.elasticsearch.action.explain.ExplainResponse;
 import org.elasticsearch.action.fieldcaps.FieldCapabilitiesRequest;
 import org.elasticsearch.action.fieldcaps.FieldCapabilitiesResponse;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.main.MainResponse;
@@ -145,6 +147,10 @@ public class ReactorElasticSearchClient implements AutoCloseable {
 
     public Mono<SearchTemplateResponse> searchTemplate(SearchTemplateRequest searchTemplateRequest, RequestOptions options) {
         return toReactor(listener -> client.searchTemplateAsync(searchTemplateRequest, options, listener));
+    }
+
+    public Mono<GetResponse> get(GetRequest getRequest, RequestOptions options) {
+        return toReactor(listener -> client.getAsync(getRequest, options, listener));
     }
 
     @Override
