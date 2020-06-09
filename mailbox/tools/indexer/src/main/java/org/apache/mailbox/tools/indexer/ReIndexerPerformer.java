@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-import fj.data.Either;
+import io.vavr.control.Either;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -189,7 +189,7 @@ public class ReIndexerPerformer {
             .findMailboxByIdReactive(mailboxId)
             .flatMap(mailbox -> fullyReadMessage(mailboxSession, mailbox, uid)
                 .map(message -> Either.<Failure, ReIndexingEntry>right(new ReIndexingEntry(mailbox, mailboxSession, message)))
-                .flatMap(entryOrFailure -> reIndexMessage(entryOrFailure, reprocessingContext)))
+                .flatMap(entryOrFailure -> reIndex(entryOrFailure, reprocessingContext)))
             .switchIfEmpty(Mono.just(Result.COMPLETED));
     }
 
@@ -278,21 +278,21 @@ public class ReIndexerPerformer {
 
     private Mono<Task.Result> reIndexMessages(Flux<Either<Failure, ReIndexingEntry>> entriesToIndex, RunningOptions runningOptions, ReprocessingContext reprocessingContext) {
         return ReactorUtils.Throttler.<Either<Failure, ReIndexingEntry>, Task.Result>forOperation(
-                entry -> reIndexMessage(entry, reprocessingContext))
+                entry -> reIndex(entry, reprocessingContext))
             .window(runningOptions.getMessagesPerSecond(), Duration.ofSeconds(1))
             .throttle(entriesToIndex)
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED));
     }
 
-    private Mono<Task.Result> reIndexMessage(Either<Failure, ReIndexingEntry> entryOrFailure, ReprocessingContext reprocessingContext) {
-        return toMono(entryOrFailure.right().map(this::index))
-            .map(this::flapMapRight)
-            .map(either -> recordIndexingResult(reprocessingContext, either));
+    private Mono<Task.Result> reIndex(Either<Failure, ReIndexingEntry> failureOrEntry, ReprocessingContext reprocessingContext) {
+        return toMono(failureOrEntry.map(this::index))
+            .map(this::flatten)
+            .map(failureOrTaskResult -> recordIndexingResult(failureOrTaskResult, reprocessingContext));
     }
 
-    private Result recordIndexingResult(ReprocessingContext reprocessingContext, Either<Failure, Result> either) {
-        return either.either(
+    private Result recordIndexingResult(Either<Failure, Result> failureOrTaskResult, ReprocessingContext reprocessingContext) {
+        return failureOrTaskResult.fold(
             failure -> {
                 failure.recordFailure(reprocessingContext);
                 return Result.PARTIAL;
@@ -309,11 +309,11 @@ public class ReIndexerPerformer {
             });
     }
 
-    private <X, Y> Either<X, Y> flapMapRight(Either<X, Either<X, Y>> nestedEither) {
-        return nestedEither.right().bind(either -> either);
+    private <X, Y> Either<X, Y> flatten(Either<X, Either<X, Y>> nestedEither) {
+        return nestedEither.getOrElseGet(Either::left);
     }
 
     private <X, Y> Mono<Either<X, Y>> toMono(Either<X, Mono<Y>> either) {
-        return either.either(x -> Mono.just(Either.left(x)), yMono -> yMono.map(Either::right));
+        return either.fold(x -> Mono.just(Either.left(x)), yMono -> yMono.map(Either::right));
     }
 }
