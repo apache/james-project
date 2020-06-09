@@ -1742,6 +1742,27 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void renamingMailboxByPathShouldThrowWhenFromNotFound() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+            MailboxPath destinationPath = MailboxPath.forUser(USER_1, "destination");
+
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(originPath, destinationPath, session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void renamingMailboxByIdShouldThrowWhenFromNotFound() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath notFound = MailboxPath.forUser(USER_1, "notFound");
+
+            assertThatThrownBy(() -> mailboxManager.deleteMailbox(notFound, session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
         void user2ShouldNotBeAbleToDeleteUser1Mailbox() throws Exception {
             MailboxSession sessionUser1 = mailboxManager.createSystemSession(USER_1);
             MailboxSession sessionUser2 = mailboxManager.createSystemSession(USER_2);
