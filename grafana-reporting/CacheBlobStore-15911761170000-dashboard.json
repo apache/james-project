@@ -16,12 +16,12 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 4,
+  "id": 1,
   "links": [],
   "panels": [
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": "Elasticsearch",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -173,7 +173,8 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "Elasticsearch",
+      "decimals": 0,
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -191,13 +192,16 @@
       "hiddenSeries": false,
       "id": 8,
       "legend": {
+        "alignAsTable": false,
         "avg": false,
-        "current": false,
-        "max": false,
+        "current": true,
+        "hideEmpty": false,
+        "max": true,
         "min": false,
+        "rightSide": false,
         "show": true,
-        "total": false,
-        "values": false
+        "total": true,
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
@@ -209,11 +213,58 @@
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "Derivative hit",
+          "yaxis": 2
+        },
+        {
+          "alias": "Derivative miss",
+          "yaxis": 2
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
+        {
+          "alias": "hit",
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "elasticsearch",
+          "hide": false,
+          "metrics": [
+            {
+              "field": "count",
+              "id": "3",
+              "meta": {},
+              "pipelineAgg": "1",
+              "settings": {},
+              "type": "max"
+            },
+            {
+              "field": "3",
+              "id": "4",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "derivative"
+            }
+          ],
+          "query": "name:\"blobstoreCacheHits\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
         {
           "alias": "miss",
           "bucketAggs": [
@@ -230,6 +281,13 @@
           ],
           "metrics": [
             {
+              "field": "count",
+              "id": "1",
+              "meta": {},
+              "settings": {},
+              "type": "max"
+            },
+            {
               "field": "1",
               "id": "3",
               "meta": {},
@@ -241,34 +299,6 @@
           "query": "name:\"blobstoreCacheMisses\"",
           "refId": "A",
           "timeField": "@timestamp"
-        },
-        {
-          "alias": "hit",
-          "bucketAggs": [
-            {
-              "field": "@timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "metrics": [
-            {
-              "field": "1",
-              "id": "3",
-              "meta": {},
-              "pipelineAgg": "1",
-              "settings": {},
-              "type": "derivative"
-            }
-          ],
-          "query": "name:\"blobstoreCacheHits\"",
-          "refId": "B",
-          "timeField": "@timestamp"
         }
       ],
       "thresholds": [],
@@ -278,9 +308,15 @@
       "title": "CachedHits/CachedMisses",
       "tooltip": {
         "shared": true,
-        "sort": 0,
+        "sort": 1,
         "value_type": "individual"
       },
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {}
+        }
+      ],
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -292,7 +328,7 @@
       "yaxes": [
         {
           "decimals": 0,
-          "format": "locale",
+          "format": "none",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -301,7 +337,7 @@
         },
         {
           "decimals": 0,
-          "format": "locale",
+          "format": "opm",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -323,7 +359,7 @@
     "list": []
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {
@@ -339,8 +375,8 @@
       "1d"
     ]
   },
-  "timezone": "",
+  "timezone": "browser",
   "title": "CachedBlobstore",
   "uid": "XbLcT6zMz",
-  "version": 5
+  "version": 4
 }
