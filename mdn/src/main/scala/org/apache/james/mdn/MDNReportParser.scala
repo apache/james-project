@@ -354,7 +354,7 @@ class MDNReportParser(val input: ParserInput) extends Parser {
                          %d14-31 /          ;  return, line feed, and
                          %d127              ;  white space characters   */
   private def obsNoWsCtl = rule {
-    CharPredicate(33.toChar to 39.toChar) |
+    CharPredicate(1.toChar to 8.toChar) |
     ch(11) |
     ch(12) |
     CharPredicate(14.toChar to 31.toChar) |
@@ -368,7 +368,7 @@ class MDNReportParser(val input: ParserInput) extends Parser {
   private def vchar: Rule0 = rule { CharPredicate(21.toChar to 0x7e.toChar) }
 
   //   obs-qp          =   "\" (%d0 / obs-NO-WS-CTL / LF / CR)
-  private def obsQp: Rule0 = rule { "\\" ~ (ch(0xd0) | obsCText | lf | cr) }
+  private def obsQp: Rule0 = rule { "\\" ~ (ch(0.toChar) | obsNoWsCtl | lf | cr) }
 
   //   word            =   atom / quoted-string
   private def word: Rule0 = rule { atom | quotedString }
@@ -437,6 +437,7 @@ class MDNReportParser(val input: ParserInput) extends Parser {
     obsQtext
   }
 
+  //obs-qtext       =   obs-NO-WS-CTL
   private def obsQtext: Rule0 = obsNoWsCtl
 
   //   domain          =   dot-atom / domain-literal / obs-domain
