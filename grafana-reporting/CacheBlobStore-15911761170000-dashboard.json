@@ -38,7 +38,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "Elasticsearch",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -131,7 +131,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Latency",
+      "title": "Cache_Latency",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -151,7 +151,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         },
         {
@@ -159,7 +159,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         }
       ],
@@ -216,10 +216,14 @@
       "seriesOverrides": [
         {
           "alias": "Derivative hit",
+          "color": "#B877D9",
+          "dashes": true,
           "yaxis": 2
         },
         {
           "alias": "Derivative miss",
+          "color": "#F2495C",
+          "dashes": true,
           "yaxis": 2
         }
       ],
@@ -257,7 +261,9 @@
               "id": "4",
               "meta": {},
               "pipelineAgg": "3",
-              "settings": {},
+              "settings": {
+                "unit": "minute"
+              },
               "type": "derivative"
             }
           ],
@@ -311,12 +317,6 @@
         "sort": 1,
         "value_type": "individual"
       },
-      "transformations": [
-        {
-          "id": "filterByRefId",
-          "options": {}
-        }
-      ],
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -349,9 +349,146 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Elasticsearch",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "hiddenSeries": false,
+      "id": 10,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "connected",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "metrics": [
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p99",
+              "id": "6",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"blobStoreBackEndLatency\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Backend_Latency",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "decimals": 0,
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
-  "refresh": "30s",
+  "refresh": "10s",
   "schemaVersion": 25,
   "style": "dark",
   "tags": [],
@@ -359,7 +496,7 @@
     "list": []
   },
   "time": {
-    "from": "now-12h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
