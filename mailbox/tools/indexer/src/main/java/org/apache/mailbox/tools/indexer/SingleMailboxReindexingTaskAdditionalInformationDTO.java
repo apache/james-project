@@ -58,7 +58,7 @@ public class SingleMailboxReindexingTaskAdditionalInformationDTO implements Addi
                 details.timestamp(),
                 Optional.of(RunningOptionsDTO.toDTO(details.getRunningOptions()))
                 ))
-            .typeName(SingleMailboxReindexingTask.MAILBOX_RE_INDEXING.asString())
+            .typeName(SingleMailboxReindexingTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
     }
 

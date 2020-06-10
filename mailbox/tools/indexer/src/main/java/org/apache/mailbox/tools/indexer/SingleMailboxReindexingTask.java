@@ -36,7 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class SingleMailboxReindexingTask implements Task {
 
-    public static final TaskType MAILBOX_RE_INDEXING = TaskType.of("mailbox-reindexing");
+    public static final TaskType TYPE = TaskType.of("mailbox-reindexing");
 
     public static class AdditionalInformation extends ReprocessingContextInformation {
         private final MailboxId mailboxId;
@@ -103,7 +103,7 @@ public class SingleMailboxReindexingTask implements Task {
 
     @Override
     public TaskType type() {
-        return MAILBOX_RE_INDEXING;
+        return TYPE;
     }
 
     public RunningOptions getRunningOptions() {

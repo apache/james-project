@@ -38,7 +38,7 @@ public class SingleMailboxReindexingTaskDTO implements TaskDTO {
             .convertToDTO(SingleMailboxReindexingTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(SingleMailboxReindexingTaskDTO::of)
-            .typeName(SingleMailboxReindexingTask.MAILBOX_RE_INDEXING.asString())
+            .typeName(SingleMailboxReindexingTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }
 
