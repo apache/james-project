@@ -103,8 +103,10 @@ public class CachedBlobStore implements BlobStore {
 
     public static final String BACKEND = "blobStoreBackend";
 
-    public static final String BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME = "blobStoreCacheMisses";
     public static final String BLOBSTORE_CACHED_LATENCY_METRIC_NAME = "blobStoreCacheLatency";
+    public static final String BLOBSTORE_BACKEND_LATENCY_METRIC_NAME = "blobStoreBackEndLatency";
+
+    public static final String BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME = "blobStoreCacheMisses";
     public static final String BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME = "blobStoreCacheHits";
 
     private final MetricFactory metricFactory;
@@ -154,12 +156,12 @@ public class CachedBlobStore implements BlobStore {
         return Mono.just(bucketName)
             .filter(getDefaultBucketName()::equals)
             .flatMap(deleteBucket -> readBytesInDefaultBucket(bucketName, blobId))
-            .switchIfEmpty(readBytesFromBackend(bucketName, blobId));
+            .switchIfEmpty(Mono.defer(() -> readBytesFromBackend(bucketName, blobId)));
     }
 
     private Mono<byte[]> readBytesInDefaultBucket(BucketName bucketName, BlobId blobId) {
         return readFromCache(blobId)
-            .switchIfEmpty(readBytesFromBackend(bucketName, blobId)
+            .switchIfEmpty(Mono.defer(() -> readBytesFromBackend(bucketName, blobId))
                 .filter(this::isAbleToCache)
                 .doOnNext(any -> metricRetrieveMissCount.increment())
                 .flatMap(bytes -> saveInCache(blobId, bytes).then(Mono.just(bytes))));
@@ -264,10 +266,12 @@ public class CachedBlobStore implements BlobStore {
     }
 
     private Mono<InputStream> readFromBackend(BucketName bucketName, BlobId blobId) {
-        return Mono.fromCallable(() -> backend.read(bucketName, blobId));
+        return Mono.from(metricFactory.runPublishingTimerMetric(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME,
+            Mono.fromCallable(() -> backend.read(bucketName, blobId))));
     }
 
     private Mono<byte[]> readBytesFromBackend(BucketName bucketName, BlobId blobId) {
-        return Mono.from(backend.readBytes(bucketName, blobId));
+        return Mono.from(metricFactory.runPublishingTimerMetric(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME,
+            () -> backend.readBytes(bucketName, blobId)));
     }
 }
