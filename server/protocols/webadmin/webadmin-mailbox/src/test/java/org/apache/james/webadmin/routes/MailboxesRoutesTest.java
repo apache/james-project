@@ -63,6 +63,7 @@ import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskAdditionalInformationDTO;
 import org.eclipse.jetty.http.HttpStatus;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -245,6 +246,30 @@ class MailboxesRoutesTest {
                     .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
+            }
+
+            @Test
+            void userReprocessingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+
+                doReturn(Mono.error(new RuntimeException()))
+                    .when(searchIndex)
+                    .deleteAll(any(MailboxSession.class), any(MailboxId.class));
+
+                String taskId = with()
+                    .post("/mailboxes?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", Matchers.is("failed"))
+                    .body("taskId", Matchers.is(notNullValue()))
+                    .body("additionalInformation.mailboxFailures", Matchers.containsInAnyOrder(mailboxId.serialize()));
             }
         }
 
@@ -434,6 +459,31 @@ class MailboxesRoutesTest {
                     .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
+            }
+
+            @Test
+            void userReprocessingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+
+                doReturn(Mono.error(new RuntimeException()))
+                    .when(searchIndex)
+                    .deleteAll(any(MailboxSession.class), any(MailboxId.class));
+
+                String taskId = with()
+                    .queryParam("task", "reIndex")
+                    .post("/mailboxes/" + mailboxId.serialize())
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", Matchers.is("failed"))
+                    .body("taskId", Matchers.is(notNullValue()))
+                    .body("additionalInformation.mailboxFailures", Matchers.containsInAnyOrder(mailboxId.serialize()));
             }
         }
 
@@ -830,6 +880,37 @@ class MailboxesRoutesTest {
                     .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
+            }
+
+            @Test
+            void userReprocessingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+
+                doReturn(Mono.error(new RuntimeException()))
+                    .when(searchIndex)
+                    .deleteAll(any(MailboxSession.class), any(MailboxId.class));
+
+                String taskId = with()
+                    .post("/mailboxes?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                String fixingTaskId = with()
+                    .queryParam("reIndexFailedMessagesOf", taskId)
+                    .queryParam("task", "reIndex")
+                    .post("/mailboxes")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(fixingTaskId + "/await")
+                .then()
+                    .body("status", Matchers.is("failed"))
+                    .body("taskId", Matchers.is(notNullValue()))
+                    .body("additionalInformation.mailboxFailures", Matchers.containsInAnyOrder(mailboxId.serialize()));
             }
         }
 

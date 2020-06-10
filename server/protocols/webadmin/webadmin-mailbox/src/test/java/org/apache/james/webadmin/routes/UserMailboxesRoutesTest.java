@@ -1259,6 +1259,31 @@ class UserMailboxesRoutesTest {
                     .body("startedDate", Matchers.is(notNullValue()))
                     .body("submitDate", Matchers.is(notNullValue()));
             }
+
+            @Test
+            void userReprocessingShouldReturnTaskDetailsWhenFailingAtTheMailboxLevel() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+
+                doReturn(Mono.error(new RuntimeException()))
+                    .when(searchIndex)
+                    .deleteAll(any(MailboxSession.class), any(MailboxId.class));
+
+                String taskId = with()
+                    .queryParam("task", "reIndex")
+                    .post()
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", Matchers.is("failed"))
+                    .body("taskId", Matchers.is(notNullValue()))
+                    .body("additionalInformation.mailboxFailures", Matchers.containsInAnyOrder(mailboxId.serialize()));
+            }
         }
 
         @Nested
