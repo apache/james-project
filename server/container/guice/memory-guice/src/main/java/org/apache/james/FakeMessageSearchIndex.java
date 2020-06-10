@@ -24,6 +24,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Stream;
 
+import javax.mail.Flags;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -94,6 +96,11 @@ public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Override
     public ExecutionMode getExecutionMode() {
+        throw new NotImplementedException("not implemented");
+    }
+
+    @Override
+    public Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid) {
         throw new NotImplementedException("not implemented");
     }
 }

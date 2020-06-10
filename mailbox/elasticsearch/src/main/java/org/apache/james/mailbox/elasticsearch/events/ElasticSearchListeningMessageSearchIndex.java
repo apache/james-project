@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.mail.Flags;
 
 import org.apache.james.backends.es.DocumentId;
 import org.apache.james.backends.es.ElasticSearchIndexer;
@@ -212,5 +213,10 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         if (!searchResult.getMessageId().isPresent()) {
             LOGGER.error("No messageUid for {} in mailbox {}", searchResult.getMessageUid(), searchResult.getMailboxId());
         }
+    }
+
+    @Override
+    public Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid) {
+        return Mono.empty();
     }
 }

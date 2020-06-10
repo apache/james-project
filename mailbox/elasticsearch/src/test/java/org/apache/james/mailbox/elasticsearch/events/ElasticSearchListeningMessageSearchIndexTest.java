@@ -92,9 +92,11 @@ class ElasticSearchListeningMessageSearchIndexTest {
     static final MessageUid MESSAGE_UID_1 = MessageUid.of(25);
     static final MessageUid MESSAGE_UID_2 = MessageUid.of(26);
     static final MessageUid MESSAGE_UID_3 = MessageUid.of(27);
+    static final MessageUid MESSAGE_UID_4 = MessageUid.of(28);
     static final MessageId MESSAGE_ID_1 = TestMessageId.of(18L);
     static final MessageId MESSAGE_ID_2 = TestMessageId.of(19L);
     static final MessageId MESSAGE_ID_3 = TestMessageId.of(20L);
+    static final MessageId MESSAGE_ID_4 = TestMessageId.of(21L);
 
     static final SimpleMailboxMessage.Builder MESSAGE_BUILDER = SimpleMailboxMessage.builder()
         .mailboxId(MAILBOX_ID)
@@ -441,5 +443,4 @@ class ElasticSearchListeningMessageSearchIndexTest {
         assertThatCode(() -> testee.deleteAll(session, mailbox.getMailboxId()).block())
             .doesNotThrowAnyException();
     }
-
 }

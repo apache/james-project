@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
@@ -146,5 +148,10 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     @Override
     public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
         throw new UnsupportedSearchException();
+    }
+
+    @Override
+    public Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid) {
+        return index.retrieveIndexedFlags(mailbox, uid);
     }
 }

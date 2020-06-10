@@ -1297,4 +1297,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     public void commit() throws IOException {
         writer.commit();
     }
+
+    @Override
+    public Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid) {
+        return Mono.empty();
+    }
 }

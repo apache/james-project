@@ -21,6 +21,8 @@ package org.apache.james.mailbox.store.search;
 import java.util.Collection;
 import java.util.List;
 
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.SessionProvider;
@@ -142,4 +144,9 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param updatedFlagsList list of flags that were updated
      */
     public abstract Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList);
+
+    /**
+     * Retrieves flags of an indexed message
+     */
+    public abstract Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid);
 }
