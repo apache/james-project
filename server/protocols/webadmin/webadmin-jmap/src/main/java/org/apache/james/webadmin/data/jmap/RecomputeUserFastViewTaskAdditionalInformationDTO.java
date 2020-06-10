@@ -31,13 +31,14 @@ import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.Ru
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RecomputeUserFastViewTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-    public static final AdditionalInformationDTOModule<RecomputeUserFastViewProjectionItemsTask.AdditionalInformation, RecomputeUserFastViewTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(RecomputeUserFastViewProjectionItemsTask.AdditionalInformation.class)
+    public static AdditionalInformationDTOModule<RecomputeUserFastViewProjectionItemsTask.AdditionalInformation, RecomputeUserFastViewTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(RecomputeUserFastViewProjectionItemsTask.AdditionalInformation.class)
             .convertToDTO(RecomputeUserFastViewTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(RecomputeUserFastViewTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(RecomputeUserFastViewTaskAdditionalInformationDTO::toDTO)
             .typeName(RecomputeUserFastViewProjectionItemsTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private static RecomputeUserFastViewTaskAdditionalInformationDTO toDTO(RecomputeUserFastViewProjectionItemsTask.AdditionalInformation details, String type) {
         return new RecomputeUserFastViewTaskAdditionalInformationDTO(

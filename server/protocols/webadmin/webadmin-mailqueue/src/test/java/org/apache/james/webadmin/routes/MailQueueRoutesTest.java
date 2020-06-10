@@ -52,7 +52,6 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.ClearMailQueueTask;
 import org.apache.james.webadmin.service.ClearMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTask;
-import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailet.Mail;
@@ -96,8 +95,8 @@ class MailQueueRoutesTest {
         return WebAdminUtils.createWebAdminServer(
                 new MailQueueRoutes(mailQueueFactory, jsonTransformer, taskManager),
                 new TasksRoutes(taskManager, jsonTransformer,
-                    DTOConverter.of(WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE,
-                        ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE)))
+                    DTOConverter.of(WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO.module(),
+                        ClearMailQueueTaskAdditionalInformationDTO.module())))
             .start();
     }
 

@@ -51,6 +51,15 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
             .typeName(BlobStoreVaultGarbageCollectionTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
+    public static final AdditionalInformationDTOModule<BlobStoreVaultGarbageCollectionTask.AdditionalInformation, BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(BlobStoreVaultGarbageCollectionTask.AdditionalInformation.class)
+            .convertToDTO(BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO::toDomainObject)
+            .toDTOConverter(BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO::fromDomainObject)
+            .typeName(BlobStoreVaultGarbageCollectionTask.TYPE.asString())
+            .withFactory(AdditionalInformationDTOModule::new);
+    }
+
     private final String beginningOfRetentionPeriod;
     private final Collection<String> deletedBuckets;
     private final String type;

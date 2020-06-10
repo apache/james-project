@@ -41,14 +41,14 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
         );
     }
 
-    public static final AdditionalInformationDTOModule<DeletedMessagesVaultRestoreTask.AdditionalInformation, DeletedMessagesVaultRestoreTaskAdditionalInformationDTO> MODULE =
-        DTOModule
-            .forDomainObject(DeletedMessagesVaultRestoreTask.AdditionalInformation.class)
+    public static AdditionalInformationDTOModule<DeletedMessagesVaultRestoreTask.AdditionalInformation, DeletedMessagesVaultRestoreTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(DeletedMessagesVaultRestoreTask.AdditionalInformation.class)
             .convertToDTO(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO::fromDomainObject)
             .typeName(DeletedMessagesVaultRestoreTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final String user;

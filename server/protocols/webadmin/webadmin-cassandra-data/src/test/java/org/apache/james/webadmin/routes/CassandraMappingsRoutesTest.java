@@ -83,7 +83,7 @@ class CassandraMappingsRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new CassandraMappingsRoutes(cassandraMappingsService, taskManager, jsonTransformer),
                 new TasksRoutes(taskManager, jsonTransformer,
-                    DTOConverter.of(MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(CassandraMappingsSolveInconsistenciesTask.TYPE))))
+                    DTOConverter.of(MappingsSourcesMigrationTaskAdditionalInformationDTO.module(CassandraMappingsSolveInconsistenciesTask.TYPE))))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

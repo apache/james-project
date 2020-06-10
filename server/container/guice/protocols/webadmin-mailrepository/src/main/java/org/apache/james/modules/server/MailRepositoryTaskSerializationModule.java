@@ -59,34 +59,34 @@ public class MailRepositoryTaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> clearMailRepositoryAdditionalInformation() {
-        return ClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return ClearMailRepositoryTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminClearMailRepositoryAdditionalInformation() {
-        return WebAdminClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return WebAdminClearMailRepositoryTaskAdditionalInformationDTO.module();
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> reprocessingAllMailsAdditionalInformation() {
-        return ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return ReprocessingAllMailsTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminReprocessingAllMailsAdditionalInformation() {
-        return ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return ReprocessingAllMailsTaskAdditionalInformationDTO.module();
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> reprocessingOneMailAdditionalInformation() {
-        return ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return ReprocessingOneMailTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminReprocessingOneMailAdditionalInformation() {
-        return ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return ReprocessingOneMailTaskAdditionalInformationDTO.module();
     }
 }

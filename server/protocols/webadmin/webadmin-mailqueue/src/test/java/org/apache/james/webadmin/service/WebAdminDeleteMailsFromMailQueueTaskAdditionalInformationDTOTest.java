@@ -39,7 +39,7 @@ class WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTOTest {
         DeleteMailsFromMailQueueTask.AdditionalInformation detailsRecipient = new DeleteMailsFromMailQueueTask.AdditionalInformation(queueName, 6L, 6L,
             Optional.empty(), Optional.empty(), Optional.of(new MailAddress("d@e.f")), TIMESTAMP);
 
-        JsonSerializationVerifier.dtoModule(WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE)
+        JsonSerializationVerifier.dtoModule(WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO.module())
             .testCase(detailsSender,
                 "{\"type\": \"delete-mails-from-mail-queue\", \"mailQueueName\": \"anyQueue\", \"sender\": \"a@b.c\", \"initialCount\" : 10, \"remainingCount\":5, \"timestamp\": \"2018-11-13T12:00:55Z\"}")
             .testCase(detailsName,

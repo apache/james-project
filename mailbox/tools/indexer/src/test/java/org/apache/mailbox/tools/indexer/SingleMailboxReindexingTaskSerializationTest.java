@@ -88,7 +88,7 @@ class SingleMailboxReindexingTaskSerializationTest {
     void additionalInformationShouldBeSerializable() throws Exception {
         SingleMailboxReindexingTask.AdditionalInformation details = new SingleMailboxReindexingTask.AdditionalInformation(mailboxId, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP, RunningOptions.DEFAULT);
 
-        JsonSerializationVerifier.dtoModule(SingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(new TestId.Factory()))
+        JsonSerializationVerifier.dtoModule(SingleMailboxReindexingTaskAdditionalInformationDTO.module(new TestId.Factory()))
             .bean(details)
             .json(serializedAdditionalInformation)
             .verify();
@@ -96,7 +96,7 @@ class SingleMailboxReindexingTaskSerializationTest {
 
     @Test
     void legacyAdditionalInformationShouldBeDeserializable() throws Exception {
-        SingleMailboxReindexingTask.AdditionalInformation legacyAdditionalInformation = JsonGenericSerializer.forModules(SingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(new TestId.Factory()))
+        SingleMailboxReindexingTask.AdditionalInformation legacyAdditionalInformation = JsonGenericSerializer.forModules(SingleMailboxReindexingTaskAdditionalInformationDTO.module(new TestId.Factory()))
             .withoutNestedType()
             .deserialize(legacySerializedAdditionalInformation);
 

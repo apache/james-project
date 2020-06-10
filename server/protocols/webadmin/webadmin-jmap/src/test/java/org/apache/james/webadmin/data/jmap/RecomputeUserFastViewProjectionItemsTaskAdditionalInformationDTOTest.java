@@ -37,7 +37,7 @@ class RecomputeUserFastViewProjectionItemsTaskAdditionalInformationDTOTest {
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+        JsonSerializationVerifier.dtoModule(RecomputeUserFastViewTaskAdditionalInformationDTO.module())
             .bean(DOMAIN_OBJECT)
             .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeUser.additionalInformation.json"))
             .verify();
@@ -46,7 +46,7 @@ class RecomputeUserFastViewProjectionItemsTaskAdditionalInformationDTOTest {
 
     @Test
     void shouldDeserializeLegacy() throws Exception {
-        RecomputeUserFastViewProjectionItemsTask.AdditionalInformation legacyDetails = JsonGenericSerializer.forModules(RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+        RecomputeUserFastViewProjectionItemsTask.AdditionalInformation legacyDetails = JsonGenericSerializer.forModules(RecomputeUserFastViewTaskAdditionalInformationDTO.module())
             .withoutNestedType()
             .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/recomputeUser.additionalInformation.legacy.json"));
 

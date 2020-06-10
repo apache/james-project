@@ -73,7 +73,7 @@ class ReprocessingAllMailsTaskTest {
         ReprocessingAllMailsTask.AdditionalInformation detailsWithoutProcessor = new ReprocessingAllMailsTask.AdditionalInformation(REPOSITORY_PATH, TARGET_QUEUE, Optional.empty(),
             REPOSITORY_SIZE, REMAINING_COUNT, TIMESTAMP);
 
-        JsonSerializationVerifier.dtoModule(ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+        JsonSerializationVerifier.dtoModule(ReprocessingAllMailsTaskAdditionalInformationDTO.module())
             .testCase(details, SERIALIZED_TASK_ADDITIONAL_INFORMATION_WITH_TARGET_PROCESSOR)
             .testCase(detailsWithoutProcessor, SERIALIZED_TASK_ADDITIONAL_INFORMATION_WITHOUT_TARGET_PROCESSOR)
             .verify();

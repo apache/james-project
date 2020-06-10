@@ -37,14 +37,16 @@ public class RecomputeMailboxCountersTaskAdditionalInformationDTO implements Add
             details.timestamp());
     }
 
-    public static final AdditionalInformationDTOModule<RecomputeMailboxCountersTask.Details, RecomputeMailboxCountersTaskAdditionalInformationDTO> MODULE =
-        DTOModule
+    public static final AdditionalInformationDTOModule<RecomputeMailboxCountersTask.Details, RecomputeMailboxCountersTaskAdditionalInformationDTO> module() {
+        return DTOModule
             .forDomainObject(RecomputeMailboxCountersTask.Details.class)
             .convertToDTO(RecomputeMailboxCountersTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(RecomputeMailboxCountersTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(RecomputeMailboxCountersTaskAdditionalInformationDTO::fromDomainObject)
             .typeName(RecomputeMailboxCountersTask.RECOMPUTE_MAILBOX_COUNTERS.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
+
 
     private final String type;
     private final long processedMailboxes;

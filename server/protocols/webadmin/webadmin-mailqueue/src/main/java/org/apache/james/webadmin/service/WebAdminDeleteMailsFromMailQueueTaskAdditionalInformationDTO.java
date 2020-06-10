@@ -32,15 +32,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
 
 public class WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-
-    public static final AdditionalInformationDTOModule<DeleteMailsFromMailQueueTask.AdditionalInformation, WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO> MODULE =
-        DTOModule
-            .forDomainObject(DeleteMailsFromMailQueueTask.AdditionalInformation.class)
+    public static AdditionalInformationDTOModule<DeleteMailsFromMailQueueTask.AdditionalInformation, WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(DeleteMailsFromMailQueueTask.AdditionalInformation.class)
             .convertToDTO(WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO::fromDTO)
             .toDTOConverter(WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO::toDTO)
             .typeName(DeleteMailsFromMailQueueTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private static WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO toDTO(DeleteMailsFromMailQueueTask.AdditionalInformation domainObject, String typeName) {
         return new WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO(

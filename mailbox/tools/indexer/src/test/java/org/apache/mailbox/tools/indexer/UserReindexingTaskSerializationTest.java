@@ -89,7 +89,7 @@ class UserReindexingTaskSerializationTest {
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
         UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(USERNAME, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP, RunningOptions.DEFAULT);
-        JsonSerializationVerifier.dtoModule(UserReindexingTaskAdditionalInformationDTO.serializationModule(new TestId.Factory()))
+        JsonSerializationVerifier.dtoModule(UserReindexingTaskAdditionalInformationDTO.module(new TestId.Factory()))
             .bean(details)
             .json(serializedAdditionalInformation)
             .verify();
@@ -97,7 +97,7 @@ class UserReindexingTaskSerializationTest {
 
     @Test
     void legacyAdditionalInformationShouldBeDeserializable() throws Exception {
-        UserReindexingTask.AdditionalInformation legacyAdditionalInformation = JsonGenericSerializer.forModules(UserReindexingTaskAdditionalInformationDTO.serializationModule(new TestId.Factory()))
+        UserReindexingTask.AdditionalInformation legacyAdditionalInformation = JsonGenericSerializer.forModules(UserReindexingTaskAdditionalInformationDTO.module(new TestId.Factory()))
             .withoutNestedType()
             .deserialize(legacySerializedAdditionalInformation);
 

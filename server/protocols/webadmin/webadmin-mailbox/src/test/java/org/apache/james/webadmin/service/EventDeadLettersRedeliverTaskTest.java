@@ -84,7 +84,7 @@ class EventDeadLettersRedeliverTaskTest {
 
     @Test
     void redeliverAllAdditionalInformationShouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForAll.MODULE)
+        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForAll.module())
             .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForAll(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, TIMESTAMP))
             .json(SERIALIZED_TASK_ADDITIONAL_INFORMATION_ALL)
             .verify();
@@ -92,7 +92,7 @@ class EventDeadLettersRedeliverTaskTest {
 
     @Test
     void redeliverGroupAdditionalInformationShouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.MODULE)
+        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.module())
             .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, SOME_GROUP, TIMESTAMP))
             .json(SERIALIZED_TASK_ADDITIONAL_INFORMATION_GROUP)
             .verify();
@@ -100,7 +100,7 @@ class EventDeadLettersRedeliverTaskTest {
 
     @Test
     void redeliverOneAdditionalInformationShouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForOne.MODULE)
+        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliveryTaskAdditionalInformationForOne.module())
             .bean(new EventDeadLettersRedeliveryTaskAdditionalInformationForOne(SUCCESSFUL_REDELIVERY_COUNT, FAILED_REDELIVERY_COUNT, SOME_GROUP, SOME_INSERTION_ID, TIMESTAMP))
             .json(SERIALIZED_TASK_ADDITIONAL_INFORMATION_ONE)
             .verify();

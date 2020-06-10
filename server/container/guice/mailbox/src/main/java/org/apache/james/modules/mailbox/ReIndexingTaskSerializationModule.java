@@ -80,31 +80,31 @@ public class ReIndexingTaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> errorRecoveryAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask.serializationModule(mailboxIdFactory);
+        return ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask.module(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> fullReindexAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask.serializationModule(mailboxIdFactory);
+        return ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask.module(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> messageIdReindexingAdditionalInformation(MessageId.Factory messageIdFactory) {
-        return MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(messageIdFactory);
+        return MessageIdReindexingTaskAdditionalInformationDTO.module(messageIdFactory);
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> singleMailboxReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return SingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
+        return SingleMailboxReindexingTaskAdditionalInformationDTO.module(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> singleMessageReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return SingleMessageReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
+        return SingleMessageReindexingTaskAdditionalInformationDTO.module(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> userReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return UserReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
+        return UserReindexingTaskAdditionalInformationDTO.module(mailboxIdFactory);
     }
 }

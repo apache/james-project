@@ -72,7 +72,7 @@ class ClearMailQueueTaskTest {
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
         ClearMailQueueTask.AdditionalInformation details = new ClearMailQueueTask.AdditionalInformation(QUEUE_NAME, INITIAL_COUNT, REMAINING_COUNT, TIMESTAMP);
-        JsonSerializationVerifier.dtoModule(ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+        JsonSerializationVerifier.dtoModule(ClearMailQueueTaskAdditionalInformationDTO.module())
             .bean(details)
             .json(SERIALIZED_TASK_ADDITIONAL_INFORMATION)
             .verify();

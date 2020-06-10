@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 
 public class SingleMailboxReindexingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    public static AdditionalInformationDTOModule<SingleMailboxReindexingTask.AdditionalInformation, SingleMailboxReindexingTaskAdditionalInformationDTO> serializationModule(MailboxId.Factory factory) {
+    public static AdditionalInformationDTOModule<SingleMailboxReindexingTask.AdditionalInformation, SingleMailboxReindexingTaskAdditionalInformationDTO> module(MailboxId.Factory factory) {
         return DTOModule.forDomainObject(SingleMailboxReindexingTask.AdditionalInformation.class)
             .convertToDTO(SingleMailboxReindexingTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new SingleMailboxReindexingTask.AdditionalInformation(factory.fromString(dto.getMailboxId()),

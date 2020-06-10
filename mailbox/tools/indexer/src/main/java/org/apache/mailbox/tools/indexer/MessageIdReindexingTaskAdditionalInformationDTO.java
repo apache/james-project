@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MessageIdReindexingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    public static AdditionalInformationDTOModule<MessageIdReIndexingTask.AdditionalInformation, MessageIdReindexingTaskAdditionalInformationDTO> serializationModule(MessageId.Factory factory) {
+    public static AdditionalInformationDTOModule<MessageIdReIndexingTask.AdditionalInformation, MessageIdReindexingTaskAdditionalInformationDTO> module(MessageId.Factory factory) {
         return DTOModule.forDomainObject(MessageIdReIndexingTask.AdditionalInformation.class)
             .convertToDTO(MessageIdReindexingTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new MessageIdReIndexingTask.AdditionalInformation(factory.fromString(dto.getMessageId()), dto.timestamp))

@@ -44,13 +44,15 @@ public class MailboxMergingTaskAdditionalInformationDTO implements AdditionalInf
         );
     }
 
-    public static final AdditionalInformationDTOModule<MailboxMergingTask.Details, MailboxMergingTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(MailboxMergingTask.Details.class)
+    public static AdditionalInformationDTOModule<MailboxMergingTask.Details, MailboxMergingTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(MailboxMergingTask.Details.class)
             .convertToDTO(MailboxMergingTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(MailboxMergingTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(MailboxMergingTaskAdditionalInformationDTO::fromDomainObject)
             .typeName(MailboxMergingTask.MAILBOX_MERGING.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
+
 
     private final String type;
     private final String oldMailboxId;

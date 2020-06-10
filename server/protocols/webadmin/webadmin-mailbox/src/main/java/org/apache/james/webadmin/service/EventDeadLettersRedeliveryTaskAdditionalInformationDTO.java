@@ -26,8 +26,8 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
             }
         }
 
-        public static final AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForAll, DTO> MODULE =
-            DTOModule
+        public static AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForAll, DTO> module() {
+            return DTOModule
                 .forDomainObject(EventDeadLettersRedeliveryTaskAdditionalInformationForAll.class)
                 .convertToDTO(DTO.class)
                 .toDomainObjectConverter(EventDeadLettersRedeliveryTaskAdditionalInformationDTO::fromAll)
@@ -39,6 +39,7 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
                     domainObject.timestamp()))
                 .typeName(EventDeadLettersRedeliverAllTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
+        }
 
 
         EventDeadLettersRedeliveryTaskAdditionalInformationForAll(long successfulRedeliveriesCount, long failedRedeliveriesCount, Instant timestamp) {
@@ -59,9 +60,8 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
             }
         }
 
-        public static final AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForGroup, DTO> MODULE =
-            DTOModule
-                .forDomainObject(EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.class)
+        public static AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForGroup, DTO> module() {
+            return DTOModule.forDomainObject(EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.class)
                 .convertToDTO(DTO.class)
                 .toDomainObjectConverter(EventDeadLettersRedeliveryTaskAdditionalInformationDTO::fromGroup)
                 .toDTOConverter((domainObject, typeName) -> new DTO(typeName,
@@ -72,6 +72,7 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
                     domainObject.timestamp()))
                 .typeName(EventDeadLettersRedeliverGroupTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
+        }
 
 
         EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(long successfulRedeliveriesCount, long failedRedeliveriesCount, Optional<Group> group, Instant timestamp) {
@@ -91,9 +92,8 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
             }
         }
 
-        public static final AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForOne, DTO> MODULE =
-            DTOModule
-                .forDomainObject(EventDeadLettersRedeliveryTaskAdditionalInformationForOne.class)
+        public static AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForOne, DTO> module() {
+            return DTOModule.forDomainObject(EventDeadLettersRedeliveryTaskAdditionalInformationForOne.class)
                 .convertToDTO(DTO.class)
                 .toDomainObjectConverter(EventDeadLettersRedeliveryTaskAdditionalInformationDTO::fromOne)
                 .toDTOConverter((domainObject, typeName) -> new DTO(typeName,
@@ -104,6 +104,7 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
                     domainObject.timestamp()))
                 .typeName(EventDeadLettersRedeliverOneTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
+        }
 
 
         EventDeadLettersRedeliveryTaskAdditionalInformationForOne(

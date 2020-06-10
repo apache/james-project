@@ -50,23 +50,23 @@ public class MailQueueTaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> clearMailQueueAdditionalInformation() {
-        return ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return ClearMailQueueTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminClearMailQueueAdditionalInformation() {
-        return ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return ClearMailQueueTaskAdditionalInformationDTO.module();
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> deleteMailsFromMailQueueAdditionalInformation() {
-        return DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE;
+        return DeleteMailsFromMailQueueTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminDeleteMailsFromMailQueueAdditionalInformation() {
-        return WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE;
+        return WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTO.module();
     }
 }

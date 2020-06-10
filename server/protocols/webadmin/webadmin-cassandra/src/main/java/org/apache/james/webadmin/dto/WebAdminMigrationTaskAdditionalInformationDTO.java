@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class WebAdminMigrationTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    public static AdditionalInformationDTOModule<MigrationTask.AdditionalInformation, WebAdminMigrationTaskAdditionalInformationDTO> serializationModule() {
+    public static AdditionalInformationDTOModule<MigrationTask.AdditionalInformation, WebAdminMigrationTaskAdditionalInformationDTO> module() {
         return DTOModule.forDomainObject(MigrationTask.AdditionalInformation.class)
             .convertToDTO(WebAdminMigrationTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new MigrationTask.AdditionalInformation(new SchemaVersion(dto.getToVersion()), dto.timestamp))

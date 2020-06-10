@@ -63,7 +63,7 @@ public class WebAdminQuotaSearchTestSystem {
         RecomputeCurrentQuotasService mock = mock(RecomputeCurrentQuotasService.class);
         when(mock.recomputeCurrentQuotas(any(), any())).thenReturn(Mono.just(Task.Result.COMPLETED));
         TasksRoutes tasksRoutes = new TasksRoutes(taskManager, new JsonTransformer(),
-            DTOConverter.of(RecomputeCurrentQuotasTaskAdditionalInformationDTO.MODULE));
+            DTOConverter.of(RecomputeCurrentQuotasTaskAdditionalInformationDTO.module()));
         UserQuotaRoutes userQuotaRoutes = new UserQuotaRoutes(quotaSearchTestSystem.getUsersRepository(),
             userQuotaService,
             jsonTransformer,

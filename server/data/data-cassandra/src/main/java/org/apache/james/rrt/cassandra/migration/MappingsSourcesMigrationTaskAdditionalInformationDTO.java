@@ -40,7 +40,7 @@ public class MappingsSourcesMigrationTaskAdditionalInformationDTO implements Add
         );
     }
 
-    public static AdditionalInformationDTOModule<MappingsSourcesMigration.AdditionalInformation, MappingsSourcesMigrationTaskAdditionalInformationDTO> serializationModule(TaskType type) {
+    public static AdditionalInformationDTOModule<MappingsSourcesMigration.AdditionalInformation, MappingsSourcesMigrationTaskAdditionalInformationDTO> module(TaskType type) {
         return DTOModule
             .forDomainObject(MappingsSourcesMigration.AdditionalInformation.class)
             .convertToDTO(MappingsSourcesMigrationTaskAdditionalInformationDTO.class)

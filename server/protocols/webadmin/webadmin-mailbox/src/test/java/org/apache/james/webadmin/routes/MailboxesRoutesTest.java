@@ -50,7 +50,6 @@ import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.dto.WebAdminReprocessingContextInformationDTO;
 import org.apache.james.webadmin.dto.WebAdminReprocessingContextInformationDTO.WebAdminErrorRecoveryIndexationDTO;
 import org.apache.james.webadmin.dto.WebAdminReprocessingContextInformationDTO.WebAdminFullIndexationDTO;
 import org.apache.james.webadmin.dto.WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO;
@@ -60,14 +59,10 @@ import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
-import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskAdditionalInformationDTO;
 import org.eclipse.jetty.http.HttpStatus;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -112,7 +107,7 @@ class MailboxesRoutesTest {
                         WebAdminErrorRecoveryIndexationDTO.serializationModule(mailboxIdFactory),
                         WebAdminFullIndexationDTO.serializationModule(mailboxIdFactory),
                         WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory),
-                        SingleMessageReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory))),
+                        SingleMessageReindexingTaskAdditionalInformationDTO.module(mailboxIdFactory))),
                 new MailboxesRoutes(taskManager,
                     jsonTransformer,
                     ImmutableSet.of(

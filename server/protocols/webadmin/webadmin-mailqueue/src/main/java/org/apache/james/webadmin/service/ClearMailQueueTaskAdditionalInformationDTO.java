@@ -29,15 +29,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    public static final AdditionalInformationDTOModule<ClearMailQueueTask.AdditionalInformation, ClearMailQueueTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(ClearMailQueueTask.AdditionalInformation.class)
+    public static AdditionalInformationDTOModule<ClearMailQueueTask.AdditionalInformation, ClearMailQueueTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(ClearMailQueueTask.AdditionalInformation.class)
             .convertToDTO(ClearMailQueueTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new ClearMailQueueTask.AdditionalInformation(
                 MailQueueName.of(dto.mailQueueName),
                 dto.initialCount,
                 dto.remainingCount,
-                dto.timestamp
-            ))
+                dto.timestamp))
             .toDTOConverter((details, type) -> new ClearMailQueueTaskAdditionalInformationDTO(
                 type,
                 details.getMailQueueName(),
@@ -46,6 +45,7 @@ public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInf
                 details.timestamp()))
             .typeName(ClearMailQueueTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String mailQueueName;
     private final String type;

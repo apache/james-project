@@ -135,7 +135,7 @@ class RecomputeUserFastViewProjectionItemsRequestToTaskTest {
         MessageFastViewPrecomputedProperties.Factory projectionItemFactory = new MessageFastViewPrecomputedProperties.Factory(previewFactory);
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new TasksRoutes(taskManager, jsonTransformer,
-                DTOConverter.of(RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE)),
+                DTOConverter.of(RecomputeUserFastViewTaskAdditionalInformationDTO.module())),
             new JMAPRoutes(
                 new MessageFastViewProjectionCorrector(usersRepository, mailboxManager, messageFastViewProjection, projectionItemFactory),
                 taskManager, usersRepository))

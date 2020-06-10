@@ -66,45 +66,45 @@ public class VaultTaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> blobStoreVaultGarbageCollectionAdditionalInformation() {
-        return BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.MODULE;
+        return BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminBlobStoreVaultGarbageCollectionAdditionalInformation() {
-        return BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.MODULE;
+        return BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.module();
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> deletedMessagesVaultDeleteAdditionalInformation(MessageId.Factory factory) {
-        return DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.serializationModule(factory);
+        return DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.module(factory);
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminDeletedMessagesVaultDeleteAdditionalInformation(MessageId.Factory factory) {
-        return WebAdminDeletedMessagesVaultDeleteTaskAdditionalInformationDTO.serializationModule(factory);
+        return WebAdminDeletedMessagesVaultDeleteTaskAdditionalInformationDTO.module(factory);
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> deletedMessagesVaultExportAdditionalInformation() {
-        return DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE;
+        return DeletedMessagesVaultExportTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminDeletedMessagesVaultExportAdditionalInformation() {
-        return DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE;
+        return DeletedMessagesVaultExportTaskAdditionalInformationDTO.module();
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> deletedMessagesVaultRestoreAdditionalInformation() {
-        return DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE;
+        return DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminDeletedMessagesVaultRestoreAdditionalInformation() {
-        return WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE;
+        return WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO.module();
     }
 }

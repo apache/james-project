@@ -46,7 +46,7 @@ class MailboxMergingTaskTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(MailboxMergingTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+        JsonSerializationVerifier.dtoModule(MailboxMergingTaskAdditionalInformationDTO.module())
             .bean(DETAILS)
             .json(SERIALIZED_ADDITIONAL_INFORMATION)
             .verify();

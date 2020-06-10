@@ -30,9 +30,8 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingAllMailsTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-
-    public static final AdditionalInformationDTOModule<ReprocessingAllMailsTask.AdditionalInformation, ReprocessingAllMailsTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(ReprocessingAllMailsTask.AdditionalInformation.class)
+    public static AdditionalInformationDTOModule<ReprocessingAllMailsTask.AdditionalInformation, ReprocessingAllMailsTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(ReprocessingAllMailsTask.AdditionalInformation.class)
             .convertToDTO(ReprocessingAllMailsTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new ReprocessingAllMailsTask.AdditionalInformation(
                 MailRepositoryPath.from(dto.repositoryPath),
@@ -40,8 +39,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
                 dto.targetProcessor,
                 dto.initialCount,
                 dto.remainingCount,
-                dto.timestamp
-            ))
+                dto.timestamp))
             .toDTOConverter((details, type) -> new ReprocessingAllMailsTaskAdditionalInformationDTO(
                 type,
                 details.getRepositoryPath(),
@@ -52,6 +50,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
                 details.timestamp()))
             .typeName(ReprocessingAllMailsTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final String repositoryPath;

@@ -128,9 +128,9 @@ class EventDeadLettersRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new EventDeadLettersRoutes(service, eventSerializer, taskManager, jsonTransformer),
                 new TasksRoutes(taskManager, jsonTransformer,
-                    DTOConverter.of(EventDeadLettersRedeliveryTaskAdditionalInformationForOne.MODULE,
-                        EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.MODULE,
-                        EventDeadLettersRedeliveryTaskAdditionalInformationForAll.MODULE)))
+                    DTOConverter.of(EventDeadLettersRedeliveryTaskAdditionalInformationForOne.module(),
+                        EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.module(),
+                        EventDeadLettersRedeliveryTaskAdditionalInformationForAll.module())))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();

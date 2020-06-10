@@ -44,14 +44,14 @@ public class DeletedMessagesVaultExportTaskAdditionalInformationDTO implements A
         );
     }
 
-    public static final AdditionalInformationDTOModule<DeletedMessagesVaultExportTask.AdditionalInformation, DeletedMessagesVaultExportTaskAdditionalInformationDTO> MODULE =
-        DTOModule
-            .forDomainObject(DeletedMessagesVaultExportTask.AdditionalInformation.class)
+    public static final AdditionalInformationDTOModule<DeletedMessagesVaultExportTask.AdditionalInformation, DeletedMessagesVaultExportTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(DeletedMessagesVaultExportTask.AdditionalInformation.class)
             .convertToDTO(DeletedMessagesVaultExportTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(DeletedMessagesVaultExportTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(DeletedMessagesVaultExportTaskAdditionalInformationDTO::fromDomainObject)
             .typeName(DeletedMessagesVaultExportTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final String userExportFrom;

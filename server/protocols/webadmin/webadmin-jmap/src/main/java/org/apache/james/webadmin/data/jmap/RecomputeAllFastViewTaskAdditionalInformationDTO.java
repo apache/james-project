@@ -31,13 +31,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 
 public class RecomputeAllFastViewTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-    public static final AdditionalInformationDTOModule<RecomputeAllFastViewProjectionItemsTask.AdditionalInformation, RecomputeAllFastViewTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(RecomputeAllFastViewProjectionItemsTask.AdditionalInformation.class)
+    public static AdditionalInformationDTOModule<RecomputeAllFastViewProjectionItemsTask.AdditionalInformation, RecomputeAllFastViewTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(RecomputeAllFastViewProjectionItemsTask.AdditionalInformation.class)
             .convertToDTO(RecomputeAllFastViewTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(RecomputeAllFastViewTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(RecomputeAllFastViewTaskAdditionalInformationDTO::toDTO)
             .typeName(RecomputeAllFastViewProjectionItemsTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private static RecomputeAllFastViewProjectionItemsTask.AdditionalInformation toDomainObject(RecomputeAllFastViewTaskAdditionalInformationDTO dto) {
         return new RecomputeAllFastViewProjectionItemsTask.AdditionalInformation(

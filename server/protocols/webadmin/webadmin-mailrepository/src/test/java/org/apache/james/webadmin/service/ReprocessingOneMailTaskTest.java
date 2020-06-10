@@ -72,7 +72,7 @@ class ReprocessingOneMailTaskTest {
     @Test
     void additionalInformationShouldBeSerializable() throws IOException {
         ReprocessingOneMailTask.AdditionalInformation details = new ReprocessingOneMailTask.AdditionalInformation(REPOSITORY_PATH, TARGET_QUEUE, MAIL_KEY, TARGET_PROCESSOR, TIMESTAMP);
-        JsonSerializationVerifier.dtoModule(ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+        JsonSerializationVerifier.dtoModule(ReprocessingOneMailTaskAdditionalInformationDTO.module())
             .bean(details)
             .json(SERIALIZED_TASK_1_ADDITIONAL_INFORMATION)
             .verify();

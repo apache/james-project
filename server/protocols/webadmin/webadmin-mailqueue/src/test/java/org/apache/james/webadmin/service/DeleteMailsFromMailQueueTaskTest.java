@@ -20,7 +20,6 @@ package org.apache.james.webadmin.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -104,7 +103,7 @@ class DeleteMailsFromMailQueueTaskTest {
         DeleteMailsFromMailQueueTask.AdditionalInformation detailsRecipient = new DeleteMailsFromMailQueueTask.AdditionalInformation(queue.getName(), 6L, 6L,
             Optional.empty(), Optional.empty(), Optional.of(new MailAddress("d@e.f")), TIMESTAMP);
 
-        JsonSerializationVerifier.dtoModule(DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE)
+        JsonSerializationVerifier.dtoModule(DeleteMailsFromMailQueueTaskAdditionalInformationDTO.module())
             .testCase(detailsSender,
                 "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"sender\": \"a@b.c\", \"initialCount\" : 10, \"remainingCount\":5, \"timestamp\": \"2018-11-13T12:00:55Z\"}")
             .testCase(detailsName,
@@ -117,7 +116,7 @@ class DeleteMailsFromMailQueueTaskTest {
     @Test
     void additionalInformationShouldThrowWhenDeserializeAMalformedMailAddress() {
         String serializedJson = "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"sender\": \"a.b.c\", \"initialCount\" : 10, \"remainingCount\":5}";
-        assertThatThrownBy(() -> JsonTaskAdditionalInformationSerializer.of(DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE)
+        assertThatThrownBy(() -> JsonTaskAdditionalInformationSerializer.of(DeleteMailsFromMailQueueTaskAdditionalInformationDTO.module())
                 .deserialize(serializedJson))
             .isInstanceOf(AddressException.class);
     }

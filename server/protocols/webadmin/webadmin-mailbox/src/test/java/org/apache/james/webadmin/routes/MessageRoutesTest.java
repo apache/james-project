@@ -89,7 +89,7 @@ class MessageRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new TasksRoutes(taskManager, jsonTransformer,
                     DTOConverter.of(
-                        MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(mailboxManager.getMessageIdFactory()))),
+                        MessageIdReindexingTaskAdditionalInformationDTO.module(mailboxManager.getMessageIdFactory()))),
                 new MessagesRoutes(taskManager,
                     new InMemoryMessageId.Factory(),
                     new MessageIdReIndexerImpl(reIndexerPerformer),

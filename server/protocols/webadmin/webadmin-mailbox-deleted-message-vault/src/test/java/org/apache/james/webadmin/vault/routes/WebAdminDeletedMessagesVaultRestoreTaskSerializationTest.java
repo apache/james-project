@@ -33,7 +33,7 @@ class WebAdminDeletedMessagesVaultRestoreTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE)
+        JsonSerializationVerifier.dtoModule(WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO.module())
             .bean(DETAILS)
             .json(SERIALIZED_ADDITIONAL_INFORMATION_TASK)
             .verify();

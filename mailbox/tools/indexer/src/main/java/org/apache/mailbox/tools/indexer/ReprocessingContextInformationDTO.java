@@ -35,8 +35,8 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Preconditions;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 
@@ -77,7 +77,7 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
             }
         }
 
-        public static AdditionalInformationDTOModule<ReprocessingContextInformationForErrorRecoveryIndexationTask, DTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
+        public static AdditionalInformationDTOModule<ReprocessingContextInformationForErrorRecoveryIndexationTask, DTO> module(MailboxId.Factory mailboxIdFactory) {
             return DTOModule.forDomainObject(ReprocessingContextInformationForErrorRecoveryIndexationTask.class)
                 .convertToDTO(DTO.class)
                 .toDomainObjectConverter(dto -> new ReprocessingContextInformationForErrorRecoveryIndexationTask(
@@ -128,7 +128,7 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
             }
         }
 
-        public static AdditionalInformationDTOModule<ReprocessingContextInformationForFullReindexingTask, DTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
+        public static AdditionalInformationDTOModule<ReprocessingContextInformationForFullReindexingTask, DTO> module(MailboxId.Factory mailboxIdFactory) {
             return DTOModule.forDomainObject(ReprocessingContextInformationForFullReindexingTask.class)
                 .convertToDTO(DTO.class)
                 .toDomainObjectConverter(dto -> new ReprocessingContextInformationForFullReindexingTask(

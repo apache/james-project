@@ -72,7 +72,7 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE)
+        JsonSerializationVerifier.dtoModule(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.module())
             .bean(DETAILS)
             .json(SERIALIZED_ADDITIONAL_INFORMATION_TASK)
             .verify();

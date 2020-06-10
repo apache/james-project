@@ -64,7 +64,7 @@ class ClearMailRepositoryTaskTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(ClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+        JsonSerializationVerifier.dtoModule(ClearMailRepositoryTaskAdditionalInformationDTO.module())
             .bean(new ClearMailRepositoryTask.AdditionalInformation(MAIL_REPOSITORY_PATH, INITIAL_COUNT, REMAINING_COUNT, TIMESTAMP))
             .json(SERIALIZED_TASK_ADDITIONAL_INFORMATION)
             .verify();

@@ -57,7 +57,7 @@ class SingleMessageReindexingTaskSerializationTest {
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
         SingleMessageReindexingTask.AdditionalInformation details = new SingleMessageReindexingTask.AdditionalInformation(mailboxId, messageUid, TIMESTAMP);
-        JsonSerializationVerifier.dtoModule(SingleMessageReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory))
+        JsonSerializationVerifier.dtoModule(SingleMessageReindexingTaskAdditionalInformationDTO.module(mailboxIdFactory))
             .bean(details)
             .json(serializedAdditionalInformation)
             .verify();

@@ -59,7 +59,7 @@ class MessageIdReindexingTaskSerializationTest {
         MessageId messageId = messageIdFactory.fromString("1");
         MessageIdReIndexingTask.AdditionalInformation details = new MessageIdReIndexingTask.AdditionalInformation(messageId, TIMESTAMP);
 
-        JsonSerializationVerifier.dtoModule(MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(messageIdFactory))
+        JsonSerializationVerifier.dtoModule(MessageIdReindexingTaskAdditionalInformationDTO.module(messageIdFactory))
             .bean(details)
             .json(serializedAdditionalInformation)
             .verify();

@@ -78,7 +78,7 @@ class SolveMailboxInconsistenciesTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(SolveMailboxInconsistenciesTaskAdditionalInformationDTO.MODULE)
+        JsonSerializationVerifier.dtoModule(SolveMailboxInconsistenciesTaskAdditionalInformationDTO.module())
             .bean(DETAILS)
             .json(SERIALIZED_ADDITIONAL_INFORMATION)
             .verify();

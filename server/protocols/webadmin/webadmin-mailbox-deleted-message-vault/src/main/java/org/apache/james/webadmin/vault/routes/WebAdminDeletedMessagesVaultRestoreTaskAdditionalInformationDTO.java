@@ -41,14 +41,14 @@ public class WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO imp
         );
     }
 
-    public static final AdditionalInformationDTOModule<DeletedMessagesVaultRestoreTask.AdditionalInformation, WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO> MODULE =
-        DTOModule
-            .forDomainObject(DeletedMessagesVaultRestoreTask.AdditionalInformation.class)
+    public static AdditionalInformationDTOModule<DeletedMessagesVaultRestoreTask.AdditionalInformation, WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(DeletedMessagesVaultRestoreTask.AdditionalInformation.class)
             .convertToDTO(WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO::fromDomainObject)
             .typeName(DeletedMessagesVaultRestoreTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final String username;

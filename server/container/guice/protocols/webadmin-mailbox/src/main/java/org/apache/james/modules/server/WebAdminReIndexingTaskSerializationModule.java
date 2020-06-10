@@ -50,7 +50,7 @@ public class WebAdminReIndexingTaskSerializationModule extends AbstractModule {
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> messageIdReindexingAdditionalInformation(MessageId.Factory messageIdFactory) {
-        return MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(messageIdFactory);
+        return MessageIdReindexingTaskAdditionalInformationDTO.module(messageIdFactory);
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
@@ -62,7 +62,7 @@ public class WebAdminReIndexingTaskSerializationModule extends AbstractModule {
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> singleMessageReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return SingleMessageReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
+        return SingleMessageReindexingTaskAdditionalInformationDTO.module(mailboxIdFactory);
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)

@@ -40,14 +40,15 @@ public class SolveMailboxInconsistenciesTaskAdditionalInformationDTO implements 
             details.timestamp());
     }
 
-    public static final AdditionalInformationDTOModule<SolveMailboxInconsistenciesTask.Details, SolveMailboxInconsistenciesTaskAdditionalInformationDTO> MODULE =
-        DTOModule
-            .forDomainObject(SolveMailboxInconsistenciesTask.Details.class)
+    public static AdditionalInformationDTOModule<SolveMailboxInconsistenciesTask.Details, SolveMailboxInconsistenciesTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(SolveMailboxInconsistenciesTask.Details.class)
             .convertToDTO(SolveMailboxInconsistenciesTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(SolveMailboxInconsistenciesTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(SolveMailboxInconsistenciesTaskAdditionalInformationDTO::fromDomainObject)
             .typeName(SolveMailboxInconsistenciesTask.SOLVE_MAILBOX_INCONSISTENCIES.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
+
 
     private final String type;
     private final long processedMailboxEntries;

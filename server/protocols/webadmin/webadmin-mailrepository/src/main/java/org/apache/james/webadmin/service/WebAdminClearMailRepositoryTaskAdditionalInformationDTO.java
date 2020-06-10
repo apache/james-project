@@ -28,16 +28,14 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class WebAdminClearMailRepositoryTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-
-    public static final AdditionalInformationDTOModule<ClearMailRepositoryTask.AdditionalInformation, WebAdminClearMailRepositoryTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(ClearMailRepositoryTask.AdditionalInformation.class)
+    public static AdditionalInformationDTOModule<ClearMailRepositoryTask.AdditionalInformation, WebAdminClearMailRepositoryTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(ClearMailRepositoryTask.AdditionalInformation.class)
             .convertToDTO(WebAdminClearMailRepositoryTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new ClearMailRepositoryTask.AdditionalInformation(
                 MailRepositoryPath.from(dto.repositoryPath),
                 dto.initialCount,
                 dto.remainingCount,
-                dto.timestamp
-            ))
+                dto.timestamp))
             .toDTOConverter((details, type) -> new WebAdminClearMailRepositoryTaskAdditionalInformationDTO(
                 type,
                 details.getRepositoryPath(),
@@ -46,6 +44,7 @@ public class WebAdminClearMailRepositoryTaskAdditionalInformationDTO implements 
                 details.timestamp()))
             .typeName(ClearMailRepositoryTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String repositoryPath;
     private final String type;

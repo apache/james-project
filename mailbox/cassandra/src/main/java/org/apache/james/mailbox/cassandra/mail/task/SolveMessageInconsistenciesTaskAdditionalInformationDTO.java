@@ -49,14 +49,14 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
             details.getErrors());
     }
 
-    public static final AdditionalInformationDTOModule<Details, SolveMessageInconsistenciesTaskAdditionalInformationDTO> MODULE =
-        DTOModule
-            .forDomainObject(Details.class)
+    public static AdditionalInformationDTOModule<Details, SolveMessageInconsistenciesTaskAdditionalInformationDTO> module() {
+        return  DTOModule.forDomainObject(Details.class)
             .convertToDTO(SolveMessageInconsistenciesTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(SolveMessageInconsistenciesTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(SolveMessageInconsistenciesTaskAdditionalInformationDTO::fromDomainObject)
             .typeName(SOLVE_MESSAGE_INCONSISTENCIES.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final Instant timestamp;
     private final String type;

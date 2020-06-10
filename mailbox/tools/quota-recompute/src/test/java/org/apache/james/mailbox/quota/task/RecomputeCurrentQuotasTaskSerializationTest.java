@@ -66,7 +66,7 @@ class RecomputeCurrentQuotasTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(RecomputeCurrentQuotasTaskAdditionalInformationDTO.MODULE)
+        JsonSerializationVerifier.dtoModule(RecomputeCurrentQuotasTaskAdditionalInformationDTO.module())
             .bean(DETAILS)
             .json(SERIALIZED_ADDITIONAL_INFORMATION)
             .verify();
@@ -84,7 +84,7 @@ class RecomputeCurrentQuotasTaskSerializationTest {
 
     @Test
     void shouldDeserializeLegacyDetails() throws Exception {
-        RecomputeCurrentQuotasTask.Details legacyDetails = JsonGenericSerializer.forModules(RecomputeCurrentQuotasTaskAdditionalInformationDTO.MODULE)
+        RecomputeCurrentQuotasTask.Details legacyDetails = JsonGenericSerializer.forModules(RecomputeCurrentQuotasTaskAdditionalInformationDTO.module())
             .withoutNestedType()
             .deserialize(SERIALIZED_ADDITIONAL_INFORMATION_LEGACY);
 

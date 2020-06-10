@@ -86,7 +86,7 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(SolveMessageInconsistenciesTaskAdditionalInformationDTO.MODULE)
+        JsonSerializationVerifier.dtoModule(SolveMessageInconsistenciesTaskAdditionalInformationDTO.module())
             .bean(DETAILS)
             .json(ClassLoaderUtils.getSystemResourceAsString("json/solveMessageInconsistencies.additionalInformation.json"))
             .verify();
@@ -94,7 +94,7 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
 
     @Test
     void legacyAdditionalInformationShouldBeDeserializable() throws Exception {
-        SolveMessageInconsistenciesTask.Details legacyDetails = JsonGenericSerializer.forModules(SolveMessageInconsistenciesTaskAdditionalInformationDTO.MODULE)
+        SolveMessageInconsistenciesTask.Details legacyDetails = JsonGenericSerializer.forModules(SolveMessageInconsistenciesTaskAdditionalInformationDTO.module())
             .withoutNestedType()
             .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/solveMessageInconsistencies.additionalInformation.legacy.json"));
 

@@ -40,14 +40,14 @@ public class RecomputeCurrentQuotasTaskAdditionalInformationDTO implements Addit
             details.timestamp());
     }
 
-    public static final AdditionalInformationDTOModule<RecomputeCurrentQuotasTask.Details, RecomputeCurrentQuotasTaskAdditionalInformationDTO> MODULE =
-        DTOModule
-            .forDomainObject(RecomputeCurrentQuotasTask.Details.class)
+    public static AdditionalInformationDTOModule<RecomputeCurrentQuotasTask.Details, RecomputeCurrentQuotasTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(RecomputeCurrentQuotasTask.Details.class)
             .convertToDTO(RecomputeCurrentQuotasTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(RecomputeCurrentQuotasTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(RecomputeCurrentQuotasTaskAdditionalInformationDTO::fromDomainObject)
             .typeName(RecomputeCurrentQuotasTask.RECOMPUTE_CURRENT_QUOTAS.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final long processedQuotaRoots;

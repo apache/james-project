@@ -41,7 +41,6 @@ import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.backends.cassandra.migration.CassandraSchemaTransitions;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.migration.MigrationTask;
-import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInformationDTO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
@@ -91,7 +90,7 @@ public class CassandraMigrationRoutesTest {
                 new CassandraMigrationRoutes(new CassandraMigrationService(schemaVersionDAO, transitions, version -> new MigrationTask(schemaVersionDAO, transitions, version), LATEST_VERSION),
                     taskManager, jsonTransformer),
                 new TasksRoutes(taskManager, jsonTransformer,
-                    DTOConverter.of(WebAdminMigrationTaskAdditionalInformationDTO.serializationModule())))
+                    DTOConverter.of(WebAdminMigrationTaskAdditionalInformationDTO.module())))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

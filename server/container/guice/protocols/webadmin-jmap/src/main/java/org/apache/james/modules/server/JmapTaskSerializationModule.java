@@ -48,23 +48,23 @@ public class JmapTaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> recomputeAllJmapPreviewsAdditionalInformation() {
-        return RecomputeAllFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return RecomputeAllFastViewTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminRecomputeAllJmapPreviewsAdditionalInformation() {
-        return RecomputeAllFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return RecomputeAllFastViewTaskAdditionalInformationDTO.module();
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> recomputeUserJmapPreviewsAdditionalInformation() {
-        return RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return RecomputeUserFastViewTaskAdditionalInformationDTO.module();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminRecomputeUserJmapPreviewsAdditionalInformation() {
-        return RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return RecomputeUserFastViewTaskAdditionalInformationDTO.module();
     }
 }

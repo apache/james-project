@@ -22,7 +22,6 @@ import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.backends.cassandra.migration.MigrationTask;
-import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInformationDTO;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +31,7 @@ class WebAdminMigrationTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(WebAdminMigrationTaskAdditionalInformationDTO.serializationModule())
+        JsonSerializationVerifier.dtoModule(WebAdminMigrationTaskAdditionalInformationDTO.module())
             .bean(new MigrationTask.AdditionalInformation(new SchemaVersion(12), TIMESTAMP))
             .json(SERIALIZED_ADDITIONAL_INFORMATION)
             .verify();

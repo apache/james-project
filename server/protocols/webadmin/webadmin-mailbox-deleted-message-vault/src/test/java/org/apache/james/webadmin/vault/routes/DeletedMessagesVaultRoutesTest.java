@@ -197,10 +197,10 @@ class DeletedMessagesVaultRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new TasksRoutes(taskManager, jsonTransformer,
                     DTOConverter.of(
-                        WebAdminDeletedMessagesVaultDeleteTaskAdditionalInformationDTO.serializationModule(messageIdFactory),
-                        DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE,
-                        WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE,
-                        BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.MODULE)),
+                        WebAdminDeletedMessagesVaultDeleteTaskAdditionalInformationDTO.module(messageIdFactory),
+                        DeletedMessagesVaultExportTaskAdditionalInformationDTO.module(),
+                        WebAdminDeletedMessagesVaultRestoreTaskAdditionalInformationDTO.module(),
+                        BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.module())),
                 new DeletedMessagesVaultRoutes(vault, vaultRestore, exportService, jsonTransformer, taskManager, queryTranslator, usersRepository, messageIdFactory))
             .start();
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

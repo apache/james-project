@@ -45,7 +45,7 @@ class MappingsSourcesMigrationTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(MappingsSourcesMigration.TYPE))
+        JsonSerializationVerifier.dtoModule(MappingsSourcesMigrationTaskAdditionalInformationDTO.module(MappingsSourcesMigration.TYPE))
             .bean(DETAILS)
             .json(SERIALIZED_ADDITIONAL_INFORMATION)
             .verify();

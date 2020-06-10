@@ -72,7 +72,6 @@ import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.ClearMailRepositoryTask;
-import org.apache.james.webadmin.service.ClearMailRepositoryTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTaskAdditionalInformationDTO;
@@ -131,9 +130,9 @@ public class MailRepositoriesRoutesTest {
                 new MailRepositoriesRoutes(repositoryStoreService,
                     jsonTransformer, reprocessingService, taskManager),
             new TasksRoutes(taskManager, jsonTransformer,
-                DTOConverter.of(ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
-                    ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
-                    WebAdminClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE)))
+                DTOConverter.of(ReprocessingOneMailTaskAdditionalInformationDTO.module(),
+                    ReprocessingAllMailsTaskAdditionalInformationDTO.module(),
+                    WebAdminClearMailRepositoryTaskAdditionalInformationDTO.module())))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DeletedMessagesVaultDeleteTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    public static AdditionalInformationDTOModule<DeletedMessagesVaultDeleteTask.AdditionalInformation, DeletedMessagesVaultDeleteTaskAdditionalInformationDTO> serializationModule(MessageId.Factory factory) {
+    public static AdditionalInformationDTOModule<DeletedMessagesVaultDeleteTask.AdditionalInformation, DeletedMessagesVaultDeleteTaskAdditionalInformationDTO> module(MessageId.Factory factory) {
         return DTOModule.forDomainObject(DeletedMessagesVaultDeleteTask.AdditionalInformation.class)
             .convertToDTO(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new DeletedMessagesVaultDeleteTask.AdditionalInformation(Username.of(dto.userName), factory.fromString(dto.getMessageId()), dto.getTimestamp()))

@@ -84,7 +84,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE)
+        JsonSerializationVerifier.dtoModule(DeletedMessagesVaultExportTaskAdditionalInformationDTO.module())
             .bean(details)
             .json(SERIALIZED_ADDITIONAL_INFORMATION_TASK)
             .verify();
@@ -93,7 +93,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
     @Test
     void additionalInformationWithInvalidMailAddressShouldThrow() {
         String invalidSerializedAdditionalInformationTask = "{\"type\":\"deleted-messages-export\",\"exportTo\":\"invalid\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";;
-        assertThatCode(() -> JsonTaskAdditionalInformationSerializer.of(DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE)
+        assertThatCode(() -> JsonTaskAdditionalInformationSerializer.of(DeletedMessagesVaultExportTaskAdditionalInformationDTO.module())
                 .deserialize(invalidSerializedAdditionalInformationTask))
             .hasCauseInstanceOf(AddressException.class);
     }

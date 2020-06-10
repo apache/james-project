@@ -90,7 +90,7 @@ class FullReindexingTaskSerializationTest {
     void additionalInformationShouldBeSerializable() throws Exception {
         ReprocessingContextInformationForFullReindexingTask details = new ReprocessingContextInformationForFullReindexingTask(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP, RunningOptions.DEFAULT);
 
-        JsonSerializationVerifier.dtoModule(ReprocessingContextInformationForFullReindexingTask.serializationModule(new TestId.Factory()))
+        JsonSerializationVerifier.dtoModule(ReprocessingContextInformationForFullReindexingTask.module(new TestId.Factory()))
             .bean(details)
             .json(serializedAdditionalInformation)
             .verify();
@@ -98,7 +98,7 @@ class FullReindexingTaskSerializationTest {
 
     @Test
     void legacyAdditionalInformationShouldBeDeserializable() throws Exception {
-        ReprocessingContextInformationForFullReindexingTask legacyAdditionalInformation = JsonGenericSerializer.forModules(ReprocessingContextInformationForFullReindexingTask.serializationModule(new TestId.Factory()))
+        ReprocessingContextInformationForFullReindexingTask legacyAdditionalInformation = JsonGenericSerializer.forModules(ReprocessingContextInformationForFullReindexingTask.module(new TestId.Factory()))
             .withoutNestedType()
             .deserialize(legacySerializedAdditionalInformation);
 

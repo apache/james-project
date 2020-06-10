@@ -58,7 +58,7 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.serializationModule(messageIdFactory))
+        JsonSerializationVerifier.dtoModule(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.module(messageIdFactory))
             .bean(new DeletedMessagesVaultDeleteTask.AdditionalInformation(username, messageId, TIMESTAMP))
             .json(serializedAdditionalInformation)
             .verify();

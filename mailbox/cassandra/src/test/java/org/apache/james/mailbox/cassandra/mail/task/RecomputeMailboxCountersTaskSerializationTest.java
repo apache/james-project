@@ -84,7 +84,7 @@ class RecomputeMailboxCountersTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
-        JsonSerializationVerifier.dtoModule(RecomputeMailboxCountersTaskAdditionalInformationDTO.MODULE)
+        JsonSerializationVerifier.dtoModule(RecomputeMailboxCountersTaskAdditionalInformationDTO.module())
             .bean(DETAILS)
             .json(SERIALIZED_ADDITIONAL_INFORMATION)
             .verify();

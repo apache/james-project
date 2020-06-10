@@ -91,7 +91,7 @@ public class SolveMessageInconsistenciesRequestToTaskTest {
         Mockito.when(service.fixMessageInconsistencies(any(), any())).thenReturn(Mono.just(Task.Result.COMPLETED));
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-            new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(SolveMessageInconsistenciesTaskAdditionalInformationDTO.MODULE)),
+            new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(SolveMessageInconsistenciesTaskAdditionalInformationDTO.module())),
             new JMAPRoutes(
                 service,
                 taskManager))
