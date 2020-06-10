@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.lucene.search;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.james.mailbox.store.MessageIdManagerTestSystem.MOD_SEQ;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -34,6 +35,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
@@ -49,12 +51,14 @@ import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.UidValidity;
+import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 class LuceneMailboxMessageSearchIndexTest {
     static final long LIMIT = 100L;
@@ -613,5 +617,138 @@ class LuceneMailboxMessageSearchIndexTest {
 
         Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4);
+    }
+
+    @Test
+    void updateShouldUpdateFlags() throws Exception {
+        Flags newFlags = new Flags(Flags.Flag.DRAFT);
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(uid2)
+            .modSeq(MOD_SEQ)
+            .oldFlags(new Flags(Flag.ANSWERED))
+            .newFlags(newFlags)
+            .build();
+
+        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.DRAFT));
+        assertThat(index.search(session, mailbox, query))
+            .containsExactly(uid2);
+    }
+
+    @Test
+    void updateShouldNotUpdateNorThrowOnUnknownMessageUid() throws Exception {
+        Flags newFlags = new Flags(Flags.Flag.DRAFT);
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(MessageUid.of(42))
+            .modSeq(MOD_SEQ)
+            .oldFlags(new Flags())
+            .newFlags(newFlags)
+            .build();
+
+        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.DRAFT));
+        assertThat(index.search(session, mailbox, query))
+            .isEmpty();
+    }
+
+    @Test
+    void updateShouldBeIdempotent() throws Exception {
+        Flags newFlags = new Flags(Flags.Flag.DRAFT);
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(uid2)
+            .modSeq(MOD_SEQ)
+            .oldFlags(new Flags())
+            .newFlags(newFlags)
+            .build();
+
+        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.DRAFT));
+        assertThat(index.search(session, mailbox, query))
+            .containsExactly(uid2);
+    }
+
+    @Test
+    void retrieveIndexedFlagsShouldRetrieveSystemFlags() {
+        Flags expectedFlags = new Flags(Flag.ANSWERED);
+
+        assertThat(index.retrieveIndexedFlags(mailbox, uid1).block())
+            .isEqualTo(expectedFlags);
+    }
+
+    @Test
+    void retrieveIndexedFlagsShouldReturnEmptyFlagsWhenNoFlags() {
+        Flags expectedFlags = new Flags();
+
+        assertThat(index.retrieveIndexedFlags(mailbox, uid5).block())
+            .isEqualTo(expectedFlags);
+    }
+
+    @Test
+    void retrieveIndexedFlagsShouldReturnAllSystemFlagsWhenAllFlagsSet() {
+        Flags newFlags = FlagsBuilder.builder()
+            .add(Flags.Flag.ANSWERED)
+            .add(Flags.Flag.DELETED)
+            .add(Flags.Flag.RECENT)
+            .add(Flags.Flag.DRAFT)
+            .add(Flags.Flag.FLAGGED)
+            .add(Flags.Flag.SEEN)
+            .build();
+
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(uid2)
+            .modSeq(MOD_SEQ)
+            .oldFlags(new Flags(Flag.ANSWERED))
+            .newFlags(newFlags)
+            .build();
+
+        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+
+        assertThat(index.retrieveIndexedFlags(mailbox, uid2).block())
+            .isEqualTo(newFlags);
+    }
+
+    @Test
+    void retrieveIndexedFlagsShouldReturnUserFlags() {
+        Flags newFlags = FlagsBuilder.builder()
+            .add("flag1")
+            .add("flag2")
+            .build();
+
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(uid2)
+            .modSeq(MOD_SEQ)
+            .oldFlags(new Flags(Flag.ANSWERED))
+            .newFlags(newFlags)
+            .build();
+
+        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+
+        assertThat(index.retrieveIndexedFlags(mailbox, uid2).block())
+            .isEqualTo(newFlags);
+    }
+
+    @Test
+    void retrieveIndexedFlagsShouldReturnUserAndSystemFlags() {
+        Flags newFlags = FlagsBuilder.builder()
+            .add("flag1")
+            .add("flag2")
+            .add(Flag.DRAFT)
+            .build();
+
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(uid2)
+            .modSeq(MOD_SEQ)
+            .oldFlags(new Flags(Flag.ANSWERED))
+            .newFlags(newFlags)
+            .build();
+
+        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+
+        assertThat(index.retrieveIndexedFlags(mailbox, uid2).block())
+            .isEqualTo(newFlags);
     }
 }

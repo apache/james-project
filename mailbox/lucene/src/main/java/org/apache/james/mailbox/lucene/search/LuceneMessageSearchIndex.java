@@ -1209,13 +1209,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             for (ScoreDoc sDoc : sDocs) {
                 Document doc = searcher.doc(sDoc.doc);
 
-                if (doc.getFieldable(FLAGS_FIELD) == null) {
-                    doc.removeFields(FLAGS_FIELD);
-                    indexFlags(doc, f);
+                doc.removeFields(FLAGS_FIELD);
+                indexFlags(doc, f);
 
-                    writer.updateDocument(new Term(ID_FIELD, doc.get(ID_FIELD)), doc);
-
-                }
+                writer.updateDocument(new Term(ID_FIELD, doc.get(ID_FIELD)), doc);
             }
         }
     }
@@ -1241,12 +1238,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         Flag[] flags = f.getSystemFlags();
         for (Flag flag : flags) {
             fString.add(toString(flag));
-            doc.add(new Field(FLAGS_FIELD, toString(flag), Store.NO, Index.NOT_ANALYZED));
+            doc.add(new Field(FLAGS_FIELD, toString(flag), Store.YES, Index.NOT_ANALYZED));
         }
         
         String[] userFlags = f.getUserFlags();
         for (String userFlag : userFlags) {
-            doc.add(new Field(FLAGS_FIELD, userFlag, Store.NO, Index.NOT_ANALYZED));
+            doc.add(new Field(FLAGS_FIELD, userFlag, Store.YES, Index.NOT_ANALYZED));
         }
         
         // if no flags are there we just use a empty field
@@ -1300,6 +1297,49 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Override
     public Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid) {
-        return Mono.empty();
+        return Mono.fromCallable(() -> retrieveFlags(mailbox, uid));
+    }
+
+    private Flags retrieveFlags(Mailbox mailbox, MessageUid uid) throws IOException {
+        try (IndexSearcher searcher = new IndexSearcher(IndexReader.open(writer, true))) {
+            Flags retrievedFlags = new Flags();
+
+            BooleanQuery query = new BooleanQuery();
+            query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
+            query.add(createQuery(MessageRange.one(uid)), BooleanClause.Occur.MUST);
+            query.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST);
+
+            TopDocs docs = searcher.search(query, 100000);
+            ScoreDoc[] sDocs = docs.scoreDocs;
+            for (ScoreDoc sDoc : sDocs) {
+                Document doc = searcher.doc(sDoc.doc);
+
+                Stream.of(doc.getValues(FLAGS_FIELD))
+                    .forEach(flag -> fromString(flag).ifPresentOrElse(retrievedFlags::add, () -> retrievedFlags.add(flag)));
+            }
+            return retrievedFlags;
+        }
+    }
+
+    /**
+     * Convert the given {@link Flag} to a String
+     */
+    private Optional<Flag> fromString(String flag) {
+        switch (flag) {
+            case "\\ANSWERED":
+                return Optional.of(Flag.ANSWERED);
+            case "\\DELETED":
+                return Optional.of(Flag.DELETED);
+            case "\\DRAFT":
+                return Optional.of(Flag.DRAFT);
+            case "\\FLAGGED":
+                return Optional.of(Flag.FLAGGED);
+            case "\\RECENT":
+                return Optional.of(Flag.RECENT);
+            case "\\FLAG":
+                return Optional.of(Flag.SEEN);
+            default:
+                return Optional.empty();
+        }
     }
 }
