@@ -1255,7 +1255,7 @@ class UserMailboxesRoutesTest {
                     .body("type", Matchers.is(UserReindexingTask.USER_RE_INDEXING.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", Matchers.is(0))
                     .body("additionalInformation.failedReprocessedMailCount", Matchers.is(1))
-                    .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", Matchers.is(Long.valueOf(uidAsLong).intValue()))
+                    .body("additionalInformation.messageFailures.\"" + mailboxId.serialize() + "\"[0].uid", Matchers.is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", Matchers.is(notNullValue()))
                     .body("submitDate", Matchers.is(notNullValue()));
             }

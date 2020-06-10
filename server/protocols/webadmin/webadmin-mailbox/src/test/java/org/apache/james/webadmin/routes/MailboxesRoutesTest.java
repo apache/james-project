@@ -243,7 +243,7 @@ class MailboxesRoutesTest {
                     .body("type", is(FullReindexingTask.FULL_RE_INDEXING.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(0))
                     .body("additionalInformation.failedReprocessedMailCount", is(1))
-                    .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
+                    .body("additionalInformation.messageFailures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
             }
@@ -456,7 +456,7 @@ class MailboxesRoutesTest {
                     .body("type", is(SingleMailboxReindexingTask.TYPE.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(0))
                     .body("additionalInformation.failedReprocessedMailCount", is(1))
-                    .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
+                    .body("additionalInformation.messageFailures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
             }
@@ -877,7 +877,7 @@ class MailboxesRoutesTest {
                     .body("type", is("error-recovery-indexation"))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(0))
                     .body("additionalInformation.failedReprocessedMailCount", is(1))
-                    .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
+                    .body("additionalInformation.messageFailures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
             }

@@ -37,8 +37,6 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.google.common.collect.ImmutableList;
 
-import net.javacrumbs.jsonunit.core.Option;
-
 class WebAdminUserReprocessingDTOTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
 
@@ -46,7 +44,7 @@ class WebAdminUserReprocessingDTOTest {
         "  \"type\":\"user-reindexing\",\"username\":\"bob\"," +
         "  \"successfullyReprocessedMailCount\":42," +
         "  \"failedReprocessedMailCount\":2," +
-        "  \"failures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
+        "  \"messageFailures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
         "  \"mailboxFailures\":[\"3\", \"4\"]," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 

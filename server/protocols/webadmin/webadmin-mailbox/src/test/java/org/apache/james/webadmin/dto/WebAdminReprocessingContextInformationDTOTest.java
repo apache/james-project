@@ -43,14 +43,14 @@ class WebAdminReprocessingContextInformationDTOTest {
         "  \"type\":\"error-recovery-indexation\"," +
         "  \"successfullyReprocessedMailCount\":42," +
         "  \"failedReprocessedMailCount\":2," +
-        "  \"failures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
+        "  \"messageFailures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
         "  \"mailboxFailures\":[\"3\", \"4\"]," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private final String serializedFullAdditionalInformation = "{" +
         "  \"type\":\"full-reindexing\"," +
         "  \"successfullyReprocessedMailCount\":42," +
         "  \"failedReprocessedMailCount\":2," +
-        "  \"failures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
+        "  \"messageFailures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
         "  \"mailboxFailures\":[\"3\", \"4\"]," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 

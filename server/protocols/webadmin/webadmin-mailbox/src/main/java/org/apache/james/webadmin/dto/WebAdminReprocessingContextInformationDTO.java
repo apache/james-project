@@ -110,7 +110,7 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
         return failedReprocessedMailCount;
     }
 
-    public SerializableReIndexingExecutionFailures getFailures() {
+    public SerializableReIndexingExecutionFailures getMessageFailures() {
         return messageFailures;
     }
 

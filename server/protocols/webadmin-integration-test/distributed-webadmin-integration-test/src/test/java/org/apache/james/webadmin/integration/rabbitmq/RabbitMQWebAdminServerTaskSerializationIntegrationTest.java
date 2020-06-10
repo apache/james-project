@@ -148,7 +148,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("type", is("full-reindexing"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
-            .body("additionalInformation.failures", is(anEmptyMap()));
+            .body("additionalInformation.messageFailures", is(anEmptyMap()));
     }
 
     @Test
@@ -338,7 +338,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
             .body("additionalInformation.username", is(USERNAME))
-            .body("additionalInformation.failures", is(anEmptyMap()));
+            .body("additionalInformation.messageFailures", is(anEmptyMap()));
     }
 
     @Test
@@ -438,7 +438,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("type", is("error-recovery-indexation"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
-            .body("additionalInformation.failures", is(anEmptyMap()));
+            .body("additionalInformation.messageFailures", is(anEmptyMap()));
     }
 
     @Test
@@ -669,7 +669,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
             .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
-            .body("additionalInformation.failures", is(anEmptyMap()));
+            .body("additionalInformation.messageFailures", is(anEmptyMap()));
     }
 
     @Test

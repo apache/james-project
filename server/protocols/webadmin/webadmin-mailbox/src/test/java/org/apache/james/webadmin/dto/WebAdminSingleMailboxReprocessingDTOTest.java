@@ -30,7 +30,6 @@ import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +44,7 @@ class WebAdminSingleMailboxReprocessingDTOTest {
         "  \"mailboxId\":\"1\"," +
         "  \"successfullyReprocessedMailCount\":42," +
         "  \"failedReprocessedMailCount\":2," +
-        "  \"failures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
+        "  \"messageFailures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
         "  \"mailboxFailures\":[\"3\", \"4\"]," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 

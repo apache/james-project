@@ -86,8 +86,8 @@ public class WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO impleme
         return reprocessingContextInformationDTO.getFailedReprocessedMailCount();
     }
 
-    public SerializableReIndexingExecutionFailures getFailures() {
-        return reprocessingContextInformationDTO.getFailures();
+    public SerializableReIndexingExecutionFailures getMessageFailures() {
+        return reprocessingContextInformationDTO.getMessageFailures();
     }
 
     public List<String> getMailboxFailures() {

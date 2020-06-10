@@ -602,7 +602,7 @@ The scheduled task will have the following type `full-reindexing` and the follow
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "mailboxFailures": ["12", "23" ],
-  "failures": [
+  "messageFailures": [
    {
      "mailboxId": "1",
       "uids": [1, 36]
@@ -645,7 +645,7 @@ The scheduled task will have the following type `error-recovery-indexation` and 
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "mailboxFailures": ["12", "23" ],
-  "failures": [{
+  "messageFailures": [{
      "mailboxId": "1",
       "uids": [1, 36]
    }]
@@ -698,7 +698,7 @@ The scheduled task will have the following type `mailbox-reindexing` and the fol
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "mailboxFailures": ["12"],
-  "failures": [
+  "messageFailures": [
    {
      "mailboxId": "1",
       "uids": [1, 36]
@@ -1025,7 +1025,7 @@ The scheduled task will have the following type `user-reindexing` and the follow
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "mailboxFailures": ["12", "23" ],
-  "failures": [
+  "messageFailures": [
    {
      "mailboxId": "1",
       "uids": [1, 36]
