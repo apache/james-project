@@ -36,7 +36,7 @@ import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.model.Calendar;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ICALTest {
+public class ICALAttributeDTOTest {
 
     @BeforeClass
     public static void setUpIcal4J() {
@@ -47,54 +47,17 @@ public class ICALTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void buildShouldFailWhenNoCalendar() throws Exception {
-        expectedException.expect(NullPointerException.class);
-
-        ICAL.builder()
-            .recipient(MailAddressFixture.ANY_AT_JAMES)
-            .sender(MailAddressFixture.OTHER_AT_JAMES.asString())
-            .build();
-    }
-
-    @Test
-    public void buildShouldFailWhenNoSender() throws Exception {
-        expectedException.expect(NullPointerException.class);
-
-        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
-        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
-
-        ICAL.builder()
-            .recipient(MailAddressFixture.ANY_AT_JAMES)
-            .from(calendar, ics)
-            .build();
-    }
-
-    @Test
-    public void buildShouldFailWhenNoRecipient() throws Exception {
-        expectedException.expect(NullPointerException.class);
-
-        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
-        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
-
-        ICAL.builder()
-            .sender(MailAddressFixture.OTHER_AT_JAMES.asString())
-            .from(calendar, ics)
-            .build();
-    }
-
-
-    @Test
     public void buildShouldWork() throws Exception {
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
-        ICAL ical = ICAL.builder()
-            .recipient(recipient)
-            .sender(sender.asString())
+        ICALAttributeDTO ical = ICALAttributeDTO.builder()
             .from(calendar, ics)
-            .build();
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
 
         assertThat(ical.getRecipient()).isEqualTo(recipient.asString());
         assertThat(ical.getSender()).isEqualTo(sender.asString());
@@ -110,7 +73,7 @@ public class ICALTest {
 
     @Test
     public void equalsAndHashCodeShouldBeWellImplemented() {
-        EqualsVerifier.forClass(ICAL.class).verify();
+        EqualsVerifier.forClass(ICALAttributeDTO.class).verify();
     }
 
     @Test
@@ -122,11 +85,11 @@ public class ICALTest {
 
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
-        ICAL.builder()
-            .recipient(recipient)
-            .sender(sender.asString())
+        ICALAttributeDTO.builder()
             .from(calendar, ics)
-            .build();
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
     }
 
     @Test
@@ -138,11 +101,11 @@ public class ICALTest {
 
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
-        ICAL.builder()
-            .recipient(recipient)
-            .sender(sender.asString())
+        ICALAttributeDTO.builder()
             .from(calendar, ics)
-            .build();
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
     }
 
     @Test
@@ -154,11 +117,11 @@ public class ICALTest {
 
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
-        ICAL.builder()
-            .recipient(recipient)
-            .sender(sender.asString())
+        ICALAttributeDTO.builder()
             .from(calendar, ics)
-            .build();
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
     }
 
     @Test
@@ -168,12 +131,12 @@ public class ICALTest {
 
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
-        ICAL ical = ICAL.builder()
-            .recipient(recipient)
-            .sender(sender.asString())
+        ICALAttributeDTO ical = ICALAttributeDTO.builder()
             .from(calendar, ics)
-            .build();
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
 
-        assertThat(ical.getSequence()).isEqualTo(ICAL.DEFAULT_SEQUENCE_VALUE);
+        assertThat(ical.getSequence()).isEqualTo(ICALAttributeDTO.DEFAULT_SEQUENCE_VALUE);
     }
 }

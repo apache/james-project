@@ -21,12 +21,14 @@ package org.apache.james.transport.mailets;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 
@@ -41,10 +43,11 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.fasterxml.jackson.core.util.BufferRecyclers;
 import com.google.common.collect.ImmutableMap;
@@ -56,23 +59,20 @@ public class ICALToJsonAttributeTest {
     @SuppressWarnings("unchecked")
     private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private ICALToJsonAttribute testee;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         testee = new ICALToJsonAttribute();
     }
 
     @Test
-    public void getMailetInfoShouldReturnExpectedValue() {
+    void getMailetInfoShouldReturnExpectedValue() {
         assertThat(testee.getMailetInfo()).isEqualTo("ICALToJson Mailet");
     }
 
     @Test
-    public void initShouldSetAttributesWhenAbsent() throws Exception {
+    void initShouldSetAttributesWhenAbsent() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         assertThat(testee.getSourceAttributeName()).isEqualTo(ICALToJsonAttribute.DEFAULT_SOURCE);
@@ -80,34 +80,31 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void initShouldThrowOnEmptySourceAttribute() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        testee.init(FakeMailetConfig.builder()
-            .setProperty(ICALToJsonAttribute.SOURCE_ATTRIBUTE_NAME, "")
-            .build());
+    void initShouldThrowOnEmptySourceAttribute() {
+        assertThatThrownBy(() -> testee.init(FakeMailetConfig.builder()
+                .setProperty(ICALToJsonAttribute.SOURCE_ATTRIBUTE_NAME, "")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowOnEmptyRawSourceAttribute() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        testee.init(FakeMailetConfig.builder()
-            .setProperty(ICALToJsonAttribute.RAW_SOURCE_ATTRIBUTE_NAME, "")
-            .build());
+    void initShouldThrowOnEmptyRawSourceAttribute() {
+        assertThatThrownBy(() -> testee.init(FakeMailetConfig.builder()
+                .setProperty(ICALToJsonAttribute.RAW_SOURCE_ATTRIBUTE_NAME, "")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowOnEmptyDestinationAttribute() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        testee.init(FakeMailetConfig.builder()
-            .setProperty(ICALToJsonAttribute.DESTINATION_ATTRIBUTE_NAME, "")
-            .build());
+    void initShouldThrowOnEmptyDestinationAttribute() {
+        assertThatThrownBy(() -> testee.init(FakeMailetConfig.builder()
+                .setProperty(ICALToJsonAttribute.DESTINATION_ATTRIBUTE_NAME, "")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldSetAttributesWhenPresent() throws Exception {
+    void initShouldSetAttributesWhenPresent() throws Exception {
         String destination = "myDestination";
         String source = "mySource";
         String raw = "myRaw";
@@ -123,7 +120,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldFilterMailsWithoutICALs() throws Exception {
+    void serviceShouldFilterMailsWithoutICALs() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         Mail mail = FakeMail.builder()
@@ -138,7 +135,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldNotFailOnWrongAttributeType() throws Exception {
+    void serviceShouldNotFailOnWrongAttributeType() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         Mail mail = FakeMail.builder()
@@ -154,7 +151,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldNotFailOnWrongRawAttributeType() throws Exception {
+    void serviceShouldNotFailOnWrongRawAttributeType() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         Mail mail = FakeMail.builder()
@@ -170,7 +167,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldNotFailOnWrongAttributeParameter() throws Exception {
+    void serviceShouldNotFailOnWrongAttributeParameter() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         ImmutableMap<String, String> wrongParametrizedMap = ImmutableMap.of("key", "value");
@@ -187,7 +184,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldNotFailOnWrongRawAttributeParameter() throws Exception {
+    void serviceShouldNotFailOnWrongRawAttributeParameter() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         ImmutableMap<String, String> wrongParametrizedMap = ImmutableMap.of("key", "value");
@@ -204,7 +201,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldFilterMailsWithoutSender() throws Exception {
+    void serviceShouldFilterMailsWithoutSender() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -224,7 +221,7 @@ public class ICALToJsonAttributeTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void serviceShouldAttachEmptyListWhenNoRecipient() throws Exception {
+    void serviceShouldAttachEmptyListWhenNoRecipient() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -245,7 +242,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldAttachJson() throws Exception {
+    void serviceShouldAttachJson() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -270,6 +267,7 @@ public class ICALToJsonAttributeTest {
                     .isEqualTo("{" +
                         "\"ical\": \"" + toJsonValue(ics) + "\"," +
                         "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"replyTo\": \"" + SENDER.asString() + "\"," +
                         "\"recipient\": \"" + recipient.asString() + "\"," +
                         "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
                         "\"sequence\": \"0\"," +
@@ -284,8 +282,99 @@ public class ICALToJsonAttributeTest {
         return new String(BufferRecyclers.getJsonStringEncoder().quoteAsUTF8(new String(ics, StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
     }
 
+    @ParameterizedTest
+    @MethodSource("validReplyToHeaders")
+    void serviceShouldAttachJsonWithTheReplyToAttributeValueWhenPresent(String replyToHeader) throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
+        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
+        ImmutableMap<String, Calendar> icals = ImmutableMap.of("key", calendar);
+        ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
+        MailAddress replyTo = MailAddressFixture.OTHER_AT_JAMES;
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .sender(SENDER)
+            .recipient(recipient)
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(rawIcals)))
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader(ICALToJsonAttribute.REPLY_TO_HEADER_NAME, replyToHeader))
+            .build();
+        testee.service(mail);
+
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+            .isPresent()
+            .hasValueSatisfying(jsons -> {
+                assertThat(jsons).hasSize(1);
+                assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
+                    .isEqualTo("{" +
+                        "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                        "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"replyTo\": \"" + replyTo.asString() + "\"," +
+                        "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                        "\"sequence\": \"0\"," +
+                        "\"dtstamp\": \"20170106T115036Z\"," +
+                        "\"method\": \"REQUEST\"," +
+                        "\"recurrence-id\": null" +
+                        "}");
+            });
+    }
+
+    private static Stream<Arguments> validReplyToHeaders() {
+        String address = MailAddressFixture.OTHER_AT_JAMES.asString();
+        return Stream.of(
+                address,
+                "<" + address + ">",
+                "\"Bob\" <" + address + ">",
+                "\"Bob\"\n      <" + address + ">",
+                " =?UTF-8?Q?Beno=c3=aet_TELLIER?= <" + address + ">")
+            .map(Arguments::of);
+    };
+
     @Test
-    public void serviceShouldAttachJsonForSeveralRecipient() throws Exception {
+    void serviceShouldAttachJsonWithTheSenderAsReplyToAttributeValueWhenReplyToIsInvalid() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
+        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
+        ImmutableMap<String, Calendar> icals = ImmutableMap.of("key", calendar);
+        ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .sender(SENDER)
+            .recipient(recipient)
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(rawIcals)))
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader(ICALToJsonAttribute.REPLY_TO_HEADER_NAME, "inv@lid.m@il.adr"))
+            .build();
+        testee.service(mail);
+
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+            .isPresent()
+            .hasValueSatisfying(jsons -> {
+                assertThat(jsons).hasSize(1);
+                assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
+                    .isEqualTo("{" +
+                        "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                        "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"replyTo\": \"" + SENDER.asString() + "\"," +
+                        "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                        "\"sequence\": \"0\"," +
+                        "\"dtstamp\": \"20170106T115036Z\"," +
+                        "\"method\": \"REQUEST\"," +
+                        "\"recurrence-id\": null" +
+                        "}");
+            });
+    }
+
+    @Test
+    void serviceShouldAttachJsonForSeveralRecipient() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -311,6 +400,7 @@ public class ICALToJsonAttributeTest {
                         "\"ical\": \"" + toJsonValue(ics) + "\"," +
                         "\"sender\": \"" + SENDER.asString() + "\"," +
                         "\"recipient\": \"" + MailAddressFixture.ANY_AT_JAMES2.asString() + "\"," +
+                        "\"replyTo\": \"" + SENDER.asString() + "\"," +
                         "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
                         "\"sequence\": \"0\"," +
                         "\"dtstamp\": \"20170106T115036Z\"," +
@@ -321,6 +411,7 @@ public class ICALToJsonAttributeTest {
                         "\"ical\": \"" + toJsonValue(ics) + "\"," +
                         "\"sender\": \"" + SENDER.asString() + "\"," +
                         "\"recipient\": \"" + MailAddressFixture.OTHER_AT_JAMES.asString() + "\"," +
+                        "\"replyTo\": \"" + SENDER.asString() + "\"," +
                         "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
                         "\"sequence\": \"0\"," +
                         "\"dtstamp\": \"20170106T115036Z\"," +
@@ -331,7 +422,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldAttachJsonForSeveralICALs() throws Exception {
+    void serviceShouldAttachJsonForSeveralICALs() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -360,6 +451,7 @@ public class ICALToJsonAttributeTest {
                         "\"ical\": \"" + toJsonValue(ics2) + "\"," +
                         "\"sender\": \"" + SENDER.asString() + "\"," +
                         "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"replyTo\": \"" + SENDER.asString() + "\"," +
                         "\"uid\": \"f1514f44bf39311568d64072ac247c17656ceafde3b4b3eba961c8c5184cdc6ee047feb2aab16e43439a608f28671ab7c10e754c301b1e32001ad51dd20eac2fc7af20abf4093bbe\"," +
                         "\"sequence\": \"0\"," +
                         "\"dtstamp\": \"20170103T103250Z\"," +
@@ -370,6 +462,7 @@ public class ICALToJsonAttributeTest {
                         "\"ical\": \"" + toJsonValue(ics) + "\"," +
                         "\"sender\": \"" + SENDER.asString() + "\"," +
                         "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"replyTo\": \"" + SENDER.asString() + "\"," +
                         "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
                         "\"sequence\": \"0\"," +
                         "\"dtstamp\": \"20170106T115036Z\"," +
@@ -380,7 +473,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldFilterInvalidICS() throws Exception {
+    void serviceShouldFilterInvalidICS() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -409,6 +502,7 @@ public class ICALToJsonAttributeTest {
                         "\"ical\": \"" + toJsonValue(ics) + "\"," +
                         "\"sender\": \"" + SENDER.asString() + "\"," +
                         "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"replyTo\": \"" + SENDER.asString() + "\"," +
                         "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
                         "\"sequence\": \"0\"," +
                         "\"dtstamp\": \"20170106T115036Z\"," +
@@ -419,7 +513,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldFilterNonExistingKeys() throws Exception {
+    void serviceShouldFilterNonExistingKeys() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -447,6 +541,7 @@ public class ICALToJsonAttributeTest {
                     assertThatJson(actual.get(0)).isEqualTo("{" +
                         "\"ical\": \"" + toJsonValue(ics) + "\"," +
                         "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"replyTo\": \"" + SENDER.asString() + "\"," +
                         "\"recipient\": \"" + recipient.asString() + "\"," +
                         "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
                         "\"sequence\": \"0\"," +
@@ -458,7 +553,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldUseFromWhenSpecified() throws Exception {
+    void serviceShouldUseFromWhenSpecified() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -487,6 +582,7 @@ public class ICALToJsonAttributeTest {
                             "\"ical\": \"" + toJsonValue(ics) + "\"," +
                             "\"sender\": \"" + from + "\"," +
                             "\"recipient\": \"" + recipient.asString() + "\"," +
+                            "\"replyTo\": \"" + from + "\"," +
                             "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
                             "\"sequence\": \"0\"," +
                             "\"dtstamp\": \"20170106T115036Z\"," +
@@ -497,7 +593,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldSupportMimeMessagesWithoutFromFields() throws Exception {
+    void serviceShouldSupportMimeMessagesWithoutFromFields() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -524,6 +620,7 @@ public class ICALToJsonAttributeTest {
                             "\"ical\": \"" + toJsonValue(ics) + "\"," +
                             "\"sender\": \"" + SENDER.asString() + "\"," +
                             "\"recipient\": \"" + recipient.asString() + "\"," +
+                            "\"replyTo\": \"" + SENDER.asString() + "\"," +
                             "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
                             "\"sequence\": \"0\"," +
                             "\"dtstamp\": \"20170106T115036Z\"," +
@@ -534,7 +631,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void serviceShouldUseFromWhenSpecifiedAndNoSender() throws Exception {
+    void serviceShouldUseFromWhenSpecifiedAndNoSender() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
 
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
@@ -562,6 +659,7 @@ public class ICALToJsonAttributeTest {
                             "\"ical\": \"" + toJsonValue(ics) + "\"," +
                             "\"sender\": \"" + from + "\"," +
                             "\"recipient\": \"" + recipient.asString() + "\"," +
+                            "\"replyTo\": \"" + from + "\"," +
                             "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
                             "\"sequence\": \"0\"," +
                             "\"dtstamp\": \"20170106T115036Z\"," +

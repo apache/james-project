@@ -32,54 +32,52 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.component.VEvent;
 
-public class ICAL {
+public class ICALAttributeDTO {
 
     public static final String DEFAULT_SEQUENCE_VALUE = "0";
 
     public static class Builder {
-        private String ical;
-        private String sender;
-        private String recipient;
-        private Optional<String> uid = Optional.empty();
-        private Optional<String> sequence = Optional.empty();
-        private Optional<String> dtstamp = Optional.empty();
-        private Optional<String> method = Optional.empty();
-        private Optional<String> recurrenceId = Optional.empty();
-
-        public Builder from(Calendar calendar, byte[] originalEvent) {
-            this.ical = new String(originalEvent, StandardCharsets.UTF_8);
+        public RequiresSender from(Calendar calendar, byte[] originalEvent) {
+            String ical = new String(originalEvent, StandardCharsets.UTF_8);
             VEvent vevent = (VEvent) calendar.getComponent("VEVENT");
-            this.uid = optionalOf(vevent.getUid());
-            this.method = optionalOf(calendar.getMethod());
-            this.recurrenceId = optionalOf(vevent.getRecurrenceId());
-            this.sequence = optionalOf(vevent.getSequence());
-            this.dtstamp = optionalOf(vevent.getDateStamp());
-            return this;
+            Optional<String> uid = optionalOf(vevent.getUid());
+            Optional<String> method = optionalOf(calendar.getMethod());
+            Optional<String> recurrenceId = optionalOf(vevent.getRecurrenceId());
+            Optional<String> sequence = optionalOf(vevent.getSequence());
+            Optional<String> dtstamp = optionalOf(vevent.getDateStamp());
+
+            Preconditions.checkNotNull(ical);
+            Preconditions.checkState(uid.isPresent(), "uid is a compulsory property of an ICAL object");
+            Preconditions.checkState(method.isPresent(), "method is a compulsory property of an ICAL object");
+            Preconditions.checkState(dtstamp.isPresent(), "dtstamp is a compulsory property of an ICAL object");
+
+            return sender -> recipient -> replyTo ->
+                    new ICALAttributeDTO(
+                            ical,
+                            uid.get(), sender.asString(),
+                            recipient.asString(),
+                            replyTo.asString(),
+                            dtstamp.get(), method.get(), sequence,
+                            recurrenceId);
         }
 
         private Optional<String> optionalOf(Property property) {
             return Optional.ofNullable(property).map(Property::getValue);
         }
 
-        public Builder sender(String sender) {
-            this.sender = sender;
-            return this;
+        @FunctionalInterface
+        public interface RequiresSender {
+            RequiresRecipient sender(MailAddress sender);
         }
 
-
-        public Builder recipient(MailAddress recipient) {
-            this.recipient = recipient.asString();
-            return this;
+        @FunctionalInterface
+        public interface RequiresRecipient {
+            RequiresReplyTo recipient(MailAddress recipient);
         }
 
-        public ICAL build() {
-            Preconditions.checkNotNull(recipient);
-            Preconditions.checkNotNull(sender);
-            Preconditions.checkNotNull(ical);
-            Preconditions.checkState(uid.isPresent(), "uid is a compulsary property of an ICAL object");
-            Preconditions.checkState(method.isPresent(), "method is a compulsary property of an ICAL object");
-            Preconditions.checkState(dtstamp.isPresent(), "dtstamp is a compulsary property of an ICAL object");
-            return new ICAL(ical, sender, recipient, uid, sequence, dtstamp, method, recurrenceId);
+        @FunctionalInterface
+        public interface RequiresReplyTo {
+            ICALAttributeDTO replyTo(MailAddress replyTo);
         }
     }
 
@@ -90,21 +88,23 @@ public class ICAL {
     private final String ical;
     private final String sender;
     private final String recipient;
-    private final Optional<String> uid;
+    private final String replyTo;
+    private final String uid;
+    private final String dtstamp;
+    private final String method;
     private final Optional<String> sequence;
-    private final Optional<String> dtstamp;
-    private final Optional<String> method;
     private final Optional<String> recurrenceId;
 
-    private ICAL(String ical, String sender, String recipient, Optional<String> uid, Optional<String> sequence, Optional<String> dtstamp,
-                 Optional<String> method, Optional<String> recurrenceId) {
+    private ICALAttributeDTO(String ical, String uid, String sender, String recipient, String replyTo, String dtstamp,
+                             String method, Optional<String> sequence, Optional<String> recurrenceId) {
         this.ical = ical;
         this.sender = sender;
         this.recipient = recipient;
+        this.replyTo = replyTo;
         this.uid = uid;
-        this.sequence = sequence;
         this.dtstamp = dtstamp;
         this.method = method;
+        this.sequence = sequence;
         this.recurrenceId = recurrenceId;
     }
 
@@ -120,20 +120,24 @@ public class ICAL {
         return recipient;
     }
 
-    public Optional<String> getUid() {
+    public String getReplyTo() {
+        return replyTo;
+    }
+
+    public String getUid() {
         return uid;
+    }
+
+    public String getDtstamp() {
+        return dtstamp;
+    }
+
+    public String getMethod() {
+        return method;
     }
 
     public String getSequence() {
         return sequence.orElse(DEFAULT_SEQUENCE_VALUE);
-    }
-
-    public Optional<String> getDtstamp() {
-        return dtstamp;
-    }
-
-    public Optional<String> getMethod() {
-        return method;
     }
 
     @JsonProperty("recurrence-id")
@@ -143,8 +147,8 @@ public class ICAL {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof ICAL) {
-            ICAL that = (ICAL) o;
+        if (o instanceof ICALAttributeDTO) {
+            ICALAttributeDTO that = (ICALAttributeDTO) o;
             return Objects.equals(that.ical, this.ical)
                 && Objects.equals(that.sender, this.sender)
                 && Objects.equals(that.recipient, this.recipient)
@@ -152,13 +156,14 @@ public class ICAL {
                 && Objects.equals(that.sequence, this.sequence)
                 && Objects.equals(that.dtstamp, this.dtstamp)
                 && Objects.equals(that.method, this.method)
-                && Objects.equals(that.recurrenceId, this.recurrenceId);
+                && Objects.equals(that.recurrenceId, this.recurrenceId)
+                && Objects.equals(that.replyTo, this.replyTo);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(ical, sender, recipient, uid, sequence, dtstamp, method, recurrenceId);
+        return Objects.hash(ical, sender, recipient, uid, sequence, dtstamp, method, recurrenceId, replyTo);
     }
 }
