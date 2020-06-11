@@ -37,7 +37,7 @@
         <verifyIdentity>true</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
-        <smtpGreeting>JAMES Linagora's SMTP awesome Server</smtpGreeting>
+        <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
         <handlerchain>
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
