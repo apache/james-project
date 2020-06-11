@@ -84,7 +84,7 @@ public class JPAJamesServerTest {
     @Test
     public void connectSMTPServerShouldSendShabangOnConnect() throws Exception {
         socketChannel.connect(new InetSocketAddress("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue()));
-        assertThat(getServerConnectionResponse(socketChannel)).startsWith("220 JAMES Linagora's SMTP awesome Server");
+        assertThat(getServerConnectionResponse(socketChannel)).startsWith("220 Apache JAMES awesome SMTP Server");
     }
     
     private String getServerConnectionResponse(SocketChannel socketChannel) throws IOException {

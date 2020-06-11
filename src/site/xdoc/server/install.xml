@@ -146,7 +146,7 @@
         <li>Most UNIX systems require superuser privileges to open sockets below 1024,
             which includes the IANA-standard SMTP (on port 25), POP3 (on port 110) and IMAP4 (on port 143).
             These default ports can be changed in the conf file 
-            (read for <a href="config-pop3.html">pop3</a>, <a href="config-smtp.html">smtp</a> 
+            (read for <a href="config-pop3.html">pop3</a>, <a href="config-smtp-lmtp.html">smtp</a>
             and <a href="config-imap4.html">imap4</a>. Obviously, you
             would then need to reconfigure your clients. This may not be an option if
             you want to receive mail from external mail servers.</li>
