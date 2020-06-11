@@ -78,7 +78,7 @@ class RecordingMetricFactoryTest implements MetricFactoryContract {
         AtomicInteger count = new AtomicInteger();
 
         ConcurrentTestRunner.builder()
-            .operation((threadNumber, step) -> testee.runPublishingTimerMetric(TIME_METRIC_NAME, count::incrementAndGet))
+            .operation((threadNumber, step) -> testee.decorateSupplierWithTimerMetric(TIME_METRIC_NAME, count::incrementAndGet))
             .threadCount(10)
             .operationCount(200)
             .runSuccessfullyWithin(Duration.ofSeconds(10));

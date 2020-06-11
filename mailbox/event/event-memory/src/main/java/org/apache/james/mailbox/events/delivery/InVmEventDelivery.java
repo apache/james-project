@@ -79,7 +79,7 @@ public class InVmEventDelivery implements EventDelivery {
 
     private Mono<Void> doDeliverToListener(MailboxListener.ReactiveMailboxListener mailboxListener, Event event) {
         if (mailboxListener.isHandling(event)) {
-            return Mono.defer(() -> Mono.from(metricFactory.runPublishingTimerMetric(timerName(mailboxListener),
+            return Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(mailboxListener),
                     mailboxListener.reactiveEvent(event))))
                 .subscriberContext(context("deliver", buildMDC(mailboxListener, event)));
         }

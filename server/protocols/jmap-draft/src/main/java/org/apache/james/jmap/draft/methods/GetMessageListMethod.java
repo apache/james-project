@@ -101,7 +101,7 @@ public class GetMessageListMethod implements Method {
 
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
 
-        return metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+        return metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
             () -> process(methodCallId, mailboxSession, messageListRequest)
                 .subscriberContext(context("GET_MESSAGE_LIST", mdc(messageListRequest))))
             .subscribeOn(Schedulers.elastic());

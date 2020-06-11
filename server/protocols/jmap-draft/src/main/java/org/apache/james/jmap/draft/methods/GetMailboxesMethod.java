@@ -95,7 +95,7 @@ public class GetMailboxesMethod implements Method {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;
 
-        return metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+        return metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
             () -> process(methodCallId, mailboxSession, mailboxesRequest)
             .subscriberContext(context(ACTION, mdc(mailboxesRequest))));
     }

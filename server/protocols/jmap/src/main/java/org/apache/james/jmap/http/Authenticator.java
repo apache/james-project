@@ -50,7 +50,7 @@ public class Authenticator {
     }
 
     public Mono<MailboxSession> authenticate(HttpServerRequest request) {
-        return Mono.from(metricFactory.runPublishingTimerMetric("JMAP-authentication-filter",
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-authentication-filter",
             Flux.fromIterable(authMethods)
                 .concatMap(auth -> auth.createMailboxSession(request))
                 .onErrorContinue((throwable, nothing) -> LOGGER.error("Error while trying to authenticate with JMAP", throwable))

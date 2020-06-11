@@ -32,7 +32,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
-import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
+import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
@@ -44,7 +44,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
   override val methodName: MethodName = MethodName("Mailbox/get")
 
   override def process(invocation: Invocation, mailboxSession: MailboxSession): Publisher[Invocation] = {
-    metricFactory.runPublishingTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
+    metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asMailboxGetRequest(invocation.arguments)
         .flatMap(mailboxGetRequest => getMailboxes(mailboxGetRequest, mailboxSession)
           .collectSeq()

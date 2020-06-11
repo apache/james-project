@@ -56,7 +56,7 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
 
     @Override
     public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
-        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + "SetMessageDestructionProcessor",
+        return metricFactory.decorateSupplierWithTimerMetric(JMAP_PREFIX + "SetMessageDestructionProcessor",
             () -> delete(request.getDestroy(), mailboxSession)
                 .reduce(SetMessagesResponse.builder(),
                     SetMessagesResponse.Builder::accumulator,

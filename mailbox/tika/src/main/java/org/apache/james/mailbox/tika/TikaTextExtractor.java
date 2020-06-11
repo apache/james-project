@@ -37,13 +37,10 @@ import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.metrics.api.MetricFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -85,7 +82,7 @@ public class TikaTextExtractor implements TextExtractor {
         if (contentType.mediaType().equals(TEXT)) {
             return jsoupTextExtractor.extractContent(inputStream, contentType);
         }
-        return metricFactory.runPublishingTimerMetric("tikaTextExtraction", Throwing.supplier(
+        return metricFactory.decorateSupplierWithTimerMetric("tikaTextExtraction", Throwing.supplier(
             () -> performContentExtraction(inputStream, contentType))
             .sneakyThrow());
     }
@@ -95,7 +92,7 @@ public class TikaTextExtractor implements TextExtractor {
         return new ParsedContent(contentAndMetadata.getContent(), contentAndMetadata.getMetadata());
     }
 
-    private ContentAndMetadata convert(Optional<InputStream> maybeInputStream) throws IOException, JsonParseException, JsonMappingException {
+    private ContentAndMetadata convert(Optional<InputStream> maybeInputStream) throws IOException {
         return maybeInputStream
                 .map(Throwing.function(inputStream -> objectMapper.readValue(inputStream, ContentAndMetadata.class)))
                 .orElse(ContentAndMetadata.empty());
@@ -105,7 +102,7 @@ public class TikaTextExtractor implements TextExtractor {
     static class ContentAndMetadataDeserializer extends JsonDeserializer<ContentAndMetadata> {
 
         @Override
-        public ContentAndMetadata deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+        public ContentAndMetadata deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
             TreeNode treeNode = jsonParser.getCodec().readTree(jsonParser);
             Preconditions.checkState(treeNode.isArray() && treeNode.size() >= 1, "The response should be an array with at least one element");
             Preconditions.checkState(treeNode.get(0).isObject(), "The element should be a Json object");

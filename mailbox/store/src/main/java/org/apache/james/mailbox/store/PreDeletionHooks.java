@@ -63,6 +63,6 @@ public class PreDeletionHooks {
 
     private Mono<Void> publishMetric(PreDeletionHook.DeleteOperation deleteOperation, PreDeletionHook hook, MetricFactory factory) {
         return Mono.from(
-            factory.runPublishingTimerMetric(PRE_DELETION_HOOK_METRIC_NAME, hook.notifyDelete(deleteOperation)));
+            factory.decoratePublisherWithTimerMetric(PRE_DELETION_HOOK_METRIC_NAME, hook.notifyDelete(deleteOperation)));
     }
 }

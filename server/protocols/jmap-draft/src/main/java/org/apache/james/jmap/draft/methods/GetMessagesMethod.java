@@ -83,7 +83,7 @@ public class GetMessagesMethod implements Method {
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
         MessageProperties outputProperties = getMessagesRequest.getProperties().toOutputProperties();
 
-        return metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+        return metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
             () -> Flux.from(getMessagesResponse(mailboxSession, getMessagesRequest)
                 .map(response -> JmapResponse.builder().methodCallId(methodCallId)
                     .response(response)

@@ -94,7 +94,7 @@ public class SpamAssassinInvoker {
      *             if an error on scanning is detected
      */
     public SpamAssassinResult scanMail(MimeMessage message, Username username) throws MessagingException {
-        return metricFactory.runPublishingTimerMetric(
+        return metricFactory.decorateSupplierWithTimerMetric(
             "spamAssassin-check",
             Throwing.supplier(
                 () -> scanMailWithAdditionalHeaders(message,
@@ -103,7 +103,7 @@ public class SpamAssassinInvoker {
     }
 
     public SpamAssassinResult scanMail(MimeMessage message) throws MessagingException {
-        return metricFactory.runPublishingTimerMetric(
+        return metricFactory.decorateSupplierWithTimerMetric(
             "spamAssassin-check",
             Throwing.supplier(
                 () -> scanMailWithoutAdditionalHeaders(message))
@@ -194,7 +194,7 @@ public class SpamAssassinInvoker {
      *             if an error occured during learning.
      */
     public boolean learnAsSpam(InputStream message, Username username) throws MessagingException {
-        return metricFactory.runPublishingTimerMetric(
+        return metricFactory.decorateSupplierWithTimerMetric(
             "spamAssassin-spam-report",
             Throwing.supplier(
                 () -> reportMessageAs(message, username, MessageClass.SPAM))
@@ -210,7 +210,7 @@ public class SpamAssassinInvoker {
      *             if an error occured during learning.
      */
     public boolean learnAsHam(InputStream message, Username username) throws MessagingException {
-        return metricFactory.runPublishingTimerMetric(
+        return metricFactory.decorateSupplierWithTimerMetric(
             "spamAssassin-ham-report",
             Throwing.supplier(
                 () -> reportMessageAs(message, username, MessageClass.HAM))

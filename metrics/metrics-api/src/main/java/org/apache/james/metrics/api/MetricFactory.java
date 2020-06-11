@@ -31,7 +31,7 @@ public interface MetricFactory {
 
     TimeMetric timer(String name);
 
-    default <T> T runPublishingTimerMetric(String name, Supplier<T> operation) {
+    default <T> T decorateSupplierWithTimerMetric(String name, Supplier<T> operation) {
         TimeMetric timer = timer(name);
         try {
             return operation.get();
@@ -40,7 +40,7 @@ public interface MetricFactory {
         }
     }
 
-    default <T> T runPublishingTimerMetricLogP99(String name, Supplier<T> operation) {
+    default <T> T decorateSupplierWithTimerMetricLogP99(String name, Supplier<T> operation) {
         TimeMetric timer = timer(name);
         try {
             return operation.get();
@@ -49,12 +49,12 @@ public interface MetricFactory {
         }
     }
 
-    <T> Publisher<T> runPublishingTimerMetric(String name, Publisher<T> publisher);
+    <T> Publisher<T> decoratePublisherWithTimerMetric(String name, Publisher<T> publisher);
 
-    <T> Publisher<T> runPublishingTimerMetricLogP99(String name, Publisher<T> publisher);
+    <T> Publisher<T> decoratePublisherWithTimerMetricLogP99(String name, Publisher<T> publisher);
 
     default void runPublishingTimerMetric(String name, Runnable runnable) {
-        runPublishingTimerMetric(name, () -> {
+        decorateSupplierWithTimerMetric(name, () -> {
             runnable.run();
             return null;
         });

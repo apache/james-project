@@ -92,7 +92,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         Preconditions.checkNotNull(mimeMessage);
         BucketName bucketName = nameGenerator.currentBucket();
 
-        return metricFactory.runPublishingTimerMetric(
+        return metricFactory.decoratePublisherWithTimerMetric(
             APPEND_METRIC_NAME,
             appendMessage(deletedMessage, mimeMessage, bucketName));
     }
@@ -112,7 +112,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         Preconditions.checkNotNull(username);
         Preconditions.checkNotNull(messageId);
 
-        return metricFactory.runPublishingTimerMetric(
+        return metricFactory.decoratePublisherWithTimerMetric(
             LOAD_MIME_MESSAGE_METRIC_NAME,
             Mono.from(messageMetadataVault.retrieveStorageInformation(username, messageId))
                 .flatMap(storageInformation -> loadMimeMessage(storageInformation, username, messageId)));
@@ -130,7 +130,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         Preconditions.checkNotNull(username);
         Preconditions.checkNotNull(query);
 
-        return metricFactory.runPublishingTimerMetric(
+        return metricFactory.decoratePublisherWithTimerMetric(
             SEARCH_METRIC_NAME,
             searchOn(username, query));
     }
@@ -147,7 +147,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         Preconditions.checkNotNull(username);
         Preconditions.checkNotNull(messageId);
 
-        return metricFactory.runPublishingTimerMetric(
+        return metricFactory.decoratePublisherWithTimerMetric(
             DELETE_METRIC_NAME,
             deleteMessage(username, messageId));
     }
@@ -168,7 +168,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
 
     Flux<BucketName> deleteExpiredMessages(ZonedDateTime beginningOfRetentionPeriod) {
         return Flux.from(
-            metricFactory.runPublishingTimerMetric(
+            metricFactory.decoratePublisherWithTimerMetric(
                 DELETE_EXPIRED_MESSAGES_METRIC_NAME,
                 retentionQualifiedBuckets(beginningOfRetentionPeriod)
                     .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)))));

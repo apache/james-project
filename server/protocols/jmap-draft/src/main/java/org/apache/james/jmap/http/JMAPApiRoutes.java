@@ -99,7 +99,7 @@ public class JMAPApiRoutes implements JMAPRoutes {
             .flatMap(session -> Flux.merge(
                 userProvisioner.provisionUser(session),
                 defaultMailboxesProvisioner.createMailboxesIfNeeded(session))
-                .then(Mono.from(metricFactory.runPublishingTimerMetric("JMAP-request",
+                .then(Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-request",
                     post(request, response, session))))
                 .subscriberContext(jmapAuthContext(session)))
             .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, LOGGER, e))

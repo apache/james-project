@@ -50,28 +50,28 @@ public class MetricableBlobStore implements BlobStore {
 
     @Override
     public Publisher<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
-        return metricFactory.runPublishingTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
+        return metricFactory.decoratePublisherWithTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
     }
 
     @Override
     public Publisher<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
-        return metricFactory.runPublishingTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
+        return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
     }
 
     @Override
     public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return metricFactory.runPublishingTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucketName, blobId));
+        return metricFactory.decoratePublisherWithTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucketName, blobId));
     }
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) {
         return metricFactory
-            .runPublishingTimerMetric(READ_TIMER_NAME, () -> blobStoreImpl.read(bucketName, blobId));
+            .decorateSupplierWithTimerMetric(READ_TIMER_NAME, () -> blobStoreImpl.read(bucketName, blobId));
     }
 
     @Override
     public Publisher<Void> deleteBucket(BucketName bucketName) {
-        return metricFactory.runPublishingTimerMetric(DELETE_BUCKET_TIMER_NAME, blobStoreImpl.deleteBucket(bucketName));
+        return metricFactory.decoratePublisherWithTimerMetric(DELETE_BUCKET_TIMER_NAME, blobStoreImpl.deleteBucket(bucketName));
     }
 
     @Override
@@ -81,7 +81,7 @@ public class MetricableBlobStore implements BlobStore {
 
     @Override
     public Publisher<Void> delete(BucketName bucketName, BlobId blobId) {
-        return metricFactory.runPublishingTimerMetric(DELETE_TIMER_NAME, blobStoreImpl.delete(bucketName, blobId));
+        return metricFactory.decoratePublisherWithTimerMetric(DELETE_TIMER_NAME, blobStoreImpl.delete(bucketName, blobId));
     }
 
 }

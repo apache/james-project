@@ -36,7 +36,7 @@ class MailboxListenerExecutor {
 
     Mono<Void> execute(MailboxListener.ReactiveMailboxListener listener, MDCBuilder mdcBuilder, Event event) {
         if (listener.isHandling(event)) {
-            return Mono.from(metricFactory.runPublishingTimerMetric(timerName(listener),
+            return Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
                 Mono.from(listener.reactiveEvent(event))
                     .subscriberContext(ReactorUtils.context("MailboxListenerExecutor", mdc(listener, mdcBuilder, event)))));
         }

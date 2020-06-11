@@ -71,7 +71,7 @@ public class SetMessagesMethod implements Method {
             .addContext("destroy", setMessagesRequest.getDestroy())
             .addContext("ifInState", setMessagesRequest.getIfInState())
             .wrapArround(
-                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+                () -> metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
                     () ->  Stream.of(
                         JmapResponse.builder().methodCallId(methodCallId)
                             .response(setMessagesResponse(setMessagesRequest, mailboxSession))

@@ -75,7 +75,7 @@ public class GetFilterMethod implements Method {
 
         GetFilterRequest filterRequest = (GetFilterRequest) request;
 
-        return Flux.from(metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+        return Flux.from(metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
             () -> process(methodCallId, mailboxSession, filterRequest)
                 .subscriberContext(context("GET_FILTER", MDCBuilder.of(MDCBuilder.ACTION, "GET_FILTER")))));
     }

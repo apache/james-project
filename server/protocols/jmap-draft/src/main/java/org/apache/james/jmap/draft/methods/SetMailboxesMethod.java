@@ -74,7 +74,7 @@ public class SetMailboxesMethod implements Method {
             .addContext("update", setMailboxesRequest.getUpdate())
             .addContext("destroy", setMailboxesRequest.getDestroy())
             .wrapArround(
-                () -> metricFactory.runPublishingTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+                () -> metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
                     () -> Stream.of(
                         JmapResponse.builder().methodCallId(methodCallId)
                             .response(setMailboxesResponse(setMailboxesRequest, mailboxSession))

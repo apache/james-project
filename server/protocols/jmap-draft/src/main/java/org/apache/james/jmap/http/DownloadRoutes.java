@@ -139,7 +139,7 @@ public class DownloadRoutes implements JMAPRoutes {
 
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response, DownloadPath downloadPath) {
         return authenticator.authenticate(request)
-            .flatMap(session -> Mono.from(metricFactory.runPublishingTimerMetric("JMAP-download-post",
+            .flatMap(session -> Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-download-post",
                     respondAttachmentAccessToken(session, downloadPath, response)))
                 .subscriberContext(jmapAuthContext(session)))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
@@ -169,7 +169,7 @@ public class DownloadRoutes implements JMAPRoutes {
 
     private Mono<Void> get(HttpServerRequest request, HttpServerResponse response, DownloadPath downloadPath) {
         return authenticator.authenticate(request)
-            .flatMap(session -> Mono.from(metricFactory.runPublishingTimerMetric("JMAP-download-get",
+            .flatMap(session -> Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-download-get",
                     download(session, downloadPath, response)))
                 .subscriberContext(jmapAuthContext(session)))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
