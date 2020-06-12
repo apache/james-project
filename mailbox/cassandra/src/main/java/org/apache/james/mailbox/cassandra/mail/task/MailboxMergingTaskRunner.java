@@ -24,7 +24,6 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
@@ -41,6 +40,9 @@ import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MailboxMergingTaskRunner {
@@ -91,12 +93,11 @@ public class MailboxMergingTaskRunner {
     }
 
     private Mono<Void> mergeRights(CassandraId oldMailboxId, CassandraId newMailboxId) {
-            Mono<MailboxACL> oldAclMono = cassandraACLMapper.getACL(oldMailboxId)
-                    .defaultIfEmpty(MailboxACL.EMPTY);
-            Mono<MailboxACL> newAclMono = cassandraACLMapper.getACL(newMailboxId)
-                    .defaultIfEmpty(MailboxACL.EMPTY);
-        return Mono.zip(oldAclMono, newAclMono)
-            .flatMap(acls -> cassandraACLMapper.setACL(newMailboxId, acls.getT1())
-                .then(rightsDAO.update(oldMailboxId, ACLDiff.computeDiff(acls.getT2(), MailboxACL.EMPTY))));
+            return Flux.concat(
+                    cassandraACLMapper.getACL(oldMailboxId),
+                    cassandraACLMapper.getACL(newMailboxId))
+                .reduce(Throwing.biFunction(MailboxACL::union))
+                .flatMap(union -> cassandraACLMapper.setACL(newMailboxId, union))
+                .then();
     }
 }
