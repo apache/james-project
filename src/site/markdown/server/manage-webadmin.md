@@ -589,9 +589,21 @@ An admin can specify the concurrency that should be used when running the task:
 
 This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
 
+An admin can also specify the reindexing mode it wants to use when running the task:
+
+ - `mode` the reindexing mode used. There are 2 modes for the moment:
+   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `fixOutdated` will check for outdated indexed document and reindex only those.
+   
+This optional parameter must be passed as query parameter. 
+
+It's good to note as well that there is a limitation with the `fixOutdated` mode. As we first collect metadata of 
+stored messages to compare them with the ones in the index, a failed `expunged` operation might not be well corrected
+(as the message might not exist anymore but still be indexed).
+
 Example:
 
-curl -XPOST http://ip:port/mailboxes?task=reIndex&messagesPerSecond=200
+curl -XPOST http://ip:port/mailboxes?task=reIndex&messagesPerSecond=200&mode=rebuildAll
 
 The scheduled task will have the following type `full-reindexing` and the following `additionalInformation`:
 
@@ -599,7 +611,8 @@ The scheduled task will have the following type `full-reindexing` and the follow
 {
   "type":"full-reindexing",
   "runningOptions":{
-    "messagesPerSecond":200
+    "messagesPerSecond":200,
+    "mode":"REBUILD_ALL"
   },
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
@@ -630,10 +643,22 @@ An admin can specify the concurrency that should be used when running the task:
 
 This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
 
+An admin can also specify the reindexing mode it wants to use when running the task:
+
+ - `mode` the reindexing mode used. There are 2 modes for the moment:
+   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `fixOutdated` will check for outdated indexed document and reindex only those.
+   
+This optional parameter must be passed as query parameter.
+
+It's good to note as well that there is a limitation with the `fixOutdated` mode. As we first collect metadata of 
+stored messages to compare them with the ones in the index, a failed `expunged` operation might not be well corrected
+(as the message might not exist anymore but still be indexed).
+
 Example:
 
 ```
-curl -XPOST http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5&messagesPerSecond=200
+curl -XPOST http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5&messagesPerSecond=200&mode=rebuildAll
 ```
 
 The scheduled task will have the following type `error-recovery-indexation` and the following `additionalInformation`:
@@ -642,7 +667,8 @@ The scheduled task will have the following type `error-recovery-indexation` and 
 {
   "type":"error-recovery-indexation"
   "runningOptions":{
-    "messagesPerSecond":200
+    "messagesPerSecond":200,
+    "mode":"REBUILD_ALL"
   },
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
@@ -677,10 +703,22 @@ An admin can specify the concurrency that should be used when running the task:
 
 This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
 
+An admin can also specify the reindexing mode it wants to use when running the task:
+
+ - `mode` the reindexing mode used. There are 2 modes for the moment:
+   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `fixOutdated` will check for outdated indexed document and reindex only those.
+   
+This optional parameter must be passed as query parameter.
+
+It's good to note as well that there is a limitation with the `fixOutdated` mode. As we first collect metadata of 
+stored messages to compare them with the ones in the index, a failed `expunged` operation might not be well corrected
+(as the message might not exist anymore but still be indexed).
+
 Example:
 
 ```
-curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex&messagesPerSecond=200
+curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex&messagesPerSecond=200&mode=fixOutdated
 ```
 
 Response codes:
@@ -694,7 +732,8 @@ The scheduled task will have the following type `mailbox-reindexing` and the fol
 {
   "type":"mailbox-reindexing",
   "runningOptions":{
-    "messagesPerSecond":200
+    "messagesPerSecond":200,
+    "mode":"FIX_OUTDATED"
   },   
   "mailboxId":"{mailboxId}",
   "successfullyReprocessedMailCount":18,
@@ -815,10 +854,22 @@ An admin can specify the concurrency that should be used when running the task:
 
 This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
 
+An admin can also specify the reindexing mode it wants to use when running the task:
+
+ - `mode` the reindexing mode used. There are 2 modes for the moment:
+   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `fixOutdated` will check for outdated indexed document and reindex only those.
+   
+This optional parameter must be passed as query parameter.
+
+It's good to note as well that there is a limitation with the `fixOutdated` mode. As we first collect metadata of 
+stored messages to compare them with the ones in the index, a failed `expunged` operation might not be well corrected
+(as the message might not exist anymore but still be indexed).
+
 Example:
 
 ```
-curl -XPOST /messages?task=SolveInconsistencies&messagesPerSecond=200
+curl -XPOST /messages?task=SolveInconsistencies&messagesPerSecond=200&mode=rebuildAll
 ```
 
 Response codes:
@@ -838,7 +889,8 @@ The scheduled task will have the following type `solve-message-inconsistencies` 
   "updatedMessageIdEntries": 0,
   "removedMessageIdEntries": 1,
   "runningOptions":{
-    "messagesPerSecond": 200
+    "messagesPerSecond": 200,
+    "mode":"REBUILD_ALL"
   },
   "fixedInconsistencies": [
     {
@@ -1004,10 +1056,22 @@ An admin can specify the concurrency that should be used when running the task:
 
 This optional parameter must have a strictly positive integer as a value and be passed as query parameter.
 
+An admin can also specify the reindexing mode it wants to use when running the task:
+
+ - `mode` the reindexing mode used. There are 2 modes for the moment:
+   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `fixOutdated` will check for outdated indexed document and reindex only those.
+   
+This optional parameter must be passed as query parameter.
+
+It's good to note as well that there is a limitation with the `fixOutdated` mode. As we first collect metadata of 
+stored messages to compare them with the ones in the index, a failed `expunged` operation might not be well corrected
+(as the message might not exist anymore but still be indexed).
+
 Example:
 
 ```
-curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes?task=reIndex&messagesPerSecond=200
+curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes?task=reIndex&messagesPerSecond=200&mode=fixOutdated
 ```
 
 Response codes:
@@ -1021,7 +1085,8 @@ The scheduled task will have the following type `user-reindexing` and the follow
 {
   "type":"user-reindexing",
   "runningOptions":{
-    "messagesPerSecond":200
+    "messagesPerSecond":200,
+    "mode":"FIX_OUTDATED"
   }, 
   "user":"user@domain.com",
   "successfullyReprocessedMailCount":18,
