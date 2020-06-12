@@ -72,8 +72,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     private final ListeningMessageSearchIndex index;
     private final ConcurrentHashMap<MailboxId, Object> indexed = new ConcurrentHashMap<>();
     private final MailboxSessionMapperFactory factory;
-    
-    
+
     public LazyMessageSearchIndex(ListeningMessageSearchIndex index, MailboxSessionMapperFactory factory, SessionProvider sessionProvider) {
         super(factory, sessionProvider);
         this.index = index;

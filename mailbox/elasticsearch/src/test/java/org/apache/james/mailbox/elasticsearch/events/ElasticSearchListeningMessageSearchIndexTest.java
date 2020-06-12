@@ -37,7 +37,6 @@ import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.DefaultMailboxes;
-import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -76,9 +75,12 @@ import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+import org.apache.james.mailbox.store.search.ListeningMessageSearchIndexContract;
 import org.awaitility.Duration;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
@@ -446,102 +448,27 @@ class ElasticSearchListeningMessageSearchIndexTest {
             .doesNotThrowAnyException();
     }
 
-    @Test
-    void retrieveIndexedFlagsShouldRetrieveSystemFlags() {
-        Flags flags = FlagsBuilder.builder()
-            .add(Flags.Flag.RECENT)
-            .add(Flags.Flag.DRAFT)
-            .build();
+    @Nested
+    class RetrieveIndexedFlags implements ListeningMessageSearchIndexContract {
+        @Override
+        public ListeningMessageSearchIndex testee() {
+            return testee;
+        }
 
-        SimpleMailboxMessage message = MESSAGE_BUILDER.messageId(MESSAGE_ID_4)
-            .uid(MESSAGE_UID_4)
-            .flags(flags)
-            .build();
+        @Override
+        public MailboxSession session() {
+            return session;
+        }
 
-        testee.add(session, mailbox, message).block();
+        @Override
+        public Mailbox mailbox() {
+            return mailbox;
+        }
 
-        assertThat(testee.retrieveIndexedFlags(mailbox, MESSAGE_UID_4).block())
-            .isEqualTo(flags);
-    }
-
-    @Test
-    void retrieveIndexedFlagsShouldReturnEmptyFlagsWhenNoFlags() {
-        Flags flags = new Flags();
-
-        SimpleMailboxMessage message = MESSAGE_BUILDER.messageId(MESSAGE_ID_4)
-            .uid(MESSAGE_UID_4)
-            .flags(flags)
-            .build();
-
-        testee.add(session, mailbox, message).block();
-
-        assertThat(testee.retrieveIndexedFlags(mailbox, MESSAGE_UID_4).block())
-            .isEqualTo(flags);
-    }
-
-    @Test
-    void retrieveIndexedFlagsShouldReturnAllSystemFlagsWhenAllFlagsSet() {
-        Flags flags = FlagsBuilder.builder()
-            .add(Flags.Flag.ANSWERED)
-            .add(Flags.Flag.DELETED)
-            .add(Flags.Flag.RECENT)
-            .add(Flags.Flag.DRAFT)
-            .add(Flags.Flag.FLAGGED)
-            .add(Flags.Flag.SEEN)
-            .build();
-
-        SimpleMailboxMessage message = MESSAGE_BUILDER.messageId(MESSAGE_ID_4)
-            .uid(MESSAGE_UID_4)
-            .flags(flags)
-            .build();
-
-        testee.add(session, mailbox, message).block();
-
-        assertThat(testee.retrieveIndexedFlags(mailbox, MESSAGE_UID_4).block())
-            .isEqualTo(flags);
-    }
-
-    @Test
-    void retrieveIndexedFlagsShouldReturnUserFlags() {
-        Flags flags = FlagsBuilder.builder()
-            .add("flag1")
-            .add("flag2")
-            .build();
-
-        SimpleMailboxMessage message = MESSAGE_BUILDER.messageId(MESSAGE_ID_4)
-            .uid(MESSAGE_UID_4)
-            .flags(flags)
-            .build();
-
-        testee.add(session, mailbox, message).block();
-
-        assertThat(testee.retrieveIndexedFlags(mailbox, MESSAGE_UID_4).block())
-            .isEqualTo(flags);
-    }
-
-    @Test
-    void retrieveIndexedFlagsShouldReturnUserAndSystemFlags() {
-        Flags flags = FlagsBuilder.builder()
-            .add(Flags.Flag.ANSWERED)
-            .add(Flags.Flag.DELETED)
-            .add("flag1")
-            .add("flag2")
-            .build();
-
-        SimpleMailboxMessage message = MESSAGE_BUILDER.messageId(MESSAGE_ID_4)
-            .uid(MESSAGE_UID_4)
-            .flags(flags)
-            .build();
-
-        testee.add(session, mailbox, message).block();
-
-        assertThat(testee.retrieveIndexedFlags(mailbox, MESSAGE_UID_4).block())
-            .isEqualTo(flags);
-    }
-
-    @Test
-    void retrieveIndexedFlagsShouldPropagateExceptionWhenNotFound() {
-        assertThatThrownBy(() -> testee.retrieveIndexedFlags(mailbox, MESSAGE_UID_4).block())
-            .isInstanceOf(IndexNotFoundException.class);
+        @Test
+        void retrieveIndexedFlagsShouldPropagateExceptionWhenNotFound() {
+            assertThatThrownBy(() -> testee.retrieveIndexedFlags(mailbox, MESSAGE_UID_4).block())
+                .isInstanceOf(IndexNotFoundException.class);
+        }
     }
 }

@@ -71,7 +71,7 @@ public class ReIndexerImplTest {
     }
 
     @Test
-    void reIndexAllShouldCallMessageSearchIndex() throws Exception {
+    void reIndexMailboxPathShouldCallMessageSearchIndex() throws Exception {
         MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
         MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
@@ -98,7 +98,7 @@ public class ReIndexerImplTest {
     }
 
     @Test
-    void reIndexMailboxPathShouldCallMessageSearchIndex() throws Exception {
+    void reIndexAllShouldCallMessageSearchIndex() throws Exception {
         MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
         MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)

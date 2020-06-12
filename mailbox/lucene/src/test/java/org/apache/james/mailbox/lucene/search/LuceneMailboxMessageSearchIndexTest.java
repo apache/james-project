@@ -35,7 +35,6 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
@@ -53,8 +52,11 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MessageBuilder;
+import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+import org.apache.james.mailbox.store.search.ListeningMessageSearchIndexContract;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -671,84 +673,21 @@ class LuceneMailboxMessageSearchIndexTest {
             .containsExactly(uid2);
     }
 
-    @Test
-    void retrieveIndexedFlagsShouldRetrieveSystemFlags() {
-        Flags expectedFlags = new Flags(Flag.ANSWERED);
+    @Nested
+    class RetrieveIndexedFlags implements ListeningMessageSearchIndexContract {
+        @Override
+        public ListeningMessageSearchIndex testee() {
+            return index;
+        }
 
-        assertThat(index.retrieveIndexedFlags(mailbox, uid1).block())
-            .isEqualTo(expectedFlags);
-    }
+        @Override
+        public MailboxSession session() {
+            return session;
+        }
 
-    @Test
-    void retrieveIndexedFlagsShouldReturnEmptyFlagsWhenNoFlags() {
-        Flags expectedFlags = new Flags();
-
-        assertThat(index.retrieveIndexedFlags(mailbox, uid5).block())
-            .isEqualTo(expectedFlags);
-    }
-
-    @Test
-    void retrieveIndexedFlagsShouldReturnAllSystemFlagsWhenAllFlagsSet() {
-        Flags newFlags = FlagsBuilder.builder()
-            .add(Flags.Flag.ANSWERED)
-            .add(Flags.Flag.DELETED)
-            .add(Flags.Flag.RECENT)
-            .add(Flags.Flag.DRAFT)
-            .add(Flags.Flag.FLAGGED)
-            .add(Flags.Flag.SEEN)
-            .build();
-
-        UpdatedFlags updatedFlags = UpdatedFlags.builder()
-            .uid(uid2)
-            .modSeq(MOD_SEQ)
-            .oldFlags(new Flags(Flag.ANSWERED))
-            .newFlags(newFlags)
-            .build();
-
-        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
-
-        assertThat(index.retrieveIndexedFlags(mailbox, uid2).block())
-            .isEqualTo(newFlags);
-    }
-
-    @Test
-    void retrieveIndexedFlagsShouldReturnUserFlags() {
-        Flags newFlags = FlagsBuilder.builder()
-            .add("flag1")
-            .add("flag2")
-            .build();
-
-        UpdatedFlags updatedFlags = UpdatedFlags.builder()
-            .uid(uid2)
-            .modSeq(MOD_SEQ)
-            .oldFlags(new Flags(Flag.ANSWERED))
-            .newFlags(newFlags)
-            .build();
-
-        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
-
-        assertThat(index.retrieveIndexedFlags(mailbox, uid2).block())
-            .isEqualTo(newFlags);
-    }
-
-    @Test
-    void retrieveIndexedFlagsShouldReturnUserAndSystemFlags() {
-        Flags newFlags = FlagsBuilder.builder()
-            .add("flag1")
-            .add("flag2")
-            .add(Flag.DRAFT)
-            .build();
-
-        UpdatedFlags updatedFlags = UpdatedFlags.builder()
-            .uid(uid2)
-            .modSeq(MOD_SEQ)
-            .oldFlags(new Flags(Flag.ANSWERED))
-            .newFlags(newFlags)
-            .build();
-
-        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
-
-        assertThat(index.retrieveIndexedFlags(mailbox, uid2).block())
-            .isEqualTo(newFlags);
+        @Override
+        public Mailbox mailbox() {
+            return mailbox;
+        }
     }
 }
