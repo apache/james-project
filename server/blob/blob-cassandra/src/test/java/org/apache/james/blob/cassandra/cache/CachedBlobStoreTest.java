@@ -446,6 +446,36 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         }
 
         @Test
+        void readBytesShouldRecordDistinctTimingsWhenRepeatAndBackendRead() {
+            BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, ELEVEN_KILOBYTES, SIZE_BASED)).block();
+
+            Duration delay = Duration.ofMillis(500);
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId))
+                .then(Mono.delay(delay))
+                .repeat(2)
+                .blockLast();
+
+            assertThat(metricFactory.executionTimesFor(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME))
+                .hasSize(3)
+                .allSatisfy(timing -> assertThat(timing).isLessThan(delay));
+        }
+
+        @Test
+        void readBytesShouldRecordDistinctTimingsWhenRepeat() {
+            BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
+
+            Duration delay = Duration.ofMillis(500);
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId))
+                .then(Mono.delay(delay))
+                .repeat(2)
+                .blockLast();
+
+            assertThat(metricFactory.executionTimesFor(BLOBSTORE_CACHED_LATENCY_METRIC_NAME))
+                .hasSize(3)
+                .allSatisfy(timing -> assertThat(timing).isLessThan(delay));
+        }
+
+        @Test
         void readBlobStoreCacheShouldCountWhenHit() {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 

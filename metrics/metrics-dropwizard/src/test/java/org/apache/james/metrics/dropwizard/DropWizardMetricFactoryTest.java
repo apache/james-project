@@ -19,11 +19,19 @@
 
 package org.apache.james.metrics.dropwizard;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.MetricFactoryContract;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.codahale.metrics.MetricRegistry;
+
+import reactor.core.publisher.Mono;
 
 class DropWizardMetricFactoryTest implements MetricFactoryContract {
 
@@ -37,5 +45,27 @@ class DropWizardMetricFactoryTest implements MetricFactoryContract {
     @Override
     public MetricFactory testee() {
         return testee;
+    }
+
+    @Test
+    void decoratePublisherWithTimerMetricShouldRecordANewValueForEachRetry() {
+        Duration duration = Duration.ofMillis(100);
+        Mono.from(testee.decoratePublisherWithTimerMetric("any", Mono.delay(duration)))
+            .repeat(5)
+            .blockLast();
+
+        assertThat(testee.timer("any").getTimer().getSnapshot().get99thPercentile())
+            .isLessThan(duration.get(ChronoUnit.NANOS) * 2);
+    }
+
+    @Test
+    void decoratePublisherWithTimerMetricLogP99ShouldRecordANewValueForEachRetry() {
+        Duration duration = Duration.ofMillis(100);
+        Mono.from(testee.decoratePublisherWithTimerMetricLogP99("any", Mono.delay(duration)))
+            .repeat(5)
+            .blockLast();
+
+        assertThat(testee.timer("any").getTimer().getSnapshot().get99thPercentile())
+            .isLessThan(duration.get(ChronoUnit.NANOS) * 2);
     }
 }

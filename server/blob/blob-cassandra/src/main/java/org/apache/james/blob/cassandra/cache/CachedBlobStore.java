@@ -38,7 +38,6 @@ import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
@@ -277,10 +276,9 @@ public class CachedBlobStore implements BlobStore {
     }
 
     private Mono<byte[]> readBytesFromBackend(BucketName bucketName, BlobId blobId) {
-        TimeMetric timer = metricFactory.timer(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME);
-
-        return Mono.from(backend.readBytes(bucketName, blobId))
-            .doOnSuccess(any -> timer.stopAndPublish())
-            .doOnError(ObjectNotFoundException.class, any -> timer.stopAndPublish());
+        return Mono.fromCallable(() -> metricFactory.timer(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME))
+            .flatMap(timer -> Mono.from(backend.readBytes(bucketName, blobId))
+                .doOnSuccess(any -> timer.stopAndPublish())
+                .doOnError(ObjectNotFoundException.class, any -> timer.stopAndPublish()));
     }
 }

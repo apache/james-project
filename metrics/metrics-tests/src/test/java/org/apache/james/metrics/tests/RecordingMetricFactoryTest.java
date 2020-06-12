@@ -32,6 +32,8 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Mono;
+
 class RecordingMetricFactoryTest implements MetricFactoryContract {
 
     private static final String TIME_METRIC_NAME = "timerMetric";
@@ -117,5 +119,29 @@ class RecordingMetricFactoryTest implements MetricFactoryContract {
 
         assertThat(testee.countFor(METRIC_NAME))
             .isEqualTo(5);
+    }
+
+    @Test
+    void decoratePublisherWithTimerMetricShouldRecordANewValueForEachRetry() {
+        Duration duration = Duration.ofMillis(100);
+        Mono.from(testee.decoratePublisherWithTimerMetric("any", Mono.delay(duration)))
+            .repeat(5)
+            .blockLast();
+
+        assertThat(testee.executionTimesFor("any"))
+            .hasSize(6)
+            .allSatisfy(timing -> assertThat(timing).isLessThan(duration.multipliedBy(2)));
+    }
+
+    @Test
+    void decoratePublisherWithTimerMetricLogP99ShouldRecordANewValueForEachRetry() {
+        Duration duration = Duration.ofMillis(100);
+        Mono.from(testee.decoratePublisherWithTimerMetricLogP99("any", Mono.delay(duration)))
+            .repeat(5)
+            .blockLast();
+
+        assertThat(testee.executionTimesFor("any"))
+            .hasSize(6)
+            .allSatisfy(timing -> assertThat(timing).isLessThan(duration.multipliedBy(2)));
     }
 }

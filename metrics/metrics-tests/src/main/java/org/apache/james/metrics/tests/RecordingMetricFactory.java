@@ -38,6 +38,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class RecordingMetricFactory implements MetricFactory {
     private final Multimap<String, Duration> executionTimes = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
@@ -63,15 +64,16 @@ public class RecordingMetricFactory implements MetricFactory {
 
     @Override
     public <T> Publisher<T> decoratePublisherWithTimerMetric(String name, Publisher<T> publisher) {
-        TimeMetric timer = timer(name);
-        return Flux.from(publisher).doOnComplete(timer::stopAndPublish);
+        return Mono.fromCallable(() -> timer(name))
+            .flatMapMany(timer ->  Flux.from(publisher)
+                .doOnComplete(timer::stopAndPublish));
     }
 
     @Override
     public <T> Publisher<T> decoratePublisherWithTimerMetricLogP99(String name, Publisher<T> publisher) {
-        TimeMetric timer = timer(name);
-        return Flux.from(publisher)
-            .doOnComplete(() -> timer.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD));
+        return Mono.fromCallable(() -> timer(name))
+            .flatMapMany(timer ->  Flux.from(publisher)
+                .doOnComplete(() -> timer.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD)));
     }
 
     public Collection<Duration> executionTimesFor(String name) {

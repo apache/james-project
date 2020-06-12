@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class DropWizardTimeMetric implements TimeMetric {
@@ -71,6 +72,16 @@ public class DropWizardTimeMetric implements TimeMetric {
         this.name = name;
         this.timer = timer;
         this.context = this.timer.time();
+    }
+
+    @VisibleForTesting
+    Timer.Context getContext() {
+        return context;
+    }
+
+    @VisibleForTesting
+    Timer getTimer() {
+        return timer;
     }
 
     @Override

@@ -28,13 +28,13 @@ import javax.inject.Inject;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
 import org.reactivestreams.Publisher;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class DropWizardMetricFactory implements MetricFactory, Startable {
 
@@ -54,21 +54,22 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
     }
 
     @Override
-    public TimeMetric timer(String name) {
+    public DropWizardTimeMetric timer(String name) {
         return new DropWizardTimeMetric(name, metricRegistry.timer(name));
     }
 
     @Override
     public <T> Publisher<T> decoratePublisherWithTimerMetric(String name, Publisher<T> publisher) {
-        TimeMetric timer = timer(name);
-        return Flux.from(publisher).doOnComplete(timer::stopAndPublish);
+        return Mono.fromCallable(() -> timer(name))
+            .flatMapMany(timer ->  Flux.from(publisher)
+                .doOnComplete(timer::stopAndPublish));
     }
 
     @Override
     public <T> Publisher<T> decoratePublisherWithTimerMetricLogP99(String name, Publisher<T> publisher) {
-        TimeMetric timer = timer(name);
-        return Flux.from(publisher)
-            .doOnComplete(() -> timer.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD));
+        return Mono.fromCallable(() -> timer(name))
+            .flatMapMany(timer ->  Flux.from(publisher)
+                .doOnComplete(() -> timer.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD)));
     }
 
     @PostConstruct
