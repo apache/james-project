@@ -24,7 +24,7 @@ to give James a quick spin on their local machine.
 == James Local Mail Server
 
 If you are not sure which server you should be using, then
-you probably ought to be using the xref:local.adoc[*Local Server*].
+you probably ought to be using the xref:local/index.adoc[*Local Server*].
 This server uses the local file system to store emails, which tends
 to considerably simplify the system. To safeguard your emails, you
 only need a simple generic backup solution that works with a data
@@ -36,7 +36,7 @@ have a huge amount of emails to process, then usually the simplicity is
 well worth the loss of some functionality. The last thing you need is
 to have to resolve difficult issues on a production server when you have not
 yet acquired the requisite knowledge to deal with those issues. Using the
-xref:local.adoc[*Local Server*] will help you reduce the risk of running into 
+xref:local/index.adoc[*Local Server*] will help you reduce the risk of running into 
 production issues.
 
 This server is:

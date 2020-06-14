@@ -1,0 +1,23 @@
+= James Local Mail Server Configuration
+:navtitle: Configuration
+
+ * Domain names (domainlist.xml)
+ * Database (james-database.properties)
+ * LMTP (lmtpserver.xml)
+ * POP3 (pop3server.xml)
+ * DNS (dnsservice.xml)
+ * Loggin (logback.xml)
+ * ??? (jmx.properties)
+ * ??? (recipientrewritetable.xml)
+ * ??? (extensions.properties)
+ * JWT (jwt_publickey)
+ * Mailets (mailetcontainer.xml)
+ * SMTP (smtpserver.xml)
+ * Health checks (healthcheck.properties)
+ * Mail storage (mailrepositorystore.xml)
+ * User storage (usersrepository.xml)
+ * IMAP (imapserver.xml)
+ * ??? (listeners.xml)
+ * Sieve filters (managesieveserver.xml)
+ * Web admin (webadmin.properties)
+ 

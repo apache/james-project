@@ -1,0 +1,34 @@
+= James Local Server &mdash; Objectives
+:navtitle: Objectives
+
+The objective of the Local Server is to be as simple and minimalistic as possible,
+while still being useful. Many people wish to have a basic mail server that they
+can customize, without necessarily requiring a complex distributed system.
+The Local Server is intended to be an entry-level server that is accessible to
+those who want a mail server, but who don't want to have to learn about all the
+complexities of a new system.
+
+This server is therefore intended to be the simplest to set up and use in 
+production.
+Of all the James Servers, it has the least amount of dependencies and 
+complexities.
+If you are not sure which of the James servers is best for you, you should
+probably choose this one.
+
+The default configuration of the Local Server includes the following features:
+
+ * Secure SMTP (SSL/TLS) over port 465
+ * Secure IMAP4 (SSL/TLS) over port 993
+ * Local Mailbox support
+  ** Files are stored locally on the filesystem
+  ** Optionally use a volume if you are a Docker or Kubernetes user
+  ** Data can be backed up simply by backing up the filesystem / volume
+ * Multi-domain (virtual domain) support
+  ** Up to xxx domains
+  ** Up to yyy users per domain
+ * Administration of users either via a command-line tool or the admin api
+
+
+Optionally, more advanced users can adapt the Local Server to their needs by 
+updating the xref:local/conf/index.adoc[configuration files] and building a new Docker image
+(currently unsupported).

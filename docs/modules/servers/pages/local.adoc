@@ -1,5 +1,0 @@
-= James Local Mail Server
-:navtitle: Local
-
-(TODO)
-
