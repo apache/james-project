@@ -71,7 +71,7 @@ SMTP relates to:
 
 == Try It!
 
-You can connect manually to the James SMTP server using telnet.
+You can try speaking SMTP with your demo server by connecting to it using telnet. It would not work on a real world server as it would requires encrypted traffic. See "using openssl to talk to your server"
 
 Requirements:
 
