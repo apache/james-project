@@ -72,7 +72,7 @@ class MessageFastViewProjectionHealthCheckTest {
             missMetric.increment();
 
             assertThat(testee.check().block())
-                .isEqualTo(Result.degraded(COMPONENT_NAME, "retrieveMissCount percentage 100.0% (2/2) is higher than the threshold 10.0%"));
+                .isEqualTo(Result.degraded(COMPONENT_NAME, "retrieveMissCount percentage 100.0% (2.0/2.0) is higher than the threshold 10.0%"));
         }
 
         @Test
@@ -100,7 +100,7 @@ class MessageFastViewProjectionHealthCheckTest {
 
             assertThat(testee.check().block())
                 .isEqualTo(Result.degraded(COMPONENT_NAME,
-                    "retrieveMissCount percentage 25.0% (1/4) is higher than the threshold 10.0%"));
+                    "retrieveMissCount percentage 25.0% (1.0/4.0) is higher than the threshold 10.0%"));
         }
 
         @Test
@@ -116,7 +116,7 @@ class MessageFastViewProjectionHealthCheckTest {
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(resultWithLessHit)
                     .isEqualTo(Result.degraded(COMPONENT_NAME,
-                    "retrieveMissCount percentage 50.0% (1/2) is higher than the threshold 10.0%"));
+                    "retrieveMissCount percentage 50.0% (1.0/2.0) is higher than the threshold 10.0%"));
                 softly.assertThat(resultWithMoreHit)
                     .isEqualTo(Result.healthy(COMPONENT_NAME));
             });
@@ -135,15 +135,15 @@ class MessageFastViewProjectionHealthCheckTest {
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(resultWithLessHit)
                     .isEqualTo(Result.degraded(COMPONENT_NAME,
-                    "retrieveMissCount percentage 50.0% (1/2) is higher than the threshold 10.0%"));
+                    "retrieveMissCount percentage 50.0% (1.0/2.0) is higher than the threshold 10.0%"));
                 softly.assertThat(resultWithMoreHit)
                     .isEqualTo(Result.degraded(COMPONENT_NAME,
-                        "retrieveMissCount percentage 20.0% (1/5) is higher than the threshold 10.0%"));
+                        "retrieveMissCount percentage 20.0% (1.0/5.0) is higher than the threshold 10.0%"));
             });
         }
 
         @Test
-        void checkShouldReturnDegradedAfterMoreHiss() {
+        void checkShouldReturnDegradedAfterMoreMiss() {
             missMetric.increment();
             // enough of hits
             hitMetric.add(10);
@@ -158,8 +158,7 @@ class MessageFastViewProjectionHealthCheckTest {
                 softly.assertThat(resultWithEnoughOfHits)
                     .isEqualTo(Result.healthy(COMPONENT_NAME));
                 softly.assertThat(resultWithMoreMiss)
-                    .isEqualTo(Result.degraded(COMPONENT_NAME,
-                        "retrieveMissCount percentage 16.666666666666668% (2/12) is higher than the threshold 10.0%"));
+                    .isEqualTo(Result.degraded(COMPONENT_NAME, "retrieveMissCount percentage 16.666666666666668% (2.0/12.0) is higher than the threshold 10.0%"));
             });
         }
 
