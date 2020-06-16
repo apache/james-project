@@ -19,6 +19,11 @@
 
 package org.apache.james.imap.processor.base;
 
+import static io.vavr.API.$;
+import static io.vavr.API.Case;
+import static io.vavr.API.Match;
+import static io.vavr.Predicates.instanceOf;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,6 +67,8 @@ import reactor.core.scheduler.Schedulers;
  */
 public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
+
+    private static final Void VOID = null;
 
     @VisibleForTesting
     static class ApplicableFlags {
@@ -362,37 +369,35 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     private void mailboxEvent(MailboxEvent mailboxEvent) {
         // Check if the event was for the mailbox we are observing
         if (mailboxEvent.getMailboxId().equals(getMailboxId())) {
-            MailboxSession.SessionId eventSessionId = mailboxEvent.getSessionId();
-            if (mailboxEvent instanceof MessageEvent) {
-                final MessageEvent messageEvent = (MessageEvent) mailboxEvent;
-                if (messageEvent instanceof Added) {
-                    final Collection<MessageUid> uids = ((Added) mailboxEvent).getUids();
-                    handleAddition(uids);
-                } else if (messageEvent instanceof FlagsUpdated) {
-                    FlagsUpdated updated = (FlagsUpdated) messageEvent;
-                    handleFlagsUpdates(mailboxEvent, eventSessionId, (FlagsUpdated) messageEvent, updated);
-                } else if (messageEvent instanceof Expunged) {
-                    handleMailboxExpunge(messageEvent);
-                }
-            } else if (mailboxEvent instanceof MailboxDeletion) {
-                handleMailboxDeletion(eventSessionId);
-            }
+            Match(mailboxEvent).of(
+                Case($(instanceOf(Added.class)),
+                    this::handleAddition),
+                Case($(instanceOf(FlagsUpdated.class)),
+                    this::handleFlagsUpdates),
+                Case($(instanceOf(Expunged.class)),
+                    this::handleMailboxExpunge),
+                Case($(instanceOf(MailboxDeletion.class)),
+                    this::handleMailboxDeletion),
+                Case($(), VOID)
+            );
         }
     }
 
-    private void handleMailboxDeletion(MailboxSession.SessionId eventSessionId) {
-        if (eventSessionId != sessionId) {
+    private Void handleMailboxDeletion(MailboxDeletion mailboxDeletion) {
+        if (mailboxDeletion.getSessionId() != sessionId) {
             isDeletedByOtherSession = true;
         }
+        return VOID;
     }
 
-    private void handleMailboxExpunge(MessageEvent messageEvent) {
+    private Void handleMailboxExpunge(MessageEvent messageEvent) {
         expungedUids.addAll(messageEvent.getUids());
+        return VOID;
     }
 
-    private void handleFlagsUpdates(MailboxEvent mailboxEvent, MailboxSession.SessionId eventSessionId, FlagsUpdated messageEvent, FlagsUpdated updated) {
+    private Void handleFlagsUpdates(FlagsUpdated updated) {
         List<UpdatedFlags> uFlags = updated.getUpdatedFlags();
-        if (sessionId != eventSessionId || !silentFlagChanges) {
+        if (sessionId != updated.getSessionId() || !silentFlagChanges) {
 
             for (UpdatedFlags u : uFlags) {
                 if (interestingFlags(u)) {
@@ -414,28 +419,27 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
                 while (flags.hasNext()) {
                     if (Flag.RECENT.equals(flags.next())) {
                         MailboxId id = sm.getMailboxId();
-                        if (id != null && id.equals(mailboxEvent.getMailboxId())) {
+                        if (id != null && id.equals(updated.getMailboxId())) {
                             sm.addRecent(u.getUid());
                         }
                     }
                 }
-
-
             }
         }
-
-        applicableFlags = updateApplicableFlags(applicableFlags, messageEvent);
+        applicableFlags = updateApplicableFlags(applicableFlags, updated);
+        return VOID;
     }
 
-    private void handleAddition(Collection<MessageUid> uids) {
+    private Void handleAddition(Added added) {
         sizeChanged = true;
         SelectedMailbox sm = session.getSelected();
-        for (MessageUid uid : uids) {
+        for (MessageUid uid : added.getUids()) {
             uidMsnConverter.addUid(uid);
             if (sm != null) {
                 sm.addRecent(uid);
             }
         }
+        return VOID;
     }
 
     @VisibleForTesting
