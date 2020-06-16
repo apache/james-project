@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -356,9 +357,10 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
 
         builder.append(bounceMessage()).append(LINE_BREAK);
         builder.append("Failed recipient(s):").append(LINE_BREAK);
-        for (MailAddress mailAddress : originalMail.getRecipients()) {
-            builder.append(mailAddress);
-        }
+        builder.append(originalMail.getRecipients()
+                .stream()
+                .map(MailAddress::asString)
+                .collect(Collectors.joining(", ")));
         builder.append(LINE_BREAK).append(LINE_BREAK);
         builder.append("Error message:").append(LINE_BREAK);
         builder.append(AttributeUtils.getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class).orElse("")).append(LINE_BREAK);
