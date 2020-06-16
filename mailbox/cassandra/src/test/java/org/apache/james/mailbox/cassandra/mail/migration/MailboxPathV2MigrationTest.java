@@ -72,19 +72,28 @@ class MailboxPathV2MigrationTest {
         daoV1 = new CassandraMailboxPathDAOImpl(
             cassandra.getConf(),
             cassandra.getTypesProvider(),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            cassandraCluster.getCassandraConsistenciesConfiguration());
         daoV2 = new CassandraMailboxPathV2DAO(
             cassandra.getConf(),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            cassandraCluster.getCassandraConsistenciesConfiguration());
 
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-        mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        mailboxDAO = new CassandraMailboxDAO(
+            cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
         mailboxMapper = new CassandraMailboxMapper(
             mailboxDAO,
             daoV1,
             daoV2,
             userMailboxRightsDAO,
-            new CassandraACLMapper(cassandra.getConf(), userMailboxRightsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION),
+            new CassandraACLMapper(
+                cassandra.getConf(),
+                userMailboxRightsDAO,
+                CassandraConfiguration.DEFAULT_CONFIGURATION,
+                cassandraCluster.getCassandraConsistenciesConfiguration()),
             new CassandraSchemaVersionManager(new CassandraSchemaVersionDAO(cassandra.getConf())));
     }
 

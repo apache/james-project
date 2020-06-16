@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -54,10 +55,14 @@ public class CassandraMapperProvider implements MapperProvider {
     private final MailboxSession mailboxSession = MailboxSessionUtil.create(Username.of("benwa"));
     private CassandraMailboxSessionMapperFactory mapperFactory;
 
-    public CassandraMapperProvider(CassandraCluster cassandra) {
+    public CassandraMapperProvider(CassandraCluster cassandra,
+                                   CassandraConsistenciesConfiguration cassandraConsistenciesConfiguration) {
         this.cassandra = cassandra;
         messageUidProvider = new MessageUidProvider();
-        cassandraModSeqProvider = new CassandraModSeqProvider(this.cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
+        cassandraModSeqProvider = new CassandraModSeqProvider(
+                this.cassandra.getConf(),
+                CassandraConfiguration.DEFAULT_CONFIGURATION,
+                cassandraConsistenciesConfiguration);
         mapperFactory = createMapperFactory();
     }
 

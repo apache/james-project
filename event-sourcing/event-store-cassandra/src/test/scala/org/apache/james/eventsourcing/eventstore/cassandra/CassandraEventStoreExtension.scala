@@ -43,7 +43,7 @@ class CassandraEventStoreExtension(var cassandra: CassandraClusterExtension, val
   override def afterAll(context: ExtensionContext): Unit = cassandra.afterAll(context)
 
   override def beforeEach(context: ExtensionContext): Unit = eventStoreDao =
-    Some(new EventStoreDao(cassandra.getCassandraCluster.getConf, eventSerializer))
+    Some(new EventStoreDao(cassandra.getCassandraCluster.getConf, eventSerializer, cassandra.getCassandraConsistenciesConfiguration))
 
   override def afterEach(context: ExtensionContext): Unit = cassandra.afterEach(context)
 

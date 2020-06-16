@@ -60,7 +60,10 @@ class CassandraMessageIdToImapUidDAOTest {
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         messageIdFactory = new CassandraMessageId.Factory();
-        testee = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory);
+        testee = new CassandraMessageIdToImapUidDAO(
+            cassandra.getConf(),
+            cassandraCluster.getCassandraConsistenciesConfiguration(),
+            messageIdFactory);
     }
 
     @Test

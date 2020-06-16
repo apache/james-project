@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.ConsistencyLevel.QUORUM;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.count;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
@@ -35,6 +34,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Username;
@@ -46,6 +46,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -68,12 +69,16 @@ public class CassandraMailboxPathDAOImpl {
     private final PreparedStatement selectAllForUser;
     private final PreparedStatement selectAll;
     private final PreparedStatement countAll;
+    private final ConsistencyLevel consistencyLevel;
 
     @Inject
-    public CassandraMailboxPathDAOImpl(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils) {
+    public CassandraMailboxPathDAOImpl(Session session, CassandraTypesProvider typesProvider,
+                                       CassandraUtils cassandraUtils,
+                                       CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
         this.cassandraUtils = cassandraUtils;
+        this.consistencyLevel = consistenciesConfiguration.getRegular();
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
         this.select = prepareSelect(session);
@@ -83,8 +88,9 @@ public class CassandraMailboxPathDAOImpl {
     }
 
     @VisibleForTesting
-    public CassandraMailboxPathDAOImpl(Session session, CassandraTypesProvider typesProvider) {
-        this(session, typesProvider, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+    public CassandraMailboxPathDAOImpl(Session session, CassandraTypesProvider typesProvider,
+                                       CassandraConsistenciesConfiguration consistenciesConfiguration) {
+        this(session, typesProvider, CassandraUtils.WITH_DEFAULT_CONFIGURATION, consistenciesConfiguration);
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -129,7 +135,7 @@ public class CassandraMailboxPathDAOImpl {
             select.bind()
                 .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser()))
                 .setString(MAILBOX_NAME, mailboxPath.getName())
-                .setConsistencyLevel(QUORUM))
+                .setConsistencyLevel(consistencyLevel))
             .map(this::fromRowToCassandraIdAndPath)
             .map(FunctionalUtils.toFunction(this::logGhostMailboxSuccess))
             .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> logGhostMailboxFailure(mailboxPath)));

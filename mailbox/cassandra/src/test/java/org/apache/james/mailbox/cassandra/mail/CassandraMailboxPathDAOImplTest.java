@@ -50,7 +50,10 @@ class CassandraMailboxPathDAOImplTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraMailboxPathDAOImpl(cassandra.getConf(), cassandra.getTypesProvider());
+        testee = new CassandraMailboxPathDAOImpl(
+            cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
     }
 
     @Test

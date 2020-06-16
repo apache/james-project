@@ -100,7 +100,10 @@ public class SolveMessageInconsistenciesServiceTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+        imapUidDAO = new CassandraMessageIdToImapUidDAO(
+            cassandra.getConf(),
+            cassandraCluster.getCassandraConsistenciesConfiguration(),
+            new CassandraMessageId.Factory());
         messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
         testee = new SolveMessageInconsistenciesService(imapUidDAO, messageIdDAO);
     }

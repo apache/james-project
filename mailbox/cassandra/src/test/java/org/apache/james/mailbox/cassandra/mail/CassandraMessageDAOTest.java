@@ -89,8 +89,13 @@ class CassandraMessageDAOTest {
         messageId = messageIdFactory.generate();
         CassandraBlobStore blobStore = CassandraBlobStore.forTesting(cassandra.getConf());
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobStore, blobIdFactory,
-            new CassandraMessageId.Factory());
+        testee = new CassandraMessageDAO(
+            cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            blobStore,
+            blobIdFactory,
+            new CassandraMessageId.Factory(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
 
         messageIdWithMetadata = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))

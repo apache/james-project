@@ -38,6 +38,7 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -87,10 +88,13 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     private final PreparedStatement select;
     private final PreparedStatement update;
     private final PreparedStatement insert;
+    private final ConsistencyLevel consistencyLevel;
 
     @Inject
-    public CassandraModSeqProvider(Session session, CassandraConfiguration cassandraConfiguration) {
+    public CassandraModSeqProvider(Session session, CassandraConfiguration cassandraConfiguration,
+                                   CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
+        this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
         this.maxModSeqRetries = cassandraConfiguration.getModSeqMaxRetry();
         this.insert = prepareInsert(session);
         this.update = prepareUpdate(session);
@@ -148,7 +152,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
         return cassandraAsyncExecutor.executeSingleRowOptional(
             select.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                .setConsistencyLevel(ConsistencyLevel.SERIAL))
+                .setConsistencyLevel(consistencyLevel))
             .map(maybeRow -> maybeRow.map(row -> ModSeq.of(row.getLong(NEXT_MODSEQ))));
     }
 
