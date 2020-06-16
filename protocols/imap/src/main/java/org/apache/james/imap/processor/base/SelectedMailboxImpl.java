@@ -51,6 +51,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -61,7 +62,8 @@ import reactor.core.scheduler.Schedulers;
 public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
 
-    private static class ApplicableFlags {
+    @VisibleForTesting
+    static class ApplicableFlags {
         static ApplicableFlags from(Flags flags) {
             boolean updated = false;
             return new ApplicableFlags(flags, updated);
@@ -88,7 +90,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         }
 
         public ApplicableFlags update(boolean applicableFlagsChanged) {
-            return new ApplicableFlags(flags, true);
+            return new ApplicableFlags(flags, applicableFlagsChanged);
         }
     }
 
@@ -398,7 +400,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
                         }
                     }
 
-                    updateApplicableFlags((FlagsUpdated) messageEvent);
+                    applicableFlags = updateApplicableFlags(applicableFlags, (FlagsUpdated) messageEvent);
 
                 } else if (messageEvent instanceof Expunged) {
                     expungedUids.addAll(messageEvent.getUids());
@@ -412,7 +414,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         }
     }
 
-    private void updateApplicableFlags(FlagsUpdated messageEvent) {
+    @VisibleForTesting
+    static ApplicableFlags updateApplicableFlags(ApplicableFlags applicableFlags, FlagsUpdated messageEvent) {
         Flags updatedFlags = applicableFlags.flags();
         int size = updatedFlags.getUserFlags().length;
         FlagsUpdated updatedF = messageEvent;
@@ -433,7 +436,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         } else {
             applicableFlagsChanged = false;
         }
-        applicableFlags = ApplicableFlags.from(updatedFlags).update(applicableFlagsChanged);
+        return ApplicableFlags.from(updatedFlags).update(applicableFlagsChanged);
     }
 
     @Override
