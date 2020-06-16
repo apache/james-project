@@ -33,6 +33,8 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import io.vavr.Tuple;
+
 public class UidMsnConverterTest {
     private UidMsnConverter testee;
     private MessageUid messageUid1;
@@ -62,11 +64,20 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void getUidShouldTheCorrespondingUidIfItExist() {
+    public void getUidShouldReturnEmptyIfOutOfRange() {
         testee.addUid(messageUid1);
+        testee.addUid(messageUid2);
 
-        assertThat(testee.getUid(1))
-            .contains(messageUid1);
+        assertThat(testee.getUid(50))
+            .isEmpty();
+    }
+
+    @Test
+    public void getUidShouldReturnTheCorrespondingUidIfItExist() {
+        testee.addAll(ImmutableList.of(messageUid1, messageUid2));
+
+        assertThat(testee.getUid(2))
+            .contains(messageUid2);
     }
 
     @Test
@@ -447,11 +458,7 @@ public class UidMsnConverterTest {
     }
 
     private Map<Integer, MessageUid> mapTesteeInternalDataToMsnByUid() {
-        ImmutableMap.Builder<Integer, MessageUid> result = ImmutableMap.builder();
-        for (int i = 0; i < testee.uids.size(); i++) {
-            result.put(i + 1, testee.uids.get(i));
-        }
-        return result.build();
+        return testee.uids.zipWithIndex().toMap(input -> Tuple.of(input._2 + 1, input._1)).toJavaMap();
     }
 
 }
