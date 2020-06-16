@@ -35,6 +35,8 @@ import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.server.core.configuration.Configuration.ConfigurationPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -42,6 +44,7 @@ import com.google.common.base.Strings;
 
 public class PropertiesProvider {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("org.apache.james.CONFIGURATION");
     private static final char COMMA = ',';
     private static final String COMMA_STRING = ",";
 
@@ -85,7 +88,9 @@ public class PropertiesProvider {
 
     private Optional<File> getConfigurationFile(String fileName) {
         try {
-            return Optional.of(fileSystem.getFile(configurationPrefix.asString() + fileName + ".properties"))
+            File file = fileSystem.getFile(configurationPrefix.asString() + fileName + ".properties");
+            LOGGER.info("Load configuration file {}", file.getAbsolutePath());
+            return Optional.of(file)
                 .filter(File::exists);
         } catch (FileNotFoundException e) {
             return Optional.empty();

@@ -134,6 +134,14 @@ public interface Configuration {
         public JamesDirectoriesProvider directories() {
             return directories;
         }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("configurationPath", configurationPath)
+                .add("directories", directories)
+                .toString();
+        }
     }
 
     static Basic.Builder builder() {

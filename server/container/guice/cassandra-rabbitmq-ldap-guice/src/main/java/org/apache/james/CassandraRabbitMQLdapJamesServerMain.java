@@ -38,6 +38,7 @@ public class CassandraRabbitMQLdapJamesServerMain implements JamesServerMain {
             .useWorkingDirectoryEnvProperty()
             .build();
 
+        LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration)
             .combineWith(new JMXServerModule());
 

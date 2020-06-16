@@ -19,7 +19,13 @@
 
 package org.apache.james;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public interface JamesServerMain {
+
+    Logger LOGGER = LoggerFactory.getLogger("org.apache.james.CONFIGURATION");
+
     static void main(GuiceJamesServer server) throws Exception {
         server.start();
 

@@ -138,7 +138,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
             .useWorkingDirectoryEnvProperty()
             .build();
 
-
+        LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration)
             .combineWith(new FakeSearchMailboxModule(), new JMXServerModule());
 

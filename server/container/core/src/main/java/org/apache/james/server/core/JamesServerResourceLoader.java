@@ -20,6 +20,8 @@ package org.apache.james.server.core;
 
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 
+import com.google.common.base.MoreObjects;
+
 public class JamesServerResourceLoader implements JamesDirectoriesProvider {
 
     private final String rootDirectory;
@@ -58,4 +60,12 @@ public class JamesServerResourceLoader implements JamesDirectoriesProvider {
         return rootDirectory;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("rootDirectory", rootDirectory)
+            .add("varDirectory", getVarDirectory())
+            .add("confDirectory", getConfDirectory())
+            .toString();
+    }
 }

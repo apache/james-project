@@ -1,0 +1,43 @@
+= Logging in Apache James
+
+NOTE: This information targets developers.
+
+Logging is very important when running a software.
+Most of the time people use logs for debugging and troubleshooting issues in production.
+In Apache James we leverage a logging facade for logging http://www.slf4j.org/[Slf4j] .
+Please see the documentation for exact details.
+
+In a typical application logs are stored for a specific period.
+This can be 1 day, 1 week, etc.
+
+Some other typical scenarios include:
+
+* Rotating logs periodically.
+* Shipping logs centrally.
+* Saving some logging messages to other files / end devices
+
+By leveraging a logging facade like Slf4j, the end user has the ability to use different logging back ends and achieve the above requirements.
+
+Logging is something we do to help the people running our code.
+We also help ourselves when they encounter bugs, and they need to share information with us for a fix.
+As developers, we should be mindful of the logging statements.
+We should also be mindful about the performance implications of logging and not abuse it.
+
+== Loggers used in code
+
+You can define a logger using a string or a class.
+For common loggers it's ok to use a string name.
+
+[source,java]
+--
+    private static final Logger LOGGER = LoggerFactory.getLogger("org.apache.james.CONFIGURATION");
+    private static final Logger LOGGER = LoggerFactory.getLogger(JamesServerMain.class);
+--
+
+Loggers can be hierarchical.
+This helps when we build a logger from a class name, and we use package structure to drive the logger hierarchy.
+
+The most useful loggers should to be documented below.
+Please maintain this list of loggers.
+
+org.apache.james.CONFIGURATION:: It is used to log events related to configuration loading and updating.
