@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.methods.integration;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
+import static io.restassured.http.ContentType.JSON;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
@@ -74,6 +75,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import io.restassured.RestAssured;
+import io.restassured.response.Response;
 
 public abstract class SetMailboxesMethodTest {
 
@@ -81,7 +83,7 @@ public abstract class SetMailboxesMethodTest {
     private static final String WRITE = String.valueOf(Right.Write.asCharacter());
     private static final String DELETE_MESSAGES = String.valueOf(Right.DeleteMessages.asCharacter());
 
-    private static int MAILBOX_NAME_LENGTH_64K = 65536;
+    private static final int MAILBOX_NAME_LENGTH_64K = 65536;
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
@@ -338,17 +340,15 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void subscriptionUserShouldBeChangedWhenUpdateMailbox() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), "root");
-
-        String initialMailboxName = "root.myBox";
-        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), initialMailboxName);
+        String initialMailboxName = "myBox";
+        String mailboxId = createMailBoxThroughJMAP(initialMailboxName);
 
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
                 "      \"update\": {" +
-                "        \"" + mailboxId.serialize() + "\" : {" +
+                "        \"" + mailboxId + "\" : {" +
                 "          \"name\" : \"mySecondBox\"" +
                 "        }" +
                 "      }" +
@@ -364,6 +364,139 @@ public abstract class SetMailboxesMethodTest {
         assertThat(mailboxProbe.listSubscriptions(username.asString()))
             .contains("mySecondBox")
             .doesNotContain(initialMailboxName);
+    }
+
+    @Test
+    public void subscriptionUserShouldBeChangedWhenUpdateParentMailbox() throws Exception {
+        MailboxId parentId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), "root");
+
+        String secondMailboxName = "second";
+        String secondMailboxId = createSubMailBox(parentId.serialize(), secondMailboxName);
+
+        String thirdMailBoxName = "third";
+        String thirdMailboxId = createSubMailBox(secondMailboxId, thirdMailBoxName);
+
+        String fourthMailboxName = "fourth";
+        createSubMailBox(thirdMailboxId, fourthMailboxName);
+
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + thirdMailboxId + "\" : {" +
+                "          \"name\" : \"thirdtest\" ,"  +
+                "          \"parentId\" : \"" + secondMailboxId + "\""  +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+        with()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+            .post("/jmap");
+
+        assertThat(mailboxProbe.listSubscriptions(username.asString()))
+            .contains("root.second.thirdtest.fourth")
+            .doesNotContain("root.second.third.fourth");
+    }
+
+    @Test
+    public void subscriptionUserShouldBeChangedForAllChildrenWhenUpdateParentMailbox() throws Exception {
+        MailboxId parentId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), "root");
+
+        String secondMailboxName = "second";
+        String secondMailboxId = createSubMailBox(parentId.serialize(), secondMailboxName);
+
+        String thirdMailBoxName = "third";
+        String thirdMailboxId = createSubMailBox(secondMailboxId, thirdMailBoxName);
+
+        String fourthMailboxName = "fourth";
+        createSubMailBox(thirdMailboxId, fourthMailboxName);
+
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + secondMailboxId + "\" : {" +
+                "          \"name\" : \"secondtest\" ,"  +
+                "          \"parentId\" : \"" + parentId.serialize() + "\""  +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+        with()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+            .post("/jmap");
+
+        assertThat(mailboxProbe.listSubscriptions(username.asString()))
+            .contains("root.secondtest.third.fourth")
+            .doesNotContain("root.second.third.fourth");
+    }
+
+    private String createSubMailBox(String parentMailboxId, String childMailboxName) {
+        String clientIdentifier = "whatever";
+        String createChildMailbox =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"" + clientIdentifier + "\" : {" +
+                "          \"name\" : \"" + childMailboxName + "\"," +
+                "          \"parentId\" : \"" + parentMailboxId + "\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        Response response = given()
+            .header("Authorization", accessToken.asString())
+            .body(createChildMailbox)
+        .when()
+            .post("/jmap")
+        .then()
+            .contentType(JSON)
+        .extract()
+            .response();
+
+        return response.jsonPath().get("[0][1].created." + clientIdentifier + ".id");
+    }
+
+    private String createMailBoxThroughJMAP(String mailboxName) {
+        String clientIdentifier = "whatever";
+        String createMailbox =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"" + clientIdentifier + "\" : {" +
+                "          \"name\" : \"" + mailboxName + "\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        Response response = given()
+            .header("Authorization", accessToken.asString())
+            .body(createMailbox)
+        .when()
+            .post("/jmap")
+        .then()
+            .contentType(JSON)
+        .extract()
+            .response();
+
+        return response.jsonPath().get("[0][1].created." + clientIdentifier + ".id");
     }
 
     @Test

@@ -39,6 +39,7 @@ import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.AppendResult;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -65,6 +66,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.PreDeletionHooks;
+import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
@@ -89,6 +91,11 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         return CassandraMailboxManagerProvider.provideMailboxManager(
             cassandra.getCassandraCluster(),
             new PreDeletionHooks(preDeletionHooks(), new RecordingMetricFactory()));
+    }
+
+    @Override
+    protected SubscriptionManager provideSubscriptionManager() {
+        return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory());
     }
 
     @Override

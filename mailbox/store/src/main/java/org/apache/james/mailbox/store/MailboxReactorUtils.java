@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store;
 import java.util.Optional;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
@@ -37,7 +38,11 @@ public abstract class MailboxReactorUtils {
             throw e;
         }
     }
-    
+
+    public static <T> T block(Publisher<T> publisher) throws MailboxException {
+        return block(Mono.from(publisher));
+    }
+
     public static <T> Optional<T> blockOptional(Mono<T> publisher) throws MailboxException {
         try {
             return publisher.blockOptional();

@@ -37,7 +37,6 @@ import org.apache.james.jmap.draft.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.metrics.api.MetricFactory;
@@ -49,7 +48,6 @@ import org.mockito.Mockito;
 public class SetMailboxesUpdateProcessorTest {
 
     private MailboxManager mockedMailboxManager;
-    private SubscriptionManager mockSubscriptionManager;
     private MailboxUtils mockedMailboxUtils;
     private MailboxFactory mockedMailboxFactory;
     private MailboxSession mockedMailboxSession;
@@ -58,12 +56,11 @@ public class SetMailboxesUpdateProcessorTest {
     @Before
     public void setup() {
         mockedMailboxManager = mock(MailboxManager.class);
-        mockSubscriptionManager = mock(SubscriptionManager.class);
         mockedMailboxUtils = mock(MailboxUtils.class);
         mockedMailboxFactory = mock(MailboxFactory.class);
         mockedMailboxSession = mock(MailboxSession.class);
         MetricFactory metricFactory = new RecordingMetricFactory();
-        sut = new SetMailboxesUpdateProcessor(mockedMailboxUtils, mockedMailboxManager, mockSubscriptionManager, mockedMailboxFactory, metricFactory);
+        sut = new SetMailboxesUpdateProcessor(mockedMailboxUtils, mockedMailboxManager, mockedMailboxFactory, metricFactory);
     }
 
     @Test

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox;
 
+import static org.apache.james.mailbox.MailboxManager.RenameOption.RENAME_SUBSCRIPTIONS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,6 +46,7 @@ import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
+import org.apache.james.mailbox.MailboxManager.MailboxRenamedResult;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
@@ -112,6 +114,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     private static final int DEFAULT_MAXIMUM_LIMIT = 256;
 
     protected T mailboxManager;
+    private  SubscriptionManager subscriptionManager;
     private MailboxSession session;
     protected Message.Builder message;
 
@@ -119,6 +122,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     private PreDeletionHook preDeletionHook2;
 
     protected abstract T provideMailboxManager();
+
+    protected abstract SubscriptionManager provideSubscriptionManager();
 
     protected abstract EventBus retrieveEventBus(T mailboxManager);
 
@@ -130,6 +135,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     void setUp() throws Exception {
         setupMockForPreDeletionHooks();
         this.mailboxManager = provideMailboxManager();
+        this.subscriptionManager = provideSubscriptionManager();
 
         this.message = Message.Builder.of()
             .setSubject("test")
@@ -1533,6 +1539,197 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
     @Nested
     public class BasicFeaturesTests {
+
+        @Test
+        void renameMailboxShouldReturnAllRenamedResultsIncludeChildren() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath mailboxPath1 = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath mailboxPath2 = MailboxPath.forUser(USER_1, "mbx1.mbx2");
+            MailboxPath mailboxPath3 = MailboxPath.forUser(USER_1, "mbx1.mbx2.mbx3");
+            MailboxPath mailboxPath4 = MailboxPath.forUser(USER_1, "mbx1.mbx2.mbx3.mbx4");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx1.mbx9");
+
+            mailboxManager.createMailbox(mailboxPath1, session);
+            Optional<MailboxId> mailboxId2 = mailboxManager.createMailbox(mailboxPath2, session);
+            Optional<MailboxId> mailboxId3 = mailboxManager.createMailbox(mailboxPath3, session);
+            Optional<MailboxId> mailboxId4 = mailboxManager.createMailbox(mailboxPath4, session);
+
+            List<MailboxRenamedResult> mailboxRenamedResults = mailboxManager.renameMailbox(mailboxPath2, newMailboxPath, session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(mailboxRenamedResults).hasSize(3);
+                softly.assertThat(mailboxRenamedResults).contains(
+                    new MailboxRenamedResult(mailboxId2.get(), mailboxPath2, MailboxPath.forUser(USER_1, "mbx1.mbx9")),
+                    new MailboxRenamedResult(mailboxId3.get(), mailboxPath3, MailboxPath.forUser(USER_1, "mbx1.mbx9.mbx3")),
+                    new MailboxRenamedResult(mailboxId4.get(), mailboxPath4, MailboxPath.forUser(USER_1, "mbx1.mbx9.mbx3.mbx4"))
+                );
+            });
+        }
+
+        @Test
+        void renameMailboxShouldReturnRenamedMailboxOnlyWhenNoChildren() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath mailboxPath1 = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath mailboxPath2 = MailboxPath.forUser(USER_1, "mbx1.mbx2");
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "mbx1.mbx2.mbx3");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx1.mbx2.mbx9");
+
+            mailboxManager.createMailbox(mailboxPath1, session);
+            mailboxManager.createMailbox(mailboxPath2, session);
+            Optional<MailboxId> mailboxId3 = mailboxManager.createMailbox(originalPath, session);
+
+            List<MailboxRenamedResult> mailboxRenamedResults = mailboxManager.renameMailbox(originalPath, newMailboxPath, session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(mailboxRenamedResults).hasSize(1);
+                softly.assertThat(mailboxRenamedResults).contains(
+                    new MailboxRenamedResult(mailboxId3.get(), originalPath, newMailboxPath)
+                );
+            });
+        }
+
+        @Test
+        void renameMailboxShouldRenamedChildMailboxesWithRenameOption() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath mailboxPath2 = MailboxPath.forUser(USER_1, "mbx1.mbx2");
+            MailboxPath mailboxPath3 = MailboxPath.forUser(USER_1, "mbx1.mbx2.mbx3");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx9");
+
+            mailboxManager.createMailbox(originalPath, session);
+            mailboxManager.createMailbox(mailboxPath2, session);
+            subscriptionManager.subscribe(session, originalPath.getName());
+            subscriptionManager.subscribe(session, mailboxPath2.getName());
+
+            mailboxManager.createMailbox(mailboxPath3, session);
+            subscriptionManager.subscribe(session, mailboxPath3.getName());
+
+            mailboxManager.renameMailbox(originalPath, newMailboxPath, RENAME_SUBSCRIPTIONS, session);
+
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(
+                newMailboxPath.getName(),
+                "mbx9.mbx2",
+                "mbx9.mbx2.mbx3"
+            );
+        }
+
+        @Test
+        void renameMailboxShouldRenameSubscriptionWhenCalledWithRenameSubscriptionOption() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
+
+            mailboxManager.createMailbox(originalPath, session);
+            subscriptionManager.subscribe(session, originalPath.getName());
+
+            mailboxManager.renameMailbox(originalPath, newMailboxPath, RENAME_SUBSCRIPTIONS, session);
+
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(newMailboxPath.getName());
+        }
+
+        @Test
+        void renameMailboxShouldNotSubscribeUnsubscribedMailboxes() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
+
+            mailboxManager.createMailbox(originalPath, session);
+
+            mailboxManager.renameMailbox(originalPath, newMailboxPath, RENAME_SUBSCRIPTIONS, session);
+
+            assertThat(subscriptionManager.subscriptions(session)).isEmpty();
+        }
+
+        @Test
+        void renameMailboxShouldNotRenameSubscriptionWhenCalledWithoutRenameSubscriptionOption() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
+
+            mailboxManager.createMailbox(originalPath, session);
+            subscriptionManager.subscribe(session, originalPath.getName());
+
+            mailboxManager.renameMailbox(originalPath, newMailboxPath, MailboxManager.RenameOption.NONE, session);
+
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(originalPath.getName());
+        }
+
+        @Test
+        void renameMailboxByIdShouldRenamedMailboxesWithRenameOption() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath mailboxPath2 = MailboxPath.forUser(USER_1, "mbx1.mbx2");
+            MailboxPath mailboxPath3 = MailboxPath.forUser(USER_1, "mbx1.mbx2.mbx3");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx9");
+
+            Optional<MailboxId> id = mailboxManager.createMailbox(originalPath, session);
+            mailboxManager.createMailbox(mailboxPath2, session);
+            subscriptionManager.subscribe(session, originalPath.getName());
+            subscriptionManager.subscribe(session, mailboxPath2.getName());
+
+            mailboxManager.createMailbox(mailboxPath3, session);
+            subscriptionManager.subscribe(session, mailboxPath3.getName());
+
+            mailboxManager.renameMailbox(id.get(), newMailboxPath, RENAME_SUBSCRIPTIONS, session);
+
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(
+                newMailboxPath.getName(),
+                "mbx9.mbx2",
+                "mbx9.mbx2.mbx3"
+            );
+        }
+
+        @Test
+        void renameMailboxByIdShouldRenameSubscriptionWhenCalledWithRenameSubscriptionOption() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
+
+            Optional<MailboxId> id = mailboxManager.createMailbox(originalPath, session);
+            subscriptionManager.subscribe(session, originalPath.getName());
+
+            mailboxManager.renameMailbox(id.get(), newMailboxPath, RENAME_SUBSCRIPTIONS, session);
+
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(newMailboxPath.getName());
+        }
+
+        @Test
+        void renameMailboxByIdShouldNotSubscribeUnsubscribedMailboxes() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
+
+            Optional<MailboxId> id = mailboxManager.createMailbox(originalPath, session);
+
+            mailboxManager.renameMailbox(id.get(), newMailboxPath, RENAME_SUBSCRIPTIONS, session);
+
+            assertThat(subscriptionManager.subscriptions(session)).isEmpty();
+        }
+
+        @Test
+        void renameMailboxByIdShouldNotRenameSubscriptionWhenCalledWithoutRenameSubscriptionOption() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "mbx2");
+
+            Optional<MailboxId> id = mailboxManager.createMailbox(originalPath, session);
+            subscriptionManager.subscribe(session, originalPath.getName());
+
+            mailboxManager.renameMailbox(id.get(), newMailboxPath, MailboxManager.RenameOption.NONE, session);
+
+            assertThat(subscriptionManager.subscriptions(session)).containsExactly(originalPath.getName());
+        }
+
         @Test
         void user1ShouldNotHaveAnInbox() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);

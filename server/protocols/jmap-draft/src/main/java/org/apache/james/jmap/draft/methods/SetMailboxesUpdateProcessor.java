@@ -41,7 +41,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
-import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.DifferentDomainException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -70,14 +69,12 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     private final MailboxManager mailboxManager;
     private final MailboxFactory mailboxFactory;
     private final MetricFactory metricFactory;
-    private final SubscriptionManager subscriptionManager;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesUpdateProcessor(MailboxUtils mailboxUtils, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxFactory mailboxFactory, MetricFactory metricFactory) {
+    SetMailboxesUpdateProcessor(MailboxUtils mailboxUtils, MailboxManager mailboxManager, MailboxFactory mailboxFactory, MetricFactory metricFactory) {
         this.mailboxUtils = mailboxUtils;
         this.mailboxManager = mailboxManager;
-        this.subscriptionManager = subscriptionManager;
         this.mailboxFactory = mailboxFactory;
         this.metricFactory = metricFactory;
     }
@@ -156,7 +153,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                     .description("An error occurred when updating the mailbox")
                     .build());
         }
-   }
+    }
 
     private void assertNotSharedOutboxOrDraftMailbox(Mailbox mailbox, MailboxUpdateRequest updateRequest) {
         Preconditions.checkArgument(!updateRequest.getSharedWith().isPresent() || !mailbox.hasRole(Role.OUTBOX), "Sharing 'Outbox' is forbidden");
@@ -258,6 +255,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     private void updateMailbox(Mailbox mailbox, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException {
         MailboxPath originMailboxPath = mailboxManager.getMailbox(mailbox.getId(), mailboxSession).getMailboxPath();
         MailboxPath destinationMailboxPath = computeNewMailboxPath(mailbox, originMailboxPath, updateRequest, mailboxSession);
+
         if (updateRequest.getSharedWith().isPresent()) {
             mailboxManager.setRights(mailbox.getId(),
                 updateRequest.getSharedWith()
@@ -266,11 +264,9 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                     .toMailboxAcl(),
                 mailboxSession);
         }
-        if (!originMailboxPath.equals(destinationMailboxPath)) {
-            mailboxManager.renameMailbox(mailbox.getId(), destinationMailboxPath, mailboxSession);
 
-            subscriptionManager.unsubscribe(mailboxSession, originMailboxPath.getName());
-            subscriptionManager.subscribe(mailboxSession, destinationMailboxPath.getName());
+        if (!originMailboxPath.equals(destinationMailboxPath)) {
+            mailboxManager.renameMailbox(mailbox.getId(), destinationMailboxPath, MailboxManager.RenameOption.RENAME_SUBSCRIPTIONS, mailboxSession);
         }
     }
 
