@@ -57,10 +57,10 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 
-public class SelectedMailboxImplTest {
+class SelectedMailboxImplTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectedMailboxImplTest.class);
     private static final MessageUid EMITTED_EVENT_UID = MessageUid.of(5);
@@ -86,8 +86,8 @@ public class SelectedMailboxImplTest {
     private EventBus eventBus;
     private MailboxIdRegistrationKey mailboxIdRegistrationKey;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         executorService = Executors.newFixedThreadPool(1, threadFactory);
         mailboxPath = MailboxPath.inbox(Username.of("tellier@linagora.com"));
@@ -113,13 +113,13 @@ public class SelectedMailboxImplTest {
         when(mailbox.getMailboxId()).thenReturn(mailboxId);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         executorService.shutdownNow();
     }
 
     @Test
-    public void concurrentEventShouldNotSkipAddedEventsEmittedDuringInitialisation() throws Exception {
+    void concurrentEventShouldNotSkipAddedEventsEmittedDuringInitialisation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(eventBus)
@@ -133,9 +133,9 @@ public class SelectedMailboxImplTest {
         assertThat(selectedMailbox.getLastUid().get()).isEqualTo(EMITTED_EVENT_UID);
     }
 
-    @Ignore("JAMES-3177 SelectedMailboxImpl is not thread safe")
+    @Disabled("JAMES-3177 SelectedMailboxImpl is not thread safe")
     @Test
-    public void customFlagsEventShouldNotFailWhenConcurrentWithCreation() throws Exception {
+    void customFlagsEventShouldNotFailWhenConcurrentWithCreation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitCustomFlagEventAnswer(successCount))
             .when(eventBus)
@@ -146,9 +146,9 @@ public class SelectedMailboxImplTest {
         assertThat(successCount.get()).isEqualTo(1);
     }
 
-    @Ignore("JAMES-3177 SelectedMailboxImpl is not thread safe")
+    @Disabled("JAMES-3177 SelectedMailboxImpl is not thread safe")
     @Test
-    public void applicableFlagsShouldBeWellUpdatedWhenConcurrentWithCreation() throws Exception {
+    void applicableFlagsShouldBeWellUpdatedWhenConcurrentWithCreation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitCustomFlagEventAnswer(successCount))
             .when(eventBus)
@@ -160,7 +160,7 @@ public class SelectedMailboxImplTest {
     }
 
     @Test
-    public void concurrentEventShouldBeProcessedSuccessfullyDuringInitialisation() throws Exception {
+    void concurrentEventShouldBeProcessedSuccessfullyDuringInitialisation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(eventBus)
@@ -177,22 +177,22 @@ public class SelectedMailboxImplTest {
             .isEqualTo(1);
     }
 
-    private Answer<Stream<MessageUid>> delayedSearchAnswer() {
+    Answer<Stream<MessageUid>> delayedSearchAnswer() {
         return invocation -> {
             Thread.sleep(1000);
             return Stream.of(MessageUid.of(1), MessageUid.of(3));
         };
     }
 
-    private Answer<Mono<Registration>> generateEmitEventAnswer(AtomicInteger success) {
+    Answer<Mono<Registration>> generateEmitEventAnswer(AtomicInteger success) {
         return generateEmitEventAnswer(event(), success);
     }
 
-    private Answer<Mono<Registration>> generateEmitCustomFlagEventAnswer(AtomicInteger success) {
+    Answer<Mono<Registration>> generateEmitCustomFlagEventAnswer(AtomicInteger success) {
         return generateEmitEventAnswer(customFlagEvent(), success);
     }
 
-    private Answer<Mono<Registration>> generateEmitEventAnswer(Event event, AtomicInteger success) {
+    Answer<Mono<Registration>> generateEmitEventAnswer(Event event, AtomicInteger success) {
         return invocation -> {
             Object[] args = invocation.getArguments();
             MailboxListener mailboxListener = (MailboxListener) args[0];
@@ -208,7 +208,7 @@ public class SelectedMailboxImplTest {
         };
     }
 
-    private Event event() {
+    Event event() {
         return EventFactory.added()
             .randomEventId()
             .mailboxSession(MailboxSessionUtil.create(Username.of("user")))
@@ -217,7 +217,7 @@ public class SelectedMailboxImplTest {
             .build();
     }
 
-    private Event customFlagEvent() {
+    Event customFlagEvent() {
         return EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(MailboxSessionUtil.create(Username.of("user")))
