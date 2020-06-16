@@ -59,6 +59,39 @@ import reactor.core.scheduler.Schedulers;
  * Default implementation of {@link SelectedMailbox}
  */
 public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
+
+
+    private static class ApplicableFlags {
+        static ApplicableFlags from(Flags flags) {
+            boolean updated = false;
+            return new ApplicableFlags(flags, updated);
+        }
+
+        private final Flags flags;
+        private final boolean updated;
+
+        private ApplicableFlags(Flags flags, boolean updated) {
+            this.flags = flags;
+            this.updated = updated;
+        }
+
+        public ApplicableFlags ackUpdates() {
+            return new ApplicableFlags(flags, false);
+        }
+
+        public Flags flags() {
+            return new Flags(flags);
+        }
+
+        public boolean updated() {
+            return updated;
+        }
+
+        public ApplicableFlags update(boolean applicableFlagsChanged) {
+            return new ApplicableFlags(flags, true);
+        }
+    }
+
     private final Registration registration;
     private final MailboxManager mailboxManager;
     private final MailboxId mailboxId;
@@ -75,8 +108,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     private boolean isDeletedByOtherSession = false;
     private boolean sizeChanged = false;
     private boolean silentFlagChanges = false;
-    private final Flags applicableFlags;
-    private boolean applicableFlagsChanged;
+    private ApplicableFlags applicableFlags;
 
     public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MessageManager messageManager) throws MailboxException {
         this.session = session;
@@ -96,7 +128,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
             .subscribeOn(Schedulers.elastic())
             .block();
 
-        applicableFlags = messageManager.getApplicableFlags(mailboxSession);
+        applicableFlags = ApplicableFlags.from(messageManager.getApplicableFlags(mailboxSession));
         try (Stream<MessageUid> stream = messageManager.search(SearchQuery.of(SearchQuery.all()), mailboxSession)) {
             uidMsnConverter.addAll(stream.collect(Guavate.toImmutableList()));
         }
@@ -185,7 +217,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         sizeChanged = false;
         flagUpdateUids.clear();
         isDeletedByOtherSession = false;
-        applicableFlagsChanged = false;
+        applicableFlags = applicableFlags.ackUpdates();
     }
 
     @Override
@@ -290,19 +322,19 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
     @Override
     public synchronized Flags getApplicableFlags() {
-        return new Flags(applicableFlags);
+        return applicableFlags.flags();
     }
 
     
     @Override
     public synchronized boolean hasNewApplicableFlags() {
-        return applicableFlagsChanged;
+        return applicableFlags.updated();
     }
 
     
     @Override
     public synchronized void resetNewApplicableFlags() {
-        applicableFlagsChanged = false;
+        applicableFlags = applicableFlags.ackUpdates();
     }
 
     
@@ -381,22 +413,27 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     private void updateApplicableFlags(FlagsUpdated messageEvent) {
-        int size = applicableFlags.getUserFlags().length;
+        Flags updatedFlags = applicableFlags.flags();
+        int size = updatedFlags.getUserFlags().length;
         FlagsUpdated updatedF = messageEvent;
         List<UpdatedFlags> flags = updatedF.getUpdatedFlags();
 
         for (UpdatedFlags flag : flags) {
-            applicableFlags.add(flag.getNewFlags());
+            updatedFlags.add(flag.getNewFlags());
 
         }
 
         // \RECENT is not a applicable flag in imap so remove it
         // from the list
-        applicableFlags.remove(Flag.RECENT);
+        updatedFlags.remove(Flag.RECENT);
 
-        if (size < applicableFlags.getUserFlags().length) {
+        boolean applicableFlagsChanged;
+        if (size < updatedFlags.getUserFlags().length) {
             applicableFlagsChanged = true;
+        } else {
+            applicableFlagsChanged = false;
         }
+        applicableFlags = ApplicableFlags.from(updatedFlags).update(applicableFlagsChanged);
     }
 
     @Override
