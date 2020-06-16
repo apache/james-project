@@ -23,7 +23,7 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
-public class TestingMailRepositoryLoader implements MailRepositoryLoader {
+public class SimpleMailRepositoryLoader implements MailRepositoryLoader {
     @Override
     public MailRepository load(String fullyQualifiedClassName, MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException {
         if (fullyQualifiedClassName.equals(MemoryMailRepository.class.getCanonicalName())) {

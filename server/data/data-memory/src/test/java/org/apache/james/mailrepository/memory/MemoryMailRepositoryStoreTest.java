@@ -47,14 +47,14 @@ public class MemoryMailRepositoryStoreTest {
 
     private MemoryMailRepositoryUrlStore urlStore;
 
-    private TestingMailRepositoryLoader loader;
+    private SimpleMailRepositoryLoader loader;
     private MemoryMailRepositoryStore repositoryStore;
     private FileSystemImpl fileSystem;
     private Configuration configuration;
 
     @Before
     public void setUp() throws Exception {
-        loader = new TestingMailRepositoryLoader();
+        loader = new SimpleMailRepositoryLoader();
         configuration = Configuration.builder()
             .workingDirectory("../")
             .configurationFromClasspath()
