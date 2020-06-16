@@ -365,25 +365,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
    
                         }
                     }
-                    
-                    int size = applicableFlags.getUserFlags().length;
-                    FlagsUpdated updatedF = (FlagsUpdated) messageEvent;
-                    List<UpdatedFlags> flags = updatedF.getUpdatedFlags();
-   
-                    for (UpdatedFlags flag : flags) {
-                        applicableFlags.add(flag.getNewFlags());
-   
-                    }
-   
-                    // \RECENT is not a applicable flag in imap so remove it
-                    // from the list
-                    applicableFlags.remove(Flags.Flag.RECENT);
-   
-                    if (size < applicableFlags.getUserFlags().length) {
-                        applicableFlagsChanged = true;
-                    }
-                    
-                    
+
+                    updateApplicableFlags((FlagsUpdated) messageEvent);
+
                 } else if (messageEvent instanceof Expunged) {
                     expungedUids.addAll(messageEvent.getUids());
                     
@@ -393,6 +377,25 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
                     isDeletedByOtherSession = true;
                 }
             }
+        }
+    }
+
+    private void updateApplicableFlags(FlagsUpdated messageEvent) {
+        int size = applicableFlags.getUserFlags().length;
+        FlagsUpdated updatedF = messageEvent;
+        List<UpdatedFlags> flags = updatedF.getUpdatedFlags();
+
+        for (UpdatedFlags flag : flags) {
+            applicableFlags.add(flag.getNewFlags());
+
+        }
+
+        // \RECENT is not a applicable flag in imap so remove it
+        // from the list
+        applicableFlags.remove(Flag.RECENT);
+
+        if (size < applicableFlags.getUserFlags().length) {
+            applicableFlagsChanged = true;
         }
     }
 
