@@ -24,6 +24,9 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import javax.mail.internet.MimeMessage;
 
 import java.util.Arrays;
 
@@ -44,6 +47,7 @@ import org.apache.james.transport.mailets.Redirect;
 import org.apache.james.transport.mailets.Resend;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIs;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
@@ -58,6 +62,8 @@ public class BounceIntegrationTest {
     public static final String POSTMASTER_PASSWORD = "postmasterSecret";
     public static final String SENDER = "bounce.receiver@" + DEFAULT_DOMAIN;
     public static final String SENDER_PASSWORD = "senderSecret";
+    public static final String OTHER = "other@" + DEFAULT_DOMAIN;
+    public static final String OTHER_PASSWORD = "otherSecret";
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -86,6 +92,46 @@ public class BounceIntegrationTest {
             .awaitMessage(awaitAtMostOneMinute);
     }
 
+    @Test
+    public void dsnBounceMailetShouldDeliverBounceToTheMailFromAddress() throws Exception {
+        setup(DSNBounce.class);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessageWithHeaders(SENDER, RECIPIENT,
+                "From: " + OTHER + "\r\n" +
+                    "To: " + RECIPIENT + "\r\n" +
+                    "Subject: " + "Hello\r\n" +
+                    "\r\n" +
+                    "Please bounce me to the return address\r\n"
+            );
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(SENDER, SENDER_PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Test
+    public void dsnBounceMailetBouncedMailShouldBeAdressedToTheSenderInEnvelopeAndHeader() throws Exception {
+        setup(DSNBounce.class);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessageWithHeaders(SENDER, RECIPIENT,
+                "From: " + OTHER + "\r\n" +
+                    "To: " + RECIPIENT + "\r\n" +
+                    "Subject: " + "Hello\r\n" +
+                    "\r\n" +
+                    "Please bounce me to the return address\r\n"
+            );
+
+        MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromString(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(SENDER, SENDER_PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute)
+            .readFirstMessage());
+        assertThat(mimeMessage.getHeader("To")[0]).isEqualTo(SENDER);
+    }
+
     private void setup(Class<? extends Mailet> mailet, Pair<String, String>... additionalProperties) throws Exception {
         MailetConfiguration.Builder mailetConfiguration = MailetConfiguration.builder()
                 .matcher(All.class)
@@ -106,6 +152,7 @@ public class BounceIntegrationTest {
                 .addDomain(DEFAULT_DOMAIN)
                 .addUser(RECIPIENT, PASSWORD)
                 .addUser(SENDER, SENDER_PASSWORD)
+                .addUser(OTHER, OTHER_PASSWORD)
                 .addUser(POSTMASTER, POSTMASTER_PASSWORD);
     }
 
