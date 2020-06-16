@@ -24,8 +24,6 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
-
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.jsieve.ConfigurationManager;
@@ -36,24 +34,18 @@ public class Parser implements SieveParser {
     
     private static final List<String> EMPTY_WARNINGS = new ArrayList<>(0);
     
-    private SieveFactory sieveFactory;
+    private final SieveFactory sieveFactory;
+
+    public Parser(SieveFactory sieveFactory) {
+        this.sieveFactory = sieveFactory;
+    }
 
     public Parser() throws Exception {
-        setConfigurationManager(new ConfigurationManager());
+        this(new ConfigurationManager());
     }
 
     public Parser(ConfigurationManager manager) {
-        setConfigurationManager(manager);
-    }
-    
-    /**
-     * setConfigurationManager.
-     *
-     * @param manager The <code>ConfigurationManager</code> to set
-     */
-    @Resource(name = "jsieveconfigurationmanager")
-    public void setConfigurationManager(ConfigurationManager manager) {
-        sieveFactory = manager.build();
+        this(manager.build());
     }
 
     @Override
