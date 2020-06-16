@@ -34,6 +34,7 @@ import javax.mail.Flags.Flag;
 
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -89,8 +90,17 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
             return updated;
         }
 
-        public ApplicableFlags update(boolean applicableFlagsChanged) {
-            return new ApplicableFlags(flags, applicableFlagsChanged);
+        public ApplicableFlags updateWithNewFlags(Flags newFlags) {
+            Flags updatedFlags = flags();
+            int size = updatedFlags.getUserFlags().length;
+
+            updatedFlags.add(newFlags);
+            // \RECENT is not a applicable flag in imap so remove it
+            // from the list
+            updatedFlags.remove(Flag.RECENT);
+
+            boolean applicableFlagsChanged = size < updatedFlags.getUserFlags().length;
+            return new ApplicableFlags(updatedFlags, applicableFlagsChanged);
         }
     }
 
@@ -415,28 +425,16 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     @VisibleForTesting
-    static ApplicableFlags updateApplicableFlags(ApplicableFlags applicableFlags, FlagsUpdated messageEvent) {
-        Flags updatedFlags = applicableFlags.flags();
-        int size = updatedFlags.getUserFlags().length;
-        FlagsUpdated updatedF = messageEvent;
-        List<UpdatedFlags> flags = updatedF.getUpdatedFlags();
+    static ApplicableFlags updateApplicableFlags(ApplicableFlags applicableFlags, FlagsUpdated flagsUpdated) {
+        Flags updatedFlags = mergeAllNewFlags(flagsUpdated);
+        return applicableFlags.updateWithNewFlags(updatedFlags);
+    }
 
-        for (UpdatedFlags flag : flags) {
-            updatedFlags.add(flag.getNewFlags());
-
-        }
-
-        // \RECENT is not a applicable flag in imap so remove it
-        // from the list
-        updatedFlags.remove(Flag.RECENT);
-
-        boolean applicableFlagsChanged;
-        if (size < updatedFlags.getUserFlags().length) {
-            applicableFlagsChanged = true;
-        } else {
-            applicableFlagsChanged = false;
-        }
-        return ApplicableFlags.from(updatedFlags).update(applicableFlagsChanged);
+    private static Flags mergeAllNewFlags(FlagsUpdated flagsUpdated) {
+        List<UpdatedFlags> flags = flagsUpdated.getUpdatedFlags();
+        FlagsBuilder builder = FlagsBuilder.builder();
+        flags.stream().map(UpdatedFlags::getNewFlags).forEach(builder::add);
+        return builder.build();
     }
 
     @Override
