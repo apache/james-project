@@ -366,60 +366,74 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
             if (mailboxEvent instanceof MessageEvent) {
                 final MessageEvent messageEvent = (MessageEvent) mailboxEvent;
                 if (messageEvent instanceof Added) {
-                    sizeChanged = true;
                     final Collection<MessageUid> uids = ((Added) mailboxEvent).getUids();
-                    SelectedMailbox sm = session.getSelected();
-                    for (MessageUid uid : uids) {
-                        uidMsnConverter.addUid(uid);
-                        if (sm != null) {
-                            sm.addRecent(uid);
-                        }
-                    }
+                    handleAddition(uids);
                 } else if (messageEvent instanceof FlagsUpdated) {
                     FlagsUpdated updated = (FlagsUpdated) messageEvent;
-                    List<UpdatedFlags> uFlags = updated.getUpdatedFlags();
-                    if (sessionId != eventSessionId || !silentFlagChanges) {
-   
-                        for (UpdatedFlags u : uFlags) {
-                            if (interestingFlags(u)) {
-                                flagUpdateUids.add(u.getUid());
-                            }
-                        }
-                    }
-   
-                    SelectedMailbox sm = session.getSelected();
-                    if (sm != null) {
-                        // We need to add the UID of the message to the recent
-                        // list if we receive an flag update which contains a
-                        // \RECENT flag
-                        // See IMAP-287
-                        List<UpdatedFlags> uflags = updated.getUpdatedFlags();
-                        for (UpdatedFlags u : uflags) {
-                            Iterator<Flag> flags = u.systemFlagIterator();
-   
-                            while (flags.hasNext()) {
-                                if (Flag.RECENT.equals(flags.next())) {
-                                    MailboxId id = sm.getMailboxId();
-                                    if (id != null && id.equals(mailboxEvent.getMailboxId())) {
-                                        sm.addRecent(u.getUid());
-                                    }
-                                }
-                            }
-   
-   
-                        }
-                    }
-
-                    applicableFlags = updateApplicableFlags(applicableFlags, (FlagsUpdated) messageEvent);
-
+                    handleFlagsUpdates(mailboxEvent, eventSessionId, (FlagsUpdated) messageEvent, updated);
                 } else if (messageEvent instanceof Expunged) {
-                    expungedUids.addAll(messageEvent.getUids());
-                    
+                    handleMailboxExpunge(messageEvent);
                 }
             } else if (mailboxEvent instanceof MailboxDeletion) {
-                if (eventSessionId != sessionId) {
-                    isDeletedByOtherSession = true;
+                handleMailboxDeletion(eventSessionId);
+            }
+        }
+    }
+
+    private void handleMailboxDeletion(MailboxSession.SessionId eventSessionId) {
+        if (eventSessionId != sessionId) {
+            isDeletedByOtherSession = true;
+        }
+    }
+
+    private void handleMailboxExpunge(MessageEvent messageEvent) {
+        expungedUids.addAll(messageEvent.getUids());
+    }
+
+    private void handleFlagsUpdates(MailboxEvent mailboxEvent, MailboxSession.SessionId eventSessionId, FlagsUpdated messageEvent, FlagsUpdated updated) {
+        List<UpdatedFlags> uFlags = updated.getUpdatedFlags();
+        if (sessionId != eventSessionId || !silentFlagChanges) {
+
+            for (UpdatedFlags u : uFlags) {
+                if (interestingFlags(u)) {
+                    flagUpdateUids.add(u.getUid());
                 }
+            }
+        }
+
+        SelectedMailbox sm = session.getSelected();
+        if (sm != null) {
+            // We need to add the UID of the message to the recent
+            // list if we receive an flag update which contains a
+            // \RECENT flag
+            // See IMAP-287
+            List<UpdatedFlags> uflags = updated.getUpdatedFlags();
+            for (UpdatedFlags u : uflags) {
+                Iterator<Flag> flags = u.systemFlagIterator();
+
+                while (flags.hasNext()) {
+                    if (Flag.RECENT.equals(flags.next())) {
+                        MailboxId id = sm.getMailboxId();
+                        if (id != null && id.equals(mailboxEvent.getMailboxId())) {
+                            sm.addRecent(u.getUid());
+                        }
+                    }
+                }
+
+
+            }
+        }
+
+        applicableFlags = updateApplicableFlags(applicableFlags, messageEvent);
+    }
+
+    private void handleAddition(Collection<MessageUid> uids) {
+        sizeChanged = true;
+        SelectedMailbox sm = session.getSelected();
+        for (MessageUid uid : uids) {
+            uidMsnConverter.addUid(uid);
+            if (sm != null) {
+                sm.addRecent(uid);
             }
         }
     }
