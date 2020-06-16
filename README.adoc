@@ -462,14 +462,14 @@ You can then just add DOMAIN to your /etc/hosts and you can connect to your jame
 
 === How to manage SIEVE scripts ?
 
-Each user can manage his SIEVE scripts threw the manage SIEVE mailet.
+Each user can manage his SIEVE scripts through the manage SIEVE mailet.
 
 To use the manage SIEVE mailet :
 
  * You need to create the user sievemanager@DOMAIN ( if you don't, the SMTP server will check the domain, recognize it, and look for an absent local user, and will generate an error ).
  * You can send Manage Sieve commands by mail to sievemanager@DOMAIN. Your subject must contain the command. Scripts needs to be added as attachments and need the ".sieve" extension.
 
-To activate a script for a user, you need the following combinaison :
+To activate a script for a user, you need the following combination :
 
  * PUTSCRIPT scriptname
  * SETACTIVE scriptname
