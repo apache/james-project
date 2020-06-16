@@ -17,12 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.api;
+package org.apache.james.mailrepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.Test;
 

@@ -33,13 +33,13 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.mailrepository.api.Initializable;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
-import org.apache.james.repository.api.Initializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

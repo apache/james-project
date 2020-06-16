@@ -121,10 +121,6 @@
     <!--<bean id="filesystem" class="org.apache.james.container.spring.filesystem.FileSystemImpl" autowire="byName"/>-->
     <bean id="filesystem" class="org.apache.james.container.spring.filesystem.ResourceLoaderFileSystem"/>
 
-    <bean id="sieveparser" class="org.apache.james.managesieve.jsieve.Parser">
-        <property name="configurationManager" ref="configurationmanager"/>
-    </bean>
-
-    <bean id="configurationmanager" class="org.apache.jsieve.ConfigurationManager"/>
+    <bean id="sieveparser" class="org.apache.james.managesieve.jsieve.Parser"/>
 
 </beans>

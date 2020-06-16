@@ -17,12 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.cassandra;
+package org.apache.james.mailrepository.memory;
 
-import org.apache.james.mailrepository.api.MailRepositoryUrlStoreContract;
+import org.apache.james.mailrepository.MailRepositoryUrlStoreContract;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(CassandraMailRepositoryUrlStoreExtension.class)
-public class CassandraMailRepositoryUrlStoreTest implements MailRepositoryUrlStoreContract {
+@ExtendWith(MemoryMailRepositoryUrlStoreExtension.class)
+public class MemoryMailRepositoryUrlStoreTest implements MailRepositoryUrlStoreContract {
 
 }

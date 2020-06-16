@@ -17,12 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.memory;
+package org.apache.james.mailrepository.api;
 
-import org.apache.james.mailrepository.api.MailRepositoryUrlStoreContract;
-import org.junit.jupiter.api.extension.ExtendWith;
+public interface Initializable {
 
-@ExtendWith(MemoryMailRepositoryUrlStoreExtension.class)
-public class MemoryMailRepositoryUrlStoreTest implements MailRepositoryUrlStoreContract {
-
+    void init() throws Exception;
 }

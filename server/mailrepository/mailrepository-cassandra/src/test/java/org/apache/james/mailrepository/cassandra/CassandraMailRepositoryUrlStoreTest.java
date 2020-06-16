@@ -17,9 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.repository.api;
+package org.apache.james.mailrepository.cassandra;
 
-public interface Initializable {
+import org.apache.james.mailrepository.MailRepositoryUrlStoreContract;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-    void init() throws Exception;
+@ExtendWith(CassandraMailRepositoryUrlStoreExtension.class)
+public class CassandraMailRepositoryUrlStoreTest implements MailRepositoryUrlStoreContract {
+
 }
