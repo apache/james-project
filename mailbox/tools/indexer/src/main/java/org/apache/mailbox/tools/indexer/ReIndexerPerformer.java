@@ -55,6 +55,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ReIndexerPerformer {
+    public static final int MAILBOX_CONCURRENCY = 1;
+
     private static class ReIndexingEntry {
         private final Mailbox mailbox;
         private final MailboxSession mailboxSession;
@@ -147,7 +149,7 @@ public class ReIndexerPerformer {
         LOGGER.info("Starting a full reindex");
 
         Flux<Either<Failure, ReIndexingEntry>> entriesToIndex = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).list()
-            .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession));
+            .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession), MAILBOX_CONCURRENCY);
 
         return reIndexMessages(entriesToIndex, runningOptions, reprocessingContext)
             .doFinally(any -> LOGGER.info("Full reindex finished"));
@@ -172,7 +174,7 @@ public class ReIndexerPerformer {
 
         try {
             Flux<Either<Failure, ReIndexingEntry>> entriesToIndex = mailboxMapper.findMailboxWithPathLike(mailboxQuery.asUserBound())
-                .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession));
+                .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession), MAILBOX_CONCURRENCY);
 
             return reIndexMessages(entriesToIndex, runningOptions, reprocessingContext)
                 .doFinally(any -> LOGGER.info("User {} reindex finished", username.asString()));
