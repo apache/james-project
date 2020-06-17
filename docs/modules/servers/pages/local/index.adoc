@@ -14,6 +14,6 @@ the installation will be made even simpler.
  * xref:local/concepts.adoc[Useful background concepts]
  * xref:local/architecture.adoc[Overview of architecture]
  * xref:local/dependencies.adoc[Dependencies and requirements]
- * xref:local/config.adoc[Configuration]
+ * xref:local/conf/index.adoc[Configuration]
  * xref:local/help.adoc[Where to go for help]
 

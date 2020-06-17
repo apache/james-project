@@ -7,7 +7,7 @@
 *** xref:local/concepts.adoc[]
 *** xref:local/architecture.adoc[]
 *** xref:local/dependencies.adoc[]
-*** xref:local/config.adoc[]
+*** xref:local/conf/index.adoc[]
 *** xref:local/help.adoc[]
 ** xref:redundant.adoc[]
 ** xref:distributed.adoc[]
