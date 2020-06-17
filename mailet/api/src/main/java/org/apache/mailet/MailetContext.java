@@ -107,7 +107,7 @@ public interface MailetContext {
     /**
      * Returns the name and version of the mailet container on which
      * the mailet is running.
-     * <p/>
+     * <p>
      * The returned string is of the form {@code <servername>/<versionnumber>},
      * optionally followed by additional information in parentheses. For example,
      * the JAMES mailet container may return the string {@code "JAMES/1.2"}
@@ -120,7 +120,7 @@ public interface MailetContext {
     /**
      * Returns an Iterator over the names of all attributes which are set
      * in this mailet context.
-     * <p/>
+     * <p>
      * The {@link #getAttribute} method can be called to
      * retrieve an attribute's value given its name.
      *
@@ -140,28 +140,16 @@ public interface MailetContext {
     Object getAttribute(String name);
 
     /**
-     * Binds an object to a given attribute name in this mailet context.  If the name
-     * specified is already used for an attribute, this method will remove the old
-     * attribute and bind the name to the new attribute.
-     * <p>
-     * Attribute names should follow the same convention as package names. The Java
-     * Mailet API specification reserves names matching java.*, javax.*, and sun.*.
-     *
-     * @param name - a String specifying the name of the attribute
-     * @param object - an Object representing the attribute to be bound
-     */
-
-    /**
      * Associates an attribute with the given name and value with this mailet context.
-     * <p/>
+     * <p>
      * If an attribute with the given name already exists, it is replaced, and the
      * previous value is returned.
-     * <p/>
+     * <p>
      * Attribute names should follow the same convention as package names.
      * The Mailet API specification reserves names matching
      * <i>org.apache.james.*</i> and <i>org.apache.mailet.*</i>.
      *
-     * @param name  the attribute name
+     * @param name the attribute name
      * @param value the attribute value
      */
     @Deprecated
@@ -192,7 +180,7 @@ public interface MailetContext {
      * is specific to the mailet container.
      *
      * @param message the message to be written to the log
-     * @param t       the Throwable whose stack trace is to be written to the log
+     * @param t the Throwable whose stack trace is to be written to the log
      * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
     @Deprecated
@@ -203,7 +191,7 @@ public interface MailetContext {
      * Writes the specified message to a mailet log. The name and type of
      * the mailet log is specific to the mailet container.
      *
-     * @param level   {@link LogLevel} to use
+     * @param level the {@link LogLevel} to use
      * @param message the message to be written to the log
      * @since 2.5
      * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
@@ -217,8 +205,8 @@ public interface MailetContext {
      * is specific to the mailet container.
      *
      * @param message the message to be written to the log
-     * @param t       the Throwable whose stack trace is to be written to the log
-     * @param level   {@link LogLevel} to use
+     * @param t the Throwable whose stack trace is to be written to the log
+     * @param level {@link LogLevel} to use
      * @since 2.5
      * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
@@ -245,7 +233,7 @@ public interface MailetContext {
      * Checks if a user account is local, i.e. the account exists locally
      * and this server is the final delivery destination for messages
      * sent to this address.
-     * <p/>
+     * <p>
      * This given user account string should contain the full
      * user address, i.e. user@domain. If the domain part is
      * missing, "localhost" will be used as the domain name.
@@ -319,9 +307,9 @@ public interface MailetContext {
      * This is functionally equivalent to having opened an SMTP session to the local
      * host and delivering the message using the given sender and recipients.
      *
-     * @param sender     the message sender
+     * @param sender the message sender
      * @param recipients the message recipients as a Collection of MailAddress objects
-     * @param message    the message to send
+     * @param message the message to send
      * @throws MessagingException if an error occurs accessing or sending the message
      */
     void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message)
@@ -331,11 +319,11 @@ public interface MailetContext {
      * Sends an outgoing message to the top of this mailet container's queue for the
      * specified processor.
      *
-     * @param sender     the message sender
+     * @param sender the message sender
      * @param recipients the message recipients as a Collection of MailAddress objects
-     * @param message    the message to send
-     * @param state      the state of the message, indicating the name of the processor for
-     *                   which the message will be queued
+     * @param message the message to send
+     * @param state the state of the message, indicating the name of the processor for
+     *              which the message will be queued
      * @throws MessagingException if an error occurs accessing or sending the message
      */
     void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message, String state)
@@ -344,42 +332,40 @@ public interface MailetContext {
     /**
      * Sends an outgoing message to the top of this mailet container's root queue.
      * This is the equivalent of opening an SMTP session to localhost.
-     * The Mail object provides all envelope and content information
+     * The Mail object provides all envelope and content information.
      *
-     * @param mail - the message that is to sent
+     * @param mail the message that is to sent
      * @throws MessagingException if an error occurs accessing or sending the message
      */
-    void sendMail(Mail mail)
-            throws MessagingException;
+    void sendMail(Mail mail) throws MessagingException;
 
     /**
      * Sends an outgoing message to the top of this mailet container's root queue.
      * This is the equivalent of opening an SMTP session to localhost.
-     * The Mail object provides all envelope and content information
-     * 
+     * The Mail object provides all envelope and content information.
+     * <p>
      * The given delay and unit are used to calculate the time when
-     * the Mail will be available for deQueue
+     * the Mail will be available for deQueue.
      *
-     * @param mail - the message that is to sent
-     * @param delay - the delay value for deQueue
-     * @param unit - the delay unit for deQueue
+     * @param mail the message that is to sent
+     * @param delay the delay value for deQueue
+     * @param unit the delay unit for deQueue
      * @throws MessagingException if an error occurs accessing or sending the message
      */
-    void sendMail(Mail mail, long delay, TimeUnit unit)
-            throws MessagingException;
+    void sendMail(Mail mail, long delay, TimeUnit unit) throws MessagingException;
 
 
     /**
      * Sends an outgoing message to the top of this mailet container's root queue,
      * targeting a specific processing state.
-     *
+     * <p>
      * This functionally allows mail treatment done out of the MailetProcessor to be sent
      * to a specific processor inside the MailetContainer. This is for instance useful for bouncing mail
-     * being remote delivered (asynchronously to original mail treatment)
+     * being remote delivered (asynchronously to original mail treatment).
      *
-     * @param message The message to send
-     * @param state   The state of the message, indicating the name of the processor for
-     *                which the message will be queued
+     * @param mail The message to send
+     * @param state The state of the message, indicating the name of the processor for
+     *              which the message will be queued
      * @throws MessagingException if an error occurs accessing or sending the message
      */
     void sendMail(Mail mail, String state) throws MessagingException;
@@ -387,31 +373,31 @@ public interface MailetContext {
     /**
      * Sends an outgoing message to the top of this mailet container's root queue,
      * targeting a specific processing state.
-     *
+     * <p>
      * This functionally allows mail treatment done out of the MailetProcessor to be sent
      * to a specific processor inside the MailetContainer. This is for instance useful for bouncing mail
-     * being remote delivered (asynchronously to original mail treatment)
-     * 
+     * being remote delivered (asynchronously to original mail treatment).
+     * <p>
      * The given delay and unit are used to calculate the time when
-     * the Mail will be available for deQueue
+     * the Mail will be available for deQueue.
      *
-     * @param message The message to send
-     * @param state   The state of the message, indicating the name of the processor for
-     *                which the message will be queued
-     * @param delay   The delay value for deQueue
-     * @param unit    The delay unit for deQueue
+     * @param mail The message to send
+     * @param state The state of the message, indicating the name of the processor for
+     *              which the message will be queued
+     * @param delay The delay value for deQueue
+     * @param unit The delay unit for deQueue
      * @throws MessagingException if an error occurs accessing or sending the message
      */
     void sendMail(Mail mail, String state, long delay, TimeUnit unit) throws MessagingException;
 
     /**
      * Bounces the message using a standard format with the given message.
-     * <p/>
+     * <p>
      * The message will be sent to the original sender from the postmaster address
      * as configured in this mailet context, adding the message to top of mail
      * server queue using {@code sendMail}.
      *
-     * @param mail    the message to bounce, with the original sender
+     * @param mail the message to bounce, with the original sender
      * @param message a descriptive message explaining why the message bounced
      * @throws MessagingException if an error occurs accessing or sending the message
      */
@@ -423,7 +409,7 @@ public interface MailetContext {
      * The message will be sent to the original sender from the given address,
      * adding the message to top of mail server queue using {@code sendMail}.
      *
-     * @param mail    the message to bounce, with the original sender
+     * @param mail the message to bounce, with the original sender
      * @param message a descriptive message explaining why the message bounced
      * @param bouncer the address used as the sender of the bounce message
      * @throws MessagingException if an error occurs accessing or sending the message
@@ -432,14 +418,16 @@ public interface MailetContext {
 
 
     /**
-     * Lookups the DNS system for a given record type.
-     * In case of MX records the returned List will be sorted using the priority score, ascending.
+     * Looks up the given record type in the DNS system.
+     * <p>
+     * In the case of MX records the returned List will be sorted using the priority score, ascending.
      *
      * @param name the host/domain name to lookup
      * @param type the "IN" record type to lookup
-     * @return a String list with result records with at least 1 element.
+     * @return a String list with result records with at least 1 element
      * @throws TemporaryLookupException on timeout or servfail
-     * @throws LookupException          on host not found, record type not found, name syntax issues and other permanent exceptions.
+     * @throws LookupException on host not found, record type not found,
+     *                         name syntax issues and other permanent exceptions
      * @since Mailet API v2.5
      */
     List<String> dnsLookup(String name, RecordType type) throws TemporaryLookupException, LookupException;

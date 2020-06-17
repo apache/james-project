@@ -140,12 +140,12 @@ public interface Mail extends Serializable, Cloneable {
      * Returns the sender of the message, as specified by the SMTP "MAIL FROM" command,
      * or internally defined.
      *
-     * @deprecated @see {@link #getMaybeSender()} and {@link MaybeSender}
-     *
-     * Note that SMTP null sender ( "&lt;&gt;" ) needs to be implicitly handled by the caller under the form of 'null' or
-     * {@link MailAddress#nullSender()}. Replacement method adds type safety on this operation.
+     * Note that SMTP null sender ( "&lt;&gt;" ) needs to be implicitly handled by the caller
+     * in the form of 'null' or {@link MailAddress#nullSender()}.
+     * Replacement method adds type safety on this operation.
      *
      * @return the sender of this message
+     * @deprecated see {@link #getMaybeSender()}
      */
     @Deprecated
     MailAddress getSender();
@@ -175,8 +175,11 @@ public interface Mail extends Serializable, Cloneable {
     }
 
     /**
+     * Returns a duplicate copy of this email.
+     * Implementation can affect a variation of the initial mail name property.
+     *
      * @since Mailet API v3.2.0
-     * @return A copy of this email. Implementation can affect a variation of the initial mail name property.
+     * @return A copy of this email
      */
     Mail duplicate() throws MessagingException;
     
@@ -354,18 +357,23 @@ public interface Mail extends Serializable, Cloneable {
     Optional<Attribute> setAttribute(Attribute attribute);
 
     /**
-     * Store a header (and its specific values) for a recipient
-     * This header will be stored only for this recipient at delivery time
-     * 
+     * Adds a header (and its specific values) for a recipient.
+     * This header will be stored only for this recipient at delivery time.
+     * <p>
      * Note that the headers must contain only US-ASCII characters, so a header that
      * contains non US-ASCII characters must have been encoded by the
      * caller as per the rules of RFC 2047.
+     *
+     * @param header the header to add
+     * @param recipient the recipient for which the header is added
      */
     void addSpecificHeaderForRecipient(Header header, MailAddress recipient);
 
     /** 
      * Get the currently stored association between recipients and
-     * specific headers
+     * specific headers.
+     *
+     * @return the recipient-specific headers
      */
     PerRecipientHeaders getPerRecipientSpecificHeaders();
 
@@ -387,6 +395,7 @@ public interface Mail extends Serializable, Cloneable {
 
     /**
      * Returns the time at which this Mail was last updated.
+     *
      * @return the time at which this Mail was last updated
      * @since Mailet API v2.3
      */
@@ -394,6 +403,7 @@ public interface Mail extends Serializable, Cloneable {
     
     /**
      * Sets the time at which this Mail was last updated.
+     *
      * @param lastUpdated the time at which this Mail was last modified
      * @since Mailet API v2.3
      */

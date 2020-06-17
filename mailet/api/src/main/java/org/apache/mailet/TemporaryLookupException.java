@@ -37,6 +37,8 @@ public class TemporaryLookupException extends LookupException {
 
     /**
      * Constructs a new lookup exception with the specified message.
+     *
+     * @param message the exception message
      */
     public TemporaryLookupException(String message) {
         super(message);

@@ -41,6 +41,8 @@ public class MailetException extends MessagingException {
 
     /**
      * Constructs a new mailet exception with the specified message.
+     *
+     * @param message the exception message
      */
     public MailetException(String message) {
         super(message);
@@ -49,6 +51,9 @@ public class MailetException extends MessagingException {
     /**
      * Constructs a new mailet exception with the specified message
      * and an exception which is the "root cause" of the exception.
+     *
+     * @param message the exception message
+     * @param e the root cause exception
      */
     public MailetException(String message, Exception e) {
         super(message, e);

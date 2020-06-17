@@ -29,13 +29,13 @@ import java.util.Iterator;
  * The configuration information consists of mailet-specific initialization
  * parameters in a set of name/value pairs, and a MailetContext object
  * which allows the mailet to interact with the mailet container.
- *
  */
 public interface MailetConfig {
 
     /**
      * Returns the value of the named initialization parameter,
      * or null if the parameter does not exist.
+     * Multi-valued parameters are returned as a comma-delineated string.
      *
      * @param name the name of the initialization parameter
      * @return the value of the initialization parameter, or null

@@ -63,7 +63,7 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      * <p>This method is supplied for convenience. It gets the value of the
      * named parameter from the matcher's MatcherConfig object.</p>
      *
-     * @return String a String containing the value of the initalization parameter
+     * @return String a String containing the value of the initialization parameter
      */
     @Override
     public String getCondition() {

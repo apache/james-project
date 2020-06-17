@@ -57,7 +57,6 @@ import org.apache.james.core.MailAddress;
  * its configuration information and a {@link MailetContext} through which
  * it can interact with the mailet container, and the {@link #getMatcherInfo}
  * method, which provides basic information about the Matcher.
- *
  */
 public interface Matcher {
 
@@ -86,6 +85,7 @@ public interface Matcher {
      *
      * @param mail the Mail to match
      * @return the recipients that meet the match criteria as a Collection of String objects
+     *         (may be null if there are no matched recipients)
      * @throws MessagingException if any error occurs which prevents the Mail
      *         matching from completing successfully
      */
