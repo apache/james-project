@@ -404,7 +404,6 @@ public class SolveMessageInconsistenciesService {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SolveMessageInconsistenciesService.class);
-    private static final Duration DELAY = Duration.ZERO;
     private static final Duration PERIOD = Duration.ofSeconds(1);
 
     private final CassandraMessageIdToImapUidDAO messageIdToImapUidDAO;
