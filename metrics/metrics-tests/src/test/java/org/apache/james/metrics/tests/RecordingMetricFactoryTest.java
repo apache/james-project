@@ -22,6 +22,7 @@ package org.apache.james.metrics.tests;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.metrics.api.Metric;
@@ -29,6 +30,8 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.MetricFactoryContract;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +43,7 @@ class RecordingMetricFactoryTest implements MetricFactoryContract {
     private static final String METRIC_NAME = "metric";
     private static final java.time.Duration ONE_SECOND = java.time.Duration.ofSeconds(1);
     private static final java.time.Duration FIVE_SECONDS = java.time.Duration.ofSeconds(5);
+    private static final ConditionFactory WAIT_AT_MOST = Awaitility.waitAtMost(5, TimeUnit.SECONDS);
 
     private RecordingMetricFactory testee;
 
@@ -128,9 +132,10 @@ class RecordingMetricFactoryTest implements MetricFactoryContract {
             .repeat(5)
             .blockLast();
 
-        assertThat(testee.executionTimesFor("any"))
-            .hasSize(6)
-            .allSatisfy(timing -> assertThat(timing).isLessThan(duration.multipliedBy(2)));
+        WAIT_AT_MOST.untilAsserted(() ->
+            assertThat(testee.executionTimesFor("any"))
+                .hasSize(6)
+                .allSatisfy(timing -> assertThat(timing).isLessThan(duration.multipliedBy(2))));
     }
 
     @Test
@@ -140,8 +145,9 @@ class RecordingMetricFactoryTest implements MetricFactoryContract {
             .repeat(5)
             .blockLast();
 
-        assertThat(testee.executionTimesFor("any"))
-            .hasSize(6)
-            .allSatisfy(timing -> assertThat(timing).isLessThan(duration.multipliedBy(2)));
+        WAIT_AT_MOST.untilAsserted(() ->
+            assertThat(testee.executionTimesFor("any"))
+                .hasSize(6)
+                .allSatisfy(timing -> assertThat(timing).isLessThan(duration.multipliedBy(2))));
     }
 }
