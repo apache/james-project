@@ -1,4 +1,5 @@
 * xref:index.adoc[]
+** xref:user/index.adoc[]
 ** xref:mail/index.adoc[]
 *** xref:mail/messages/index.adoc[]
 **** xref:mail/messages/imf.adoc[]

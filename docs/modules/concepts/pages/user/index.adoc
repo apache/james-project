@@ -1,0 +1,74 @@
+= James User Model
+:navtitle: User Model
+
+
+For clarity, we have defined various roles for actors who interact 
+with James in one way or another.
+The deliverables we make available are produced with these roles in mind.
+Note that any given person may play more than one role, even at the same
+time.
+
+ * <<User>>
+ * <<Operator>>
+ * <<Integrator>>
+ * <<Developer>>
+ * <<Member>>
+ * <<Committer>>
+
+== User
+
+A **User** simply uses email without any notion of what server is providing the service.
+
+More precisely, in typical cases a User will have an email client for reading and writing email. The
+xref:glossary.adoc[email client] will connect to the James server via 
+xref:mail/protocols/smtp.adoc[SMTP], 
+xref:mail/protocols/pop.adoc[POP], or 
+xref:mail/protocols/imap.adoc[IMAP].
+The User will have no indication anywhere that the server is a James server.
+
+
+== Operator
+
+An **Operator** installs and runs James for the benefit of Users.
+
+The Operator does not compile any Java code, and does not require any software
+development environment. In fact, the objective of the James project is provide
+a mail server that does not even require any knowledge of software programming at all.
+
+
+
+== Integrator 
+
+An **Integrator** has some expertise in Java development. Based on this expertise
+the Integrator can perform more advanced server configurations and may
+develop xref:xxx.adoc[Extensions] to customize the behavior of a James server.
+
+An Integrator does **not** need to download the source code or compile James.
+
+
+
+== Developer
+
+A **Developer** uses the James codebase, executes a build using the provided
+build system (Maven), and may edit and deploy the source code.
+
+
+
+== Member
+
+A **Member** is anybody who has:
+
+ * Filed an issue on the issue tracking system
+ * Posted a question on the Mailing list
+ * Submitted a pull request (PR)
+
+
+== Committer
+
+A **Committer** is granted special rights (according to Apache practices) 
+to participate in the development of James by:
+
+ * Accepting (being assigned) issues in the issue tracking system
+ * Merging code into the git repository
+ * Being granted a voice when voting matters arise
+
