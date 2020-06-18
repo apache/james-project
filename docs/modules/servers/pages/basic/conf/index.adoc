@@ -1,4 +1,4 @@
-= James Local Mail Server Configuration
+= James Basic Mail Server Configuration
 :navtitle: Configuration
 
 == Configuration by feature

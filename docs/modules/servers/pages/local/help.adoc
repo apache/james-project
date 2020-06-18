@@ -1,5 +1,0 @@
-= James Local Server &mdash; Where to get help
-:navtitle: Help
-
-(TODO)
-

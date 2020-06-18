@@ -1,5 +1,0 @@
-= James Local Server &mdash; Concepts
-:navtitle: Concepts
-
-(TODO)
-

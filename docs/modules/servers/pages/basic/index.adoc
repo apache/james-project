@@ -1,0 +1,19 @@
+= James Basic Mail Server
+:navtitle: Basic 
+
+If you are not sure which server you should be using, then
+you probably ought to be using the Basic Server.
+
+At this time, the server is not entirely "out-of-the-box", because there
+is some work you will have to do in order to get the server up and running.
+However, the work that needs to be done is quite minimal. We will walk you
+through the configuration in these documents. Hopefully in the near future
+the installation will be made even simpler.
+
+ * xref:basic/objectives.adoc[Objectives and motivation of the Basic Server]
+ * xref:basic/concepts.adoc[Useful background concepts]
+ * xref:basic/architecture.adoc[Overview of architecture]
+ * xref:basic/dependencies.adoc[Dependencies and requirements]
+ * xref:basic/conf/index.adoc[Configuration]
+ * xref:basic/help.adoc[Where to go for help]
+

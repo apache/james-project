@@ -9,7 +9,7 @@ a production-grade Mail Server that you can use with confidence.
 The available James Servers are:
 
  * <<demo,James Demo Mail Server>>
- * <<local,James Local Mail Server>>
+ * <<basic,James Basic Mail Server>>
  * <<redundant,James Redundant Mail Server>>
  * <<distributed,James Distributed Mail Server>>
 
@@ -20,11 +20,11 @@ The xref:demo.adoc[James Server Demo] is intended for those who just want
 to give James a quick spin on their local machine.
 
 
-[#local]
-== James Local Mail Server
+[#basic]
+== James Basic Mail Server
 
 If you are not sure which server you should be using, then
-you probably ought to be using the xref:local/index.adoc[*Local Server*].
+you probably ought to be using the xref:basic/index.adoc[*BasicServer*].
 This server uses the local file system to store emails, which tends
 to considerably simplify the system. To safeguard your emails, you
 only need a simple generic backup solution that works with a data
@@ -36,7 +36,7 @@ have a huge amount of emails to process, then usually the simplicity is
 well worth the loss of some functionality. The last thing you need is
 to have to resolve difficult issues on a production server when you have not
 yet acquired the requisite knowledge to deal with those issues. Using the
-xref:local/index.adoc[*Local Server*] will help you reduce the risk of running into 
+xref:basic/index.adoc[*Basic Server*] will help you reduce the risk of running into 
 production issues.
 
 This server is:
