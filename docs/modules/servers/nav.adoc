@@ -26,3 +26,4 @@
 **** xref:distributed/extend/mailbox-listeners.adoc[]
 **** xref:distributed/extend/smtp-hooks.adoc[]
 **** xref:distributed/extend/webadmin-routes.adoc[]
+** xref:test.adoc[]

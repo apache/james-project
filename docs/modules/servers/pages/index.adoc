@@ -12,6 +12,7 @@ The available James Servers are:
  * <<basic,James Basic Mail Server>>
  * <<extendable,James Extendable Mail Server>>
  * <<distributed,James Distributed Mail Server>>
+ * <<test,James  Test Server>>
 
 
 [#demo]
@@ -82,3 +83,8 @@ This server is:
  * The most feature-rich server, but also by far the most complex
 
 
+
+[#test]
+== James Test Server
+
+The xref:test.adoc[*Test Server*] is, as the name suggests, for testing purposes.
