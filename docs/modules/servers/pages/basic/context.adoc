@@ -1,0 +1,25 @@
+= James Basic Server &mdash; Context
+:navtitle: Context
+
+Email has been around in one form or another for more than 50 years.
+It is arguably one of the most resilient applications or our day, and
+may even be called **THE** killer app of our time. Most of us, if not
+all but the most unfortunate, use email on a regular basis. If you are
+reading this page over the web, it is almost 100% certain that you have
+used and continue to use email.
+
+Despite its ubiquity, the vast majority of people do not control their
+own email infrastructure. Although, unlike telecommunications or electricity
+for example, the barriers to owning and maintaining your own infrastructure 
+are very low, individuals and companies alike usually defer to the large
+email providers for this essential service.
+Although relying on the big providers is easy, what they offer is often
+limited and in some cases much more costly than it ought to be.
+
+The Apache James Community is dedicated to liberating email. Our missing
+is to make email hosting both easy and fun. We do this by:
+
+ * Providing an easy-to-use self-hosted server for amateur Operators
+ * Providing an extendable server for those more experienced Operators
+ * Providing a distributed solution for heavy-duty projects
+ * Ensuring that James remains a flexible, reliable technology platform

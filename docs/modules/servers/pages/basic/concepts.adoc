@@ -1,5 +1,13 @@
-= James Basic Server &mdash; Concepts
+= James Basic Server &mdash; Background Concepts
 :navtitle: Concepts
 
-(TODO)
+Before embarking on your adventure with the **James Basic Server**, we
+highly recommend that you familiarize yourself with the following concepts:
 
+[TODO: provide links and ensure that articles exist for each of these topics]
+
+ * James User Model
+ * SMTP
+ * IMAP
+ * Secured email communications
+ * Email storage

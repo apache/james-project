@@ -1,5 +1,0 @@
-= James Basic Server &mdash; Dependencies
-:navtitle: Dependencies
-
-(TODO)
-
