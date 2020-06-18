@@ -10,7 +10,7 @@ The available James Servers are:
 
  * <<demo,James Demo Mail Server>>
  * <<basic,James Basic Mail Server>>
- * <<redundant,James Redundant Mail Server>>
+ * <<extendable,James Extendable Mail Server>>
  * <<distributed,James Distributed Mail Server>>
 
 
@@ -50,12 +50,12 @@ This server is:
 
 
 
-[#redundant]
-== James Redundant Mail Server
+[#extendable]
+== James Extendable Mail Server
 
 When your requirements start to get a little more serious 
 (let's say in the tens of millions of emails), then you may want to
-start to consider using the xref:redundant.adoc[*Redundant Server*].
+start to consider using the xref:extendable.adoc[*Extendable Server*].
 
 This server provides data redundancy so that it can stay live at
 all times, even in the rare case that your data gets corrupted.

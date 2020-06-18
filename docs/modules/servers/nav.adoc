@@ -9,7 +9,7 @@
 *** xref:basic/dependencies.adoc[]
 *** xref:basic/conf/index.adoc[]
 *** xref:basic/help.adoc[]
-** xref:redundant.adoc[]
+** xref:extendable.adoc[]
 ** xref:distributed.adoc[]
 *** xref:distributed/architecture.adoc[]
 *** xref:distributed/run.adoc[]
