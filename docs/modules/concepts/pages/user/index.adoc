@@ -1,0 +1,95 @@
+= James User Model
+:navtitle: User Model
+
+
+For clarity, we have defined various roles for actors who interact 
+with xref:servers/index.adoc[James servers] in one way or another.
+The deliverables we make available are produced with these roles in mind.
+Note that any given person may play more than one role, even at the same
+time.
+
+ * <<User>>
+ * <<Operator>>
+ * <<Integrator>>
+ * <<Developer>>
+ * <<Contributor>>
+ * <<Committer>>
+ * <<PMC Member>>
+
+== User
+
+A **User** simply uses email without any notion of what server is providing the service.
+
+More precisely, in typical cases a User will have an email client for reading and writing email. The
+xref:glossary.adoc[email client] will connect to the James server via 
+xref:mail/protocols/smtp.adoc[SMTP], 
+xref:mail/protocols/pop.adoc[POP], or 
+xref:mail/protocols/imap.adoc[IMAP].
+The User will have no indication anywhere that the server is a James server.
+
+
+== Operator
+
+An **Operator** installs and runs James for the benefit of Users.
+
+The Operator does not compile any Java code, and does not require any software
+development environment. 
+
+Apache James offers Operators a range of servers for various use cases, including:
+
+ * A xref:server/basic/index.adoc[Basic Server] ideal for busy Operators who 
+   are interested in an easy-to-use self-hosting solution, but who may not have the
+   time to gain deep expertise
+ * An xref:server/advanced/index.adoc[Advanced Server] well-suited for Operators with
+   advanced skills and resources who are not daunted by getting their hands dirty
+   with configurations or using built-in extensions
+
+
+
+== Integrator 
+
+An **Integrator** has some expertise with Java or a JVM-based language. Based 
+on this expertise the Integrator can perform more advanced server configurations and may
+develop xref:xxx.adoc[Extensions] to customize the behavior of a James server.
+
+An Integrator does **not** need to download the source code or compile James.
+
+
+
+== Developer
+
+A **Developer** uses the James codebase, executes a build using the provided
+build system (Maven), may edit the source code and deploy the built artifacts.
+
+
+
+== Contributor
+
+A **Contributor** refers to anyone involved with the Apache James community by:
+
+ * Filing an issue on the https://issues.apache.org/jira/secure/Dashboard.jspa[issue tracking system]
+ * Posting a question on the https://james.apache.org/mail.html[mailing list] 
+   or on the https://gitter.im/apache/james-project[gitter channel]
+ * Submitting a https://github.com/apache/james-project/pulls[pull request] (PR)
+ * Fixes, refines and writes documentation
+ * Writes a tutorial or article about James
+ * Otherwise generally helps the James Community in any other way not listed here
+
+
+
+== Committer
+
+A **Committer** is granted special rights (according to 
+https://www.apache.org/dev/committers.html[Apache practices]) 
+to participate in the development of James by:
+
+ * Accepting (being assigned) issues in the https://issues.apache.org/jira/secure/Dashboard.jspa[issue tracking system]
+ * Merging code into the https://github.com/apache/james-project[git repository]
+ * Being granted a voice when voting matters arise
+
+
+== PMC Member
+
+A **PMC** (Project Management Committee) Member
+is a Committer who is also a member of the PMC, as stipulated by 
+https://www.apache.org/dev/pmc.html[Apache rules].
