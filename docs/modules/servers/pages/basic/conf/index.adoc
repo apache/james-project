@@ -102,7 +102,7 @@
 
 
 == Notes
-Jmx protocol is used by James cli to interactwith the server. Jmx is known to be insecure, and we have as a project to rewrite the cli for james servers in order to rely on webadmin.
+Jmx protocol is used by James cli to interact with the server. Jmx is known to be insecure, and we have as a project to rewrite the cli for james servers in order to rely on webadmin.
 
 
 
