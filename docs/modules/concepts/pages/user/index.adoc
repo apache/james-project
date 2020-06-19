@@ -65,11 +65,16 @@ build system (Maven), and may edit and deploy the source code.
 
 == Contributor
 
-A **Contributor** is anybody who has:
+A **Contributor** refers to anyone involved with the Apache James community by:
 
- * Filed an issue on the issue tracking system
- * Posted a question on the Mailing list
- * Submitted a pull request (PR)
+ * Filing an issue on the https://issues.apache.org/jira/secure/Dashboard.jspa[issue tracking system]
+ * Posting a question on the https://james.apache.org/mail.html[mailing list] 
+   or on the https://gitter.im/apache/james-project[gitter channel]
+ * Submitting a https://github.com/apache/james-project/pulls[pull request] (PR)
+ * Fixes, refines and writes documentation
+ * Writes a tutorial or article about James
+ * Otherwise generally helps the James Community in any other way not listed here
+
 
 
 == Committer
@@ -78,8 +83,8 @@ A **Committer** is granted special rights (according to
 https://www.apache.org/dev/committers.html[Apache practices]) 
 to participate in the development of James by:
 
- * Accepting (being assigned) issues in the issue tracking system
- * Merging code into the git repository
+ * Accepting (being assigned) issues in the https://issues.apache.org/jira/secure/Dashboard.jspa[issue tracking system]
+ * Merging code into the https://github.com/apache/james-project[git repository]
  * Being granted a voice when voting matters arise
 
 
