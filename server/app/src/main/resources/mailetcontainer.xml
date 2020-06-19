@@ -317,7 +317,7 @@ Regards, Postmaster XXX.YYY
           <delayTime>4 * 15 minutes, 2 * 3 hours, 18 * 6 hours</delayTime>
           -->
           <delayTime>5000, 100000, 500000</delayTime>
-          <maxRetries>25</maxRetries>
+          <maxRetries>3</maxRetries>
             
           <!-- The max reties which will used if no A or MX record for the domain was found. -->
           <!-- If 0 it will fail on first time -->
