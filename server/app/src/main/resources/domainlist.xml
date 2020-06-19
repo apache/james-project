@@ -45,8 +45,8 @@
 
 <!-- JPA implementation for DomainList -->
 <domainlist class="org.apache.james.domainlist.jpa.JPADomainList">
-   <autodetect>true</autodetect>
-   <autodetectIP>true</autodetectIP>
+   <autodetect>false</autodetect>
+   <autodetectIP>false</autodetectIP>
    <defaultDomain>localhost</defaultDomain>
 </domainlist>
 

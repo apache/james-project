@@ -108,9 +108,7 @@ class AliasRoutesTest {
             memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
             DNSService dnsService = mock(DNSService.class);
             domainList = new MemoryDomainList(dnsService);
-            domainList.configure(DomainListConfiguration.builder()
-                .autoDetect(false)
-                .autoDetectIp(false));
+            domainList.configure(DomainListConfiguration.DEFAULT);
             domainList.addDomain(DOMAIN);
             domainList.addDomain(ALIAS_DOMAIN);
             domainList.addDomain(DOMAIN_MAPPING);

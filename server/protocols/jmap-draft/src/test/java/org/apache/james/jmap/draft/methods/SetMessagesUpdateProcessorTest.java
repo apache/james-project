@@ -47,7 +47,6 @@ import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.jmap.draft.model.UpdateMessagePatch;
 import org.apache.james.jmap.draft.send.MailSpool;
-import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -73,8 +72,6 @@ import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
-import org.apache.james.util.html.HtmlTextExtractor;
-import org.apache.james.util.mime.MessageContentExtractor;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -154,8 +151,6 @@ public class SetMessagesUpdateProcessorTest {
 
     @Before
     public void setUp() throws MailboxException, DomainListException, UnknownHostException, ConfigurationException {
-        MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
-        HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("fake"));
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
@@ -163,9 +158,7 @@ public class SetMessagesUpdateProcessorTest {
 
         DNSService dnsService = mock(DNSService.class);
         MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false));
+        domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("example.com"));
         domainList.addDomain(Domain.of("other.org"));
         recipientRewriteTable.setDomainList(domainList);

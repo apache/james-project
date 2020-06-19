@@ -212,9 +212,7 @@ class DeletedMessagesVaultRoutesTest {
     private MemoryUsersRepository createUsersRepository() throws Exception {
         DNSService dnsService = mock(DNSService.class);
         MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false));
+        domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(DOMAIN);
 
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);

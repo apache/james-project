@@ -43,10 +43,10 @@ to determine when a mail is intended for local delivery - Only applicable for XM
         <dt><strong>autodetect</strong></dt>
         <dd>true or false - If autodetect is true, James wil attempt to discover its own host name AND 
 use any explicitly specified servernames. 
-If autodetect is false, James will use only the specified domainnames.</dd>
+If autodetect is false, James will use only the specified domainnames. Defaults to false.</dd>
         <dt><strong>autodetectIP</strong></dt>
         <dd>true or false - If autodetectIP is not false, James will also allow add the IP address for each servername. 
-The automatic IP detection is to support RFC 2821, Sec 4.1.3, address literals.</dd>
+The automatic IP detection is to support RFC 2821, Sec 4.1.3, address literals. Defaults to false.</dd>
         <dt><strong>defaultDomain</strong></dt>
         <dd>Set the default domain which will be used if an email is send to a recipient without a domain part.
             If not defaultdomain is set the first domain of the DomainList get used. If the default is not yet contained by the Domain List, the domain will be created upon start.</dd>
