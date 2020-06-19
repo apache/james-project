@@ -16,7 +16,7 @@ email providers for this essential service.
 Although relying on the big providers is easy, what they offer is often
 limited and in some cases much more costly than it ought to be.
 
-The Apache James Community is dedicated to liberating email. Our missing
+The Apache James Community is dedicated to liberating email. Our mission
 is to make email hosting both easy and fun. We do this by:
 
  * Providing an easy-to-use self-hosted server for amateur Operators
