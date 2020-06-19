@@ -50,9 +50,7 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
 
             DNSService dnsService = mock(DNSService.class);
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
-            domainList.configure(DomainListConfiguration.builder()
-                .autoDetect(false)
-                .autoDetectIp(false));
+            domainList.configure(DomainListConfiguration.DEFAULT);
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
 

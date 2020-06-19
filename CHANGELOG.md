@@ -38,6 +38,7 @@ of tasks being currently executed.
 - Differentiation between domain alias and domain mapping. Read upgrade instructions.
 - JAMES-3122 Log4J2 adoption for Spring product. Log file configuration needs to be updated. See upgrade instructions.
 - JAMES-2760 mailqueue.size.metricsEnabled should be false by default
+- JAMES-3252 DomainList autoDection should be turned off by default. Operators relying on implicit values for enabling DomainList autoDection now needs to explicitly configure it.
 
 ### Fixed
 - JAMES-2828 & JAMES-2929 bugs affecting JDBCMailRepository usage with PostgresSQL thanks to Jörg Thomas & Sergey B

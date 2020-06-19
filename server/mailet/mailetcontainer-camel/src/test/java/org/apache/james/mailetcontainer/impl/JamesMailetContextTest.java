@@ -84,8 +84,6 @@ public class JamesMailetContextTest {
     public void setUp() throws Exception {
         domainList = spy(new MemoryDomainList(DNS_SERVICE));
         domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
             .build());
 
         usersRepository = spy(MemoryUsersRepository.withVirtualHosting(domainList));
@@ -130,8 +128,6 @@ public class JamesMailetContextTest {
     @Test
     public void isLocalUserShouldPropagateUserExceptions() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
             .defaultDomain(Domain.of("any"))
             .build());
         domainList.addDomain(DOMAIN_COM);
@@ -145,8 +141,6 @@ public class JamesMailetContextTest {
     @Test
     public void isLocalUserShouldPropagateRrtExceptions() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
             .defaultDomain(Domain.of("any"))
             .build());
         domainList.addDomain(DOMAIN_COM);
@@ -175,8 +169,6 @@ public class JamesMailetContextTest {
     @Test
     public void isLocalUserShouldReturnTrueWhenUsedWithLocalPartAndUserExistOnDefaultDomain() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
             .defaultDomain(DOMAIN_COM)
             .build());
 
@@ -188,8 +180,6 @@ public class JamesMailetContextTest {
     @Test
     public void isLocalUserShouldReturnFalseWhenUsedWithLocalPartAndUserDoNotExistOnDefaultDomain() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
             .defaultDomain(Domain.of("any"))
             .build());
 
@@ -271,8 +261,6 @@ public class JamesMailetContextTest {
     @Test
     public void isLocalEmailShouldPropagateUserExceptions() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
             .defaultDomain(Domain.of("any"))
             .build());
         domainList.addDomain(DOMAIN_COM);
@@ -286,8 +274,6 @@ public class JamesMailetContextTest {
     @Test
     public void isLocalEmailShouldPropagateRrtExceptions() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
             .defaultDomain(Domain.of("any"))
             .build());
         domainList.addDomain(DOMAIN_COM);

@@ -19,10 +19,7 @@
  -->
 
 <domainlist class="org.apache.james.domainlist.jpa.JPADomainList">
-    <domainnames>
-        <domainname>james.linagora.com</domainname>
-    </domainnames>
-    <autodetect>true</autodetect>
-    <autodetectIP>true</autodetectIP>
+    <autodetect>false</autodetect>
+    <autodetectIP>false</autodetectIP>
     <defaultDomain>localhost</defaultDomain>
 </domainlist>

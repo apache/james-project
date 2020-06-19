@@ -93,12 +93,14 @@ public class DomainListConfiguration {
 
         public DomainListConfiguration build() {
             return new DomainListConfiguration(
-                autoDetectIp.orElse(true),
-                autoDetect.orElse(true),
+                autoDetectIp.orElse(false),
+                autoDetect.orElse(false),
                 defaultDomain.orElse(Domain.LOCALHOST),
                 configuredDomains.build());
         }
     }
+
+    public static DomainListConfiguration DEFAULT = builder().build();
 
     public static final String CONFIGURE_AUTODETECT = "autodetect";
     public static final String CONFIGURE_AUTODETECT_IP = "autodetectIP";
