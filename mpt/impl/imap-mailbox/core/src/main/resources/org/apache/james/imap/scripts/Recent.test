@@ -17,16 +17,18 @@
 # under the License.                                           #
 ################################################################
 C: A2 CREATE testmailbox
-S: A2 OK Create completed\.
-C: A3 SELECT testmailbox
-S: \* FLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft\)
-S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft \\\*\)\] Flags permitted\.
+S: A2 OK CREATE completed\.
+
+C: A5 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 0 EXISTS
 S: \* 0 RECENT
-S: \* OK \[UIDVALIDITY 1203172345\] UIDs valid
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[PERMANENTFLAGS .*
 S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT 1\] Predicted next UID
-S: A3 OK \[READ-WRITE\] SELECT completed\.
+S: A5 OK \[READ-WRITE\] SELECT completed\.
+
 C: A4 APPEND testmailbox {185+}
 C: From: Timothy Tayler <timothy@example.org>
 C: To: Samual Smith <samual@example.org>
@@ -37,32 +39,15 @@ C: This is a very simple email.
 C: 
 S: \* 1 EXISTS
 S: \* 1 RECENT
-S: A4 OK Append completed\.
-C: A5 SELECT testmailbox
-S: \* FLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft\)
-S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft \\\*\)\] Flags permitted\.
-S: \* 1 EXISTS
-S: \* 1 RECENT
-S: \* OK \[UNSEEN 1\] First unseen\.
-S: \* OK \[UIDVALIDITY 1203172345\] UIDs valid
-S: \* OK \[HIGHESTMODSEQ \d+\].*
-S: \* OK \[UIDNEXT 2\] Predicted next UID
-S: A5 OK \[READ-WRITE\] Select completed\.
+S: A4 OK .*
+
+C: A146 UID SEARCH RECENT
+S: \* SEARCH 1
+S: A146 OK SEARCH completed\.
+
 C: A6 FETCH 1 (FLAGS)
 S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
-S: A6 OK Fetch completed\.
-C: A7 FETCH 1 (BODY[])
-S: \* 1 FETCH \(FLAGS \(\\Seen \\Recent\) BODY\[\] {185}
-S: From: Timothy Tayler <timothy@example\.org>
-S: To: Samual Smith <samual@example\.org>
-S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
-S: Subject: A Simple Email
-S: 
-S: This is a very simple email\.
-S: \)
-S: A7 OK Fetch completed\.
-C: A8 FETCH 1 (FLAGS)
-S: \* 1 FETCH \(FLAGS \(\\Seen \\Recent\)\)
-S: A8 OK Fetch completed\.
+S: A6 OK FETCH completed\.
+
 C: A9 DELETE testmailbox
-S: A9 OK Delete completed\..
+S: A9 OK DELETE completed\.
