@@ -22,7 +22,7 @@
 <mailetcontainer enableJmx="false">
 
     <context>
-        <postmaster>postmaster@james.minet.net</postmaster>
+        <postmaster>postmaster@localhost</postmaster>
     </context>
 
     <spooler>

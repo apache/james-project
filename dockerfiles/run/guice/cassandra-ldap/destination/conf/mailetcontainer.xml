@@ -24,7 +24,7 @@
 <mailetcontainer enableJmx="true">
 
     <context>
-        <postmaster>postmaster@james.minet.net</postmaster>
+        <postmaster>postmaster@localhost</postmaster>
     </context>
 
     <spooler>
