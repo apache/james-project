@@ -42,7 +42,7 @@ Apache James offers Operators a range of servers for various use cases, includin
    time to gain deep expertise
  * An xref:server/advanced/index.adoc[Advanced Server] well-suited for Operators with
    advanced skills and resources who are not daunted by getting their hands dirty
-   with configurations and extensions
+   with configurations or using built-in extensions
 
 
 
