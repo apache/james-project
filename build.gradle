@@ -12,21 +12,15 @@ subprojects {
     apply plugin: 'maven-publish'
 
     repositories {
-        mavenLocal()
-        maven {
-            url = uri('https://jcenter.bintray.com')
-        }
-
-        maven {
-            url = uri('https://dl.bintray.com/netdava/maven')
-        }
-
+        jcenter()
+        mavenCentral()
         maven {
             url = uri('https://repository.apache.org/snapshots')
         }
     }
 
-    sourceCompatibility = '1.8'
+    sourceCompatibility = '11'
+    targetCompatibility = '11'
 
     configurations.all {
     }
