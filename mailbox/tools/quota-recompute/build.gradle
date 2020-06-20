@@ -3,11 +3,27 @@
  */
 
 dependencies {
+    implementation project(":james-core")
+    implementation project(":james-json")
+
+    implementation project(':apache-james-mailbox:apache-james-mailbox-api')
     implementation project(':apache-james-mailbox:apache-james-mailbox-store')
+
+    implementation project(':james-server:james-server-util')
     implementation project(':james-server:james-server-data-api')
+    implementation project(':james-server:james-server-task-api')
     implementation project(':james-server:james-server-task-json')
+
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.9'
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'com.github.steveash.guavate:guavate:1.0.0'
+    implementation 'org.slf4j:slf4j-api:1.7.27'
+    implementation 'javax.inject:javax.inject:1'
+
     testImplementation project(':james-json')
     testImplementation project(':testing-base')
+
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
 }

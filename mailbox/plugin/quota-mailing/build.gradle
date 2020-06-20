@@ -3,18 +3,25 @@
  */
 
 dependencies {
+    implementation project(":james-core")
+
     implementation project(':apache-james-mailbox:apache-james-mailbox-api')
     implementation project(':apache-mailet:apache-mailet-api')
+
+    implementation project(':event-sourcing:event-sourcing-pojo')
     implementation project(':event-sourcing:event-sourcing-core')
     implementation project(':event-sourcing:event-sourcing-event-store-api')
+
     implementation project(':james-server:james-server-data-api')
     implementation project(':james-server:james-server-filesystem-api')
     implementation project(':james-server:james-server-util')
+
     implementation 'com.github.spullara.mustache.java:compiler:0.9.6'
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.27'
     implementation 'org.slf4j:log4j-over-slf4j:1.7.27'
+
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
@@ -23,6 +30,7 @@ dependencies {
     testImplementation project(':james-server:james-server-data-memory')
     testImplementation project(':metrics:metrics-tests')
     testImplementation project(':testing-base')
+
     testImplementation 'org.mockito:mockito-core:3.0.0'
 }
 

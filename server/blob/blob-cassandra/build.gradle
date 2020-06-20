@@ -6,11 +6,23 @@ dependencies {
     implementation project(':james-backends-common:apache-james-backends-cassandra')
     implementation project(':james-server:james-server-blob:blob-api')
     implementation project(':james-server:james-server-util')
+
+    implementation project(':metrics:metrics-api')
+
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'commons-io:commons-io:2.6'
+    implementation 'org.apache.commons:commons-lang3:3.9'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
+    implementation 'com.github.fge:throwing-lambdas:0.5.0'
+
     testImplementation project(':james-backends-common:apache-james-backends-cassandra')
     testImplementation project(':james-server:james-server-blob:blob-api')
     testImplementation project(':metrics:metrics-tests')
     testImplementation project(':testing-base')
+
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
