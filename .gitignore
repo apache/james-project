@@ -7,3 +7,5 @@ dockerfiles/run/**/glowroot
 .m2
 test-run.log
 build
+
+.gradle
