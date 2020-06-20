@@ -149,6 +149,3 @@ Address rewriting changes an email address by rewriting specific fields in the m
 
 https://www.exim.org/exim-html-current/doc/html/spec_html/ch-address_rewriting.html
 
-
-:wq
- 
