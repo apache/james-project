@@ -3,6 +3,7 @@
  */
 
 dependencies {
+    implementation project(":james-core")
     implementation project(':apache-james-mailbox:apache-james-mailbox-api')
     implementation project(':apache-james-mailbox:apache-james-mailbox-event-json')
     implementation project(':apache-james-mailbox:apache-james-mailbox-tools-indexer')
@@ -12,13 +13,18 @@ dependencies {
     implementation project(':james-server:james-server-blob:blob-api')
     implementation project(':james-server:james-server-blob:blob-export-api')
     implementation project(':james-server:james-server-data-api')
+    implementation project(":james-server:james-server-task-api")
     implementation project(':james-server:james-server-task-json')
     implementation project(':james-server:james-server-util')
     implementation project(':james-server:james-server-webadmin-core')
+
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     implementation 'com.google.guava:guava:25.1-jre'
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.slf4j:slf4j-api:1.7.27'
+    implementation 'io.swagger:swagger-jaxrs:1.5.22'
+    implementation 'com.sparkjava:spark-core:2.9.1'
+
     testImplementation project(':james-server:james-server-dnsservice-test')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
@@ -39,6 +45,7 @@ dependencies {
     testImplementation project(':james-server:james-server-webadmin-core')
     testImplementation project(':metrics:metrics-tests')
     testImplementation project(':testing-base')
+
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.hamcrest:java-hamcrest:2.0.0.0'
