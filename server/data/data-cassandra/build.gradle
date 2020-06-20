@@ -3,16 +3,39 @@
  */
 
 dependencies {
+    implementation project(":james-core")
+    implementation project(":james-json")
+
     implementation project(':james-backends-common:apache-james-backends-cassandra')
+
+    implementation project(':event-sourcing:event-sourcing-pojo')
     implementation project(':event-sourcing:event-sourcing-event-store-cassandra')
+
+    implementation project(':james-server:james-server-task-api')
+    implementation project(':james-server:james-server-task-json')
+
     implementation project(':james-server:james-server-data-api')
     implementation project(':james-server:james-server-data-library')
     implementation project(':james-server:james-server-dnsservice-api')
+    implementation project(':james-server:james-server-util')
+    implementation project(':james-server:james-server-lifecycle-api')
+    implementation project(':james-server:james-server-mailrepository-api')
+
+    implementation 'org.scala-lang:scala-library:2.13.1'
+    implementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.9'
+    implementation 'commons-io:commons-io:2.6'
+    implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.google.guava:guava:25.1-jre'
+
+    implementation 'javax.inject:javax.inject:1'
     implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.27'
     implementation 'org.slf4j:log4j-over-slf4j:1.7.27'
     implementation 'org.slf4j:slf4j-api:1.7.27'
+
     testImplementation project(':james-backends-common:apache-james-backends-cassandra')
     testImplementation project(':event-sourcing:event-sourcing-event-store-cassandra')
     testImplementation project(':james-json')
@@ -20,6 +43,7 @@ dependencies {
     testImplementation project(':james-server:james-server-data-library')
     testImplementation project(':james-server:james-server-dnsservice-test')
     testImplementation project(':testing-base')
+
     testImplementation 'io.cucumber:cucumber-java:2.4.0'
     testImplementation 'io.cucumber:cucumber-junit:2.4.0'
     testImplementation 'io.cucumber:cucumber-picocontainer:2.4.0'

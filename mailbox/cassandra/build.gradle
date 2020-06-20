@@ -17,11 +17,13 @@ dependencies {
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
     implementation 'commons-io:commons-io:2.6'
-    implementation 'com.github.steveash.guavate:guavate:1.0.0'
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
+
+    implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.google.guava:guava:25.1-jre'
+
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.slf4j:slf4j-api:1.7.27'

@@ -8,10 +8,15 @@ dependencies {
     implementation project(':james-server:james-server-data-library')
     implementation project(':james-server:james-server-util')
     implementation project(':james-server:james-server-webadmin-core')
+
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.9'
+
+    implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.google.guava:guava:25.1-jre'
     implementation 'org.apache.commons:commons-lang3:3.9'
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.slf4j:slf4j-api:1.7.27'
+
     testImplementation project(':event-sourcing:event-sourcing-event-store-memory')
     testImplementation project(':james-server:james-server-data-file')
     testImplementation project(':james-server:james-server-data-library')
@@ -20,6 +25,7 @@ dependencies {
     testImplementation project(':james-server:james-server-webadmin-core')
     testImplementation project(':metrics:metrics-tests')
     testImplementation project(':testing-base')
+
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.hamcrest:java-hamcrest:2.0.0.0'
