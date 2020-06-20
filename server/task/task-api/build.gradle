@@ -22,6 +22,18 @@ dependencies {
 
 }
 
+// https://stackoverflow.com/questions/23261075/compiling-scala-before-alongside-java-with-gradle
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['src/main/scala', 'src/main/java']
+        }
+        java {
+            srcDirs = []
+        }
+    }
+}
+
 description = 'Apache James :: Server :: Task :: API'
 
 tasks.register('testsJar', Jar) {
