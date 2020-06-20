@@ -4,6 +4,10 @@
 
 dependencies {
     implementation project(':apache-mailet:apache-mailet-api')
+    implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'com.sun.mail:javax.mail:1.6.2'
+    implementation 'org.apache.commons:commons-lang3:3.9'
+
     testImplementation project(':james-server:james-server-core')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':testing-base')
