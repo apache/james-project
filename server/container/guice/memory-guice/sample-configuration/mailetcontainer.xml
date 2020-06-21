@@ -26,7 +26,7 @@
     <context>
         <!-- When the domain part of the postmaster mailAddress is missing, the default domain is appended.
         You can configure it to (for example) <postmaster>postmaster@myDomain.com</postmaster> -->
-        <postmaster>postmaster@localhost</postmaster>
+        <postmaster>postmaster</postmaster>
     </context>
 
     <spooler>
@@ -47,9 +47,12 @@
             <mailet match="All" class="MetricsMailet">
                 <metricName>mailetContainerErrors</metricName>
             </mailet>
-            <mailet match="All" class="Bounce"/>
+            <mailet match="All" class="Bounce">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
             <mailet match="All" class="ToRepository">
                 <repositoryPath>memory://var/mail/error/</repositoryPath>
+                <onMailetException>ignore</onMailetException>
             </mailet>
         </processor>
 
@@ -68,23 +71,27 @@
             <mailet match="All" class="RecipientRewriteTable">
                 <errorProcessor>rrt-error</errorProcessor>
             </mailet>
-            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
-            <mailet match="RecipientIsLocal" class="Sieve"/>
-            <mailet match="RecipientIsLocal" class="AddDeliveredToHeader"/>
-            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>
-            <mailet match="RecipientIsLocal" class="LocalDelivery"/>
+            <mailet match="RecipientIsLocal" class="ToProcessor">
+                <processor>local-delivery</processor>
+            </mailet>
             <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>
                 <notice>550 - Requested action not taken: no such user here</notice>
             </mailet>
-
             <mailet match="relay-allowed" class="ToProcessor">
                 <processor>relay</processor>
             </mailet>
-
             <mailet match="All" class="ToProcessor">
                 <processor>relay-denied</processor>
             </mailet>
+        </processor>
+
+        <processor state="local-delivery" enableJmx="true">
+            <mailet match="All" class="org.apache.james.jmap.mailet.VacationMailet"/>
+            <mailet match="All" class="Sieve"/>
+            <mailet match="All" class="AddDeliveredToHeader"/>
+            <mailet match="All" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>
+            <mailet match="All" class="LocalDelivery"/>
         </processor>
 
         <processor state="relay" enableJmx="true">

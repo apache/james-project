@@ -18,9 +18,11 @@ EXPOSE 25 110 143 465 587 993 4000 8000
 
 WORKDIR /root
 
+RUN apt-get update && apt-get install -y unzip
+
 # Get data we need to run James : build results and configuration
-ADD destination/james-server-memory-guice.jar /root/james-server.jar
-ADD destination/james-server-memory-guice.lib /root/james-server-memory-guice.lib
+ADD destination/james-server-memory-guice.zip /root
+RUN unzip james-server-memory-guice.zip && cp -r /root/james-server-memory-guice/* /root
 ADD destination/james-server-cli.jar /root/james-cli.jar
 ADD destination/james-server-cli.lib /root/james-server-cli.lib
 ADD destination/conf /root/conf
