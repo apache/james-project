@@ -21,7 +21,6 @@ package org.apache.james.eventsourcing.eventstore
 import org.apache.james.eventsourcing.{AggregateId, Event}
 
 import scala.annotation.varargs
-import scala.jdk.CollectionConverters._
 import org.reactivestreams.Publisher
 
 trait EventStore {
