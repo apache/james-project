@@ -126,12 +126,12 @@ if [ $? -eq 0 ]; then
 
    if [ -d "$MEMORY_DESTINATION" ]; then
       echo "Copying memory JARs"
-      cp server/container/guice/memory-guice/target/james-server-memory-guice.jar $MEMORY_DESTINATION || true
-      cp -r server/container/guice/memory-guice/target/james-server-memory-guice.lib $MEMORY_DESTINATION || true
+      cp server/container/guice/memory-guice/target/james-server-memory-guice.zip $MEMORY_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $MEMORY_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $MEMORY_DESTINATION || true
       mkdir -p ${MEMORY_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${MEMORY_DESTINATION}/glowroot || true
+      unzip $MEMORY_DESTINATION/james-server-memory-guice.zip
    fi
 
    if [ -d "$SPRING_DESTINATION" ]; then

@@ -39,7 +39,6 @@ under the License.
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <idleTimeInterval>120</idleTimeInterval>
         <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
-        <disabledCaps>ACL|MOVE</disabledCaps>
         <enableIdle>true</enableIdle>
     </imapserver>
     <imapserver enabled="true">
@@ -58,7 +57,6 @@ under the License.
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <idleTimeInterval>120</idleTimeInterval>
         <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
-        <disabledCaps>ACL|MOVE</disabledCaps>
         <enableIdle>true</enableIdle>
     </imapserver>
 </imapservers>
