@@ -3,8 +3,20 @@
  */
 
 dependencies {
+    implementation project(':james-core')
+    implementation project(':james-server:james-server-lifecycle-api')
+    implementation project(':james-server:james-server-mailrepository-api')
     implementation project(':james-server:james-server-data-api')
     implementation project(':james-server:james-server-data-library')
+    implementation project(':james-server:james-server-dnsservice-api')
+
+    implementation 'com.github.fge:throwing-lambdas:0.5.0'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
+    implementation 'com.github.steveash.guavate:guavate:1.0.0'
+    implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'org.slf4j:slf4j-api:1.7.27'
+    implementation 'javax.inject:javax.inject:1'
+
     testImplementation project(':apache-mailet:apache-mailet-test')
     testImplementation project(':event-sourcing:event-sourcing-event-store-memory')
     testImplementation project(':james-server:james-server-core')
@@ -13,6 +25,7 @@ dependencies {
     testImplementation project(':james-server:james-server-dnsservice-test')
     testImplementation project(':james-server:james-server-mailrepository-memory')
     testImplementation project(':testing-base')
+
     testImplementation 'io.cucumber:cucumber-java:2.4.0'
     testImplementation 'io.cucumber:cucumber-junit:2.4.0'
     testImplementation 'io.cucumber:cucumber-picocontainer:2.4.0'
