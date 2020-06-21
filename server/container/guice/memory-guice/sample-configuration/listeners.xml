@@ -18,24 +18,14 @@
   under the License.                                           
  -->
 
-<lmtpservers>
+<!-- Read https://james.apache.org/server/config-listeners.html for further details -->
 
-    <lmtpserver enabled="false">
-        <jmxName>lmtpserver</jmxName>
-        <!-- LMTP should not be reachable from outside your network so bind it to loopback-->
-        <bind>127.0.0.1:1024</bind>
-        <connectionBacklog>200</connectionBacklog>
-        <connectiontimeout>1200</connectiontimeout>
-        <!-- Set the maximum simultaneous incoming connections for this service -->
-        <connectionLimit>0</connectionLimit>
-        <!-- Set the maximum simultaneous incoming connections per IP for this service -->
-        <connectionLimitPerIP>0</connectionLimitPerIP>
-        <!--  This sets the maximum allowed message size (in kilobytes) for this -->
-        <!--  LMTP service. If unspecified, the value defaults to 0, which means no limit. -->
-        <maxmessagesize>0</maxmessagesize>
-        <handlerchain>
-            <handler class="org.apache.james.lmtpserver.CoreCmdHandlerLoader"/>
-        </handlerchain>
-    </lmtpserver>
-
-</lmtpservers>
+<listeners>
+  <listener>
+    <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
+    <async>true</async>
+  </listener>
+  <preDeletionHook>
+    <class>org.apache.james.vault.DeletedMessageVaultHook</class>
+  </preDeletionHook>
+</listeners>
