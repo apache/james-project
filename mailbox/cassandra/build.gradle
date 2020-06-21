@@ -28,24 +28,44 @@ dependencies {
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
-    testImplementation project(':james-backends-common:apache-james-backends-cassandra')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-store', configuration: 'tests')
+    testImplementation project(path: ':james-json', configuration: 'tests')
+
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-tools-quota-recompute')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-tools-quota-recompute')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-tools-quota-recompute', configuration: 'tests')
+    testImplementation project(':james-server:james-server-lifecycle-api')
     testImplementation project(':james-server:james-server-blob:blob-cassandra')
-    testImplementation project(':james-json')
+    testImplementation project(':james-server:james-server-data-api')
+    testImplementation project(':james-server:james-server-data-library')
     testImplementation project(':james-server:james-server-data-cassandra')
     testImplementation project(':james-server:james-server-task-memory')
+    testImplementation project(':metrics:metrics-api')
     testImplementation project(':metrics:metrics-tests')
     testImplementation project(':testing-base')
+    testImplementation project(":james-server:james-server-util")
 
+    testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     testImplementation 'com.google.inject:guice:4.2.2'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
+
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
+    // TODO: Move test helpers to java-test-fixtures and change this back to runtimeOnly
+    //    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 description = 'Apache James :: Mailbox :: Cassandra'
