@@ -19,11 +19,13 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+<!-- Read https://james.apache.org/server/config-imap4.html for further details -->
+
 
 <imapservers>
     <imapserver enabled="true">
         <jmxName>imapserver</jmxName>
-        <bind>0.0.0.0:1143</bind>
+        <bind>0.0.0.0:143</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="false" startTLS="true">
             <!-- To create a new keystore execute:
@@ -35,10 +37,14 @@ under the License.
         </tls>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
+        <idleTimeInterval>120</idleTimeInterval>
+        <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
+        <disabledCaps>ACL|MOVE</disabledCaps>
+        <enableIdle>true</enableIdle>
     </imapserver>
     <imapserver enabled="true">
         <jmxName>imapserver-ssl</jmxName>
-        <bind>0.0.0.0:1993</bind>
+        <bind>0.0.0.0:993</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="true" startTLS="false">
             <!-- To create a new keystore execute:
@@ -50,5 +56,9 @@ under the License.
         </tls>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
+        <idleTimeInterval>120</idleTimeInterval>
+        <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
+        <disabledCaps>ACL|MOVE</disabledCaps>
+        <enableIdle>true</enableIdle>
     </imapserver>
 </imapservers>
