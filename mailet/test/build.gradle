@@ -3,14 +3,21 @@
  */
 
 dependencies {
+    implementation project(':james-core')
+    implementation project(':apache-mailet:apache-mailet-api')
     implementation project(':apache-mailet:apache-mailet-api')
     implementation project(':james-server:james-server-util')
+
+    implementation 'org.apache.james:apache-mime4j-core:0.8.3'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'com.github.fge:throwing-lambdas:0.5.0'
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'org.slf4j:slf4j-api:1.7.27'
+
     testImplementation project(':apache-mailet:apache-mailet-api')
     testImplementation project(':testing-base')
+
     testImplementation 'org.mockito:mockito-core:3.0.0'
 }
 
