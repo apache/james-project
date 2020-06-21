@@ -6,13 +6,31 @@ dependencies {
     implementation project(':james-backends-common:apache-james-backends-cassandra')
     implementation project(':apache-james-mailbox:apache-james-mailbox-api')
     implementation project(':apache-james-mailbox:apache-james-mailbox-event-json')
+
+    implementation 'com.typesafe.play:play-json_2.13:2.8.1'
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    implementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
+    implementation 'com.github.fge:throwing-lambdas:0.5.0'
+    implementation 'javax.inject:javax.inject:1'
+
     testImplementation project(':james-backends-common:apache-james-backends-cassandra')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
     testImplementation project(':testing-base')
+
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
 }
 
+test {
+    useJUnitPlatform()
+}
 description = 'Apache James :: Mailbox :: Event :: In Cassandra implementation'
 
 tasks.register('testsJar', Jar) {

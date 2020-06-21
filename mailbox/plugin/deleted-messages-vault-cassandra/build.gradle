@@ -3,16 +3,43 @@
  */
 
 dependencies {
+    implementation project(':james-core')
+    implementation project(':james-server:james-server-util')
+    implementation project(':james-server:james-server-blob:blob-api')
     implementation project(':james-backends-common:apache-james-backends-cassandra')
+    implementation project(':apache-james-mailbox:apache-james-mailbox-api')
     implementation project(':apache-james-mailbox:apache-james-mailbox-deleted-messages-vault')
+
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.9'
+    implementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
+    implementation 'com.sun.mail:javax.mail:1.6.2'
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'org.slf4j:slf4j-api:1.7.27'
+
+    testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
     testImplementation project(':james-backends-common:apache-james-backends-cassandra')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-deleted-messages-vault')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-deleted-messages-vault', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':testing-base')
+
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 description = 'Apache James :: Mailbox :: Plugin :: Deleted Messages Vault :: Cassandra'
