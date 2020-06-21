@@ -1,37 +1,20 @@
 = Guice-Memory Module How-to
 
-== Building
-
-=== Requirements
+== Requirements
 
  * Java 11 SDK
- * Docker
  * Maven 3
-
-=== Building the artifacts
-
-An usual compilation using maven will produce two artifacts into target directory:
-
- * james-server-memory-guice-${version}.jar
- * james-server-memory-guice-${version}.lib
-
- You can for example run in the base of this git repository:
-
- ```
- mvn clean install
- ```
 
 == Running
 
-=== James Launch
-
 To run james, you have to create a directory containing required configuration files.
 
-James requires the configuration to be in a subfolder of working directory that is called **conf**. A sample directory
-(appropriately named sample-directory) is provided with some default values you may need to replace. You will need to
-rename it into **conf** if you intend to use it.
+James requires the configuration to be in a subfolder of working directory that is called
+**conf**. A sample directory is provided with some default values you may need to replace.
+You will need to update its content to match your needs.
 
 You also need to generate a keystore with the following command:
+
 [source]
 ----
 $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
@@ -41,5 +24,7 @@ Once everything is set up, you just have to run the jar with:
 
 [source]
 ----
-$ java -Dworking.directory=. -jar target/james-server-memory-guice-${version}.jar
+$ java -Dworking.directory=. -jar james-server-memory-guice.jar
 ----
+
+Note that binding ports below 1024 requires administrative rights.
