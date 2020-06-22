@@ -42,7 +42,7 @@ active contributors are willing to raise the quality level of this component, an
 mature. Or at least are willing to support users.
 
 Users should have low expectations regarding experimental artifacts or features. They are encouraged to contribute to them 
-in order to raise its code quality.
+in order to raise its quality.
 
 By **unsupported** we mean that an artifact or feature do not match most of the *mature* quality conditions. Active 
 contributors do not feel confident delivering support for it. This artifact or feature might be deprecated and 
