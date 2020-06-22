@@ -27,7 +27,12 @@ To achieve that, we will extract the EventBus out of mailbox-api in order to mak
 
 ## Consequences
 
-Mailbox-api would leverage the EventBus to keep exposing the MailboxListener api without changes on top of the generified EventBus. 
-We need to define a common Event interface in eventbus-api, then each event-bus usage will define its own sealed event hierarchy implementing Event. 
+Mailbox-api would leverage the EventBus to keep exposing the MailboxListener api without changes on top of the generified EventBus. We need to define a common Event interface in eventbus-api, 
+then each event-bus usage will define its own sealed event hierarchy implementing Event.
+
+Dead-letter storage needs to be reworked in order to store events of various event bus separately (which is needed for knowing which EventBus the event should be reprocessed on 
+and knowing which sealed hierarchy an event belongs to.)
+
+As a consequence, we will need a Cassandra data migration to add the EventBus name as part of the EventDeadLetter primary key. 
 
 We could rely on the EventBus reliability for building any feature in James.
