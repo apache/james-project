@@ -5,6 +5,10 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    tests
+}
+
 dependencies {
     implementation project(":james-core")
     implementation project(":james-json")
@@ -13,7 +17,7 @@ dependencies {
     api project(':apache-james-mailbox:apache-james-mailbox-api')
     implementation project(':apache-james-mailbox:apache-james-mailbox-store')
     implementation project(':james-server:james-server-blob:blob-api')
-    implementation project(':james-server:james-server-task-api')
+    api project(':james-server:james-server-task-api')
     implementation project(':james-server:james-server-task-json')
     implementation project(':james-server:james-server-util')
 
@@ -76,6 +80,10 @@ description = 'Apache James :: Mailbox :: Cassandra'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

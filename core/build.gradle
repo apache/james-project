@@ -5,6 +5,10 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    tests
+}
+
 dependencies {
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
@@ -35,6 +39,10 @@ description = 'Apache James :: Core Domain Objects'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

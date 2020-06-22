@@ -18,6 +18,10 @@ plugins {
 
 apply plugin: 'openjpa'
 
+configurations {
+    tests
+}
+
 dependencies {
     implementation project(':james-core')
     implementation project(':james-backends-common:apache-james-backends-jpa')
@@ -63,6 +67,10 @@ description = 'Apache James :: Server :: Data :: JPA Persistence'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

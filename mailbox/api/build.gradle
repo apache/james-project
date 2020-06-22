@@ -12,6 +12,7 @@ configurations {
 dependencies {
     implementation project(':james-core')
     implementation project(':james-server:james-server-task-api')
+
     implementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
