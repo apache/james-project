@@ -419,6 +419,8 @@ Will schedule a task for fixing inconsistencies for the mailbox deduplicated obj
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
+The `I-KNOW-WHAT-I-M-DOING` header is mandatory (you can read more information about it in the warning section below).
+
 The scheduled task will have the following type `solve-mailbox-inconsistencies` and the following `additionalInformation`:
 
 ```
