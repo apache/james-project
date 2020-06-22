@@ -105,7 +105,7 @@ public class ICALToJsonAttribute extends GenericMailet {
     public static final AttributeName DEFAULT_SOURCE = AttributeName.of(DEFAULT_SOURCE_ATTRIBUTE_NAME);
     public static final AttributeName DEFAULT_RAW_SOURCE = AttributeName.of(DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME);
     public static final AttributeName DEFAULT_DESTINATION = AttributeName.of(DEFAULT_DESTINATION_ATTRIBUTE_NAME);
-    public static final String REPLY_TO_HEADER_NAME = "replyTo";
+    public static final String REPLY_TO_HEADER_NAME = "Reply-To";
 
     static {
         ICal4JConfigurator.configure();
