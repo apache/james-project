@@ -174,7 +174,7 @@ public class SolveMailboxInconsistenciesService {
         }
     }
 
-    static class Context {
+    public static class Context {
         static class Builder {
             private Optional<Long> processedMailboxEntries;
             private Optional<Long> processedMailboxPathEntries;
@@ -366,7 +366,7 @@ public class SolveMailboxInconsistenciesService {
         this.versionManager = versionManager;
     }
 
-    Mono<Result> fixMailboxInconsistencies(Context context) {
+    public Mono<Result> fixMailboxInconsistencies(Context context) {
         assertValidVersion();
         return Flux.concat(
                 processMailboxDaoInconsistencies(context),
