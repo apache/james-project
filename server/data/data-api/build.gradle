@@ -5,6 +5,10 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    tests
+}
+
 dependencies {
     implementation project(':james-core')
     api project(':james-server:james-server-mailrepository-api')
@@ -16,8 +20,13 @@ dependencies {
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
-    testImplementation project(':testing-base')
+    testImplementation project(':james-server:james-server-util')
+
     testImplementation 'org.slf4j:jcl-over-slf4j:1.7.27'
+    testImplementation 'com.github.fge:throwing-lambdas:0.5.0'
+    testImplementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -33,6 +42,10 @@ description = 'Apache James :: Server :: Data  :: API'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)
