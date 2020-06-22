@@ -6,6 +6,10 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    tests
+}
+
 dependencies {
     implementation project(":james-core")
 
@@ -16,9 +20,9 @@ dependencies {
     implementation project(':event-sourcing:event-sourcing-event-store-api')
 
     api project(':james-server:james-server-data-api')
-    implementation project(':james-server:james-server-dnsservice-api')
-    implementation project(':james-server:james-server-filesystem-api')
-    implementation project(':james-server:james-server-lifecycle-api')
+    api project(':james-server:james-server-dnsservice-api')
+    api project(':james-server:james-server-filesystem-api')
+    api project(':james-server:james-server-lifecycle-api')
     implementation project(':james-server:james-server-util')
 
     implementation 'org.scala-lang:scala-library:2.13.1'
@@ -35,7 +39,7 @@ dependencies {
     implementation 'org.slf4j:log4j-over-slf4j:1.7.27'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
-    testImplementation project(':james-server:james-server-data-api')
+    testImplementation project(path: ':james-server:james-server-data-api', configuration: 'tests')
     testImplementation project(':james-server:james-server-dnsservice-test')
     testImplementation project(':testing-base')
 
@@ -60,6 +64,10 @@ description = 'Apache James :: Server :: Data :: Library'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)
