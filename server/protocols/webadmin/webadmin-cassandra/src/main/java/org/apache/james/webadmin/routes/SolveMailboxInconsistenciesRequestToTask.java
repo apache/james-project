@@ -35,8 +35,9 @@ public class SolveMailboxInconsistenciesRequestToTask extends TaskFromRequestReg
     public SolveMailboxInconsistenciesRequestToTask(SolveMailboxInconsistenciesService service) {
         super(REGISTRATION_KEY,
             request -> {
-                Preconditions.checkArgument(request.headers("I-KNOW-WHAT-I-M-DOING")
-                        .equalsIgnoreCase("ALL-SERVICES-ARE-OFFLINE"),
+                String header = request.headers("I-KNOW-WHAT-I-M-DOING");
+                Preconditions.checkArgument(header != null
+                        && header.equalsIgnoreCase("ALL-SERVICES-ARE-OFFLINE"),
                     "Due to concurrency risks, a `I-KNOW-WHAT-I-M-DOING` header should be positioned to " +
                         "`ALL-SERVICES-ARE-OFFLINE` in order to prevent accidental calls. " +
                         "Check the documentation for details.");

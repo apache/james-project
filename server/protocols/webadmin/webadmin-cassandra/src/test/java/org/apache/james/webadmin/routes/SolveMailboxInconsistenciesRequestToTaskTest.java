@@ -42,7 +42,6 @@ import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -148,7 +147,6 @@ public class SolveMailboxInconsistenciesRequestToTaskTest {
     }
 
     @Test
-    @Disabled("JAMES-3262 : returns 500, should fix")
     void postShouldFailWhenIKnowWhatImDoingHeaderIsMissing() {
         given()
             .queryParam("action", "SolveInconsistencies")
