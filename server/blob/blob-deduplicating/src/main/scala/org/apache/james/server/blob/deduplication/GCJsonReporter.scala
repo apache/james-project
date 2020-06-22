@@ -19,7 +19,7 @@
 package org.apache.james.server.blob.deduplication
 
 import org.apache.james.blob.api.BlobId
-import org.apache.james.server.blob.deduplication.RelatedAction.{Delete, GarbageCollect, Init, Save}
+import org.apache.james.server.blob.deduplication.RelatedAction.{GarbageCollect, Init, Save}
 import play.api.libs.json.{JsString, Json, Writes}
 
 import scala.collection.immutable.TreeSet
@@ -29,7 +29,7 @@ sealed trait RelatedAction
 object RelatedAction {
   case object Init extends RelatedAction
   case class Save(blobId: BlobId, reference: ExternalID) extends RelatedAction
-  case class Delete(reference: ExternalID) extends RelatedAction
+  case class Dereference(reference: ExternalID) extends RelatedAction
   case object GarbageCollect extends RelatedAction
 }
 
@@ -44,14 +44,14 @@ object JsonReport {
                    `garbage-collection-iterations`: TreeSet[String],
                    blobs: Seq[BlobId],
                    references: Seq[Reference],
-                   deletions: Seq[Dereference])
+                   dereferences: Seq[Dereference])
 
 
   //action
   implicit val relatedActionWrites: Writes[RelatedAction] = {
     case Init => JsString("init")
     case Save(blobId, reference) => JsString(s"save(blob = ${blobId.asString()}, reference = ${reference.id})")
-    case Delete(reference) => JsString(s"delete(reference = ${reference.id})")
+    case RelatedAction.Dereference(reference) => JsString(s"dereference(reference = ${reference.id})")
     case GarbageCollect => JsString(s"garbageCollect")
   }
   //generation
@@ -134,7 +134,7 @@ object GCJsonReporter {
       `garbage-collection-iterations` = lastState.`garbage-collection-iterations` + gcReports.iteration.asString,
       blobs = lastState.blobs.diff(gcReports.blobsToDelete.map { case (generation, blobId) => JsonReport.BlobId(blobId.asString, generation) }.toSeq),
       references = lastState.references.filterNot(reference => blobsToDeleteAsString.contains(reference.blob)),
-      deletions = lastState.deletions.filterNot(dereference => blobsToDeleteAsString.contains(dereference.blob)))
+      dereferences = lastState.dereferences.filterNot(dereference => blobsToDeleteAsString.contains(dereference.blob)))
   }
 
   private def stateForDereference(reportStates: JsonReport, dereference: Dereference) = {
@@ -143,14 +143,14 @@ object GCJsonReporter {
     val iterations = previousState.`garbage-collection-iterations`
     val references = previousState.references
     val lastIteration = previousState.`garbage-collection-iterations`.last
-    val dereferences = previousState.deletions :+ JsonReport.Dereference(dereference.blob.asString(), dereference.generation, lastIteration)
+    val dereferences = previousState.dereferences :+ JsonReport.Dereference(dereference.blob.asString(), dereference.generation, lastIteration)
 
-    JsonReport.State(Delete(dereference.externalId),
+    JsonReport.State(RelatedAction.Dereference(dereference.externalId),
       `reference-generations` = referenceGenerations,
       `garbage-collection-iterations` = iterations,
       blobs = previousState.blobs,
       references = references,
-      deletions = dereferences)
+      dereferences = dereferences)
   }
 
   private def stateForReference(reportStates: JsonReport, add: Reference) = {
@@ -163,8 +163,8 @@ object GCJsonReporter {
     else
       previousState.blobs :+ JsonReport.BlobId(add.blobId.asString(), add.generation)
     val references = previousState.references :+ JsonReport.Reference(add.externalId.id, add.blobId.asString(), add.generation)
-    val deletions = previousState.deletions
+    val dereferences = previousState.dereferences
 
-    JsonReport.State(Save(add.blobId, add.externalId), referenceGenerations, iterations, blobs, references, deletions)
+    JsonReport.State(Save(add.blobId, add.externalId), referenceGenerations, iterations, blobs, references, dereferences)
   }
 }

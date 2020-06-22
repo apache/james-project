@@ -5,7 +5,7 @@
     "garbage-collection-iterations" : [ "0" ],
     "blobs" : [ ],
     "references" : [ ],
-    "deletions" : [ ]
+    "dereferences" : [ ]
   }, {
     "related-action" : "save(blob = 0_myHash, reference = message1)",
     "reference-generations" : [ "0" ],
@@ -19,7 +19,7 @@
       "blob" : "0_myHash",
       "reference-generation" : "0"
     } ],
-    "deletions" : [ ]
+    "dereferences" : [ ]
   }, {
     "related-action" : "garbageCollect",
     "reference-generations" : [ "0" ],
@@ -33,9 +33,9 @@
       "blob" : "0_myHash",
       "reference-generation" : "0"
     } ],
-    "deletions" : [ ]
+    "dereferences" : [ ]
   }, {
-    "related-action" : "delete(reference = message1)",
+    "related-action" : "dereference(reference = message1)",
     "reference-generations" : [ "0", "1" ],
     "garbage-collection-iterations" : [ "0", "1" ],
     "blobs" : [ {
@@ -47,7 +47,7 @@
       "blob" : "0_myHash",
       "reference-generation" : "0"
     } ],
-    "deletions" : [ {
+    "dereferences" : [ {
       "blob" : "0_myHash",
       "reference-generation" : "1",
       "garbage-collection-iterations" : "1"
@@ -58,6 +58,6 @@
     "garbage-collection-iterations" : [ "0", "1", "2" ],
     "blobs" : [ ],
     "references" : [ ],
-    "deletions" : [ ]
+    "dereferences" : [ ]
   } ]
 }
