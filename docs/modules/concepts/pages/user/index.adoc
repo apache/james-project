@@ -59,7 +59,7 @@ An Integrator does **not** need to download the source code or compile James.
 == Developer
 
 A **Developer** uses the James codebase, executes a build using the provided
-build system (Maven), and may edit and deploy the source code.
+build system (Maven), may edit the source code and deploy the built artifacts.
 
 
 
