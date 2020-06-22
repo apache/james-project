@@ -29,7 +29,7 @@ leveraging modern noSQL infrastructure to ease scaling.
 We currently deliver as part of the Apache James server:
 
  - **Spring server** (`server/app`): barely maintained, Spring server exposes configuration allowing 
-class level overides, resulting in untested componant combinaison leading to unexpected runtime errors. 
+class level overrides, resulting in untested component combination leading to unexpected runtime errors. 
 Its usage requires configuration to adapt it to the user use cases, wich can be 
 not obvious for people with limited knowledge/resources, and can discourage self hosting usages.
 
