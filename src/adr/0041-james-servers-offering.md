@@ -30,7 +30,7 @@ We currently deliver as part of the Apache James server:
 
  - **Spring server** (`server/app`): barely maintained, Spring server exposes configuration allowing 
 class level overrides, resulting in untested component combination leading to unexpected runtime errors. 
-Its usage requires configuration to adapt it to the user use cases, wich can be 
+Its usage requires configuration to adapt it to the user use cases, which can be 
 not obvious for people with limited knowledge/resources, and can discourage self hosting usages.
 
 Guice servers includes:
