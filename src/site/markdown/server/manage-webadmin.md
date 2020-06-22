@@ -271,7 +271,7 @@ Response codes:
 
  - 204: The redirection now exists
  - 400: `source.domain.tld` or `destination.domain.tld` have an invalid syntax
- - 400: source, domain and destination domain are the same
+ - 400: `source, domain` and `destination domain` are the same
  - 404: `source.domain.tld` are not part of handled domains.
 
 ### Delete an alias for a domain
@@ -3302,6 +3302,7 @@ Response codes:
 
  - 200: Success. A JSON representing this event is returned.
  - 400: Invalid group name or `insertionId`
+ - 404: No event with this `insertionId`
 
 ### Deleting an event
 
@@ -3319,7 +3320,7 @@ Response codes:
 ### Redeliver all events
 
 ```
-curl -XPOST http://ip:port/events/deadLetter
+curl -XPOST http://ip:port/events/deadLetter?action=redeliver
 ```
 
 Will create a task that will attempt to redeliver all events stored in "Event Dead Letter".
@@ -3351,7 +3352,7 @@ Response codes:
 ### Redeliver a single event
 
 ```
-curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/6e0dd59d-660e-4d9b-b22f-0354479f47b4
+curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/6e0dd59d-660e-4d9b-b22f-0354479f47b4?action=reDeliver
 ```
 
 Will create a task that will attempt to redeliver a single event of a particular group stored in "Event Dead Letter".
@@ -3721,7 +3722,7 @@ Response codes:
 A list of all tasks can be retrieved:
 
 ```
-curl -XGET /tasks
+curl -XGET http://ip:port/tasks
 ```
 
 Will return a list of Execution reports
@@ -3729,7 +3730,7 @@ Will return a list of Execution reports
 One can filter the above results by status. For example:
 
 ```
-curl -XGET /tasks?status=inProgress
+curl -XGET http://ip:port/tasks?status=inProgress
 ```
 
 Will return a list of Execution reports that are currently in progress.
