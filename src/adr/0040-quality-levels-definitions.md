@@ -27,6 +27,7 @@ we need to better define some quality levels.
 For a given artifact or feature, by **mature** we mean that:
 
  - *interfaces* in components need a contract test suite
+ - *interfaces* have several implementations
  - *implementation* of these interfaces need to pass this contract test suite which provides unit tests
  - Decent integration tests coverage is needed
  - Performance tests need to be conducted out
@@ -37,7 +38,7 @@ For a given artifact or feature, by **mature** we mean that:
 This is the maximum quality level delivered by the James project. Users should feel confident using these
 artifacts or features.
 
-By **experimental** we designate a part of the code not matching yet the above requirements. However some
+By **experimental** we designate an artifact or feature not matching yet the above requirements. However some
 active contributors are willing to raise the quality level of this component, and eventually make it 
 mature. Or at least are willing to support users.
 
