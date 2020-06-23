@@ -10,14 +10,13 @@ configurations {
 }
 
 dependencies {
+    api project(':james-core')
     api project(':james-server:james-server-lifecycle-api')
     api project(':james-server:james-server-filesystem-api')
+    api project(':james-server:james-server-protocols-library')
+    api project(':protocols:protocols-managesieve')
+    api project(':protocols:protocols-netty')
 
-    implementation project(':james-core')
-    implementation project(':james-server:james-server-protocols-library')
-    implementation project(':james-server:james-server-util')
-    implementation project(':protocols:protocols-managesieve')
-    implementation project(':protocols:protocols-netty')
     implementation project(':james-server:james-server-util')
 
     implementation 'io.netty:netty:3.10.6.Final'

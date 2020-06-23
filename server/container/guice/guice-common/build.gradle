@@ -10,28 +10,28 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-core')
-    implementation project(':james-json')
-    implementation project(':james-server:james-server-core')
-    implementation project(':james-server:james-server-data-api')
-    implementation project(':james-server:james-server-data-memory')
-    implementation project(':james-server:james-server-dnsservice-api')
-    implementation project(':james-server:james-server-dnsservice-dnsjava')
-    implementation project(':james-server:james-server-filesystem-api')
-    implementation project(':james-server:james-server-guice:james-server-guice-utils')
-    implementation project(':james-server:james-server-guice:james-server-guice-configuration')
-    implementation project(':james-server:james-server-guice:james-server-guice-mailet')
-    implementation project(':james-server:james-server-guice:james-server-guice-netty')
-    implementation project(':james-server:james-server-mailrepository-memory')
-    implementation project(':james-server:james-server-guice:james-server-onami')
-    implementation project(':james-server:james-server-protocols-library')
-    implementation project(':james-server:james-server-queue-api')
-    implementation project(':james-server:james-server-task-json')
-    implementation project(':james-server:james-server-task-memory')
-    implementation project(':james-server:james-server-util')
-    implementation project(':metrics:metrics-api')
-    implementation project(':metrics:metrics-dropwizard')
-    implementation project(':protocols:protocols-api')
+    api project(':james-core')
+    api project(':james-json')
+    api project(':james-server:james-server-data-api')
+    api project(':james-server:james-server-dnsservice-api')
+    api project(':james-server:james-server-filesystem-api')
+    api project(':james-server:james-server-queue-api')
+    api project(':james-server:james-server-core')
+    api project(':james-server:james-server-data-memory')
+    api project(':james-server:james-server-dnsservice-dnsjava')
+    api project(':james-server:james-server-guice:james-server-guice-utils')
+    api project(':james-server:james-server-guice:james-server-guice-configuration')
+    api project(':james-server:james-server-guice:james-server-guice-mailet')
+    api project(':james-server:james-server-guice:james-server-guice-netty')
+    api project(':james-server:james-server-mailrepository-memory')
+    api project(':james-server:james-server-guice:james-server-onami')
+    api project(':james-server:james-server-protocols-library')
+    api project(':james-server:james-server-task-json')
+    api project(':james-server:james-server-task-memory')
+    api project(':james-server:james-server-util')
+    api project(':protocols:protocols-api')
+    api project(':metrics:metrics-api')
+    api project(':metrics:metrics-dropwizard')
 
     implementation 'io.dropwizard.metrics:metrics-core:4.1.0'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
@@ -52,10 +52,15 @@ dependencies {
     testImplementation project(':james-server:james-server-guice:james-server-guice-smtp')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':james-server:james-server-util')
+    testImplementation project(':apache-mailet:apache-mailet-test')
 
     testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
     testImplementation 'io.projectreactor:reactor-test:3.3.4.RELEASE'
+    testImplementation 'ch.qos.logback:logback-classic:1.2.3'
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.awaitility:awaitility:3.1.6'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

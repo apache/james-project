@@ -10,19 +10,18 @@ configurations {
 }
 
 dependencies {
+    api project(':james-core')
     api project(':james-server:james-server-lifecycle-api')
     api project(':james-server:james-server-filesystem-api')
-
-    implementation project(':james-core')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-mailet:apache-mailet-api')
-    implementation project(':james-server:james-server-data-api')
-    implementation project(':james-server:james-server-protocols-library')
-    implementation project(':james-server:james-server-protocols-smtp')
-    implementation project(':protocols:protocols-api')
-    implementation project(':protocols:protocols-lmtp')
-    implementation project(':protocols:protocols-netty')
-    implementation project(':protocols:protocols-smtp')
+    api project(':james-server:james-server-data-api')
+    api project(':james-server:james-server-protocols-smtp')
+    api project(':james-server:james-server-protocols-library')
+    api project(':apache-mailet:apache-mailet-api')
+    api project(':apache-james-mailbox:apache-james-mailbox-api')
+    api project(':protocols:protocols-api')
+    api project(':protocols:protocols-lmtp')
+    api project(':protocols:protocols-netty')
+    api project(':protocols:protocols-smtp')
 
     implementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'

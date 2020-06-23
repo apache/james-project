@@ -10,14 +10,14 @@ configurations {
 }
 
 dependencies {
-    implementation project(":james-core")
-    implementation project(":james-json")
-
-    implementation project(':james-backends-common:apache-james-backends-cassandra')
+    api project(":james-core")
     api project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-store')
-    implementation project(':james-server:james-server-blob:blob-api')
+    api project(':apache-james-mailbox:apache-james-mailbox-store')
     api project(':james-server:james-server-task-api')
+    api project(':james-server:james-server-blob:blob-api')
+
+    implementation project(":james-json")
+    implementation project(':james-backends-common:apache-james-backends-cassandra')
     implementation project(':james-server:james-server-task-json')
     implementation project(':james-server:james-server-util')
 
@@ -51,7 +51,7 @@ dependencies {
     testImplementation project(':james-server:james-server-task-memory')
     testImplementation project(':metrics:metrics-api')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
     testImplementation project(":james-server:james-server-util")
 
     testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'

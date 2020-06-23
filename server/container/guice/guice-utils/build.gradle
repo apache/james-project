@@ -10,7 +10,8 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-server:james-server-filesystem-api')
+    api project(':james-server:james-server-filesystem-api')
+
     implementation project(':james-server:james-server-guice:james-server-guice-configuration')
     implementation project(':james-server:james-server-util')
 

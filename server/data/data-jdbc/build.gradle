@@ -10,15 +10,14 @@ configurations {
 }
 
 dependencies {
+    api project(':james-core')
     api project(':apache-mailet:apache-mailet-api')
     api project(':james-server:james-server-data-api')
     api project(':james-server:james-server-filesystem-api')
     api project(':james-server:james-server-lifecycle-api')
-
-    implementation project(':james-core')
-    implementation project(':james-server:james-server-core')
-    implementation project(':james-server:james-server-data-library')
-    implementation project(':james-server:james-server-util')
+    api project(':james-server:james-server-core')
+    api project(':james-server:james-server-data-library')
+    api project(':james-server:james-server-util')
 
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.google.guava:guava:25.1-jre'
@@ -35,9 +34,12 @@ dependencies {
     runtimeOnly 'org.apache.derby:derby:10.14.2.0'
 
     testImplementation project(':james-server:james-server-data-library')
-    testImplementation project(':james-server:james-server-filesystem-api')
-    testImplementation project(':james-server:james-server-mailrepository-api')
+    testImplementation project(path: ':james-server:james-server-filesystem-api',  configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-mailrepository-api',  configuration: 'tests')
     testImplementation project(':james-server:james-server-testing')
+
+    testImplementation 'commons-dbcp:commons-dbcp:1.4'
+    testImplementation 'org.apache.derby:derby:10.14.2.0'
 
     testImplementation 'io.cucumber:cucumber-java:2.4.0'
     testImplementation 'io.cucumber:cucumber-junit:2.4.0'

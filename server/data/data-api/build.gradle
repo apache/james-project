@@ -10,7 +10,7 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-core')
+    api project(':james-core')
     api project(':james-server:james-server-mailrepository-api')
 
     implementation 'org.apache.commons:commons-configuration2:2.7'

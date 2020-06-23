@@ -6,11 +6,11 @@ plugins {
 }
 
 dependencies {
-    implementation project(':james-core')
-    implementation project(':james-json')
-
+    api project(':james-core')
+    api project(':james-json')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-store')
+    api project(':apache-james-mailbox:apache-james-mailbox-store')
+
     implementation project(':james-server:james-server-task-json')
     implementation project(':james-server:james-server-util')
 
@@ -33,7 +33,7 @@ dependencies {
     testImplementation project(':james-server:james-server-blob:blob-cassandra')
     testImplementation project(path: ':james-json', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     testImplementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'

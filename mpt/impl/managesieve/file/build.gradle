@@ -6,7 +6,7 @@ dependencies {
     implementation project(':apache-james-mpt:apache-james-mpt-managesieve:apache-james-mpt-managesieve-core')
     implementation project(':james-server:james-server-data-file')
     implementation project(':james-server:james-server-data-memory')
-    // testImplementation project(':testing-base')
+
 }
 
 description = 'Apache James MPT ManageSieve File'

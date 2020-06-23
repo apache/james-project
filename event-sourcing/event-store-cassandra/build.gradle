@@ -36,7 +36,7 @@ dependencies {
     testImplementation project(':event-sourcing:event-sourcing-core')
     testImplementation project(path: ':event-sourcing:event-sourcing-core', configuration: 'tests')
     testImplementation project(path: ':event-sourcing:event-sourcing-pojo', configuration: 'tests')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'

@@ -10,9 +10,10 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-backends-common:apache-james-backends-cassandra')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
     api project(':apache-james-mailbox:apache-james-mailbox-event-json')
+
+    implementation project(':james-backends-common:apache-james-backends-cassandra')
 
     implementation 'com.typesafe.play:play-json_2.13:2.8.1'
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
@@ -25,7 +26,7 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
     testImplementation 'org.assertj:assertj-core:3.12.2'
