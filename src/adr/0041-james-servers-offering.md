@@ -47,7 +47,7 @@ server furthermore is extensible, and ships many extra features by default. It i
 without external dependencies, we mostly rely on it for testing purposes.
 
  - **JPA Guice** (`server/container/guice/jpa-guice`) ships an extensible server based on JPA storage. With
-a default configuration using Derby embedded database, this server have no external dependencies by default.
+a default configuration using Derby embedded database, this server has no external dependencies by default.
 However the still large amount of configuration can make new comers confused. It currently satisfies operator 
 looking for self hosting solutions as well as those looking for an extensible server.
 
