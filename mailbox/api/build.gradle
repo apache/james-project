@@ -10,8 +10,8 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-core')
-    implementation project(':james-server:james-server-task-api')
+    api project(':james-core')
+    api project(':james-server:james-server-task-api')
 
     implementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
@@ -28,7 +28,7 @@ dependencies {
 
     testImplementation project(':james-server:james-server-task-memory')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
     testImplementation project(":james-server:james-server-util")
 
     testImplementation 'org.awaitility:awaitility:3.1.6'

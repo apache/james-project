@@ -10,8 +10,9 @@ configurations {
 }
 
 dependencies {
+    api project(':james-server:james-server-blob:blob-api')
+
     implementation project(':james-core')
-    implementation project(':james-server:james-server-blob:blob-api')
 
     implementation 'org.apache.commons:commons-lang3:3.9'
     implementation 'com.google.guava:guava:25.1-jre'

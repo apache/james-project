@@ -11,12 +11,11 @@ configurations {
 }
 
 dependencies {
+    api project(':james-core')
     api project(':james-server:james-server-data-api')
     api project(':james-server:james-server-lifecycle-api')
-
-    implementation project(':james-core')
-    implementation project(':james-server:james-server-data-library')
-    implementation project(':james-server:james-server-util')
+    api project(':james-server:james-server-data-library')
+    api project(':james-server:james-server-util')
 
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
@@ -30,7 +29,7 @@ dependencies {
 
     testImplementation project(':james-server:james-server-data-library')
     testImplementation project(':james-server:james-server-testing')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'

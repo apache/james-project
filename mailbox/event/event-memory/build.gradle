@@ -6,16 +6,18 @@ plugins {
 }
 
 dependencies {
-    implementation project(":james-core")
+    api project(":james-core")
     api project(':apache-james-mailbox:apache-james-mailbox-api')
+    api project(':metrics:metrics-api')
+
     implementation project(':james-server:james-server-util')
-    implementation project(':metrics:metrics-api')
 
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.mockito:mockito-core:3.0.0'
 

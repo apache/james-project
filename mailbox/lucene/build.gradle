@@ -6,9 +6,9 @@ plugins {
 }
 
 dependencies {
-    implementation project(':james-core')
+    api project(':james-core')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-store')
+    api project(':apache-james-mailbox:apache-james-mailbox-store')
 
     implementation 'org.apache.james:apache-mime4j-core:0.8.3'
     implementation 'org.apache.james:apache-mime4j-dom:0.8.3'
@@ -33,7 +33,7 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-store', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.assertj:assertj-core:3.12.2'

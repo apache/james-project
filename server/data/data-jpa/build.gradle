@@ -23,12 +23,12 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-core')
-    implementation project(':james-backends-common:apache-james-backends-jpa')
-    implementation project(':james-server:james-server-data-api')
-    implementation project(':james-server:james-server-data-library')
-    implementation project(':james-server:james-server-dnsservice-api')
-    implementation project(':james-server:james-server-lifecycle-api')
+    api project(':james-core')
+    api project(':james-backends-common:apache-james-backends-jpa')
+    api project(':james-server:james-server-data-api')
+    api project(':james-server:james-server-data-library')
+    api project(':james-server:james-server-dnsservice-api')
+    api project(':james-server:james-server-lifecycle-api')
 
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
@@ -46,7 +46,7 @@ dependencies {
     testImplementation project(':james-server:james-server-data-api')
     testImplementation project(':james-server:james-server-data-library')
     testImplementation project(':james-server:james-server-dnsservice-test')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.apache.derby:derby:10.14.2.0'
     testImplementation 'io.cucumber:cucumber-java:2.4.0'

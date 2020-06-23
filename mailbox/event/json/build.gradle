@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    implementation project(':james-core')
+    api project(':james-core')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
 
     implementation 'com.beachape:enumeratum_2.13:1.5.13'

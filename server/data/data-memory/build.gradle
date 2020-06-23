@@ -10,13 +10,13 @@ configurations {
 }
 
 dependencies {
+    api project(':james-core')
     api project(':james-server:james-server-lifecycle-api')
     api project(':james-server:james-server-mailrepository-api')
     api project(':james-server:james-server-data-api')
     api project(':james-server:james-server-dnsservice-api')
+    api project(':james-server:james-server-data-library')
 
-    implementation project(':james-core')
-    implementation project(':james-server:james-server-data-library')
 
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
     implementation 'org.apache.commons:commons-configuration2:2.7'

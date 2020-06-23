@@ -6,13 +6,14 @@ plugins {
 }
 
 dependencies {
-    implementation project(':james-core')
+    api project(':james-core')
+    api project(':apache-james-mailbox:apache-james-mailbox-api')
+    api project(':james-server:james-server-lifecycle-api')
+    api project(':metrics:metrics-api')
+
     implementation project(':james-server:james-server-util')
     implementation project(':james-backends-common:apache-james-backends-rabbitmq')
-    api project(':apache-james-mailbox:apache-james-mailbox-api')
     implementation project(':apache-james-mailbox:apache-james-mailbox-event-json')
-    implementation project(':james-server:james-server-lifecycle-api')
-    implementation project(':metrics:metrics-api')
 
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'io.projectreactor.rabbitmq:reactor-rabbitmq:1.4.1.RELEASE'
