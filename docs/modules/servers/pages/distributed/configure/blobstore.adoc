@@ -10,7 +10,7 @@ James uses the BlobStore for storing blobs which are usually mail contents, atta
 
 You can choose the underlying implementation of BlobStore to fit with your James setup.
 
-It could be the implementation on top of Cassandra or file storage service like Openstack Swift, AWS S3.
+It could be the implementation on top of Cassandra or file storage service S3 compatible like Openstack Swift and AWS S3.
 
 Consult https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties[blob.properties]
 in GIT to get some examples and hints.
@@ -65,17 +65,6 @@ Maximum size of stored objects expressed in bytes.
 
 === Object storage configuration
 
-==== Underlying Service Configuration
-
-*objectstorage.provider* :
-
-* swift: Openstack Swift
-* aws-s3: Amazon AWS S3
-
-==== Swift Configuration
-
-(TODO)
-
 ==== AWS S3 Configuration
 
 .blobstore.properties S3 related properties
@@ -84,6 +73,9 @@ Maximum size of stored objects expressed in bytes.
 
 | objectstorage.s3.endPoint
 | S3 service endpoint
+
+| objectstorage.s3.region
+| S3 region
 
 | objectstorage.s3.accessKeyId
 | https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys[S3 access key id]
@@ -105,30 +97,6 @@ BucketPrefix is the prefix of bucket names in James BlobStore
 | objectstorage.namespace
 | BlobStore default bucket name. Most of blobs storing in BlobStore are inside the default bucket.
 Unless a special case like storing blobs of deleted messages.
-|===
-
-==== Codec Configuration
-
-.objectstorage.payload.codec
-|===
-| objectstorage.payload.codec
-
-| DEFAULT: no encryption
-
-| AES-256: AES-256 encryption
-|===
-
-If an AES-256 payload is used:
-
-.AES-256 configuration
-|===
-| Property name | explanation
-
-| objectstorage.aes256.hexsalt
-| salt string required by AES 256 encryption
-
-| objectstorage.aes256.password
-| password string required by AES 256 encryption
 |===
 
 == Blob Export

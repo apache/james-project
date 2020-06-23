@@ -45,7 +45,7 @@
             <dl>
                 <dt><strong>implementation</strong></dt>
                 <dd>cassandra: use cassandra based BlobStore</dd>
-                <dd>objectstorage: use Swift/AWS S3 based BlobStore</dd>
+                <dd>s3: use AWS S3 based BlobStore</dd>
 
                 <dt><strong>deduplication/enable</strong></dt>
                 <dd>Mandatory. Supported value: true and false.</dd>
@@ -86,22 +86,6 @@
                 </dl>
             </subsection>
 
-            <subsection name="ObjectStorage BlobStore Codec Configuration">
-                <dl>
-                    <dt><strong>objectstorage.payload.codec</strong></dt>
-                    <dd>DEFAULT: no encryption</dd>
-                    <dd>AES-256: AES-256 encryption</dd>
-                </dl>
-                <subsection name="ObjectStorage AES256 Encryption">
-                    <dl>
-                        <dt><strong>objectstorage.aes256.hexsalt</strong></dt>
-                        <dd>salt string required by AES 256 encryption</dd>
-
-                        <dt><strong>objectstorage.aes256.password</strong></dt>
-                        <dd>password string required by AES 256 encryption</dd>
-                    </dl>
-                </subsection>
-            </subsection>
             <subsection name="ObjectStorage BlobStore Buckets Configuration">
                 <dl>
                     <dt><strong>objectstorage.bucketPrefix</strong></dt>
@@ -118,98 +102,13 @@
                 </dl>
             </subsection>
             <subsection name="ObjectStorage Underlying Service Configuration">
-                <dl>
-                    <dt><strong>objectstorage.provider</strong></dt>
-                    <dd>swift: Openstack Swift</dd>
-                    <dd>aws-s3: Amazon AWS S3</dd>
-                </dl>
-                <subsection name="ObjectStorage Swift Configuration">
-                    <dl>
-                        <dt><strong>objectstorage.swift.region</strong></dt>
-                        <dd>
-                            Specify the geography region which the BlobStore will connect to a in Swift ObjectStorage
-                        </dd>
-
-                        <dt><strong>objectstorage.swift.authapi</strong></dt>
-                        <dd>
-                            Specify the authentication mechanism of Swift.
-                            <strong>tmpauth</strong>:<a href="https://docs.openstack.org/swift/latest/overview_auth.html#tempauth">Swift Temp Auth</a>
-                            <strong>keystone2</strong>:<a href="https://docs.openstack.org/swift/latest/overview_auth.html#keystone-auth">Swift Keystone Auth</a>
-                            <strong>keystone3</strong>:<a href="https://docs.openstack.org/swift/latest/overview_auth.html#keystone-auth">Swift Keystone Auth</a>
-                        </dd>
-
-                        <dt><strong>objectstorage.swift.endpoint</strong></dt>
-                        <dd>
-                            authentication endpoint
-                        </dd>
-
-                        <dt><strong>objectstorage.swift.credentials</strong></dt>
-                        <dd>
-                            authentication credential
-                        </dd>
-                    </dl>
-
-                    <subsection name="ObjectStorage Swift temp Authentication Configuration">
-                        <dl>
-                            <dt><strong>objectstorage.swift.tempauth.username</strong></dt>
-                            <dd>Username of Swift</dd>
-
-                            <dt><strong>objectstorage.swift.tempauth.tenantname</strong></dt>
-                            <dd>Tenantname of Swift</dd>
-
-                            <dt><strong>objectstorage.swift.tempauth.passheadername</strong></dt>
-                            <dd>Specify http header name for carrying credential information</dd>
-
-                            <dt><strong>objectstorage.swift.tempauth.userheadername</strong></dt>
-                            <dd>Specify http header name for carrying identity information</dd>
-                        </dl>
-                    </subsection>
-
-                    <subsection name="ObjectStorage Swift keystone2 Authentication Configuration">
-                        <dl>
-                            <dt><strong>objectstorage.swift.keystone2.username</strong></dt>
-                            <dd>Similar to tempAuth</dd>
-
-                            <dt><strong>objectstorage.swift.keystone2.tenantname</strong></dt>
-                            <dd>Similar to tempAuth</dd>
-                        </dl>
-                    </subsection>
-
-                    <subsection name="ObjectStorage Swift keystone3 Authentication Configuration">
-                        <dl>
-                            <dt><strong>objectstorage.swift.keystone3.user.name</strong></dt>
-                            <dd>Specifying username in identity information</dd>
-
-                            <dt><strong>objectstorage.swift.keystone3.user.domain</strong></dt>
-                            <dd>Specifying user domain in identity information</dd>
-
-                            <dt><strong>objectstorage.swift.keystone3.scope.domainid</strong></dt>
-                            <dd>Specifying scope domain in identity information</dd>
-
-                            <dt><strong>objectstorage.swift.keystone3.scope.project.name</strong></dt>
-                            <dd>
-                                Specifying project name in project information.
-                                Equivalent to <strong>jclouds.keystone.scope</strong> jclouds keystore configuration
-                            </dd>
-
-                            <dt><strong>objectstorage.swift.keystone3.scope.project.domainname</strong></dt>
-                            <dd>
-                                Specifying project domain name in project information.
-                                Equivalent to <strong>jclouds.keystone.project-domain-name</strong> jclouds keystore configuration
-                            </dd>
-
-                            <dt><strong>objectstorage.swift.keystone3.scope.project.domainid</strong></dt>
-                            <dd>
-                                Specifying project domain id in project information.
-                                Equivalent to <strong>jclouds.keystone.project-domain-id</strong> jclouds keystore configuration
-                            </dd>
-                        </dl>
-                    </subsection>
-                </subsection>
                 <subsection name="ObjectStorage AWS S3 Configuration">
                     <dl>
                         <dt><strong>objectstorage.s3.endPoint</strong></dt>
                         <dd>S3 service endpoint</dd>
+
+                        <dt><strong>objectstorage.s3.region</strong></dt>
+                        <dd>S3 region</dd>
 
                         <dt><strong>objectstorage.s3.accessKeyId</strong></dt>
                         <dd><a href="https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys">S3 access key id</a></dd>

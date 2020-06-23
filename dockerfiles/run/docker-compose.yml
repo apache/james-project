@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
 
@@ -8,7 +8,7 @@ services:
       - cassandra
       - tika
       - rabbitmq
-      - swift
+      - s3
     entrypoint: bash -c "java -Dworking.directory=/root/ -Dlogback.configurationFile=/root/conf/logback.xml -jar james-server.jar"
     image: linagora/james-rabbitmq-project:latest
     container_name: james
@@ -21,7 +21,7 @@ services:
       - "465:465"
       - "587:587"
       - "993:993"
-      - "8000:8000"
+      - "8080:8000"
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
@@ -42,9 +42,7 @@ services:
       - "5672:5672"
       - "15672:15672"
 
-  swift:
-    image: linagora/openstack-keystone-swift:pike
+  s3:
+    image: scality/s3server:6018536a
     ports:
-      - "5000:5000"
-      - "8080:8080"
-      - "35357:35357"
+      - "8080:8000"

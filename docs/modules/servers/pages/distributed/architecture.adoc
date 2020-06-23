@@ -11,7 +11,7 @@ image::storage.png[Storage responsibilities for the Distributed Server]
 
  * *Cassandra* is used for metadata storage
  * The *blob store* storage interface is responsible of storing potentially large binary data. For instance
- email bodies, headers or attachments. Different technologies can be used: *Cassandra*, or *Object Storage*
+ email bodies, headers or attachments. Different technologies can be used: *Cassandra*, or S3 compatible *Object Storage*
 (S3 or Swift)
  * *ElasticSearch* component empowers full text search on emails.
  * *RabbitMQ* enables James nodes of a same cluster to collaborate together.
@@ -261,7 +261,7 @@ Stores potentially large binary data.
 Mailbox component, Mail Queue component, Deleted Message Vault
 component relies on it.
 
-Supported backends includes ObjectStorage (link:https://wiki.openstack.org/wiki/Swift[Swift], S3 API).
+Supported backends include S3 compatible ObjectStorage (link:https://wiki.openstack.org/wiki/Swift[Swift], S3 API).
 
 Encryption can be configured on top of ObjectStorage.
 

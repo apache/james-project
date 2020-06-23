@@ -44,7 +44,7 @@ There is many other ways one can help us: packaging, communication, etc ...
  * link:#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
  * link:#how-to-check-the-compilation[How to check the compilation]
  * link:#how-to-run-james-in-docker[How to run James in Docker]
- ** link:#run-james-with-guice-%2Dcassandra-%2Drabbitmq-%2Dswift-%2Delasticsearch[Run James with Guice + Cassandra + RabbitMQ + Swift + ElasticSearch]
+ ** link:#run-james-with-%2Dguice-%2Dcassandra-%2Drabbitmq-%2Ds3-%2Delasticsearch[Run James with Guice + Cassandra + RabbitMQ + S3 + ElasticSearch]
  ** link:#run-james-with-guice-%2Dcassandra-%2Delasticsearch[Run James with Guice + Cassandra + ElasticSearch]
  ** link:#run-james-with-guice-%2Djpa-%2Dlucene[Run James with Guice + JPA + Lucene]
  ** link:#run-james-with-spring-%2Djpa[Run James with Spring + JPA]
@@ -198,13 +198,13 @@ If you are using a a fresh installation of Docker, your DOCKER_HOST should be un
 
 This feature is available for three configurations :
 
- * Guice + Cassandra + RabbitMQ + Swift + ElasticSearch
+ * Guice + Cassandra + RabbitMQ + S3 + ElasticSearch
  * Guice + Cassandra + ElasticSearch
  * Guice + JPA + Lucene
  * Spring + JPA
 
 
-=== Run James with Guice + Cassandra + RabbitMQ + Swift + ElasticSearch
+=== Run James with Guice + Cassandra + RabbitMQ + S3 + ElasticSearch
 
 
 ==== Requirements
@@ -226,9 +226,9 @@ You need a running *rabbitmq* in docker. To achieve this run:
 
     $ docker run -d --name=rabbitmq rabbitmq:3.8.1-management
 
-You need a running *swift* objectstorage in docker. To achieve this run:
+You need a running *s3* compatible objectstorage in docker. To achieve this run:
 
-    $ docker run -d --name=swift linagora/openstack-keystone-swift:pike
+    $ docker run -d -p 8080:8000 --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 zenko/cloudserver:8.2.6
 
 You need a running *ElasticSearch* in docker. To achieve this run:
 
@@ -253,7 +253,7 @@ Then we need to build james container :
 To run this container :
 
     $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --link cassandra:cassandra --link rabbitmq:rabbitmq
-   --link elasticsearch:elasticsearch --link tika:tika --link swift:swift --name james_run -t james_run
+   --link elasticsearch:elasticsearch --link tika:tika --link s3:s3 --name james_run -t james_run
 
 Where :
 
@@ -550,7 +550,7 @@ Where:
 - ITERATION is the release number used after the last hyphen (e.g. 3.0.1, 3.1.0, 3.2.0...)
 - BASE is the image jar and executable are copied from. Defaults to linagora/james-project
 - BASE_LDAP is the image jar and executable are copied from for a deployment with an LDAP user repository. Defaults to linagora/james-ldap-project
-- BASE_RABBITMQ is the image jar and executable are copied from for a deployment of linagora/james-project + RabbitMQ + Swift BlobStore.
+- BASE_RABBITMQ is the image jar and executable are copied from for a deployment of linagora/james-project + RabbitMQ + S3 BlobStore.
 Defaults to linagora/james-rabbitmq-project
 - TAG is the tag of these docker images. Defaults to latest.
 

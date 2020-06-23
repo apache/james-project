@@ -167,19 +167,12 @@ layout: howTo
                 </p>
 
                 <pre><code>
-implementation=objectstorage
-
-# Configuration for swift BlobStore
-objectstorage.payload.codec=DEFAULT
-objectstorage.provider=swift
+implementation=s3
 objectstorage.namespace=james
-objectstorage.swift.authapi=tmpauth
-objectstorage.swift.endpoint=http://swift:8080/auth/v1.0
-objectstorage.swift.credentials=testing
-objectstorage.swift.tempauth.username=tester
-objectstorage.swift.tempauth.tenantname=test
-objectstorage.swift.tempauth.passheadername=X-Storage-Pass
-objectstorage.swift.tempauth.userheadername=X-Storage-User
+objectstorage.s3.endPoint=http://scality:8080/
+objectstorage.s3.region=eu-west-1
+objectstorage.s3.accessKeyId=accessKey1
+objectstorage.s3.secretKey=verySecretKey1
                 </code></pre>
 
                 <p>

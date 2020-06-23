@@ -51,9 +51,9 @@ You need a running *rabbitmq* in docker. To achieve this run:
 
     $ docker run -d --name=rabbitmq rabbitmq:3.8.1-management
 
-You need a running *swift* objectstorage in docker. To achieve this run:
+You need a running *Zenko Cloudserver* objectstorage in docker. To achieve this run:
 
-    $ docker run -d --name=swift linagora/openstack-keystone-swift:pike
+    $ docker run -d -p 8080:8000 --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 zenko/cloudserver:8.2.6
 
 You need a running *ElasticSearch* in docker. To achieve this run:
 
@@ -78,7 +78,7 @@ Then we need to build james container :
 To run this container :
 
     $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --link cassandra:cassandra --link rabbitmq:rabbitmq
-   --link elasticsearch:elasticsearch --link tika:tika --link swift:swift --name james_run -t james_run
+   --link elasticsearch:elasticsearch --link tika:tika --link s3:s3 --name james_run -t james_run
 
 Where :
 
