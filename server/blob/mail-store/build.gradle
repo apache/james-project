@@ -9,7 +9,7 @@ dependencies {
     implementation 'com.google.guava:guava:25.1-jre'
     testImplementation project(':james-server:james-server-blob:blob-memory')
     testImplementation project(':james-core')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
 }
 

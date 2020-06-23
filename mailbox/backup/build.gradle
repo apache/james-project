@@ -35,7 +35,7 @@ dependencies {
 
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
 
     testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
 

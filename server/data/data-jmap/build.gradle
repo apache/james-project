@@ -10,21 +10,30 @@ configurations {
 }
 
 dependencies {
-    implementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    api project(':apache-james-mailbox:apache-james-mailbox-api')
+
     implementation project(':james-core')
     implementation project(':james-server:james-server-util')
+    implementation project(':event-sourcing:event-sourcing-pojo')
     implementation project(':event-sourcing:event-sourcing-core')
+    implementation project(':event-sourcing:event-sourcing-event-store-api')
     implementation project(':metrics:metrics-api')
+
+    implementation 'org.apache.james:apache-mime4j-dom:0.8.3'
+    implementation 'org.apache.commons:commons-lang3:3.9'
     implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'org.scala-lang:scala-library:2.13.1'
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.apache.commons:commons-collections4:4.4'
     implementation 'org.slf4j:slf4j-api:1.7.27'
+
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
     testImplementation project(':event-sourcing:event-sourcing-event-store-memory')
     testImplementation project(':event-sourcing:event-sourcing-event-store-memory')
     testImplementation project(':metrics:metrics-tests')
     testImplementation project(':testing-base')
+
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.mockito:mockito-core:3.0.0'
 

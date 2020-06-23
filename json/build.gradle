@@ -14,7 +14,7 @@ dependencies {
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'org.slf4j:slf4j-api:1.7.27'
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
 
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
