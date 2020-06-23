@@ -28,7 +28,6 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapSession;
@@ -141,8 +140,11 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                              */
                             @Override
                             public void close() throws IOException {
-                                super.close();
-                                FileUtils.forceDelete(f);
+                                try {
+                                    super.close();
+                                } finally {
+                                    f.delete();
+                                }
                             }
 
                         }, retry);
