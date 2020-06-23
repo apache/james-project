@@ -319,7 +319,38 @@ public abstract class MessageMapperTest {
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
         messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
-        assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox)).containsOnly(message2.getUid(), message4.getUid());
+        assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox))
+            .containsOnly(message2.getUid(), message4.getUid());
+    }
+
+    @Test
+    void resetRecentsShouldReturnEmptyListWhenNoMessagesMarkedAsRecentArePresentInMailbox() throws MailboxException {
+        assertThat(messageMapper.resetRecent(benwaInboxMailbox)).isEmpty();
+    }
+
+    @Test
+    void resetRecentsShouldRemoveAllRecentFlags() throws MailboxException {
+        saveMessages();
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
+        messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
+
+        messageMapper.resetRecent(benwaInboxMailbox);
+
+        assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox))
+            .isEmpty();
+    }
+
+    @Test
+    void resetRecentsShouldReturnUpdatedFlags() throws MailboxException {
+        saveMessages();
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
+        messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
+
+        assertThat(messageMapper.resetRecent(benwaInboxMailbox))
+            .extracting(UpdatedFlags::getUid)
+            .containsOnly(message2.getUid(), message4.getUid());
     }
 
     @Test

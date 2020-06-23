@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import static javax.mail.Flags.Flag.RECENT;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -38,6 +41,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.util.streams.Iterators;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -121,6 +126,20 @@ public interface MessageMapper extends Mapper {
      */
     Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator,
             final MessageRange set) throws MailboxException;
+
+    default List<UpdatedFlags> resetRecent(Mailbox mailbox) throws MailboxException {
+        final List<MessageUid> members = findRecentMessageUidsInMailbox(mailbox);
+        ImmutableList.Builder<UpdatedFlags> result = ImmutableList.builder();
+
+        FlagsUpdateCalculator calculator = new FlagsUpdateCalculator(new Flags(RECENT), FlagsUpdateMode.REMOVE);
+        // Convert to MessageRanges so we may be able to optimize the flag update
+        List<MessageRange> ranges = MessageRange.toRanges(members);
+        for (MessageRange range : ranges) {
+            result.addAll(updateFlags(mailbox, calculator, range));
+        }
+        return result.build();
+    }
+
     
     /**
      * Copy the given {@link MailboxMessage} to a new mailbox and return the uid of the copy. Be aware that the given uid is just a suggestion for the uid of the copied

@@ -656,28 +656,37 @@ public class StoreMessageManager implements MessageManager {
      * the recent flag on the messages for the uids
      */
     protected List<MessageUid> recent(final boolean reset, MailboxSession mailboxSession) throws MailboxException {
-        if (reset) {
-            if (!isWriteable(mailboxSession)) {
-                throw new ReadOnlyException(getMailboxPath());
-            }
-        }
-        final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
+        MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
         return messageMapper.execute(() -> {
-            final List<MessageUid> members = messageMapper.findRecentMessageUidsInMailbox(getMailboxEntity());
-
-            // Convert to MessageRanges so we may be able to optimize the
-            // flag update
-            List<MessageRange> ranges = MessageRange.toRanges(members);
-            for (MessageRange range : ranges) {
-                if (reset) {
-                    // only call save if we need to
-                    messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REMOVE), range);
-                }
+            if (reset) {
+                return resetRecents(messageMapper, mailboxSession);
             }
-            return members;
+            return messageMapper.findRecentMessageUidsInMailbox(getMailboxEntity());
         });
 
+    }
+
+    private List<MessageUid> resetRecents(MessageMapper messageMapper, MailboxSession mailboxSession) throws MailboxException {
+        if (!isWriteable(mailboxSession)) {
+            throw new ReadOnlyException(getMailboxPath());
+        }
+
+        List<UpdatedFlags> updatedFlags = messageMapper.resetRecent(getMailboxEntity());
+
+        eventBus.dispatch(EventFactory.flagsUpdated()
+                .randomEventId()
+                .mailboxSession(mailboxSession)
+                .mailbox(getMailboxEntity())
+                .updatedFlags(updatedFlags)
+                .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .subscribeOn(Schedulers.elastic())
+            .block();
+
+        return updatedFlags.stream()
+            .map(UpdatedFlags::getUid)
+            .collect(Guavate.toImmutableList());
     }
 
     private void runPredeletionHooks(List<MessageUid> uids, MailboxSession session) {

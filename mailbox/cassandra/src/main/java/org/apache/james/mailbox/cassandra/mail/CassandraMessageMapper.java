@@ -35,6 +35,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -294,12 +295,30 @@ public class CassandraMessageMapper implements MessageMapper {
 
         Flux<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited());
 
+        return updateFlags(flagUpdateCalculator, mailboxId, toBeUpdated).iterator();
+    }
+
+    private List<UpdatedFlags> updateFlags(FlagsUpdateCalculator flagUpdateCalculator, CassandraId mailboxId, Flux<ComposedMessageIdWithMetaData> toBeUpdated) {
         FlagsUpdateStageResult firstResult = runUpdateStage(mailboxId, toBeUpdated, flagUpdateCalculator).block();
         FlagsUpdateStageResult finalResult = handleUpdatesStagedRetry(mailboxId, flagUpdateCalculator, firstResult);
         if (finalResult.containsFailedResults()) {
             LOGGER.error("Can not update following UIDs {} for mailbox {}", finalResult.getFailed(), mailboxId.asUuid());
         }
-        return finalResult.getSucceeded().iterator();
+        return finalResult.getSucceeded();
+    }
+
+    @Override
+    public List<UpdatedFlags> resetRecent(Mailbox mailbox) {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+
+        Flux<ComposedMessageIdWithMetaData> toBeUpdated = mailboxRecentDAO.getRecentMessageUidsInMailbox(mailboxId)
+            .collectList()
+            .flatMapMany(uids -> Flux.fromIterable(MessageRange.toRanges(uids)))
+            .concatMap(range -> messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited()))
+            .filter(message -> message.getFlags().contains(Flag.RECENT));
+        FlagsUpdateCalculator calculator = new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REMOVE);
+
+        return updateFlags(calculator, mailboxId, toBeUpdated);
     }
 
     private FlagsUpdateStageResult handleUpdatesStagedRetry(CassandraId mailboxId, FlagsUpdateCalculator flagUpdateCalculator, FlagsUpdateStageResult firstResult) {
