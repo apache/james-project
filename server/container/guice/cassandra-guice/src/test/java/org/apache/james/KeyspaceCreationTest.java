@@ -33,12 +33,7 @@ class KeyspaceCreationTest {
     @Nested
     class CreateWhenKeyspaceExists {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-        CassandraJamesServerConfiguration.builder()
-            .workingDirectory(tmpDir)
-            .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.elasticSearch())
-            .build())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(CassandraJamesServerMain::createServer)
@@ -59,12 +54,7 @@ class KeyspaceCreationTest {
     @Nested
     class CreateWhenDoesNotExistAndHasRights {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-        CassandraJamesServerConfiguration.builder()
-            .workingDirectory(tmpDir)
-            .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.elasticSearch())
-            .build())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(CassandraJamesServerMain::createServer)
@@ -91,12 +81,7 @@ class KeyspaceCreationTest {
     @Nested
     class CreateWhenDoesNotExistAndDoNotHaveRights {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-        CassandraJamesServerConfiguration.builder()
-            .workingDirectory(tmpDir)
-            .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.elasticSearch())
-            .build())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(CassandraJamesServerMain::createServer)
@@ -123,12 +108,7 @@ class KeyspaceCreationTest {
     @Nested
     class StartWhenKeyspaceDoesNotExist {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-        CassandraJamesServerConfiguration.builder()
-            .workingDirectory(tmpDir)
-            .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.elasticSearch())
-            .build())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(CassandraJamesServerMain::createServer)

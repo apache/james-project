@@ -19,17 +19,21 @@
 
 package org.apache.james;
 
-import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.jupiter.api.extension.RegisterExtension;
+public class TestingDistributedJamesServerBuilder {
+    @FunctionalInterface
+    interface ConfigurationSpecification {
+        CassandraJamesServerConfiguration.Builder customize(CassandraJamesServerConfiguration.Builder configuration);
+    }
 
-class CassandraWithTikaTest implements JamesServerContract {
-    @RegisterExtension
-    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
-            .extension(new CassandraExtension())
-            .extension(new  TikaExtension())
-            .extension(new DockerElasticSearchExtension())
-            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule())
-                .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
-            .build();
+    public static JamesServerBuilder<CassandraJamesServerConfiguration> forConfiguration(ConfigurationSpecification configurationSpecification) {
+        return new JamesServerBuilder<>(tmpDir ->
+            configurationSpecification.customize(CassandraJamesServerConfiguration.builder()
+                .workingDirectory(tmpDir)
+                .configurationFromClasspath())
+                .build());
+    }
+
+    public static JamesServerBuilder<CassandraJamesServerConfiguration> withSearchConfiguration(SearchConfiguration searchConfiguration) {
+        return forConfiguration(configuration -> configuration.searchConfiguration(searchConfiguration));
+    }
 }

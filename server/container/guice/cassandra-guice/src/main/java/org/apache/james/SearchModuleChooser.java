@@ -66,11 +66,6 @@ public class SearchModuleChooser {
 
     // Required for CLI
     private static class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
-        private static class FakeMessageSearchIndexGroup extends Group {
-
-        }
-
-        private static final FakeMessageSearchIndexGroup GROUP = new FakeMessageSearchIndexGroup();
 
         public FakeMessageSearchIndex() {
             super(null, null);
@@ -82,7 +77,7 @@ public class SearchModuleChooser {
         }
 
         @Override
-        public Mono<Void> delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
+        public Mono<Void> delete(MailboxSession session, MailboxId mailboxId, Collection<MessageUid> expungedUids) {
             throw new NotImplementedException("not implemented");
         }
 
@@ -92,7 +87,7 @@ public class SearchModuleChooser {
         }
 
         @Override
-        public Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
+        public Mono<Void> update(MailboxSession session, MailboxId mailboxId, List<UpdatedFlags> updatedFlagsList) {
             throw new NotImplementedException("not implemented");
         }
 
@@ -103,7 +98,7 @@ public class SearchModuleChooser {
 
         @Override
         public Group getDefaultGroup() {
-            return GROUP;
+            throw new NotImplementedException("not implemented");
         }
 
         @Override

@@ -20,12 +20,11 @@
 package org.apache.james.jmap.cassandra;
 
 import org.apache.james.CassandraExtension;
-import org.apache.james.CassandraJamesServerConfiguration;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
-import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
+import org.apache.james.TestingDistributedJamesServerBuilder;
 import org.apache.james.jmap.draft.methods.integration.SendMDNMethodTest;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
@@ -35,12 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class CassandraSendMDNMethodTest extends SendMDNMethodTest {
 
     @RegisterExtension
-    JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-        CassandraJamesServerConfiguration.builder()
-            .workingDirectory(tmpDir)
-            .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.elasticSearch())
-            .build())
+    JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)

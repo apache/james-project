@@ -43,12 +43,7 @@ class AuthenticatedCassandraJamesServerTest {
     @Nested
     class AuthenticationTest implements JamesServerContract {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-            CassandraJamesServerConfiguration.builder()
-                .workingDirectory(tmpDir)
-                .configurationFromClasspath()
-                .searchConfiguration(SearchConfiguration.elasticSearch())
-                .build())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
@@ -64,12 +59,7 @@ class AuthenticatedCassandraJamesServerTest {
     @Nested
     class SslTest {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-            CassandraJamesServerConfiguration.builder()
-                .workingDirectory(tmpDir)
-                .configurationFromClasspath()
-                .searchConfiguration(SearchConfiguration.elasticSearch())
-                .build())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .disableAutoStart()
@@ -94,12 +84,7 @@ class AuthenticatedCassandraJamesServerTest {
     @Nested
     class AuthenticationFailureTest {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-            CassandraJamesServerConfiguration.builder()
-                .workingDirectory(tmpDir)
-                .configurationFromClasspath()
-                .searchConfiguration(SearchConfiguration.elasticSearch())
-                .build())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .disableAutoStart()
