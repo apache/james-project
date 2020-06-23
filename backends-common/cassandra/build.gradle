@@ -33,7 +33,7 @@ dependencies {
     implementation 'org.slf4j:jcl-over-slf4j:1.7.27'
 
     testImplementation project(':james-server:james-server-task-memory')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
 
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     testImplementation 'commons-beanutils:commons-beanutils:1.9.4'

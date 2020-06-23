@@ -7,7 +7,7 @@ dependencies {
     implementation project(':james-server:james-server-guice:james-server-guice-utils')
     implementation project(':james-server:james-server-webadmin-core')
     implementation 'com.google.inject:guice:4.2.2'
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
 }
 
 description = 'Apache James :: Server :: Guice :: Webadmin'

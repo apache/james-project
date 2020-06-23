@@ -19,7 +19,7 @@ dependencies {
     testImplementation project(':james-server:james-server-guice:james-server-guice-common')
     testImplementation project(':james-server:james-server-guice:james-server-guice-jmap')
     testImplementation project(':james-server:james-server-testing')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
     testImplementation 'io.cucumber:cucumber-guice:2.4.0'
     testImplementation 'io.cucumber:cucumber-java:2.4.0'
     testImplementation 'io.cucumber:cucumber-junit:2.4.0'

@@ -10,7 +10,7 @@ dependencies {
     implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
     testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
