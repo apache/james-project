@@ -24,7 +24,7 @@
 <mailetcontainer enableJmx="true">
 
     <context>
-        <postmaster>postmaster@localhost</postmaster>
+        <postmaster>postmaster</postmaster>
     </context>
 
     <spooler>

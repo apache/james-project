@@ -31,7 +31,7 @@
  
     <!-- MailAddress used for PostMaster -->
     <context>
-        <postmaster>postmaster@localhost</postmaster>
+        <postmaster>postmaster</postmaster>
     </context>
 
     <!-- Number of spool threads -->
