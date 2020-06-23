@@ -51,7 +51,7 @@ removed from future James releases. Users are strongly encouraged to contribute 
 
 ## Consequences
 
-Quality levels needs to be mentioned explicitly in the documentation, per artifact, and per feature.
+Quality levels need to be mentioned explicitly in the documentation, per artifact, and per feature.
 
 We need to audit existing artifacts and features to make a list of experimental and unsupported artifacts. We will maintain
 JIRA tickets opened from them, detailing for each one of them expected actions to raise the quality level. Maintaining such 
