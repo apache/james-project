@@ -42,7 +42,7 @@ dependencies {
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':james-server:james-server-util')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'

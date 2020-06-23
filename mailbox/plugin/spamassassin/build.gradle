@@ -28,7 +28,7 @@ dependencies {
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-memory', configuration: 'tests')
     testImplementation project(':third-party:apache-james-spamassassin')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.assertj:assertj-core:3.12.2'

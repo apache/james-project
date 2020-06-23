@@ -8,7 +8,7 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-maildir')
     testImplementation project(':apache-james-mpt:apache-james-mpt-imapmailbox:apache-james-mpt-imapmailbox-core')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
 }
 
 description = 'Apache James MPT Imap Mailbox - Maildir'

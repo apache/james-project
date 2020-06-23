@@ -11,7 +11,7 @@ configurations {
 
 dependencies {
     implementation project(':metrics:metrics-api')
-    
+
     implementation 'com.google.guava:guava:25.1-jre'
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.apache.commons:commons-lang3:3.9'

@@ -6,10 +6,9 @@ plugins {
 }
 
 dependencies {
-    implementation project(':james-core')
-
+    api project(':james-core')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-store')
+    api project(':apache-james-mailbox:apache-james-mailbox-store')
 
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'org.slf4j:slf4j-api:1.7.27'

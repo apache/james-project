@@ -14,7 +14,7 @@ dependencies {
     testImplementation project(':james-backends-common:apache-james-backends-es')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':metrics:metrics-dropwizard')
-    // testImplementation project(':testing-base')
+
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'org.slf4j:jcl-over-slf4j:1.7.27'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'

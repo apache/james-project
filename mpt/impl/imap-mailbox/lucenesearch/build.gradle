@@ -13,7 +13,7 @@ dependencies {
     implementation project(':apache-james-mailbox:apache-james-mailbox-store')
     testImplementation project(':apache-james-mpt:apache-james-mpt-imapmailbox:apache-james-mpt-imapmailbox-core')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
 }
 
 description = 'Apache James MPT Imap Mailbox - LuceneSearch'

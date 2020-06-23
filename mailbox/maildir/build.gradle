@@ -6,9 +6,10 @@ plugins {
 }
 
 dependencies {
+    api project(':apache-james-mailbox:apache-james-mailbox-api')
+    api project(':apache-james-mailbox:apache-james-mailbox-store')
+
     implementation project(':james-core')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-store')
 
     implementation 'org.apache.james:apache-mime4j-core:0.8.3'
     implementation 'org.apache.james:apache-mime4j-dom:0.8.3'
@@ -26,7 +27,7 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.assertj:assertj-core:3.12.2'

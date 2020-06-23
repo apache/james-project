@@ -13,7 +13,7 @@ dependencies {
     testImplementation project(':apache-james-mpt:apache-james-mpt-imapmailbox:apache-james-mpt-imapmailbox-core')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
 }
 
