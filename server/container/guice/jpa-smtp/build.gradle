@@ -10,7 +10,7 @@ dependencies {
     testImplementation project(':james-backends-common:apache-james-backends-jpa')
     testImplementation project(':james-server:james-server-guice:james-server-jpa-common-guice')
     testImplementation project(':james-server:james-server-guice:james-server-guice-common')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.mockito:mockito-core:3.0.0'

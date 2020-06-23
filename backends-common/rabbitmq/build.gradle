@@ -27,7 +27,7 @@ dependencies {
     implementation 'org.slf4j:log4j-over-slf4j:1.7.27'
 
     testImplementation project(':james-server:james-server-testing')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
     testImplementation 'org.slf4j:jcl-over-slf4j:1.7.27'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
     testImplementation 'org.apache.httpcomponents:httpclient:4.5.10'

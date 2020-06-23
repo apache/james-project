@@ -11,7 +11,7 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
     testImplementation project(':apache-james-mpt:apache-james-mpt-imapmailbox:apache-james-mpt-imapmailbox-core')
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
     testImplementation 'org.apache.derby:derby:10.14.2.0'
 }
 

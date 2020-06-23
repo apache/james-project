@@ -11,18 +11,16 @@ configurations {
 }
 
 dependencies {
-    implementation project(":james-core")
-
-    implementation project(':apache-mailet:apache-mailet-api')
-
-    implementation project(':event-sourcing:event-sourcing-pojo')
-    implementation project(':event-sourcing:event-sourcing-core')
-    implementation project(':event-sourcing:event-sourcing-event-store-api')
-
+    api project(':apache-mailet:apache-mailet-api')
     api project(':james-server:james-server-data-api')
     api project(':james-server:james-server-dnsservice-api')
     api project(':james-server:james-server-filesystem-api')
     api project(':james-server:james-server-lifecycle-api')
+    api project(':event-sourcing:event-sourcing-event-store-api')
+
+    implementation project(":james-core")
+    implementation project(':event-sourcing:event-sourcing-pojo')
+    implementation project(':event-sourcing:event-sourcing-core')
     implementation project(':james-server:james-server-util')
 
     implementation 'org.scala-lang:scala-library:2.13.1'
@@ -41,11 +39,13 @@ dependencies {
 
     testImplementation project(path: ':james-server:james-server-data-api', configuration: 'tests')
     testImplementation project(':james-server:james-server-dnsservice-test')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
 
     testImplementation 'io.cucumber:cucumber-java:2.4.0'
     testImplementation 'io.cucumber:cucumber-junit:2.4.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

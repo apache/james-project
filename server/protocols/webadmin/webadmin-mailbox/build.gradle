@@ -44,7 +44,7 @@ dependencies {
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':james-server:james-server-webadmin-core')
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
 
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
