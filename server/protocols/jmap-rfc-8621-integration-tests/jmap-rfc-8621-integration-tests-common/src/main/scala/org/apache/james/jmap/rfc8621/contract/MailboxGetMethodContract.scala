@@ -27,7 +27,7 @@ import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.http.HttpStatus.{SC_INTERNAL_SERVER_ERROR, SC_OK}
+import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaSizeLimit}
 import org.apache.james.jmap.http.UserCredential
@@ -69,6 +69,8 @@ object MailboxGetMethodContract {
 
 trait MailboxGetMethodContract {
   import MailboxGetMethodContract._
+
+  def randomMailboxId: MailboxId
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
@@ -450,27 +452,207 @@ trait MailboxGetMethodContract {
   }
 
   @Test
-  def getMailboxesByIdsShouldNotBeImplementedYet(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+  def getMailboxesByIdsShouldReturnCorrespondingMailbox(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |      {
+         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "state": "000001",
+         |        "list": [
+         |          {
+         |            "id": "${mailboxId}",
+         |            "name": "custom",
+         |            "sortOrder": 1000,
+         |            "totalEmails": 0,
+         |            "unreadEmails": 0,
+         |            "totalThreads": 0,
+         |            "unreadThreads": 0,
+         |            "myRights": {
+         |              "mayReadItems": true,
+         |              "mayAddItems": true,
+         |              "mayRemoveItems": true,
+         |              "maySetSeen": true,
+         |              "maySetKeywords": true,
+         |              "mayCreateChild": true,
+         |              "mayRename": true,
+         |              "mayDelete": true,
+         |              "maySubmit": true
+         |            },
+         |            "isSubscribed": false,
+         |            "namespace": "Personal",
+         |            "rights": {},
+         |            "quotas": {
+         |              "#private&bob@domain.tld": {
+         |                "Storage": { "used": 0},
+         |                "Message": {"used": 0}
+         |              }
+         |            }
+         |          }
+         |        ],
+         |        "notFound": []
+         |      },
+         |      "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def getMailboxesByIdsShouldReturnOnlyRequestedMailbox(server: GuiceJamesServer): Unit = {
+    val mailboxName: String = "custom"
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "othercustom"))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(s"""{
-              |  "using": [
-              |    "urn:ietf:params:jmap:core",
-              |    "urn:ietf:params:jmap:mail"],
-              |  "methodCalls": [[
-              |      "Mailbox/get",
-              |      {
-              |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-              |        "ids": ["${mailboxId}"]
-              |      },
-              |      "c1"]]
-              |}""".stripMargin)
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
-      .statusCode(SC_INTERNAL_SERVER_ERROR)
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(1))
+      .body(s"$FIRST_MAILBOX.id", equalTo(mailboxId))
+      .body(s"$FIRST_MAILBOX.name", equalTo(mailboxName))
+  }
+
+  @Test
+  def getMailboxesByIdsShouldReturnBothFoundAndNotFound(server: GuiceJamesServer): Unit = {
+    val mailboxName: String = "custom"
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+    val randomId = randomMailboxId.serialize()
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "othercustom"))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |     "Mailbox/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["$mailboxId", "$randomId"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(1))
+      .body(s"$FIRST_MAILBOX.id", equalTo(mailboxId))
+      .body(s"$FIRST_MAILBOX.name", equalTo(mailboxName))
+      .body(s"$ARGUMENTS.notFound", hasSize(1))
+      .body(s"$ARGUMENTS.notFound", contains(randomId))
+  }
+
+  @Test
+  def getMailboxesByIdsShouldReturnNotFoundWhenMailboxDoesNotExist(): Unit = {
+    val randomId = randomMailboxId.serialize()
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |    "Mailbox/get",
+           |    {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "ids": ["$randomId"]
+           |    },
+           |    "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", empty())
+      .body(s"$ARGUMENTS.notFound", hasSize(1))
+      .body(s"$ARGUMENTS.notFound", contains(randomId))
+  }
+
+  @Test
+  def getMailboxesByIdsShouldReturnMailboxesInSorteredOrder(server: GuiceJamesServer): Unit = {
+    val mailboxId1: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.TRASH))
+      .serialize
+    val mailboxId2: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
+      .serialize
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |     "Mailbox/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["$mailboxId1", "$mailboxId2"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(2))
+      .body(s"$FIRST_MAILBOX.id", equalTo(mailboxId2))
+      .body(s"$FIRST_MAILBOX.name", equalTo(DefaultMailboxes.INBOX))
+      .body(s"$FIRST_MAILBOX.sortOrder", equalTo(10))
+      .body(s"$SECOND_MAILBOX.id", equalTo(mailboxId1))
+      .body(s"$SECOND_MAILBOX.name", equalTo(DefaultMailboxes.TRASH))
+      .body(s"$SECOND_MAILBOX.sortOrder", equalTo(60))
   }
 }

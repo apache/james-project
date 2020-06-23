@@ -32,7 +32,9 @@ case class MailboxGetRequest(accountId: AccountId,
                              ids: Option[Ids],
                              properties: Option[Properties])
 
-case class NotFound(value: List[MailboxId])
+case class NotFound(value: List[MailboxId]) {
+  def merge(other: NotFound): NotFound = NotFound(this.value ++ other.value)
+}
 
 case class MailboxGetResponse(accountId: AccountId,
                               state: State,
