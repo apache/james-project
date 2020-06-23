@@ -7,7 +7,7 @@ dependencies {
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'com.google.guava:guava:25.1-jre'
     implementation 'javax.activation:javax.activation-api:1.2.0'
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
 }
 
 description = 'Apache James :: Java Mail Extension'

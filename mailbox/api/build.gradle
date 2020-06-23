@@ -28,7 +28,7 @@ dependencies {
 
     testImplementation project(':james-server:james-server-task-memory')
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
     testImplementation project(":james-server:james-server-util")
 
     testImplementation 'org.awaitility:awaitility:3.1.6'

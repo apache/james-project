@@ -26,9 +26,10 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
 
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

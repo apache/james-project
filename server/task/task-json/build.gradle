@@ -16,7 +16,6 @@ dependencies {
 
     testImplementation project(':james-json')
     testImplementation project(':james-server:james-server-task-api')
-    testImplementation project(':testing-base')
 
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'

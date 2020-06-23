@@ -25,7 +25,7 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
 
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
     testImplementation 'org.assertj:assertj-core:3.12.2'

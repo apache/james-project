@@ -15,7 +15,7 @@ dependencies {
     testImplementation project(':james-server:james-server-guice:james-server-guice-jmap')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':james-server:james-server-util')
-    testImplementation project(':testing-base')
+    // testImplementation project(':testing-base')
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
