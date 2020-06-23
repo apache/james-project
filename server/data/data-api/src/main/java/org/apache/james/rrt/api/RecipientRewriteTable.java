@@ -30,7 +30,6 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Interface which should be implemented of classes which map recipients.
@@ -148,12 +147,13 @@ public interface RecipientRewriteTable {
     }
 
     default Stream<Mapping> getMappingsForType(Mapping.Type type) throws RecipientRewriteTableException {
-        return ImmutableSet.copyOf(getAllMappings()
+        return getAllMappings()
             .values().stream()
             .map(mappings -> mappings.select(type))
-            .reduce(Mappings::union)
-            .orElse(MappingsImpl.empty()))
-            .stream();
+            .reduce(MappingsImpl.builder(), MappingsImpl.Builder::addAll, (builder1, builder2) -> builder1.addAll(builder2.build()))
+            .build()
+            .asStream()
+            .distinct();
     }
 
 }
