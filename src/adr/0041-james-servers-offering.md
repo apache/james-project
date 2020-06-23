@@ -52,7 +52,7 @@ However the still large amount of configuration can make new comers confused. It
 looking for self hosting solutions as well as those looking for an extensible server.
 
  - **JPA SMTP** (`server/container/guice/jpa-smtp`) demonstrate a Mail Transfer Agent, dedicated to mail
-processing, that do not ship the James Mailbox, as well as Mail Delivery protocols like IMAP, JMAP or POP3.
+processing, that does not ship the James Mailbox, as well as Mail Delivery protocols like IMAP, JMAP or POP3.
 
 We can notice that this offer is specified in technical terms, and do not directly map to identified user needs.
 
