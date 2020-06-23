@@ -20,17 +20,17 @@ and since the quota-search feature is a plugin of James, it cannot be hardwired 
 
 ## Decision
 
-For quota-search to be initialized/removed for a given user while keeping this feature as a plugin, we decided to adopt the Event Driven pattern we already use in mailbox-api. 
+For quota-search to be initialized/removed for a given user while keeping this feature as a plugin, we decided to adopt the Event Driven pattern we already use in Mailbox-api. 
 We can create new events related to user management (UserCreated, UserRemoved and so on).
 
 To achieve that, we will extract the EventBus out of mailbox-api in order to make it a utility component (eventbus-api), then we will make both mailbox-api and data-api depend on that new module. 
 
 ## Consequences
 
-Mailbox-api would leverage the EventBus to keep exposing the MailboxListener api without changes on top of the generified EventBus. We need to define a common Event interface in eventbus-api, 
-then each event-bus usage will define its own sealed event hierarchy implementing Event.
+Mailbox-api would leverage the EventBus to keep exposing the mailbox-listener-api without changes on top of the generified EventBus. We need to define a common Event interface in eventbus-api, 
+then each EventBus usage will define its own sealed event hierarchy implementing Event.
 
-Dead-letter storage needs to be reworked in order to store events of various event bus separately (which is needed for knowing which EventBus the event should be reprocessed on 
+DeadLetter storage needs to be reworked in order to store events of various EventBus separately (which is needed for knowing which EventBus the event should be reprocessed on 
 and knowing which sealed hierarchy an event belongs to.)
 
 As a consequence, we will need a Cassandra data migration to add the EventBus name as part of the EventDeadLetter primary key. 
