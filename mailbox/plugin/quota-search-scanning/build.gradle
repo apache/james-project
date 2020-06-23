@@ -28,7 +28,7 @@ dependencies {
     testImplementation project(path: ':james-core', configuration: 'tests')
     testImplementation project(':james-server:james-server-data-memory')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.assertj:assertj-core:3.12.2'

@@ -19,11 +19,11 @@ plugins {
 apply plugin: 'openjpa'
 
 dependencies {
-    implementation project(':james-core')
+    api project(':james-core')
+    api project(':apache-james-mailbox:apache-james-mailbox-api')
+    api project(':apache-james-mailbox:apache-james-mailbox-store')
 
     implementation project(':james-backends-common:apache-james-backends-jpa')
-    api project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-store')
     implementation project(':james-server:james-server-util')
 
     implementation 'org.apache.openjpa:openjpa:3.1.0'
@@ -54,7 +54,7 @@ dependencies {
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-tools-quota-recompute', configuration: 'tests')
     testImplementation project(':james-server:james-server-data-jpa')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.apache.derby:derby:10.14.2.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'

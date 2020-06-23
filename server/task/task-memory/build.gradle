@@ -30,7 +30,7 @@ dependencies {
 
     testImplementation project(':event-sourcing:event-sourcing-event-store-memory')
     testImplementation project(':james-server:james-server-task-api')
-    // testImplementation project(':testing-base')
+
 
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.mockito:mockito-core:3.0.0'

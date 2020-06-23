@@ -5,9 +5,13 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    tests
+}
+
 dependencies {
     api project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-store')
+    api project(':apache-james-mailbox:apache-james-mailbox-store')
 
     implementation 'org.slf4j:jcl-over-slf4j:1.7.27'
     implementation 'org.slf4j:slf4j-api:1.7.27'
@@ -21,7 +25,6 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-store', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
-    // testImplementation project(':testing-base')
 
     testImplementation 'org.apache.pdfbox:pdfbox:2.0.16'
     testImplementation 'org.awaitility:awaitility:3.1.6'
@@ -43,6 +46,10 @@ description = 'Apache James :: Mailbox :: Scanning'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

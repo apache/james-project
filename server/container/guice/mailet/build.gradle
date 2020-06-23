@@ -10,14 +10,14 @@ configurations {
 }
 
 dependencies {
-    implementation project(':apache-mailet:apache-mailet-base')
-    implementation project(':apache-mailet:apache-mailet-standard')
-    implementation project(':james-server:james-server-guice:james-server-guice-configuration')
-    implementation project(':james-server:james-server-guice:james-server-guice-utils')
-    implementation project(':james-server:james-server-mailet-dkim')
-    implementation project(':james-server:james-server-mailetcontainer-api')
-    implementation project(':james-server:james-server-mailetcontainer-camel')
-    implementation project(':james-server:james-server-core')
+    api project(':apache-mailet:apache-mailet-base')
+    api project(':apache-mailet:apache-mailet-standard')
+    api project(':james-server:james-server-guice:james-server-guice-configuration')
+    api project(':james-server:james-server-guice:james-server-guice-utils')
+    api project(':james-server:james-server-mailet-dkim')
+    api project(':james-server:james-server-mailetcontainer-api')
+    api project(':james-server:james-server-mailetcontainer-camel')
+    api project(':james-server:james-server-core')
 
     implementation 'org.apache.james.jdkim:apache-jdkim-library:0.2'
     implementation 'org.apache.camel:camel-core:2.24.1'

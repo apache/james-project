@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     implementation project(':james-core')
-    api project(':apache-james-mailbox:apache-james-mailbox-api')
+    implementation project(':apache-james-mailbox:apache-james-mailbox-api')
     implementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
     implementation project(':apache-james-mailbox:apache-james-mailbox-jpa')
     implementation project(':apache-james-mailbox:apache-james-mailbox-lucene')
