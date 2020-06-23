@@ -30,7 +30,9 @@ import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.reactivestreams.Publisher;
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.SlidingTimeWindowMovingAverages;
 import com.codahale.metrics.jmx.JmxReporter;
 
 import reactor.core.publisher.Flux;
@@ -50,7 +52,7 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
 
     @Override
     public Metric generate(String name) {
-        return new DropWizardMetric(metricRegistry.meter(name), name);
+        return new DropWizardMetric(metricRegistry.meter(name, () -> new Meter(new SlidingTimeWindowMovingAverages())), name);
     }
 
     @Override
@@ -81,5 +83,4 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
     public void stop() {
         jmxReporter.stop();
     }
-
 }

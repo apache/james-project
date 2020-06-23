@@ -64,13 +64,14 @@ public class MessageFastViewProjectionHealthCheck implements HealthCheck {
             });
     }
 
-    private Result check(double hitCount, double missCount) {
-        double totalCount = hitCount + missCount;
-        double missCountPercentage = missCount * 100.0d / totalCount;
-        if (missCountPercentage > MAXIMUM_MISS_PERCENTAGE_ACCEPTED) {
+    private Result check(double hitAverage, double missAverage) {
+        double total = hitAverage + missAverage;
+        double missPercentage = missAverage * 100.0d / total;
+
+        if (missPercentage > MAXIMUM_MISS_PERCENTAGE_ACCEPTED) {
             return Result.degraded(COMPONENT_NAME,
-                String.format("retrieveMissCount percentage %s%% (%s/%s) is higher than the threshold %s%%",
-                    missCountPercentage, missCount, totalCount, MAXIMUM_MISS_PERCENTAGE_ACCEPTED));
+                String.format("Miss percentage %.2f%% (%.0f/%.0f) is higher than the threshold %.0f%%",
+                    missPercentage, missAverage, total, MAXIMUM_MISS_PERCENTAGE_ACCEPTED));
         }
 
         return Result.healthy(COMPONENT_NAME);
