@@ -25,13 +25,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Iterator;
 import java.util.Optional;
 
+import javax.mail.Flags;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
@@ -71,6 +75,23 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             .extracting(statement -> statement.preparedStatement().getQueryString())
             .filteredOn(statementString -> statementString.equals("SELECT messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,textualLineCount,properties,attachments FROM messageV2 WHERE messageId=:messageId;"))
             .hasSize(limit);
+    }
+
+    @Test
+    void updateFlagsShouldLimitModSeqAllocation(CassandraCluster cassandra) throws MailboxException {
+        saveMessages();
+
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandra.getConf().recordStatements(statementRecorder);
+
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE), MessageRange.all());
+
+        assertThat(statementRecorder.listExecutedStatements())
+            .filteredOn(statement -> statement instanceof BoundStatement)
+            .extracting(BoundStatement.class::cast)
+            .extracting(statement -> statement.preparedStatement().getQueryString())
+            .filteredOn(statementString -> statementString.equals("UPDATE modseq SET nextModseq=:nextModseq WHERE mailboxId=:mailboxId IF nextModseq=:modSeqCondition;"))
+            .hasSize(1);
     }
 
     private void consume(Iterator<MailboxMessage> inMailbox) {
