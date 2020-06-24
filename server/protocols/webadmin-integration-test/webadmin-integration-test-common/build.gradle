@@ -10,34 +10,36 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-backends-common:apache-james-backends-es')
-    implementation project(':third-party:apache-james-linshare')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-memory')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-scanning-search')
-    implementation project(':apache-james-mailbox:backup')
-    implementation project(':james-server:james-server-guice:blob-export-guice')
-    implementation project(':james-server:james-server-guice:james-server-guice-common')
-    implementation project(':james-server:james-server-guice:james-server-guice-jmap')
-    implementation project(':james-server:james-server-guice:james-server-guice-imap')
-    implementation project(':james-server:james-server-guice:james-server-guice-jmap')
-    implementation project(':james-server:james-server-guice:james-server-guice-mailbox')
-    implementation project(':james-server:james-server-guice:james-server-guice-webadmin')
-    implementation project(':james-server:james-server-guice:james-server-mailbox-plugin-deleted-messages-vault-guice')
-    implementation project(':james-server:james-server-testing')
-    implementation project(':james-server:james-server-webadmin-core')
-    implementation project(':james-server:james-server-webadmin-data')
-    implementation project(':james-server:james-server-webadmin-mailbox')
-    implementation project(':james-server:james-server-webadmin-mailqueue')
-    implementation project(':james-server:james-server-webadmin-mailrepository')
-    implementation project(':james-server:james-server-webadmin-swagger')
+    api project(path: ':apache-james-mailbox:backup', configuration: 'tests')
+    api project(':apache-james-mailbox:apache-james-mailbox-memory')
+    api project(':apache-james-mailbox:apache-james-mailbox-scanning-search')
+    api project(':james-backends-common:apache-james-backends-es')
+    api project(':james-server:james-server-guice:blob-export-guice')
+    api project(path: ':james-server:james-server-guice:james-server-guice-common', configuration: 'tests')
+    api project(':james-server:james-server-guice:james-server-guice-jmap')
+    api project(':james-server:james-server-guice:james-server-guice-imap')
+    api project(':james-server:james-server-guice:james-server-guice-jmap')
+    api project(':james-server:james-server-guice:james-server-guice-mailbox')
+    api project(':james-server:james-server-guice:james-server-guice-webadmin')
+    api project(':james-server:james-server-guice:james-server-mailbox-plugin-deleted-messages-vault-guice')
+    api project(':james-server:james-server-testing')
+    api project(path: ':james-server:james-server-webadmin-core', configuration: 'tests')
+    api project(':james-server:james-server-webadmin-data')
+    api project(':james-server:james-server-webadmin-mailbox')
+    api project(':james-server:james-server-webadmin-mailqueue')
+    api project(':james-server:james-server-webadmin-mailrepository')
+    api project(':james-server:james-server-webadmin-swagger')
+    api project(path: ':third-party:apache-james-linshare', configuration: 'tests')
 
+    implementation 'org.awaitility:awaitility:3.1.6'
     implementation 'io.rest-assured:rest-assured:4.0.0'
     implementation 'org.hamcrest:java-hamcrest:2.0.0.0'
     implementation 'org.testcontainers:testcontainers:1.12.0'
+    implementation 'org.assertj:assertj-core:3.12.2'
+    implementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+    implementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
 }
 
 test {

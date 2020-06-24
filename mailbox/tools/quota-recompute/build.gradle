@@ -10,16 +10,14 @@ configurations {
 }
 
 dependencies {
-    api project(":james-core")
-
     api project(':apache-james-mailbox:apache-james-mailbox-api')
     api project(':apache-james-mailbox:apache-james-mailbox-store')
+    api project(":james-core")
+    api project(":james-json")
     api project(':james-server:james-server-data-api')
     api project(':james-server:james-server-task-api')
-
-    implementation project(":james-json")
-    implementation project(':james-server:james-server-util')
-    implementation project(':james-server:james-server-task-json')
+    api project(':james-server:james-server-util')
+    api project(':james-server:james-server-task-json')
 
     implementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.9'
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'

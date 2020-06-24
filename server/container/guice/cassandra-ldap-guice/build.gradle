@@ -10,10 +10,12 @@ configurations {
 }
 
 dependencies {
-    implementation project(':apache-james-mailbox:apache-james-mailbox-cassandra')
-    implementation project(':james-server:james-server-guice:james-server-cassandra-guice')
-    implementation project(':james-server:james-server-data-ldap')
-    implementation project(':james-server:james-server-guice:james-server-guice-common')
+    api project(':apache-james-mailbox:apache-james-mailbox-cassandra')
+    api project(':james-server:james-server-guice:james-server-cassandra-guice')
+    api project(':james-server:james-server-data-ldap')
+    api project(':james-server:james-server-guice:james-server-guice-common')
+
+    implementation 'com.google.inject:guice:4.2.2'
 
     testImplementation project(':james-backends-common:apache-james-backends-cassandra')
     testImplementation project(':james-backends-common:apache-james-backends-es')

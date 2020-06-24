@@ -6,14 +6,14 @@ plugins {
 }
 
 dependencies {
-    implementation project(':james-core')
-
-    implementation project(':james-backends-common:apache-james-backends-es')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-quota-search')
-    implementation project(':james-server:james-server-data-api')
+    api project(':apache-james-mailbox:apache-james-mailbox-quota-search')
+    api project(':james-core')
+    api project(':james-backends-common:apache-james-backends-es')
+    api project(':james-server:james-server-data-api')
 
-    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.4.3'
+    api 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.4.3'
+    
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.9'
 
