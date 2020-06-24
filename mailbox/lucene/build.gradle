@@ -10,14 +10,14 @@ dependencies {
     api project(':apache-james-mailbox:apache-james-mailbox-api')
     api project(':apache-james-mailbox:apache-james-mailbox-store')
 
+    api 'org.apache.lucene:lucene-core:3.6.2'
+    api 'org.apache.lucene:lucene-analyzers:3.6.2'
+    api 'org.apache.lucene:lucene-smartcn:3.6.2'
+
     implementation 'org.apache.james:apache-mime4j-core:0.8.3'
     implementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     implementation 'com.sun.mail:javax.mail:1.6.2'
-    implementation 'org.apache.lucene:lucene-analyzers:3.6.2'
-    implementation 'org.apache.lucene:lucene-core:3.6.2'
-    implementation 'org.apache.lucene:lucene-smartcn:3.6.2'
     implementation 'org.slf4j:slf4j-api:1.7.27'
-
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.google.guava:guava:25.1-jre'

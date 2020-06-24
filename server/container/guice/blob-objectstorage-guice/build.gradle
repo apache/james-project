@@ -11,9 +11,10 @@ configurations {
 
 dependencies {
     api project(':james-server:james-server-guice:blob-api-guice')
+    api project(':james-server:james-server-blob:blob-objectstorage')
+    api project(':james-server:james-server-guice:james-server-guice-configuration')
 
-    implementation project(':james-server:james-server-blob:blob-objectstorage')
-    implementation project(':james-server:james-server-guice:james-server-guice-configuration')
+    implementation 'com.google.inject:guice:4.2.2'
 
     testImplementation project(':james-server:james-server-blob:blob-objectstorage')
     testImplementation project(':james-server:james-server-guice:james-server-guice-common')

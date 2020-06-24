@@ -10,16 +10,15 @@ configurations {
 }
 
 dependencies {
-    api project(":james-core")
+    api project(':apache-james-mailbox:apache-james-mailbox-api')
     api project(':apache-mailet:apache-mailet-api')
+    api project(':event-sourcing:event-sourcing-pojo')
+    api project(':event-sourcing:event-sourcing-core')
+    api project(':event-sourcing:event-sourcing-event-store-api')
+    api project(":james-core")
     api project(':james-server:james-server-data-api')
     api project(':james-server:james-server-filesystem-api')
-    api project(':apache-james-mailbox:apache-james-mailbox-api')
-    api project(':event-sourcing:event-sourcing-event-store-api')
-
-    implementation project(':james-server:james-server-util')
-    implementation project(':event-sourcing:event-sourcing-pojo')
-    implementation project(':event-sourcing:event-sourcing-core')
+    api project(':james-server:james-server-util')
 
     implementation 'com.github.spullara.mustache.java:compiler:0.9.6'
     implementation 'javax.inject:javax.inject:1'

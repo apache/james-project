@@ -5,17 +5,18 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    tests
+}
+
 dependencies {
-    implementation project(":james-core")
-    implementation project(":james-json")
-
-    implementation project(':james-backends-common:apache-james-backends-cassandra')
-
     api project(':apache-james-mailbox:apache-james-mailbox-api')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-quota-mailing')
-
-    implementation project(':event-sourcing:event-sourcing-pojo')
-    implementation project(':event-sourcing:event-sourcing-event-store-cassandra')
+    api project(':apache-james-mailbox:apache-james-mailbox-quota-mailing')
+    api project(':event-sourcing:event-sourcing-pojo')
+    api project(':event-sourcing:event-sourcing-event-store-cassandra')
+    api project(":james-core")
+    api project(":james-json")
+    api project(':james-backends-common:apache-james-backends-cassandra')
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.9'
@@ -51,6 +52,10 @@ description = 'Apache James :: Mailbox :: Plugin :: Quota Mailing :: Cassandra'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

@@ -10,9 +10,11 @@ configurations {
 }
 
 dependencies {
-    implementation project(':apache-james-mailbox:apache-james-mailbox-cassandra')
-    implementation project(':james-server:james-server-webadmin-core')
+    api project(':apache-james-mailbox:apache-james-mailbox-cassandra')
+    api project(':james-server:james-server-webadmin-core')
 
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    implementation 'com.google.guava:guava:25.1-jre'
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 

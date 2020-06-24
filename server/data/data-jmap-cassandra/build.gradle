@@ -10,11 +10,16 @@ configurations {
 }
 
 dependencies {
+    implementation project(':james-json')
     implementation project(':james-backends-common:apache-james-backends-cassandra')
     implementation project(':apache-james-mailbox:apache-james-mailbox-cassandra')
     implementation project(':event-sourcing:event-sourcing-event-store-cassandra')
     implementation project(':james-server:james-server-data-jmap')
 
+    implementation 'org.scala-lang:scala-library:2.13.1'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.9'
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    implementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
     implementation 'com.google.guava:guava:25.1-jre'
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.slf4j:slf4j-api:1.7.27'
@@ -25,7 +30,6 @@ dependencies {
     testImplementation project(':james-json')
     testImplementation project(':james-server:james-server-data-jmap')
     testImplementation project(':metrics:metrics-tests')
-
 
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
