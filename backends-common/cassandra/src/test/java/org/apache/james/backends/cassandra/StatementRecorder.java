@@ -22,11 +22,37 @@ package org.apache.james.backends.cassandra;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.function.Predicate;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Statement;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class StatementRecorder {
+    @FunctionalInterface
+    public interface Selector {
+        Selector ALL = statements -> statements;
+
+        static Selector preparedStatement(String statementString) {
+            return preparedStatementMatching(statement -> statement.preparedStatement().getQueryString().equals(statementString));
+        }
+
+        static Selector preparedStatementStartingWith(String statementString) {
+            return preparedStatementMatching(statement -> statement.preparedStatement().getQueryString().startsWith(statementString));
+        }
+
+        private static StatementRecorder.Selector preparedStatementMatching(Predicate<BoundStatement> condition) {
+            return statements -> statements.stream()
+                .filter(BoundStatement.class::isInstance)
+                .map(BoundStatement.class::cast)
+                .filter(condition)
+                .collect(Guavate.toImmutableList());
+        }
+
+        List<Statement> select(List<Statement> statements);
+    }
+
     private final ConcurrentLinkedDeque statements;
 
     public StatementRecorder() {
@@ -39,5 +65,9 @@ public class StatementRecorder {
 
     public List<Statement> listExecutedStatements() {
         return ImmutableList.copyOf(statements);
+    }
+
+    public List<Statement> listExecutedStatements(Selector selector) {
+        return selector.select(ImmutableList.copyOf(statements));
     }
 }

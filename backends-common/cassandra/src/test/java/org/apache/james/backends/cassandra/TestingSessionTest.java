@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.Scenario.InjectedFailureException;
+import org.apache.james.backends.cassandra.StatementRecorder.Selector;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
@@ -81,11 +82,9 @@ class TestingSessionTest {
 
         dao.getCurrentSchemaVersion().block();
 
-        assertThat(statementRecorder.listExecutedStatements())
-            .filteredOn(statement -> statement instanceof BoundStatement)
-            .extracting(BoundStatement.class::cast)
-            .extracting(statement -> statement.preparedStatement().getQueryString())
-            .containsExactly("SELECT value FROM schemaVersion;");
+        assertThat(statementRecorder.listExecutedStatements(
+                Selector.preparedStatement("SELECT value FROM schemaVersion;")))
+            .hasSize(1);
     }
 
     @Test
@@ -96,7 +95,7 @@ class TestingSessionTest {
         dao.updateVersion(new SchemaVersion(36)).block();
         dao.getCurrentSchemaVersion().block();
 
-        assertThat(statementRecorder.listExecutedStatements())
+        assertThat(statementRecorder.listExecutedStatements(Selector.ALL))
             .filteredOn(statement -> statement instanceof BoundStatement)
             .extracting(BoundStatement.class::cast)
             .extracting(statement -> statement.preparedStatement().getQueryString())

@@ -30,6 +30,7 @@ import javax.mail.Flags;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
+import org.apache.james.backends.cassandra.StatementRecorder.Selector;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -47,7 +48,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
-import com.datastax.driver.core.BoundStatement;
 import com.github.fge.lambdas.Throwing;
 
 class CassandraMessageMapperTest extends MessageMapperTest {
@@ -69,11 +69,10 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         int limit = 2;
         consume(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Full, limit));
 
-        assertThat(statementRecorder.listExecutedStatements())
-            .filteredOn(statement -> statement instanceof BoundStatement)
-            .extracting(BoundStatement.class::cast)
-            .extracting(statement -> statement.preparedStatement().getQueryString())
-            .filteredOn(statementString -> statementString.equals("SELECT messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,textualLineCount,properties,attachments FROM messageV2 WHERE messageId=:messageId;"))
+
+        assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
+            "SELECT messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,textualLineCount,properties,attachments " +
+                "FROM messageV2 WHERE messageId=:messageId;")))
             .hasSize(limit);
     }
 
@@ -86,11 +85,8 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE), MessageRange.all());
 
-        assertThat(statementRecorder.listExecutedStatements())
-            .filteredOn(statement -> statement instanceof BoundStatement)
-            .extracting(BoundStatement.class::cast)
-            .extracting(statement -> statement.preparedStatement().getQueryString())
-            .filteredOn(statementString -> statementString.equals("UPDATE modseq SET nextModseq=:nextModseq WHERE mailboxId=:mailboxId IF nextModseq=:modSeqCondition;"))
+        assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
+            "UPDATE modseq SET nextModseq=:nextModseq WHERE mailboxId=:mailboxId IF nextModseq=:modSeqCondition;")))
             .hasSize(1);
     }
 
