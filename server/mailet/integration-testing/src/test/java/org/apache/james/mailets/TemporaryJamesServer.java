@@ -148,7 +148,9 @@ public class TemporaryJamesServer {
             .overrideWith(additionalModules)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith((binder) -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
+    }
 
+    public void start() throws Exception {
         jamesServer.start();
     }
 

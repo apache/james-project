@@ -75,6 +75,7 @@ public class SenderIsLocalIntegrationTest {
                 .postmaster(POSTMASTER)
                 .putProcessor(transport()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);

@@ -85,6 +85,7 @@ public class SMIMEDecryptIntegrationTest {
             .withOverrides(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015))
             .withMailetContainer(mailetContainer)
             .build(workingDir);
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

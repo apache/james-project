@@ -107,6 +107,7 @@ public class AmqpForwardAttachmentTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataprobe = jamesServer.getProbe(DataProbeImpl.class);
         dataprobe.addDomain(DEFAULT_DOMAIN);

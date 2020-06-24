@@ -51,6 +51,7 @@ public class SmtpBracketEnforcementTest {
         jamesServer = TemporaryJamesServer.builder()
             .withSmtpConfiguration(smtpConfiguration)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

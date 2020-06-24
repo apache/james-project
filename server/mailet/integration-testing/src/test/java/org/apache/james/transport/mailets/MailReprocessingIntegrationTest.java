@@ -88,6 +88,7 @@ public class MailReprocessingIntegrationTest {
             .withBase(Modules.combine(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE, MemoryJamesServerMain.WEBADMIN_TESTING))
             .withMailetContainer(mailets)
             .build(folder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

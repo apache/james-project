@@ -140,6 +140,7 @@ public class SmtpRandomStoringTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
     }
 
     private void sendMails() throws Exception {

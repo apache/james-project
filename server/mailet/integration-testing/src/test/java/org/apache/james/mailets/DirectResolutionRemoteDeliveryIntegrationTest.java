@@ -101,6 +101,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -127,6 +128,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -151,6 +153,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
                 .putProcessor(transport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -177,6 +180,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
                 .putProcessor(transport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -212,6 +216,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
                         .matcher(All.class)))
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

@@ -71,6 +71,7 @@ public class AddFooterTest {
                         .addProperty("text", MATCH_ME))
                     .addMailetsFrom(CommonProcessors.transport())))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

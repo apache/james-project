@@ -65,6 +65,7 @@ public class SizeGreaterThanIntegrationTest {
             .withMailetContainer(
                 generateMailetContainerConfiguration())
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

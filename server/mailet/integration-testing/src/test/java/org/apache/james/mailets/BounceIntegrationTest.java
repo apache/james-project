@@ -146,6 +146,7 @@ public class BounceIntegrationTest {
                 .withMailetContainer(
                         generateMailetContainerConfiguration(mailetConfiguration))
                 .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
                 .fluent()

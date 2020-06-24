@@ -144,6 +144,7 @@ public class RemoteDeliveryErrorTest {
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

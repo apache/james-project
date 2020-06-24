@@ -90,6 +90,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -110,6 +111,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -129,6 +131,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -149,6 +152,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -170,6 +174,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -195,6 +200,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -224,6 +230,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
                         .matcher(All.class)
                         .addProperty("gateway", gatewayProperty))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

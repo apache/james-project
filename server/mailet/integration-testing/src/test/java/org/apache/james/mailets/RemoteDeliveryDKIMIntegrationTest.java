@@ -146,6 +146,7 @@ class RemoteDeliveryDKIMIntegrationTest {
                         .addProperty("mail.smtp.allow8bitmime", "true")))
                     .putProcessor(CommonProcessors.bounces()))
                 .build(tempDir);
+            jamesServer.start();
 
             dataProbe = jamesServer.getProbe(DataProbeImpl.class);
             dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -186,6 +187,7 @@ class RemoteDeliveryDKIMIntegrationTest {
                         .addProperty("mail.smtp.allow8bitmime", "true")))
                     .putProcessor(CommonProcessors.bounces()))
                 .build(tempDir);
+            jamesServer.start();
 
             dataProbe = jamesServer.getProbe(DataProbeImpl.class);
             dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -230,6 +232,7 @@ class RemoteDeliveryDKIMIntegrationTest {
                     .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
                     .putProcessor(CommonProcessors.bounces()))
                 .build(tempDir);
+            jamesServer.start();
 
             dataProbe = jamesServer.getProbe(DataProbeImpl.class);
             dataProbe.addDomain(DEFAULT_DOMAIN);
