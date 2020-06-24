@@ -10,15 +10,20 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-backends-common:apache-james-backends-cassandra')
-    implementation project(':james-server:james-server-data-cassandra')
-    implementation project(':james-server:james-server-task-json')
-    implementation project(':james-server:james-server-webadmin-core')
+    api project(':james-backends-common:apache-james-backends-cassandra')
+    api project(':james-server:james-server-data-cassandra')
+    api project(':james-server:james-server-task-json')
+    api project(':james-server:james-server-webadmin-core')
+
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    implementation 'javax.inject:javax.inject:1'
+
     testImplementation project(':james-backends-common:apache-james-backends-cassandra')
     testImplementation project(':james-server:james-server-task-memory')
     testImplementation project(':james-server:james-server-webadmin-core')
     testImplementation project(':metrics:metrics-tests')
     testImplementation project(':testing-base')
+
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
@@ -39,6 +44,10 @@ description = 'Apache James :: Server :: Web Admin :: Cassandra :: Data'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

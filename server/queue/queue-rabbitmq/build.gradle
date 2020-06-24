@@ -10,29 +10,34 @@ configurations {
 }
 
 dependencies {
-    api project(':metrics:metrics-api')
+    api project(':event-sourcing:event-sourcing-core')
+    api project(':event-sourcing:event-sourcing-event-store-cassandra')
+    api project(':event-sourcing:event-sourcing-pojo')
     api project(':james-server:james-server-blob:blob-api')
+    api project(':james-server:james-server-blob:blob-common')
     api project(':james-server:james-server-queue-api')
-
-    implementation project(':james-backends-common:apache-james-backends-rabbitmq')
-    implementation project(':james-backends-common:apache-james-backends-cassandra')
-    implementation project(':event-sourcing:event-sourcing-core')
-    implementation project(':event-sourcing:event-sourcing-event-store-cassandra')
-    implementation project(':event-sourcing:event-sourcing-pojo')
-    implementation project(':james-server:james-server-core')
-    implementation project(':james-server:james-server-blob:james-server-mail-store')
-    implementation project(':james-server:james-server-util')
+    api project(':james-backends-common:apache-james-backends-rabbitmq')
+    api project(':james-backends-common:apache-james-backends-cassandra')
+    api project(':james-server:james-server-core')
+    api project(':james-server:james-server-blob:james-server-mail-store')
+    api project(':james-server:james-server-util')
+    api project(':metrics:metrics-api')
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.9'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.9'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.9'
+    implementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'com.rabbitmq:amqp-client:5.7.3'
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    implementation 'io.projectreactor.rabbitmq:reactor-rabbitmq:1.4.1.RELEASE'
     implementation 'javax.inject:javax.inject:1'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
+    implementation 'org.scala-lang:scala-library:2.13.1'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
     testImplementation project(':james-backends-common:apache-james-backends-rabbitmq')

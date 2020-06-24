@@ -33,6 +33,8 @@ dependencies {
     api project(':metrics:metrics-api')
     api project(':metrics:metrics-dropwizard')
 
+    api 'com.google.inject:guice:4.2.2'
+
     implementation 'io.dropwizard.metrics:metrics-core:4.1.0'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
