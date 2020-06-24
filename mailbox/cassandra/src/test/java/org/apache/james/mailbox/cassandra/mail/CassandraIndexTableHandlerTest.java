@@ -286,7 +286,7 @@ class CassandraIndexTableHandlerTest {
 
         testee.updateIndexOnDelete(new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
-                new Flags(),
+                new Flags(Flags.Flag.DELETED),
                 MODSEQ),
             MAILBOX_ID).block();
 

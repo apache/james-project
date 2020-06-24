@@ -64,6 +64,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 public class CassandraMessageMapper implements MessageMapper {
@@ -139,25 +140,30 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public void delete(Mailbox mailbox, MailboxMessage message) {
-        deleteAsFuture(message)
+        ComposedMessageIdWithMetaData metaData = message.getComposedMessageIdWithMetaData();
+
+        deleteAndHandleIndexUpdates(metaData)
             .block();
     }
 
-    private Mono<Void> deleteAsFuture(MailboxMessage message) {
-        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = message.getComposedMessageIdWithMetaData();
+    private Mono<Void> deleteAndHandleIndexUpdates(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
+        ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
+        CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
 
-        return deleteUsingMailboxId(composedMessageIdWithMetaData);
+        return delete(composedMessageIdWithMetaData)
+             .then(indexTableHandler.updateIndexOnDelete(composedMessageIdWithMetaData, mailboxId));
     }
 
-    private Mono<Void> deleteUsingMailboxId(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
+    private Mono<Void> delete(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         CassandraMessageId messageId = (CassandraMessageId) composedMessageId.getMessageId();
         CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
         MessageUid uid = composedMessageId.getUid();
+
         return Flux.merge(
                 imapUidDAO.delete(messageId, mailboxId),
                 messageIdDAO.delete(mailboxId, uid))
-            .then(indexTableHandler.updateIndexOnDelete(composedMessageIdWithMetaData, mailboxId));
+                .then();
     }
 
     @Override
@@ -211,25 +217,20 @@ public class CassandraMessageMapper implements MessageMapper {
     public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return Flux.fromStream(uids.stream())
-            .flatMap(messageUid -> expungeOne(mailboxId, messageUid), cassandraConfiguration.getExpungeChunkSize())
-            .collect(Guavate.<SimpleMailboxMessage, MessageUid, MessageMetaData>toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData))
+        return Flux.fromIterable(MessageRange.toRanges(uids))
+            .concatMap(range -> messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited()))
+            .flatMap(this::expungeOne, cassandraConfiguration.getExpungeChunkSize())
+            .collect(Guavate.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData))
+            .flatMap(messageMap -> indexTableHandler.updateIndexOnDelete(mailboxId, messageMap.values())
+                .thenReturn(messageMap))
+            .subscribeOn(Schedulers.elastic())
             .block();
     }
 
-    private Mono<SimpleMailboxMessage> expungeOne(CassandraId mailboxId, MessageUid messageUid) {
-        return retrieveComposedId(mailboxId, messageUid)
-            .flatMap(idWithMetadata -> deleteUsingMailboxId(idWithMetadata).thenReturn(idWithMetadata))
-            .flatMap(idWithMetadata -> messageDAO.retrieveMessage(idWithMetadata, FetchType.Metadata)
-                .map(pair -> pair.toMailboxMessage(idWithMetadata, ImmutableList.of())));
-    }
-
-    private Mono<ComposedMessageIdWithMetaData> retrieveComposedId(CassandraId mailboxId, MessageUid uid) {
-        return messageIdDAO.retrieve(mailboxId, uid)
-            .handle((t, sink) ->
-                t.ifPresentOrElse(
-                    sink::next,
-                    () -> LOGGER.warn("Could not retrieve message {} {}", mailboxId, uid)));
+    private Mono<SimpleMailboxMessage> expungeOne(ComposedMessageIdWithMetaData metaData) {
+        return delete(metaData)
+            .then(messageDAO.retrieveMessage(metaData, FetchType.Metadata)
+                .map(pair -> pair.toMailboxMessage(metaData, ImmutableList.of())));
     }
 
     @Override
@@ -237,7 +238,7 @@ public class CassandraMessageMapper implements MessageMapper {
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = original.getComposedMessageIdWithMetaData();
 
         MessageMetaData messageMetaData = copy(destinationMailbox, original);
-        deleteUsingMailboxId(composedMessageIdWithMetaData).block();
+        deleteAndHandleIndexUpdates(composedMessageIdWithMetaData).block();
 
         return messageMetaData;
     }
@@ -357,14 +358,12 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private Mono<FlagsUpdateStageResult> updateIndexesForUpdatesResult(CassandraId mailboxId, FlagsUpdateStageResult result) {
-        return Flux.fromIterable(result.getSucceeded())
-            .flatMap(Throwing
-                .function((UpdatedFlags updatedFlags) -> indexTableHandler.updateIndexOnFlagsUpdate(mailboxId, updatedFlags))
-                .fallbackTo(failedIndex -> {
-                    LOGGER.error("Could not update flag indexes for mailboxId {} UID {}. This will lead to inconsistencies across Cassandra tables", mailboxId, failedIndex.getUid());
-                    return Mono.empty();
-                }))
-            .then(Mono.just(result));
+        return indexTableHandler.updateIndexOnFlagsUpdate(mailboxId, result.getSucceeded())
+            .onErrorResume(e -> {
+                LOGGER.error("Could not update flag indexes for mailboxId {}. This will lead to inconsistencies across Cassandra tables", mailboxId, e);
+                return Mono.empty();
+            })
+            .thenReturn(result);
     }
 
     @Override

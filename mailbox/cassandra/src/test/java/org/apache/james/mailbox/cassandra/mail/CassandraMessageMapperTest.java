@@ -59,39 +59,136 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         return new CassandraMapperProvider(cassandraCluster.getCassandraCluster());
     }
 
-    @Test
-    void findInMailboxLimitShouldLimitProjectionReadCassandraQueries(CassandraCluster cassandra) throws MailboxException {
-        saveMessages();
+    @Nested
+    class StatementLimitationTests {
+        @Test
+        void deleteMessagesShouldGroupMessageReads(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
 
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+            cassandra.getConf().printStatements();
 
-        int limit = 2;
-        consume(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Full, limit));
+            messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
+
+            assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatementStartingWith(
+                "SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen," +
+                    "flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId AND ")))
+                .hasSize(1);
+        }
+
+        @Test
+        void deleteMessagesShouldGroupCounterUpdates(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+            cassandra.getConf().printStatements();
+
+            messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
+
+            assertThat(statementRecorder.listExecutedStatements(
+                Selector.preparedStatementStartingWith("UPDATE mailboxCounters SET ")))
+                .hasSize(1);
+        }
+
+        @Test
+        void deleteMessagesShouldNotDeleteMessageNotMarkedAsDeletedInDeletedProjection(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+            cassandra.getConf().printStatements();
+
+            messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
+
+            assertThat(statementRecorder.listExecutedStatements(
+                Selector.preparedStatement("DELETE FROM messageDeleted WHERE mailboxId=:mailboxId AND uid=:uid;")))
+                .isEmpty();
+        }
+
+        @Test
+        void deleteMessagesShouldNotDeleteMessageNotMarkedAsRecentInRecentProjection(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+            cassandra.getConf().printStatements();
+
+            messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
+
+            assertThat(statementRecorder.listExecutedStatements(
+                Selector.preparedStatement("DELETE FROM messageDeleted WHERE mailboxId=:mailboxId AND uid=:uid;")))
+                .isEmpty();
+        }
+
+        @Test
+        void deleteMessagesShouldNotDeleteMessageNotMarkedAsUnSeenInFirstUnseenProjection(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+            FlagsUpdateCalculator markAsRead = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD);
+            messageMapper.updateFlags(benwaInboxMailbox, markAsRead, MessageRange.all());
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+            cassandra.getConf().printStatements();
+
+            messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
+
+            assertThat(statementRecorder.listExecutedStatements(
+                Selector.preparedStatement("DELETE FROM firstUnseen WHERE mailboxId=:mailboxId AND uid=:uid;")))
+                .isEmpty();
+        }
+
+        @Test
+        void updateFlagsShouldUpdateMailboxCountersOnce(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+            cassandra.getConf().printStatements();
+
+            messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.REPLACE), MessageRange.all());
 
 
-        assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
-            "SELECT messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,textualLineCount,properties,attachments " +
-                "FROM messageV2 WHERE messageId=:messageId;")))
-            .hasSize(limit);
-    }
+            assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatementStartingWith(
+                "UPDATE mailboxCounters SET ")))
+                .hasSize(1);
+        }
 
-    @Test
-    void updateFlagsShouldLimitModSeqAllocation(CassandraCluster cassandra) throws MailboxException {
-        saveMessages();
+        @Test
+        void findInMailboxLimitShouldLimitProjectionReadCassandraQueries(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
 
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
 
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE), MessageRange.all());
+            int limit = 2;
+            consume(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Full, limit));
 
-        assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
-            "UPDATE modseq SET nextModseq=:nextModseq WHERE mailboxId=:mailboxId IF nextModseq=:modSeqCondition;")))
-            .hasSize(1);
-    }
 
-    private void consume(Iterator<MailboxMessage> inMailbox) {
-        ImmutableList.copyOf(inMailbox);
+            assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
+                "SELECT messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,textualLineCount,properties,attachments " +
+                    "FROM messageV2 WHERE messageId=:messageId;")))
+                .hasSize(limit);
+        }
+
+        @Test
+        void updateFlagsShouldLimitModSeqAllocation(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+
+            messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE), MessageRange.all());
+
+            assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
+                "UPDATE modseq SET nextModseq=:nextModseq WHERE mailboxId=:mailboxId IF nextModseq=:modSeqCondition;")))
+                .hasSize(1);
+        }
+
+        private void consume(Iterator<MailboxMessage> inMailbox) {
+            ImmutableList.copyOf(inMailbox);
+        }
     }
 
     @Nested

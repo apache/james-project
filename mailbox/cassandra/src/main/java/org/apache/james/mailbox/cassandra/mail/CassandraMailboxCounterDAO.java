@@ -136,7 +136,7 @@ public class CassandraMailboxCounterDAO {
             .build();
     }
 
-    private Mono<Void> add(MailboxCounters counters) {
+    public Mono<Void> add(MailboxCounters counters) {
         CassandraId mailboxId = (CassandraId) counters.getMailboxId();
         return cassandraAsyncExecutor.executeVoid(
             bindWithMailbox(mailboxId, addToCounters)
@@ -144,7 +144,7 @@ public class CassandraMailboxCounterDAO {
                 .setLong(UNSEEN, counters.getUnseen()));
     }
 
-    private Mono<Void> remove(MailboxCounters counters) {
+    public Mono<Void> remove(MailboxCounters counters) {
         CassandraId mailboxId = (CassandraId) counters.getMailboxId();
         return cassandraAsyncExecutor.executeVoid(
             bindWithMailbox(mailboxId, removeToCounters)
