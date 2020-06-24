@@ -20,7 +20,6 @@ dependencies {
     testImplementation project(path: ':james-core', configuration: 'tests')
     testImplementation project(':james-server:james-server-data-api')
 
-
     testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     testImplementation 'org.assertj:assertj-core:3.12.2'
     testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'

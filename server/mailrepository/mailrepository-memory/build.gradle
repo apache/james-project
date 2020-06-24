@@ -14,9 +14,8 @@ dependencies {
     api project(':james-server:james-server-mailrepository-api')
     implementation 'com.sun.mail:javax.mail:1.6.2'
 
-    testImplementation project(':james-server:james-server-mailrepository-api')
-//    testImplementation project(path: ':james-server:james-server-data-library', configuration: 'tests')
-    testImplementation project(':testing-base')
+    testImplementation project(path: ':james-server:james-server-mailrepository-api', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-data-library', configuration: 'tests')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

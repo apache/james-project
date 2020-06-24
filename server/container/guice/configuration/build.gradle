@@ -12,20 +12,13 @@ configurations {
 dependencies {
     api project(':james-server:james-server-filesystem-api')
     api project(':james-server:james-server-lifecycle-api')
-
-    // TODO: @ieugen: this should probably be implementation
     api project(':james-server:james-server-core')
 
-
-    api 'com.github.steveash.guavate:guavate:1.0.0'
-
-    api 'com.google.guava:guava:25.1-jre'
-
-    api 'org.apache.commons:commons-configuration2:2.7'
-
-    api 'javax.inject:javax.inject:1'
-
-    api 'org.slf4j:slf4j-api:1.7.27'
+    implementation 'com.github.steveash.guavate:guavate:1.0.0'
+    implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'org.slf4j:slf4j-api:1.7.27'
 
     testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
 

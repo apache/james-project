@@ -11,9 +11,8 @@ configurations {
 
 dependencies {
     api project(':james-server:james-server-filesystem-api')
-
-    implementation project(':james-server:james-server-guice:james-server-guice-configuration')
-    implementation project(':james-server:james-server-util')
+    api project(':james-server:james-server-guice:james-server-guice-configuration')
+    api project(':james-server:james-server-util')
 
     implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'

@@ -10,22 +10,22 @@ configurations {
 }
 
 dependencies {
+    api project(':apache-james-mailbox:apache-james-mailbox-tools-copier')
+    api project(':apache-james-mailbox:apache-james-mailbox-tools-indexer')
+    api project(':james-core')
     api project(':james-server:james-server-data-api')
+    api project(':james-server:james-server-data-library')
     api project(':james-server:james-server-mailetcontainer-api')
-
-    implementation project(':james-core')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-tools-copier')
-    implementation project(':apache-james-mailbox:apache-james-mailbox-tools-indexer')
-    implementation project(':james-server:james-server-data-library')
-    implementation project(':james-server:james-server-guice:james-server-guice-common')
-    implementation project(':james-server:james-server-guice:james-server-guice-configuration')
-    implementation project(':james-server:james-server-mailbox-jmx')
-    implementation project(':james-server:james-server-mailetcontainer-camel')
-    implementation project(':james-server:james-server-util')
+    api project(':james-server:james-server-mailetcontainer-camel')
+    api project(':james-server:james-server-mailbox-jmx')
+    api project(':james-server:james-server-util')
+    api project(':james-server:james-server-guice:james-server-guice-common')
+    api project(':james-server:james-server-guice:james-server-guice-configuration')
 
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
     implementation 'com.google.inject:guice:4.2.2'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'

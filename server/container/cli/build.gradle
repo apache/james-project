@@ -10,11 +10,10 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-core')
-
+    api project(':james-core')
     api project(':james-server:james-server-data-api')
-    implementation project(':james-server:james-server-mailbox-jmx')
-    implementation project(':james-server:james-server-util')
+    api project(':james-server:james-server-mailbox-jmx')
+    api project(':james-server:james-server-util')
 
     implementation 'com.google.guava:guava:25.1-jre'
     implementation 'commons-cli:commons-cli:1.4'
