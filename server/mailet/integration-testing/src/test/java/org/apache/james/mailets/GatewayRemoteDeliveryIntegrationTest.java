@@ -222,7 +222,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
                     .addMailet(MailetConfiguration.LOCAL_DELIVERY)
@@ -253,7 +253,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     private MailetContainer.Builder generateMailetContainerConfiguration(String gatewayProperty) {
-        return TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        return TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(relayAndLocalDeliveryTransport(gatewayProperty));
     }
 

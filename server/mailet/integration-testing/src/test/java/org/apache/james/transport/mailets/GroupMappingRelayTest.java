@@ -76,7 +76,7 @@ public class GroupMappingRelayTest {
 
     @Before
     public void setup() throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.rrtErrorEnabledTransport()
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(All.class)

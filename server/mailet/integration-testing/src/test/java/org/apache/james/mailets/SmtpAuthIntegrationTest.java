@@ -71,7 +71,7 @@ public class SmtpAuthIntegrationTest {
                 .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(MailetConfiguration.TO_BOUNCE);
 
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(rootProcessor)
             .putProcessor(CommonProcessors.deliverOnlyTransport())
             .putProcessor(bounces());

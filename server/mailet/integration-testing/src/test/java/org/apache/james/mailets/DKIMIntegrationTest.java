@@ -113,7 +113,7 @@ public class DKIMIntegrationTest {
     public void setup() throws Exception {
         dkimAuthResults = new ArrayList<>();
         ExtractAttributeStub.setDkimAuthResultInspector(value -> dkimAuthResults.add(value.map(result -> (String) result)));
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(DKIMSIGN_MAILET)
                 .addMailet(DKIMVERIFY_MAILET)

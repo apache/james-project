@@ -66,7 +66,7 @@ public class SmtpAuthorizedAddressesTest {
     private TemporaryJamesServer jamesServer;
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()

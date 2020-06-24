@@ -236,7 +236,7 @@ public class BounceIntegrationTest {
     }
 
     private MailetContainer.Builder generateMailetContainerConfiguration(MailetConfiguration.Builder redirectionMailetConfiguration) {
-        return TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+        return TemporaryJamesServer.defaultMailetContainerConfiguration()
             .postmaster(POSTMASTER)
             .putProcessor(transport())
             .putProcessor(bounces(redirectionMailetConfiguration));

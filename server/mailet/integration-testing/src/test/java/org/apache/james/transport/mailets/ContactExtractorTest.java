@@ -82,7 +82,7 @@ public class ContactExtractorTest {
     @Before
     public void setup() throws Exception {
         String attribute = "ExtractedContacts";
-        MailetContainer.Builder mailets = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .postmaster(SENDER)
             .putProcessor(
                 ProcessorConfiguration.transport()

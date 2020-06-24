@@ -65,7 +65,7 @@ public class SMTPHeloHooksTest {
     private TemporaryJamesServer jamesServer;
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.deliverOnlyTransport());
 
         jamesServer = TemporaryJamesServer.builder()

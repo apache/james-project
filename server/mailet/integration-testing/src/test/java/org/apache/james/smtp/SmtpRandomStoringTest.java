@@ -131,7 +131,7 @@ public class SmtpRandomStoringTest {
     }
 
     private void createJamesServer() throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(RANDOM_STORING)
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));

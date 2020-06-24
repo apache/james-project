@@ -71,7 +71,7 @@ public class SenderIsLocalIntegrationTest {
     public void setUp() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .withMailetContainer(TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.defaultMailetContainerConfiguration()
                 .postmaster(POSTMASTER)
                 .putProcessor(transport()))
             .build(temporaryFolder.newFolder());

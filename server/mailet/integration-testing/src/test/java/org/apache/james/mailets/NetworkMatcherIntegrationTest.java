@@ -63,7 +63,7 @@ public class NetworkMatcherIntegrationTest {
     private TemporaryJamesServer createJamesServerWithRootProcessor(ProcessorConfiguration.Builder rootProcessor) throws Exception {
         TemporaryJamesServer temporaryJamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .withMailetContainer(TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.defaultMailetContainerConfiguration()
                 .putProcessor(rootProcessor)
                 .putProcessor(CommonProcessors.deliverOnlyTransport()))
             .build(temporaryFolder.newFolder());
