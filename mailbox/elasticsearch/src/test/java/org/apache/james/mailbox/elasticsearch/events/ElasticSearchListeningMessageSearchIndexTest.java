@@ -275,7 +275,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.add(session, mailbox, MESSAGE_1).block();
         elasticSearch.awaitForElasticSearch();
 
-        testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)).block();
+        testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block();
         elasticSearch.awaitForElasticSearch();
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
@@ -290,7 +290,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)).block();
+        testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block();
         elasticSearch.awaitForElasticSearch();
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
@@ -305,7 +305,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1, MESSAGE_UID_2)).block();
+        testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1, MESSAGE_UID_2)).block();
         elasticSearch.awaitForElasticSearch();
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
@@ -318,8 +318,8 @@ class ElasticSearchListeningMessageSearchIndexTest {
         testee.add(session, mailbox, MESSAGE_1).block();
         elasticSearch.awaitForElasticSearch();
 
-        testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)).block();
-        testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)).block();
+        testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block();
+        testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block();
         elasticSearch.awaitForElasticSearch();
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
@@ -329,7 +329,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
     @Test
     void deleteShouldNotThrowOnUnknownMessageUid() {
-        assertThatCode(() -> testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)).block())
+        assertThatCode(() -> testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block())
             .doesNotThrowAnyException();
     }
 
@@ -338,7 +338,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         elasticSearch.getDockerElasticSearch().pause();
         Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
 
-        assertThatThrownBy(() -> testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)).block())
+        assertThatThrownBy(() -> testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block())
             .hasCauseInstanceOf(IOException.class);
 
         elasticSearch.getDockerElasticSearch().unpause();
@@ -357,7 +357,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
             .newFlags(newFlags)
             .build();
 
-        testee.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+        testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
         elasticSearch.awaitForElasticSearch();
 
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
@@ -378,7 +378,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
             .newFlags(newFlags)
             .build();
 
-        testee.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+        testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
         elasticSearch.awaitForElasticSearch();
 
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
@@ -399,8 +399,8 @@ class ElasticSearchListeningMessageSearchIndexTest {
             .newFlags(newFlags)
             .build();
 
-        testee.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
-        testee.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+        testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
+        testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
         elasticSearch.awaitForElasticSearch();
 
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
@@ -421,7 +421,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
             .newFlags(newFlags)
             .build();
 
-        assertThatThrownBy(() -> testee.update(session, mailbox, Lists.newArrayList(updatedFlags)).block())
+        assertThatThrownBy(() -> testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block())
             .hasCauseInstanceOf(IOException.class);
 
         elasticSearch.getDockerElasticSearch().unpause();

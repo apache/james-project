@@ -369,7 +369,7 @@ class MailboxesRoutesTest {
                     .build();
 
                 // We update on the searchIndex level to try to create inconsistencies
-                searchIndex.update(systemSession, mailbox, ImmutableList.of(updatedFlags)).block();
+                searchIndex.update(systemSession, mailbox.getMailboxId(), ImmutableList.of(updatedFlags)).block();
 
                 String taskId = with()
                     .post("/mailboxes?task=reIndex&mode=fixOutdated")
@@ -416,7 +416,7 @@ class MailboxesRoutesTest {
                     .build();
 
                 // We update on the searchIndex level to try to create inconsistencies
-                searchIndex.update(systemSession, mailbox, ImmutableList.of(updatedFlags)).block();
+                searchIndex.update(systemSession, mailbox.getMailboxId(), ImmutableList.of(updatedFlags)).block();
 
                 String taskId = with()
                     .post("/mailboxes?task=reIndex&mode=fixOutdated")
@@ -741,7 +741,7 @@ class MailboxesRoutesTest {
                     .build();
 
                 // We update on the searchIndex level to try to create inconsistencies
-                searchIndex.update(systemSession, mailbox, ImmutableList.of(updatedFlags)).block();
+                searchIndex.update(systemSession, mailbox.getMailboxId(), ImmutableList.of(updatedFlags)).block();
 
                 String taskId = with()
                     .queryParam("task", "reIndex")
@@ -790,7 +790,7 @@ class MailboxesRoutesTest {
                     .build();
 
                 // We update on the searchIndex level to try to create inconsistencies
-                searchIndex.update(systemSession, mailbox, ImmutableList.of(updatedFlags)).block();
+                searchIndex.update(systemSession, mailbox.getMailboxId(), ImmutableList.of(updatedFlags)).block();
 
                 String taskId = with()
                     .queryParam("task", "reIndex")

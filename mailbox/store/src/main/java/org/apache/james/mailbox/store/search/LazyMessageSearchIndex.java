@@ -95,8 +95,8 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public Mono<Void> delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
-        return index.delete(session, mailbox, expungedUids);
+    public Mono<Void> delete(MailboxSession session, MailboxId mailboxId, Collection<MessageUid> expungedUids) {
+        return index.delete(session, mailboxId, expungedUids);
     }
 
     @Override
@@ -139,8 +139,8 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
-        return index.update(session, mailbox, updatedFlagsList);
+    public Mono<Void> update(MailboxSession session, MailboxId mailboxId, List<UpdatedFlags> updatedFlagsList) {
+        return index.update(session, mailboxId, updatedFlagsList);
     }
     
 

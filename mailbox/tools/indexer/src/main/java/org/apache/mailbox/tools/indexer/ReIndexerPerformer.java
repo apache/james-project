@@ -332,7 +332,7 @@ public class ReIndexerPerformer {
     }
 
     private Mono<Either<Failure, Result>> correct(ReIndexingEntry entry, MailboxMessage message) {
-        return messageSearchIndex.delete(entry.getMailboxSession(), entry.getMailbox(), ImmutableList.of(message.getUid()))
+        return messageSearchIndex.delete(entry.getMailboxSession(), entry.getMailbox().getMailboxId(), ImmutableList.of(message.getUid()))
             .then(index(entry));
     }
 
