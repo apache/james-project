@@ -10,12 +10,11 @@ configurations {
 }
 
 dependencies {
+    api project(':james-core')
     api project(':james-server:james-server-blob:blob-export-api')
+    api project(':james-server:james-server-core')
     api project(':james-server:james-server-dnsservice-api')
     api project(':james-server:james-server-filesystem-api')
-
-    implementation project(':james-core')
-    implementation project(':james-server:james-server-core')
 
     implementation 'com.google.guava:guava:25.1-jre'
     implementation 'commons-io:commons-io:2.6'
@@ -25,9 +24,13 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
     testImplementation project(':apache-mailet:apache-mailet-test')
+    testImplementation project(':james-server:james-server-util')
     testImplementation project(':james-server:james-server-blob:blob-memory')
 
+    testImplementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -42,6 +45,10 @@ description = 'Apache James :: Server :: Blob :: Export :: File implementation'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

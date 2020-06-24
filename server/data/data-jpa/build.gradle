@@ -42,16 +42,17 @@ dependencies {
     implementation 'org.slf4j:log4j-over-slf4j:1.7.27'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
-    testImplementation project(':james-backends-common:apache-james-backends-jpa')
-    testImplementation project(':james-server:james-server-data-api')
-    testImplementation project(':james-server:james-server-data-library')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-jpa', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-data-api', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-data-library', configuration: 'tests')
     testImplementation project(':james-server:james-server-dnsservice-test')
 
-
     testImplementation 'org.apache.derby:derby:10.14.2.0'
+    testImplementation 'org.apache.openjpa:openjpa:3.1.0'
     testImplementation 'io.cucumber:cucumber-java:2.4.0'
     testImplementation 'io.cucumber:cucumber-junit:2.4.0'
     testImplementation 'io.cucumber:cucumber-picocontainer:2.4.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

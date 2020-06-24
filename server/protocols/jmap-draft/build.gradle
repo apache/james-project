@@ -46,29 +46,36 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.27'
     implementation 'com.sun.mail:javax.mail:1.6.2'
 
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
+    testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-memory', configuration: 'tests')
     testImplementation project(':apache-mailet:apache-mailet-test')
     testImplementation project(':event-sourcing:event-sourcing-event-store-memory')
     testImplementation project(':james-server:james-server-data-memory')
     testImplementation project(':james-server:james-server-dnsservice-test')
-    testImplementation project(':james-server:james-server-filesystem-api')
+    testImplementation project(path: ':james-server:james-server-filesystem-api', configuration: 'tests')
     testImplementation project(':james-server:james-server-queue-memory')
-    testImplementation project(':james-server:james-server-util')
+    testImplementation project(path: ':james-server:james-server-util', configuration: 'tests')
     testImplementation project(':metrics:metrics-logger')
     testImplementation project(':metrics:metrics-tests')
 
+    testImplementation 'org.apache.commons:commons-configuration2:2.7'
     testImplementation 'com.github.dpaukov:combinatoricslib3:3.3.0'
     testImplementation 'com.jayway.jsonpath:json-path:2.4.0'
+    testImplementation 'commons-io:commons-io:2.6'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.junit.platform:junit-platform-engine:1.5.1'
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testCompileOnly 'junit:junit:4.13'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
 }
 

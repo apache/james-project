@@ -10,10 +10,9 @@ configurations {
 }
 
 dependencies {
-    api project(':james-core')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
-
-    implementation project(':james-server:james-server-util')
+    api project(':james-core')
+    api project(':james-server:james-server-util')
 
     implementation 'org.reactivestreams:reactive-streams:1.0.3'
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
@@ -36,7 +35,6 @@ dependencies {
 
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':metrics:metrics-tests')
-
 
     testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
 

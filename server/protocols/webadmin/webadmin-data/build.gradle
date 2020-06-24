@@ -29,16 +29,20 @@ dependencies {
 
     testImplementation project(':event-sourcing:event-sourcing-event-store-memory')
     testImplementation project(':james-server:james-server-data-file')
-    testImplementation project(':james-server:james-server-data-library')
+    testImplementation project(path: ':james-server:james-server-data-library', configuration: 'tests')
     testImplementation project(':james-server:james-server-data-memory')
     testImplementation project(':james-server:james-server-testing')
-    testImplementation project(':james-server:james-server-webadmin-core')
+    testImplementation project(path: ':james-server:james-server-webadmin-core', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
 
+    testImplementation 'org.apache.commons:commons-configuration2:2.7'
+    testImplementation 'commons-io:commons-io:2.6'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.hamcrest:java-hamcrest:2.0.0.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -47,6 +51,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    failFast = true
 }
 
 description = 'Apache James :: Server :: Web Admin :: data'

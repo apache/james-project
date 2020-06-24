@@ -18,12 +18,12 @@ dependencies {
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'javax.inject:javax.inject:1'
 
-    testImplementation project(':james-backends-common:apache-james-backends-cassandra')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
     testImplementation project(':james-server:james-server-task-memory')
-    testImplementation project(':james-server:james-server-webadmin-core')
+    testImplementation project(path: ':james-server:james-server-webadmin-core', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':testing-base')
 
+    testImplementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'

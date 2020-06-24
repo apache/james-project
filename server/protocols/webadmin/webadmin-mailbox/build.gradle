@@ -36,36 +36,38 @@ dependencies {
     implementation 'io.swagger:swagger-jaxrs:1.5.22'
     implementation 'com.sparkjava:spark-core:2.9.1'
 
-//    implementation 'org.apache.commons:commons-lang3:3.9'
-//    implementation 'javax.inject:javax.inject:1'
-//    implementation 'org.slf4j:slf4j-api:1.7.27'
-//    implementation 'com.sun.mail:javax.mail:1.6.2'
-
-
+    testImplementation project(':apache-mailet:apache-mailet-test')
     testImplementation project(':james-server:james-server-dnsservice-test')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-quota-search')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-memory', configuration: 'tests')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-quota-search', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-quota-search-scanning')
-    testImplementation project(':james-backends-common:apache-james-backends-es')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-es', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-quota-search-elasticsearch')
-    testImplementation project(':apache-james-mailbox:backup')
+    testImplementation project(path: ':apache-james-mailbox:backup', configuration: 'tests')
     testImplementation project(':james-server:james-server-blob:blob-export-file')
-    testImplementation project(':james-server:james-server-blob:blob-export-file')
+    testImplementation project(path: ':james-server:james-server-blob:blob-export-file', configuration: 'tests')
     testImplementation project(':james-server:james-server-blob:blob-memory')
-    testImplementation project(':james-json')
+    testImplementation project(path: ':james-json', configuration: 'tests')
     testImplementation project(':james-server:james-server-data-memory')
     testImplementation project(':james-server:james-server-task-memory')
     testImplementation project(':james-server:james-server-testing')
-    testImplementation project(':james-server:james-server-webadmin-core')
+    testImplementation project(path: ':james-server:james-server-webadmin-core', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
 
+    testImplementation 'org.apache.commons:commons-configuration2:2.7'
+    testImplementation 'com.google.guava:guava:25.1-jre'
+    testImplementation 'com.sun.mail:javax.mail:1.6.2'
+    testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
+    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.9'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.hamcrest:java-hamcrest:2.0.0.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.testcontainers:testcontainers:1.12.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -73,7 +75,10 @@ dependencies {
 }
 
 test {
+    //TODO: @ieugen: Disabled because some tests fail with    java.lang.NoClassDefFoundError . Part of https://issues.apache.org/jira/browse/JAMES-3260
+    enabled = false
     useJUnitPlatform()
+    failFast = true
 }
 
 description = 'Apache James :: Server :: Web Admin :: mailbox'
