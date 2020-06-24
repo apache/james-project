@@ -12,13 +12,11 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-json')
-
-    implementation project(':james-backends-common:apache-james-backends-cassandra')
-    implementation project(':event-sourcing:event-sourcing-pojo')
-    implementation project(':event-sourcing:event-sourcing-event-store-api')
-
-    implementation project(':james-server:james-server-lifecycle-api')
+    api project(':event-sourcing:event-sourcing-pojo')
+    api project(':event-sourcing:event-sourcing-event-store-api')
+    api project(':james-json')
+    api project(':james-server:james-server-lifecycle-api')
+    api project(':james-backends-common:apache-james-backends-cassandra')
 
     implementation 'org.reactivestreams:reactive-streams:1.0.3'
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'

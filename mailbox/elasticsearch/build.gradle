@@ -6,14 +6,14 @@ plugins {
 }
 
 dependencies {
-    api project(':james-core')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
     api project(':apache-james-mailbox:apache-james-mailbox-store')
+    api project(':james-core')
+    api project(':james-server:james-server-util')
+    api project(':james-backends-common:apache-james-backends-es')
 
-    implementation project(':james-server:james-server-util')
-    implementation project(':james-backends-common:apache-james-backends-es')
+    api 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.4.3'
 
-    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.4.3'
     implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'org.reactivestreams:reactive-streams:1.0.3'
@@ -43,7 +43,6 @@ dependencies {
     testImplementation project(':james-server:james-server-util')
     testImplementation project(':metrics:metrics-api')
     testImplementation project(':metrics:metrics-tests')
-
 
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'

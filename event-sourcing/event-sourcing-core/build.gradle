@@ -11,8 +11,8 @@ configurations {
 }
 
 dependencies {
-    implementation project(':event-sourcing:event-sourcing-event-store-api')
-    implementation project(':event-sourcing:event-sourcing-pojo')
+    api project(':event-sourcing:event-sourcing-event-store-api')
+    api project(':event-sourcing:event-sourcing-pojo')
 
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'io.projectreactor:reactor-scala-extensions_2.13:0.5.1'

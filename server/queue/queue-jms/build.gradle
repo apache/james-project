@@ -10,13 +10,15 @@ configurations {
 }
 
 dependencies {
-    implementation project(':james-core')
-    implementation project(':apache-mailet:apache-mailet-api')
-    implementation project(':james-server:james-server-core')
-    implementation project(':james-server:james-server-lifecycle-api')
-    implementation project(':james-server:james-server-queue-api')
-    implementation project(':metrics:metrics-api')
-    implementation project(':james-server:james-server-util')
+    api project(':apache-mailet:apache-mailet-api')
+    api project(':james-core')
+    api project(':james-server:james-server-core')
+    api project(':james-server:james-server-lifecycle-api')
+    api project(':james-server:james-server-queue-api')
+    api project(':james-server:james-server-util')
+    api project(':metrics:metrics-api')
+
+    api 'org.apache.geronimo.specs:geronimo-jms_2.0_spec:1.0-alpha-2'
 
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'

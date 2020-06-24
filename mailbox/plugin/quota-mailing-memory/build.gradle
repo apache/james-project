@@ -6,8 +6,8 @@ plugins {
 }
 
 dependencies {
-    implementation project(':apache-james-mailbox:apache-james-mailbox-quota-mailing')
-    implementation project(':event-sourcing:event-sourcing-event-store-memory')
+    api project(':apache-james-mailbox:apache-james-mailbox-quota-mailing')
+    api project(':event-sourcing:event-sourcing-event-store-memory')
 
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-quota-mailing', configuration: 'tests')

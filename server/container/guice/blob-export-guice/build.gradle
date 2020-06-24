@@ -12,10 +12,9 @@ configurations {
 dependencies {
     api project(':james-server:james-server-guice:blob-api-guice')
     api project(':james-server:james-server-blob:blob-export-api')
-
-    implementation project(':third-party:apache-james-linshare')
-    implementation project(':james-server:james-server-blob:blob-export-file')
-    implementation project(':james-server:james-server-guice:james-server-guice-configuration')
+    api project(':james-server:james-server-blob:blob-export-file')
+    api project(':james-server:james-server-guice:james-server-guice-configuration')
+    api project(':third-party:apache-james-linshare')
 
     implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'

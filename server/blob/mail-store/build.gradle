@@ -14,7 +14,11 @@ dependencies {
     implementation project(':james-server:james-server-blob:blob-common')
     implementation project(':james-server:james-server-util')
 
+    implementation 'org.apache.commons:commons-lang3:3.9'
     implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'commons-io:commons-io:2.6'
+    implementation 'com.sun.mail:javax.mail:1.6.2'
+    implementation 'javax.inject:javax.inject:1'
 
     testImplementation project(':james-server:james-server-blob:blob-memory')
     testImplementation project(':james-core')
