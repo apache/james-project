@@ -16,7 +16,7 @@ There exists several use cases for such servers:
 have limited infrastructure, time and knowledge and are mostly looking for an easy to use 
 solution.
 
- - **Customization use cases**: operators is willing to provide advanced, integrated features
+ - **Customization use cases**: operators are willing to provide advanced, integrated features
 for emails. They are willing to do advanced configuration and write extensions in order to customize 
 the behaviour of Apache James.
 
