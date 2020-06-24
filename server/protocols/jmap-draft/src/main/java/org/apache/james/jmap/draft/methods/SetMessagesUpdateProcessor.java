@@ -74,6 +74,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import io.vavr.control.Try;
+
 public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesUpdateProcessor.class);
@@ -109,24 +111,41 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     @Override
-    public SetMessagesResponse process(SetMessagesRequest request,  MailboxSession mailboxSession) {
+    public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
         TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMessagesUpdateProcessor");
-
         SetMessagesResponse.Builder responseBuilder = SetMessagesResponse.builder();
-        request.buildUpdatePatches(updatePatchConverter).forEach((id, patch) -> {
-                if (patch.isValid()) {
-                    update(id, patch, mailboxSession, responseBuilder);
-                } else {
-                    handleInvalidRequest(responseBuilder, id, patch.getValidationErrors(), patch);
-                }
-            }
-        );
+        Try.ofCallable(() -> listMailboxIdsForRole(mailboxSession, Role.OUTBOX))
+            .map(outboxes -> {
+                prepareResponse(request, mailboxSession, responseBuilder, outboxes);
+                return null;
+            })
+            .onFailure(e -> request.buildUpdatePatches(updatePatchConverter)
+                .forEach((id, patch) -> prepareResponseIfCantReadOutboxes(responseBuilder, e, id, patch)));
 
         timeMetric.stopAndPublish();
         return responseBuilder.build();
     }
 
-    private void update(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession,
+    private void prepareResponseIfCantReadOutboxes(SetMessagesResponse.Builder responseBuilder, Throwable e, MessageId id, UpdateMessagePatch patch) {
+        if (patch.isValid()) {
+            handleMessageUpdateException(id, responseBuilder, e);
+        } else {
+            handleInvalidRequest(responseBuilder, id, patch.getValidationErrors(), patch);
+        }
+    }
+
+    private void prepareResponse(SetMessagesRequest request, MailboxSession mailboxSession, SetMessagesResponse.Builder responseBuilder, Set<MailboxId> outboxes) {
+        request.buildUpdatePatches(updatePatchConverter).forEach((id, patch) -> {
+                if (patch.isValid()) {
+                    update(outboxes, id, patch, mailboxSession, responseBuilder);
+                } else {
+                    handleInvalidRequest(responseBuilder, id, patch.getValidationErrors(), patch);
+                }
+            }
+        );
+    }
+
+    private void update(Set<MailboxId> outboxes, MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession,
                         SetMessagesResponse.Builder builder) {
         try {
             List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, mailboxSession);
@@ -144,7 +163,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 } else {
                     builder.updated(ImmutableList.of(messageId));
                 }
-                sendMessageWhenOutboxInTargetMailboxIds(messageId, updateMessagePatch, mailboxSession, builder);
+                sendMessageWhenOutboxInTargetMailboxIds(outboxes, messageId, updateMessagePatch, mailboxSession, builder);
             }
         } catch (DraftMessageMailboxUpdateException e) {
             handleDraftMessageMailboxUpdateException(messageId, builder, e);
@@ -173,8 +192,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void sendMessageWhenOutboxInTargetMailboxIds(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, SetMessagesResponse.Builder builder) throws MailboxException, MessagingException, IOException {
-        if (isTargetingOutbox(mailboxSession, listTargetMailboxIds(updateMessagePatch))) {
+    private void sendMessageWhenOutboxInTargetMailboxIds(Set<MailboxId> outboxes, MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, SetMessagesResponse.Builder builder) throws MailboxException, MessagingException, IOException {
+        if (isTargetingOutbox(outboxes, listTargetMailboxIds(updateMessagePatch))) {
             Optional<MessageResult> maybeMessageToSend =
                 messageIdManager.getMessage(messageId, FetchGroup.FULL_CONTENT, mailboxSession)
                     .stream()
@@ -270,8 +289,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             .collect(Guavate.toImmutableSet());
     }
 
-    private boolean isTargetingOutbox(MailboxSession mailboxSession, Set<MailboxId> targetMailboxIds) throws MailboxException {
-        Set<MailboxId> outboxes = listMailboxIdsForRole(mailboxSession, Role.OUTBOX);
+    private boolean isTargetingOutbox(Set<MailboxId> outboxes, Set<MailboxId> targetMailboxIds) throws MailboxException {
         if (outboxes.isEmpty()) {
             throw new MailboxNotFoundException("At least one outbox should be accessible");
         }
@@ -329,8 +347,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private SetMessagesResponse.Builder handleMessageUpdateException(MessageId messageId,
-                                              SetMessagesResponse.Builder builder,
-                                              Exception e) {
+                                                                     SetMessagesResponse.Builder builder,
+                                                                     Throwable e) {
         LOGGER.error("An error occurred when updating a message", e);
         return builder.notUpdated(ImmutableMap.of(messageId, SetError.builder()
                 .type(SetError.Type.ERROR)
