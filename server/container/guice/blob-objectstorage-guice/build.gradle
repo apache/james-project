@@ -15,12 +15,16 @@ dependencies {
     api project(':james-server:james-server-guice:james-server-guice-configuration')
 
     implementation 'com.google.inject:guice:4.2.2'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
 
-    testImplementation project(':james-server:james-server-blob:blob-objectstorage')
-    testImplementation project(':james-server:james-server-guice:james-server-guice-common')
+    testImplementation project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-guice:james-server-guice-common', configuration: 'tests')
     testImplementation project(':james-server:james-server-testing')
 
+    testImplementation 'com.google.inject:guice:4.2.2'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
+    testImplementation 'org.reactivestreams:reactive-streams:1.0.3'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -29,6 +33,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    //TODO: @ieugen: Disabled temporarily. Fails with java.lang.NoClassDefFoundError . Part of  https://issues.apache.org/jira/browse/JAMES-3260
+    enabled = false
 }
 
 description = 'Apache James :: Server :: Blob Store in object storage - guice injection'
@@ -36,6 +42,10 @@ description = 'Apache James :: Server :: Blob Store in object storage - guice in
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

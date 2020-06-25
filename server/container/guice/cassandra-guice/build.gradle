@@ -58,29 +58,31 @@ dependencies {
     implementation 'com.linagora:logback-elasticsearch-appender:1.8.0'
     implementation 'com.google.inject:guice:4.2.2'
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
+    implementation 'com.google.guava:guava:25.1-jre'
     implementation 'com.google.inject:guice:4.2.2'
     implementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'org.awaitility:awaitility:3.1.6'
 
-    testImplementation project(':james-backends-common:apache-james-backends-cassandra')
-    testImplementation project(':james-backends-common:apache-james-backends-es')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-es', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-cassandra')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-elasticsearch')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-scanning-search')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-tika')
-    testImplementation project(':third-party:apache-james-spamassassin')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-scanning-search', configuration: 'tests')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-tika', configuration: 'tests')
     testImplementation project(':event-sourcing:event-sourcing-event-store-cassandra')
-    testImplementation project(':james-server:james-server-guice:james-server-guice-common')
-    testImplementation project(':james-server:james-server-guice:james-server-guice-jmap')
-    testImplementation project(':james-server:jmap-draft-integration-testing:james-server-jmap-draft-integration-testing')
+    testImplementation project(path: ':james-server:james-server-guice:james-server-guice-common', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-guice:james-server-guice-jmap', configuration: 'tests')
+    testImplementation project(path: ':james-server:jmap-draft-integration-testing:james-server-jmap-draft-integration-testing', configuration: 'tests')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':james-server:james-server-webadmin-core')
-
+    testImplementation project(path: ':third-party:apache-james-spamassassin', configuration: 'tests')
 
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'org.apache.pdfbox:pdfbox:2.0.16'
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -96,6 +98,10 @@ description = 'Apache James :: Server :: Cassandra - guice injection'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)
