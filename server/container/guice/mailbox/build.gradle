@@ -24,10 +24,11 @@ dependencies {
     api project(':james-server:james-server-lifecycle-api')
 
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
-    implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'com.google.inject:guice:4.2.2'
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
