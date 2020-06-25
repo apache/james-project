@@ -16,17 +16,23 @@ dependencies {
 
     implementation 'org.apache.derby:derby:10.14.2.0'
 
-    testImplementation project(':james-backends-common:apache-james-backends-jpa')
-    testImplementation project(':james-server:james-server-guice:james-server-jpa-common-guice')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-jpa', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-guice:james-server-jpa-common-guice', configuration: 'tests')
+    testImplementation project(':james-server:james-server-data-jpa')
     testImplementation project(':james-server:james-server-guice:james-server-guice-common')
+    testImplementation project(':james-server:james-server-guice:james-server-guice-smtp')
 
+    testImplementation 'org.apache.openjpa:openjpa:3.1.0'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
     testImplementation 'org.mockito:mockito-core:3.0.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testCompileOnly 'junit:junit:4.13'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.5.1'
 }
 
 test {

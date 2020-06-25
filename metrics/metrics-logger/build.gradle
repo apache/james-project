@@ -12,8 +12,8 @@ dependencies {
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
-    testImplementation project(':metrics:metrics-api')
-    testImplementation project(':testing-base')
+    testImplementation project(path: ':metrics:metrics-api', configuration: 'tests')
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

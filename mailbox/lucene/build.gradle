@@ -5,6 +5,10 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    tests
+}
+
 dependencies {
     api project(':james-core')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
@@ -53,6 +57,10 @@ description = 'Apache James :: Mailbox :: Lucene Index'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

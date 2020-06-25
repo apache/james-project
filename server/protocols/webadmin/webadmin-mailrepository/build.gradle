@@ -55,12 +55,15 @@ test {
     useJUnitPlatform()
 }
 
-
 description = 'Apache James :: Server :: Web Admin :: MailRepository'
 
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

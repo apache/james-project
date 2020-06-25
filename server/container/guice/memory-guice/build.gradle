@@ -49,13 +49,14 @@ dependencies {
     implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'com.google.inject:guice:4.2.2'
 
-    testImplementation project(':third-party:apache-james-linshare')
+    testImplementation project(':apache-james-mailbox:backup')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-scanning-search', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:blob-export-guice', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-common', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-jmap', configuration: 'tests')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(path: ':james-server:james-server-webadmin-core', configuration: 'tests')
+    testImplementation project(':third-party:apache-james-linshare')
 
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'org.apache.pdfbox:pdfbox:2.0.16'
@@ -70,6 +71,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    //TODO: @Ieugen: Disabled temporarily . Part of https://issues.apache.org/jira/browse/JAMES-3260
+    enabled = false
 }
 
 description = 'Apache James :: Server :: Memory - guice injection'

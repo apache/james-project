@@ -5,6 +5,10 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    tests
+}
+
 dependencies {
     api project(':apache-james-mailbox:apache-james-mailbox-api')
     api project(":james-core")
@@ -45,6 +49,10 @@ description = 'Apache James :: Mailbox :: Event :: In VM implementation'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

@@ -18,6 +18,10 @@ plugins {
 
 apply plugin: 'openjpa'
 
+configurations {
+    tests
+}
+
 dependencies {
     api project(':james-core')
     api project(':apache-james-mailbox:apache-james-mailbox-api')
@@ -55,7 +59,6 @@ dependencies {
     testImplementation project(':james-server:james-server-data-jpa')
     testImplementation project(':metrics:metrics-tests')
 
-
     testImplementation 'org.apache.derby:derby:10.14.2.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.assertj:assertj-core:3.12.2'
@@ -84,6 +87,10 @@ description = 'Apache James :: Mailbox :: JPA'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

@@ -3,17 +3,31 @@
  */
 
 dependencies {
-    testImplementation project(':james-backends-common:apache-james-backends-jpa')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-jpa', configuration: 'tests')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-jpa')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-jpa')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-jpa', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
     testImplementation project(':apache-james-mpt:apache-james-mpt-imapmailbox:apache-james-mpt-imapmailbox-core')
     testImplementation project(':metrics:metrics-tests')
 
     testImplementation 'org.apache.derby:derby:10.14.2.0'
+    testImplementation 'com.google.guava:guava:25.1-jre'
+    testImplementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    testImplementation 'org.apache.openjpa:openjpa:3.1.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testCompileOnly 'junit:junit:4.13'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.5.1'
 }
+
+test {
+    useJUnitPlatform()
+}
+
 
 description = 'Apache James MPT Imap Mailbox - JPA'
 
