@@ -49,6 +49,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    enabled = false
 }
 
 description = 'Apache James :: Server :: Core'

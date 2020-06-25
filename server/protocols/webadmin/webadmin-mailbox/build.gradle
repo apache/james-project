@@ -39,6 +39,7 @@ dependencies {
     testImplementation project(':apache-mailet:apache-mailet-test')
     testImplementation project(':james-server:james-server-dnsservice-test')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
+    testImplementation project(':apache-james-mailbox:apache-james-mailbox-elasticsearch')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-memory', configuration: 'tests')
