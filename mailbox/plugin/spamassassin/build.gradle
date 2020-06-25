@@ -15,12 +15,13 @@ dependencies {
     implementation project(':james-server:james-server-util')
     implementation project(':metrics:metrics-api')
 
-    implementation 'javax.inject:javax.inject:1'
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
-    implementation 'com.google.guava:guava:25.1-jre'
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
-    implementation 'org.slf4j:slf4j-api:1.7.27'
+    implementation 'com.google.guava:guava:25.1-jre'
     implementation 'com.sun.mail:javax.mail:1.6.2'
+    implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'org.slf4j:slf4j-api:1.7.27'
 
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
@@ -28,7 +29,6 @@ dependencies {
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-memory', configuration: 'tests')
     testImplementation project(':third-party:apache-james-spamassassin')
     testImplementation project(':metrics:metrics-tests')
-
 
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.assertj:assertj-core:3.12.2'
