@@ -11,8 +11,12 @@ configurations {
 
 dependencies {
     testImplementation project(':james-server:james-server-guice:james-server-memory-guice')
-    testImplementation project(':james-server:james-server-guice:james-server-memory-guice')
+    testImplementation project(path: ':james-server:james-server-guice:blob-export-guice', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-guice', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-guice:james-server-memory-guice', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-guice:james-server-guice-jmap', configuration: 'tests')
     testImplementation project(':james-server:webadmin-integration-test:james-server-webadmin-integration-test-common')
+    testImplementation project(path: ':james-server:james-server-guice:james-server-mailbox-plugin-deleted-messages-vault-guice', configuration: 'tests')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -21,6 +25,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    //TODO: @ieugen Disabled temporarily. https://issues.apache.org/jira/browse/JAMES-3260
+    enabled = false
 }
 
 description = 'Apache James :: Server :: Web Admin server integration tests :: Memory'
