@@ -621,7 +621,7 @@ trait MailboxGetMethodContract {
   }
 
   @Test
-  def getMailboxesByIdsShouldReturnMailboxesInSorteredOrder(server: GuiceJamesServer): Unit = {
+  def getMailboxesByIdsShouldReturnMailboxesInSortedOrder(server: GuiceJamesServer): Unit = {
     val mailboxId1: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.TRASH))
       .serialize

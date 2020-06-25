@@ -156,7 +156,7 @@ class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
         accountId = ACCOUNT_ID,
         state = "75128aab4b1b",
         list = List(MAILBOX),
-        notFound = NotFound(List(MAILBOX_ID_1, MAILBOX_ID_2)))
+        notFound = NotFound(Set(MAILBOX_ID_1, MAILBOX_ID_2)))
 
       val expectedJson: String =
         """
