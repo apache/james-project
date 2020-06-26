@@ -26,6 +26,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -35,6 +36,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface MessageIdMapper {
 
@@ -48,11 +50,15 @@ public interface MessageIdMapper {
 
     void save(MailboxMessage mailboxMessage) throws MailboxNotFoundException, MailboxException;
 
-    void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxNotFoundException, MailboxException;
+    void copyInMailbox(MailboxMessage mailboxMessage, Mailbox mailbox) throws MailboxException;
 
     void delete(MessageId messageId);
 
     void delete(MessageId messageId, Collection<MailboxId> mailboxIds);
+
+    default Mono<Void> deleteReactive(MessageId messageId, Collection<MailboxId> mailboxIds) {
+        return Mono.fromRunnable(() -> delete(messageId, mailboxIds));
+    }
 
     default void delete(Multimap<MessageId, MailboxId> ids) {
         ids.asMap()

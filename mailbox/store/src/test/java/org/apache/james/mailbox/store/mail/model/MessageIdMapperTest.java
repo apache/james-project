@@ -202,22 +202,6 @@ public abstract class MessageIdMapperTest {
     }
 
     @Test
-    void copyInMailboxShouldThrowWhenMailboxDoesntExist() throws Exception {
-        message1.setUid(mapperProvider.generateMessageUid());
-        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
-        sut.save(message1);
-
-        Mailbox notPersistedMailbox = new Mailbox(MailboxPath.forUser(BENWA, "mybox"), UID_VALIDITY, mapperProvider.generateId());
-
-        SimpleMailboxMessage message1InOtherMailbox = SimpleMailboxMessage.copy(notPersistedMailbox.getMailboxId(), message1);
-        message1InOtherMailbox.setUid(mapperProvider.generateMessageUid());
-        message1InOtherMailbox.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
-
-        assertThatThrownBy(() -> sut.copyInMailbox(message1InOtherMailbox))
-            .isInstanceOf(MailboxNotFoundException.class);
-    }
-
-    @Test
     void copyInMailboxShouldSaveMessageInAnotherMailbox() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
@@ -226,7 +210,7 @@ public abstract class MessageIdMapperTest {
         SimpleMailboxMessage message1InOtherMailbox = SimpleMailboxMessage.copy(benwaWorkMailbox.getMailboxId(), message1);
         message1InOtherMailbox.setUid(mapperProvider.generateMessageUid());
         message1InOtherMailbox.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
-        sut.copyInMailbox(message1InOtherMailbox);
+        sut.copyInMailbox(message1InOtherMailbox, benwaWorkMailbox);
 
         List<MailboxId> mailboxes = sut.findMailboxes(message1.getMessageId());
         assertThat(mailboxes).containsOnly(benwaInboxMailbox.getMailboxId(), benwaWorkMailbox.getMailboxId());
@@ -241,8 +225,8 @@ public abstract class MessageIdMapperTest {
         copiedMessage.setUid(mapperProvider.generateMessageUid());
         copiedMessage.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
 
-        sut.copyInMailbox(copiedMessage);
-        sut.copyInMailbox(copiedMessage);
+        sut.copyInMailbox(copiedMessage, benwaWorkMailbox);
+        sut.copyInMailbox(copiedMessage, benwaWorkMailbox);
 
         List<MailboxId> mailboxes = sut.findMailboxes(message1.getMessageId());
         assertThat(mailboxes)
@@ -894,7 +878,7 @@ public abstract class MessageIdMapperTest {
         SimpleMailboxMessage copiedMessage = SimpleMailboxMessage.copy(benwaWorkMailbox.getMailboxId(), message1);
         copiedMessage.setUid(mapperProvider.generateMessageUid());
         copiedMessage.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
-        sut.copyInMailbox(copiedMessage);
+        sut.copyInMailbox(copiedMessage, benwaWorkMailbox);
 
         sut.delete(
             ImmutableMultimap.<MessageId, MailboxId>builder()
@@ -919,7 +903,7 @@ public abstract class MessageIdMapperTest {
         SimpleMailboxMessage copiedMessage = SimpleMailboxMessage.copy(benwaWorkMailbox.getMailboxId(), message1);
         copiedMessage.setUid(mapperProvider.generateMessageUid());
         copiedMessage.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
-        sut.copyInMailbox(copiedMessage);
+        sut.copyInMailbox(copiedMessage, benwaWorkMailbox);
 
         sut.delete(
             ImmutableMultimap.<MessageId, MailboxId>builder()

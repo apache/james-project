@@ -87,8 +87,8 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-    public void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxException {
-        boolean isAlreadyInMailbox = findMailboxes(mailboxMessage.getMessageId()).contains(mailboxMessage.getMailboxId());
+    public void copyInMailbox(MailboxMessage mailboxMessage, Mailbox mailbox) throws MailboxException {
+        boolean isAlreadyInMailbox = findMailboxes(mailboxMessage.getMessageId()).contains(mailbox.getMailboxId());
         if (!isAlreadyInMailbox) {
             save(mailboxMessage);
         }
