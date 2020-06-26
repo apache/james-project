@@ -32,7 +32,6 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -48,7 +47,6 @@ class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSi
         return CassandraMessageIdManagerTestSystem.createTestingData(cassandraCluster.getCassandraCluster(), quotaManager, eventBus, preDeletionHooks);
     }
 
-    @Disabled("11 mailbox reads and 10 acl reads")
     @Test
     void setInMailboxesShouldLimitMailboxReads(CassandraCluster cassandra) throws Exception {
         givenUnlimitedQuota();
