@@ -63,7 +63,7 @@
         <delayTime>2 hours</delayTime>
         <delayTime>3 hours</delayTime>
         <delayTime>6 hours</delayTime>
-        <maxRetries>25</maxRetries>
+        <maxRetries>6</maxRetries>
         <maxDnsProblemRetries>0</maxDnsProblemRetries>
         <deliveryThreads>10</deliveryThreads>
         <sendpartial>true</sendpartial>
