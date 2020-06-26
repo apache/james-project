@@ -20,7 +20,6 @@
 package org.apache.james.jmap.rabbitmq.cucumber.awss3;
 
 import org.apache.james.jmap.categories.EnableCucumber;
-
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 

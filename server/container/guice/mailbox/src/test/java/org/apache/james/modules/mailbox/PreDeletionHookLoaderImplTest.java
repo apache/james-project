@@ -33,8 +33,6 @@ import org.apache.james.utils.GuiceGenericLoader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.google.inject.Guice;
-
 class PreDeletionHookLoaderImplTest {
     private PreDeletionHookLoaderImpl testee;
 

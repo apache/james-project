@@ -34,7 +34,8 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
+
+import com.google.common.collect.ImmutableSet;
 
 import io.restassured.RestAssured;
 

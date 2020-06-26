@@ -23,11 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
-
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public interface LinshareFixture {
 

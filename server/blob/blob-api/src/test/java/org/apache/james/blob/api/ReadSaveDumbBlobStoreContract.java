@@ -380,7 +380,7 @@ public interface ReadSaveDumbBlobStoreContract {
             public int read(byte[] b, int off, int len) throws IOException {
                 int remaining = b.length - off;
                 int toRead = Math.min(remaining, len);
-                for (int i = 0; i < toRead; i ++) {
+                for (int i = 0; i < toRead; i++) {
                     int value = read();
                     if (value != -1) {
                         b[off] = (byte) value;

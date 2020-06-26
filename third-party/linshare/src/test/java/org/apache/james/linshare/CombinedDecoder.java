@@ -22,9 +22,8 @@ package org.apache.james.linshare;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
-
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 import feign.FeignException;
 import feign.Response;

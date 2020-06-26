@@ -24,9 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import java.util.Map;
 
-import org.apache.james.mailbox.MessageSequenceNumber;
-import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Before;
 import org.junit.Test;

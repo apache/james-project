@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Streams;
+
 import scala.Option;
 import scala.jdk.javaapi.CollectionConverters;
 
@@ -56,13 +57,13 @@ class TaskAggregateTest {
     }
 
     @Test
-    void TaskAggregateShouldThrowWhenHistoryDoesntStartWithCreatedEvent() {
+    void taskAggregateShouldThrowWhenHistoryDoesntStartWithCreatedEvent() {
         assertThatThrownBy(() -> TaskAggregate.fromHistory(ID, buildHistory(eventId -> Started.apply(ID, eventId, HOSTNAME))))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void TaskAggregateShouldThrowWhenEmptyHistory() {
+    void taskAggregateShouldThrowWhenEmptyHistory() {
         assertThatThrownBy(() -> TaskAggregate.fromHistory(ID, History.empty())).isInstanceOf(IllegalArgumentException.class);
     }
 

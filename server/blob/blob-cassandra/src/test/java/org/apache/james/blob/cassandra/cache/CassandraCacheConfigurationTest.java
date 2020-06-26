@@ -33,16 +33,16 @@ import com.google.common.base.Strings;
 
 public class CassandraCacheConfigurationTest {
 
-    byte[] EIGHT_KILOBYTES = Strings.repeat("01234567\n", 1000).getBytes(StandardCharsets.UTF_8);
-    private final Duration DEFAULT_TIME_OUT = Duration.ofSeconds(50);
-    private final int DEFAULT_THRESHOLD_SIZE_IN_BYTES = EIGHT_KILOBYTES.length;
-    private final Duration _1_SEC_TTL = Duration.ofSeconds(1);
-    private final Duration TOO_BIG_TTL = Duration.ofSeconds(Integer.MAX_VALUE + 1L);
+    private static final byte[] EIGHT_KILOBYTES = Strings.repeat("01234567\n", 1000).getBytes(StandardCharsets.UTF_8);
+    private static final Duration DEFAULT_TIME_OUT = Duration.ofSeconds(50);
+    private static final int DEFAULT_THRESHOLD_SIZE_IN_BYTES = EIGHT_KILOBYTES.length;
+    private static final Duration _1_SEC_TTL = Duration.ofSeconds(1);
+    private static final Duration TOO_BIG_TTL = Duration.ofSeconds(Integer.MAX_VALUE + 1L);
 
-    private final Duration NEGATIVE_TIME_OUT = Duration.ofSeconds(-50);
-    private final Duration _2_HOURS_TIME_OUT = Duration.ofHours(2);
-    private final int NEGATIVE_THRESHOLD_SIZE_IN_BYTES = -1 * EIGHT_KILOBYTES.length;
-    private final Duration NEGATIVE_TTL = Duration.ofSeconds(-1);
+    private static final Duration NEGATIVE_TIME_OUT = Duration.ofSeconds(-50);
+    private static final Duration _2_HOURS_TIME_OUT = Duration.ofHours(2);
+    private static final int NEGATIVE_THRESHOLD_SIZE_IN_BYTES = -1 * EIGHT_KILOBYTES.length;
+    private static final Duration NEGATIVE_TTL = Duration.ofSeconds(-1);
 
     @Test
     void shouldReturnTheCorrectConfigured() {

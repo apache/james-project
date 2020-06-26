@@ -62,7 +62,7 @@ public class MemoryReferenceWithCounterTask implements Task {
 
         @Override
         public boolean equals(Object that) {
-            if(that instanceof MemoryReferenceWithCounterTask.AdditionalInformation) {
+            if (that instanceof MemoryReferenceWithCounterTask.AdditionalInformation) {
                 return Objects.equals(this.count, ((AdditionalInformation) that).getCount()) &&
                     Objects.equals(this.timestamp, ((AdditionalInformation) that).timestamp);
             }

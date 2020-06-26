@@ -33,7 +33,6 @@ import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMai
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 
 import com.datastax.driver.core.Session;
-import reactor.core.publisher.Mono;
 
 public class CassandraMailQueueViewTestFactory {
 

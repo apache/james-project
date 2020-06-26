@@ -37,5 +37,7 @@ public class MemoryVacationIntegrationTest extends VacationIntegrationTest {
     }
 
     @Override
-    protected void await() {}
+    protected void await() {
+
+    }
 }
