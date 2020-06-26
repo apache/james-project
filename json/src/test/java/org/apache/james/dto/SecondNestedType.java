@@ -34,8 +34,12 @@ public class SecondNestedType implements NestedType {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         SecondNestedType that = (SecondNestedType) o;
         return Objects.equals(bar, that.bar);
     }

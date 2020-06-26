@@ -24,7 +24,8 @@ import java.util.ArrayList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.protocols.smtp.hook.Hook;
 import org.junit.rules.ExternalResource;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 public class StaticInputChecker extends ExternalResource {
     private static final ArrayList<Pair<Class<? extends Hook>, ?>> results = new ArrayList<>();

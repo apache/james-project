@@ -52,7 +52,9 @@ public class JwtFilterTest {
         }
 
         @Override
-        public void describeTo(Description description) {}
+        public void describeTo(Description description) {
+            
+        }
     };
 
     private JwtTokenVerifier jwtTokenVerifier;

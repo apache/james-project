@@ -204,7 +204,7 @@ public class SelectedMailboxImplTest {
                     LOGGER.error("Error while processing event on a concurrent thread", e);
                 }
             });
-            return Mono.just(() -> {});
+            return Mono.just(() -> { });
         };
     }
 

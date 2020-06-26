@@ -31,7 +31,8 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -56,11 +57,13 @@ class ElasticSearchClusterExtension implements AfterAllCallback, BeforeAllCallba
             doInParallel(() -> {
                     if (es1.isRunning()) {
                         es1.cleanUpData();
-                }},
+                    }
+                },
                 () -> {
                     if (es2.isRunning()) {
                         es2.cleanUpData();
-                }});
+                    }
+                });
         }
 
         void stop() {

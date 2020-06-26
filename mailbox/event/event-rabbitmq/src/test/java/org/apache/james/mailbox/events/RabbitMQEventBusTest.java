@@ -196,6 +196,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         public EnvironmentSpeedProfile getSpeedProfile() {
             return EnvironmentSpeedProfile.SLOW;
         }
+
         @Test
         void rabbitMQEventBusShouldHandleBulksGracefully() throws Exception {
             EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();

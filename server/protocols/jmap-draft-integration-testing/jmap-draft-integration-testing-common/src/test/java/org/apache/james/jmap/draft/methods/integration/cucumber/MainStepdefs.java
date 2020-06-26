@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.draft.MessageIdProbe;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -32,7 +33,6 @@ import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.MessageIdProbe;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;

@@ -61,7 +61,7 @@ public interface CanSendFromContract {
 
         default void asAlias() throws Exception {
             withType(Mapping.Type.DomainAlias);
-        };
+        }
 
         default void asMapping() throws Exception {
             withType(Mapping.Type.Domain);

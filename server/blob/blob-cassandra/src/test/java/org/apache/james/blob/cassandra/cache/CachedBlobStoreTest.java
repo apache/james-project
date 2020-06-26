@@ -61,7 +61,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
     private static final BucketName DEFAULT_BUCKETNAME = DEFAULT;
     private static final BucketName TEST_BUCKETNAME = BucketName.of("test");
-    byte[] APPROXIMATELY_FIVE_KILOBYTES = Strings.repeat("0123456789\n", 500).getBytes(StandardCharsets.UTF_8);
+    private static final byte[] APPROXIMATELY_FIVE_KILOBYTES = Strings.repeat("0123456789\n", 500).getBytes(StandardCharsets.UTF_8);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(

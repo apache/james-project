@@ -653,7 +653,7 @@ public abstract class GetMessageListMethodTest {
 
         given()
             .header("Authorization", aliceAccessToken.asString())
-            .body("[[\"getMessageList\", {\"filter\": {\"inMailboxes\": [\""+ mailboxId.serialize() +"\"], \"isUnread\":\"true\"}}, \"#0\"]]")
+            .body("[[\"getMessageList\", {\"filter\": {\"inMailboxes\": [\"" + mailboxId.serialize() + "\"], \"isUnread\":\"true\"}}, \"#0\"]]")
 
         .when()
             .post("/jmap")
@@ -693,7 +693,7 @@ public abstract class GetMessageListMethodTest {
 
         given()
             .header("Authorization", aliceAccessToken.asString())
-                .body("[[\"getMessageList\", {\"filter\":{\"operator\":\"AND\",\"conditions\":[{\"inMailboxes\": [\""+ mailboxId.serialize() +"\"]},{\"isUnread\":\"true\"}]}}, \"#0\"]]")
+                .body("[[\"getMessageList\", {\"filter\":{\"operator\":\"AND\",\"conditions\":[{\"inMailboxes\": [\"" + mailboxId.serialize() + "\"]},{\"isUnread\":\"true\"}]}}, \"#0\"]]")
                 .when()
             .post("/jmap")
         .then()

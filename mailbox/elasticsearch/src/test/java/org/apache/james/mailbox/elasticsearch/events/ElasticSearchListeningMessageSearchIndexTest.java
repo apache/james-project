@@ -83,8 +83,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 class ElasticSearchListeningMessageSearchIndexTest {

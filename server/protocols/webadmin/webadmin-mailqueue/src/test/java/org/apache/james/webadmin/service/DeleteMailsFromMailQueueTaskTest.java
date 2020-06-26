@@ -43,7 +43,7 @@ class DeleteMailsFromMailQueueTaskTest {
 
     private MailQueueFactory<ManageableMailQueue> mailQueueFactory;
     private ManageableMailQueue mockedQueue;
-    private final static MailQueueName queueName = MailQueueName.of("anyQueue");
+    private static final MailQueueName queueName = MailQueueName.of("anyQueue");
 
     @BeforeEach
     void setUp() {

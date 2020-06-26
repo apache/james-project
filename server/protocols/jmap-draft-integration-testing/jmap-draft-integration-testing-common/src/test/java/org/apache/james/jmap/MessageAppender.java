@@ -36,7 +36,9 @@ import com.google.common.collect.ImmutableList;
 
 public class MessageAppender {
 
-    private MessageAppender() {}
+    private MessageAppender() {
+
+    }
 
     public static List<ComposedMessageId> fillMailbox(MailboxProbe mailboxProbe, String user, String mailbox) {
         ImmutableList.Builder<ComposedMessageId> insertedMessages = ImmutableList.builder();

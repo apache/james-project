@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.es.RoutingKey;
 import org.apache.james.core.Username;
-
 import org.junit.jupiter.api.Test;
 
 class UserRoutingKeyFactoryTest {

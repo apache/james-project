@@ -33,7 +33,9 @@ public interface GuiceModuleTestExtension extends RegistrableExtension {
         return binder -> { };
     }
 
-    default void await() {}
+    default void await() {
+
+    }
 
     default Optional<Class<?>> supportedParameterClass() {
         return Optional.empty();

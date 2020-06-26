@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Username;
-
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;

@@ -32,6 +32,7 @@ import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class QuotaThresholdsTest {
