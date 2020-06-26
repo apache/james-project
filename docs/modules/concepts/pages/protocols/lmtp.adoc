@@ -1,0 +1,26 @@
+= Local Mail Transfer Protocol (LMTP)
+:navtitle: LMTP
+
+== Overview
+
+
+
+== Specifications
+
+=== RFCXXX
+
+
+== Related Concepts
+
+LMTP relates to:
+
+ * 
+ * 
+
+
+== James Model
+
+(TODO: explain how all this is modeled in James)
+
+
+
