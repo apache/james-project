@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Username;
-
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
 import org.junit.jupiter.api.Test;
 

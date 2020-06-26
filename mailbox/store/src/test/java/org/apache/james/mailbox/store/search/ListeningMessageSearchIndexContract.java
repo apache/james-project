@@ -56,7 +56,9 @@ public interface ListeningMessageSearchIndexContract {
         .modseq(MOD_SEQ);
     
     ListeningMessageSearchIndex testee();
+
     MailboxSession session();
+
     Mailbox mailbox();
     
     @Test

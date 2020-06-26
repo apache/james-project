@@ -34,6 +34,7 @@ import org.apache.james.util.Port;
  * <p>Runs MPT application.</p>
  * <p>Return values:</p>
  * <table>
+ *  <caption>Mail Performance Test framework</caption>
  * <tr><td>0</td><td>Success</td></tr>
  * <tr><td>-1</td><td>Illegal Arguments</td></tr>
  * <tr><td>1</td><td>Script not found</td></tr>

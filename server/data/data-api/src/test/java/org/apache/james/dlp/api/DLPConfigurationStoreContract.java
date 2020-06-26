@@ -30,6 +30,7 @@ import org.apache.james.core.Domain;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Mono;
 
 public interface DLPConfigurationStoreContract {

@@ -49,7 +49,7 @@ public class DockerRabbitMQTestRule extends ExternalResource {
     private void performQuietly(ThrowingRunnable runnable) {
         try {
             runnable.run();
-        } catch (Exception e){
+        } catch (Exception e) {
             // ignore
         }
     }

@@ -60,7 +60,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenFrom() {
-        String from = "sender@james.org";Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        String from = "sender@james.org";
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .from(from)
                 .build());
 
@@ -69,7 +70,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenTo() {
-        String to = "recipient@james.org";Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        String to = "recipient@james.org";
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .to(to)
                 .build());
 
@@ -78,7 +80,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenCc() {
-        String cc = "copy@james.org";Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        String cc = "copy@james.org";
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .cc(cc)
                 .build());
 
@@ -86,7 +89,8 @@ public class FilterToCriteriaTest {
     }
 
     @Test
-    public void filterConditionShouldMapWhenHasAttachment() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenHasAttachment() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
             .hasAttachment(true)
             .build());
 
@@ -94,7 +98,8 @@ public class FilterToCriteriaTest {
     }
 
     @Test
-    public void filterConditionShouldMapWhenHasNoAttachment() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenHasNoAttachment() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
             .hasAttachment(false)
             .build());
 
@@ -103,7 +108,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenBcc() {
-        String bcc = "blindcopy@james.org";Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        String bcc = "blindcopy@james.org";
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .bcc(bcc)
                 .build());
 
@@ -112,7 +118,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenSubject() {
-        String subject = "subject";Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        String subject = "subject";
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .subject(subject)
                 .build());
 
@@ -121,7 +128,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenBody() {
-        String body = "body";Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        String body = "body";
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .body(body)
                 .build());
 
@@ -130,7 +138,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenAttachments() {
-        String attachments = "attachments";Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        String attachments = "attachments";
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .attachments(attachments)
                 .build());
 
@@ -139,7 +148,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenText() {
-        String text = "text";Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        String text = "text";
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .text(text)
                 .build());
 
@@ -156,7 +166,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenAfter() {
-        ZonedDateTime after = ZonedDateTime.now();Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        ZonedDateTime after = ZonedDateTime.now();
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .after(after)
                 .build());
 
@@ -165,7 +176,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenBefore() {
-        ZonedDateTime before = ZonedDateTime.now();Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        ZonedDateTime before = ZonedDateTime.now();
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .before(before)
                 .build());
 
@@ -173,7 +185,8 @@ public class FilterToCriteriaTest {
     }
 
     @Test
-    public void filterConditionShouldMapWhenIsAnswered() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenIsAnswered() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .isAnswered(true)
                 .build());
 
@@ -181,7 +194,8 @@ public class FilterToCriteriaTest {
     }
 
     @Test
-    public void filterConditionShouldMapWhenIsDraft() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenIsDraft() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .isDraft(true)
                 .build());
 
@@ -189,7 +203,8 @@ public class FilterToCriteriaTest {
     }
 
     @Test
-    public void filterConditionShouldMapWhenIsFlagged() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenIsFlagged() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .isFlagged(true)
                 .build());
 
@@ -197,7 +212,8 @@ public class FilterToCriteriaTest {
     }
 
     @Test
-    public void filterConditionShouldMapWhenIsUnread() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenIsUnread() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .isUnread(true)
                 .build());
 
@@ -206,7 +222,8 @@ public class FilterToCriteriaTest {
 
 
     @Test
-    public void filterConditionShouldMapWhenIsNotAnswered() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenIsNotAnswered() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
             .isAnswered(false)
             .build());
 
@@ -214,7 +231,8 @@ public class FilterToCriteriaTest {
     }
 
     @Test
-    public void filterConditionShouldMapWhenIsNotDraft() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenIsNotDraft() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
             .isDraft(false)
             .build());
 
@@ -222,7 +240,8 @@ public class FilterToCriteriaTest {
     }
 
     @Test
-    public void filterConditionShouldMapWhenIsNotFlagged() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenIsNotFlagged() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
             .isFlagged(false)
             .build());
 
@@ -230,7 +249,8 @@ public class FilterToCriteriaTest {
     }
 
     @Test
-    public void filterConditionShouldMapWhenIsRead() {Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+    public void filterConditionShouldMapWhenIsRead() {
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
             .isUnread(false)
             .build());
 
@@ -239,7 +259,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenMaxSize() {
-        int maxSize = 123;Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        int maxSize = 123;
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .maxSize(maxSize)
                 .build());
 
@@ -248,7 +269,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenMinSize() {
-        int minSize = 4;Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        int minSize = 4;
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .minSize(minSize)
                 .build());
 
@@ -257,7 +279,8 @@ public class FilterToCriteriaTest {
 
     @Test
     public void filterConditionShouldMapWhenHeaderWithOneElement() {
-        String headerName = "name";Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
+        String headerName = "name";
+        Stream<SearchQuery.Criterion> criteria = new FilterToCriteria().convert(FilterCondition.builder()
                 .header(Header.from(ImmutableList.of(headerName)))
                 .build());
 
@@ -279,7 +302,8 @@ public class FilterToCriteriaTest {
     @Test
     public void filterConditionShouldMapTwoConditions() {
         String from = "sender@james.org";
-        String to = "recipient@james.org";Filter filter = FilterOperator.and(
+        String to = "recipient@james.org";
+        Filter filter = FilterOperator.and(
                 FilterCondition.builder()
                     .from(from)
                     .build(),

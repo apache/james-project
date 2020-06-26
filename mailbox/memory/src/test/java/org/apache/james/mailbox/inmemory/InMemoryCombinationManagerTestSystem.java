@@ -25,7 +25,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 
 public class InMemoryCombinationManagerTestSystem extends CombinationManagerTestSystem {

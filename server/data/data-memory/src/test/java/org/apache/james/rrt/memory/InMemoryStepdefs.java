@@ -24,6 +24,7 @@ import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 
 import com.github.fge.lambdas.Throwing;
+
 import cucumber.api.java.Before;
 
 public class InMemoryStepdefs {

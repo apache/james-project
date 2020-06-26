@@ -51,6 +51,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.fasterxml.jackson.core.util.BufferRecyclers;
 import com.google.common.collect.ImmutableMap;
+
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.model.Calendar;
 
@@ -332,7 +333,7 @@ public class ICALToJsonAttributeTest {
                 "\"Bob\"\n      <" + address + ">",
                 " =?UTF-8?Q?Beno=c3=aet_TELLIER?= <" + address + ">")
             .map(Arguments::of);
-    };
+    }
 
     @Test
     void serviceShouldAttachJsonWithTheSenderAsReplyToAttributeValueWhenReplyToIsInvalid() throws Exception {

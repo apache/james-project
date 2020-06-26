@@ -31,7 +31,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import spark.Request;
 import spark.Response;
 
-public class JwtFilter implements AuthenticationFilter {
+public class
+JwtFilter implements AuthenticationFilter {
     public static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
     public static final String AUTHORIZATION_HEADER_NAME = "Authorization";
     public static final String OPTIONS = "OPTIONS";

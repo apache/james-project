@@ -54,7 +54,7 @@ class MailAddressTest {
                 "\\.server-dev@james.apache.org",
                 "server-dev\\.@james.apache.org")
             .map(Arguments::of);
-    };
+    }
 
     private static Stream<Arguments> badAddresses() {
         return Stream.of(

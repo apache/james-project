@@ -82,6 +82,7 @@ class CassandraApplicableFlagDAOTest {
         assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).blockOptional())
             .isEmpty();
     }
+
     @Test
     void deleteShouldNotThrowWhenEmpty() {
         assertThatCode(() -> testee.delete(CASSANDRA_ID).block())

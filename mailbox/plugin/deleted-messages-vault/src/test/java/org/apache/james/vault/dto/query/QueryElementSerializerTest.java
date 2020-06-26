@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class QueryElementSerializerTest {
