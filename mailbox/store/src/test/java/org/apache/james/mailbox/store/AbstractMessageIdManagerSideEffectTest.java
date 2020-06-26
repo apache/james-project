@@ -86,18 +86,18 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         .used(QuotaCountUsage.count(102))
         .computedLimit(QuotaCountLimit.count(100))
         .build();
-    private static final MessageUid messageUid1 = MessageUid.of(111);
-    private static final MessageUid messageUid2 = MessageUid.of(113);
+    protected static final MessageUid messageUid1 = MessageUid.of(111);
+    protected static final MessageUid messageUid2 = MessageUid.of(113);
 
-    private static final Flags FLAGS = new Flags();
+    protected static final Flags FLAGS = new Flags();
 
-    private MessageIdManager messageIdManager;
-    private MailboxSession session;
-    private Mailbox mailbox1;
-    private Mailbox mailbox2;
-    private Mailbox mailbox3;
+    protected MessageIdManager messageIdManager;
+    protected MailboxSession session;
+    protected Mailbox mailbox1;
+    protected Mailbox mailbox2;
+    protected Mailbox mailbox3;
     private QuotaManager quotaManager;
-    private MessageIdManagerTestSystem testingData;
+    protected MessageIdManagerTestSystem testingData;
     private EventCollector eventCollector;
     private EventBus eventBus;
     private PreDeletionHook preDeletionHook1;
@@ -525,7 +525,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         assertThat(eventCollector.getEvents()).isEmpty();
     }
 
-    private void givenUnlimitedQuota() throws MailboxException {
+    protected void givenUnlimitedQuota() throws MailboxException {
         when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(
             Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(2)).computedLimit(QuotaCountLimit.unlimited()).build());
         when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
