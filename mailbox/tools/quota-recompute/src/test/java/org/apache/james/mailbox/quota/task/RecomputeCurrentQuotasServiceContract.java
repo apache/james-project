@@ -54,10 +54,15 @@ public interface RecomputeCurrentQuotasServiceContract {
     CurrentQuotas EXPECTED_QUOTAS = new CurrentQuotas(QuotaCountUsage.count(1L), QuotaSizeUsage.size(103L));
 
     UsersRepository usersRepository();
+
     SessionProvider sessionProvider();
+
     MailboxManager mailboxManager();
+
     CurrentQuotaManager currentQuotaManager();
+
     UserQuotaRootResolver userQuotaRootResolver();
+
     RecomputeCurrentQuotasService testee();
 
     @Test

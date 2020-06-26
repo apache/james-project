@@ -86,7 +86,7 @@ class AddressMappingRoutesTest {
     @Test
     void addAddressMappingShouldReturnNotFoundWhenOneParameterIsEmpty() {
         when()
-            .post(MAPPING_SOURCE + "/targets/" )
+            .post(MAPPING_SOURCE + "/targets/")
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404);
     }

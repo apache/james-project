@@ -56,6 +56,7 @@ import org.junit.jupiter.api.Test;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -514,8 +515,8 @@ public interface MailQueueContract {
     @Test
     default void dequeueShouldBeConcurrent() {
         MailQueue testee = getMailQueue();
-        int NB_MAILS = 1000;
-        IntStream.range(0, NB_MAILS)
+        int nbMails = 1000;
+        IntStream.range(0, nbMails)
             .forEach(Throwing.intConsumer(i -> testee.enQueue(defaultMail()
                 .name("name" + i)
                 .build())));
@@ -539,7 +540,7 @@ public interface MailQueueContract {
 
         Awaitility.await()
             .atMost(org.awaitility.Duration.ONE_MINUTE)
-            .until(() -> dequeuedMails.size() >= NB_MAILS);
+            .until(() -> dequeuedMails.size() >= nbMails);
 
     }
 

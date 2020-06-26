@@ -103,7 +103,7 @@ public class JWTAuthenticationStrategyTest {
     }
 
     @Test
-    public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid(){
+    public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() {
         String username = "123456789";
         String validAuthHeader = "valid";
         String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;

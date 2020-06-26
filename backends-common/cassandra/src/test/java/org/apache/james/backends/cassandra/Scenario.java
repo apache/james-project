@@ -23,14 +23,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
-
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class Scenario {
     public static class InjectedFailureException extends RuntimeException {

@@ -459,6 +459,7 @@ class CassandraMessageIdDAOTest {
         assertThat(testee.retrieveMessages(mailboxId, MessageRange.from(messageUid2), Limit.unlimited()).toIterable())
             .containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
     }
+
     @Test
     void retrieveMessagesShouldAppluLimitWhenRangeFrom() {
         CassandraMessageId messageId = messageIdFactory.generate();

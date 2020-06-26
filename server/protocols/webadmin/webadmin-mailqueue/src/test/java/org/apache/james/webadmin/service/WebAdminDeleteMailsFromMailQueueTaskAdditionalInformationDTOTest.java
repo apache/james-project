@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 class WebAdminDeleteMailsFromMailQueueTaskAdditionalInformationDTOTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
 
-    private final static MailQueueName queueName = MailQueueName.of("anyQueue");
+    private static final MailQueueName queueName = MailQueueName.of("anyQueue");
 
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {

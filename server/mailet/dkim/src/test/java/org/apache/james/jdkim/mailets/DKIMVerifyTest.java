@@ -35,7 +35,6 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-
 import org.junit.jupiter.api.Test;
 
 public class DKIMVerifyTest {

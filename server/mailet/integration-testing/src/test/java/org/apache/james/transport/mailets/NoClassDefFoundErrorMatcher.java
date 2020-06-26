@@ -25,7 +25,6 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.GenericMatcher;
 
 public class NoClassDefFoundErrorMatcher extends GenericMatcher {

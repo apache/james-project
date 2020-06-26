@@ -36,7 +36,7 @@ import reactor.rabbitmq.Sender;
 
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
-    private static final Consumer<DockerRabbitMQ> DO_NOTHING = dockerRabbitMQ -> {};
+    private static final Consumer<DockerRabbitMQ> DO_NOTHING = dockerRabbitMQ -> { };
 
     public enum DockerRestartPolicy {
         PER_TEST(DockerRabbitMQ::start, DockerRabbitMQ::start, DockerRabbitMQ::stop, DockerRabbitMQ::stop),

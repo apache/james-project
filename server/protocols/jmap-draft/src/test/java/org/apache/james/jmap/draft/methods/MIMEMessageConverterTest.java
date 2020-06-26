@@ -34,7 +34,6 @@ import java.time.ZonedDateTime;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.methods.ValueWithId.MessageWithId;
-import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;
@@ -53,7 +52,6 @@ import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.TextBody;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
-import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.stream.Field;
 import org.assertj.core.data.Index;

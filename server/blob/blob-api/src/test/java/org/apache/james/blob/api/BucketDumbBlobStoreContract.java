@@ -20,7 +20,6 @@
 package org.apache.james.blob.api;
 
 import static org.apache.james.blob.api.DumbBlobStoreFixture.CUSTOM_BUCKET_NAME;
-import static org.apache.james.blob.api.DumbBlobStoreFixture.ELEVEN_KILOBYTES;
 import static org.apache.james.blob.api.DumbBlobStoreFixture.OTHER_TEST_BLOB_ID;
 import static org.apache.james.blob.api.DumbBlobStoreFixture.SHORT_BYTEARRAY;
 import static org.apache.james.blob.api.DumbBlobStoreFixture.SHORT_STRING;

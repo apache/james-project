@@ -33,10 +33,10 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class LinshareConfigurationTest {
 
-    private final static String EMPTY_STRING = "";
-    private final static String SOME_RANDOM_STRING = "laksdhfdksd";
-    private final String DEFAULT_URL = "http://127.0.0.1:8080";
-    private final static String DEFAULT_UUID = UUID.randomUUID().toString();
+    private static final String EMPTY_STRING = "";
+    private static final String SOME_RANDOM_STRING = "laksdhfdksd";
+    private static final String DEFAULT_URL = "http://127.0.0.1:8080";
+    private static final String DEFAULT_UUID = UUID.randomUUID().toString();
 
     @Test
     void shouldMatchBeanContract() {

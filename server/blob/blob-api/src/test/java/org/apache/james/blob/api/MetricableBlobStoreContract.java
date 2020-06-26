@@ -34,7 +34,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.awaitility.Duration;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
