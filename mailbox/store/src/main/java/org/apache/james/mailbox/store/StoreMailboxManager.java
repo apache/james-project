@@ -746,6 +746,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Rfc4314Rights myRights(Mailbox mailbox, MailboxSession session) {
+        return storeRightManager.myRights(mailbox, session);
+    }
+
+    @Override
     public List<Rfc4314Rights> listRights(MailboxPath mailboxPath, MailboxACL.EntryKey key, MailboxSession session) throws MailboxException {
         return storeRightManager.listRights(mailboxPath, key, session);
     }

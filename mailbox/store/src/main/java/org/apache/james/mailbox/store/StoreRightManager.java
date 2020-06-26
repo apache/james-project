@@ -104,6 +104,7 @@ public class StoreRightManager implements RightManager {
             .map(Throwing.function(mailbox -> myRights(mailbox, session)));
     }
 
+    @Override
     public Rfc4314Rights myRights(Mailbox mailbox, MailboxSession session) {
         Username username = session.getUser();
 
