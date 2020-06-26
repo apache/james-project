@@ -36,7 +36,7 @@
         <property name="enableSuffixMatch" value="true"/>
     </bean>
     <bean id="fsDirectory"  class="org.apache.lucene.store.FSDirectory" factory-method="open">
-        <constructor-arg index="0" value="../var/store/lucene"/>
+        <constructor-arg index="0" value="build/var/store/lucene"/>
     </bean>
     <alias name="jpa-mailboxIdFactory" alias="mailboxIdFactory"/>
     <alias name="jpa-mailboxmanager" alias="mailboxmanager"/>

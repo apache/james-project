@@ -59,8 +59,6 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    // TODO: @ieugen: Disabled temporarily. Fails with ` Database connection refused.`  Part of https://issues.apache.org/jira/browse/JAMES-3260
-    enabled = false
 }
 
 description = 'Apache James :: Server :: JPA - guice injection'
