@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 class ReadOnlyUsersLDAPRepositoryTest {
 
     static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepositoryTest.class);
-    static final Username JAMES_USER_MAIL = Username.of(JAMES_USER.getLocalPart()+ "@" + DOMAIN);
+    static final Username JAMES_USER_MAIL = Username.of(JAMES_USER.getLocalPart() + "@" + DOMAIN);
     static final Username UNKNOWN = Username.of("unknown");
     static final String BAD_PASSWORD = "badpassword";
     public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";

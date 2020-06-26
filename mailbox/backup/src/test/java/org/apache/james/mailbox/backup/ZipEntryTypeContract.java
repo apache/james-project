@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 class ZipEntryTypeContract {
 
     private void assertZipEntryTypeDeserializedFromValue(int value, ZipEntryType expectedType) {
-        assertThat(ZipEntryType.zipEntryType( value)).contains(expectedType);
+        assertThat(ZipEntryType.zipEntryType(value)).contains(expectedType);
     }
 
     @Test

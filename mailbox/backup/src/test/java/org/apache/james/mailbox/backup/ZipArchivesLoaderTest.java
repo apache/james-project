@@ -61,15 +61,12 @@ class ZipArchivesLoaderTest implements MailboxMessageFixture {
     private void createMailBoxWithMessage(MailboxPath mailboxPath, MailboxMessage... messages) throws Exception {
         MailboxSession session = mailboxManager.createSystemSession(mailboxPath.getUser());
         MailboxId mailboxId = mailboxManager.createMailbox(mailboxPath, session).get();
-        Arrays.stream(messages).forEach(Throwing.consumer(message ->
-            {
+        Arrays.stream(messages).forEach(Throwing.consumer(message -> {
                 MessageManager.AppendCommand appendCommand = MessageManager.AppendCommand.builder()
                     .withFlags(message.createFlags())
                     .build(message.getFullContent());
                 mailboxManager.getMailbox(mailboxId, session).appendMessage(appendCommand, session);
-            }
-            )
-        );
+            }));
     }
 
     @Test

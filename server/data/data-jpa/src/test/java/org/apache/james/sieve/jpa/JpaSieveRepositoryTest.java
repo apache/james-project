@@ -24,7 +24,6 @@ import org.apache.james.sieve.jpa.model.JPASieveQuota;
 import org.apache.james.sieve.jpa.model.JPASieveScript;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.lib.AbstractSieveRepositoryTest;
-
 import org.junit.After;
 import org.junit.Before;
 

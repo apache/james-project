@@ -28,14 +28,12 @@ import java.util.Properties;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.jdkim.mailets.MockPublicKeyRecordRetriever;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-
 import org.junit.jupiter.api.Test;
 
 public class DKIMVerifyTest {

@@ -124,7 +124,7 @@ class LocalListenerRegistryTest {
 
     @Nested
     class ConcurrentTest {
-        private final Duration ONE_SECOND = Duration.ofSeconds(1);
+        private final Duration oneSecond = Duration.ofSeconds(1);
 
         @Test
         void getLocalMailboxListenersShouldReturnPreviousAddedListener() throws Exception {
@@ -134,7 +134,7 @@ class LocalListenerRegistryTest {
                 .operation((threadNumber, operationNumber) -> testee.addListener(KEY_1, listener))
                 .threadCount(10)
                 .operationCount(10)
-                .runSuccessfullyWithin(ONE_SECOND);
+                .runSuccessfullyWithin(oneSecond);
 
             assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
                 .containsOnly(wrapReactive(listener));
@@ -153,7 +153,7 @@ class LocalListenerRegistryTest {
                     (threadNumber, operationNumber) -> testee.addListener(KEY_1, listener3))
                 .threadCount(6)
                 .operationCount(10)
-                .runSuccessfullyWithin(ONE_SECOND);
+                .runSuccessfullyWithin(oneSecond);
 
             assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
                 .containsOnly(wrapReactive(listener1), wrapReactive(listener2), wrapReactive(listener3));
@@ -169,7 +169,7 @@ class LocalListenerRegistryTest {
                 .operation(((threadNumber, operationNumber) -> registration.unregister()))
                 .threadCount(10)
                 .operationCount(10)
-                .runSuccessfullyWithin(ONE_SECOND);
+                .runSuccessfullyWithin(oneSecond);
 
             assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
                 .isEmpty();
@@ -204,7 +204,7 @@ class LocalListenerRegistryTest {
                     })
                 .threadCount(6)
                 .operationCount(10)
-                .runSuccessfullyWithin(ONE_SECOND);
+                .runSuccessfullyWithin(oneSecond);
 
             assertThat(firstListenerCount.get()).isEqualTo(1);
         }
@@ -223,7 +223,7 @@ class LocalListenerRegistryTest {
                 }))
                 .threadCount(10)
                 .operationCount(10)
-                .runSuccessfullyWithin(ONE_SECOND);
+                .runSuccessfullyWithin(oneSecond);
 
             assertThat(lastListenerRemoved.get()).isEqualTo(1);
         }

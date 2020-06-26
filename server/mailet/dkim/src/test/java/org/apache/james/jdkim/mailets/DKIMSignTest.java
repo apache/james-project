@@ -210,7 +210,7 @@ class DKIMSignTest {
                 .getDefaultInstance(new Properties()));
         mm.addFrom(new Address[]{new InternetAddress("io@bago.org")});
         mm.addRecipient(RecipientType.TO, new InternetAddress("io@bago.org"));
-        mm.setText("An 8bit encoded body with \u20ACuro symbol.", "ISO-8859-15");
+        mm.setText("An 8bit encoded body with €uro symbol.", "ISO-8859-15");
 
         Mailet mailet = new DKIMSign();
 
@@ -255,7 +255,7 @@ class DKIMSignTest {
                 .getDefaultInstance(new Properties()));
         mm.addFrom(new Address[]{new InternetAddress("io@bago.org")});
         mm.addRecipient(RecipientType.TO, new InternetAddress("io@bago.org"));
-        mm.setContent("An 8bit encoded body with \u20ACuro symbol.",
+        mm.setContent("An 8bit encoded body with €uro symbol.",
                 "text/plain; charset=iso-8859-15");
         mm.setHeader("Content-Transfer-Encoding", "8bit");
         mm.saveChanges();
@@ -304,7 +304,7 @@ class DKIMSignTest {
                 .getDefaultInstance(new Properties()));
         mm.addFrom(new Address[]{new InternetAddress("io@bago.org")});
         mm.addRecipient(RecipientType.TO, new InternetAddress("io@bago.org"));
-        mm.setContent("An 8bit encoded body with \u20ACuro symbol.",
+        mm.setContent("An 8bit encoded body with €uro symbol.",
                 "text/plain; charset=iso-8859-15");
         mm.setHeader("Content-Transfer-Encoding", "8bit");
         mm.saveChanges();
@@ -346,7 +346,7 @@ class DKIMSignTest {
             verify(rawMessage, mockPublicKeyRecordRetriever);
             fail("Expected PermFail");
         } catch (PermFailException e) {
-
+            // do nothing
         }
     }
 

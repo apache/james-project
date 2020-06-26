@@ -118,8 +118,8 @@ class ZipAssertTest {
         try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
             for (ZipEntryWithContent entry : entries) {
                 ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File(UUID.randomUUID().toString()), entry.name);
-                entry.extraFields.
-                    forEach(archiveEntry::addExtraField);
+                entry.extraFields
+                    .forEach(archiveEntry::addExtraField);
                 archiveOutputStream.putArchiveEntry(archiveEntry);
                 IOUtils.copy(entry.content, archiveOutputStream);
                 archiveOutputStream.closeArchiveEntry();
@@ -287,6 +287,7 @@ class ZipAssertTest {
                 .isInstanceOf(AssertionError.class);
         }
     }
+
     @Test
     void containsExactlyEntriesMatchingShouldNotThrowWhenRightOrder() throws Exception {
         try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {

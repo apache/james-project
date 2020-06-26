@@ -75,9 +75,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMailboxManager> {
     public static final Username BOB = Username.of("Bob");

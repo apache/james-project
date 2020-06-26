@@ -22,7 +22,6 @@ package org.apache.james.rrt.lib;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.Username;
-
 import org.junit.jupiter.api.Test;
 
 public class DomainRewriterTest {

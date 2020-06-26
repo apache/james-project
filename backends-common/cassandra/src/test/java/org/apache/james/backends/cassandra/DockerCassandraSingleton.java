@@ -56,7 +56,7 @@ public class DockerCassandraSingleton {
 
     // Call this method to ensure that cassandra is restarted every MAX_TEST_PLAYED tests
     public static void restartAfterMaxTestsPlayed() throws Exception {
-        restartAfterMaxTestsPlayed(() -> {}, () -> {});
+        restartAfterMaxTestsPlayed(() -> { }, () -> { });
     }
 
     private static void restart() {

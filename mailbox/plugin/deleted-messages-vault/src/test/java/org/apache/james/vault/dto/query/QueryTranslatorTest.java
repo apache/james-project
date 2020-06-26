@@ -80,7 +80,7 @@ class QueryTranslatorTest {
     }
 
     @Test
-    void toDTOShouldConvertQueryWithDeletionDateBeforeOrEquals() throws Exception{
+    void toDTOShouldConvertQueryWithDeletionDateBeforeOrEquals() throws Exception {
         String serializedDate = "2007-12-03T10:15:30+01:00[Europe/Paris]";
         Query query = Query.of(
             CriterionFactory.deletionDate().beforeOrEquals(ZonedDateTime.parse(serializedDate))
@@ -91,7 +91,7 @@ class QueryTranslatorTest {
     }
 
     @Test
-    void toDTOShouldConvertQueryWithDeletionDateAfterOrEquals() throws Exception{
+    void toDTOShouldConvertQueryWithDeletionDateAfterOrEquals() throws Exception {
         String serializedDate = "2007-12-03T10:15:30+01:00[Europe/Paris]";
         Query query = Query.of(
             CriterionFactory.deletionDate().afterOrEquals(ZonedDateTime.parse(serializedDate))
@@ -100,8 +100,9 @@ class QueryTranslatorTest {
             new CriterionDTO(FieldName.DELETION_DATE.getValue(), Operator.AFTER_OR_EQUALS.getValue(), serializedDate)
         ));
     }
+
     @Test
-    void toDTOShouldConvertQueryWithDeliveryDateBeforeOrEquals() throws Exception{
+    void toDTOShouldConvertQueryWithDeliveryDateBeforeOrEquals() throws Exception {
         String serializedDate = "2007-12-03T10:15:30+01:00[Europe/Paris]";
         Query query = Query.of(
             CriterionFactory.deliveryDate().beforeOrEquals(ZonedDateTime.parse(serializedDate))
@@ -112,7 +113,7 @@ class QueryTranslatorTest {
     }
 
     @Test
-    void toDTOShouldConvertQueryWithDeliveryDateAfterOrEquals() throws Exception{
+    void toDTOShouldConvertQueryWithDeliveryDateAfterOrEquals() throws Exception {
         String serializedDate = "2007-12-03T10:15:30+01:00[Europe/Paris]";
         Query query = Query.of(
             CriterionFactory.deliveryDate().afterOrEquals(ZonedDateTime.parse(serializedDate))
@@ -123,7 +124,7 @@ class QueryTranslatorTest {
     }
 
     @Test
-    void toDTOShouldConvertQueryWithRecipientsContains() throws Exception{
+    void toDTOShouldConvertQueryWithRecipientsContains() throws Exception {
         Query query = Query.of(
             CriterionFactory.containsRecipient(new MailAddress("user@james.org"))
         );
@@ -133,7 +134,7 @@ class QueryTranslatorTest {
     }
 
     @Test
-    void toDTOShouldConvertQueryWithSenderEquals() throws Exception{
+    void toDTOShouldConvertQueryWithSenderEquals() throws Exception {
         Query query = Query.of(
             CriterionFactory.hasSender(new MailAddress("user@james.org"))
         );

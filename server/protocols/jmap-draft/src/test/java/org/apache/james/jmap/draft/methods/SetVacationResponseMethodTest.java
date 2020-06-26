@@ -35,8 +35,8 @@ import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.GetMailboxesRequest;
+import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetError;
 import org.apache.james.jmap.draft.model.SetMailboxesRequest;
 import org.apache.james.jmap.draft.model.SetVacationRequest;
@@ -48,6 +48,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+
 import reactor.core.publisher.Mono;
 
 public class SetVacationResponseMethodTest {
