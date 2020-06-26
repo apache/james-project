@@ -49,6 +49,7 @@
         <mailet match="SMTPAuthSuccessful" class="RemoteDelivery">
             <outgoingQueue>outgoing</outgoingQueue>
             <delayTime>5000, 100000, 500000</delayTime>
+            <maxRetries>3</maxRetries>
             <maxDnsProblemRetries>0</maxDnsProblemRetries>
             <deliveryThreads>10</deliveryThreads>
             <sendpartial>true</sendpartial>
