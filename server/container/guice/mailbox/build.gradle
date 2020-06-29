@@ -20,7 +20,6 @@ dependencies {
     api project(':james-server:james-server-guice:james-server-guice-utils')
     api project(':james-server:james-server-task-json')
     api project(':james-server:james-server-core')
-    api project(':james-server:james-server-spring')
     api project(':james-server:james-server-lifecycle-api')
 
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
