@@ -12,7 +12,9 @@ configurations {
 dependencies {
     api project(':apache-james-mailbox:apache-james-mailbox-event-rabbitmq')
     api project(':apache-james-mailbox:apache-james-mailbox-tools-quota-recompute')
-    api project(':james-server:james-server-guice:blob-objectstorage-guice')
+    api(project(':james-server:james-server-guice:blob-objectstorage-guice')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
     api project(':james-server:james-server-blob:blob-union')
     api project(':james-server:james-server-guice:james-server-cassandra-guice')
     api project(':james-server:james-server-task-distributed')
@@ -28,8 +30,12 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-elasticsearch')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-scanning-search')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-tika')
-    testImplementation project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')
-    testImplementation project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')
+    testImplementation(project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
+    testImplementation(project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')){
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-guice', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-common', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-jmap', configuration: 'tests')
@@ -54,7 +60,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    //TODO: @ieugen: Temporarily disabled. Failes to load classes at runtime. Part of https://issues.apache.org/jira/browse/JAMES-3258
+    failFast = true
+    // WithEncryptedAwsS3Test Error in custom provider, java.lang.NoClassDefFoundError: com/google/inject/internal/util/$Maps
     enabled = false
 }
 

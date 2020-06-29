@@ -45,6 +45,7 @@ dependencies {
     testImplementation project(path: ':james-backends-common:apache-james-backends-jpa', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-data-api', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-data-library', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-mailrepository-api', configuration: 'tests')
     testImplementation project(':james-server:james-server-dnsservice-test')
 
     testImplementation 'org.apache.derby:derby:10.14.2.0'

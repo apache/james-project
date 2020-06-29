@@ -12,9 +12,9 @@ configurations {
 dependencies {
     testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
     testImplementation project(path: ':james-backends-common:apache-james-backends-es', configuration: 'tests')
-    testImplementation project(':james-backends-common:apache-james-backends-rabbitmq')
-    testImplementation project(':james-server:james-server-blob:blob-objectstorage')
-    testImplementation project(':james-server:james-server-guice:blob-objectstorage-guice')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-rabbitmq', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-guice', configuration: 'tests')
     testImplementation project(':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice')
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice', configuration: 'tests')
@@ -30,7 +30,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    // TODO: @ieugen: Disabled temporarily. Related to https://issues.apache.org/jira/browse/JAMES-3260
+    failFast = true
     enabled = false
 }
 
