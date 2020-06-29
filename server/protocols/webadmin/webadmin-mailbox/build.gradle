@@ -76,8 +76,6 @@ dependencies {
 }
 
 test {
-    //TODO: @ieugen: Disabled because some tests fail with    java.lang.NoClassDefFoundError . Part of https://issues.apache.org/jira/browse/JAMES-3260
-    enabled = false
     useJUnitPlatform()
     failFast = true
 }

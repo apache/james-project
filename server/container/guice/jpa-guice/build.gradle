@@ -59,6 +59,9 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    maxParallelForks = 4
+    forkEvery = 1
+    failFast = true
 }
 
 description = 'Apache James :: Server :: JPA - guice injection'

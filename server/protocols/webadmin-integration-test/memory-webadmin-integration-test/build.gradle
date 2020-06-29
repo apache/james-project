@@ -25,8 +25,6 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    //TODO: @ieugen Disabled temporarily. https://issues.apache.org/jira/browse/JAMES-3260
-    enabled = false
 }
 
 description = 'Apache James :: Server :: Web Admin server integration tests :: Memory'

@@ -62,6 +62,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    failFast = true
 }
 
 description = 'Apache James :: Server :: JMAP (draft) :: Integration testing Common'

@@ -22,8 +22,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    // TODO: @ieugen: Disabled temporarily. Related to https://issues.apache.org/jira/browse/JAMES-3260
-    enabled = false
+    failFast = true
 }
 
 description = 'Apache James :: Server :: JMAP RFC-8621 :: Memory Integration Testing'

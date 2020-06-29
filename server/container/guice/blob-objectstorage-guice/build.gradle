@@ -33,7 +33,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    //TODO: @ieugen: Disabled temporarily. Fails with java.lang.NoClassDefFoundError . Part of  https://issues.apache.org/jira/browse/JAMES-3260
+    // ObjectStorageBlobStoreModuleTest   Error in custom provider, java.lang.NoClassDefFoundError: com/google/inject/internal/util/$Maps
     enabled = false
 }
 
