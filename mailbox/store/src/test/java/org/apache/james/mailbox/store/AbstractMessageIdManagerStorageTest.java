@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.fixture.MailboxFixture.BOB;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -68,6 +69,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
     private Mailbox aliceMailbox2;
     private Mailbox aliceMailbox3;
     private Mailbox bobMailbox1;
+    private Mailbox bobMailbox2;
     private MailboxSession aliceSession;
     private MailboxSession bobSession;
     private MailboxSession systemSession;
@@ -77,7 +79,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
     @BeforeEach
     void setUp() throws Exception {
         aliceSession = MailboxSessionUtil.create(MailboxFixture.ALICE);
-        bobSession = MailboxSessionUtil.create(MailboxFixture.BOB);
+        bobSession = MailboxSessionUtil.create(BOB);
         systemSession = MailboxSessionUtil.create(Username.of("systemuser"));
         testingData = createTestingData();
         messageIdManager = testingData.getMessageIdManager();
@@ -86,6 +88,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         aliceMailbox2 = testingData.createMailbox(MailboxFixture.OUTBOX_ALICE, aliceSession);
         aliceMailbox3 = testingData.createMailbox(MailboxFixture.SENT_ALICE, aliceSession);
         bobMailbox1 = testingData.createMailbox(MailboxFixture.INBOX_BOB, bobSession);
+        bobMailbox2 = testingData.createMailbox(MailboxFixture.BOB_2, bobSession);
     }
 
     @Test
@@ -268,11 +271,27 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
     @Test
     void setInMailboxesShouldIgnoreMessagesBelongingToOtherUsers() throws Exception {
-        MessageId messageId = testingData.persist(bobMailbox1.getMailboxId(), messageUid1, FLAGS, bobSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, bobSession);
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), aliceSession);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox1.getMailboxId(), aliceMailbox2.getMailboxId()), aliceSession);
 
-        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession)).isEmpty();
+        testingData.getMailboxManager().setRights(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(BOB)
+                .rights(MailboxACL.FULL_RIGHTS)
+                .asAddition()),
+            aliceSession);
+
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(bobMailbox1.getMailboxId(), bobMailbox2.getMailboxId()), bobSession);
+
+        // Bob couldn't alter the message in the mailbox he could not access
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession))
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(aliceMailbox2.getMailboxId());
+        // Bob succeeded to copy the message in his mailboxes
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, bobSession))
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(bobMailbox1.getMailboxId(), bobMailbox2.getMailboxId());
     }
 
     @Test
@@ -582,7 +601,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(new Rfc4314Rights(Right.Read))
                     .asAddition()),
             aliceSession);
@@ -601,7 +620,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(Rfc4314Rights.allExcept(Right.Read))
                     .asAddition()),
             aliceSession);
@@ -618,7 +637,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(new Rfc4314Rights(Right.Write))
                     .asAddition()),
             aliceSession);
@@ -639,7 +658,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(Rfc4314Rights.allExcept(Right.Write))
                     .asAddition()),
             aliceSession);
@@ -662,7 +681,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(new Rfc4314Rights(Right.Read))
                     .asAddition()),
             aliceSession);
@@ -687,7 +706,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(Rfc4314Rights.allExcept(Right.Read))
                     .asAddition()),
             aliceSession);
@@ -712,7 +731,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(new Rfc4314Rights(Right.Insert, Right.Read))
                     .asAddition()),
             aliceSession);
@@ -737,7 +756,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(Rfc4314Rights.allExcept(Right.Insert))
                     .asAddition()),
             aliceSession);
@@ -766,7 +785,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(new Rfc4314Rights(Right.Lookup, Right.Read, Right.DeleteMessages))
                     .asAddition()),
             aliceSession);
@@ -791,7 +810,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(Rfc4314Rights.allExcept(Right.DeleteMessages))
                     .asAddition()),
             aliceSession);
@@ -820,7 +839,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox2.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(MailboxACL.FULL_RIGHTS)
                     .asAddition()),
             aliceSession);
@@ -855,7 +874,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(new Rfc4314Rights(Right.Read, Right.Lookup, Right.DeleteMessages))
                     .asAddition()),
             aliceSession);
@@ -873,7 +892,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(Rfc4314Rights.allExcept(Right.DeleteMessages))
                     .asAddition()),
             aliceSession);
@@ -894,7 +913,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(new Rfc4314Rights(Right.Read, Right.Lookup))
                     .asAddition()),
             aliceSession);
@@ -911,7 +930,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(Rfc4314Rights.allExcept(Right.Read))
                     .asAddition()),
             aliceSession);
@@ -928,7 +947,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(new Rfc4314Rights(Right.Read, Right.Lookup, Right.Insert))
                     .asAddition()),
             aliceSession);
@@ -948,7 +967,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         testingData.setACL(aliceMailbox1.getMailboxId(),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .forUser(MailboxFixture.BOB)
+                    .forUser(BOB)
                     .rights(new Rfc4314Rights(Right.Read, Right.Lookup, Right.Insert, Right.Write))
                     .asAddition()),
             aliceSession);
