@@ -23,6 +23,8 @@ subprojects {
     targetCompatibility = '11'
 
     configurations.all {
+        // Guice depends on guava:*-android version that does not contain Streams class -> fails tests
+        resolutionStrategy.force 'com.google.guava:guava:25.1-jre'
     }
 
     java {
