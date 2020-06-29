@@ -7,35 +7,34 @@ configurations {
 
 dependencies {
 
-    compile 'com.google.guava:guava:25.1-jre'
-    compile 'org.reactivestreams:reactive-streams:1.0.3'
-    compile 'io.projectreactor:reactor-core:3.3.4.RELEASE'
-    compile 'com.github.steveash.guavate:guavate:1.0.0'
-    compile 'com.google.guava:guava:25.1-jre'
-    compile 'com.github.fge:throwing-lambdas:0.5.0'
-    compile 'org.apache.james:apache-mime4j-core:0.8.3'
-    compile 'com.sun.mail:javax.mail:1.6.2'
-    compile 'commons-io:commons-io:2.6'
-    compile 'org.slf4j:slf4j-api:1.7.27'
-    compile 'javax.inject:javax.inject:1'
-    compile 'com.google.inject:guice:4.2.2'
-    compile 'org.assertj:assertj-core:3.12.2'
-    compile 'org.mockito:mockito-core:3.0.0'
-
     testImplementation project(':apache-james-mailbox:backup')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-scanning-search', configuration: 'tests')
     testImplementation project(':james-server:james-server-cli')
     testImplementation project(':james-server:james-server-lifecycle-api')
-    testImplementation project(':james-server:james-server-guice:james-server-guice-common')
+    testImplementation project(path: ':james-server:james-server-guice:james-server-guice-common', configuration: 'tests')
     testImplementation project(':james-server:james-server-guice:james-server-guice-configuration')
     testImplementation project(':james-server:james-server-guice:james-server-guice-jmx')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-jmap', configuration: 'tests')
-    testImplementation project(':james-server:james-server-guice:james-server-memory-guice')
     testImplementation project(':james-server:james-server-guice:james-server-guice-managedsieve')
+    testImplementation project(':james-server:james-server-guice:james-server-memory-guice')
     testImplementation project(path: ':james-server:james-server-guice:james-server-memory-guice', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-task-api', configuration: 'tests')
 
-    compile 'ch.qos.logback:logback-classic:1.2.3'
+    testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+    testImplementation 'com.google.guava:guava:25.1-jre'
+    testImplementation 'com.github.steveash.guavate:guavate:1.0.0'
+    testImplementation 'com.github.fge:throwing-lambdas:0.5.0'
+    testImplementation 'com.google.guava:guava:25.1-jre'
+    testImplementation 'com.google.inject:guice:4.2.2'
+    testImplementation 'com.sun.mail:javax.mail:1.6.2'
+    testImplementation 'commons-io:commons-io:2.6'
+    testImplementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
+    testImplementation 'javax.inject:javax.inject:1'
+    testImplementation 'org.apache.james:apache-mime4j-core:0.8.3'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.reactivestreams:reactive-streams:1.0.3'
+    testImplementation 'org.slf4j:slf4j-api:1.7.27'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -45,12 +44,8 @@ dependencies {
 }
 
 test {
-    //TODO: @ieugen: I disabled these as they fail with NoClassDefFoundError . Tests are part of https://issues.apache.org/jira/browse/JAMES-3260 .
-    enabled = false
-    failFast = true
     useJUnitPlatform()
-    forkEvery = 1
-    maxParallelForks = 4
+    failFast = true
 }
 
 description = 'Apache James :: Server :: Cli :: Integration'

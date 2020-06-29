@@ -22,12 +22,22 @@ dependencies {
     implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.27'
 
+    testImplementation project(':apache-mailet:apache-mailet-test')
+    testImplementation project(':james-server:james-server-core')
+    testImplementation project(':james-server:james-server-filesystem-api')
+    testImplementation project(':james-server:james-server-util')
+    testImplementation project(':james-server:james-server-testing')
     testImplementation project(path: ':james-server:james-server-mailrepository-api', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-data-library', configuration: 'tests')
+
+    testImplementation 'org.apache.commons:commons-configuration2:2.7'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testCompileOnly 'junit:junit:4.13'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.5.1'
 }
 
 test {

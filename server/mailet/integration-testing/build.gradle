@@ -52,10 +52,10 @@ dependencies {
 }
 
 test {
-    //TODO: @ieugen: I disabled these as they fail with NoClassDefFoundError . Tests are part of https://issues.apache.org/jira/browse/JAMES-3260 .
+    useJUnitPlatform()
+    //TODO: org.awaitility.core.ConditionTimeoutException: Condition with lambda expression in org.apache.james.utils.TestIMAPClient was not fulfilled within 60 seconds.
     enabled = false
     failFast = true
-    useJUnitPlatform()
 }
 
 

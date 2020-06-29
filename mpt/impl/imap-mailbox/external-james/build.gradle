@@ -31,9 +31,9 @@ dependencies {
 }
 
 test {
-    //TODO: @ieugen: Disabled temporarily because they require an environment variable: JAMES_ADDRESS=127.0.0.1  https://issues.apache.org/jira/browse/JAMES-3260
-    enabled = false
     useJUnitPlatform()
+    // Disabled in maven as well
+    enabled = false
 }
 
 description = 'Apache James MPT Imap Mailbox - External James'
