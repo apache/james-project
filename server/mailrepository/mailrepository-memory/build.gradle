@@ -12,7 +12,15 @@ configurations {
 
 dependencies {
     api project(':james-server:james-server-mailrepository-api')
+    api project(':james-server:james-server-lifecycle-api')
+
+    implementation 'com.github.fge:throwing-lambdas:0.5.0'
+    implementation 'com.github.steveash.guavate:guavate:1.0.0'
+    implementation 'com.google.guava:guava:25.1-jre'
     implementation 'com.sun.mail:javax.mail:1.6.2'
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
+    implementation 'org.slf4j:jcl-over-slf4j:1.7.27'
 
     testImplementation project(path: ':james-server:james-server-mailrepository-api', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-data-library', configuration: 'tests')
