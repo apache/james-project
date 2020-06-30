@@ -50,7 +50,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -112,8 +111,9 @@ class ReactorUtilsTest {
                 .collect(Guavate.toImmutableList())
                 .block();
 
+            // delayElements also delay the first element
             assertThat(windowMembership)
-                .containsExactly(0L, 0L, 0L, 1L, 1L, 1L, 2L, 2L, 2L, 3L);
+                .containsExactly(1L, 1L, 1L, 2L, 2L, 2L, 3L, 3L, 3L, 4L);
         }
 
         @Test
@@ -223,6 +223,9 @@ class ReactorUtilsTest {
                 .blockLast()).doesNotThrowAnyException();
         }
 
+        @Disabled("We no longer rely on 'windowTimeout', this breakage is expected." +
+            "'windowTimeout' solves this but create other, more critical issues (large flux cannot be throttled" +
+            "as described in https://github.com/reactor/reactor-core/issues/1099")
         @Test
         void throttleShouldGenerateSmallerWindowsWhenUpstreamIsSlow() {
             int windowMaxSize = 3;
@@ -270,7 +273,7 @@ class ReactorUtilsTest {
         }
 
         @Test
-        void throttleShouldCompleteWhenOriginalFluxDoNotFillAWindow() {
+        void throttleShouldCompleteWhenOriginalFluxDoesNotFillAWindow() {
             int windowMaxSize = 3;
             Duration windowDuration = Duration.ofMillis(20);
 
@@ -335,8 +338,6 @@ class ReactorUtilsTest {
 
         @Test
         void throttleShouldTolerateManyEmptySuccessiveWindows() {
-            Hooks.onOperatorDebug();
-
             int windowMaxSize = 3;
             Duration windowDuration = Duration.ofMillis(5);
 
@@ -356,8 +357,6 @@ class ReactorUtilsTest {
             assertThat(results).containsExactly(0L, 1L, 2L);
         }
 
-        @Disabled("reactor.core.Exceptions$OverflowException: Could not emit tick 32 due to lack of requests (interval " +
-            "doesn't support small downstream requests that replenish slower than the ticks)")
         @Test
         void throttleShouldTolerateManyEmptyWindows() {
             int windowMaxSize = 3;
