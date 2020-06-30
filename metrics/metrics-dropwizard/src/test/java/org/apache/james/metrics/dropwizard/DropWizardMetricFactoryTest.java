@@ -28,7 +28,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.MetricFactoryContract;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.codahale.metrics.MetricRegistry;
@@ -71,7 +70,6 @@ class DropWizardMetricFactoryTest implements MetricFactoryContract {
             .isGreaterThan(duration.get(ChronoUnit.NANOS));
     }
 
-    @Disabled("Recorded timing is 0")
     @Test
     void decoratePublisherWithTimerMetricShouldRecordAtLeastTheMonoDelayWhenWrappedInAMono() {
         Duration duration = Duration.ofMillis(100);
