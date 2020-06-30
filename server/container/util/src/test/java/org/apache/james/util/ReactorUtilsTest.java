@@ -21,6 +21,7 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Duration.ONE_SECOND;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -29,12 +30,15 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.awaitility.Awaitility;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
@@ -202,6 +206,178 @@ class ReactorUtilsTest {
 
             assertThat(results)
                 .containsExactly(0, 1, 2, 3, 4, 6, 7, 8, 9);
+        }
+
+        @Test
+        void throttleShouldHandleLargeFluxes() {
+            int windowMaxSize = 2;
+            Duration windowDuration = Duration.ofMillis(1);
+
+            Flux<Integer> originalFlux = Flux.range(0, 10000);
+
+            assertThatCode(() -> originalFlux
+                .transform(ReactorUtils.<Integer, Integer>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(Mono::just))
+                .blockLast()).doesNotThrowAnyException();
+        }
+
+        @Test
+        void throttleShouldGenerateSmallerWindowsWhenUpstreamIsSlow() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(20);
+            Stopwatch stopwatch = Stopwatch.createUnstarted();
+
+            Flux<Long> originalFlux = Flux.interval(Duration.ofMillis(10));
+
+            ImmutableList<Long> perWindowCount = originalFlux
+                .transform(ReactorUtils.<Long, Long>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(i -> Mono.fromCallable(() -> stopwatch.elapsed(TimeUnit.MILLISECONDS))))
+                .map(i -> i / 20)
+                .doOnSubscribe(signal -> stopwatch.start())
+                .take(10)
+                .groupBy(Function.identity())
+                .flatMap(Flux::count)
+                .collect(Guavate.toImmutableList())
+                .block();
+
+            // We verify that we generate 2 elements by slice and not 3
+            // (as the upstream cannot generate more than 2 element per window)
+            assertThat(perWindowCount)
+                .allSatisfy(count -> assertThat(count).isLessThanOrEqualTo(2));
+        }
+
+        @Test
+        void throttleShouldNotDropEntriesWhenUpstreamIsSlow() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(20);
+
+            Flux<Long> originalFlux = Flux.interval(Duration.ofMillis(10));
+
+            ImmutableList<Long> results = originalFlux
+                .transform(ReactorUtils.<Long, Long>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(Mono::just))
+                .take(10)
+                .collect(Guavate.toImmutableList())
+                .block();
+
+            assertThat(results).containsExactly(0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L);
+        }
+
+        @Test
+        void throttleShouldCompleteWhenOriginalFluxDoNotFillAWindow() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(20);
+
+            Flux<Long> originalFlux = Flux.just(0L, 1L);
+
+            ImmutableList<Long> results = originalFlux
+                .transform(ReactorUtils.<Long, Long>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(Mono::just))
+                .take(10)
+                .collect(Guavate.toImmutableList())
+                .block();
+
+            assertThat(results).containsExactly(0L, 1L);
+        }
+
+        @Test
+        void throttleShouldSupportEmittingPartiallyCompleteWindowImmediately() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(20);
+
+            ConcurrentLinkedDeque<Long> results = new ConcurrentLinkedDeque<>();
+            Flux<Long> originalFlux = Flux.concat(Flux.just(0L, 1L),
+                Flux.never());
+
+            originalFlux
+                .transform(ReactorUtils.<Long, Long>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(i -> {
+                        results.add(i);
+                        return Mono.just(i);
+                    }))
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
+
+            Awaitility.await().atMost(ONE_SECOND)
+                .untilAsserted(() -> assertThat(results).containsExactly(0L, 1L));
+        }
+
+        @Test
+        void throttleShouldTolerateSeveralEmptySlices() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(5);
+
+            // 150 ms = 30 * window duration (which is smaller than reactor small buffers)
+            Flux<Long> originalFlux = Flux.concat(Flux.just(0L, 1L),
+                Mono.delay(Duration.ofMillis(150)).thenReturn(2L));
+
+            List<Long> results = originalFlux
+                .transform(ReactorUtils.<Long, Long>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(Mono::just))
+                .collectList()
+                .block();
+
+            System.out.println(results);
+            assertThat(results).containsExactly(0L, 1L, 2L);
+        }
+
+        @Test
+        void throttleShouldTolerateManyEmptySuccessiveWindows() {
+            Hooks.onOperatorDebug();
+
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(5);
+
+            // 150 ms = 33 * window duration (which is greater than reactor small buffers)
+            Flux<Long> originalFlux = Flux.concat(Flux.just(0L, 1L),
+                Mono.delay(Duration.ofMillis(165)).thenReturn(2L));
+
+            List<Long> results = originalFlux
+                .transform(ReactorUtils.<Long, Long>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(Mono::just))
+                .collectList()
+                .block();
+
+            System.out.println(results);
+            assertThat(results).containsExactly(0L, 1L, 2L);
+        }
+
+        @Disabled("reactor.core.Exceptions$OverflowException: Could not emit tick 32 due to lack of requests (interval " +
+            "doesn't support small downstream requests that replenish slower than the ticks)")
+        @Test
+        void throttleShouldTolerateManyEmptyWindows() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(5);
+
+            // 150 ms = 30 * window duration (which is smaller than reactor small buffers)
+            Flux<Long> originalFlux = Flux.concat(Flux.just(0L, 1L),
+                Mono.delay(Duration.ofMillis(150)).thenReturn(2L),
+                Mono.delay(Duration.ofMillis(150)).thenReturn(3L));
+
+            List<Long> results = originalFlux
+                .transform(ReactorUtils.<Long, Long>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(Mono::just))
+                .collectList()
+                .block();
+
+            System.out.println(results);
+            assertThat(results).containsExactly(0L, 1L, 2L, 3L);
         }
     }
 

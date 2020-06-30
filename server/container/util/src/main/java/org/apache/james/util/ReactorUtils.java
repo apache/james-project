@@ -54,7 +54,7 @@ public class ReactorUtils {
             Preconditions.checkArgument(!duration.isZero(), "'windowDuration' must be strictly positive");
 
             return flux -> flux
-                .windowTimeout(elements, duration)
+                .window(elements)
                 .zipWith(Flux.interval(DELAY, duration))
                 .flatMap(Tuple2::getT1, elements, elements)
                 .flatMap(operation, elements)
