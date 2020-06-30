@@ -20,6 +20,7 @@ dependencies {
     testImplementation project(':james-server:james-server-guice:james-server-guice-smtp')
     testImplementation project(':james-server:james-server-guice:james-server-jpa-common-guice')
 
+    testImplementation 'com.google.inject:guice:4.2.2'
     testImplementation 'org.apache.derby:derby:10.14.2.0'
     testImplementation 'org.assertj:assertj-core:3.12.2'
     testImplementation 'org.testcontainers:mariadb:1.12.0'

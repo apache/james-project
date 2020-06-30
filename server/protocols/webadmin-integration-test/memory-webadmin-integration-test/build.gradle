@@ -18,6 +18,8 @@ dependencies {
     testImplementation project(':james-server:webadmin-integration-test:james-server-webadmin-integration-test-common')
     testImplementation project(path: ':james-server:james-server-guice:james-server-mailbox-plugin-deleted-messages-vault-guice', configuration: 'tests')
 
+    testImplementation 'com.google.inject:guice:4.2.2'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
