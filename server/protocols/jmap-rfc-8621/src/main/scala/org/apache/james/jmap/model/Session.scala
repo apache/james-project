@@ -80,8 +80,6 @@ object State {
   type State = String Refined NonEmpty
 }
 
-case class Capabilities(coreCapability: CoreCapability, mailCapability: MailCapability)
-
 final case class Session(capabilities: Capabilities,
                          accounts: List[Account],
                          primaryAccounts: Map[CapabilityIdentifier, AccountId],

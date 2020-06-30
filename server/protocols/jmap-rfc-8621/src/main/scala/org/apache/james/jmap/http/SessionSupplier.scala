@@ -21,35 +21,13 @@ package org.apache.james.jmap.http
 
 import java.net.URL
 
-import eu.timepit.refined.auto._
 import org.apache.james.core.Username
-import org.apache.james.jmap.http.SessionSupplier.{CORE_CAPABILITY, HARD_CODED_URL_PREFIX, MAIL_CAPABILITY}
+import org.apache.james.jmap.http.SessionSupplier.HARD_CODED_URL_PREFIX
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model._
 import reactor.core.scala.publisher.SMono
 
 object SessionSupplier {
-  private val CORE_CAPABILITY = CoreCapability(
-    properties = CoreCapabilityProperties(
-      MaxSizeUpload(10_000_000L),
-      MaxConcurrentUpload(4L),
-      MaxSizeRequest(10_000_000L),
-      MaxConcurrentRequests(4L),
-      MaxCallsInRequest(16L),
-      MaxObjectsInGet(500L),
-      MaxObjectsInSet(500L),
-      collationAlgorithms = List("i;unicode-casemap")))
-
-  private val MAIL_CAPABILITY = MailCapability(
-    properties = MailCapabilityProperties(
-      MaxMailboxesPerEmail(Some(10_000_000L)),
-      MaxMailboxDepth(None),
-      MaxSizeMailboxName(200L),
-      MaxSizeAttachmentsPerEmail(20_000_000L),
-      emailQuerySortOptions = List("receivedAt", "cc", "from", "to", "subject", "size", "sentAt", "hasKeyword", "uid", "Id"),
-      MayCreateTopLevelMailbox(true)
-    ))
-
   private val HARD_CODED_URL_PREFIX = "http://this-url-is-hardcoded.org"
 }
 
@@ -57,7 +35,7 @@ class SessionSupplier {
   def generate(username: Username): SMono[Session] = {
     accounts(username)
       .map(account => Session(
-        Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY),
+        DefaultCapabilities.SUPPORTED,
         List(account),
         primaryAccounts(account.accountId),
         username,
@@ -68,11 +46,13 @@ class SessionSupplier {
   }
 
   private def accounts(username: Username): SMono[Account] = SMono.defer(() =>
-    Account.from(username, IsPersonal(true), IsReadOnly(false), Set(CORE_CAPABILITY, MAIL_CAPABILITY)) match {
+    Account.from(username, IsPersonal(true), IsReadOnly(false), DefaultCapabilities.SUPPORTED.toSet) match {
       case Left(ex: IllegalArgumentException) => SMono.raiseError(ex)
       case Right(account: Account) => SMono.just(account)
     })
 
   private def primaryAccounts(accountId: AccountId): Map[CapabilityIdentifier, AccountId] =
-    Map(CORE_CAPABILITY.identifier -> accountId, MAIL_CAPABILITY.identifier -> accountId)
+    DefaultCapabilities.SUPPORTED.toSet
+      .map(capability => (capability.identifier(), accountId))
+      .toMap
 }
