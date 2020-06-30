@@ -28,6 +28,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.MetricFactoryContract;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.codahale.metrics.MetricRegistry;
@@ -58,6 +59,37 @@ class DropWizardMetricFactoryTest implements MetricFactoryContract {
 
         assertThat(testee.timer("any").getTimer().getSnapshot().get99thPercentile())
             .isLessThan(duration.get(ChronoUnit.NANOS) * 2);
+    }
+
+    @Test
+    void decoratePublisherWithTimerMetricShouldRecordAtLeastTheMonoDelayWhenWrappedInAFlux() {
+        Duration duration = Duration.ofMillis(100);
+        Flux.from(testee.decoratePublisherWithTimerMetric("any", Mono.delay(duration)))
+            .blockLast();
+
+        assertThat(testee.timer("any").getTimer().getSnapshot().get99thPercentile())
+            .isGreaterThan(duration.get(ChronoUnit.NANOS));
+    }
+
+    @Disabled("Recorded timing is 0")
+    @Test
+    void decoratePublisherWithTimerMetricShouldRecordAtLeastTheMonoDelayWhenWrappedInAMono() {
+        Duration duration = Duration.ofMillis(100);
+        Mono.from(testee.decoratePublisherWithTimerMetric("any", Mono.delay(duration)))
+            .block();
+
+        assertThat(testee.timer("any").getTimer().getSnapshot().get99thPercentile())
+            .isGreaterThan(duration.get(ChronoUnit.NANOS));
+    }
+
+    @Test
+    void decoratePublisherWithTimerMetricShouldRecordAtLeastTheFluxDelayWhenWrappedInAFlux() {
+        Duration duration = Duration.ofMillis(100);
+        Flux.from(testee.decoratePublisherWithTimerMetric("any", Flux.interval(duration).take(1)))
+            .blockLast();
+
+        assertThat(testee.timer("any").getTimer().getSnapshot().get99thPercentile())
+            .isGreaterThan(duration.get(ChronoUnit.NANOS));
     }
 
     @Test
