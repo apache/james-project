@@ -11,19 +11,25 @@ configurations {
 
 dependencies {
     api project(':james-server:james-server-guice:blob-api-guice')
-    api project(':james-server:james-server-blob:blob-objectstorage')
+    api(project(':james-server:james-server-blob:blob-objectstorage')){
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+        exclude group: 'com.google.inject', module: 'guice'
+    }
     api project(':james-server:james-server-guice:james-server-guice-configuration')
 
     implementation 'com.google.inject:guice:4.2.2'
     implementation 'org.apache.commons:commons-configuration2:2.7'
 
-    testImplementation project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')
+    testImplementation(project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+        exclude group: 'com.google.inject', module: 'guice'
+    }
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-common', configuration: 'tests')
     testImplementation project(':james-server:james-server-testing')
 
-    testImplementation 'com.google.inject:guice:4.2.2'
+//    testImplementation 'com.google.inject:guice:4.2.2'
     testImplementation 'org.assertj:assertj-core:3.12.2'
-    testImplementation 'org.testcontainers:testcontainers:1.12.0'
+    testImplementation 'org.testcontainers:testcontainers:1.14.3'
     testImplementation 'org.reactivestreams:reactive-streams:1.0.3'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
@@ -34,7 +40,7 @@ dependencies {
 test {
     useJUnitPlatform()
     // ObjectStorageBlobStoreModuleTest   Error in custom provider, java.lang.NoClassDefFoundError: com/google/inject/internal/util/$Maps
-    enabled = false
+//    enabled = false
 }
 
 description = 'Apache James :: Server :: Blob Store in object storage - guice injection'

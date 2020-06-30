@@ -27,10 +27,11 @@ dependencies {
     testImplementation project(':james-server:james-server-webadmin-cassandra-data')
     testImplementation project(':james-server:webadmin-integration-test:james-server-webadmin-integration-test-common')
 
-    testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     testImplementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
+    testImplementation 'com.google.inject:guice:4.2.2'
     testImplementation 'com.github.fge:throwing-lambdas:0.5.0'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
+    testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.assertj:assertj-core:3.12.2'
 
@@ -44,7 +45,7 @@ dependencies {
 test {
     useJUnitPlatform()
     failFast = true
-    // RabbitMQForwardIntegrationTest Error in custom provider, java.lang.NoClassDefFoundError: com/google/inject/internal/util/$Maps  
+    // RabbitMQForwardIntegrationTest Error in custom provider, java.lang.NoClassDefFoundError: com/google/inject/internal/util/$Maps
     enabled = false
 //    maxParallelForks = Runtime.getRuntime().availableProcessors();
 }
