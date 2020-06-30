@@ -38,6 +38,7 @@ dependencies {
 
     implementation 'ch.qos.logback:logback-classic:1.2.3'
     implementation 'com.linagora:logback-elasticsearch-appender:1.8.0'
+    implementation 'com.google.inject:guice:4.2.2'
     implementation 'org.apache.derby:derby:10.14.2.0'
     implementation 'org.awaitility:awaitility:3.1.6'
 

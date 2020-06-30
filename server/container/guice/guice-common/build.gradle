@@ -33,10 +33,9 @@ dependencies {
     api project(':metrics:metrics-api')
     api project(':metrics:metrics-dropwizard')
 
-    api 'com.google.inject:guice:4.2.2'
-
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.google.guava:guava:25.1-jre'
+    implementation 'com.google.inject:guice:4.2.2'
     implementation 'com.github.fge:throwing-lambdas:0.5.0'
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'io.dropwizard.metrics:metrics-core:4.1.0'

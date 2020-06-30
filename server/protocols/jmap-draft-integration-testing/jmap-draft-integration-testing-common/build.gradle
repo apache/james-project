@@ -39,6 +39,7 @@ dependencies {
     testImplementation 'com.github.fge:throwing-lambdas:0.5.0'
     testImplementation 'com.github.steveash.guavate:guavate:1.0.0'
     testImplementation 'com.google.guava:guava:25.1-jre'
+    testImplementation 'com.google.inject:guice:4.2.2'
     testImplementation 'commons-io:commons-io:2.6'
     testImplementation 'commons-net:commons-net:3.6'
     testImplementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'

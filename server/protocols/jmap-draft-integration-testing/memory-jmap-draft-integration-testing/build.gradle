@@ -30,6 +30,7 @@ dependencies {
     testImplementation project(':javax-mail-extension')
     testImplementation project(':third-party:apache-james-spamassassin')
 
+    testImplementation 'com.google.inject:guice:4.2.2'
     testImplementation 'com.google.guava:guava:25.1-jre'
     testImplementation 'io.cucumber:cucumber-guice:2.4.0'
     testImplementation 'io.cucumber:cucumber-java:2.4.0'
