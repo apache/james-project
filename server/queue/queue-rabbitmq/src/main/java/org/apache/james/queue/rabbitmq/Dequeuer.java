@@ -24,7 +24,6 @@ import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.metrics.api.Metric;
@@ -35,6 +34,7 @@ import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.mailet.Mail;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.rabbitmq.client.Delivery;
 
@@ -76,14 +76,14 @@ class Dequeuer implements Closeable {
 
     }
 
-    private final Function<MailReferenceDTO, MailWithEnqueueId> mailLoader;
+    private final MailLoader mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
     private final MailQueueView mailQueueView;
     private final Receiver receiver;
     private final Flux<AcknowledgableDelivery> flux;
 
-    Dequeuer(MailQueueName name, ReceiverProvider receiverProvider, Function<MailReferenceDTO, MailWithEnqueueId> mailLoader,
+    Dequeuer(MailQueueName name, ReceiverProvider receiverProvider, MailLoader mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
              MailQueueView mailQueueView, MailQueueFactory.PrefetchCount prefetchCount) {
         this.mailLoader = mailLoader;
@@ -120,13 +120,8 @@ class Dequeuer implements Closeable {
     }
 
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
-        try {
-            MailWithEnqueueId mailWithEnqueueId = loadMail(response);
-            ThrowingConsumer<Boolean> ack = ack(response, mailWithEnqueueId);
-            return Mono.just(new RabbitMQMailQueueItem(ack, mailWithEnqueueId));
-        } catch (MailQueue.MailQueueException e) {
-            return Mono.error(e);
-        }
+        return loadMail(response)
+            .map(mailWithEnqueueId -> new RabbitMQMailQueueItem(ack(response, mailWithEnqueueId), mailWithEnqueueId));
     }
 
     private ThrowingConsumer<Boolean> ack(AcknowledgableDelivery response, MailWithEnqueueId mailWithEnqueueId) {
@@ -141,17 +136,15 @@ class Dequeuer implements Closeable {
         };
     }
 
-    private MailWithEnqueueId loadMail(Delivery response) throws MailQueue.MailQueueException {
-        MailReferenceDTO mailDTO = toMailReference(response);
-        return mailLoader.apply(mailDTO);
+    private Mono<MailWithEnqueueId> loadMail(Delivery response) {
+        return toMailReference(response)
+            .flatMap(mailLoader::load);
     }
 
-    private MailReferenceDTO toMailReference(Delivery getResponse) throws MailQueue.MailQueueException {
-        try {
-            return mailReferenceSerializer.read(getResponse.getBody());
-        } catch (IOException e) {
-            throw new MailQueue.MailQueueException("Failed to parse DTO", e);
-        }
+    private Mono<MailReferenceDTO> toMailReference(Delivery getResponse) {
+        return Mono.fromCallable(getResponse::getBody)
+            .map(Throwing.function(mailReferenceSerializer::read).sneakyThrow())
+            .onErrorResume(IOException.class, e -> Mono.error(new MailQueue.MailQueueException("Failed to parse DTO", e)));
     }
 
 }
