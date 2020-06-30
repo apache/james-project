@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -150,6 +151,57 @@ class ReactorUtilsTest {
 
             assertThat(ongoingProcessingUponComputationStart)
                 .allSatisfy(processingCount -> assertThat(processingCount).isLessThanOrEqualTo(windowMaxSize));
+        }
+
+        @Test
+        void throttleShouldNotAbortProcessingUponError() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(100);
+
+            Flux<Integer> originalFlux = Flux.range(0, 10);
+            Function<Integer, Publisher<Integer>> operation =
+                i -> {
+                    if (i == 5) {
+                        return Mono.error(new RuntimeException());
+                    }
+                    return Mono.just(i);
+                };
+
+            List<Integer> results = originalFlux
+                .transform(ReactorUtils.<Integer, Integer>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(operation))
+                .collectList()
+                .block();
+
+            assertThat(results)
+                .containsExactly(0, 1, 2, 3, 4, 6, 7, 8, 9);
+        }
+
+        @Test
+        void throttleShouldNotAbortProcessingUponUpstreamError() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(100);
+
+            Flux<Integer> originalFlux = Flux.range(0, 10)
+                .flatMap(i -> {
+                    if (i == 5) {
+                        return Mono.error(new RuntimeException());
+                    }
+                    return Mono.just(i);
+                });
+
+            List<Integer> results = originalFlux
+                .transform(ReactorUtils.<Integer, Integer>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(Mono::just))
+                .collectList()
+                .block();
+
+            assertThat(results)
+                .containsExactly(0, 1, 2, 3, 4, 6, 7, 8, 9);
         }
     }
 
