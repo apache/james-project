@@ -41,6 +41,14 @@ public class Scenario {
     @FunctionalInterface
     interface Behavior {
         Behavior THROW = (session, statement) -> {
+            //JAMES-3289 add a delay in the throwing behavior to avoid the reactor bug defined in https://github.com/reactor/reactor-core/issues/1941
+            //which cause flacky tests.
+            //once this bug is solved this delay could be removed.
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                //DO NOTHING
+            }
             throw new InjectedFailureException();
         };
 
