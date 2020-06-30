@@ -209,6 +209,25 @@ class ReactorUtilsTest {
         }
 
         @Test
+        void throttleShouldNotOverwriteErrorHandling() {
+            int windowMaxSize = 3;
+            Duration windowDuration = Duration.ofMillis(20);
+
+            Flux<Long> originalFlux = Flux.just(0L);
+            ConcurrentLinkedDeque<Throwable> recordedExceptions = new ConcurrentLinkedDeque<>();
+
+            originalFlux
+                .transform(ReactorUtils.<Long, Long>throttle()
+                    .elements(windowMaxSize)
+                    .per(windowDuration)
+                    .forOperation(any -> Mono.<Long>error(new RuntimeException())
+                        .onErrorResume(e -> Mono.fromRunnable(() -> recordedExceptions.add(e)).thenReturn(any))))
+                .blockLast();
+
+            assertThat(recordedExceptions).hasSize(1);
+        }
+
+        @Test
         void throttleShouldHandleLargeFluxes() {
             int windowMaxSize = 2;
             Duration windowDuration = Duration.ofMillis(1);

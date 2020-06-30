@@ -52,10 +52,14 @@ public class ReactorUtils {
             Preconditions.checkArgument(!duration.isZero(), "'windowDuration' must be strictly positive");
 
             return flux -> flux
+                .onErrorContinue((e, o) -> LOGGER.error("Error encountered while generating throttled entries", e))
                 .window(elements)
                 .delayElements(duration)
-                .concatMap(window -> window.flatMap(operation))
-                .onErrorContinue((e, o) -> LOGGER.error("Error encountered while throttling for {}", o.toString(), e));
+                .concatMap(window -> window.flatMap(operation)
+                    .onErrorResume(e -> {
+                        LOGGER.error("Error encountered while throttling", e);
+                        return Mono.empty();
+                    }));
         };
     }
 
