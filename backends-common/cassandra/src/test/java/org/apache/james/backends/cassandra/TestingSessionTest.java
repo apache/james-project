@@ -23,6 +23,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.apache.james.backends.cassandra.Scenario.Builder.returnEmpty;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.TABLE_NAME;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,6 +74,17 @@ class TestingSessionTest {
 
         assertThatCode(() -> dao.getCurrentSchemaVersion().block())
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void daoOperationShouldNotBeInstrumentedWhenReturnEmpty(CassandraCluster cassandra) {
+        cassandra.getConf()
+            .registerScenario(returnEmpty()
+                .times(1)
+                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+
+        assertThat(dao.getCurrentSchemaVersion().block())
+            .isEmpty();
     }
 
     @Test

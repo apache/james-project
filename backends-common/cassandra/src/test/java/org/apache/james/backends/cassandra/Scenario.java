@@ -54,6 +54,10 @@ public class Scenario {
 
         Behavior EXECUTE_NORMALLY = Session::executeAsync;
 
+        // Hack. We rely on version key unicity (because UUID) to create an empty ResultSet
+        Behavior RETURN_EMPTY = (session, statement) -> session.executeAsync(
+            "SELECT value FROM schemaVersion WHERE key=49128560-bb80-11ea-bad6-e3b96c9cd431;");
+
         static Behavior awaitOn(Barrier barrier, Behavior behavior) {
             return (session, statement) -> {
                 barrier.call();
@@ -160,6 +164,13 @@ public class Scenario {
             return validity -> statementPredicate -> new ExecutionHook(
                 statementPredicate,
                 Behavior.THROW,
+                validity);
+        }
+
+        static RequiresValidity returnEmpty() {
+            return validity -> statementPredicate -> new ExecutionHook(
+                statementPredicate,
+                Behavior.RETURN_EMPTY,
                 validity);
         }
 
