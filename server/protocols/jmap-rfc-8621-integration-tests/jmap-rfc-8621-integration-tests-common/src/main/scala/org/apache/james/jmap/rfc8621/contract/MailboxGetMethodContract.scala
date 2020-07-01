@@ -65,6 +65,52 @@ object MailboxGetMethodContract {
     |      },
     |      "c1"]]
     |}""".stripMargin
+
+  private val GET_ALL_MAILBOXES_REQUEST_WITH_QUOTA: String =
+    """{
+    |  "using": [
+    |    "urn:ietf:params:jmap:core",
+    |    "urn:ietf:params:jmap:mail",
+    |    "urn:apache:james:params:jmap:mail:quota"],
+    |  "methodCalls": [[
+    |      "Mailbox/get",
+    |      {
+    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+    |        "ids": null
+    |      },
+    |      "c1"]]
+    |}""".stripMargin
+
+  private val GET_ALL_MAILBOXES_REQUEST_WITH_SHARES: String =
+    """{
+    |  "using": [
+    |    "urn:ietf:params:jmap:core",
+    |    "urn:ietf:params:jmap:mail",
+    |    "urn:apache:james:params:jmap:mail:shares"],
+    |  "methodCalls": [[
+    |      "Mailbox/get",
+    |      {
+    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+    |        "ids": null
+    |      },
+    |      "c1"]]
+    |}""".stripMargin
+
+  private val GET_ALL_MAILBOXES_REQUEST_WITH_BOTH: String =
+    """{
+    |  "using": [
+    |    "urn:ietf:params:jmap:core",
+    |    "urn:ietf:params:jmap:mail",
+    |    "urn:apache:james:params:jmap:mail:quota",
+    |    "urn:apache:james:params:jmap:mail:shares"],
+    |  "methodCalls": [[
+    |      "Mailbox/get",
+    |      {
+    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+    |        "ids": null
+    |      },
+    |      "c1"]]
+    |}""".stripMargin
 }
 
 trait MailboxGetMethodContract {
@@ -94,6 +140,179 @@ trait MailboxGetMethodContract {
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(GET_ALL_MAILBOXES_REQUEST)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [
+         |        {
+         |          "id": "${mailboxId}",
+         |          "name": "custom",
+         |          "sortOrder": 1000,
+         |          "totalEmails": 0,
+         |          "unreadEmails": 0,
+         |          "totalThreads": 0,
+         |          "unreadThreads": 0,
+         |          "myRights": {
+         |            "mayReadItems": true,
+         |            "mayAddItems": true,
+         |            "mayRemoveItems": true,
+         |            "maySetSeen": true,
+         |            "maySetKeywords": true,
+         |            "mayCreateChild": true,
+         |            "mayRename": true,
+         |            "mayDelete": true,
+         |            "maySubmit": true
+         |          },
+         |          "isSubscribed": false
+         |        }
+         |      ],
+         |      "notFound": []
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def getMailboxesShouldIncludeRightsAndNamespaceIfSharesCapabilityIsUsed(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [
+         |        {
+         |          "id": "${mailboxId}",
+         |          "name": "custom",
+         |          "sortOrder": 1000,
+         |          "totalEmails": 0,
+         |          "unreadEmails": 0,
+         |          "totalThreads": 0,
+         |          "unreadThreads": 0,
+         |          "myRights": {
+         |            "mayReadItems": true,
+         |            "mayAddItems": true,
+         |            "mayRemoveItems": true,
+         |            "maySetSeen": true,
+         |            "maySetKeywords": true,
+         |            "mayCreateChild": true,
+         |            "mayRename": true,
+         |            "mayDelete": true,
+         |            "maySubmit": true
+         |          },
+         |          "isSubscribed": false,
+         |          "namespace": "Personal",
+         |          "rights": {}
+         |        }
+         |      ],
+         |      "notFound": []
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def getMailboxesShouldIncludeQuotasIfQuotaCapabilityIsUsed(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST_WITH_QUOTA)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [
+         |        {
+         |          "id": "${mailboxId}",
+         |          "name": "custom",
+         |          "sortOrder": 1000,
+         |          "totalEmails": 0,
+         |          "unreadEmails": 0,
+         |          "totalThreads": 0,
+         |          "unreadThreads": 0,
+         |          "myRights": {
+         |            "mayReadItems": true,
+         |            "mayAddItems": true,
+         |            "mayRemoveItems": true,
+         |            "maySetSeen": true,
+         |            "maySetKeywords": true,
+         |            "mayCreateChild": true,
+         |            "mayRename": true,
+         |            "mayDelete": true,
+         |            "maySubmit": true
+         |          },
+         |          "isSubscribed": false,
+         |          "quotas": {
+         |            "#private&bob@domain.tld": {
+         |              "Storage": { "used": 0},
+         |              "Message": {"used": 0}
+         |            }
+         |          }
+         |        }
+         |      ],
+         |      "notFound": []
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def getMailboxesShouldIncludeBothQuotasAndRightsIfUsed(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST_WITH_BOTH)
     .when
       .post
     .`then`
@@ -225,7 +444,7 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES)
     .when
       .post
     .`then`
@@ -250,7 +469,7 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES)
     .when
       .post
     .`then`
@@ -278,7 +497,7 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES)
     .when
       .post
     .`then`
@@ -389,7 +608,7 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(GET_ALL_MAILBOXES_REQUEST_WITH_QUOTA)
     .when
       .post
     .`then`
@@ -415,7 +634,7 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(GET_ALL_MAILBOXES_REQUEST_WITH_QUOTA)
     .when
       .post
     .`then`
@@ -453,6 +672,82 @@ trait MailboxGetMethodContract {
 
   @Test
   def getMailboxesByIdsShouldReturnCorrespondingMailbox(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:quota",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |      {
+         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "state": "000001",
+         |        "list": [
+         |          {
+         |            "id": "${mailboxId}",
+         |            "name": "custom",
+         |            "sortOrder": 1000,
+         |            "totalEmails": 0,
+         |            "unreadEmails": 0,
+         |            "totalThreads": 0,
+         |            "unreadThreads": 0,
+         |            "myRights": {
+         |              "mayReadItems": true,
+         |              "mayAddItems": true,
+         |              "mayRemoveItems": true,
+         |              "maySetSeen": true,
+         |              "maySetKeywords": true,
+         |              "mayCreateChild": true,
+         |              "mayRename": true,
+         |              "mayDelete": true,
+         |              "maySubmit": true
+         |            },
+         |            "isSubscribed": false,
+         |            "namespace": "Personal",
+         |            "rights": {},
+         |            "quotas": {
+         |              "#private&bob@domain.tld": {
+         |                "Storage": { "used": 0},
+         |                "Message": {"used": 0}
+         |              }
+         |            }
+         |          }
+         |        ],
+         |        "notFound": []
+         |      },
+         |      "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def getMailboxesByIdsShouldReturnCorrespondingMailboxWithoutPropertiesFromNotProvidedCapabilities(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "custom"))
       .serialize
@@ -508,15 +803,7 @@ trait MailboxGetMethodContract {
          |              "mayDelete": true,
          |              "maySubmit": true
          |            },
-         |            "isSubscribed": false,
-         |            "namespace": "Personal",
-         |            "rights": {},
-         |            "quotas": {
-         |              "#private&bob@domain.tld": {
-         |                "Storage": { "used": 0},
-         |                "Message": {"used": 0}
-         |              }
-         |            }
+         |            "isSubscribed": false
          |          }
          |        ],
          |        "notFound": []
