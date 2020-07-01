@@ -33,6 +33,8 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
@@ -46,6 +48,7 @@ import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.Receiver;
 
 class Dequeuer implements Closeable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Dequeuer.class);
     private static final boolean REQUEUE = true;
 
     private static class RabbitMQMailQueueItem implements MailQueue.MailQueueItem {
@@ -136,9 +139,14 @@ class Dequeuer implements Closeable {
         };
     }
 
-    private Mono<MailWithEnqueueId> loadMail(Delivery response) {
+    private Mono<MailWithEnqueueId> loadMail(AcknowledgableDelivery response) {
         return toMailReference(response)
-            .flatMap(mailLoader::load);
+            .flatMap(reference -> mailLoader.load(reference)
+                .onErrorResume(e -> {
+                    LOGGER.error("Fail to load mail {} with enqueueId {}", reference.getName(), reference.getEnqueueId(), e);
+                    response.nack(REQUEUE);
+                    return Mono.empty();
+                }));
     }
 
     private Mono<MailReferenceDTO> toMailReference(Delivery getResponse) {

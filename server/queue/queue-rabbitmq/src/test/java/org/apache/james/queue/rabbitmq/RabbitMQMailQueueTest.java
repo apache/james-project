@@ -20,6 +20,7 @@
 package org.apache.james.queue.rabbitmq;
 
 import static java.time.temporal.ChronoUnit.HOURS;
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -295,6 +296,38 @@ class RabbitMQMailQueueTest {
                     return mailQueueItem;
                 }))
                 .blockLast();
+        }
+
+        @Test
+        void dequeueShouldRetryLoadingErrors(CassandraCluster cassandra) throws Exception {
+            String name1 = "myMail1";
+            String name2 = "myMail2";
+            String name3 = "myMail3";
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name2)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name3)
+                .build());
+
+            cassandra.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("SELECT * FROM blobs WHERE id=:id;"));
+
+            List<MailQueue.MailQueueItem> items =  Flux.from(getMailQueue().deQueue())
+                .take(3)
+                .collectList()
+                .block(Duration.ofSeconds(10));
+
+            assertThat(items)
+                .extracting(item -> item.getMail().getName())
+                .containsOnly(name1, name2, name3);
         }
     }
 
