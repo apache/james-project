@@ -1289,6 +1289,10 @@ class MailboxesRoutesTest {
                     .jsonPath()
                     .get("taskId");
 
+                with()
+                    .basePath(TasksRoutes.BASE)
+                    .get(taskId + "/await");
+
                 String fixingTaskId = with()
                     .queryParam("reIndexFailedMessagesOf", taskId)
                     .queryParam("task", "reIndex")
