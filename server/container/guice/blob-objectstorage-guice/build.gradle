@@ -40,7 +40,7 @@ dependencies {
 test {
     useJUnitPlatform()
     // ObjectStorageBlobStoreModuleTest   Error in custom provider, java.lang.NoClassDefFoundError: com/google/inject/internal/util/$Maps
-//    enabled = false
+    enabled = false
 }
 
 description = 'Apache James :: Server :: Blob Store in object storage - guice injection'

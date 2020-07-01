@@ -35,7 +35,6 @@ dependencies {
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-store', configuration: 'tests')
     testImplementation project(path: ':james-json', configuration: 'tests')
-
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-memory')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-tools-quota-recompute')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-tools-quota-recompute', configuration: 'tests')
@@ -47,8 +46,6 @@ dependencies {
     testImplementation project(':james-server:james-server-task-memory')
     testImplementation project(':metrics:metrics-api')
     testImplementation project(':metrics:metrics-tests')
-
-    testImplementation project(":james-server:james-server-util")
 
     testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     testImplementation 'com.google.inject:guice:4.2.2'

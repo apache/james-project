@@ -3,6 +3,14 @@
  */
 
 rootProject.name = 'james-project'
+
+gradleEnterprise {
+    buildScan {
+        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+        termsOfServiceAgree = 'yes'
+    }
+}
+
 include(':james-backends-common:apache-james-backends-cassandra')
 include(':james-backends-common:apache-james-backends-es')
 include(':james-backends-common:apache-james-backends-jpa')

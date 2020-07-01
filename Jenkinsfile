@@ -49,7 +49,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh "./gradlew clean build -x tests"
+                sh "./gradlew clean build -x tests --info --scan" 
             }
         }
     }
