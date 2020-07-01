@@ -250,6 +250,8 @@ class MailboxesRoutesTest {
                     .body("type", is(FullReindexingTask.FULL_RE_INDEXING.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(0))
                     .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
@@ -279,6 +281,40 @@ class MailboxesRoutesTest {
                     .body("type", is(FullReindexingTask.FULL_RE_INDEXING.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(1))
                     .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()))
+                    .body("completedDate", is(notNullValue()));
+            }
+
+            @Test
+            void fullReprocessingWithMessagesPerSecondShouldReturnTaskDetailsWhenMail() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                String taskId = with()
+                    .queryParam("messagesPerSecond", 1)
+                    .post("/mailboxes?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("type", is(FullReindexingTask.FULL_RE_INDEXING.asString()))
+                    .body("additionalInformation.successfullyReprocessedMailCount", is(1))
+                    .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(1))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
@@ -313,6 +349,8 @@ class MailboxesRoutesTest {
                     .body("type", is(FullReindexingTask.FULL_RE_INDEXING.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(0))
                     .body("additionalInformation.failedReprocessedMailCount", is(1))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("additionalInformation.messageFailures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
@@ -386,6 +424,8 @@ class MailboxesRoutesTest {
                     .body("type", is(FullReindexingTask.FULL_RE_INDEXING.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(2))
                     .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("FIX_OUTDATED"))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
@@ -619,6 +659,8 @@ class MailboxesRoutesTest {
                     .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(0))
                     .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
@@ -649,6 +691,41 @@ class MailboxesRoutesTest {
                     .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(1))
                     .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()));
+            }
+
+            @Test
+            void mailboxReprocessingWithMessagesPerSecondShouldReturnTaskDetailsWhenMail() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+                mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                String taskId = with()
+                    .queryParam("task", "reIndex")
+                    .queryParam("messagesPerSecond", 1)
+                    .post("/mailboxes/" + mailboxId.serialize())
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("type", is(SingleMailboxReindexingTask.TYPE.asString()))
+                    .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
+                    .body("additionalInformation.successfullyReprocessedMailCount", is(1))
+                    .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(1))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
             }
@@ -683,6 +760,8 @@ class MailboxesRoutesTest {
                     .body("type", is(SingleMailboxReindexingTask.TYPE.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(0))
                     .body("additionalInformation.failedReprocessedMailCount", is(1))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("additionalInformation.messageFailures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
@@ -760,6 +839,8 @@ class MailboxesRoutesTest {
                     .body("type", is(SingleMailboxReindexingTask.TYPE.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(2))
                     .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("FIX_OUTDATED"))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
@@ -1181,6 +1262,8 @@ class MailboxesRoutesTest {
                     .body("type", is("error-recovery-indexation"))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(0))
                     .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
@@ -1225,6 +1308,55 @@ class MailboxesRoutesTest {
                     .body("type", is("error-recovery-indexation"))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(1))
                     .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()))
+                    .body("completedDate", is(notNullValue()));
+            }
+
+            @Test
+            void fixingReIndexingWithMessagePerSecondShouldReturnTaskDetailsWhenMail() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                doReturn(Mono.error(new RuntimeException())).when(searchIndex).add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
+
+                String taskId = with()
+                    .post("/mailboxes?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                with()
+                    .basePath(TasksRoutes.BASE)
+                    .get(taskId + "/await");
+
+                doReturn(Mono.empty()).when(searchIndex).add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
+
+                String fixingTaskId = with()
+                    .queryParam("reIndexFailedMessagesOf", taskId)
+                    .queryParam("task", "reIndex")
+                    .queryParam("messagesPerSecond", 1)
+                    .post("/mailboxes")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(fixingTaskId + "/await")
+                .then()
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("type", is("error-recovery-indexation"))
+                    .body("additionalInformation.successfullyReprocessedMailCount", is(1))
+                    .body("additionalInformation.failedReprocessedMailCount", is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(1))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
@@ -1270,6 +1402,8 @@ class MailboxesRoutesTest {
                     .body("type", is("error-recovery-indexation"))
                     .body("additionalInformation.successfullyReprocessedMailCount", is(0))
                     .body("additionalInformation.failedReprocessedMailCount", is(1))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("additionalInformation.messageFailures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
@@ -1307,6 +1441,8 @@ class MailboxesRoutesTest {
                 .then()
                     .body("status", Matchers.is("failed"))
                     .body("taskId", Matchers.is(notNullValue()))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", is(50))
+                    .body("additionalInformation.runningOptions.mode", is("REBUILD_ALL"))
                     .body("additionalInformation.mailboxFailures", Matchers.containsInAnyOrder(mailboxId.serialize()));
             }
         }

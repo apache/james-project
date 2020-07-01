@@ -27,6 +27,7 @@ import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
+import org.apache.mailbox.tools.indexer.RunningOptionsDTO;
 import org.apache.mailbox.tools.indexer.UserReindexingTask;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -42,6 +43,7 @@ public class WebAdminUserReindexingTaskAdditionalInformationDTO implements Addit
             .toDTOConverter((details, type) -> new WebAdminUserReindexingTaskAdditionalInformationDTO(
                 type,
                 details.getUsername(),
+                RunningOptionsDTO.toDTO(details.getRunningOptions()),
                 details.getSuccessfullyReprocessedMailCount(),
                 details.getFailedReprocessedMailCount(),
                 details.failures(),
@@ -56,6 +58,7 @@ public class WebAdminUserReindexingTaskAdditionalInformationDTO implements Addit
     @JsonCreator
     private WebAdminUserReindexingTaskAdditionalInformationDTO(String type,
                                                                String username,
+                                                               RunningOptionsDTO runningOptions,
                                                                int successfullyReprocessedMailCount,
                                                                int failedReprocessedMailCount,
                                                                ReIndexingExecutionFailures failures,
@@ -63,6 +66,7 @@ public class WebAdminUserReindexingTaskAdditionalInformationDTO implements Addit
         this.username = username;
         this.reprocessingContextInformationDTO = new WebAdminReprocessingContextInformationDTO(
             type,
+            runningOptions,
             successfullyReprocessedMailCount,
             failedReprocessedMailCount, failures, timestamp);
     }
@@ -78,6 +82,10 @@ public class WebAdminUserReindexingTaskAdditionalInformationDTO implements Addit
 
     public String getUsername() {
         return username;
+    }
+
+    public RunningOptionsDTO getRunningOptions() {
+        return reprocessingContextInformationDTO.getRunningOptions();
     }
 
     public int getSuccessfullyReprocessedMailCount() {

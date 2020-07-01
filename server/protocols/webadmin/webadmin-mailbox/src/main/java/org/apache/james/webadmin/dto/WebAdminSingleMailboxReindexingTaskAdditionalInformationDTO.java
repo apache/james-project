@@ -27,6 +27,7 @@ import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
+import org.apache.mailbox.tools.indexer.RunningOptionsDTO;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -42,6 +43,7 @@ public class WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO impleme
             .toDTOConverter((details, type) -> new WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO(
                 type,
                 details.getMailboxId(),
+                RunningOptionsDTO.toDTO(details.getRunningOptions()),
                 details.getSuccessfullyReprocessedMailCount(),
                 details.getFailedReprocessedMailCount(),
                 details.failures(),
@@ -56,13 +58,14 @@ public class WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO impleme
     @JsonCreator
     private WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO(String type,
                                                                         String mailboxId,
+                                                                        RunningOptionsDTO runningOptions,
                                                                         int successfullyReprocessedMailCount,
                                                                         int failedReprocessedMailCount,
                                                                         ReIndexingExecutionFailures failures,
                                                                         Instant timestamp) {
         this.mailboxId = mailboxId;
         this.reprocessingContextInformationDTO = new WebAdminReprocessingContextInformationDTO(
-            type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
+            type, runningOptions, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
     }
 
     @Override
@@ -76,6 +79,10 @@ public class WebAdminSingleMailboxReindexingTaskAdditionalInformationDTO impleme
 
     public String getMailboxId() {
         return mailboxId;
+    }
+
+    public RunningOptionsDTO getRunningOptions() {
+        return reprocessingContextInformationDTO.getRunningOptions();
     }
 
     public int getSuccessfullyReprocessedMailCount() {
