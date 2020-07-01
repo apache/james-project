@@ -31,7 +31,6 @@ import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
 import org.jclouds.io.Payloads;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import com.google.crypto.tink.subtle.Hex;
@@ -73,7 +72,7 @@ class AESPayloadCodecTest implements PayloadCodecContract {
                 private int readCount = 0;
 
                 @Override
-                public int read(@NotNull byte[] b, int off, int len) throws IOException {
+                public int read(byte[] b, int off, int len) throws IOException {
                     if (readCount >= ENCRYPTED_BYTES.length / 2) {
                         throw new IOException();
                     } else {

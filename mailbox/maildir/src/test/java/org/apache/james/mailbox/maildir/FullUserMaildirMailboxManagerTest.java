@@ -26,7 +26,6 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,7 +41,7 @@ class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxM
     @RegisterExtension
     TemporaryFolderExtension temporaryFolder = new TemporaryFolderExtension();
     Optional<StoreMailboxManager> mailboxManager = Optional.empty();
-    
+
     @Override
     protected StoreMailboxManager provideMailboxManager() {
         if (!mailboxManager.isPresent()) {
