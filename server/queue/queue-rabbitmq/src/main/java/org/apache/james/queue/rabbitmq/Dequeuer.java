@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
@@ -142,6 +143,11 @@ class Dequeuer implements Closeable {
     private Mono<MailWithEnqueueId> loadMail(AcknowledgableDelivery response) {
         return toMailReference(response)
             .flatMap(reference -> mailLoader.load(reference)
+                .onErrorResume(ObjectNotFoundException.class, e -> {
+                    LOGGER.error("Fail to load mail {} with enqueueId {} as underlying blobs do not exist. Discarding this message to prevent an infinite loop.", reference.getName(), reference.getEnqueueId(), e);
+                    response.nack(!REQUEUE);
+                    return Mono.empty();
+                })
                 .onErrorResume(e -> {
                     LOGGER.error("Fail to load mail {} with enqueueId {}", reference.getName(), reference.getEnqueueId(), e);
                     response.nack(REQUEUE);
