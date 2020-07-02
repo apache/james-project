@@ -29,6 +29,8 @@ import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTab
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.TABLE_NAME;
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.USER;
 
+import java.util.function.Predicate;
+
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -112,7 +114,7 @@ public class CassandraRecipientRewriteTableDAO {
                 .map(row -> row.getString(MAPPING))
                 .collect(Guavate.toImmutableList()))
             .map(MappingsImpl::fromCollection)
-            .filter(mappings -> !mappings.isEmpty());
+            .filter(Predicate.not(MappingsImpl::isEmpty));
     }
 
     public Flux<Pair<MappingSource, Mapping>> getAllMappings() {

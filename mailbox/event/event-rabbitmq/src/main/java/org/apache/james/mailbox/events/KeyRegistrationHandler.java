@@ -29,6 +29,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
@@ -121,7 +122,7 @@ class KeyRegistrationHandler {
     }
 
     void stop() {
-        receiverSubscriber.filter(subscriber -> !subscriber.isDisposed())
+        receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
             .ifPresent(Disposable::dispose);
         receiver.close();
         sender.delete(QueueSpecification.queue(registrationQueue.asString()))

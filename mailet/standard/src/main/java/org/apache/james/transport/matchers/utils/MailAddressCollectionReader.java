@@ -21,6 +21,7 @@ package org.apache.james.transport.matchers.utils;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.mail.internet.AddressException;
 
@@ -38,7 +39,7 @@ public class MailAddressCollectionReader {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(condition));
         return Splitter.onPattern("(,| |\t)").splitToList(condition)
             .stream()
-            .filter(s -> !Strings.isNullOrEmpty(s))
+            .filter(Predicate.not(Strings::isNullOrEmpty))
             .map(MailAddressCollectionReader::getMailAddress)
             .collect(Guavate.toImmutableSet());
     }

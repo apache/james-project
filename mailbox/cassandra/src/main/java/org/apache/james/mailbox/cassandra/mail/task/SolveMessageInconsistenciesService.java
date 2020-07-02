@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
@@ -456,7 +457,7 @@ public class SolveMessageInconsistenciesService {
 
     private Mono<Inconsistency> detectOutdatedMessageIdEntry(CassandraId mailboxId, CassandraMessageId messageId, ComposedMessageIdWithMetaData messageIdRecord) {
         return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId))
-            .filter(upToDateMessageFromImapUid -> !upToDateMessageFromImapUid.equals(messageIdRecord))
+            .filter(Predicate.not(Predicate.isEqual(messageIdRecord)))
             .<Inconsistency>map(upToDateMessageFromImapUid -> new OutdatedMessageIdEntry(messageIdRecord, upToDateMessageFromImapUid))
             .next()
             .switchIfEmpty(Mono.just(NO_INCONSISTENCY));

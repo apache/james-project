@@ -22,6 +22,7 @@ package org.apache.james.modules.objectstorage;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -172,7 +173,7 @@ public class ObjectStorageBlobConfiguration {
 
             public ObjectStorageBlobConfiguration build() {
                 if (payloadCodecFactory == PayloadCodecFactory.AES256) {
-                    aesSalt.filter(s -> !s.isEmpty())
+                    aesSalt.filter(Predicate.not(Strings::isNullOrEmpty))
                         .orElseThrow(() -> new IllegalStateException("AES code requires an non-empty salt parameter"));
                     aesPassword.filter(s -> s.length > 0)
                         .orElseThrow(() -> new IllegalStateException("AES code requires an non-empty password parameter"));

@@ -22,6 +22,7 @@ package org.apache.james.core;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.mail.internet.AddressException;
@@ -58,7 +59,7 @@ public class MaybeSender {
     @SuppressWarnings("deprecation")
     public static MaybeSender of(MailAddress mailAddress) {
         return new MaybeSender(Optional.ofNullable(mailAddress)
-            .filter(address -> !address.isNullSender()));
+            .filter(Predicate.not(MailAddress::isNullSender)));
     }
 
     private final Optional<MailAddress> mailAddress;

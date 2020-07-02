@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;
@@ -37,6 +38,7 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -123,7 +125,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         try (FileReader fileReader = new FileReader(subscriptionFile)) {
             try (BufferedReader reader = new BufferedReader(fileReader)) {
                 return reader.lines()
-                    .filter(subscription -> !subscription.equals(""))
+                    .filter(Predicate.not(Strings::isNullOrEmpty))
                     .collect(Guavate.toImmutableSet());
             }
         }

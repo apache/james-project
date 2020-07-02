@@ -30,6 +30,7 @@ import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXC
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
@@ -168,7 +169,7 @@ class GroupRegistration implements Registration {
 
     @Override
     public void unregister() {
-        receiverSubscriber.filter(subscriber -> !subscriber.isDisposed())
+        receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
             .ifPresent(Disposable::dispose);
         receiver.close();
         unregisterGroup.run();

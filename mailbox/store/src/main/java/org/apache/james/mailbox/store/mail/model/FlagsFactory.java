@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
@@ -115,7 +116,7 @@ public class FlagsFactory {
                         toUserFlagStream(flagsOrEmpty),
                         userFlags.stream())
                     .distinct()
-                    .filter(s -> !Strings.isNullOrEmpty(s))
+                    .filter(Predicate.not(Strings::isNullOrEmpty))
                     .filter(flagsFilter.getUserFlagFilter());
 
             final Flags result = new Flags();

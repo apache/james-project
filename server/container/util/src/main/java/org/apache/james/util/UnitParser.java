@@ -20,6 +20,7 @@
 package org.apache.james.util;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +58,7 @@ class UnitParser {
             String amountAsString = res.group(AMOUNT);
             long amount = Integer.parseInt(amountAsString.trim());
 
-            return new ParsingResult(amount, Optional.of(unitAsString).filter(s -> !Strings.isNullOrEmpty(s)));
+            return new ParsingResult(amount, Optional.of(unitAsString).filter(Predicate.not(Strings::isNullOrEmpty)));
         }
         throw new NumberFormatException("Supplied value do not follow the unit format (number optionally suffixed with a string representing the unit");
     }

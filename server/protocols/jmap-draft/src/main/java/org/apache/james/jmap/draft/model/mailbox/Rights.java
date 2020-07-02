@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
@@ -232,7 +233,7 @@ public class Rights {
 
     private Optional<Boolean> containsRight(Username username, Right right) {
         return Optional.ofNullable(rights.get(username))
-            .filter(rightList -> !rightList.isEmpty())
+            .filter(Predicate.not(Collection::isEmpty))
             .map(rightList -> rightList.contains(right));
     }
 

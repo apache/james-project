@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
@@ -204,9 +205,8 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     private Optional<String> mainTextContent(MessageContent messageContent) {
         return messageContent.getHtmlBody()
             .map(htmlTextExtractor::toPlainText)
-            .filter(s -> !Strings.isNullOrEmpty(s))
-            .map(Optional::of)
-            .orElse(messageContent.getTextBody());
+            .filter(Predicate.not(Strings::isNullOrEmpty))
+            .or(messageContent::getTextBody);
     }
     
     private List<Attachment> getAttachments(List<MessageAttachmentMetadata> attachments) {

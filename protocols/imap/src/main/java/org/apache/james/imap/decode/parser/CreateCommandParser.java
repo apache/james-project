@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import java.util.function.Predicate;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -68,7 +70,7 @@ public class CreateCommandParser extends AbstractImapCommandParser {
         Splitter.on(delimiter)
             .splitToList(mailboxName)
             .stream()
-            .filter(s -> !Strings.isNullOrEmpty(s))
+            .filter(Predicate.not(Strings::isNullOrEmpty))
             .findAny()
             .orElseThrow(() -> new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid mailbox name"));
     }

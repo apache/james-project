@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra;
 import static org.apache.james.util.FunctionalUtils.negate;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
@@ -204,7 +205,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
 
     private Mono<Boolean> hasOtherMessagesReferences(MessageRepresentation message, MessageAttachmentRepresentation attachment) {
         return attachmentMessageIdDAO.getOwnerMessageIds(attachment.getAttachmentId())
-            .filter(messageId -> !message.getMessageId().equals(messageId))
+            .filter(Predicate.not(Predicate.isEqual(message.getMessageId())))
             .hasElements()
             .map(negate());
     }

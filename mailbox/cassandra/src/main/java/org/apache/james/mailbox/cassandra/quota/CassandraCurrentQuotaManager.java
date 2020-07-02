@@ -30,6 +30,8 @@ import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.QUO
 import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.STORAGE;
 import static org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota.TABLE_NAME;
 
+import java.util.function.Predicate;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -117,7 +119,7 @@ public class CassandraCurrentQuotaManager implements CurrentQuotaManager {
     @Override
     public Mono<Void> setCurrentQuotas(QuotaOperation quotaOperation) {
         return getCurrentQuotas(quotaOperation.quotaRoot())
-            .filter(storedQuotas -> !storedQuotas.equals(CurrentQuotas.from(quotaOperation)))
+            .filter(Predicate.not(Predicate.isEqual(CurrentQuotas.from(quotaOperation))))
             .flatMap(storedQuotas -> decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size()))
                 .then(increase(quotaOperation)));
     }
