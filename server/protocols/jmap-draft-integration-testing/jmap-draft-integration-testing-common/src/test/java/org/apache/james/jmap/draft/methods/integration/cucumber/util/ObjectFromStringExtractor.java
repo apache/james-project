@@ -34,8 +34,7 @@ public class ObjectFromStringExtractor {
     public Object extract(String value) {
         return EXTRACTORS.stream()
             .map(extractor -> extractor.extract(value))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
+            .flatMap(Optional::stream)
             .findFirst()
             .orElse(null);
     }

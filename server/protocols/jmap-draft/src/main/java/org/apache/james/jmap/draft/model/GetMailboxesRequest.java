@@ -69,8 +69,7 @@ public class GetMailboxesRequest implements JmapRequest {
             this.properties = Optional.of(
                 properties.stream()
                     .map(MailboxProperty::findProperty)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
+                    .flatMap(Optional::stream)
                     .collect(Guavate.toImmutableSet()));
             return this;
         }

@@ -121,9 +121,8 @@ public class MailRepositoryStoreService {
 
     private Optional<Mail> fecthMail(MailRepositoryPath path, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         return getRepositories(path)
-                .map(Throwing.function((MailRepository repository) -> Optional.ofNullable(repository.retrieve(mailKey))).sneakyThrow())
-                .filter(Optional::isPresent)
-                .findFirst()
-                .orElse(Optional.empty());
+            .map(Throwing.function((MailRepository repository) -> Optional.ofNullable(repository.retrieve(mailKey))).sneakyThrow())
+            .flatMap(Optional::stream)
+            .findFirst();
         }
 }

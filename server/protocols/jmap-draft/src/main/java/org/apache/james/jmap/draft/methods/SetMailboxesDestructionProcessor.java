@@ -99,8 +99,7 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
                     .id(id)
                     .session(mailboxSession)
                     .build())
-            .filter(Optional::isPresent)
-            .map(Optional::get)
+            .flatMap(Optional::stream)
             .forEach(mailbox -> idToMailboxBuilder.put(mailbox.getId(), mailbox));
         return idToMailboxBuilder.build();
     }

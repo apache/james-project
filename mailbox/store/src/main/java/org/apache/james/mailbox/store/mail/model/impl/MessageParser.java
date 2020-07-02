@@ -160,9 +160,8 @@ public class MessageParser {
 
     private Optional<String> name(Optional<ContentTypeField> contentTypeField, Optional<ContentDispositionField> contentDispositionField) {
         return contentTypeField
-            .map(field -> Optional.ofNullable(field.getParameter("name")))
-            .filter(Optional::isPresent)
-            .orElseGet(() -> contentDispositionField.map(ContentDispositionField::getFilename))
+            .flatMap(field -> Optional.ofNullable(field.getParameter("name")))
+            .or(() -> contentDispositionField.map(ContentDispositionField::getFilename))
             .map(MimeUtil::unscrambleHeaderValue);
     }
 

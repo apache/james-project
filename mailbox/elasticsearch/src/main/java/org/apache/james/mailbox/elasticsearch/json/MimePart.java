@@ -270,10 +270,9 @@ public class MimePart {
 
     private Optional<String> firstBody(Stream<MimePart> mimeParts) {
         return mimeParts
-                .map((mimePart) -> mimePart.bodyTextContent)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst();
+            .map(mimePart -> mimePart.bodyTextContent)
+            .flatMap(Optional::stream)
+            .findFirst();
     }
 
     private Stream<MimePart> textAttachments() {
