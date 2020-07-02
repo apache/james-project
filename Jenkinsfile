@@ -44,11 +44,13 @@ pipeline {
                 logRotator(artifactNumToKeepStr: '5', numToKeepStr: '10')
         )
         disableConcurrentBuilds()
+
     }
 
     stages {
         stage('Build') {
             steps {
+                sh "./gradlew clean :apache-mailet:apache-mailet-standard:test --debug --stacktrace --scan"
                 sh "./gradlew clean build -x test"
             }
         }
