@@ -12,9 +12,9 @@ RUN apt-get install -y git wget unzip
 
 # Install Maven
 WORKDIR /root
-RUN wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
-RUN tar -xvf apache-maven-3.6.3-bin.tar.gz
-RUN ln -s /root/apache-maven-3.6.3/bin/mvn /usr/bin/mvn
+RUN wget https://downloads.gradle-dn.com/distributions/gradle-6.5.1-bin.zip
+RUN unzip gradle-6.5.1-bin.zip
+RUN ln -s /root/gradle-6.5.1/bin/gradle /usr/bin/gradle
 
 # Copy the script
 COPY compile.sh /root/compile.sh

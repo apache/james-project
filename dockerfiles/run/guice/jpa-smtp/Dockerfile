@@ -18,9 +18,9 @@ WORKDIR /root
 
 # Get data we need to run James : build results and configuration
 ADD destination/james-server-jpa-smtp-guice.jar /root/james-server-jpa-smtp-guice.jar
-ADD destination/james-server-jpa-smtp-guice.lib /root/james-server-jpa-smtp-guice.lib
+#ADD destination/james-server-jpa-smtp-guice.lib /root/james-server-jpa-smtp-guice.lib
 ADD destination/james-server-cli.jar /root/james-cli.jar
-ADD destination/james-server-cli.lib /root/james-server-cli.lib
+#ADD destination/james-server-cli.lib /root/james-server-cli.lib
 ADD destination/conf /root/conf
 ADD destination/glowroot/plugins /root/glowroot/plugins
 ADD destination/glowroot/glowroot.jar /root/glowroot/glowroot.jar

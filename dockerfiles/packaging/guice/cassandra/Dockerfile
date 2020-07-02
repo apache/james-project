@@ -23,11 +23,11 @@ COPY --from=source /root/james-cli.jar /packages/package/usr/share/james/james-c
 COPY --from=sourceLdap /root/james-server.jar /packages/package/usr/share/james/james-ldap-server.jar
 COPY --from=sourceRabbitMQ /root/james-server.jar /packages/package/usr/share/james/james-rabbitmq-withoutldap-server.jar
 COPY --from=sourceRabbitMQLdap /root/james-server.jar /packages/package/usr/share/james/james-rabbitmq-ldap-server.jar
-COPY --from=source /root/james-server-cassandra-guice.lib/ /packages/package/usr/share/james/james-server-cassandra-guice.lib/
-COPY --from=sourceLdap /root/james-server-cassandra-ldap-guice.lib/ /packages/package/usr/share/james/james-server-cassandra-ldap-guice.lib/
-COPY --from=sourceRabbitMQ /root/james-server-cassandra-rabbitmq-guice.lib/ /packages/package/usr/share/james/james-server-cassandra-rabbitmq-guice.lib/
-COPY --from=sourceRabbitMQLdap /root/james-server-cassandra-rabbitmq-ldap-guice.lib /packages/package/usr/share/james/james-server-cassandra-rabbitmq-ldap-guice.lib
-COPY --from=source /root/james-server-cli.lib/ /packages/package/usr/share/james/james-server-cli.lib/
+#COPY --from=source /root/james-server-cassandra-guice.lib/ /packages/package/usr/share/james/james-server-cassandra-guice.lib/
+#COPY --from=sourceLdap /root/james-server-cassandra-ldap-guice.lib/ /packages/package/usr/share/james/james-server-cassandra-ldap-guice.lib/
+#COPY --from=sourceRabbitMQ /root/james-server-cassandra-rabbitmq-guice.lib/ /packages/package/usr/share/james/james-server-cassandra-rabbitmq-guice.lib/
+#COPY --from=sourceRabbitMQLdap /root/james-server-cassandra-rabbitmq-ldap-guice.lib /packages/package/usr/share/james/james-server-cassandra-rabbitmq-ldap-guice.lib
+#COPY --from=source /root/james-server-cli.lib/ /packages/package/usr/share/james/james-server-cli.lib/
 
 RUN mkdir -p /packages/package/var/lib/james
 RUN mkdir -p /packages/package/var/log/james

@@ -59,11 +59,13 @@ git checkout $SHA1
 
 # Compilation
 
-if [ "$SKIPTESTS" = "skipTests" ]; then
-   mvn package -DskipTests ${MVN_ADDITIONAL_ARG_LINE}
-else
-   mvn package ${MVN_ADDITIONAL_ARG_LINE}
-fi
+# if [ "$SKIPTESTS" = "skipTests" ]; then
+#    mvn package -DskipTests ${MVN_ADDITIONAL_ARG_LINE}
+# else
+#    mvn package ${MVN_ADDITIONAL_ARG_LINE}
+# fi
+
+gradle build -x test --parallel
 
 # download glowroot jar
 wget  -O $GLOW_ROOT_ZIP $GLOW_ROOT_URL
@@ -73,79 +75,79 @@ unzip $GLOW_ROOT_ZIP
 if [ $? -eq 0 ]; then
    if [ -d "$CASSANDRA_RABBITMQ_LDAP_DESTINATION" ]; then
       echo "Copying cassandra - rabbitMQ - Ldap JARs"
-      cp server/container/guice/cassandra-rabbitmq-ldap-guice/target/james-server-cassandra-rabbitmq-ldap-guice.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
-      cp -r server/container/guice/cassandra-rabbitmq-ldap-guice/target/james-server-cassandra-rabbitmq-ldap-guice.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
-      cp server/container/cli/target/james-server-cli.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
-      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+      cp server/container/guice/cassandra-rabbitmq-ldap-guice/build/libs/james-server-cassandra-rabbitmq-ldap-guice.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+#      cp -r server/container/guice/cassandra-rabbitmq-ldap-guice/target/james-server-cassandra-rabbitmq-ldap-guice.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+      cp server/container/cli/build/libs/james-server-cli.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+#      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
       mkdir -p ${CASSANDRA_RABBITMQ_LDAP_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${CASSANDRA_RABBITMQ_LDAP_DESTINATION}/glowroot || true
    fi
 
    if [ -d "$CASSANDRA_RABBITMQ_DESTINATION" ]; then
       echo "Copying cassandra JARs"
-      cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.jar $CASSANDRA_RABBITMQ_DESTINATION || true
-      cp -r server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.lib $CASSANDRA_RABBITMQ_DESTINATION || true
-      cp server/container/cli/target/james-server-cli.jar $CASSANDRA_RABBITMQ_DESTINATION || true
-      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_DESTINATION || true
+      cp server/container/guice/cassandra-rabbitmq-guice/build/libs/james-server-cassandra-rabbitmq-guice.jar $CASSANDRA_RABBITMQ_DESTINATION || true
+#      cp -r server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.lib $CASSANDRA_RABBITMQ_DESTINATION || true
+      cp server/container/cli/build/libs/james-server-cli.jar $CASSANDRA_RABBITMQ_DESTINATION || true
+#      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_DESTINATION || true
       mkdir -p ${CASSANDRA_RABBITMQ_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${CASSANDRA_RABBITMQ_DESTINATION}/glowroot || true
    fi
 
    if [ -d "$CASSANDRA_DESTINATION" ]; then
       echo "Copying cassandra JARs"
-      cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice.jar $CASSANDRA_DESTINATION || true
-      cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice.lib $CASSANDRA_DESTINATION || true
-      cp server/container/cli/target/james-server-cli.jar $CASSANDRA_DESTINATION || true
-      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_DESTINATION || true
+      cp server/container/guice/cassandra-guice/build/libs/james-server-cassandra-guice.jar $CASSANDRA_DESTINATION || true
+#      cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice.lib $CASSANDRA_DESTINATION || true
+      cp server/container/cli/build/libs/james-server-cli.jar $CASSANDRA_DESTINATION || true
+#      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_DESTINATION || true
 
-      cp server/container/guice/cassandra-ldap-guice/target/james-server-cassandra-ldap-guice.jar $CASSANDRA_DESTINATION || true
-      cp -r server/container/guice/cassandra-ldap-guice/target/james-server-cassandra-ldap-guice.lib $CASSANDRA_DESTINATION || true
+      cp server/container/guice/cassandra-ldap-guice/build/libs/james-server-cassandra-ldap-guice.jar $CASSANDRA_DESTINATION || true
+#      cp -r server/container/guice/cassandra-ldap-guice/target/james-server-cassandra-ldap-guice.lib $CASSANDRA_DESTINATION || true
       mkdir -p ${CASSANDRA_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${CASSANDRA_DESTINATION}/glowroot || true
    fi
 
    if [ -d "$JPA_DESTINATION" ]; then
       echo "Copying JPA jars"
-      cp server/container/guice/jpa-guice/target/james-server-jpa-guice.jar $JPA_DESTINATION || true
-      cp -r server/container/guice/jpa-guice/target/james-server-jpa-guice.lib $JPA_DESTINATION || true
-      cp server/container/cli/target/james-server-cli.jar $JPA_DESTINATION || true
-      cp -r server/container/cli/target/james-server-cli.lib $JPA_DESTINATION || true
+      cp server/container/guice/jpa-guice/build/libs/james-server-jpa-guice.jar $JPA_DESTINATION || true
+#      cp -r server/container/guice/jpa-guice/target/james-server-jpa-guice.lib $JPA_DESTINATION || true
+      cp server/container/cli/build/libs/james-server-cli.jar $JPA_DESTINATION || true
+#      cp -r server/container/cli/target/james-server-cli.lib $JPA_DESTINATION || true
       mkdir -p ${JPA_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${JPA_DESTINATION}/glowroot || true
    fi
 
    if [ -d "$JPA_SMTP_DESTINATION" ]; then
       echo "Copying JPA-SMTP jars"
-      cp server/container/guice/jpa-smpt/target/james-server-jpa-smtp-guice.jar $JPA_SMTP_DESTINATION || true
-      cp -r server/container/guice/jpa-smpt/target/james-server-jpa-smtp-guice.lib $JPA_SMTP_DESTINATION || true
-      cp server/container/cli/target/james-server-cli.jar $JPA_SMTP_DESTINATION || true
-      cp -r server/container/cli/target/james-server-cli.lib $JPA_SMTP_DESTINATION || true
+      cp server/container/guice/jpa-smpt/build/libs/james-server-jpa-smtp-guice.jar $JPA_SMTP_DESTINATION || true
+#      cp -r server/container/guice/jpa-smpt/target/james-server-jpa-smtp-guice.lib $JPA_SMTP_DESTINATION || true
+      cp server/container/cli/build/libs/james-server-cli.jar $JPA_SMTP_DESTINATION || true
+#      cp -r server/container/cli/target/james-server-cli.lib $JPA_SMTP_DESTINATION || true
       mkdir -p ${JPA_SMTP_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${JPA_SMTP_DESTINATION}/glowroot || true
    fi
 
    if [ -d "$MEMORY_DESTINATION" ]; then
       echo "Copying memory JARs"
-      cp server/container/guice/memory-guice/target/james-server-memory-guice.jar $MEMORY_DESTINATION || true
-      cp -r server/container/guice/memory-guice/target/james-server-memory-guice.lib $MEMORY_DESTINATION || true
-      cp server/container/cli/target/james-server-cli.jar $MEMORY_DESTINATION || true
-      cp -r server/container/cli/target/james-server-cli.lib $MEMORY_DESTINATION || true
+      cp server/container/guice/memory-guice/build/libs/james-server-memory-guice.jar $MEMORY_DESTINATION || true
+#      cp -r server/container/guice/memory-guice/build/james-server-memory-guice.lib $MEMORY_DESTINATION || true
+      cp server/container/cli/build/libs/james-server-cli.jar $MEMORY_DESTINATION || true
+#      cp -r server/container/cli/build/james-server-cli.lib $MEMORY_DESTINATION || true
       mkdir -p ${MEMORY_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${MEMORY_DESTINATION}/glowroot || true
    fi
 
-   if [ -d "$SPRING_DESTINATION" ]; then
-      echo "Copying SPRING jars"
-      cp server/app/target/james-server-app-*-app.zip $SPRING_DESTINATION
-      mkdir -p ${SPRING_DESTINATION}/glowroot
-      cp -r ${GLOW_ROOT_DIR}/* ${SPRING_DESTINATION}/glowroot || true
-   fi
-
-   if [ -d "$SWAGGER_DESTINATION" ]; then
-      cp server/protocols/webadmin/webadmin-data/target/webadmin-data.json $SWAGGER_DESTINATION || true
-      cp server/protocols/webadmin/webadmin-mailbox/target/webadmin-mailbox.json $SWAGGER_DESTINATION || true
-      cp server/protocols/webadmin/webadmin-swagger/target/webadmin-swagger.json $SWAGGER_DESTINATION || true
-   fi
+#   if [ -d "$SPRING_DESTINATION" ]; then
+#      echo "Copying SPRING jars"
+#      cp server/app/target/james-server-app-*-app.zip $SPRING_DESTINATION
+#      mkdir -p ${SPRING_DESTINATION}/glowroot
+#      cp -r ${GLOW_ROOT_DIR}/* ${SPRING_DESTINATION}/glowroot || true
+#   fi
+#
+#   if [ -d "$SWAGGER_DESTINATION" ]; then
+#      cp server/protocols/webadmin/webadmin-data/target/webadmin-data.json $SWAGGER_DESTINATION || true
+#      cp server/protocols/webadmin/webadmin-mailbox/target/webadmin-mailbox.json $SWAGGER_DESTINATION || true
+#      cp server/protocols/webadmin/webadmin-swagger/target/webadmin-swagger.json $SWAGGER_DESTINATION || true
+#   fi
 fi
 
 # delete temporary glowroot files
