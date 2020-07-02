@@ -10,42 +10,50 @@ configurations {
 }
 
 dependencies {
-    implementation project(':apache-mailet:apache-mailet-crypto')
-    implementation project(':apache-mailet:apache-mailet-icalendar')
-    implementation project(':james-server:james-server-mailets')
-    implementation project(':james-server:james-server-mailet-dkim')
-    implementation project(':james-server:james-server-guice:james-server-memory-guice')
-
-    implementation 'com.github.spullara.mustache.java:compiler:0.9.6'
-    implementation 'com.github.fge:throwing-lambdas:0.5.0'
-    implementation 'com.github.steveash.guavate:guavate:1.0.0'
-    implementation 'com.google.guava:guava:25.1-jre'
-    implementation 'com.sun.mail:javax.mail:1.6.2'
-    implementation 'org.apache.commons:commons-configuration2:2.7'
-    implementation 'org.slf4j:slf4j-api:1.7.27'
-    implementation 'org.testcontainers:testcontainers:1.12.0'
-    implementation 'org.xmlunit:xmlunit-core:2.6.3'
-    implementation 'org.xmlunit:xmlunit-matchers:2.6.3'
-    implementation 'org.awaitility:awaitility:3.1.6'
-
+    testImplementation project(':apache-mailet:apache-mailet-crypto')
+    testImplementation project(':apache-mailet:apache-mailet-icalendar')
     testImplementation project(':apache-mailet:apache-mailet-test')
     testImplementation project(':james-server:james-server-dnsservice-test')
+    testImplementation project(':james-server:james-server-mailets')
+    testImplementation project(':james-server:james-server-mailet-dkim')
+    testImplementation project(':james-server:james-server-jmap-draft')
+    testImplementation project(':james-server:james-server-testing')
+    testImplementation project(':james-server:james-server-webadmin-core')
+    testImplementation project(':james-server:james-server-webadmin-data')
+    testImplementation project(':james-server:james-server-webadmin-mailrepository')
+    testImplementation project(':james-server:mock-smtp-server')
     testImplementation project(':james-server:james-server-guice:james-server-guice-activemq')
     testImplementation project(':james-server:james-server-guice:james-server-guice-common')
+    testImplementation project(':james-server:james-server-guice:james-server-guice-imap')
+    testImplementation project(':james-server:james-server-guice:james-server-guice-smtp')
+    testImplementation project(':james-server:james-server-guice:james-server-guice-mailbox')
+    testImplementation project(':james-server:james-server-guice:james-server-guice-managedsieve')
+    testImplementation project(':james-server:james-server-guice:james-server-guice-webadmin')
+    testImplementation project(':james-server:james-server-guice:james-server-memory-guice')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-jmap', configuration: 'tests')
-    testImplementation project(':james-server:james-server-testing')
     testImplementation project(path: ':james-server:james-server-webadmin-core', configuration: 'tests')
-    testImplementation project(':james-server:mock-smtp-server')
     testImplementation project(':third-party:apache-james-spamassassin')
 
     testImplementation 'commons-io:commons-io:2.6'
-    testImplementation 'com.google.inject:guice:4.2.2'
     testImplementation 'com.jayway.jsonpath:json-path:2.4.0'
     testImplementation 'com.rabbitmq:amqp-client:5.7.3'
+    testImplementation 'com.github.spullara.mustache.java:compiler:0.9.6'
+    testImplementation 'com.github.fge:throwing-lambdas:0.5.0'
+    testImplementation 'com.github.steveash.guavate:guavate:1.0.0'
+    testImplementation 'com.google.inject:guice:4.2.2'
+    testImplementation 'com.google.guava:guava:25.1-jre'
+    testImplementation 'com.sun.mail:javax.mail:1.6.2'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
+    testImplementation 'org.apache.commons:commons-configuration2:2.7'
+    testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.hamcrest:java-hamcrest:2.0.0.0'
+    testImplementation 'org.slf4j:slf4j-api:1.7.27'
     testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'org.testcontainers:testcontainers:1.12.0'
+    testImplementation 'org.xmlunit:xmlunit-core:2.6.3'
+    testImplementation 'org.xmlunit:xmlunit-matchers:2.6.3'
+
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

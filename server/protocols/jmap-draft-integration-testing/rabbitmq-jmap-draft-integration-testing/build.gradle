@@ -13,16 +13,20 @@ dependencies {
     testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
     testImplementation project(path: ':james-backends-common:apache-james-backends-es', configuration: 'tests')
     testImplementation project(path: ':james-backends-common:apache-james-backends-rabbitmq', configuration: 'tests')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-cassandra')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-scanning-search', configuration: 'tests')
     testImplementation project(':third-party:apache-james-spamassassin')
     testImplementation(project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests'))
+    testImplementation(project(':james-server:james-server-guice:blob-objectstorage-guice'))
     testImplementation(project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests'))
     testImplementation project(':james-server:james-server-dnsservice-test')
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-guice', configuration: 'tests')
     testImplementation project(':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice')
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice', configuration: 'tests')
     testImplementation project(path: ':james-server:jmap-draft-integration-testing:james-server-jmap-draft-integration-testing', configuration: 'tests')
+    testImplementation project(':james-server:james-server-guice:james-server-guice-common')
+    testImplementation project(':james-server:james-server-guice:james-server-cassandra-guice')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-common', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-jmap', configuration: 'tests')
     testImplementation project(':james-server:james-server-testing')
@@ -34,6 +38,7 @@ dependencies {
     testImplementation 'io.cucumber:cucumber-junit:2.4.0'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
+    testImplementation 'org.apache.activemq:activemq-broker:5.15.9'
     testImplementation 'org.apache.pdfbox:pdfbox:2.0.16'
     testImplementation 'org.hamcrest:java-hamcrest:2.0.0.0'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
