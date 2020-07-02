@@ -107,7 +107,12 @@ This parameter could cause body content alteration leading to DKIM invalid DKIM 
 Thanks to Sergey B. for the report. 
 More details about the property is at [java mail doc](https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html)
  - JAMES-3122 LogEnabled API in Spring product had been removed for Log4J2 adoption for Java 9+ runtime compatibility.
-
+ - JAMES-3122 LogEnabled API in Spring product had been removed for Log4J2 adoption for Java 9+ runtime compatibility. 
+ - HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be
+ compared to a cache, but with a sub-optimal implementation (no eviction, default replication factor, no  circuit breaking).
+ Use BlobStore cache instead.
+ - JAMES-3028 OpenStack's Swift support. It was very complex, slow and even slowed down AWS S3 implementation.
+ 
 ### Third party softwares
  - The distributed James server product (relying on Guice, Cassandra, ElasticSearch, RabbitMQ and optionally Swift) now needs at least RabbitMQ 3.8.1.
  - Tika prior 1.24 is subject to multiple CVEs. We recommend the upgrade.

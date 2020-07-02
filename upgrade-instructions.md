@@ -19,6 +19,18 @@ Change list:
  - [Drop Cassandra schema version prior version 5](#drop-cassandra-schema-version-prior-version-5)
  - [mailqueue.size.metricsEnabled now defaults to false](#mailqueuesizemetricsenabled-now-defaults-to-false)
  - [LDAP users repository connection pool now defaults to false](#ldap-users-repository-connection-pool-now-defaults-to-false)
+ - [Swift support has been dropped](#swift-support-has-been-dropped)
+
+### Swift support has been dropped
+
+Date 14/09/2020
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3028
+
+Concerned product: Distributed James
+
+OpenStack's Swift APIs support has been dropped, please use Cassandra or AWS S3 instead. Please note that modern Swift 
+versions support S3 APIs out of the box, thus OpenStack Swift can still be used through the S3 API.
 
 ### LDAP users repository connection pool now defaults to false
 
