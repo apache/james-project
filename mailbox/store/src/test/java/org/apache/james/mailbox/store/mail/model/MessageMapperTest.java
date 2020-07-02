@@ -43,6 +43,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -375,6 +376,23 @@ public abstract class MessageMapperTest {
         messageMapper.delete(benwaInboxMailbox, message1);
 
         assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox)).containsOnly(message2.getUid(), message4.getUid());
+    }
+
+    @Test
+    void deleteMessagesShouldDecrementUnseenToOneWhenDeletingTwoUnseenMessagesOutOfThree() throws MailboxException {
+        saveMessages();
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message3.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
+
+        messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
+
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox))
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(benwaInboxMailbox.getMailboxId())
+                .count(2)
+                .unseen(1)
+                .build());
     }
 
     @Test
