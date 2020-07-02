@@ -382,7 +382,6 @@ class RabbitMQMailQueueTest {
             assertThat(dequeuedNames).isEmpty();
         }
 
-        @Disabled("JAMES-3291 Badly formatted mailqueue causes RabbitMQMailQueue to crash")
         @Test
         void dequeueShouldNotAbortProcessingUponSerializationIssuesErrors() throws Exception {
             String name1 = "myMail1";

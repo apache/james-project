@@ -22,7 +22,6 @@ package org.apache.james.queue.rabbitmq;
 import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.function.Consumer;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
@@ -158,7 +157,10 @@ class Dequeuer implements Closeable {
     private Mono<MailReferenceDTO> toMailReference(Delivery getResponse) {
         return Mono.fromCallable(getResponse::getBody)
             .map(Throwing.function(mailReferenceSerializer::read).sneakyThrow())
-            .onErrorResume(IOException.class, e -> Mono.error(new MailQueue.MailQueueException("Failed to parse DTO", e)));
+            .onErrorResume(e -> {
+                LOGGER.error("Fail to deserialize MailReferenceDTO. Discarding this message to prevent an infinite loop.", e);
+                return Mono.empty();
+            });
     }
 
 }
