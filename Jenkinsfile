@@ -50,14 +50,13 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh "./gradlew clean :apache-mailet:apache-mailet-standard:test --debug --stacktrace --scan"
                 sh "./gradlew clean build -x test"
             }
         }
 
         stage('Run tests') {
             steps {
-                sh "./gradlew build test"
+                sh "./gradlew build test --scan"
             }
         }
     }
@@ -67,6 +66,18 @@ pipeline {
         // If this build failed, send an email to the list.
         failure {
             echo "Failed "
+            script {
+                emailext(
+                        subject: "[BUILD-UNSTABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
+                        body: """
+BUILD-UNSTABLE: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]':
+ 
+Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]</a>"
+""",
+                        to: "server-dev@james.apache.org",
+                        recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+                )
+            }
         }
 
         // If this build didn't fail, but there were failing tests, send an email to the list.
@@ -77,6 +88,20 @@ pipeline {
         // Send an email, if the last build was not successful and this one is.
         success {
             echo "Success "
+            script {
+                if ((currentBuild.previousBuild != null) && (currentBuild.previousBuild.result != 'SUCCESS')) {
+                    emailext (
+                            subject: "[BUILD-STABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
+                            body: """
+BUILD-STABLE: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]':
+ 
+Is back to normal.
+""",
+                            to: "server-dev@james.apache.org",
+                            recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+                    )
+                }
+            }
         }
 
         always {
