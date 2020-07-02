@@ -46,6 +46,7 @@ import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
@@ -156,7 +157,15 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             sender.declareExchange(ExchangeSpecification.exchange(exchangeName)
                 .durable(true)
                 .type("direct")),
+            sender.declareExchange(ExchangeSpecification.exchange(mailQueueName.toDeadLetterExchangeName())
+                .durable(true)
+                .type("direct")),
             sender.declareQueue(QueueSpecification.queue(mailQueueName.toWorkQueueName().asString())
+                .durable(DURABLE)
+                .exclusive(!EXCLUSIVE)
+                .autoDelete(!AUTO_DELETE)
+                .arguments(ImmutableMap.of("x-dead-letter-exchange", mailQueueName.toDeadLetterExchangeName()))),
+            sender.declareQueue(QueueSpecification.queue(mailQueueName.toDeadLetterQueueName())
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
@@ -164,6 +173,10 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             sender.bind(BindingSpecification.binding()
                 .exchange(mailQueueName.toRabbitExchangeName().asString())
                 .queue(mailQueueName.toWorkQueueName().asString())
+                .routingKey(EMPTY_ROUTING_KEY)),
+            sender.bind(BindingSpecification.binding()
+                .exchange(mailQueueName.toDeadLetterExchangeName())
+                .queue(mailQueueName.toDeadLetterQueueName())
                 .routingKey(EMPTY_ROUTING_KEY)))
             .then()
             .block();

@@ -35,6 +35,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -327,7 +328,7 @@ class RabbitMQMailQueueTest {
                 .times(1)
                 .whenQueryStartsWith("SELECT * FROM blobs WHERE id=:id;"));
 
-            List<MailQueue.MailQueueItem> items =  Flux.from(getMailQueue().deQueue())
+            List<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue())
                 .take(3)
                 .collectList()
                 .block(Duration.ofSeconds(10));
@@ -456,6 +457,33 @@ class RabbitMQMailQueueTest {
             Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
                 .untilAsserted(() -> assertThat(dequeuedMailNames)
                     .containsExactly(name1, name2, name3));
+        }
+
+        @Test
+        void rejectedMessagesShouldBeDeadLettered() {
+            String emptyRoutingKey = "";
+            rabbitMQExtension.getSender()
+                .send(Mono.just(new OutboundMessage("JamesMailQueue-exchange-spool",
+                    emptyRoutingKey,
+                    "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+                .block();
+
+            AtomicInteger deadLetteredCount = new AtomicInteger();
+            rabbitMQExtension.getRabbitChannelPool()
+                .createReceiver()
+                .consumeAutoAck("JamesMailQueue-dead-letter-queue-spool")
+                .doOnNext(next -> deadLetteredCount.incrementAndGet())
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
+
+            Flux.from(getMailQueue().deQueue())
+                .doOnNext(Throwing.consumer(item -> item.done(true)))
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
+
+
+            Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
+                .untilAsserted(() -> assertThat(deadLetteredCount.get()).isEqualTo(1));
         }
     }
 

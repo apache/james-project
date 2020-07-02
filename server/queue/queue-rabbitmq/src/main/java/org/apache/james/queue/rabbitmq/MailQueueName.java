@@ -112,6 +112,8 @@ public final class MailQueueName {
 
     private static final String PREFIX = "JamesMailQueue";
     private static final String EXCHANGE_PREFIX = PREFIX + "-exchange-";
+    private static final String DEAD_LETTER_EXCHANGE_PREFIX = PREFIX + "-dead-letter-exchange-";
+    private static final String DEAD_LETTER_QUEUE_PREFIX = PREFIX + "-dead-letter-queue-";
     @VisibleForTesting static final String WORKQUEUE_PREFIX = PREFIX + "-workqueue-";
 
     public static MailQueueName fromString(String name) {
@@ -132,6 +134,14 @@ public final class MailQueueName {
 
     public String asString() {
         return name;
+    }
+
+    String toDeadLetterExchangeName() {
+        return DEAD_LETTER_EXCHANGE_PREFIX + name;
+    }
+
+    String toDeadLetterQueueName() {
+        return DEAD_LETTER_QUEUE_PREFIX + name;
     }
 
     ExchangeName toRabbitExchangeName() {

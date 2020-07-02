@@ -38,6 +38,7 @@ import org.apache.mailet.Mail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 
 import reactor.core.publisher.Mono;
@@ -88,6 +89,7 @@ class Enqueuer {
             .deliveryMode(PERSISTENT_TEXT_PLAIN.getDeliveryMode())
             .priority(PERSISTENT_TEXT_PLAIN.getPriority())
             .contentType(PERSISTENT_TEXT_PLAIN.getContentType())
+            .headers(ImmutableMap.of("x-dead-letter-routing-key", EMPTY_ROUTING_KEY))
             .build();
 
         OutboundMessage data = new OutboundMessage(
