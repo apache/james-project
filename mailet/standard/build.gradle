@@ -43,6 +43,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    // StripAttachmentTest is dependent on system charset and needs UTF-8. builds.apache.org uses ISO-8859-1 .
+    systemProperty "file.encoding", "utf-8"
 }
 
 description = 'Apache James :: Standard Mailets'
