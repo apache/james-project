@@ -127,6 +127,11 @@ public interface MessageMapper extends Mapper {
     Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator,
             final MessageRange set) throws MailboxException;
 
+    default Optional<UpdatedFlags> updateFlags(Mailbox mailbox, MessageUid uid, FlagsUpdateCalculator flagsUpdateCalculator) throws MailboxException {
+        return Iterators.toStream(updateFlags(mailbox, flagsUpdateCalculator, MessageRange.one(uid)))
+            .findFirst();
+    }
+
     default List<UpdatedFlags> resetRecent(Mailbox mailbox) throws MailboxException {
         final List<MessageUid> members = findRecentMessageUidsInMailbox(mailbox);
         ImmutableList.Builder<UpdatedFlags> result = ImmutableList.builder();
