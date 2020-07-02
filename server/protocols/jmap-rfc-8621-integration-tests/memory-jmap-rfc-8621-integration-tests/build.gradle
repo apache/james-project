@@ -10,6 +10,7 @@ configurations {
 }
 
 dependencies {
+    testImplementation project(':james-server:james-server-guice:james-server-guice-common')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-common', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-jmap', configuration: 'tests')
     testImplementation project(':james-server:james-server-guice:james-server-memory-guice')

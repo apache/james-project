@@ -11,21 +11,28 @@ configurations {
 
 dependencies {
     testImplementation project(':apache-mailet:apache-mailet-test')
+    testImplementation project(':apache-james-mailbox:apache-james-mailbox-cassandra')
+    testImplementation project(':apache-james-mailbox:apache-james-mailbox-event-rabbitmq')
+    testImplementation project(':james-server:james-server-guice:blob-objectstorage-guice')
+    testImplementation project(':james-server:james-server-guice:james-server-guice-smtp')
+    testImplementation project(':james-server:james-server-guice:james-server-cassandra-guice')
+    testImplementation project(':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice')
+    testImplementation project(':james-server:james-server-webadmin-cassandra')
+    testImplementation project(':james-server:james-server-webadmin-cassandra-data')
+    testImplementation project(':james-server:webadmin-integration-test:james-server-webadmin-integration-test-common')
+
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-scanning-search', configuration: 'tests')
     testImplementation project(path: ':james-backends-common:apache-james-backends-es', configuration: 'tests')
     testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
     testImplementation project(path: ':james-backends-common:apache-james-backends-rabbitmq', configuration: 'tests')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-elasticsearch', configuration: 'tests')
-    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-scanning-search', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-guice-jmap', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-guice', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:blob-export-guice', configuration: 'tests')
-    testImplementation project(':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice')
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice', configuration: 'tests')
     testImplementation project(path: ':james-server:james-server-guice:james-server-mailbox-plugin-deleted-messages-vault-guice', configuration: 'tests')
-    testImplementation project(':james-server:james-server-webadmin-cassandra-data')
-    testImplementation project(':james-server:webadmin-integration-test:james-server-webadmin-integration-test-common')
 
     testImplementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
     testImplementation 'com.google.inject:guice:4.2.2'

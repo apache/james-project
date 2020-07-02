@@ -13,6 +13,7 @@ dependencies {
     implementation project(':james-server:james-server-guice:james-server-cassandra-guice')
     implementation 'com.google.guava:guava:25.1-jre'
 
+    testImplementation project(':james-backends-common:apache-james-backends-cassandra')
     testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
     testImplementation project(':apache-james-mpt:apache-james-mpt-smtp:apache-james-mpt-smtp-core')
     testImplementation project(':james-server:james-server-guice:james-server-cassandra-guice')
