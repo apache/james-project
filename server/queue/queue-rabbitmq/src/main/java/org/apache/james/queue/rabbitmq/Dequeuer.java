@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
-import com.rabbitmq.client.Delivery;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -139,26 +138,27 @@ class Dequeuer implements Closeable {
         };
     }
 
-    private Mono<MailWithEnqueueId> loadMail(AcknowledgableDelivery response) {
-        return toMailReference(response)
+    private Mono<MailWithEnqueueId> loadMail(AcknowledgableDelivery delivery) {
+        return toMailReference(delivery)
             .flatMap(reference -> mailLoader.load(reference)
                 .onErrorResume(ObjectNotFoundException.class, e -> {
                     LOGGER.error("Fail to load mail {} with enqueueId {} as underlying blobs do not exist. Discarding this message to prevent an infinite loop.", reference.getName(), reference.getEnqueueId(), e);
-                    response.nack(!REQUEUE);
+                    delivery.nack(!REQUEUE);
                     return Mono.empty();
                 })
                 .onErrorResume(e -> {
                     LOGGER.error("Fail to load mail {} with enqueueId {}", reference.getName(), reference.getEnqueueId(), e);
-                    response.nack(REQUEUE);
+                    delivery.nack(REQUEUE);
                     return Mono.empty();
                 }));
     }
 
-    private Mono<MailReferenceDTO> toMailReference(Delivery getResponse) {
-        return Mono.fromCallable(getResponse::getBody)
+    private Mono<MailReferenceDTO> toMailReference(AcknowledgableDelivery delivery) {
+        return Mono.fromCallable(delivery::getBody)
             .map(Throwing.function(mailReferenceSerializer::read).sneakyThrow())
             .onErrorResume(e -> {
                 LOGGER.error("Fail to deserialize MailReferenceDTO. Discarding this message to prevent an infinite loop.", e);
+                delivery.nack(!REQUEUE);
                 return Mono.empty();
             });
     }

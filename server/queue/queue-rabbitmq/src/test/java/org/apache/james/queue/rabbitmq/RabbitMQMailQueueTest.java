@@ -418,6 +418,45 @@ class RabbitMQMailQueueTest {
                 .untilAsserted(() -> assertThat(dequeuedMailNames)
                     .containsExactly(name1, name2, name3));
         }
+
+        @Test
+        void manyInvalidMessagesShouldNotAbortProcessing() throws Exception {
+            String name1 = "myMail1";
+            String name2 = "myMail2";
+            String name3 = "myMail3";
+
+            String emptyRoutingKey = "";
+
+            IntStream.range(0, 100)
+                .forEach(i -> rabbitMQExtension.getSender()
+                    .send(Mono.just(new OutboundMessage("JamesMailQueue-exchange-spool",
+                        emptyRoutingKey,
+                        ("BAD_PAYLOAD " + i).getBytes(StandardCharsets.UTF_8))))
+                    .block());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name2)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name3)
+                .build());
+
+            ConcurrentLinkedDeque<String> dequeuedMailNames = new ConcurrentLinkedDeque<>();
+
+            Flux.from(getMailQueue().deQueue())
+                .doOnNext(item -> dequeuedMailNames.add(item.getMail().getName()))
+                .doOnNext(Throwing.consumer(item -> item.done(true)))
+                .subscribe();
+
+            Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
+                .untilAsserted(() -> assertThat(dequeuedMailNames)
+                    .containsExactly(name1, name2, name3));
+        }
     }
 
     @Nested
