@@ -91,6 +91,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    failFast = true
 }
 
 description = 'Apache James :: Server :: Cassandra - guice injection'
