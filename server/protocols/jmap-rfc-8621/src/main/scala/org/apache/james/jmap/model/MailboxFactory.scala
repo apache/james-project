@@ -22,7 +22,6 @@ package org.apache.james.jmap.model
 import javax.inject.Inject
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail._
-import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.utils.quotas.QuotaLoader
 import org.apache.james.mailbox._
 import org.apache.james.mailbox.model.MailboxACL.EntryKey
@@ -33,17 +32,26 @@ import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
 object MailboxValidation {
-  def validate(mailboxName: Either[IllegalArgumentException, MailboxName],
-               unreadEmails: Either[NumberFormatException, UnsignedInt],
-               unreadThreads: Either[NumberFormatException, UnsignedInt],
-               totalEmails: Either[NumberFormatException, UnsignedInt],
-               totalThreads: Either[NumberFormatException, UnsignedInt]): Either[Exception, MailboxValidation] = {
+  private def retrieveMailboxName(mailboxPath: MailboxPath, pathDelimiter: Char): Either[IllegalArgumentException, MailboxName] =
+    mailboxPath.getName
+      .split(pathDelimiter)
+      .lastOption match {
+        case Some(name) => MailboxName.validate(name)
+        case None => Left(new IllegalArgumentException("No name for the mailbox found"))
+      }
+
+  def validate(mailboxPath: MailboxPath,
+               pathDelimiter: Char,
+               unreadEmails: Long,
+               unreadThreads: Long,
+               totalEmails: Long,
+               totalThreads: Long): Either[Exception, MailboxValidation] = {
     for {
-      validatedName <- mailboxName
-      validatedUnreadEmails <- unreadEmails.map(UnreadEmails)
-      validatedUnreadThreads <- unreadThreads.map(UnreadThreads)
-      validatedTotalEmails <- totalEmails.map(TotalEmails)
-      validatedTotalThreads <- totalThreads.map(TotalThreads)
+      validatedName <- retrieveMailboxName(mailboxPath, pathDelimiter)
+      validatedUnreadEmails <- UnsignedInt.validate(unreadEmails).map(UnreadEmails)
+      validatedUnreadThreads <- UnsignedInt.validate(unreadThreads).map(UnreadThreads)
+      validatedTotalEmails <- UnsignedInt.validate(totalEmails).map(TotalEmails)
+      validatedTotalThreads <- UnsignedInt.validate(totalThreads).map(TotalThreads)
     } yield MailboxValidation(
       mailboxName = validatedName,
       unreadEmails = validatedUnreadEmails,
@@ -60,14 +68,6 @@ case class MailboxValidation(mailboxName: MailboxName,
                              totalThreads: TotalThreads)
 
 class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailboxManager: MailboxManager) {
-
-  private def retrieveMailboxName(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Either[IllegalArgumentException, MailboxName] =
-    mailboxPath.getName
-      .split(mailboxSession.getPathDelimiter)
-      .lastOption match {
-        case Some(name) => MailboxName.validate(name)
-        case None => Left(new IllegalArgumentException("No name for the mailbox found"))
-      }
 
   private def getRole(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Option[Role] = Role.from(mailboxPath.getName)
     .filter(_ => mailboxPath.belongsTo(mailboxSession)).toScala
@@ -117,88 +117,25 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
              mailboxSession: MailboxSession,
              allMailboxesMetadata: Seq[MailboxMetaData],
              quotaLoader: QuotaLoader): SMono[Mailbox] = {
-
-    val id: MailboxId = mailboxMetaData.getId
-
-    val name: Either[IllegalArgumentException, MailboxName] = retrieveMailboxName(mailboxMetaData.getPath, mailboxSession)
-
-    val role: Option[Role] = getRole(mailboxMetaData.getPath, mailboxSession)
-    val sortOrder: SortOrder = getSortOrder(role)
-    val quotas: SMono[Quotas] = quotaLoader.getQuotas(mailboxMetaData.getPath)
-    val rights: Rights = getRights(mailboxMetaData.getResolvedAcls)
-
     val sanitizedCounters: MailboxCounters = mailboxMetaData.getCounters.sanitize()
-    val unreadEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getUnseen)
-    val unreadThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getUnseen)
-    val totalEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getCount)
-    val totalThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getCount)
 
-    val namespace: MailboxNamespace = getNamespace(mailboxMetaData.getPath, mailboxSession)
-
-    val parentPath: Option[MailboxPath] = getParentPath(mailboxMetaData.getPath, mailboxSession)
-
-    val parentId: Option[MailboxId] = allMailboxesMetadata.filter(otherMetadata => parentPath.contains(otherMetadata.getPath))
-      .map(_.getId)
-      .headOption
-
-    val myRights: MailboxRights = getMyRights(mailboxMetaData.getPath, mailboxMetaData.getResolvedAcls, mailboxSession)
-
-    val isSubscribed: IsSubscribed = retrieveIsSubscribed(mailboxMetaData.getPath, mailboxSession)
-
-    MailboxValidation.validate(name, unreadEmails, unreadThreads, totalEmails, totalThreads) match {
+    MailboxValidation.validate(mailboxMetaData.getPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
       case Left(error) => SMono.raiseError(error)
-      case scala.Right(mailboxValidation) => SMono.fromPublisher(quotas)
-        .map(quotas =>
-          Mailbox(
-            id = id,
-            name = mailboxValidation.mailboxName,
-            parentId = parentId,
-            role = role,
-            sortOrder = sortOrder,
-            unreadEmails = mailboxValidation.unreadEmails,
-            totalEmails = mailboxValidation.totalEmails,
-            unreadThreads = mailboxValidation.unreadThreads,
-            totalThreads = mailboxValidation.totalThreads,
-            myRights = myRights,
-            namespace = namespace,
-            rights = rights,
-            quotas = quotas,
-            isSubscribed = isSubscribed))
-    }
-  }
+      case scala.Right(mailboxValidation) =>
+        SMono.fromPublisher(quotaLoader.getQuotas(mailboxMetaData.getPath))
+          .map(quotas => {
+            val id: MailboxId = mailboxMetaData.getId
+            val role: Option[Role] = getRole(mailboxMetaData.getPath, mailboxSession)
+            val sortOrder: SortOrder = getSortOrder(role)
+            val rights: Rights = getRights(mailboxMetaData.getResolvedAcls)
+            val namespace: MailboxNamespace = getNamespace(mailboxMetaData.getPath, mailboxSession)
+            val parentPath: Option[MailboxPath] = getParentPath(mailboxMetaData.getPath, mailboxSession)
+            val parentId: Option[MailboxId] = allMailboxesMetadata.filter(otherMetadata => parentPath.contains(otherMetadata.getPath))
+              .map(_.getId)
+              .headOption
+            val myRights: MailboxRights = getMyRights(mailboxMetaData.getPath, mailboxMetaData.getResolvedAcls, mailboxSession)
+            val isSubscribed: IsSubscribed = retrieveIsSubscribed(mailboxMetaData.getPath, mailboxSession)
 
-  def create(id: MailboxId, mailboxSession: MailboxSession, quotaLoader: QuotaLoader): SMono[Mailbox] = {
-    try {
-      val messageManager: MessageManager = mailboxManager.getMailbox(id, mailboxSession)
-      val resolvedACL = messageManager.getResolvedAcl(mailboxSession)
-
-      val name: Either[IllegalArgumentException, MailboxName] = retrieveMailboxName(messageManager.getMailboxPath, mailboxSession)
-
-      val role: Option[Role] = getRole(messageManager.getMailboxPath, mailboxSession)
-      val sortOrder: SortOrder = getSortOrder(role)
-      val quotas: SMono[Quotas] = quotaLoader.getQuotas(messageManager.getMailboxPath)
-      val rights: Rights = getRights(resolvedACL)
-
-      val sanitizedCounters: MailboxCounters = messageManager.getMailboxCounters(mailboxSession).sanitize()
-      val unreadEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getUnseen)
-      val unreadThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getUnseen)
-      val totalEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getCount)
-      val totalThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(sanitizedCounters.getCount)
-
-      val namespace: MailboxNamespace = getNamespace(messageManager.getMailboxPath, mailboxSession)
-
-      val parentId: Option[MailboxId] = getParentPath(messageManager.getMailboxPath, mailboxSession)
-        .map(parentPath => mailboxManager.getMailbox(parentPath, mailboxSession))
-        .map(_.getId)
-
-      val myRights: MailboxRights = getMyRights(messageManager.getMailboxPath, resolvedACL, mailboxSession)
-
-      val isSubscribed: IsSubscribed = retrieveIsSubscribed(messageManager.getMailboxPath, mailboxSession)
-
-      MailboxValidation.validate(name, unreadEmails, unreadThreads, totalEmails, totalThreads) match {
-        case Left(error) => SMono.raiseError(error)
-        case scala.Right(mailboxValidation) => SMono.fromPublisher(quotas)
-          .map(quotas =>
             Mailbox(
               id = id,
               name = mailboxValidation.mailboxName,
@@ -213,7 +150,46 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
               namespace = namespace,
               rights = rights,
               quotas = quotas,
-              isSubscribed = isSubscribed))
+              isSubscribed = isSubscribed)})
+    }
+  }
+
+  def create(id: MailboxId, mailboxSession: MailboxSession, quotaLoader: QuotaLoader): SMono[Mailbox] = {
+    try {
+      val messageManager: MessageManager = mailboxManager.getMailbox(id, mailboxSession)
+      val sanitizedCounters: MailboxCounters = messageManager.getMailboxCounters(mailboxSession).sanitize()
+
+      MailboxValidation.validate(messageManager.getMailboxPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
+        case Left(error) => SMono.raiseError(error)
+        case scala.Right(mailboxValidation) =>
+          SMono.fromPublisher(quotaLoader.getQuotas(messageManager.getMailboxPath))
+            .map(quotas => {
+              val resolvedACL = messageManager.getResolvedAcl(mailboxSession)
+              val role: Option[Role] = getRole(messageManager.getMailboxPath, mailboxSession)
+              val sortOrder: SortOrder = getSortOrder(role)
+              val rights: Rights = getRights(resolvedACL)
+              val namespace: MailboxNamespace = getNamespace(messageManager.getMailboxPath, mailboxSession)
+              val parentId: Option[MailboxId] = getParentPath(messageManager.getMailboxPath, mailboxSession)
+                .map(parentPath => mailboxManager.getMailbox(parentPath, mailboxSession))
+                .map(_.getId)
+              val myRights: MailboxRights = getMyRights(messageManager.getMailboxPath, resolvedACL, mailboxSession)
+              val isSubscribed: IsSubscribed = retrieveIsSubscribed(messageManager.getMailboxPath, mailboxSession)
+
+              Mailbox(
+                id = id,
+                name = mailboxValidation.mailboxName,
+                parentId = parentId,
+                role = role,
+                sortOrder = sortOrder,
+                unreadEmails = mailboxValidation.unreadEmails,
+                totalEmails = mailboxValidation.totalEmails,
+                unreadThreads = mailboxValidation.unreadThreads,
+                totalThreads = mailboxValidation.totalThreads,
+                myRights = myRights,
+                namespace = namespace,
+                rights = rights,
+                quotas = quotas,
+                isSubscribed = isSubscribed)})
       }
     } catch {
       case error: Exception => SMono.raiseError(error)

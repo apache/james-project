@@ -20,14 +20,19 @@
 package org.apache.james.jmap.model
 
 import eu.timepit.refined.auto._
+import org.apache.james.core.Username
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
+import org.apache.james.mailbox.model.MailboxPath
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 object MailboxValidationTest {
   private val mailboxName: MailboxName = "name"
+  private val user: Username = Username.of("user")
+  private val mailboxPath: MailboxPath = MailboxPath.forUser(user, mailboxName)
+  private val pathDelimiter: Char = '.'
   private val unreadEmails: UnsignedInt = 1L
   private val unreadThreads: UnsignedInt = 2L
   private val totalEmails: UnsignedInt = 3L
@@ -39,12 +44,6 @@ class MailboxValidationTest extends AnyWordSpec with Matchers {
 
   "MailboxValidation" should {
     "succeed" in {
-      val validMailboxname: Either[IllegalArgumentException, MailboxName] = MailboxName.validate(mailboxName)
-      val validUnreadEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadEmails)
-      val validUnreadThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadThreads)
-      val validTotalEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalEmails)
-      val validTotalThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalThreads)
-
       val expectedResult: Either[Exception, MailboxValidation] = scala.Right(MailboxValidation(
         mailboxName = mailboxName,
         unreadEmails = UnreadEmails(unreadEmails),
@@ -53,86 +52,62 @@ class MailboxValidationTest extends AnyWordSpec with Matchers {
         totalThreads = TotalThreads(totalThreads)))
 
       MailboxValidation.validate(
-        validMailboxname,
-        validUnreadEmails,
-        validUnreadThreads,
-        validTotalEmails,
-        validTotalThreads) must be(expectedResult)
+        mailboxPath,
+        pathDelimiter,
+        unreadEmails.value,
+        unreadThreads.value,
+        totalEmails.value,
+        totalThreads.value) must be(expectedResult)
     }
 
-    "fail when mailboxName is invalid" in {
-      val invalidMailboxname: Either[IllegalArgumentException, MailboxName] = MailboxName.validate("")
-      val validUnreadEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadEmails)
-      val validUnreadThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadThreads)
-      val validTotalEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalEmails)
-      val validTotalThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalThreads)
-
+    "fail when mailboxPath is invalid" in {
       MailboxValidation.validate(
-        invalidMailboxname,
-        validUnreadEmails,
-        validUnreadThreads,
-        validTotalEmails,
-        validTotalThreads) mustBe a[Left[_, _]]
+        MailboxPath.forUser(user, ""),
+        pathDelimiter,
+        unreadEmails.value,
+        unreadThreads.value,
+        totalEmails.value,
+        totalThreads.value) mustBe a[Left[_, _]]
     }
 
     "fail when unreadEmails is invalid" in {
-      val validMailboxname: Either[IllegalArgumentException, MailboxName] = MailboxName.validate(mailboxName)
-      val invalidUnreadEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(-1L)
-      val validUnreadThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadThreads)
-      val validTotalEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalEmails)
-      val validTotalThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalThreads)
-
       MailboxValidation.validate(
-        validMailboxname,
-        invalidUnreadEmails,
-        validUnreadThreads,
-        validTotalEmails,
-        validTotalThreads) mustBe a[Left[_, _]]
+        mailboxPath,
+        pathDelimiter,
+        -1L,
+        unreadThreads.value,
+        totalEmails.value,
+        totalThreads.value) mustBe a[Left[_, _]]
     }
 
     "fail when unreadThreads is invalid" in {
-      val validMailboxname: Either[IllegalArgumentException, MailboxName] = MailboxName.validate(mailboxName)
-      val validUnreadEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadEmails)
-      val invalidUnreadThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(-1L)
-      val validTotalEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalEmails)
-      val validTotalThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalThreads)
-
       MailboxValidation.validate(
-        validMailboxname,
-        validUnreadEmails,
-        invalidUnreadThreads,
-        validTotalEmails,
-        validTotalThreads) mustBe a[Left[_, _]]
+        mailboxPath,
+        pathDelimiter,
+        unreadEmails.value,
+        -1L,
+        totalEmails.value,
+        totalThreads.value) mustBe a[Left[_, _]]
     }
 
     "fail when totalEmails is invalid" in {
-      val validMailboxname: Either[IllegalArgumentException, MailboxName] = MailboxName.validate(mailboxName)
-      val validUnreadEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadEmails)
-      val validUnreadThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadThreads)
-      val invalidTotalEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(-1L)
-      val validTotalThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalThreads)
-
       MailboxValidation.validate(
-        validMailboxname,
-        validUnreadEmails,
-        validUnreadThreads,
-        invalidTotalEmails,
-        validTotalThreads) mustBe a[Left[_, _]]
+        mailboxPath,
+        pathDelimiter,
+        unreadEmails.value,
+        unreadThreads.value,
+        -1L,
+        totalThreads.value) mustBe a[Left[_, _]]
     }
 
     "fail when totalThreads is invalid" in {
-      val validMailboxname: Either[IllegalArgumentException, MailboxName] = MailboxName.validate(mailboxName)
-      val validUnreadEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadEmails)
-      val validUnreadThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(unreadThreads)
-      val validTotalEmails: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(totalEmails)
-      val invalidTotalThreads: Either[NumberFormatException, UnsignedInt] = UnsignedInt.validate(-1L)
-
       MailboxValidation.validate(
-        validMailboxname,
-        validUnreadEmails,
-        validUnreadThreads,
-        validTotalEmails,
-        invalidTotalThreads) mustBe a[Left[_, _]]
+        mailboxPath,
+        pathDelimiter,
+        unreadEmails.value,
+        unreadThreads.value,
+        totalEmails.value,
+        -1L) mustBe a[Left[_, _]]
     }
   }
 }
