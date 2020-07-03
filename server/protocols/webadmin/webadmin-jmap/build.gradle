@@ -24,16 +24,16 @@ dependencies {
     implementation 'com.google.guava:guava:25.1-jre'
     implementation 'javax.inject:javax.inject:1'
 
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
-    testImplementation project(':james-json')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-memory', configuration: 'tests')
+    testImplementation project(path: ':james-json', configuration: 'tests')
     testImplementation project(':james-server:james-server-data-memory')
     testImplementation project(':james-server:james-server-task-memory')
-    testImplementation project(':james-server:james-server-webadmin-core')
+    testImplementation project(path: ':james-server:james-server-webadmin-core', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':testing-base')
 
+    testImplementation 'org.apache.james:apache-mime4j-dom:0.8.3'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
@@ -45,6 +45,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    failFast = true
 }
 
 

@@ -15,6 +15,7 @@ dependencies {
     api project(':james-server:james-server-core')
 
     implementation 'com.google.inject:guice:4.2.2'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

@@ -10,13 +10,12 @@ configurations {
 }
 
 dependencies {
-    api project(':james-server:james-server-mailrepository-api')
-    api project(':james-server:james-server-blob:blob-common')
     api project(':james-backends-common:apache-james-backends-cassandra')
+    api project(':james-server:james-server-blob:blob-common')
     api project(':james-server:james-server-blob:james-server-mail-store')
     api project(':james-server:james-server-core')
-
-    implementation project(':james-server:james-server-util')
+    api project(':james-server:james-server-mailrepository-api')
+    api project(':james-server:james-server-util')
 
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'com.datastax.cassandra:cassandra-driver-core:3.7.2'
@@ -27,12 +26,14 @@ dependencies {
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'javax.inject:javax.inject:1'
 
-    testImplementation project(':james-backends-common:apache-james-backends-cassandra')
+    testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
+    testImplementation project(':apache-mailet:apache-mailet-test')
     testImplementation project(':james-server:james-server-blob:blob-cassandra')
-    testImplementation project(':james-server:james-server-blob:blob-api')
-    testImplementation project(':james-server:james-server-mailrepository-api')
+    testImplementation project(path: ':james-server:james-server-blob:blob-api', configuration: 'tests')
+    testImplementation project(path: ':james-server:james-server-mailrepository-api', configuration: 'tests')
     testImplementation project(':james-server:james-server-testing')
-    testImplementation project(':testing-base')
+
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

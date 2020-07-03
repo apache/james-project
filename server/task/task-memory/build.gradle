@@ -7,6 +7,10 @@ plugins {
     id 'java-library'
 }
 
+configurations {
+    tests
+}
+
 dependencies {
     implementation project(':event-sourcing:event-sourcing-core')
     implementation project(':event-sourcing:event-sourcing-pojo')
@@ -29,11 +33,12 @@ dependencies {
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
 
     testImplementation project(':event-sourcing:event-sourcing-event-store-memory')
-    testImplementation project(':james-server:james-server-task-api')
+    testImplementation project(path: ':james-server:james-server-task-api', configuration: 'tests')
 
-
+    testImplementation 'com.github.fge:throwing-lambdas:0.5.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -44,12 +49,19 @@ test {
     useJUnitPlatform()
 }
 
-
 // https://stackoverflow.com/questions/23261075/compiling-scala-before-alongside-java-with-gradle
 sourceSets {
     main {
         scala {
             srcDirs = ['src/main/scala', 'src/main/java']
+        }
+        java {
+            srcDirs = []
+        }
+    }
+    test {
+        scala {
+            srcDirs = ['src/test/scala', 'src/test/java']
         }
         java {
             srcDirs = []
@@ -62,6 +74,10 @@ description = 'Apache James :: Server :: Task :: Memory implementation'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)

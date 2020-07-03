@@ -20,9 +20,12 @@ dependencies {
     testImplementation project(':james-server:james-server-util')
     testImplementation project(':metrics:metrics-tests')
 
+    testImplementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     testImplementation 'commons-io:commons-io:2.6'
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -38,6 +41,10 @@ description = 'Apache James :: Server :: Blob :: API'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+artifacts {
+    tests testsJar
 }
 
 publishing.publications.maven.artifact(testsJar)
