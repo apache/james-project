@@ -10,6 +10,7 @@ configurations {
 }
 
 dependencies {
+    api project(':apache-mailet:apache-mailet-api')
     api project(':james-core')
     api project(':james-server:james-server-data-api')
     api project(':james-server:james-server-dnsservice-api')
@@ -18,15 +19,13 @@ dependencies {
     api project(':james-server:james-server-lifecycle-api')
     api project(':james-server:james-server-protocols-library')
     api project(':james-server:james-server-queue-api')
-    api project(':apache-mailet:apache-mailet-api')
+    api project(':james-server:james-server-core')
+    api project(':james-server:james-server-util')
     api project(':metrics:metrics-api')
     api project(':protocols:protocols-api')
     api project(':protocols:protocols-netty')
     api project(':protocols:protocols-smtp')
-
-    implementation project(':james-server:james-server-core')
-    implementation project(':james-server:james-server-util')
-    implementation project(':third-party:apache-james-spamassassin')
+    api project(':third-party:apache-james-spamassassin')
 
     implementation 'com.github.steveash.guavate:guavate:1.0.0'
     implementation 'com.google.guava:guava:25.1-jre'
@@ -39,28 +38,30 @@ dependencies {
     implementation 'org.slf4j:log4j-over-slf4j:1.7.27'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
-    testImplementation project(':third-party:apache-james-spamassassin')
+    testImplementation project(':apache-mailet:apache-mailet-test')
     testImplementation project(':james-server:james-server-data-memory')
-    testImplementation project(':james-server:james-server-data-memory')
+    testImplementation project(path: ':james-server:james-server-data-memory', configuration: 'tests')
     testImplementation project(':james-server:james-server-dnsservice-test')
     testImplementation project(':james-server:james-server-mailrepository-memory')
-    testImplementation project(':james-server:james-server-protocols-library')
+    testImplementation project(path: ':james-server:james-server-protocols-library', configuration: 'tests')
     testImplementation project(':james-server:james-server-queue-memory')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':testing-base')
+    testImplementation project(path: ':protocols:protocols-api', configuration: 'tests')
+    testImplementation project(path: ':protocols:protocols-smtp', configuration: 'tests')
+    testImplementation project(path: ':third-party:apache-james-spamassassin', configuration: 'tests')
 
     testImplementation 'com.google.inject:guice:4.2.2'
     testImplementation 'commons-net:commons-net:3.6'
     testImplementation 'dnsjava:dnsjava:2.1.9'
     testImplementation 'org.mockito:mockito-core:3.0.0'
-
-    testImplementation project(':protocols:protocols-api')
-    testImplementation project(':protocols:protocols-smtp')
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testCompileOnly 'junit:junit:4.13'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.5.1'
 }
 
 test {

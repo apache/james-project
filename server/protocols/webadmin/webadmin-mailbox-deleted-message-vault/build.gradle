@@ -30,22 +30,25 @@ dependencies {
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-deleted-messages-vault')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-deleted-messages-vault', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-memory', configuration: 'tests')
     testImplementation project(':apache-mailet:apache-mailet-test')
     testImplementation project(':james-server:james-server-blob:blob-memory')
-    testImplementation project(':james-json')
+    testImplementation project(path: ':james-json', configuration: 'tests')
     testImplementation project(':james-server:james-server-data-memory')
     testImplementation project(':james-server:james-server-task-memory')
     testImplementation project(':james-server:james-server-testing')
-    testImplementation project(':james-server:james-server-webadmin-core')
+    testImplementation project(path: ':james-server:james-server-webadmin-core', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':testing-base')
+
+    testImplementation 'org.apache.commons:commons-configuration2:2.7'
+    testImplementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.8.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

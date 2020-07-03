@@ -27,9 +27,9 @@ dependencies {
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.apache.httpcomponents:httpcore:4.4.13'
 
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-memory', configuration: 'tests')
     testImplementation project(':james-server:james-server-data-memory')
     testImplementation project(':metrics:metrics-tests')
     testImplementation project(':testing-base')

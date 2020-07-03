@@ -3,6 +3,7 @@
  */
 plugins {
     id 'java-library'
+    id 'scala'
 }
 
 configurations {
@@ -47,25 +48,29 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.27'
     implementation 'com.jakewharton.byteunits:byteunits:0.9.1'
 
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-api')
+    testImplementation project(path: ':apache-mailet:apache-mailet-test')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
-    testImplementation project(':apache-james-mailbox:apache-james-mailbox-memory')
+    testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-memory', configuration: 'tests')
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-store')
-    testImplementation project(':third-party:apache-james-spamassassin')
-    testImplementation project(':james-server:james-server-data-library')
+    testImplementation project(path: ':james-server:james-server-data-library', configuration: 'tests')
     testImplementation project(':james-server:james-server-data-memory')
-    testImplementation project(':james-server:james-server-data-memory')
+    testImplementation project(path: ':james-server:james-server-data-memory', configuration: 'tests')
     testImplementation project(':james-server:james-server-dnsservice-test')
     testImplementation project(':james-server:james-server-mailrepository-memory')
     testImplementation project(':james-server:james-server-queue-memory')
     testImplementation project(':james-server:james-server-testing')
     testImplementation project(':metrics:metrics-tests')
     testImplementation project(':protocols:protocols-managesieve')
+    testImplementation project(path: ':third-party:apache-james-spamassassin', configuration: 'tests')
 
+    testImplementation 'org.apache.commons:commons-configuration2:2.7'
+    testImplementation 'commons-io:commons-io:2.6'
     testImplementation 'org.hamcrest:java-hamcrest:2.0.0.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.specs2:specs2-core_2.13:4.9.4'
     testImplementation 'org.specs2:specs2-junit_2.13:4.9.4'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
@@ -81,6 +86,18 @@ description = 'Apache James :: Server :: Mailets'
 tasks.register('testsJar', Jar) {
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+// https://stackoverflow.com/questions/23261075/compiling-scala-before-alongside-java-with-gradle
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['src/main/scala', 'src/main/java']
+        }
+        java {
+            srcDirs = []
+        }
+    }
 }
 
 artifacts {

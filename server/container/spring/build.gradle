@@ -42,7 +42,7 @@ dependencies {
     implementation 'org.springframework:spring-jms:4.3.25.RELEASE'
     implementation 'org.springframework:spring-web:4.3.25.RELEASE'
 
-    testImplementation project(':james-server:james-server-filesystem-api')
+    testImplementation project(path: ':james-server:james-server-filesystem-api', configuration: 'tests')
 
     testImplementation 'com.sparkjava:spark-core:2.9.1'
     testImplementation 'pl.pragmatists:JUnitParams:1.1.1'

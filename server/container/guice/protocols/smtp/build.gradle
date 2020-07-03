@@ -14,7 +14,9 @@ dependencies {
     api project(':james-server:james-server-protocols-smtp')
 
     implementation 'com.google.inject:guice:4.2.2'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
     implementation 'org.apache.james.jspf:apache-jspf-resolver:1.0.1'
+    implementation 'org.slf4j:slf4j-api:1.7.27'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'

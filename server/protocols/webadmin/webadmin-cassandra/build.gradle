@@ -18,9 +18,9 @@ dependencies {
     implementation 'javax.inject:javax.inject:1'
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
-    testImplementation project(':james-json')
+    testImplementation project(path: ':james-json', configuration: 'tests')
     testImplementation project(':james-server:james-server-task-memory')
-    testImplementation project(':james-server:james-server-webadmin-core')
+    testImplementation project(path: ':james-server:james-server-webadmin-core', configuration: 'tests')
     testImplementation project(':metrics:metrics-tests')
 
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
@@ -30,6 +30,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testCompileOnly 'junit:junit:4.13'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.5.1'
 }
 
 test {

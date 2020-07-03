@@ -25,13 +25,17 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.27'
 
     testImplementation project(':metrics:metrics-tests')
-    testImplementation project(':protocols:protocols-api')
+    testImplementation project(path: ':protocols:protocols-api', configuration: 'tests')
 
     testImplementation 'commons-net:commons-net:3.6'
+    testImplementation 'org.assertj:assertj-core:3.12.2'
+    testImplementation 'nl.jqno.equalsverifier:equalsverifier:3.1.9'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testCompileOnly 'junit:junit:4.13'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.5.1'
 }
 
 test {
