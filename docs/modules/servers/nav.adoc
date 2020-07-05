@@ -3,3 +3,8 @@
 ** xref:local.adoc[]
 ** xref:redundant.adoc[]
 ** xref:distributed.adoc[]
+*** xref:distributed/architecture.adoc[]
+*** xref:distributed/run.adoc[]
+*** xref:distributed/run-docker.adoc[]
+*** xref:distributed/configure/index.adoc[]
+*** xref:distributed/operate/index.adoc[]

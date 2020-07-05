@@ -1,0 +1,8 @@
+= Distributed server configuration
+:navtitle: Distributed server configuration
+
+This section presents how to configure the Distributed server.
+
+The following configuration files are exposed:
+
+(TODO)

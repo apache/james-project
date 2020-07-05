@@ -1,0 +1,16 @@
+= Distributed Server Architecture
+
+This sections presents the Distributed Server architecture.
+
+In order to deliver its promises, the Distributed Server leverages the following storage strategies:
+
+(TODO picture)
+
+ * *Cassandra* is used for metadata storage
+ * The *blob store* storage interfaces is responsible of storing potentially large binary data. For instance
+ email bodies, headers or attachments. Different technologies can be used: *Cassandra*, or *Object Storage*
+(S3 or Swift)
+ * *ElasticSearch* component enpower full text search on emails.
+ * *RabbitMQ* enables James nodes of a same cluster to collaborate together.
+ * *Tika* (optional) enables text extraction from attachments, thus improving full text search results.
+ * *SpamAssassin* (optional) can be used for Spam detection and user feedback is supported.
