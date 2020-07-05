@@ -1,0 +1,4 @@
+= Command Line Interface
+
+(TODO migrate and adapt content from
+https://github.com/linagora/james-project/blob/master/src/site/markdown/server/manage-cli.md)
