@@ -7,7 +7,7 @@ In order to deliver its promises, the Distributed Server leverages the following
 (TODO picture)
 
  * *Cassandra* is used for metadata storage
- * The *blob store* storage interfaces is responsible of storing potentially large binary data. For instance
+ * The *blob store* storage interface is responsible of storing potentially large binary data. For instance
  email bodies, headers or attachments. Different technologies can be used: *Cassandra*, or *Object Storage*
 (S3 or Swift)
  * *ElasticSearch* component enpower full text search on emails.
