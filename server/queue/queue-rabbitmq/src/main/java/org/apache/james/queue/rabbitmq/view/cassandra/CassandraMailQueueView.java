@@ -21,6 +21,8 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import static org.apache.james.util.FunctionalUtils.negate;
 
+import java.time.Instant;
+
 import javax.inject.Inject;
 
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -33,10 +35,11 @@ import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMai
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-public class CassandraMailQueueView implements MailQueueView {
+public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueBrowser.CassandraMailQueueItemView> {
 
     public static class Factory implements MailQueueView.Factory {
         private final CassandraMailQueueMailStore storeHelper;
@@ -91,10 +94,21 @@ public class CassandraMailQueueView implements MailQueueView {
     @Override
     public ManageableMailQueue.MailQueueIterator browse() {
         return new CassandraMailQueueBrowser.CassandraMailQueueIterator(
-            cassandraMailQueueBrowser.browse(mailQueueName)
-                .subscribeOn(Schedulers.elastic())
+            browseReactive()
                 .toIterable()
                 .iterator());
+    }
+
+    @Override
+    public Flux<CassandraMailQueueBrowser.CassandraMailQueueItemView> browseReactive() {
+        return cassandraMailQueueBrowser.browse(mailQueueName)
+            .subscribeOn(Schedulers.elastic());
+    }
+
+    @Override
+    public Flux<CassandraMailQueueBrowser.CassandraMailQueueItemView> browseOlderThanReactive(Instant olderThan) {
+        return cassandraMailQueueBrowser.browseOlderThan(mailQueueName, olderThan)
+            .subscribeOn(Schedulers.elastic());
     }
 
     @Override
@@ -133,6 +147,6 @@ public class CassandraMailQueueView implements MailQueueView {
     @Override
     public Mono<Boolean> isPresent(EnqueueId id) {
         return cassandraMailQueueMailDelete.isDeleted(id, mailQueueName)
-                .map(negate());
+            .map(negate());
     }
 }

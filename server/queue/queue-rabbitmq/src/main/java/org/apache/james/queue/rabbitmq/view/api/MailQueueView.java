@@ -19,14 +19,17 @@
 
 package org.apache.james.queue.rabbitmq.view.api;
 
+import java.time.Instant;
+
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface MailQueueView {
+public interface MailQueueView<V extends ManageableMailQueue.MailQueueItemView> {
 
     interface Factory {
         MailQueueView create(MailQueueName mailQueueName);
@@ -41,6 +44,10 @@ public interface MailQueueView {
     Mono<Boolean> isPresent(EnqueueId id);
 
     ManageableMailQueue.MailQueueIterator browse();
+
+    Flux<V> browseReactive();
+
+    Flux<V> browseOlderThanReactive(Instant olderThan);
 
     long getSize();
 }

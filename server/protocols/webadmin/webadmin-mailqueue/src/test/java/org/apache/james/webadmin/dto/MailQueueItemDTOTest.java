@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.Mails;
+import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.ManageableMailQueue.MailQueueItemView;
 import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.JUnitSoftAssertions;
@@ -54,7 +55,7 @@ public class MailQueueItemDTOTest {
     public void fromShouldCreateTheRightObject() throws Exception {
         FakeMail mail = Mails.defaultMail().name("name").build();
         ZonedDateTime date = ZonedDateTime.parse("2018-01-02T11:22:02Z");
-        MailQueueItemView mailQueueItemView = new MailQueueItemView(mail, date);
+        MailQueueItemView mailQueueItemView = new ManageableMailQueue.DefaultMailQueueItemView(mail, date);
         MailQueueItemDTO mailQueueItemDTO = MailQueueItemDTO.from(mailQueueItemView);
         List<String> expectedRecipients = mail.getRecipients().stream()
                 .map(MailAddress::asString)

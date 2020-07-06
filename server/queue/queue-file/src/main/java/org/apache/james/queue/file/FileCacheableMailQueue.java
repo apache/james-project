@@ -477,7 +477,7 @@ public class FileCacheableMailQueue implements ManageableMailQueue {
                 while (items.hasNext()) {
                     try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(items.next().getObjectFile()))) {
                         final Mail mail = (Mail) in.readObject();
-                        item = new MailQueueItemView(mail, getNextDelivery(mail));
+                        item = new DefaultMailQueueItemView(mail, getNextDelivery(mail));
                         return true;
                     } catch (IOException | ClassNotFoundException e) {
                         LOGGER.info("Unable to load mail", e);

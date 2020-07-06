@@ -221,9 +221,9 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
 
         @Override
         public MailQueueIterator browse() throws MailQueueException {
-            Iterator<MailQueueItemView> underlying = ImmutableList.copyOf(mailItems)
+            Iterator<DefaultMailQueueItemView> underlying = ImmutableList.copyOf(mailItems)
                 .stream()
-                .map(item -> new MailQueueItemView(item.getMail(), item.delivery))
+                .map(item -> new DefaultMailQueueItemView(item.getMail(), item.delivery))
                 .iterator();
 
             return new MailQueueIterator() {

@@ -91,20 +91,30 @@ public interface ManageableMailQueue extends MailQueue {
     /**
      * Represent a View over a queue {@link MailQueue.MailQueueItem}
      */
-    class MailQueueItemView {
+    interface MailQueueItemView {
+        Mail getMail();
+
+        Optional<ZonedDateTime> getNextDelivery();
+    }
+
+
+    /**
+     * Represent a View over a queue {@link MailQueue.MailQueueItem}
+     */
+    class DefaultMailQueueItemView implements MailQueueItemView {
 
         private final Mail mail;
         private final Optional<ZonedDateTime> nextDelivery;
 
-        public MailQueueItemView(Mail mail) {
+        public DefaultMailQueueItemView(Mail mail) {
             this(mail, Optional.empty());
         }
 
-        public MailQueueItemView(Mail mail, ZonedDateTime nextDelivery) {
+        public DefaultMailQueueItemView(Mail mail, ZonedDateTime nextDelivery) {
             this(mail, Optional.of(nextDelivery));
         }
 
-        public MailQueueItemView(Mail mail, Optional<ZonedDateTime> nextDelivery) {
+        public DefaultMailQueueItemView(Mail mail, Optional<ZonedDateTime> nextDelivery) {
             this.mail = mail;
             this.nextDelivery = nextDelivery;
         }

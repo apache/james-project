@@ -23,6 +23,7 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.apache.james.backends.cassandra.Scenario.Builder.returnEmpty;
+import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -75,11 +76,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 
 import com.github.fge.lambdas.Throwing;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.OutboundMessage;
+import reactor.rabbitmq.Sender;
 
 class RabbitMQMailQueueTest {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
@@ -132,7 +134,7 @@ class RabbitMQMailQueueTest {
         }
 
         @Override
-        public MailQueue getMailQueue() {
+        public RabbitMQMailQueue getMailQueue() {
             return mailQueue;
         }
 
@@ -286,6 +288,177 @@ class RabbitMQMailQueueTest {
             assertThat(items)
                 .extracting(item -> item.getMail().getName())
                 .containsExactly(name1, name2, name3);
+        }
+
+        @Test
+        void messagesShouldBeProcessedAfterNotPublishedMailsHaveBeenReprocessed() throws Exception {
+            clock.setInstant(Instant.now().minus(Duration.ofHours(2)));
+            String name1 = "myMail1";
+            String name2 = "myMail2";
+            String name3 = "myMail3";
+            Flux<MailQueue.MailQueueItem> dequeueFlux = Flux.from(getMailQueue().deQueue());
+
+            // Avoid early processing and prefetching
+            Sender sender = rabbitMQExtension.getSender();
+
+            suspendDequeuing(sender);
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name2)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name3)
+                .build());
+
+            resumeDequeuing(sender);
+            assertThat(getMailQueue()
+                    .republishNotProcessedMails(Instant.now().minus(Duration.ofHours(1)))
+                    .collectList()
+                    .block())
+                .containsExactlyInAnyOrder(name1, name2, name3);
+
+            List<MailQueue.MailQueueItem> items = dequeueFlux.take(Duration.ofSeconds(10)).collectList().block();
+
+            assertThat(items)
+                .extracting(item -> item.getMail().getName())
+                .containsExactlyInAnyOrder(name1, name2, name3);
+        }
+
+        @Test
+        void onlyOldMessagesShouldBeProcessedAfterNotPublishedMailsHaveBeenReprocessed() throws Exception {
+            clock.setInstant(Instant.now().minus(Duration.ofHours(2)));
+            String name1 = "myMail1";
+            String name2 = "myMail2";
+            String name3 = "myMail3";
+            Flux<MailQueue.MailQueueItem> dequeueFlux = Flux.from(getMailQueue().deQueue());
+
+            // Avoid early processing and prefetching
+            Sender sender = rabbitMQExtension.getSender();
+
+            suspendDequeuing(sender);
+
+            getMailQueue().enQueue(defaultMail()
+                    .name(name1)
+                    .build());
+
+            getMailQueue().enQueue(defaultMail()
+                    .name(name2)
+                    .build());
+
+            clock.setInstant(Instant.now());
+            getMailQueue().enQueue(defaultMail()
+                    .name(name3)
+                    .build());
+
+            resumeDequeuing(sender);
+            assertThat(getMailQueue()
+                    .republishNotProcessedMails(Instant.now().minus(Duration.ofHours(1)))
+                    .collectList()
+                    .block())
+                .containsExactlyInAnyOrder(name1, name2);
+
+            List<MailQueue.MailQueueItem> items = dequeueFlux.take(Duration.ofSeconds(10)).collectList().block();
+
+            assertThat(items)
+                    .extracting(item -> item.getMail().getName())
+                    .containsExactlyInAnyOrder(name1, name2);
+        }
+
+        @Test
+        void messagesShouldBeProcessedAfterTwoMailsReprocessing() throws Exception {
+            clock.setInstant(Instant.now().minus(Duration.ofHours(2)));
+            String name1 = "myMail1";
+            String name2 = "myMail2";
+            String name3 = "myMail3";
+            Flux<MailQueue.MailQueueItem> dequeueFlux = Flux.from(getMailQueue().deQueue());
+
+            // Avoid early processing and prefetching
+            Sender sender = rabbitMQExtension.getSender();
+
+            suspendDequeuing(sender);
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name2)
+                .build());
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name3)
+                .build());
+
+            assertThat(getMailQueue()
+                    .republishNotProcessedMails(Instant.now().minus(Duration.ofHours(1)))
+                    .collectList()
+                    .block())
+                .containsExactlyInAnyOrder(name1, name2, name3);
+            resumeDequeuing(sender);
+            assertThat(getMailQueue()
+                    .republishNotProcessedMails(Instant.now().minus(Duration.ofHours(1)))
+                    .collectList()
+                    .block())
+                .containsExactlyInAnyOrder(name1, name2, name3);
+
+            List<MailQueue.MailQueueItem> items = dequeueFlux.take(Duration.ofSeconds(10)).collectList().block();
+
+            assertThat(items)
+                .extracting(item -> item.getMail().getName())
+                .containsExactlyInAnyOrder(name1, name2, name3);
+        }
+
+        @Test
+        void messagesShouldBeProcessedAfterNotPublishedMailsHaveBeenReprocessedAndNewMessagesShouldNotBeLost() throws Exception {
+            clock.setInstant(Instant.now().minus(Duration.ofHours(2)));
+            String name1 = "myMail1";
+            String name2 = "myMail2";
+            String name3 = "myMail3";
+            Flux<MailQueue.MailQueueItem> dequeueFlux = Flux.from(getMailQueue().deQueue());
+
+            // Avoid early processing and prefetching
+            Sender sender = rabbitMQExtension.getSender();
+
+            suspendDequeuing(sender);
+            //mail send when rabbit down
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+            resumeDequeuing(sender);
+
+            //mail send when rabbit is up again and before rebuild
+            clock.setInstant(Instant.now());
+            getMailQueue().enQueue(defaultMail()
+                .name(name3)
+                .build());
+
+            Flux.merge(Mono.fromCallable(() -> {
+                //mail send concurently with rebuild
+                getMailQueue().enQueue(defaultMail()
+                    .name(name2)
+                    .build());
+                return true;
+
+            }), Mono.fromRunnable(() ->
+                assertThat(getMailQueue()
+                        .republishNotProcessedMails(Instant.now().minus(Duration.ofHours(1)))
+                        .collectList()
+                        .block())
+                    .containsOnly(name1)
+            ))
+            .then()
+            .block(Duration.ofSeconds(10));
+
+            List<MailQueue.MailQueueItem> items = dequeueFlux.take(Duration.ofSeconds(10)).collectList().block();
+
+            assertThat(items)
+                .extracting(item -> item.getMail().getName())
+                .containsExactlyInAnyOrder(name1, name2, name3);
         }
 
         private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
@@ -484,6 +657,22 @@ class RabbitMQMailQueueTest {
 
             Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
                 .untilAsserted(() -> assertThat(deadLetteredCount.get()).isEqualTo(1));
+        }
+
+        private void resumeDequeuing(Sender sender) {
+            sender.bindQueue(getMailQueueBindingSpecification()).block();
+        }
+
+        private void suspendDequeuing(Sender sender) {
+            sender.unbindQueue(getMailQueueBindingSpecification()).block();
+        }
+
+        private BindingSpecification getMailQueueBindingSpecification() {
+            MailQueueName mailQueueName = MailQueueName.fromString(getMailQueue().getName().asString());
+            return BindingSpecification.binding()
+                    .exchange(mailQueueName.toRabbitExchangeName().asString())
+                    .queue(mailQueueName.toWorkQueueName().asString())
+                    .routingKey(EMPTY_ROUTING_KEY);
         }
     }
 
