@@ -3,7 +3,7 @@
 The Distributed Server exposes several interfaces allowing the user to write custom extensions in
 order to extend the Distributed Server behavior.
 
-Writing *Mailet* and *Matchers* allows one to supply custom components for the
+Writing *Mailets* and *Matchers* allows one to supply custom components for the
 xref:main:servers:distributed:extend:mail-processing.adoc[Mail Processing] and
 enables to take decisions, and implement your business logic at the transport level.
 
