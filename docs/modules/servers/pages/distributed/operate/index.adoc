@@ -1,6 +1,6 @@
 = Operate the Distributed server
 
-The following pages details how to operate the Distributed server.
+The following pages detail how to operate the Distributed server.
 
 Once you have a Distributed James server up and running you then need to ensure it operates correctly.
 You may also need to perform some operation maintenance or recover from incidents. This section covers
