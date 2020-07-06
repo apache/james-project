@@ -8,7 +8,7 @@ deployments, without needing sharding and protocol aware load balancing.
 This server is:
 
 * Intended for use by experts only
-* Use for large-scale distributed deployments
+* Used for large-scale distributed deployments
 * Is designed for Mail Delivery use cases but can also carry out mail processing
 * The most feature-rich server, but also by far the most complex
 
