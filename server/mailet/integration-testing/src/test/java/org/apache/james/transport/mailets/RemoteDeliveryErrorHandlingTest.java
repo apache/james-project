@@ -46,6 +46,7 @@ import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension.DockerM
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.AtMost;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -70,6 +71,7 @@ public class RemoteDeliveryErrorHandlingTest {
     private static final String LOCALHOST = "localhost";
     private static final MailRepositoryUrl REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/error/remote-delivery/temporary");
     private static final MailRepositoryUrl REMOTE_DELIVERY_PERMANENT_ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/error/remote-delivery/permanent");
+    private static final Integer MAX_EXECUTIONS = 2;
 
     @RegisterExtension
     static MockSmtpServerExtension mockSmtpServerExtension = new MockSmtpServerExtension();
@@ -99,7 +101,12 @@ public class RemoteDeliveryErrorHandlingTest {
                         .addProperty("maxRetries", "1")
                         .addProperty("delayTime", "0")
                         .addProperty("bounceProcessor", "remote-delivery-error")
-                        .matcher(All.class)))
+                        .matcher(AtMost.class)
+                        .matcherCondition(MAX_EXECUTIONS.toString()))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", REMOTE_DELIVERY_PERMANENT_ERROR_REPOSITORY.asString())))
                 .putProcessor(ProcessorConfiguration.builder()
                     .state("remote-delivery-error")
                     .addMailet(MailetConfiguration.builder()
@@ -205,7 +212,6 @@ public class RemoteDeliveryErrorHandlingTest {
     }
 
     @Test
-    @Disabled("We need to count retries")
     void remoteDeliveryShouldStoreTemporaryFailureAsPermanentWhenExceedsMaximumRetries(SMTPMessageSender smtpMessageSender, DockerMockSmtp dockerMockSmtp) throws Exception {
         // Given a failed remote delivery
         dockerMockSmtp.getConfigurationClient()
@@ -224,6 +230,16 @@ public class RemoteDeliveryErrorHandlingTest {
                 .isEqualTo(1));
 
         // When we retry and temporary problem is not solved
+        given()
+            .spec(webAdminApi)
+            .param("action", "reprocess")
+            .param("queue", MailQueueFactory.SPOOL.asString())
+            .param("processor", TRANSPORT_PROCESSOR)
+            .patch("/mailRepositories/" + REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.getPath().urlEncoded() + "/mails");
+        awaitAtMostOneMinute
+            .untilAsserted(() -> assertThat(jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY))
+                .isEqualTo(1));
         given()
             .spec(webAdminApi)
             .param("action", "reprocess")
