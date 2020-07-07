@@ -2692,4 +2692,82 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .satisfies(Throwing.consumer(messageResult -> assertThat(messageResult.hasAttachments()).isFalse()));
         }
     }
+
+    @Nested
+    class RightTests {
+        @BeforeEach
+        void setUp() {
+            session = mailboxManager.createSystemSession(USER_1);
+        }
+
+        @Test
+        void hasRightShouldThrowOnUnknownMailbox() {
+            assertThatThrownBy(() -> mailboxManager.hasRight(
+                    MailboxPath.forUser(USER_1, "notFound"),
+                    MailboxACL.Right.Administer,
+                    session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void listRightsShouldThrowOnUnknownMailbox() {
+            assertThatThrownBy(() -> mailboxManager.listRights(
+                    MailboxPath.forUser(USER_1, "notFound"),
+                    session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void myRightsShouldThrowOnUnknownMailbox() {
+            assertThatThrownBy(() -> mailboxManager.myRights(
+                    MailboxPath.forUser(USER_1, "notFound"),
+                    session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void listRightsForEntryShouldThrowOnUnknownMailbox() {
+            assertThatThrownBy(() -> mailboxManager.listRights(
+                    MailboxPath.forUser(USER_1, "notFound"),
+                    MailboxACL.EntryKey.createUserEntryKey(USER_2),
+                    session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void setRightsShouldNotThrowOnUnknownMailbox() {
+            assertThatCode(() -> mailboxManager.setRights(
+                    MailboxPath.forUser(USER_1, "notFound"),
+                    MailboxACL.EMPTY,
+                    session))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void hasRightShouldThrowOnDeletedMailbox() throws Exception {
+            MailboxId id = mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "deleted"), session).get();
+            mailboxManager.deleteMailbox(id, session);
+
+            assertThatThrownBy(() -> mailboxManager.hasRight(id, MailboxACL.Right.Administer, session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void myRightsShouldThrowOnDeletedMailbox() throws Exception {
+            MailboxId id = mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "deleted"), session).get();
+            mailboxManager.deleteMailbox(id, session);
+
+            assertThatThrownBy(() -> Mono.from(mailboxManager.myRights(id, session)).blockOptional())
+                .hasCauseInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void setRightsShouldThrowOnDeletedMailbox() throws Exception {
+            MailboxId id = mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "deleted"), session).get();
+            mailboxManager.deleteMailbox(id, session);
+
+            assertThatThrownBy(() -> mailboxManager.setRights(id, MailboxACL.EMPTY, session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+    }
 }
