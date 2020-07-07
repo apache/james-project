@@ -1,5 +1,7 @@
 * xref:index.adoc[]
 ** xref:demo.adoc[]
+*** xref:servers:5-minute-demo.adoc[]
+*** xref:servers:15-minute-demo.adoc[]
 ** xref:local.adoc[]
 ** xref:redundant.adoc[]
 ** xref:distributed.adoc[]

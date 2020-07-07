@@ -4,10 +4,10 @@
 The James Demo Server sets up  a light-weight, disposable mail server
 so you can try it out easily on your own local machine.
 
- * xref:main:servers:5-minute-demo.adoc[Short demo] (~5 minutes)
+ * xref:servers:5-minute-demo.adoc[Short demo] (~5 minutes)
    ** Set up a demo server
    ** Create a new user with the CLI
- * xref:main:servers:15-minute-demo.adoc[Long demo] (~15 minutes)
+ * xref:servers:15-minute-demo.adoc[Long demo] (~15 minutes)
    ** Same steps as above
    ** Interact with the server via the Admin API
    ** Test the server with an email client
