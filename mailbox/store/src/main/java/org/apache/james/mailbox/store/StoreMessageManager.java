@@ -819,7 +819,7 @@ public class StoreMessageManager implements MessageManager {
 
     private Iterator<MailboxMessage> retrieveOriginalRows(MessageRange set, MailboxSession session) throws MailboxException {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
-        return messageMapper.findInMailbox(mailbox, set, FetchType.Full, UNLIMITED);
+        return messageMapper.findInMailbox(mailbox, set, FetchType.Metadata, UNLIMITED);
     }
 
     private SortedMap<MessageUid, MessageMetaData> collectMetadata(Iterator<MessageMetaData> ids) {
