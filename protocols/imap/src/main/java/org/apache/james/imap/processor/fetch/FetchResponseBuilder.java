@@ -47,6 +47,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.MessageRange;
@@ -125,21 +126,9 @@ public final class FetchResponseBuilder {
             // message. If so, update the flags, and ensure that a flags response is
             // included in the response.
             final MailboxSession mailboxSession = session.getMailboxSession();
-            boolean ensureFlagsResponse = false;
-            final Flags resultFlags = result.getFlags();
-            if (fetch.isSetSeen() && !resultFlags.contains(Flags.Flag.SEEN)) {
-                mailbox.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(resultUid), mailboxSession);
-                resultFlags.add(Flags.Flag.SEEN);
-                ensureFlagsResponse = true;
-            }
 
             // FLAGS response
-            if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
-                if (selected.isRecent(resultUid)) {
-                    resultFlags.add(Flags.Flag.RECENT);
-                }
-                setFlags(resultFlags);
-            }
+            addFlags(fetch, mailbox, selected, resultUid, mailboxSession, result.getFlags());
 
             // INTERNALDATE response
             if (fetch.contains(Item.INTERNAL_DATE)) {
@@ -183,23 +172,74 @@ public final class FetchResponseBuilder {
                     bodystructure = new MimeDescriptorStructure(true, result.getMimeDescriptor(), envelopeBuilder);
                 }
             }
-            // UID response
-            if (fetch.contains(Item.UID)) {
-                setUid(resultUid);
-            }
 
+            addUid(fetch, resultUid);
 
-            if (fetch.contains(Item.MODSEQ)) {
-                long changedSince = fetch.getChangedSince();
-                if (changedSince != -1) {
-                    // check if the modsequence if higher then the one specified by the CHANGEDSINCE option
-                    if (changedSince < result.getModSeq().asLong()) {
-                        setModSeq(result.getModSeq());
-                    }
-                } else {
-                    setModSeq(result.getModSeq());
+            addModSeq(fetch, result.getModSeq());
+
+            return build();
+        });
+    }
+
+    private void addUid(FetchData fetch, MessageUid resultUid) {
+        // UID response
+        if (fetch.contains(Item.UID)) {
+            setUid(resultUid);
+        }
+    }
+
+    private void addModSeq(FetchData fetch, ModSeq modSeq) {
+        if (fetch.contains(Item.MODSEQ)) {
+            long changedSince = fetch.getChangedSince();
+            if (changedSince != -1) {
+                // check if the modsequence if higher then the one specified by the CHANGEDSINCE option
+                if (changedSince < modSeq.asLong()) {
+                    setModSeq(modSeq);
                 }
+            } else {
+                setModSeq(modSeq);
             }
+        }
+    }
+
+    private void addFlags(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) throws MailboxException {
+        boolean ensureFlagsResponse = false;
+        final Flags resultFlags = flags;
+        if (fetch.isSetSeen() && !resultFlags.contains(Flags.Flag.SEEN)) {
+            mailbox.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(resultUid), mailboxSession);
+            resultFlags.add(Flags.Flag.SEEN);
+            ensureFlagsResponse = true;
+        }
+
+        if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
+            if (selected.isRecent(resultUid)) {
+                resultFlags.add(Flags.Flag.RECENT);
+            }
+            setFlags(resultFlags);
+        }
+    }
+
+    public FetchResponse build(FetchData fetch, ComposedMessageIdWithMetaData result, MessageManager mailbox, ImapSession session) throws MessageRangeException, MailboxException {
+        final SelectedMailbox selected = session.getSelected();
+        final MessageUid resultUid = result.getComposedMessageId().getUid();
+        return selected.msn(resultUid).fold(() -> {
+            throw new MessageRangeException("No such message found with uid " + resultUid);
+        }, msn -> {
+
+            reset(msn);
+            // setMsn(resultMsn);
+
+            // Check if this fetch will cause the "SEEN" flag to be set on this
+            // message. If so, update the flags, and ensure that a flags response is
+            // included in the response.
+            final MailboxSession mailboxSession = session.getMailboxSession();
+            // FLAGS response
+            addFlags(fetch, mailbox, selected, resultUid, mailboxSession, result.getFlags());
+            // UID response
+            addUid(fetch, resultUid);
+
+
+            addModSeq(fetch, result.getModSeq());
             return build();
         });
     }

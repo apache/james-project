@@ -19,6 +19,7 @@
 package org.apache.james.mailbox;
 
 import static org.apache.james.mailbox.MailboxManager.RenameOption.RENAME_SUBSCRIPTIONS;
+import static org.apache.james.mailbox.MessageManager.FlagsUpdateMode.REPLACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -63,6 +64,7 @@ import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.mock.DataProvisioner;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -2662,6 +2664,62 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session).get();
             inboxManager = mailboxManager.getMailbox(inbox, session);
+        }
+
+        @Test
+        void listMessagesMetadataShouldReturnEmptyWhenNoMessages() {
+            assertThat(Flux.from(inboxManager.listMessagesMetadata(MessageRange.all(), session))
+                .collectList().block())
+                .isEmpty();
+        }
+
+        @Test
+        void listMessagesMetadataShouldReturnAppendedMessage() throws Exception {
+            Flags flags = new Flags(Flags.Flag.DELETED);
+            ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
+                .withFlags(flags)
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachmentsApi.eml")), session).getId();
+
+            assertThat(Flux.from(inboxManager.listMessagesMetadata(MessageRange.all(), session))
+                    .collectList().block())
+                .hasSize(1)
+                .allSatisfy(ids -> SoftAssertions.assertSoftly(softly -> {
+                    softly.assertThat(ids.getComposedMessageId().getMailboxId()).isEqualTo(composeId.getMailboxId());
+                    softly.assertThat(ids.getComposedMessageId().getUid()).isEqualTo(composeId.getUid());
+                    softly.assertThat(ids.getFlags()).isEqualTo(flags);
+                }));
+        }
+
+        @Test
+        void listMessagesMetadataShouldReturnUpdatedMessage() throws Exception {
+            Flags flags = new Flags(Flags.Flag.SEEN);
+            ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
+                .withFlags(new Flags(Flags.Flag.DELETED))
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachmentsApi.eml")), session).getId();
+
+            inboxManager.setFlags(flags, REPLACE, MessageRange.all(), session);
+
+            assertThat(Flux.from(inboxManager.listMessagesMetadata(MessageRange.all(), session))
+                    .collectList().block())
+                .hasSize(1)
+                .allSatisfy(ids -> SoftAssertions.assertSoftly(softly -> {
+                    softly.assertThat(ids.getComposedMessageId().getMailboxId()).isEqualTo(composeId.getMailboxId());
+                    softly.assertThat(ids.getComposedMessageId().getUid()).isEqualTo(composeId.getUid());
+                    softly.assertThat(ids.getFlags()).isEqualTo(flags);
+                }));
+        }
+
+        @Test
+        void listMessagesMetadataShouldNotReturnDeletedMessage() throws Exception {
+            inboxManager.appendMessage(AppendCommand.builder()
+                .withFlags(new Flags(Flags.Flag.DELETED))
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachmentsApi.eml")), session).getId();
+
+            inboxManager.expunge(MessageRange.all(), session);
+
+            assertThat(Flux.from(inboxManager.listMessagesMetadata(MessageRange.all(), session))
+                    .collectList().block())
+                .isEmpty();
         }
 
         @Test
