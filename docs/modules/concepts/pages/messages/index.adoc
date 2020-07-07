@@ -10,5 +10,5 @@ do not know each other.
 The two most important standards upon which today's emails are based
 are:
 
- * xref:mail/messages/imf.adoc[Internet Mail Format] (IMF)
- * xref:mail/messages/mime.adoc[Multipurpose Internet Mail Extensions] (MIME)
+ * xref:messages/imf.adoc[Internet Mail Format] (IMF)
+ * xref:messages/mime.adoc[Multipurpose Internet Mail Extensions] (MIME)

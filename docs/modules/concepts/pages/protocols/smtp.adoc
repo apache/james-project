@@ -1,0 +1,131 @@
+= Simple Mail Transfer Protocol (SMTP)
+:navtitle: SMTP
+
+== Overview
+
+When the original specification for Simple Mail Transfer Protocol, or SMTP, 
+was published almost 40 years ago together with 
+xref:messages/imf.adoc[IMF], email as we know it today was born.
+
+
+
+== Specifications
+
+=== RFC821
+
+https://tools.ietf.org/html/rfc821[RFC821] ("Simple Mail Transfer Protocol")
+was the original SMTP specification published in 1982. 
+It was obsoleted by <<RFC2821>> in 2001.
+
+=== RFC2821
+
+https://tools.ietf.org/html/rfc2821[RFC2821] ("Simple Mail Transfer Protocol") replaced
+<<RFC821>>. It was itself replaced by <<RFC5321>> in 2008.
+
+=== RFC 5321
+
+https://tools.ietf.org/html/rfc5321[RFC5321] is the currently used standard for
+"Simple Mail Transfer Protocol", or "SMTP". Published in 2008, it is "a specification of the basic 
+protocol for Internet electronic mail transport". If you are interested in all
+the gory details, we recommend that you read this document.
+
+This specification has many dependencies with xref:messages/imf.adoc[IMF],
+xref:messages/mime.adoc[MIME], and other technical concepts, which can quickly
+become utterly confusing.
+Here, we provide a very short and simplified description of those portions of the 
+specification that we felt were interesting enough to repeat here.
+
+As the spec mentions, "SMTP transports a mail object",  a mail object being described
+as an object that contains both an envelope and content. An SMTP client connects
+to a server and communicates via a session. Both client and server provide a
+mail transport service, and are therefore act as "Mail Transfer Agents", or
+"MTAs". A mail originates and terminates with a "Mail User Agent" ("MUA").
+On the originating side, a MUA may, for instance, collect mail to be transmitted
+by a user and hand it off to an MTA. On the terminating side, an MTA would 
+hand a mail off to an MUA.
+
+"SMTP sessions are stateful, with both parties carefully maintaining a
+common view of the current state." The session is initiated by the client,
+which establishes a two-way channel to an SMTP server. The session must either
+close successful (or with a failure message), else delivery is considered to
+have failed.
+
+
+
+== Related Concepts
+
+SMTP relates to:
+
+ * *xref:messages/index.adoc[Email messages]*, in that the SMTP protocol exists to transfer
+   messages from one host to another
+ * *xref:glossary.adoc#mta[MTA]*, in that the very nature of SMTP is about specifying how a message
+   gets transferred from one MTA to another
+
+
+
+== Try It!
+
+You can try speaking SMTP with your demo server by connecting to it using telnet. It would not work on a real world server as it would requires encrypted traffic. See "using openssl to talk to your server"
+
+Requirements:
+
+ * Run the long demo (without stopping)
+ * Telnet
+
+Approximate duration: 5 minutes
+
+====
+Note: extra lines are inserted below to help show you what you need to type.
+====
+
+[source,telnet]
+----
+$ telnet 127.0.0.1 25 <1>
+
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+220 JAMES Linagora's SMTP awesome Server
+
+ehlo test <2>
+
+250-9a2fe463e592 Hello test [172.17.0.1])
+250-PIPELINING
+250-ENHANCEDSTATUSCODES
+250 8BITMIME
+
+mail from: <user02@james.local> <3>
+
+250 2.1.0 Sender <user02@james.local> OK
+
+rcpt to: <user01@james.local> <4>
+
+250 2.1.5 Recipient <user01@james.local> OK
+
+data <5>
+
+354 Ok Send data ending with <CRLF>.<CRLF>
+
+Subject: Test Message <5>
+<6>
+This is just a test. <7>
+. <8>
+
+250 2.6.0 Message received
+
+quit <9>
+----
+<1> Connect to the James server using the SMTP protocol via telnet.
+<2> Initiate the SMTP session.
+<3> Indicate that you want to send a mail from user02@james.local.
+<4> Indicate that the mail should be sent to user01@james.local.
+<5> Enter the subject.
+<6> Enter a blank line.
+<7> Enter some text. You can enter multiples lines if you like.
+<8> When you have completed the message, enter a line with only a "." and no other text.
+<9> End the session.
+
+If you set up Thunderbird to connect to the server, you can confirm that the mail
+has indeed arrived in the mailbox of user01@james.local.
+
+Pretty cool! Good thing we have James so we don't have to always send emails manually.
