@@ -5,11 +5,11 @@
 
 https://en.wikipedia.org/wiki/Internet_Message_Access_Protocol[Internet Message Access Protocol],
 or IMAP, is a protocol used by email clients to retrieve 
-xref:messages/index.adoc[email messages] from a xref:storage/index.adoc[mail server].
+xref:messages/index.adoc[email messages] from a xref:glossary.adoc#email_server[mail server].
 One could say that it is effectively in competition with xref:protocols/pop.adoc[POP]
 because it accomplishes a function similar in nature, and most clients will force you
 to choose one or the other..
-These days, the natural choice of protocol tends to be IMAP over POP.
+These days, the natural choice of protocol tends to be IMAP rather than POP.
 
 The main difference between IMAP and POP is that messages are kept on the server, which
 keeps a kind of master reference. Instead of transferring the message to the client,
@@ -26,8 +26,6 @@ will be stored on the server.
 == Specifications
 
 === IMAP
-
-==== Original IMAP
 
 Apparently, no official specification exists for the original IMAP.
 It became a specification with the publication of <<IMAP2>>
@@ -104,20 +102,17 @@ For brevity, we simply refence a number of extentions to RFC3501:
 IMAP is related to...
 
  * *xref:protocols/pop.adoc[POP]* as a "competing" protocol
- * *Email clients*, as the client will provide the functionality of
+ * *xref:glossary.adoc#email_client[Email clients]*, as the client will provide the functionality of
    an IMAP Client and connect to the IMAP Server
  * *xref:protocols/smtp.adoc[SMTP]*, in that messages will normally be
    delivered to the IMAP Server via SMTP.
 
 
-== James Model
-
-(TODO)
-
 
 == Try It!
 
-You can connect manually to the James IMAP server using telnet.
+You can connect manually to James using the IMAP protocol by opening a
+telnet session.
 
 Requirements:
 

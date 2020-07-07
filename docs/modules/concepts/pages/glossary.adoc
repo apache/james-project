@@ -1,5 +1,6 @@
 = Glossary
 
+[[email_client]]
 Email Client::
 Any software application that acts as a POP Client or an IMAP Client.
 
@@ -7,9 +8,10 @@ xref:messages/imf.adoc[IMF]::
 *Internet Message Format* (IMF) is the base specification that defines the
 syntax of an email message.
 
-Email Server::
+[[email_server]]
+Email Server (or Mail Server)::
 Any host that contains a sofware application that acts as a POP Server, an
-Email Server, or an MTA.
+IMAP Server, or an MTA.
 
 IMAP::
 
@@ -28,6 +30,7 @@ xref:messages/mime.adoc[MIME]::
 *Multipurpose Internet Mail Extension* (MIME) is a specification that extends
 IMF, defining most of the "advanced" features of email.
 
+[[mta]]
 MTA::
 A *Mail Transfer Agent* (MTA) is a host that is capable of providing a mail
 transport service compliant with the SMTP protocol.

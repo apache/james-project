@@ -122,15 +122,9 @@ still-current protocol.
 POP relates to...
 
  * *xref:protocols/imap.adoc[IMAP]* as a "competing" protocol
- * *Email clients*, in that the client acts as a POP Client
+ * *xref:glossary.adoc#email_client[Email clients]*, in that the client acts as a POP Client
  * *xref:storage/index.adoc[Storage]* in that messages are stored temporarily on
    a ????  while awaiting transfer to the client
  * *xref:protocols/smtp.adoc[SMTP]*, in that messages will normally be
    delivered to the IMAP Server via SMTP.
-
-
-== James Model
-
-(TODO)
-
 

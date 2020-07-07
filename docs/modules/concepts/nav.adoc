@@ -8,6 +8,7 @@
 *** xref:protocols/pop.adoc[]
 *** xref:protocols/imap.adoc[]
 *** xref:protocols/jmap.adoc[]
+*** xref:protocols/esmtp.adoc[]
 *** xref:protocols/lmtp.adoc[]
 ** xref:storage/index.adoc[]
 ** xref:processing/index.adoc[]

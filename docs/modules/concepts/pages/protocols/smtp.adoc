@@ -25,7 +25,7 @@ https://tools.ietf.org/html/rfc2821[RFC2821] ("Simple Mail Transfer Protocol") r
 === RFC 5321
 
 https://tools.ietf.org/html/rfc5321[RFC5321] is the currently used standard for
-"Simple Mail Transfer Protocol", or "SMTP". It is "a specification of the basic 
+"Simple Mail Transfer Protocol", or "SMTP". Published in 2008, it is "a specification of the basic 
 protocol for Internet electronic mail transport". If you are interested in all
 the gory details, we recommend that you read this document.
 
@@ -58,14 +58,8 @@ SMTP relates to:
 
  * *xref:messages/index.adoc[Email messages]*, in that the SMTP protocol exists to transfer
    messages from one host to another
- * *MTA*, in that the very nature of SMTP is about specifying how a message
+ * *xref:glossary.adoc#mta[MTA]*, in that the very nature of SMTP is about specifying how a message
    gets transferred from one MTA to another
-
-
-== James Model
-
-(TODO: explain how all this is modeled in James)
-
 
 
 

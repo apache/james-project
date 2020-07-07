@@ -3,24 +3,30 @@
 
 == Overview
 
+https://en.wikipedia.org/wiki/Local_Mail_Transfer_Protocol[Local Mail Transfer Protocol] ("LMTP")
+is
+
+From <<RFC2033>>:
+
+   Although LMTP is an alternative protocol to ESMTP, it uses (with a
+   few changes) the syntax and semantics of ESMTP.  This design permits
+   LMTP to utilize the extensions defined for ESMTP.  LMTP should be
+   used only by specific prior arrangement and configuration, and it
+   MUST NOT be used on TCP port 25. 
 
 
 == Specifications
 
-=== RFCXXX
+=== RFC2033
+
+https://tools.ietf.org/html/rfc2033[RFC2033] ("Local Mail Transfer Protocol") was published
+in 1996, and defines a simplified protocol for local mail delivery mainly inspired by
+xref:protocols/esmtp.adoc[ESMTP]. It is the first, last, and only specification of its kind.
 
 
 == Related Concepts
 
 LMTP relates to:
 
- * 
- * 
-
-
-== James Model
-
-(TODO: explain how all this is modeled in James)
-
-
+ * *xref:protocols/esmtp.adoc[ESMTP]*, as it is a derivative thereof
 
