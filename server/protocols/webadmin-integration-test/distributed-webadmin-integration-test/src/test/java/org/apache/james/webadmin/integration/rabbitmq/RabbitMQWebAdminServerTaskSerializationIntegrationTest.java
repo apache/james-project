@@ -797,4 +797,25 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .mailboxPath(MailboxPath.forUser(Username.of(USERNAME), "Important-mailbox"))
             .build();
     }
+
+    @Test
+    void republishNotProcessedMailsOnSpoolShouldComplete() {
+        String taskId = with()
+            .basePath("/mailQueues/spool")
+            .queryParam("action", "RepublishNotProcessedMails")
+            .queryParam("olderThan", "2d")
+        .post()
+            .jsonPath()
+        .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(taskId))
+            .body("type", is("republish-not-processed-mails"))
+            .body("additionalInformation.nbRequeuedMails", is(0));
+    }
 }

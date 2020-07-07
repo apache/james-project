@@ -27,10 +27,10 @@
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-webadmin-mailqueue</artifactId>
+    <artifactId>james-server-webadmin-rabbitmq</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Web Admin :: MailQueue</name>
+    <name>Apache James :: Server :: Web Admin :: RabbitMQ</name>
 
     <dependencies>
         <dependency>
@@ -56,7 +56,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-queue-memory</artifactId>
+            <artifactId>james-server-queue-rabbitmq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-testing</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -65,7 +69,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-task-memory</artifactId>
+            <artifactId>james-server-task-distributed</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -77,6 +81,10 @@
             <artifactId>james-server-webadmin-core</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-webadmin-mailqueue</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -129,7 +137,7 @@
                                 <version>v1</version>
                             </info>
                             <swaggerDirectory>${project.build.directory}</swaggerDirectory>
-                            <swaggerFileName>webadmin-mailqueue</swaggerFileName>
+                            <swaggerFileName>webadmin-rabbitmq</swaggerFileName>
                         </apiSource>
                     </apiSources>
                 </configuration>

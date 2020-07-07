@@ -42,6 +42,7 @@
         <module>webadmin-mailbox-deleted-message-vault</module>
         <module>webadmin-mailqueue</module>
         <module>webadmin-mailrepository</module>
+        <module>webadmin-rabbitmq</module>
         <module>webadmin-swagger</module>
     </modules>
 

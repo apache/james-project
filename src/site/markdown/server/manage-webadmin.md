@@ -2900,6 +2900,7 @@ The scheduled task will have the following type `reprocessing-one` and the follo
  - [Deleting mails from a mail queue](#Deleting_mails_from_a_mail_queue)
  - [Clearing a mail queue](#Clearing_a_mail_queue)
  - [Flushing mails from a mail queue](#Flushing_mails_from_a_mail_queue)
+ - [RabbitMQ republishing a mail queue from cassandra](#RabbitMQ_republishing_a_mail_queue_from_cassandra)
 
 ### Listing mail queues
 
@@ -3048,6 +3049,40 @@ Response codes:
  - 204: Success (No content)
  - 400: Invalid request
  - 404: The mail queue does not exist
+ 
+### RabbitMQ republishing a mail queue from cassandra
+
+```
+curl -XPOST 'http://ip:port/mailQueues/{mailQueueName}?action=RepublishNotProcessedMails&olderThan=1d'
+```
+
+This method is specific to the distributed flavor of James, which relies on Cassandra and RabbitMQ for implementing a mail queue.
+In case of a RabbitMQ crash resulting in a loss of messages, this task can be launched to repopulate the
+`mailQueueName` queue in RabbitMQ using the information stored in Cassandra.
+
+The `olderThan` parameter is mandatory. It filters the mails to be restored, by taking into account only
+the mails older than the given value.
+The expected value should be expressed in the following format: `Nunit`.
+`N` should be strictly positive.
+`unit` could be either in the short form (`h`, `d`, `w`, etc.), or in the long form (`day`, `week`, `month`, etc.).
+
+Examples:
+
+ - `5h`
+ - `7d`
+ - `1y`
+
+Response codes:
+
+ - 201: Task created
+ - 400: Invalid request
+
+ The response body contains the id of the republishing task.
+ ```
+ {
+     "taskId": "a650a66a-5984-431e-bdad-f1baad885856"
+ }
+ ```
 
 ## Administrating DLP Configuration
 
