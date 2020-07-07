@@ -588,7 +588,7 @@ class MappingRoutesTest {
         .body("statusCode", is(400))
         .body("type", is("InvalidArgument"))
         .body("message", is("Invalid arguments supplied in the user request"))
-        .body("details", is("The username should not contain multiple domain delimiter."));
+        .body("details", is("The username should not contain multiple domain delimiter. Value: alice123@domain@domain.tld"));
     }
 
     @Test

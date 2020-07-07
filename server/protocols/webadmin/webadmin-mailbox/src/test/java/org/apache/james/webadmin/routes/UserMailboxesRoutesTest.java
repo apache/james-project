@@ -1239,7 +1239,7 @@ class UserMailboxesRoutesTest {
                     .body("statusCode", Matchers.is(400))
                     .body("type", Matchers.is("InvalidArgument"))
                     .body("message", Matchers.is("Invalid arguments supplied in the user request"))
-                    .body("details", Matchers.is("The username should not contain multiple domain delimiter."));
+                    .body("details", Matchers.is("The username should not contain multiple domain delimiter. Value: bad@bad@bad"));
             }
         }
 

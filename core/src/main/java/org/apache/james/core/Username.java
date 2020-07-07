@@ -36,7 +36,7 @@ public class Username {
 
     public static Username of(String username) {
         Preconditions.checkArgument(username != null, "username should not be null or empty");
-        Preconditions.checkArgument(!username.trim().isEmpty(), "username should not be null or empty");
+        Preconditions.checkArgument(!username.trim().isEmpty(), "username should not be null or empty after being trimmed");
         Preconditions.checkArgument(username.length() <= MAXIMUM_MAIL_ADDRESS_LENGTH,
             "username length should not be longer than %s characters", MAXIMUM_MAIL_ADDRESS_LENGTH);
 
@@ -47,7 +47,7 @@ public class Username {
             case 2:
                 return fromLocalPartWithDomain(parts.get(0), parts.get(1));
         }
-        throw new IllegalArgumentException("The username should not contain multiple domain delimiter.");
+        throw new IllegalArgumentException("The username should not contain multiple domain delimiter. Value: " + username);
     }
 
     public static Username fromLocalPartWithDomain(String localPart, String domain) {
@@ -82,8 +82,8 @@ public class Username {
 
     private Username(String localPart, Optional<Domain> domainPart) {
         Preconditions.checkNotNull(localPart);
-        Preconditions.checkArgument(!localPart.isEmpty(), "username should not be empty");
-        Preconditions.checkArgument(!localPart.contains("@"), "username can not contain domain delimiter");
+        Preconditions.checkArgument(!localPart.isEmpty(), "username local part should not be empty");
+        Preconditions.checkArgument(!localPart.contains("@"), "username local part can not contain domain delimiter, got %s", localPart);
 
         this.localPart = localPart.toLowerCase(Locale.US);
         this.domainPart = domainPart;
