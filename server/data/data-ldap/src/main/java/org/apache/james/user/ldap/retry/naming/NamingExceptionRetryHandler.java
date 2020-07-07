@@ -18,20 +18,20 @@
  *
  */
 
-package org.apache.james.util.retry.naming;
+package org.apache.james.user.ldap.retry.naming;
 
 import javax.naming.NamingException;
 
-import org.apache.james.util.retry.ExceptionRetryHandler;
-import org.apache.james.util.retry.api.ExceptionRetryingProxy;
-import org.apache.james.util.retry.api.RetrySchedule;
+import org.apache.james.user.ldap.retry.ExceptionRetryHandler;
+import org.apache.james.user.ldap.retry.api.ExceptionRetryingProxy;
+import org.apache.james.user.ldap.retry.api.RetrySchedule;
 
 /**
  * Abstract class <code>NamingExceptionRetryHandler</code> narrows the set of Exceptions throwable 
  * by <code>perform</code> to <code>NamingException</code> and its subclasses.
  * <p><code>RuntimeException</code>s are <strong>not</strong> retried.
  * 
- * @see org.apache.james.user.ldap.ExceptionRetryHandler
+ * @see org.apache.james.user.ldap.retry.ExceptionRetryHandler
  * 
  */
 public abstract class NamingExceptionRetryHandler extends ExceptionRetryHandler {

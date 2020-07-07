@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.retry;
+package org.apache.james.user.ldap.retry;
 
 public interface FaultyService {
     String faultyService();

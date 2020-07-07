@@ -18,7 +18,7 @@
  *
  */
 
-package org.apache.james.util.retry.naming;
+package org.apache.james.user.ldap.retry.naming;
 
 import java.util.Hashtable;
 
@@ -33,15 +33,16 @@ import javax.naming.NamingException;
 import javax.naming.NoInitialContextException;
 import javax.naming.ServiceUnavailableException;
 
-import org.apache.james.util.retry.api.ExceptionRetryingProxy;
-import org.apache.james.util.retry.api.RetrySchedule;
+import org.apache.james.user.ldap.retry.ExceptionRetryHandler;
+import org.apache.james.user.ldap.retry.api.ExceptionRetryingProxy;
+import org.apache.james.user.ldap.retry.api.RetrySchedule;
 
 /**
  * <code>RetryingContext</code> retries the methods defined by <code>javax.naming.Context</code>
  * according to the specified schedule. 
  * 
- * @see org.apache.james.util.retry.ExceptionRetryHandler
- * @see org.apache.james.util.retry.api.ExceptionRetryingProxy
+ * @see ExceptionRetryHandler
+ * @see org.apache.james.user.ldap.retry.api.ExceptionRetryingProxy
  * @see javax.naming.Context
  */
 public abstract class RetryingContext implements Context, ExceptionRetryingProxy {

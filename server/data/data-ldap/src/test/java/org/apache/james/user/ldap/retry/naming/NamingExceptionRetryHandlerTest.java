@@ -17,16 +17,16 @@
  *   under the License.
  *
  */
-package org.apache.james.util.retry.naming;
+package org.apache.james.user.ldap.retry.naming;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
 
-import org.apache.james.util.retry.api.ExceptionRetryingProxy;
-import org.apache.james.util.retry.api.RetryHandler;
-import org.apache.james.util.retry.api.RetrySchedule;
+import org.apache.james.user.ldap.retry.api.ExceptionRetryingProxy;
+import org.apache.james.user.ldap.retry.api.RetryHandler;
+import org.apache.james.user.ldap.retry.api.RetrySchedule;
 import org.junit.jupiter.api.Test;
 
 class NamingExceptionRetryHandlerTest {

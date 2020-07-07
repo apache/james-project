@@ -18,12 +18,12 @@
  *
  */
 
-package org.apache.james.util.retry.naming;
+package org.apache.james.user.ldap.retry.naming;
 
 import javax.naming.NamingException;
 
-import org.apache.james.util.retry.api.ExceptionRetryingProxy;
-import org.apache.james.util.retry.api.RetrySchedule;
+import org.apache.james.user.ldap.retry.api.ExceptionRetryingProxy;
+import org.apache.james.user.ldap.retry.api.RetrySchedule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,11 +17,11 @@
  *   under the License.
  *
  */
-package org.apache.james.util.retry;
+package org.apache.james.user.ldap.retry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.util.retry.api.RetrySchedule;
+import org.apache.james.user.ldap.retry.api.RetrySchedule;
 import org.junit.jupiter.api.Test;
 
 class DoublingRetryScheduleTest {

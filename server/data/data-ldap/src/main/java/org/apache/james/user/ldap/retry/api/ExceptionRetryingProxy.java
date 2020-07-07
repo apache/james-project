@@ -18,7 +18,7 @@
  *
  */
 
-package org.apache.james.util.retry.api;
+package org.apache.james.user.ldap.retry.api;
 
 
 /**

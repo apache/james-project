@@ -18,7 +18,7 @@
  *
  */
 
-package org.apache.james.util.retry.naming.ldap;
+package org.apache.james.user.ldap.retry.naming.ldap;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
@@ -27,16 +27,17 @@ import javax.naming.ldap.ExtendedRequest;
 import javax.naming.ldap.ExtendedResponse;
 import javax.naming.ldap.LdapContext;
 
-import org.apache.james.util.retry.api.RetrySchedule;
-import org.apache.james.util.retry.naming.LoggingRetryHandler;
-import org.apache.james.util.retry.naming.directory.RetryingDirContext;
+import org.apache.james.user.ldap.retry.ExceptionRetryHandler;
+import org.apache.james.user.ldap.retry.api.RetrySchedule;
+import org.apache.james.user.ldap.retry.naming.LoggingRetryHandler;
+import org.apache.james.user.ldap.retry.naming.directory.RetryingDirContext;
 
 /**
  * <code>RetryingLdapContext</code> retries the methods defined by <code>javax.naming.ldap.LdapContext</code>
  * according to the specified schedule. 
  * 
- * @see org.apache.james.util.retry.ExceptionRetryHandler
- * @see org.apache.james.util.retry.api.ExceptionRetryingProxy
+ * @see ExceptionRetryHandler
+ * @see org.apache.james.user.ldap.retry.api.ExceptionRetryingProxy
  * @see javax.naming.ldap.LdapContext
  */
 public abstract class RetryingLdapContext extends RetryingDirContext implements LdapContext {

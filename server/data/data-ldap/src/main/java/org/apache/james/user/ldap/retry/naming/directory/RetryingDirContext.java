@@ -18,7 +18,7 @@
  *
  */
 
-package org.apache.james.util.retry.naming.directory;
+package org.apache.james.user.ldap.retry.naming.directory;
 
 import javax.naming.Context;
 import javax.naming.Name;
@@ -30,16 +30,17 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
-import org.apache.james.util.retry.api.RetrySchedule;
-import org.apache.james.util.retry.naming.LoggingRetryHandler;
-import org.apache.james.util.retry.naming.RetryingContext;
+import org.apache.james.user.ldap.retry.ExceptionRetryHandler;
+import org.apache.james.user.ldap.retry.api.RetrySchedule;
+import org.apache.james.user.ldap.retry.naming.LoggingRetryHandler;
+import org.apache.james.user.ldap.retry.naming.RetryingContext;
 
 /**
  * <code>RetryingDirContext</code> retries the methods defined by <code>javax.naming.directory.DirContext</code>
  * according to the specified schedule. 
  * 
- * @see org.apache.james.util.retry.ExceptionRetryHandler
- * @see org.apache.james.util.retry.api.ExceptionRetryingProxy
+ * @see ExceptionRetryHandler
+ * @see org.apache.james.user.ldap.retry.api.ExceptionRetryingProxy
  * @see javax.naming.directory.DirContext
  */
 public abstract class RetryingDirContext extends RetryingContext implements DirContext {

@@ -18,9 +18,9 @@
  *
  */
 
-package org.apache.james.util.retry;
+package org.apache.james.user.ldap.retry;
 
-import org.apache.james.util.retry.api.RetrySchedule;
+import org.apache.james.user.ldap.retry.api.RetrySchedule;
 
 
 /**
