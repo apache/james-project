@@ -22,7 +22,7 @@ package org.apache.james.mailbox.cassandra.mail.utils;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -33,24 +33,24 @@ public class FlagsUpdateStageResult {
         return new FlagsUpdateStageResult(ImmutableList.of(), ImmutableList.of(updatedFlags));
     }
 
-    public static FlagsUpdateStageResult fail(MessageUid uid) {
-        return new FlagsUpdateStageResult(ImmutableList.of(uid), ImmutableList.of());
+    public static FlagsUpdateStageResult fail(ComposedMessageId ids) {
+        return new FlagsUpdateStageResult(ImmutableList.of(ids), ImmutableList.of());
     }
 
     public static FlagsUpdateStageResult none() {
         return new FlagsUpdateStageResult(ImmutableList.of(), ImmutableList.of());
     }
 
-    private final ImmutableList<MessageUid> failed;
+    private final ImmutableList<ComposedMessageId> failed;
     private final ImmutableList<UpdatedFlags> succeeded;
 
     @VisibleForTesting
-    FlagsUpdateStageResult(ImmutableList<MessageUid> failed, ImmutableList<UpdatedFlags> succeeded) {
+    FlagsUpdateStageResult(ImmutableList<ComposedMessageId> failed, ImmutableList<UpdatedFlags> succeeded) {
         this.failed = failed;
         this.succeeded = succeeded;
     }
 
-    public List<MessageUid> getFailed() {
+    public List<ComposedMessageId> getFailed() {
         return failed;
     }
 
@@ -60,7 +60,7 @@ public class FlagsUpdateStageResult {
 
     public FlagsUpdateStageResult merge(FlagsUpdateStageResult other) {
         return new FlagsUpdateStageResult(
-            ImmutableList.<MessageUid>builder()
+            ImmutableList.<ComposedMessageId>builder()
                 .addAll(this.failed)
                 .addAll(other.failed)
                 .build(),

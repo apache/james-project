@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static org.apache.james.util.ReactorUtils.publishIfPresent;
-
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -333,11 +331,10 @@ public class CassandraMessageMapper implements MessageMapper {
         return globalResult;
     }
 
-    private Mono<FlagsUpdateStageResult> retryUpdatesStage(CassandraId mailboxId, FlagsUpdateCalculator flagsUpdateCalculator, List<MessageUid> failed) {
+    private Mono<FlagsUpdateStageResult> retryUpdatesStage(CassandraId mailboxId, FlagsUpdateCalculator flagsUpdateCalculator, List<ComposedMessageId> failed) {
         if (!failed.isEmpty()) {
             Flux<ComposedMessageIdWithMetaData> toUpdate = Flux.fromIterable(failed)
-                .flatMap(uid -> messageIdDAO.retrieve(mailboxId, uid))
-                .handle(publishIfPresent());
+                .flatMap(ids -> imapUidDAO.retrieve((CassandraMessageId) ids.getMessageId(), Optional.of((CassandraId) ids.getMailboxId())));
             return runUpdateStage(mailboxId, toUpdate, flagsUpdateCalculator);
         } else {
             return Mono.empty();
@@ -443,7 +440,7 @@ public class CassandraMessageMapper implements MessageMapper {
                         .newFlags(newFlags)
                         .build());
                 } else {
-                    return FlagsUpdateStageResult.fail(oldMetaData.getComposedMessageId().getUid());
+                    return FlagsUpdateStageResult.fail(oldMetaData.getComposedMessageId());
                 }
             });
     }

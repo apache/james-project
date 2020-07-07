@@ -64,6 +64,32 @@ class CassandraMessageMapperTest extends MessageMapperTest {
     @Nested
     class StatementLimitationTests {
         @Test
+        void updateFlagsShouldNotRetryOnDeletedMessages(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+
+            cassandra.getConf().printStatements();
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("DELETE FROM messageIdTable WHERE mailboxId=:mailboxId AND uid=:uid;"));
+            try {
+                messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
+            } catch (Exception e) {
+                // expected
+            }
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+
+            FlagsUpdateCalculator markAsRead = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD);
+            messageMapper.updateFlags(benwaInboxMailbox, markAsRead, MessageRange.all());
+
+            assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
+                "UPDATE modseq SET nextModseq=:nextModseq WHERE mailboxId=:mailboxId IF nextModseq=:modSeqCondition;")))
+                .hasSize(2);
+        }
+
+        @Test
         void deleteMessagesShouldGroupMessageReads(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
 
