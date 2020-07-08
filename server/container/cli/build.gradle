@@ -3,6 +3,7 @@
  */
 plugins {
     id 'java-library'
+    id 'com.github.johnrengelman.shadow'
 }
 
 configurations {
@@ -43,5 +44,18 @@ tasks.register('testsJar', Jar) {
 artifacts {
     tests testsJar
 }
+
+shadowJar {
+    manifest {
+        attributes 'Main-Class': 'org.apache.james.cli.ServerCmd'
+    }
+
+    mergeServiceFiles()
+    classifier = ''
+    archiveVersion = ''
+    zip64 true
+}
+
+tasks.assemble.dependsOn shadowJar
 
 publishing.publications.maven.artifact(testsJar)
