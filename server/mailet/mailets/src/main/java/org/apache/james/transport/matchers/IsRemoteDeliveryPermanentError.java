@@ -43,8 +43,6 @@ import com.google.common.collect.ImmutableList;
  */
 public class IsRemoteDeliveryPermanentError extends GenericMatcher {
 
-    public static final AttributeName IS_DELIVERY_PERMANENT_ERROR = AttributeName.of("is-delivery-permanent-error");
-
     @Override
     public Collection<MailAddress> match(Mail mail) {
         return AttributeUtils.getValueAndCastFromMail(mail, IS_DELIVERY_PERMANENT_ERROR, Boolean.class)
