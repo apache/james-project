@@ -19,8 +19,6 @@
 
 package org.apache.james;
 
-import static org.apache.james.modules.mailbox.ElasticSearchMailboxModule.ELASTICSEARCH_CONFIGURATION_NAME;
-
 import java.io.FileNotFoundException;
 
 import org.apache.commons.configuration2.Configuration;
@@ -30,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SearchConfiguration {
+    public static final String SEARCH_CONFIGURATION_NAME = "search";
 
     public enum Implementation {
         Scanning,
@@ -38,19 +37,26 @@ public class SearchConfiguration {
 
     public static SearchConfiguration parse(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(SEARCH_CONFIGURATION_NAME);
             return SearchConfiguration.from(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find {} configuration file, enabling elasticsearch by default", ELASTICSEARCH_CONFIGURATION_NAME);
+            LOGGER.debug("Could not find {} configuration file, enabling elasticsearch by default", SEARCH_CONFIGURATION_NAME);
             return elasticSearch();
         }
     }
 
-    static SearchConfiguration from(Configuration configuration) {
-        if (configuration.getBoolean("enabled", true)) {
+    static SearchConfiguration from(Configuration configuration) throws ConfigurationException {
+        String searchOption = configuration.getString("implementation", Implementation.ElasticSearch.name());
+        if (searchOption.equalsIgnoreCase(Implementation.ElasticSearch.name())) {
             return elasticSearch();
         }
-        return scanning();
+        if (searchOption.equalsIgnoreCase(Implementation.Scanning.name())) {
+            return scanning();
+        }
+        throw new ConfigurationException(String.format("'implementation' parameter in '%s.properties' should have '%s' or '%s' value",
+                SEARCH_CONFIGURATION_NAME,
+                Implementation.ElasticSearch.name(),
+                Implementation.Scanning.name()));
     }
 
     public static SearchConfiguration scanning() {
