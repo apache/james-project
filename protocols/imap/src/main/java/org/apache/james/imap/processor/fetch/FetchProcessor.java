@@ -49,8 +49,11 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.MemoizedSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 
@@ -86,10 +89,12 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             }
             final MailboxSession mailboxSession = session.getMailboxSession();
 
-            MailboxMetaData metaData = mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT);
+            MemoizedSupplier<MailboxMetaData> metaData = MemoizedSupplier.of(Throwing.supplier(
+                    () -> mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT))
+                .sneakyThrow());
             if (fetch.getChangedSince() != -1 || fetch.contains(Item.MODSEQ)) {
                 // Enable CONDSTORE as this is a CONDSTORE enabling command
-                condstoreEnablingCommand(session, responder,  metaData, true);
+                condstoreEnablingCommand(session, responder,  metaData.get(), true);
             }
             
             List<MessageRange> ranges = new ArrayList<>();
@@ -106,7 +111,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             if (vanished) {
                 // TODO: From the QRESYNC RFC it seems ok to send the VANISHED responses after the FETCH Responses. 
                 //       If we do so we could prolly save one mailbox access which should give use some more speed up
-                respondVanished(mailboxSession, mailbox, ranges, changedSince, metaData, responder);
+                respondVanished(mailboxSession, mailbox, ranges, changedSince, metaData.get(), responder);
             }
             processMessageRanges(session, mailbox, ranges, fetch, useUids, mailboxSession, responder);
 
