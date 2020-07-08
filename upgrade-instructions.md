@@ -35,6 +35,18 @@ Change list:
  - [Log4J2 Adoption](#log4j2-adoption)
  - [Drop Cassandra schema version prior version 5](#drop-cassandra-schema-version-prior-version-5)
  - [mailqueue.size.metricsEnabled now defaults to false](#mailqueuesizemetricsenabled-now-defaults-to-false)
+ - [LDAP users repository connection pool now defaults to false](#ldap-users-repository-connection-pool-now-defaults-to-false)
+
+### LDAP users repository connection pool now defaults to false
+
+Date 08/07/2020
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3300
+
+Concerned product: all products relying on LDAP users repository
+
+`useConnectionPool` is now false by default. If you really want it, you have to explicitely put it to `true` in `usersrepository.xml`.
+It is false by default because it can create too much connections on the LDAP server. If you have few users it can eventually still make sense.
 
 ### mailqueue.size.metricsEnabled now defaults to false
 
