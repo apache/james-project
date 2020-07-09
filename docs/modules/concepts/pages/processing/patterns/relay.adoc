@@ -1,0 +1,8 @@
+= SMTP Relay
+:navtitle: Relay
+
+== Overview
+
+(TODO: update image as per comments on mailing list)
+
+image::SMTP_Relay.png[]

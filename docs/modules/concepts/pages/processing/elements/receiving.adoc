@@ -1,0 +1,35 @@
+= Email Reception
+:navtitle: Receiving
+
+== Overview
+
+There are various situations in which an email can be "received". The most easily understood
+is mail received from a remote client via an <<SMTP>> session. However, although less visible,
+<<Local,locally received>> email is also an important part of an email system. Although less common and
+not as obvious, email can also be received via <<IMAP>>.
+
+
+
+=== SMTP
+
+The most obvious and easily-understood method that an email server handles "email reception"
+is via an SMTP session. When receiving email, the server is acting in the role of an SMTP server,
+responding to requests by a remote SMTP client.
+
+
+=== Local
+
+Once an email arrives at its destination, the final MTA along the transmission chain, the mail
+must still be delivered to a local xref:concepts/storage/mailbox.adoc[mailbox]. 
+xref:protocols/smtp.adoc#RFCXXXX[RFCXXXX] does not mandate any particular protocol for local
+email handling. The system is free to use any method at its discretion. In the case of James,
+mail is delivered locally simply via an in-process Java method call, making it simple and
+extremely fast.
+
+
+=== IMAP
+
+Although less common, it is possible for an email server to receive emails via IMAP. This is
+done by copying or moving an email from one remote mailbox to a local mailbox. You can try
+this out yourself by setting up two different IMAP accounts on the same email client and
+by copying or moving an email from one to the other.

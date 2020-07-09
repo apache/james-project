@@ -1,5 +1,13 @@
 = Email Processing
 :navtitle: Processing
 
-(TODO)
+== Overview
 
+In a way, you can think of a mail server as a mail processing engine.
+Processing emails is essentially the prime directive of such a system.
+
+This section takes a look at the different types of processing that a
+mail server typically does, including:
+
+ * xref:processing/elements/index.adoc[Elemental processes] that a typical mail server may perform
+ * xref:processing/patterns/index.adoc[Processing patterns] that are used for some typical use cases

@@ -1,0 +1,13 @@
+= Processing Elements
+:navtitle: Elements
+
+== Overview
+
+If we take the view of a mail server as a mail processing engine, then
+we can list some of the elemental processes that a typical mail server
+will likely perform:
+
+ * xref:processing/elements/receiving.adoc[Receiving] email from a remote system
+ * xref:processing/elements/queuing.adoc[Queuing] and spooling emails
+ * xref:processing/elements/chaining.adoc[Chaining] processes
+ * xref:processing/elements/sending.adoc[Sending] off email to a remote system
