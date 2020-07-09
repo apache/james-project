@@ -49,6 +49,7 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.AtMost;
 import org.apache.james.transport.matchers.IsRemoteDeliveryPermanentError;
 import org.apache.james.transport.matchers.IsRemoteDeliveryTemporaryError;
+import org.apache.james.transport.matchers.RecipientIs;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -57,7 +58,6 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -101,6 +101,11 @@ public class RemoteDeliveryErrorHandlingTest {
                 .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(BCC_STRIPPER)
                     .addMailet(MailetConfiguration.builder()
+                        .mailet(ToProcessor.class)
+                        .addProperty("processor", "remote-delivery-error")
+                        .matcher(RecipientIs.class)
+                        .matcherCondition(RECIPIENT2))
+                    .addMailet(MailetConfiguration.builder()
                         .mailet(RemoteDelivery.class)
                         .addProperty("maxRetries", "1")
                         .addProperty("delayTime", "0")
@@ -120,7 +125,11 @@ public class RemoteDeliveryErrorHandlingTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(IsRemoteDeliveryTemporaryError.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.asString()))))
+                        .addProperty("repositoryPath", REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.asString()))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", ERROR_REPOSITORY.asString()))))
             .build(tempDir);
 
         jamesServer.start();
@@ -262,8 +271,6 @@ public class RemoteDeliveryErrorHandlingTest {
     }
 
     @Test
-    @Disabled("JAMES-3295 we need to add some more mailets to prove that if a mail has no temporary and permanent"
-        + "failure, it can be treated differently")
     void remoteDeliveryErrorHandlingShouldIgnoreMailsNotTransitingByRemoteDelivery(SMTPMessageSender smtpMessageSender) throws Exception {
         // When we relay a mail where some unexpected accident happens
         smtpMessageSender.connect(LOCALHOST, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
