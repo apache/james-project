@@ -1,0 +1,32 @@
+= Mailets for developers
+
+== Artifact names
+
+All binary (and source) artifacts are available via http://repo.maven.apache.org/maven2[Maven Central].
+
+The project *groupId* is _org.apache.james_ and the artifact names are:
+
+* *apache-mailet-api* - for the Mailet API
+* *apache-mailet-base* - for base Mailets
+* *apache-mailet-standard* - for Standard Mailets
+* *apache-mailet-crypto* - for Crypto Mailets
+* *mailetdocs-maven-plugin* if you wish to extract documentation from sources
+
+Just include something like this in your _pom.xml_
+
+----
+<dependencies>
+    <dependency>
+        <groupId>org.apache.james</groupId>
+        <artifactId>apache-mailet-api</artifactId>
+        <version>3.3.0</version>
+    </dependency>
+    <!-- other dependencies -->
+</dependencies>
+----
+
+=== Write your own mailets
+
+To learn how to write your own mailets please have a look at https://github.com/apache/james-project/blob/master/mailet/base/src/main/java/org/apache/mailet/base/GenericMatcher.java[Generic Matcher] and https://github.com/apache/james-project/blob/master/mailet/base/src/main/java/org/apache/mailet/base/GenericMailet.java[Generic Mailet].
+
+Another good learning source are the unit tests from https://github.com/apache/james-project/tree/master/mailet/standard/src/main/java/org/apache/james/transport[Standard Mailets]
