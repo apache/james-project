@@ -603,7 +603,7 @@ stored messages to compare them with the ones in the index, a failed `expunged` 
 
 Example:
 
-curl -XPOST http://ip:port/mailboxes?task=reIndex&messagesPerSecond=200&mode=rebuildAll
+`curl -XPOST http://ip:port/mailboxes?task=reIndex&messagesPerSecond=200&mode=rebuildAll`
 
 The scheduled task will have the following type `full-reindexing` and the following `additionalInformation`:
 

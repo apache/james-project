@@ -37,13 +37,6 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>${project.basedir}/../antlib/target</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>apache-james-mpt*.jar</include>
-      </includes>
-    </fileSet>
-    <fileSet>
       <directory>${project.basedir}/../app/target</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
