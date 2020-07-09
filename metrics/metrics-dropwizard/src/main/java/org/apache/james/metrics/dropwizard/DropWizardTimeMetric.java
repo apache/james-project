@@ -57,7 +57,7 @@ public class DropWizardTimeMetric implements TimeMetric {
         public ExecutionResult logWhenExceedP99(Duration thresholdInNanoSeconds) {
             Preconditions.checkNotNull(thresholdInNanoSeconds);
             if (elasped.compareTo(p99) > 0 && elasped.compareTo(thresholdInNanoSeconds) > 0) {
-                LOGGER.info("{} metrics took {} nano seconds to complete, exceeding its {} nano seconds p99",
+                LOGGER.warn("{} metrics took {} nano seconds to complete, exceeding its {} nano seconds p99",
                     name, elasped, p99);
             }
             return this;
