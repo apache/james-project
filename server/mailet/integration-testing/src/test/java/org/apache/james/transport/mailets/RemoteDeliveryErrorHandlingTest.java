@@ -57,6 +57,7 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -69,9 +70,11 @@ public class RemoteDeliveryErrorHandlingTest {
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT_DOMAIN = "test.com";
     private static final String RECIPIENT = "touser@" + RECIPIENT_DOMAIN;
+    private static final String RECIPIENT2 = "accident@" + RECIPIENT_DOMAIN;
     private static final String LOCALHOST = "localhost";
     private static final MailRepositoryUrl REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/error/remote-delivery/temporary");
     private static final MailRepositoryUrl REMOTE_DELIVERY_PERMANENT_ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/error/remote-delivery/permanent");
+    private static final MailRepositoryUrl ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/error/");
     private static final Integer MAX_EXECUTIONS = 2;
 
     @RegisterExtension
@@ -255,6 +258,22 @@ public class RemoteDeliveryErrorHandlingTest {
         awaitAtMostOneMinute
             .untilAsserted(() -> assertThat(jamesServer.getProbe(MailRepositoryProbeImpl.class)
                 .getRepositoryMailCount(REMOTE_DELIVERY_PERMANENT_ERROR_REPOSITORY))
+                .isEqualTo(1));
+    }
+
+    @Test
+    @Disabled("JAMES-3295 we need to add some more mailets to prove that if a mail has no temporary and permanent"
+        + "failure, it can be treated differently")
+    void remoteDeliveryErrorHandlingShouldIgnoreMailsNotTransitingByRemoteDelivery(SMTPMessageSender smtpMessageSender) throws Exception {
+        // When we relay a mail where some unexpected accident happens
+        smtpMessageSender.connect(LOCALHOST, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, RECIPIENT2);
+
+        // Then mail should be stored in error repository
+        awaitAtMostOneMinute
+            .untilAsserted(() -> assertThat(jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(ERROR_REPOSITORY))
                 .isEqualTo(1));
     }
 }
