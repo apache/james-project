@@ -48,6 +48,7 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.AtMost;
 import org.apache.james.transport.matchers.IsRemoteDeliveryPermanentError;
+import org.apache.james.transport.matchers.IsRemoteDeliveryTemporaryError;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -114,7 +115,7 @@ public class RemoteDeliveryErrorHandlingTest {
                         .matcher(IsRemoteDeliveryPermanentError.class)
                         .addProperty("repositoryPath", REMOTE_DELIVERY_PERMANENT_ERROR_REPOSITORY.asString()))
                     .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
+                        .matcher(IsRemoteDeliveryTemporaryError.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.asString()))))
             .build(tempDir);

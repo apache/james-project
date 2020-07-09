@@ -150,6 +150,7 @@ public class DeliveryRunnable implements Disposable {
             DeliveryRetriesHelper.initRetries(mail);
             mail.setLastUpdated(dateSupplier.get());
         }
+        mail.setAttribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)));
         int retries = DeliveryRetriesHelper.retrieveRetries(mail);
 
         if (retries < configuration.getMaxRetries()) {
