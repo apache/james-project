@@ -1,14 +1,8 @@
 = Command Line Interface
 
-With any wiring, James is packed with a command line client.
+The distributed server is packed with a command line client.
 
-To use it enter, for Spring distrubution:
-
-....
-./bin/james-cli.sh -h 127.0.0.1 -p 9999 COMMAND
-....
-
-And for Guice distributions:
+To run this command line client simply execute:
 
 ....
 java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 COMMAND
@@ -17,7 +11,7 @@ java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 COMMAND
 The following document will explain you which are the available options
 for *COMMAND*.
 
-Note: the command line before *COMMAND* will be documente as _\{cli}_.
+Note: the above command line before *COMMAND* will be documented as _\{cli}_.
 
 == Manage Domains
 
@@ -173,8 +167,8 @@ INBOX.subFolder mailbox belonging to user user@domain.tld.
 
 == Managing mappings
 
-A mapping is a recipient rewritting rule. There is several kind of
-rewritting rules:
+A mapping is a recipient rewriting rule. There is several kind of
+rewriting rules:
 
 * address mapping: rewrite a given mail address into an other one.
 * regex mapping.
@@ -283,7 +277,7 @@ level. Note: syntax is similar to what was exposed previously.
 == Re-indexing
 
 James allow you to index your emails in a search engine, for making
-search faster. Both ElasticSearch and Lucene are supported.
+search faster.
 
 For some reasons, you might want to re-index your mails (inconsistencies
 across datastore, migrations).
@@ -294,7 +288,7 @@ To re-index all mails of all mailboxes of all users, type:
 {cli} ReindexAll
 ....
 
-And for a precise mailbox:
+And for a specific mailbox:
 
 ....
 {cli} Reindex #private user@domain.tld INBOX
@@ -302,7 +296,7 @@ And for a precise mailbox:
 
 == Sieve scripts quota
 
-James implements Sieve (RFC-5228). Your users can then writte scripts
+James implements Sieve (RFC-5228). Your users can then write scripts
 and upload them to the server. Thus they can define the desired behavior
 upon email reception. James defines a Sieve mailet for this, and stores
 Sieve scripts. You can update them via the ManageSieve protocol, or via
@@ -331,7 +325,7 @@ And for specific user quotas:
 Migration is experimental for now. You would need to customize *Spring*
 configuration to add a new mailbox manager with a different bean name.
 
-You can then copy data accross mailbox managers using:
+You can then copy data across mailbox managers using:
 
 ....
 {cli} CopyMailbox srcBean dstBean
