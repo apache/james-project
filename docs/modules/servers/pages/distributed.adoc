@@ -2,7 +2,7 @@
 :navtitle: Distributed
 
 The Distributed server offers an easy way to scale email server. Based on
-standard noSQL solutions, it is intended to be easy to operate for large
+noSQL solutions, it is intended to be easy to operate for large
 deployments, without needing sharding and protocol aware load balancing.
 
 This server is:
