@@ -1,4 +1,4 @@
-= Distributed Server Architecture
+= Architecture
 
 This sections presents the Distributed Server architecture.
 

@@ -1,4 +1,4 @@
-= Run the distributed server
+= Run
 
 (TODO adapt content from
 https://github.com/linagora/james-project/blob/master/src/site/markdown/server/install/guice-cassandra-rabbitmq-swift.md)

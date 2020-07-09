@@ -1,5 +1,4 @@
-= Distributed server configuration
-:navtitle: Distributed server configuration
+= Configuration
 
 This section presents how to configure the Distributed server.
 

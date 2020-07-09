@@ -1,4 +1,4 @@
-= Run the distributed server with docker
+= Run with docker
 
 (TODO adapt content from
 https://github.com/linagora/james-project#run-james-with-guice--cassandra--rabbitmq--swift--elasticsearch)
