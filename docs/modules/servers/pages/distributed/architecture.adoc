@@ -2,6 +2,8 @@
 
 This sections presents the Distributed Server architecture.
 
+== Storage
+
 In order to deliver its promises, the Distributed Server leverages the following storage strategies:
 
 (TODO picture)
@@ -14,3 +16,7 @@ In order to deliver its promises, the Distributed Server leverages the following
  * *RabbitMQ* enables James nodes of a same cluster to collaborate together.
  * *Tika* (optional) enables text extraction from attachments, thus improving full text search results.
  * *SpamAssassin* (optional) can be used for Spam detection and user feedback is supported.
+
+== Components
+
+(TODO)
