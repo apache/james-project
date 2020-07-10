@@ -11,6 +11,7 @@
 *** xref:distributed/configure/index.adoc[]
 *** xref:distributed/operate/index.adoc[]
 **** xref:distributed/operate/guide.adoc[]
+**** xref:distributed/operate/logging.adoc[]
 **** xref:distributed/operate/webadmin.adoc[]
 **** xref:distributed/operate/metrics.adoc[]
 **** xref:distributed/operate/cli.adoc[]
