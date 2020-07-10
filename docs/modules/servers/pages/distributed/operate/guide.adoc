@@ -19,9 +19,9 @@ considered experimental and thus targets advanced users.
 
 A toolbox is available to help an administrator diagnose issues:
 
-* xref:#logging.adoc[Structured logging into Kibana]
-* link:#metrics.adoc[Metrics graphs into Grafana]
-* xref:manage-webadmin.adoc#_healthcheck[WebAdmin HealthChecks]
+* xref:distributed/operate/logging.adoc[Structured logging into Kibana]
+* xref:distributed/operate/metrics.adoc[Metrics graphs into Grafana]
+* xref:distributed/operate/webadmin.adoc#_healthcheck[WebAdmin HealthChecks]
 
 == Mail processing
 
@@ -34,15 +34,15 @@ Furthermore, given the default mailet container configuration, we recommend moni
 `cassandra://var/mail/error/` to be empty.
 
 WebAdmin exposes all utilities for
-xref:manage-webadmin.html#_reprocessing_mails_from_a_mail_repository[reprocessing
+xref:distributed/operate/webadmin.adoc#_reprocessing_mails_from_a_mail_repository[reprocessing
 all mails in a mail repository] or
-xref:manage-webadmin.html#_reprocessing_a_specific_mail_from_a_mail_repository[reprocessing
+xref:distributed/operate/webadmin.adoc#_reprocessing_a_specific_mail_from_a_mail_repository[reprocessing
 a single mail in a mail repository].
 
 Also, one can decide to
-xref:manage-webadmin.html#_removing_all_mails_from_a_mail_repository[delete
+xref:distributed/operate/webadmin.adoc#_removing_all_mails_from_a_mail_repository[delete
 all the mails of a mail repository] or
-xref:manage-webadmin.html#_removing_a_mail_from_a_mail_repository[delete
+xref:distributed/operate/webadmin.adoc#_removing_a_mail_from_a_mail_repository[delete
 a single mail of a mail repository].
 
 Performance of mail processing can be monitored via the
@@ -59,17 +59,15 @@ to emails being stored in `cassandra://var/mail/rrt-error/`.
 We recommend monitoring the content of this mail repository to be empty.
 
 If it is not empty, we recommend
-verifying user mappings via xref:webadmin.adoc#_user_mappings[User
-Mappings webadmin API] then once identified break the loop by removing
+verifying user mappings via xref:distributed/operate/webadmin.adoc#_user_mappings[User Mappings webadmin API] then once identified break the loop by removing
 some Recipient Rewrite Table entry via the
-xref:webadmin.adoc#_removing_an_alias_of_an_user[Delete Alias],
-xref:webadmin.adoc#_removing_a_group_member[Delete Group member],
-xref:webadmin.adoc#_removing_a_destination_of_a_forward[Delete
-forward], xref:webadmin.adoc#_remove_an_address_mapping[Delete
-Address mapping],
-xref:webadmin.adoc#_removing_a_domain_mapping[Delete Domain
-mapping] or xref:webadmin.adoc#_removing_a_regex_mapping[Delete
-Regex mapping] APIs (as needed).
+xref:distributed/operate/webadmin.adoc#_removing_an_alias_of_an_user[Delete Alias],
+xref:distributed/operate/webadmin.adoc#_removing_a_group_member[Delete Group member],
+xref:distributed/operate/webadmin.adoc#_removing_a_destination_of_a_forward[Delete forward],
+xref:distributed/operate/webadmin.adoc#_remove_an_address_mapping[Delete Address mapping],
+xref:distributed/operate/webadmin.adoc#_removing_a_domain_mapping[Delete Domain mapping]
+or xref:distributed/operate/webadmin.adoc#_removing_a_regex_mapping[Delete Regex mapping]
+APIs (as needed).
 
 The `Mail.error` field can help diagnose the issue as well. Then once
 the root cause has been addressed, the mail can be reprocessed.
@@ -95,31 +93,31 @@ grafana board].
 Upon exceptions, a bounded number of retries are performed (with
 exponential backoff delays). If after those retries the listener is
 still failing to perform its operation, then the event will be stored in
-the xref:webadmin.adoc#_event_dead_letter[Event Dead Letter]. This
+the xref:distributed/operate/webadmin.adoc#_event_dead_letter[Event Dead Letter]. This
 API allows diagnosing issues, as well as redelivering the events.
 
 To check that you have undelivered events in your system, you can first
 run the associated with
-xref:webadmin.adoc#_healthcheck[event dead letter health check] .
+xref:distributed/operate/webadmin.adoc#_healthcheck[event dead letter health check] .
 You can explore Event DeadLetter content through WebAdmin. For
-this, xref:webadmin.adoc#_listing_mailbox_listener_groups[list mailbox listener groups]
+this, xref:distributed/operate/webadmin.adoc#_listing_mailbox_listener_groups[list mailbox listener groups]
 you will get a list of groups back, allowing
 you to check if those contain registered events in each by
-xref:webadmin.adoc#_listing_failed_events[listing their failed events].
+xref:distributed/operate/webadmin.adoc#_listing_failed_events[listing their failed events].
 
 If you get failed events IDs back, you can as well
-xref:webadmin.adoc#_getting_event_details[check their details].
+xref:distributed/operate/webadmin.adoc#_getting_event_details[check their details].
 
 An easy way to solve this is just to trigger then the
-xref:webadmin.adoc#_redeliver_all_events[redeliver all events]
+xref:distributed/operate/webadmin.adoc#_redeliver_all_events[redeliver all events]
 task. It will start reprocessing all the failed events registered in
 event dead letters.
 
 If for some other reason you don’t need to redeliver all events, you
 have more fine-grained operations allowing you to
-xref:webadmin.adoc#_redeliver_group_events[redeliver group events]
+xref:distributed/operate/webadmin.adoc#_redeliver_group_events[redeliver group events]
 or even just
-xref:webadmin.adoc#_redeliver_a_single_event[redeliver a single event].
+xref:distributed/operate/webadmin.adoc#_redeliver_a_single_event[redeliver a single event].
 
 == ElasticSearch Indexing
 
@@ -136,7 +134,7 @@ processing those events can fail sometimes.
 
 Currently, an administrator can monitor indexation failures through
 `ERROR` log review. You can as well
-xref:manage-webadmin.html#_listing_failed_events[list failed events] by
+xref:distributed/operate/webadmin.adoc#_listing_failed_events[list failed events] by
 looking with the group called
 `org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup`.
 A first on-the-fly solution could be to just
@@ -147,13 +145,13 @@ Cassandra storage exceptions), then you might need to use our WebAdmin
 reIndexing tasks.
 
 From there, you have multiple choices. You can
-xref:webadmin.adoc#_reIndexing_all_mails[reIndex all mails],
-xref:webadmin.adoc#_reIndexing_a_mailbox_mails[reIndex mails from a mailbox] or even just
-xref:webadmin.adoc#_reIndexing_a_single_mail[reIndex a single mail].
+xref:distributed/operate/webadmin.adoc#_reindexing_all_mails[reIndex all mails],
+xref:distributed/operate/webadmin.adoc#_reindexing_a_mailbox_mails[reIndex mails from a mailbox] or even just
+xref:distributed/operate/webadmin.adoc#_reindexing_a_single_mail_by_messageid[reIndex a single mail].
 
 When checking the result of a reIndexing task, you might have failed
 reprocessed mails. You can still use the task ID to
-xref:webadmin.adoc#_fixing_previously_failed_reIndexing[reprocess previously failed reIndexing mails].
+xref:distributed/operate/webadmin.adoc#_fixing_previously_failed_reindexing[reprocess previously failed reIndexing mails].
 
 === On the fly ElasticSearch Index setting update
 
@@ -214,7 +212,7 @@ message reads and will temporary decrease the performance.
 ==== How to detect the outdated projections
 
 You can watch the `MessageFastViewProjection` health check at
-xref:webadmin.adoc#_check_all_components[webadmin documentation].
+xref:distributed/operate/webadmin.adoc#_check_all_components[webadmin documentation].
 It provides a check based on the ratio of missed projection reads.
 
 ==== How to solve
@@ -243,7 +241,7 @@ diagnostic and fixes.
 ==== How to solve
 
 An admin can run offline webadmin
-xref:webadmin.adoc#_fixing_mailboxes_inconsistencies[solve Cassandra mailbox object inconsistencies task]
+xref:distributed/operate/webadmin.adoc#_fixing_mailboxes_inconsistencies[solve Cassandra mailbox object inconsistencies task]
 in order to sanitize his
 mailbox denormalization.
 
@@ -267,7 +265,7 @@ message prefix: `Invalid mailbox counters`.
 ==== How to solve
 
 Execute the
-xref:webadmin.adoc#_recomputing_mailbox_counters[recompute Mailbox counters task].
+xref:distributed/operate/webadmin.adoc#_recomputing_mailbox_counters[recompute Mailbox counters task].
 This task is not concurrent-safe. Concurrent
 increments & decrements will be ignored during a single mailbox
 processing. Re-running this task may eventually return the correct
@@ -287,7 +285,7 @@ User can see a message in JMAP but not in IMAP, or mark a message as
 ==== How to solve
 
 Execute the
-xref:webadmin.adoc#_fixing_messages_inconsistencies[solve Cassandra message inconsistencies task]. This task is not
+xref:distributed/operate/webadmin.adoc#_fixing_message_inconsistencies[solve Cassandra message inconsistencies task]. This task is not
 concurrent-safe. User actions concurrent to the inconsistency fixing
 task could result in new inconsistencies being created. However the
 source of truth `imapUidTable` will not be affected and thus re-running
@@ -307,7 +305,7 @@ Incorrect quotas could be seen in the `Mail User Agent` (IMAP or JMAP).
 ==== How to solve
 
 Execute the
-xref:webadmin.adoc#_recomputing_current_quotas_for_users[recompute Quotas counters task]. This task is not concurrent-safe. Concurrent
+xref:distributed/operate/webadmin.adoc#_recomputing_current_quotas_for_users[recompute Quotas counters task]. This task is not concurrent-safe. Concurrent
 operations will result in an invalid quota to be persisted. Re-running
 this task may eventually return the correct result.
 
@@ -327,7 +325,7 @@ the mean time, the recommendation is to execute the
 ==== How to solve
 
 Execute the Cassandra mapping `SolveInconsistencies` task described in
-xref:webadmin.adoc#_operations_on_mappings_sources[webadmin documentation]
+xref:distributed/operate/webadmin.adoc#_operations_on_mappings_sources[webadmin documentation]
 
 == Setting Cassandra user permissions
 
@@ -496,17 +494,16 @@ performance issues. As such, we advise setting
 
 Managing an email queue is an easy task if you follow this procedure:
 
-* First, xref:webadmin.adoc#_listing_mail_queues[List mail queues]
-and xref:webadmin.adoc#Getting_a_mail_queue_details[get a mail
-queue details].
+* First, xref:distributed/operate/webadmin.adoc#_listing_mail_queues[List mail queues]
+and xref:distributed/operate/webadmin.adoc#_getting_a_mail_queue_details[get a mail queue details].
 * And then
-xref:webadmin.adoc#_listing_the_mails_of_a_mail_queue[List the mails of a mail queue].
+xref:distributed/operate/webadmin.adoc#_listing_the_mails_of_a_mail_queue[List the mails of a mail queue].
 
 In case, you need to clear an email queue because there are only spam or
 trash emails in the email queue you have this procedure to follow:
 
 * All mails from the given mail queue will be deleted with
-xref:webadmin.adoc#_clearing_a_mail_queue[Clearing a mail queue].
+xref:distributed/operate/webadmin.adoc#_clearing_a_mail_queue[Clearing a mail queue].
 
 == Updating Cassandra schema version
 
@@ -543,20 +540,20 @@ These schema updates can be triggered by webadmin using the Cassandra
 backend. Following steps are for updating Cassandra schema version:
 
 * At the very first step, you need to
-xref:webadmin.adoc#_retrieving_current_cassandra_schema_version[retrieve
+xref:distributed/operate/webadmin.adoc#_retrieving_current_cassandra_schema_version[retrieve
 current Cassandra schema version]
 * And then, you
-xref:webadmin.adoc#_retrieving_latest_available_cassandra_schema_version[retrieve
+xref:distributed/operate/webadmin.adoc#_retrieving_latest_available_cassandra_schema_version[retrieve
 latest available Cassandra schema version] to make sure there is a
 latest available version
 * Eventually, you can update the current schema version to the one you
 got with
-xref:webadmin.adoc#_upgrading_to_the_latest_version[upgrading to
+xref:distributed/operate/webadmin.adoc#_upgrading_to_the_latest_version[upgrading to
 the latest version]
 
 Otherwise, if you need to run the migrations to a specific version, you
 can use
-xref:webadmin.adoc#_upgrading_to_a_specific_version[Upgrading to a
+xref:distributed/operate/webadmin.adoc#_upgrading_to_a_specific_version[Upgrading to a
 specific version]
 
 == Deleted Message Vault
@@ -594,13 +591,13 @@ by default if not defined).
 === Restore deleted messages after deletion
 
 After users deleted their mails and emptied the trash, the admin can use
-xref:webadmin.adoc#_deleted-messages-vault[Restore Deleted Messages]
+xref:distributed/operate/webadmin.adoc#_restore_deleted_messagest[Restore Deleted Messages]
 to restore all the deleted mails.
 
 === Cleaning expired deleted messages
 
 You can delete all deleted messages older than the configured
 `retentionPeriod` by using
-xref:webadmin.adoc#_deleted-messages-vault[Purge Deleted Messages].
+xref:distributed/operate/webadmin.adoc#_deleted_messages_vault[Purge Deleted Messages].
 We recommend calling this API in CRON job on 1st day each
 month.

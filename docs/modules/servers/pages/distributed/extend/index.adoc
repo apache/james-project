@@ -4,15 +4,15 @@ The Distributed Server exposes several interfaces allowing the user to write cus
 order to extend the Distributed Server behavior.
 
 Writing *Mailets* and *Matchers* allows one to supply custom components for the
-xref:main:servers:distributed:extend:mail-processing.adoc[Mail Processing] and
+xref:distributed/extend/mail-processing.adoc[Mail Processing] and
 enables to take decisions, and implement your business logic at the transport level.
 
-Writing xref:main:servers:distributed:extend:mailbox-listeners.adoc[Mailbox listeners] enables to
+Writing xref:distributed/extend/mailbox-listeners.adoc[Mailbox listeners] enables to
 react to your user interaction with their mailbox. This powerful tool allows build advanced features
 for mail delivery servers.
 
-Writing xref:main:servers:distributed:extend:smtp-hooks.adoc[SMTP hookd] enables to
+Writing xref:distributed/extend/smtp-hooks.adoc[SMTP hookd] enables to
 add features to your SMTP server.
 
-Writing xref:main:servers:distributed:extend:webadmin-routes.adoc[WebAdmin routes] enables to
+Writing xref:distributed/extend/webadmin-routes.adoc[WebAdmin routes] enables to
 add features to the WebAdmin REST API.
