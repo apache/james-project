@@ -67,6 +67,7 @@ import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
 import org.apache.james.mailbox.events.EventDispatcher.DispatchingFailureGroup;
+import org.apache.james.mailbox.events.RoutingKeyConverter.RoutingKey;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -238,6 +239,39 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
             .untilAsserted(() -> assertThat(deadLetteredCount.get()).isEqualTo(1));
+    }
+
+    @Test
+    void registrationShouldNotCrashOnInvalidMessage() {
+        EventCollector listener = new EventCollector();
+        Mono.from(eventBus.register(listener, KEY_1)).block();
+
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                RoutingKey.of(KEY_1).asString(),
+                "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+            .block();
+
+        eventBus.dispatch(EVENT, KEY_1).block();
+        await().timeout(org.awaitility.Duration.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(listener.getEvents()).containsOnly(EVENT));
+    }
+
+    @Test
+    void registrationShouldNotCrashOnInvalidMessages() {
+        EventCollector listener = new EventCollector();
+        Mono.from(eventBus.register(listener, KEY_1)).block();
+
+        IntStream.range(0, 100)
+            .forEach(i -> rabbitMQExtension.getSender()
+                .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                    RoutingKey.of(KEY_1).asString(),
+                    "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+                .block());
+
+        eventBus.dispatch(EVENT, KEY_1).block();
+        await().timeout(org.awaitility.Duration.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(listener.getEvents()).containsOnly(EVENT));
     }
 
     @Test
