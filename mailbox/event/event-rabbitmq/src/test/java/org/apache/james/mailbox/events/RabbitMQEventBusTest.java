@@ -53,6 +53,7 @@ import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
@@ -84,6 +85,7 @@ import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
+import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
@@ -169,6 +171,44 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Disabled("This test is failing by design as the different registration keys are handled by distinct messages")
     public void dispatchShouldCallListenerOnceWhenSeveralKeysMatching() {
 
+    }
+
+    @Test
+    void eventProcessingShouldNotCrashOnInvalidMessage() {
+        EventCollector listener = new EventCollector();
+        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        eventBus.register(listener, registeredGroup);
+
+        String emptyRoutingKey = "";
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                emptyRoutingKey,
+                "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+            .block();
+
+        eventBus.dispatch(EVENT, NO_KEYS).block();
+        await()
+            .timeout(org.awaitility.Duration.TEN_SECONDS).untilAsserted(() ->
+                assertThat(listener.getEvents()).containsOnly(EVENT));
+    }
+
+    @Test
+    void eventProcessingShouldNotCrashOnInvalidMessages() {
+        EventCollector listener = new EventCollector();
+        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        eventBus.register(listener, registeredGroup);
+
+        String emptyRoutingKey = "";
+        IntStream.range(0, 10).forEach(i -> rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                emptyRoutingKey,
+                "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+            .block());
+
+        eventBus.dispatch(EVENT, NO_KEYS).block();
+        await()
+            .timeout(org.awaitility.Duration.TEN_SECONDS).untilAsserted(() ->
+            assertThat(listener.getEvents()).containsOnly(EVENT));
     }
 
     @Test
