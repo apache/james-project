@@ -21,8 +21,8 @@ for emails. They are willing to do advanced configuration and write extensions i
 the behaviour of Apache James.
 
  - **Distributed Mail server**: scaling mail storage infrastructure is notoriously hard as most 
-mail server leverages only the file system. James project delivers a distributed mail server 
-leveraging modern noSQL infrastructure to ease scaling.
+mail servers leverages only the file system. The James project delivers a distributed mail server 
+that leverages modern noSQL infrastructures to ease scaling.
 
 ### Current situation
 
@@ -63,10 +63,10 @@ Also the large amount of servers makes the choice harder to make for newcomers.
 
 ## Decision
 
-We should deliver a subset of mail server directly addressing users needs, and brand them according to their use cases
-and not due to their technical details.
+We should deliver a subset of mail servers directly addressing user needs and brand them according to their use cases,
+not their technical details.
 
-In order to get a clearer offer we should first reduce the server cardinality. This can be achieved via:
+In order to arrive at a clearer offering we should first reduce the server cardinality. This can be achieved via:
 
  - **Spring server** deprecation and removal
  - Merging Guice servers with their LDAP variations (see [ADR 36 about guice module choosing](0036-against-use-of-conditional-statements-in-guice-modules.md))
@@ -86,7 +86,7 @@ around feature extensibility.
 
  - **Cassandra Guice** (TODO rebrand me) still have community traction, 
 
-Note that transitionning from basic server to the advanced one will be easy as they rely on the same technologies.
+Note that transitionning from the Basic Server to the Advanced Server will be easy as they rely on the same technologies.
 
  - **Distributed server** will remain unchanged.
 
@@ -114,7 +114,7 @@ By better focussing our offer on community needs we expect a larger adoption of 
 
 Such a split will furthermore ease documentation efforts.
 
-The split between basic and advanced server will furthermore ease bug reports as the customization capabilities of the basic server are limited.
+The split between the Basic and Advanced servers will furthermore ease bug reports as the customization capabilities of the Basic Server are limited.
 
 In order to conduct this split:
 
@@ -126,8 +126,8 @@ Additionally, working on the memory footprint of the basic server would enable t
 
 ## Example
 
-Here is an example of replacement of "mail processing" configuration file. It does cover self-hosting expected features while not 
-exposing James underlying concepts of `Mailet` and `Matcher`.
+Here is an example of what replacing the "mail processing" configuration file could look like. It covers common configurations relating to self-hosting features while not 
+exposing the underlying James concepts of `Mailet` and `Matcher`.
 
 ```
 # (optional)
@@ -145,7 +145,7 @@ dkim.key=/path/to/something
 spamassassin.host=172.2.5.6
 ```
 
-Here is an example of `ssl.properties` from which we could derive working 
+Here is an example of what `ssl.properties` could look like:
 
 ```
 starttls.enable=true
@@ -155,5 +155,5 @@ ssl.keystore=/path/to/keystore
 ssl.keystore.password=xyz
 ```
 
-Disclaimer: these are meant as examples to highlight the use of the basic server. The
-exact basic server configuration format would need to be discussed elsewhere.
+Disclaimer: these are only meant as examples to highlight what configuration could look like for the Basic Server. The
+exact Basic Server configuration format would need to be discussed elsewhere.
