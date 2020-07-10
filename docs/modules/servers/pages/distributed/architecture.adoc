@@ -23,7 +23,7 @@ The following protocols are supported and can be used to interact with the Distr
 
 * *SMTP*
 * *IMAP*
-* link:operate/webadmin.adoc[WebAdmin] REST Administration API
+* xref:distributed/operate/webadmin.adoc[WebAdmin] REST Administration API
 * *LMTP*
 
 The following protocols should be considered experimental

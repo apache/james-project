@@ -13,9 +13,9 @@ This server is:
 * The most feature-rich server, but also by far the most complex
 
 You will find information about its
-xref:main:servers:distributed:architecture.adoc[architecture], how to
-xref:main:servers:distributed:run.adoc[run it], how to
-xref:main:servers:distributed:run-docker.adoc[run it with Docker], how to
-xref:main:servers:distributed:configure/index.adoc[configure it], how to
-xref:main:servers:distributed:operate/index.adoc[operate it], how to
-xref:main:servers:distributed:extend/index.adoc[extend it].
+xref:distributed/architecture.adoc[architecture], how to
+xref:distributed/run.adoc[run it], how to
+xref:distributed/run-docker.adoc[run it with Docker], how to
+xref:distributed/configure/index.adoc[configure it], how to
+xref:distributed/operate/index.adoc[operate it], how to
+xref:distributed/extend/index.adoc[extend it].

@@ -6,17 +6,17 @@ Once you have a Distributed James server up and running you then need to ensure 
 You may also need to perform some operation maintenance or recover from incidents. This section covers
 these topics.
 
-Read more about link:logging.adoc[Logging].
+Read more about xref:distributed/operate/logging.adoc[Logging].
 
-The link:webadmin.adoc[WebAdmin Restfull administration API] is the
+The xref:distributed/operate/webadmin.adoc[WebAdmin Restfull administration API] is the
 recommended way to operate the Distributed James server. It allows managing and interacting with most
 server components.
 
-The link:cli.adoc[Command line interface] allows to interact with some
+The xref:distributed/operate/cli.adoc[Command line interface] allows to interact with some
 server components. However it relies on JMX technologies and its use is discouraged.
 
-The link:metrics.adoc[metrics] allows to build latency and throughput
+The xref:distributed/operate/metrics.adoc[metrics] allows to build latency and throughput
 graphs, that can be visualized, for instance in *Grafana*.
 
-Finally, we did put together a link:metrics.adoc[detailed guide] for
+Finally, we did put together a xref:distributed/operate/guide.adoc[detailed guide] for
 distributed James operators.
