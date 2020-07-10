@@ -4,4 +4,24 @@ This section presents how to configure the Distributed server.
 
 The following configuration files are exposed:
 
-(TODO)
+* *batchsizes.properties* allows to configure mailbox read batch sizes link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/batchsizes.properties[example]
+* *blobstore.properties* allows to configure the BlobStore link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties[example]
+* *cassandra.properties* allows to configure the Cassandra driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/cassandra.properties[example]
+* *deletedMessageVault.properties* allows to configure the DeletedMessageVaultlink:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/deletedMessageVault.properties[example]
+* *dnsservice.xml* allows to configure DNS resolution link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/dnsservice.xml[example]
+* *domainlist.xml* allows to configure Domain storage link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/domainlist.xml[example]
+* *elasticsearch.properties* allows to configure ElasticSearch driverlink:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/elasticsearch.properties[example]
+* *extensions.properties* allows to extend James behaviour by loading yours extensions in it link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/extensions.properties[example]
+* *healthcheck.properties* allows to configure periodical healthchecks link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/healthcheck.properties[example]
+* *jmap.properties* allows to configure the JMAP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmap.properties[example]
+* *jmx.properties* allows configuration of JMX being use by the Command Line Interface link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmx.properties[example]
+* *listeners.xml* enables configuration of Mailbox Listeners link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listeners.xml[example]
+* *lmtpserver.xml* allows configuring the LMTP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/lmtpserver.xml[example]
+* *mailetcontainer.xml* allows configuring mail processing link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/mailetcontainer.xml[example]
+* *mailrepositorystore.xml* enables registration of allowed MailRepository protcols and link them to MailRepository implementations link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/mailrepositorystore.xml[example]
+* *managesieveserver.xml* allows configuration for ManagedSieve (unsupported) link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/managesieveserver.xml[example]
+* *pop3server.xml* allows configuration for the POP3 protocol (experimental) link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/pop3server.xml[example]
+* *rabbitmq.propertiesl* allows configuration for the RabbitMQ driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[example]
+* *tika.properties* allows configuring Tika as a backend for text extraction link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/tika.properties[example]
+* *usersrepository.xml* allowslink:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/usersrepository.xml[example]
+* *webadmin.properties* enables configuration for the WebAdmin protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/webadmin.properties[example]
