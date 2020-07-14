@@ -21,6 +21,7 @@
 package org.apache.james.task.eventsourcing.distributed;
 
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
+import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -129,13 +130,15 @@ public class RabbitMQWorkQueue implements WorkQueue {
     }
 
     private Mono<Task.Result> executeTask(AcknowledgableDelivery delivery) {
-        TaskId taskId = TaskId.fromString(delivery.getProperties().getHeaders().get(TASK_ID).toString());
-        return Mono.fromCallable(() -> {
-            delivery.ack();
-            return new String(delivery.getBody(), StandardCharsets.UTF_8);
-        }).flatMap(json ->
-            deserialize(json, taskId)
-                .flatMap(task -> executeOnWorker(taskId, task)));
+        return Mono.fromCallable(() -> TaskId.fromString(delivery.getProperties().getHeaders().get(TASK_ID).toString()))
+            .flatMap(taskId -> deserialize(new String(delivery.getBody(), StandardCharsets.UTF_8), taskId)
+                .doOnNext(task -> delivery.ack())
+                .flatMap(task -> executeOnWorker(taskId, task)))
+            .onErrorResume(error -> {
+                LOGGER.error("Unable to process {} {}", TASK_ID, delivery.getProperties().getHeaders().get(TASK_ID), error);
+                delivery.nack(!REQUEUE);
+                return Mono.empty();
+            });
     }
 
     private Mono<Task> deserialize(String json, TaskId taskId) {
