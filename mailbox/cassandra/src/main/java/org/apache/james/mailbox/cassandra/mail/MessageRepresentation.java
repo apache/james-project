@@ -37,18 +37,16 @@ public class MessageRepresentation {
     private final Integer bodySize;
     private final SharedByteArrayInputStream content;
     private final PropertyBuilder propertyBuilder;
-    private final boolean hasAttachment;
     private final List<MessageAttachmentRepresentation> attachments;
 
     public MessageRepresentation(MessageId messageId, Date internalDate, Long size, Integer bodySize, SharedByteArrayInputStream content,
-                                 PropertyBuilder propertyBuilder, boolean hasAttachment, List<MessageAttachmentRepresentation> attachments) {
+                                 PropertyBuilder propertyBuilder, List<MessageAttachmentRepresentation> attachments) {
         this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
         this.bodySize = bodySize;
         this.content = content;
         this.propertyBuilder = propertyBuilder;
-        this.hasAttachment = hasAttachment;
         this.attachments = attachments;
     }
 
@@ -65,7 +63,6 @@ public class MessageRepresentation {
             .flags(metadata.getFlags())
             .propertyBuilder(propertyBuilder)
             .addAttachments(attachments)
-            .hasAttachment(hasAttachment)
             .build();
     }
 

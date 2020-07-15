@@ -263,7 +263,6 @@ public class CassandraMessageDAO {
                 row.getInt(BODY_START_OCTET),
                 new SharedByteArrayInputStream(content),
                 getPropertyBuilder(row),
-                hasAttachment(row),
                 getAttachments(row).collect(Guavate.toImmutableList())));
     }
 
@@ -283,11 +282,6 @@ public class CassandraMessageDAO {
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row) {
         List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
         return attachmentByIds(udtValues);
-    }
-
-    private boolean hasAttachment(Row row) {
-        List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
-        return !udtValues.isEmpty();
     }
 
     private Stream<MessageAttachmentRepresentation> attachmentByIds(List<UDTValue> udtValues) {

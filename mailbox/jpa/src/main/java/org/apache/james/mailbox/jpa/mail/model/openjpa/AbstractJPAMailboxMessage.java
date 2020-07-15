@@ -523,10 +523,4 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     private AttachmentId generateFixedAttachmentId(int position) {
         return AttachmentId.from(getMailboxId().serialize() + "-" + getUid().asLong() + "-" + position);
     }
-
-    @Override
-    public boolean hasAttachment() {
-        return !getAttachments().isEmpty();
-    }
-
 }

@@ -49,11 +49,9 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
@@ -980,35 +978,5 @@ public abstract class AbstractMessageIdManagerStorageTest {
         assertThat(messages)
             .extracting(MessageResult::getFlags)
             .containsOnly(flags);
-    }
-
-    @Test
-    void getMessagesShouldIncludeAttachmentInformation() throws Exception {
-        MessageId messageId = testingData.getMailboxManager().getMailbox(bobMailbox1.getMailboxId(), bobSession)
-            .appendMessage(MessageManager.AppendCommand.builder()
-            .withFlags(new Flags(Flags.Flag.DELETED))
-            .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachmentsApi.eml")), bobSession)
-            .getId()
-            .getMessageId();
-
-        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, bobSession);
-
-        assertThat(messages)
-            .hasSize(1)
-            .first()
-            .satisfies(Throwing.consumer(messageResult -> assertThat(messageResult.hasAttachments()).isTrue()));
-    }
-
-    @Test
-    void getMessagesShouldNotIncludeAttachmentInformationWhenNone() throws Exception {
-        Flags flags = new Flags(Flags.Flag.FLAGGED);
-        MessageId messageId = testingData.persist(bobMailbox1.getMailboxId(), messageUid1, flags, bobSession);
-
-        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, bobSession);
-
-        assertThat(messages)
-            .hasSize(1)
-            .first()
-            .satisfies(Throwing.consumer(messageResult -> assertThat(messageResult.hasAttachments()).isFalse()));
     }
 }
