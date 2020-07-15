@@ -17,9 +17,15 @@ dependencies {
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-api', configuration: 'tests')
     testImplementation project(path: ':apache-james-mailbox:apache-james-mailbox-scanning-search', configuration: 'tests')
     testImplementation project(':third-party:apache-james-spamassassin')
-    testImplementation(project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests'))
-    testImplementation(project(':james-server:james-server-guice:blob-objectstorage-guice'))
-    testImplementation(project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests'))
+    testImplementation(project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
+    testImplementation(project(':james-server:james-server-guice:blob-objectstorage-guice')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
+    testImplementation(project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
     testImplementation project(':james-server:james-server-dnsservice-test')
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-guice', configuration: 'tests')
     testImplementation project(':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice')

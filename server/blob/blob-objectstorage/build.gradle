@@ -21,11 +21,9 @@ dependencies {
     implementation 'io.projectreactor:reactor-core:3.3.4.RELEASE'
     implementation 'org.apache.commons:commons-lang3:3.9'
     implementation('org.apache.jclouds.api:openstack-swift:2.1.2') {
-        exclude group: 'com.google.inject', module: 'guice'
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
     }
-    implementation ('org.apache.jclouds.api:s3:2.1.2')  {
-        exclude group: 'com.google.inject', module: 'guice'
-    }
+    implementation ('org.apache.jclouds.api:s3:2.1.2')
     implementation ('org.apache.jclouds.driver:jclouds-slf4j:2.1.2')
     implementation 'org.slf4j:jcl-over-slf4j:1.7.27'
     implementation 'org.slf4j:slf4j-api:1.7.27'

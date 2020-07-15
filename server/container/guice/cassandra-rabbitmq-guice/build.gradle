@@ -13,7 +13,7 @@ configurations {
 dependencies {
     implementation project(':apache-james-mailbox:apache-james-mailbox-event-rabbitmq')
     implementation project(':apache-james-mailbox:apache-james-mailbox-tools-quota-recompute')
-    implementation (project(':james-server:james-server-guice:blob-objectstorage-guice')) {
+    implementation(project(':james-server:james-server-guice:blob-objectstorage-guice')) {
         exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
     }
 
@@ -40,7 +40,7 @@ dependencies {
     testImplementation(project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')) {
         exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
     }
-    testImplementation(project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')){
+    testImplementation(project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')) {
         exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
     }
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-guice', configuration: 'tests')

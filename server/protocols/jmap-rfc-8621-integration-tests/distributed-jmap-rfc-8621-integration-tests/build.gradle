@@ -13,8 +13,12 @@ dependencies {
     testImplementation project(path: ':james-backends-common:apache-james-backends-cassandra', configuration: 'tests')
     testImplementation project(path: ':james-backends-common:apache-james-backends-es', configuration: 'tests')
     testImplementation project(path: ':james-backends-common:apache-james-backends-rabbitmq', configuration: 'tests')
-    testImplementation project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')
-    testImplementation project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')
+    testImplementation(project(path: ':james-server:james-server-blob:blob-objectstorage', configuration: 'tests')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
+    testImplementation(project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-guice', configuration: 'tests')
     testImplementation project(':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice')
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-rabbitmq-guice', configuration: 'tests')

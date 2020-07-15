@@ -22,8 +22,12 @@ dependencies {
     testImplementation project(':apache-james-mailbox:apache-james-mailbox-tika')
     testImplementation project(':apache-mailet:apache-mailet-base')
     testImplementation project(':james-server:james-server-guice:blob-export-guice')
-    testImplementation project(':james-server:james-server-guice:blob-objectstorage-guice')
-    testImplementation project(':james-server:james-server-blob:blob-objectstorage')
+    testImplementation(project(':james-server:james-server-guice:blob-objectstorage-guice')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
+    testImplementation(project(':james-server:james-server-blob:blob-objectstorage')) {
+        exclude group: 'com.google.inject.extensions', module: 'guice-multibindings'
+    }
     testImplementation project(path: ':james-server:james-server-guice:blob-objectstorage-guice', configuration: 'tests')
     testImplementation project(':james-server:james-server-guice:james-server-cassandra-guice')
     testImplementation project(path: ':james-server:james-server-guice:james-server-cassandra-guice', configuration: 'tests')
