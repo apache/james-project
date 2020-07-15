@@ -81,6 +81,21 @@ object MailboxGetMethodContract {
     |      "c1"]]
     |}""".stripMargin
 
+  private val GET_ALL_MAILBOXES_REQUEST_EMPTY_PROPERTIES: String =
+    """{
+    |  "using": [
+    |    "urn:ietf:params:jmap:core",
+    |    "urn:ietf:params:jmap:mail"],
+    |  "methodCalls": [[
+    |      "Mailbox/get",
+    |      {
+    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+    |        "properties": [],
+    |        "ids": null
+    |      },
+    |      "c1"]]
+    |}""".stripMargin
+
   private val GET_ALL_MAILBOXES_REQUEST_NAME_AND_ID_PROPERTIES: String =
     """{
     |  "using": [
@@ -155,6 +170,22 @@ object MailboxGetMethodContract {
     |      },
     |      "c1"]]
     |}""".stripMargin
+
+  private val GET_ALL_MAILBOXES_REQUEST_WITH_SHARES_WITH_ONLY_ID_NAME_AND_RIGHTS: String =
+    """{
+      |  "using": [
+      |    "urn:ietf:params:jmap:core",
+      |    "urn:ietf:params:jmap:mail",
+      |    "urn:apache:james:params:jmap:mail:shares"],
+      |  "methodCalls": [[
+      |      "Mailbox/get",
+      |      {
+      |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |        "properties": ["id", "name", "rights"],
+      |        "ids": null
+      |      },
+      |      "c1"]]
+      |}""".stripMargin
 
   private val GET_ALL_MAILBOXES_REQUEST_WITH_BOTH: String =
     """{
@@ -436,9 +467,9 @@ trait MailboxGetMethodContract {
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(GET_ALL_MAILBOXES_REQUEST)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract
@@ -491,9 +522,9 @@ trait MailboxGetMethodContract {
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(GET_ALL_MAILBOXES_REQUEST_NULL_PROPERTIES)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract
@@ -537,7 +568,42 @@ trait MailboxGetMethodContract {
          |}""".stripMargin)
   }
 
-  @Disabled("TODO")
+  @Test
+  def getMailboxesShouldReturnIdWhenNoPropertiesRequested(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST_EMPTY_PROPERTIES)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [
+         |        {
+         |          "id": "${mailboxId}"
+         |        }
+         |      ],
+         |      "notFound": []
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
   @Test
   def getMailboxesShouldReturnOnlyNameAndIdWhenPropertiesRequested(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
@@ -547,9 +613,9 @@ trait MailboxGetMethodContract {
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(GET_ALL_MAILBOXES_REQUEST_NAME_AND_ID_PROPERTIES)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract
@@ -576,7 +642,6 @@ trait MailboxGetMethodContract {
          |}""".stripMargin)
   }
 
-  @Disabled("TODO")
   @Test
   def getMailboxesShouldAlwaysReturnIdEvenIfNotRequested(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
@@ -586,9 +651,9 @@ trait MailboxGetMethodContract {
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(GET_ALL_MAILBOXES_REQUEST_NAME_PROPERTIES)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract
@@ -617,6 +682,45 @@ trait MailboxGetMethodContract {
 
   @Disabled("TODO")
   @Test
+  def getMailboxesShouldNotIncludeNamespaceIfSharesCapabilityIsUsedAndNamespaceIsNotRequested(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES_WITH_ONLY_ID_NAME_AND_RIGHTS)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [
+         |        {
+         |          "id": "${mailboxId}",
+         |          "name": "custom",
+         |          "rights": {}
+         |        }
+         |      ],
+         |      "notFound": []
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
   def getMailboxesShouldReturnInvalidArgumentsErrorWhenInvalidProperty(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "custom"))
@@ -624,9 +728,9 @@ trait MailboxGetMethodContract {
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(GET_ALL_MAILBOXES_REQUEST_INVALID_PROPERTIES)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract

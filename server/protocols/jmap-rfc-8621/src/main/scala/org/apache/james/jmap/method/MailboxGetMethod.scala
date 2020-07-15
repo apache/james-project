@@ -66,7 +66,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
             notFound = mailboxes.notFound))
           .map(mailboxGetResponse => Invocation(
             methodName = methodName,
-            arguments = Arguments(serializer.serialize(mailboxGetResponse, capabilities).as[JsObject]),
+            arguments = Arguments(serializer.serialize(mailboxGetResponse, mailboxGetRequest.properties, capabilities).as[JsObject]),
             methodCallId = invocation.methodCallId))))
   }
 

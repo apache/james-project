@@ -130,8 +130,7 @@ class MailboxSerializationTest extends AnyWordSpec with Matchers {
           |}""".stripMargin
 
       val serializer = new Serializer(new TestId.Factory)
-      val noPropertyFiltering: Set[String] = Set.empty
-      assertThatJson(Json.stringify(serializer.serialize(MAILBOX)(serializer.mailboxWrites(noPropertyFiltering)))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(serializer.serialize(MAILBOX)(serializer.mailboxWrites(Mailbox.allProperties)))).isEqualTo(expectedJson)
     }
   }
 }
