@@ -41,7 +41,7 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers._
-import org.junit.jupiter.api.{BeforeEach, Tag, Test}
+import org.junit.jupiter.api.{BeforeEach, Disabled, Tag, Test}
 
 object MailboxGetMethodContract {
   private val ARGUMENTS: String = "methodResponses[0][1]"
@@ -61,6 +61,66 @@ object MailboxGetMethodContract {
     |      "Mailbox/get",
     |      {
     |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+    |        "ids": null
+    |      },
+    |      "c1"]]
+    |}""".stripMargin
+
+  private val GET_ALL_MAILBOXES_REQUEST_NULL_PROPERTIES: String =
+    """{
+    |  "using": [
+    |    "urn:ietf:params:jmap:core",
+    |    "urn:ietf:params:jmap:mail"],
+    |  "methodCalls": [[
+    |      "Mailbox/get",
+    |      {
+    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+    |        "properties": null,
+    |        "ids": null
+    |      },
+    |      "c1"]]
+    |}""".stripMargin
+
+  private val GET_ALL_MAILBOXES_REQUEST_NAME_AND_ID_PROPERTIES: String =
+    """{
+    |  "using": [
+    |    "urn:ietf:params:jmap:core",
+    |    "urn:ietf:params:jmap:mail"],
+    |  "methodCalls": [[
+    |      "Mailbox/get",
+    |      {
+    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+    |        "properties": ["id", "name"],
+    |        "ids": null
+    |      },
+    |      "c1"]]
+    |}""".stripMargin
+
+  private val GET_ALL_MAILBOXES_REQUEST_NAME_PROPERTIES: String =
+    """{
+    |  "using": [
+    |    "urn:ietf:params:jmap:core",
+    |    "urn:ietf:params:jmap:mail"],
+    |  "methodCalls": [[
+    |      "Mailbox/get",
+    |      {
+    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+    |        "properties": ["name"],
+    |        "ids": null
+    |      },
+    |      "c1"]]
+    |}""".stripMargin
+
+  private val GET_ALL_MAILBOXES_REQUEST_INVALID_PROPERTIES: String =
+    """{
+    |  "using": [
+    |    "urn:ietf:params:jmap:core",
+    |    "urn:ietf:params:jmap:mail"],
+    |  "methodCalls": [[
+    |      "Mailbox/get",
+    |      {
+    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+    |        "properties": ["invalidProperty"],
     |        "ids": null
     |      },
     |      "c1"]]
@@ -363,6 +423,224 @@ trait MailboxGetMethodContract {
          |      ],
          |      "notFound": []
          |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def getMailboxesShouldReturnAllPropertiesWhenNotSupplied(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST)
+      .when
+      .post
+      .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [
+         |        {
+         |          "id": "${mailboxId}",
+         |          "name": "custom",
+         |          "sortOrder": 1000,
+         |          "totalEmails": 0,
+         |          "unreadEmails": 0,
+         |          "totalThreads": 0,
+         |          "unreadThreads": 0,
+         |          "myRights": {
+         |            "mayReadItems": true,
+         |            "mayAddItems": true,
+         |            "mayRemoveItems": true,
+         |            "maySetSeen": true,
+         |            "maySetKeywords": true,
+         |            "mayCreateChild": true,
+         |            "mayRename": true,
+         |            "mayDelete": true,
+         |            "maySubmit": true
+         |          },
+         |          "isSubscribed": false
+         |        }
+         |      ],
+         |      "notFound": []
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def getMailboxesShouldReturnAllPropertiesWhenNull(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST_NULL_PROPERTIES)
+      .when
+      .post
+      .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [
+         |        {
+         |          "id": "${mailboxId}",
+         |          "name": "custom",
+         |          "sortOrder": 1000,
+         |          "totalEmails": 0,
+         |          "unreadEmails": 0,
+         |          "totalThreads": 0,
+         |          "unreadThreads": 0,
+         |          "myRights": {
+         |            "mayReadItems": true,
+         |            "mayAddItems": true,
+         |            "mayRemoveItems": true,
+         |            "maySetSeen": true,
+         |            "maySetKeywords": true,
+         |            "mayCreateChild": true,
+         |            "mayRename": true,
+         |            "mayDelete": true,
+         |            "maySubmit": true
+         |          },
+         |          "isSubscribed": false
+         |        }
+         |      ],
+         |      "notFound": []
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Disabled("TODO")
+  @Test
+  def getMailboxesShouldReturnOnlyNameAndIdWhenPropertiesRequested(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST_NAME_AND_ID_PROPERTIES)
+      .when
+      .post
+      .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [
+         |        {
+         |          "id": "${mailboxId}",
+         |          "name": "custom"
+         |        }
+         |      ],
+         |      "notFound": []
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Disabled("TODO")
+  @Test
+  def getMailboxesShouldAlwaysReturnIdEvenIfNotRequested(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST_NAME_PROPERTIES)
+      .when
+      .post
+      .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [
+         |        {
+         |          "id": "${mailboxId}",
+         |          "name": "custom"
+         |        }
+         |      ],
+         |      "notFound": []
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Disabled("TODO")
+  @Test
+  def getMailboxesShouldReturnInvalidArgumentsErrorWhenInvalidProperty(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(GET_ALL_MAILBOXES_REQUEST_INVALID_PROPERTIES)
+      .when
+      .post
+      .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |   "error", {
+         |     "type": "invalidArguments",
+         |     "description": "The following properties [invalidProperty] do not exist"
+         |},
          |    "c1"]]
          |}""".stripMargin)
   }
