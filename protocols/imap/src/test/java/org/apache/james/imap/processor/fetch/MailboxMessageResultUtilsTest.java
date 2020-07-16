@@ -62,7 +62,7 @@ public class MailboxMessageResultUtilsTest {
     }
 
     @Test
-    public void testGetMatching() throws Exception {
+    public void testGetMatching() {
         List<Header> results = MessageResultUtils
                 .getMatching(NAMES, headers.iterator());
         assertThat(results.size()).isEqualTo(2);
@@ -71,7 +71,7 @@ public class MailboxMessageResultUtilsTest {
     }
 
     @Test
-    public void testGetNotMatching() throws Exception {
+    public void testGetNotMatching() {
         List<Header> results = MessageResultUtils.getNotMatching(NAMES, headers
                 .iterator());
         assertThat(results.size()).isEqualTo(1);
@@ -79,7 +79,7 @@ public class MailboxMessageResultUtilsTest {
     }
 
     @Test
-    public void testGetMatchingSingle() throws Exception {
+    public void testGetMatchingSingle() {
         assertThat(MessageResultUtils.getMatching("One", headers
                 .iterator())).isEqualTo(headerOne);
         assertThat(MessageResultUtils.getMatching("Three",
