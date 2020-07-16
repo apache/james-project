@@ -197,11 +197,15 @@ not defined). It’s also possible to permanently delete a mail if needed.
 
 === Data
 
-(TODO)
+Storage for domains and users.
+
+Domains are persisted in Cassandra.
+
+Users can be managed in Cassandra, or via a LDAP (read only).
 
 === Recipient rewrite tables
 
-(TODO)
+Storage of Recipients Rewritting rules, in Cassandra.
 
 === BlobStore
 
