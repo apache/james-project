@@ -3310,6 +3310,7 @@
                     </includeOnlyProperties>
                     <skip>false</skip>
                     <useNativeGit>true</useNativeGit>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <gitDescribe>
                         <skip>false</skip>
                         <always>false</always>
