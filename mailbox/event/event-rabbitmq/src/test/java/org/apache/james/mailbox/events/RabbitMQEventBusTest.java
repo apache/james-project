@@ -581,6 +581,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 assertThatListenerReceiveOneEvent(listener);
             }
 
+            @Disabled("JAMES-3083 Disable this unstable test")
             @Test
             void dispatchShouldWorkAfterRestartForNewKeyRegistration() throws Exception {
                 eventBus.start();
