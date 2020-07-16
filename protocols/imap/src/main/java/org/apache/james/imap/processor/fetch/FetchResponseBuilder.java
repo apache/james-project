@@ -306,7 +306,7 @@ public final class FetchResponseBuilder {
     }
 
     private Content getTextContent(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
-        if (!path.isPresent()) {
+        if (path.isEmpty()) {
             try {
                 return messageResult.getBody();
             } catch (IOException e) {
@@ -332,7 +332,7 @@ public final class FetchResponseBuilder {
             // Check if its base as this can give use a more  correctly working check
             // to see if we need to write the newline out to the client. 
             // This is related to IMAP-298
-            if (!path.isPresent()) {
+            if (path.isEmpty()) {
                 if (messageResult.getSize() - result.size() <= 0) {
                     // Seems like this mail has no body 
                     result.noBody();
@@ -352,7 +352,7 @@ public final class FetchResponseBuilder {
     }
     
     private FetchResponse.BodyElement headers(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
-        if (!path.isPresent()) {
+        if (path.isEmpty()) {
             // if its base we can just return the raw headers without parsing
             // them. See MAILBOX-311 and IMAP-?
             HeadersBodyElement element = new HeadersBodyElement(name, messageResult.getHeaders());
@@ -388,7 +388,7 @@ public final class FetchResponseBuilder {
     }
 
     private Iterator<Header> getHeaders(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
-        if (!path.isPresent()) {
+        if (path.isEmpty()) {
             return messageResult.getHeaders().headers();
         } else {
             return messageResult.iterateHeaders(path.get());
@@ -406,7 +406,7 @@ public final class FetchResponseBuilder {
     }
 
     private Content getContent(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
-        if (!path.isPresent()) {
+        if (path.isEmpty()) {
             try {
                 return messageResult.getFullContent();
 
