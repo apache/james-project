@@ -280,12 +280,10 @@ public final class FetchResponseBuilder {
     private FetchResponse.BodyElement wrapIfPartialFetch(Long firstOctet, Long numberOfOctets, FetchResponse.BodyElement fullResult) {
         if (firstOctet == null) {
             return fullResult;
-        } else {
-            final long numberOfOctetsAsLong = Objects.requireNonNullElse(numberOfOctets, Long.MAX_VALUE);
-            final long firstOctetAsLong = firstOctet;
-
-            return new PartialFetchBodyElement(fullResult, firstOctetAsLong, numberOfOctetsAsLong);
         }
+        final long numberOfOctetsAsLong = Objects.requireNonNullElse(numberOfOctets, Long.MAX_VALUE);
+        final long firstOctetAsLong = firstOctet;
+        return new PartialFetchBodyElement(fullResult, firstOctetAsLong, numberOfOctetsAsLong);
     }
 
     private FetchResponse.BodyElement text(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
@@ -301,9 +299,8 @@ public final class FetchResponseBuilder {
             } catch (IOException e) {
                 throw new MailboxException("Unable to get TEXT of body", e);
             }
-        } else {
-            return messageResult.getBody(path.get());
         }
+        return messageResult.getBody(path.get());
     }
 
     private FetchResponse.BodyElement mimeHeaders(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
@@ -349,18 +346,15 @@ public final class FetchResponseBuilder {
                 if (messageResult.getSize() - element.size() <= 0) {
                     // Seems like this mail has no body
                     element.noBody();
-
                 }
             } catch (IOException e) {
                 throw new MailboxException("Unable to get size of header body element", e);
-
             }
             return element;
-        } else {
-            final Iterator<Header> headers = getHeaders(messageResult, path);
-            List<Header> lines = MessageResultUtils.getAll(headers);
-            return headerBodyElement(messageResult, name, lines, path);
         }
+        final Iterator<Header> headers = getHeaders(messageResult, path);
+        List<Header> lines = MessageResultUtils.getAll(headers);
+        return headerBodyElement(messageResult, name, lines, path);
     }
 
     private FetchResponse.BodyElement fieldsNot(MessageResult messageResult, String name, Optional<MimePath> path, Collection<String> names) throws MailboxException {
@@ -379,9 +373,8 @@ public final class FetchResponseBuilder {
     private Iterator<Header> getHeaders(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
         if (path.isEmpty()) {
             return messageResult.getHeaders().headers();
-        } else {
-            return messageResult.iterateHeaders(path.get());
         }
+        return messageResult.iterateHeaders(path.get());
     }
 
     private Iterator<Header> getMimeHeaders(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
@@ -402,8 +395,7 @@ public final class FetchResponseBuilder {
             } catch (IOException e) {
                 throw new MailboxException("Unable to get content", e);
             }
-        } else {
-            return messageResult.getMimeBody(path.get());
         }
+        return messageResult.getMimeBody(path.get());
     }
 }
