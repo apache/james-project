@@ -481,7 +481,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     @Tag(BasicFeature.TAG)
     @Test
-    public void vaultExportShouldExportZipContainsVaultMessagesToShareeWhenJmapDeleteMessage() throws Exception {
+    void vaultExportShouldExportZipContainsVaultMessagesToShareeWhenJmapDeleteMessage() throws Exception {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
         String messageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(0);
