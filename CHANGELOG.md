@@ -3,10 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
-## [Unreleased]
+## [3.5.0] - 2020-07-16
 
 ### Added
-- Distributed task management for Guice cassandra-rabbitmq product. This enables several James servers to share a consistent view
+- JAMES-2813 Distributed task management for Guice cassandra-rabbitmq product. This enables several James servers to share a consistent view
 of tasks being currently executed.
 - JAMES-2563 Health check for ElasticSearch
 - JAMES-2904 Authentication and SSL support for Cassandra backend
@@ -19,19 +19,19 @@ of tasks being currently executed.
 
 ### Changed
 - Multiple changes have been made to enhance ElasticSearch performance:
-  - Use of routing keys to collocate documents per mailbox
-  - Under some configuration, html was not extracted before document indexing
-  - Removed unnecessary fields from mailbox mapping
-  - Disable dynamic mapping thanks to a change of the header structure 
+  - JAMES-2917 Use of routing keys to collocate documents per mailbox
+  - JAMES-2910 Under some configuration, html was not extracted before document indexing
+  - JAMES-2079 Removed unnecessary fields from mailbox mapping
+  - JAMES-2078 Disable dynamic mapping thanks to a change of the header structure
   - Read related [upgrade instructions](upgrade-instructions.md)
 - JAMES-2855 Multiple library/plugin/docker images/build tool upgrades
-- By default the cassandra keyspace creation by James is now disabled by default. This allow to have credentials limited to a keyspace. It can be enabled by setting cassandra.keyspace.create=true in the cassandra.properties file.
+- JAMES-2981 By default the cassandra keyspace creation by James is now disabled by default. This allow to have credentials limited to a keyspace. It can be enabled by setting cassandra.keyspace.create=true in the cassandra.properties file.
 - Usernames are assumed to be always lower cased. Many users recently complained about mails non received when sending to upper cased local recipients. We decided to simplify the handling of case for local recipients and users by always storing them lower cased.
-- Unhealthy health checks now return HTTP 503 instead of 500, degraded now returns 200 instead of 500. See JAMES-2576.
-- In order to fasten JMAP-draft message retrieval upon calls on properties expected to be fast to fetch, we now compute the preview and hasAttachment properties asynchronously and persist them in Cassandra to improve performance. See JAMES-2919.
-- It is now forbidden to create new Usernames with the following set of characters in its local part : `"(),:; <>@\[]`, as we prefer it to stay simple to handle. However, the read of Usernames already existing with some of those characters is still allowed, to not introduce any breaking change. See JAMES-2950.
-- Linshare blob export configuration and mechanism change. See JAMES-3040.
-- Differentiation between domain alias and domain mapping. Read upgrade instructions.
+- JAMES-2576 Unhealthy health checks now return HTTP 503 instead of 500, degraded now returns 200 instead of 500. See JAMES-2576.
+- JAMES-2992 In order to fasten JMAP-draft message retrieval upon calls on properties expected to be fast to fetch, we now compute the preview and hasAttachment properties asynchronously and persist them in Cassandra to improve performance. See JAMES-2919.
+- JAMES-2950 It is now forbidden to create new Usernames with the following set of characters in its local part : `"(),:; <>@\[]`, as we prefer it to stay simple to handle. However, the read of Usernames already existing with some of those characters is still allowed, to not introduce any breaking change. See JAMES-2950.
+- JAMES-3040 Linshare blob export configuration and mechanism change.
+- JAMES-3112 Differentiation between domain alias and domain mapping. Read upgrade instructions.
 - JAMES-3122 Log4J2 adoption for Spring product. Log file configuration needs to be updated. See upgrade instructions.
 
 ### Fixed
