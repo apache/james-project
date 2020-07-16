@@ -135,6 +135,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
         return mapperFactory.getMessageIdMapper(session)
             .findReactive(ImmutableList.of(deletedMessageMailboxContext.getMessageId()), MessageMapper.FetchType.Full)
             .next()
+            .switchIfEmpty(Mono.error(new RuntimeException("Cannot find " + deletedMessageMailboxContext.getMessageId())))
             .map(Throwing.function(mailboxMessage -> Pair.of(mailboxMessage,
                 deletedMessageConverter.convert(deletedMessageMailboxContext, mailboxMessage,
                     ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC)))))
