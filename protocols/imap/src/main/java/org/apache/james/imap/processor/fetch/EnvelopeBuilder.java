@@ -97,11 +97,8 @@ public final class EnvelopeBuilder {
     /**
      * Try to parse the addresses out of the header. If its not possible because
      * of a {@link ParseException} a null value is returned
-     * 
-     * @param message
-     * @param headerName
+     *
      * @return addresses
-     * @throws MailboxException
      */
     private FetchResponse.Envelope.Address[] buildAddresses(Headers message, String headerName) throws MailboxException {
         final Header header = MessageResultUtils.getMatching(headerName, message.headers());
