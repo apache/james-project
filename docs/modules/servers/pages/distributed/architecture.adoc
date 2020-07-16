@@ -36,6 +36,21 @@ The following protocols should be considered experimental
 This section presents the various components of the Distributed server, providing context about
 their interactions, and about their implementations.
 
+=== High level view
+
+Here is a high level view of the various server components and their interactions:
+
+image::server-components.png[Server components mobilized for SMTP & IMAP]
+
+ - The SMTP protcol receives a mail, and enqueue it on the MailQueue
+ - The MailetContainer will start processing the mail Asynchronously and will take business decisions like storing the
+ email localy in a user mailbox. The behaviour of the MailetContainer is highly customizable thanks to the Mailets and
+ the Matcher composibility.
+ - The Mailbox component is responsible of storing a user mails0
+ - The user can use the IMAP or the JMAP protocol to retrieve and read his mails.
+
+These components will be presented more in depth below.
+
 === Mail processing
 
 Mail processing allows to take asynchronously business decisions on
