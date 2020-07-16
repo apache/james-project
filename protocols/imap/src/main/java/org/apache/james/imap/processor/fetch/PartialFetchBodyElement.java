@@ -55,15 +55,13 @@ final class PartialFetchBodyElement implements BodyElement {
     public long size() throws IOException {
         final long size = delegate.size();
         final long lastOctet = this.numberOfOctets + firstOctet;
-        final long result;
         if (firstOctet > size) {
-            result = 0;
+            return  0;
         } else if (size > lastOctet) {
-            result = numberOfOctets;
+            return numberOfOctets;
         } else {
-            result = size - firstOctet;
+            return size - firstOctet;
         }
-        return result;
     }
 
     @Override
