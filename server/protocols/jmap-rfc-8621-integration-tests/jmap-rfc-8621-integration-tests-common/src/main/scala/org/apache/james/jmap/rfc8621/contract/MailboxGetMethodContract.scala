@@ -41,7 +41,7 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers._
-import org.junit.jupiter.api.{BeforeEach, Disabled, Tag, Test}
+import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
 object MailboxGetMethodContract {
   private val ARGUMENTS: String = "methodResponses[0][1]"
@@ -680,7 +680,6 @@ trait MailboxGetMethodContract {
          |}""".stripMargin)
   }
 
-  @Disabled("TODO")
   @Test
   def getMailboxesShouldNotIncludeNamespaceIfSharesCapabilityIsUsedAndNamespaceIsNotRequested(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
@@ -743,7 +742,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |   "error", {
          |     "type": "invalidArguments",
-         |     "description": "The following properties [invalidProperty] do not exist"
+         |     "description": "The following properties [invalidProperty] do not exist."
          |},
          |    "c1"]]
          |}""".stripMargin)

@@ -26,7 +26,10 @@ import org.apache.james.mailbox.model.MailboxId
 
 case class Ids(value: List[MailboxId])
 
-case class Properties(value: List[NonEmptyString])
+case class Properties(value: List[NonEmptyString]) {
+  def asSetOfString: Set[String] = value.map(_.toString()).toSet
+}
+
 
 case class MailboxGetRequest(accountId: AccountId,
                              ids: Option[Ids],
