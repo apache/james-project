@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Apache James Server 3.5.0"
-date:   2020-04-06  15:16:30 +0200
+date:   2020-07-16  15:16:30 +0200
 categories: james update
 ---
 
