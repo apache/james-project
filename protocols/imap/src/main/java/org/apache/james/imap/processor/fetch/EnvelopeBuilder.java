@@ -63,13 +63,12 @@ public final class EnvelopeBuilder {
 
     private String headerValue(Headers message, String headerName) throws MailboxException {
         final Header header = MessageResultUtils.getMatching(headerName, message.headers());
-        final String result;
         if (header == null) {
-            result = null;
+            return null;
         } else {
             final String value = header.getValue();
             if (value == null || "".equals(value)) {
-                result = null;
+                return null;
             } else {
 
                 // ENVELOPE header values must be unfolded
@@ -80,22 +79,19 @@ public final class EnvelopeBuilder {
                 // unfold does. mime4j's unfold does strictly follow the rfc and so preserve them
                 //
                 // See IMAP-327 and https://mailman2.u.washington.edu/mailman/htdig/imap-protocol/2010-July/001271.html
-                result = MimeUtility.unfold(value);
+                return MimeUtility.unfold(value);
 
             }
         }
-        return result;
     }
 
     private FetchResponse.Envelope.Address[] buildAddresses(Headers message, String headerName, FetchResponse.Envelope.Address[] defaults) throws MailboxException {
-        final FetchResponse.Envelope.Address[] results;
         final FetchResponse.Envelope.Address[] addresses = buildAddresses(message, headerName);
         if (addresses == null) {
-            results = defaults;
+            return defaults;
         } else {
-            results = addresses;
+            return addresses;
         }
-        return results;
     }
 
     /**
@@ -109,9 +105,8 @@ public final class EnvelopeBuilder {
      */
     private FetchResponse.Envelope.Address[] buildAddresses(Headers message, String headerName) throws MailboxException {
         final Header header = MessageResultUtils.getMatching(headerName, message.headers());
-        FetchResponse.Envelope.Address[] results;
         if (header == null) {
-            results = null;
+            return null;
         } else {
 
             // We need to unfold the header line.
@@ -124,9 +119,8 @@ public final class EnvelopeBuilder {
             String value = MimeUtility.unfold(header.getValue());
 
             if ("".equals(value.trim())) {
-                results = null;
+                return null;
             } else {
-
                 AddressList addressList = LenientAddressParser.DEFAULT.parseAddressList(value);
                 final int size = addressList.size();
                 final List<FetchResponse.Envelope.Address> addresses = new ArrayList<>(size);
@@ -145,22 +139,13 @@ public final class EnvelopeBuilder {
                     }
                 }
 
-                results = addresses.toArray(FetchResponse.Envelope.Address[]::new);
-                
-
+                return addresses.toArray(FetchResponse.Envelope.Address[]::new);
             }
         }
-        return results;
     }
 
     private FetchResponse.Envelope.Address buildMailboxAddress(org.apache.james.mime4j.dom.address.Mailbox mailbox) {
-        // Encode the mailbox name
-        // See IMAP-266
-        String name = mailbox.getName();
-        if (name != null) {
-            name = EncoderUtil.encodeAddressDisplayName(name);
-        }
-
+        final String name = encodedMailboxName(mailbox);
         final String domain = mailbox.getDomain();
         final DomainList route = mailbox.getRoute();
         final String atDomainList;
@@ -171,6 +156,16 @@ public final class EnvelopeBuilder {
         }
         final String localPart = mailbox.getLocalPart();
         return buildMailboxAddress(name, atDomainList, localPart, domain);
+    }
+
+    private String encodedMailboxName(Mailbox mailbox) {
+        // Encode the mailbox name
+        // See IMAP-266
+        String name = mailbox.getName();
+        if (name != null) {
+            return EncoderUtil.encodeAddressDisplayName(name);
+        }
+        return null;
     }
 
     private void addAddresses(Group group, List<FetchResponse.Envelope.Address> addresses) {
