@@ -6,7 +6,7 @@ This sections presents the Distributed Server architecture.
 
 In order to deliver its promises, the Distributed Server leverages the following storage strategies:
 
-(TODO picture)
+image::storage.png[Storage responsibilities for the Distributed Server]
 
  * *Cassandra* is used for metadata storage
  * The *blob store* storage interface is responsible of storing potentially large binary data. For instance
