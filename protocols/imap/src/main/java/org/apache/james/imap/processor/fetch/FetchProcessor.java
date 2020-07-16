@@ -152,7 +152,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             if (fetch.isOnlyFlags()) {
                 processMessageRangeForFlags(session, mailbox, fetch, mailboxSession, responder, builder, range);
             } else {
-                processMessageRange(session, mailbox, fetch, useUids, mailboxSession, responder, builder, resultToFetch, range);
+                processMessageRange(session, mailbox, fetch, mailboxSession, responder, builder, resultToFetch, range);
             }
         }
 
@@ -184,7 +184,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         }
     }
 
-    private void processMessageRange(ImapSession session, MessageManager mailbox, FetchData fetch, boolean useUids, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, FetchGroup resultToFetch, MessageRange range) throws MailboxException {
+    private void processMessageRange(ImapSession session, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, FetchGroup resultToFetch, MessageRange range) throws MailboxException {
         MessageResultIterator messages = mailbox.getMessages(range, resultToFetch, mailboxSession);
         while (messages.hasNext()) {
             final MessageResult result = messages.next();
@@ -195,7 +195,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             }
 
             try {
-                final FetchResponse response = builder.build(fetch, result, mailbox, session, useUids);
+                final FetchResponse response = builder.build(fetch, result, mailbox, session);
                 responder.respond(response);
             } catch (MessageRangeException e) {
                 // we can't for whatever reason find the message so

@@ -101,7 +101,7 @@ public final class FetchResponseBuilder {
         return new FetchResponse(msn, flags, uid, modSeq, internalDate, size, envelope, body, bodystructure, elements);
     }
 
-    public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, ImapSession session, boolean useUids) throws MessageRangeException, MailboxException {
+    public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, ImapSession session) throws MessageRangeException, MailboxException {
         final SelectedMailbox selected = session.getSelected();
         final MessageUid resultUid = result.getUid();
         return selected.msn(resultUid).fold(() -> {
