@@ -29,9 +29,11 @@ import org.apache.james.mailbox.model.Header;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public class MailboxMessageResultUtilsTest {
 
-    private static final String[] NAMES = { "One", "Three" };
+    private static final ImmutableList<String> NAMES = ImmutableList.of("One", "Three");
 
     Header headerOne;
 
