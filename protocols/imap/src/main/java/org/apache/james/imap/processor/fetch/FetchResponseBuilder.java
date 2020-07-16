@@ -37,7 +37,6 @@ import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.FetchData.Item;
 import org.apache.james.imap.api.message.SectionType;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MailboxSession;
@@ -101,23 +100,20 @@ public final class FetchResponseBuilder {
         return new FetchResponse(msn, flags, uid, modSeq, internalDate, size, envelope, body, bodystructure, elements);
     }
 
-    public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, ImapSession session) throws MessageRangeException, MailboxException {
-        final SelectedMailbox selected = session.getSelected();
+    public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
         final MessageUid resultUid = result.getUid();
-        return selected.msn(resultUid).fold(() -> {
+        return selectedMailbox.msn(resultUid).fold(() -> {
             throw new MessageRangeException("No such message found with uid " + resultUid);
         }, msn -> {
 
             reset(msn);
             // setMsn(resultMsn);
 
+            // FLAGS response
             // Check if this fetch will cause the "SEEN" flag to be set on this
             // message. If so, update the flags, and ensure that a flags response is
             // included in the response.
-            final MailboxSession mailboxSession = session.getMailboxSession();
-
-            // FLAGS response
-            addFlags(fetch, mailbox, selected, resultUid, mailboxSession, result.getFlags());
+            addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags());
 
             // INTERNALDATE response
             if (fetch.contains(Item.INTERNAL_DATE)) {
@@ -208,22 +204,20 @@ public final class FetchResponseBuilder {
         }
     }
 
-    public FetchResponse build(FetchData fetch, ComposedMessageIdWithMetaData result, MessageManager mailbox, ImapSession session) throws MessageRangeException, MailboxException {
-        final SelectedMailbox selected = session.getSelected();
+    public FetchResponse build(FetchData fetch, ComposedMessageIdWithMetaData result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
         final MessageUid resultUid = result.getComposedMessageId().getUid();
-        return selected.msn(resultUid).fold(() -> {
+        return selectedMailbox.msn(resultUid).fold(() -> {
             throw new MessageRangeException("No such message found with uid " + resultUid);
         }, msn -> {
 
             reset(msn);
             // setMsn(resultMsn);
 
+            // FLAGS response
             // Check if this fetch will cause the "SEEN" flag to be set on this
             // message. If so, update the flags, and ensure that a flags response is
             // included in the response.
-            final MailboxSession mailboxSession = session.getMailboxSession();
-            // FLAGS response
-            addFlags(fetch, mailbox, selected, resultUid, mailboxSession, result.getFlags());
+            addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags());
             // UID response
             addUid(fetch, resultUid);
 
