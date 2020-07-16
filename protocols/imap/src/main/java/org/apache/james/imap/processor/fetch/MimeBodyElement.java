@@ -37,17 +37,13 @@ import org.apache.james.mailbox.model.Header;
  */
 public class MimeBodyElement implements BodyElement {
     private final String name;
-
     protected final List<Header> headers;
-
     protected long size;
 
     public MimeBodyElement(String name, List<Header> headers) throws MailboxException {
-        super();
         this.name = name;
         this.headers = headers;
         this.size = calculateSize(headers);
-        
     }
 
     @Override

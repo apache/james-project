@@ -31,7 +31,6 @@ public class HeadersBodyElement extends ContentBodyElement {
         super(name, content);
     }
 
-
     /**
      * Indicate that there is no text body in the message. In this case we don't need to write a single CRLF in anycase if
      * this Element does not contain a header.

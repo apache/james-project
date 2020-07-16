@@ -55,31 +55,20 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimePath;
 
 public final class FetchResponseBuilder {
-
     private final EnvelopeBuilder envelopeBuilder;
 
     private MessageSequenceNumber msn;
-
     private MessageUid uid;
-
     private Flags flags;
-
     private Date internalDate;
-
     private Long size;
-    
     private ModSeq modSeq;
-
     private List<FetchResponse.BodyElement> elements;
-
     private FetchResponse.Envelope envelope;
-
     private FetchResponse.Structure body;
-
     private FetchResponse.Structure bodystructure;
 
     public FetchResponseBuilder(EnvelopeBuilder envelopeBuilder) {
-        super();
         this.envelopeBuilder = envelopeBuilder;
     }
 

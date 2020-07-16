@@ -29,21 +29,16 @@ import org.apache.james.imap.message.response.FetchResponse.BodyElement;
  * Wraps full content to implement a partial fetch.
  */
 final class PartialFetchBodyElement implements BodyElement {
-
     private final BodyElement delegate;
-
     private final long firstOctet;
-
     private final long numberOfOctets;
-
     private final String name;
 
     public PartialFetchBodyElement(BodyElement delegate, long firstOctet, long numberOfOctets) {
-        super();
         this.delegate = delegate;
         this.firstOctet = firstOctet;
         this.numberOfOctets = numberOfOctets;
-        name = delegate.getName() + "<" + firstOctet + ">";
+        this.name = delegate.getName() + "<" + firstOctet + ">";
     }
 
     @Override

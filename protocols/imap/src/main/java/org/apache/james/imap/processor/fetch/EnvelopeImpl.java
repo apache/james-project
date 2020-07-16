@@ -25,29 +25,18 @@ package org.apache.james.imap.processor.fetch;
 import org.apache.james.imap.message.response.FetchResponse;
 
 final class EnvelopeImpl implements FetchResponse.Envelope {
-
     private final Address[] bcc;
-
     private final Address[] cc;
-
     private final String date;
-
     private final Address[] from;
-
     private final String inReplyTo;
-
     private final String messageId;
-
     private final Address[] replyTo;
-
     private final Address[] sender;
-
     private final String subject;
-
     private final Address[] to;
 
     public EnvelopeImpl(String date, String subject, Address[] from, Address[] sender, Address[] replyTo, Address[] to, Address[] cc, Address[] bcc, String inReplyTo, String messageId) {
-        super();
         this.bcc = bcc;
         this.cc = cc;
         this.date = date;
