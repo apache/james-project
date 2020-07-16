@@ -18,18 +18,18 @@
  ****************************************************************/
 package org.apache.james.imap.processor.fetch;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.FetchResponse.BodyElement;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Header;
-
 
 /**
  * {@link BodyElement} which represent a MIME element specified by for example (BODY[1.MIME])
@@ -41,8 +41,6 @@ public class MimeBodyElement implements BodyElement {
     protected final List<Header> headers;
 
     protected long size;
-    private static final Charset US_ASCII = Charset.forName("US-ASCII");
-
 
     public MimeBodyElement(String name, List<Header> headers) throws MailboxException {
         super();
