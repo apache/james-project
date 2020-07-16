@@ -20,6 +20,7 @@
 package org.apache.james.task.eventsourcing.distributed;
 
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue.EXCHANGE_NAME;
@@ -101,6 +102,8 @@ import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
 
 class DistributedTaskManagerTest implements TaskManagerContract {
+
+    private static final byte[] BAD_PAYLOAD = "BAD_PAYLOAD!".getBytes(UTF_8);
 
     static class TrackedRabbitMQWorkQueueSupplier implements WorkQueueSupplier {
         private final List<RabbitMQWorkQueue> workQueues;
@@ -215,6 +218,78 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         terminationSubscribers.add(terminationSubscriber);
         terminationSubscriber.start();
         return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, terminationSubscriber);
+    }
+
+    @Test
+    void badPayloadShouldNotAffectTaskManagerOnCancelTask() throws TaskManager.ReachedTimeoutException {
+        TaskManager taskManager = taskManager(HOSTNAME);
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
+            Thread.sleep(250);
+            return Task.Result.COMPLETED;
+        }));
+
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
+            .block();
+
+        taskManager.cancel(id);
+        taskManager.await(id, TIMEOUT);
+        assertThat(taskManager.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.CANCELLED);
+    }
+
+    @Test
+    void badPayloadsShouldNotAffectTaskManagerOnCancelTask() throws TaskManager.ReachedTimeoutException {
+        TaskManager taskManager = taskManager(HOSTNAME);
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
+            Thread.sleep(250);
+            return Task.Result.COMPLETED;
+        }));
+
+        IntStream.range(0, 100)
+            .forEach(i -> rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
+            .block());
+
+        taskManager.cancel(id);
+        taskManager.await(id, TIMEOUT);
+        assertThat(taskManager.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.CANCELLED);
+    }
+
+    @Test
+    void badPayloadShouldNotAffectTaskManagerOnCompleteTask() throws TaskManager.ReachedTimeoutException {
+        TaskManager taskManager = taskManager(HOSTNAME);
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
+            Thread.sleep(250);
+            return Task.Result.COMPLETED;
+        }));
+
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
+            .block();
+
+        taskManager.await(id, TIMEOUT);
+        assertThat(taskManager.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.COMPLETED);
+    }
+
+    @Test
+    void badPayloadsShouldNotAffectTaskManagerOnCompleteTask() throws TaskManager.ReachedTimeoutException {
+        TaskManager taskManager = taskManager(HOSTNAME);
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
+            Thread.sleep(250);
+            return Task.Result.COMPLETED;
+        }));
+
+        IntStream.range(0, 100)
+            .forEach(i -> rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
+            .block());
+
+        taskManager.await(id, TIMEOUT);
+        assertThat(taskManager.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.COMPLETED);
     }
 
     @Test
