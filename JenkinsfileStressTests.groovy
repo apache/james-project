@@ -89,8 +89,8 @@ pipeline {
                                 }
                             }
                             if (params.PROFILE in ["s3", "swift"]) {
-                                sh "docker exec james_run ${jamesCliWithOptions} removedomain localhost"
-                                sh "docker exec james_run ${jamesCliWithOptions} removedomain james.linagora.com"
+                                sh "docker exec james_run ${jamesCliWithOptions} removedomain localhost || true"
+                                sh "docker exec james_run ${jamesCliWithOptions} removedomain james.linagora.com || true"
                                 sh "docker exec james_run ${jamesCliWithOptions} adddomain open-paas.org"
                                 for (int n = 0; n <= 100; n++) {
                                     sh "docker exec james_run ${jamesCliWithOptions} adduser user${n}@open-paas.org secret"
