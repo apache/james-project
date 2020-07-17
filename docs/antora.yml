@@ -1,7 +1,7 @@
 name: main
 title: Apache James Reference Book
-version: '3.5'
-prerelease: Alpha
+version: '3.6.0'
+prerelease: Snapshot
 nav:
 - modules/concepts/nav.adoc
 - modules/servers/nav.adoc
