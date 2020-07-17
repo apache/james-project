@@ -1,0 +1,5 @@
+= smtpserver.xml
+
+(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-smtp-lmtp.xml
+
+== LMTP Configuration

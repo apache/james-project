@@ -1,0 +1,3 @@
+= pop3server.xml
+
+(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-pop3.xml

@@ -1,0 +1,5 @@
+= elasticsearch.properties
+
+(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-elasticsearch.xml
+
+== Tika Configuration
