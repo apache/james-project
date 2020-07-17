@@ -143,6 +143,162 @@ Response codes:
 
 * 200: List of available health checks
 
+== Task management
+
+Some webadmin features schedules tasks. The task management API allow to
+monitor and manage the execution of the following tasks.
+
+Note that the `taskId` used in the following APIs is returned by other
+WebAdmin APIs scheduling tasks.
+
+=== Getting a task details
+
+....
+curl -XGET http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+....
+
+An Execution Report will be returned:
+
+....
+{
+    "submitDate": "2017-12-27T15:15:24.805+0700",
+    "startedDate": "2017-12-27T15:15:24.809+0700",
+    "completedDate": "2017-12-27T15:15:24.815+0700",
+    "cancelledDate": null,
+    "failedDate": null,
+    "taskId": "3294a976-ce63-491e-bd52-1b6f465ed7a2",
+    "additionalInformation": {},
+    "status": "completed",
+    "type": "type-of-the-task"
+}
+....
+
+Note that:
+
+* `status` can have the value:
+** `waiting`: The task is scheduled but its execution did not start yet
+** `inProgress`: The task is currently executed
+** `cancelled`: The task had been cancelled
+** `completed`: The task execution is finished, and this execution is a
+success
+** `failed`: The task execution is finished, and this execution is a
+failure
+* `additionalInformation` is a task specific object giving additional
+information and context about that task. The structure of this
+`additionalInformation` field is provided along the specific task
+submission endpoint.
+
+Response codes:
+
+* 200: The specific task was found and the execution report exposed
+above is returned
+* 400: Invalid task ID
+* 404: Task ID was not found
+
+=== Awaiting a task
+
+One can await the end of a task, then receive it’s final execution
+report.
+
+That feature is especially usefull for testing purpose but still can
+serve real-life scenari.
+
+....
+curl -XGET http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2/await?timeout=duration
+....
+
+An Execution Report will be returned.
+
+`timeout` is optional. By default it is set to 365 days (the maximum
+value). The expected value is expressed in the following format:
+`Nunit`. `N` should be strictly positive. `unit` could be either in the
+short form (`s`, `m`, `h`, etc.), or in the long form (`day`, `week`,
+`month`, etc.).
+
+Examples:
+
+* `30s`
+* `5m`
+* `7d`
+* `1y`
+
+Response codes:
+
+* 200: The specific task was found and the execution report exposed
+above is returned
+* 400: Invalid task ID or invalid timeout
+* 404: Task ID was not found
+* 408: The timeout has been reached
+
+=== Cancelling a task
+
+You can cancel a task by calling:
+
+....
+curl -XDELETE http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+....
+
+Response codes:
+
+* 204: Task had been cancelled
+* 400: Invalid task ID
+
+=== Listing tasks
+
+A list of all tasks can be retrieved:
+
+....
+curl -XGET http://ip:port/tasks
+....
+
+Will return a list of Execution reports
+
+One can filter the above results by status. For example:
+
+....
+curl -XGET http://ip:port/tasks?status=inProgress
+....
+
+Will return a list of Execution reports that are currently in progress.
+
+Response codes:
+
+* 200: A list of corresponding tasks is returned
+* 400: Invalid status value
+
+=== Endpoints returning a task
+
+Many endpoints do generate a task.
+
+Example:
+
+....
+curl -XPOST /endpoint?action={action}
+....
+
+The response to these requests will be the scheduled `taskId` :
+
+....
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+....
+
+Positionned headers:
+
+* Location header indicates the location of the resource associated with
+the scheduled task. Example:
+
+....
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+....
+
+Response codes:
+
+* 201: Task generation succeeded. Corresponding task id is returned.
+* Other response codes might be returned depending on the endpoint
+
+The additional information returned depends on the scheduled task type
+and is documented in the endpoint documentation.
+
 == Administrating domains
 
 === Create a domain
@@ -695,9 +851,9 @@ The scheduled task will have the following type
 }
 ....
 
-== Single mailbox
+=== Single mailbox
 
-=== ReIndexing a mailbox mails
+==== ReIndexing a mailbox mails
 
 ....
 curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex
@@ -1183,9 +1339,11 @@ Response codes:
 * 400: Error in the request. Details can be found in the reported error.
 * 404: User not found.
 
-== Administrating quotas by users
+== Administrating quotas
 
-=== Getting the quota for a user
+=== Administrating quotas by users
+
+==== Getting the quota for a user
 
 ....
 curl -XGET http://ip:port/quota/users/{usernameToBeUsed}
@@ -1253,7 +1411,7 @@ Response codes:
 * 200: The user’s quota was successfully retrieved
 * 404: The user does not exist
 
-=== Updating the quota for a user
+==== Updating the quota for a user
 
 ....
 curl -XPUT http://ip:port/quota/users/{usernameToBeUsed}
@@ -1279,7 +1437,7 @@ Response codes:
 (-1).
 * 404: The user does not exist
 
-=== Getting the quota count for a user
+==== Getting the quota count for a user
 
 ....
 curl -XGET http://ip:port/quota/users/{usernameToBeUsed}/count
@@ -1299,7 +1457,7 @@ Response codes:
 * 204: No quota count limit is defined at the user level for this user
 * 404: The user does not exist
 
-=== Updating the quota count for a user
+==== Updating the quota count for a user
 
 ....
 curl -XPUT http://ip:port/quota/users/{usernameToBeUsed}/count
@@ -1320,7 +1478,7 @@ Response codes:
 (-1).
 * 404: The user does not exist
 
-=== Deleting the quota count for a user
+==== Deleting the quota count for a user
 
 ....
 curl -XDELETE http://ip:port/quota/users/{usernameToBeUsed}/count
@@ -1333,7 +1491,7 @@ Response codes:
 * 204: The quota has been updated to unlimited value.
 * 404: The user does not exist
 
-=== Getting the quota size for a user
+==== Getting the quota size for a user
 
 ....
 curl -XGET http://ip:port/quota/users/{usernameToBeUsed}/size
@@ -1353,7 +1511,7 @@ Response codes:
 * 204: No quota size limit is defined at the user level for this user
 * 404: The user does not exist
 
-=== Updating the quota size for a user
+==== Updating the quota size for a user
 
 ....
 curl -XPUT http://ip:port/quota/users/{usernameToBeUsed}/size
@@ -1374,7 +1532,7 @@ Response codes:
 (-1).
 * 404: The user does not exist
 
-=== Deleting the quota size for a user
+==== Deleting the quota size for a user
 
 ....
 curl -XDELETE http://ip:port/quota/users/{usernameToBeUsed}/size
@@ -1387,7 +1545,7 @@ Response codes:
 * 204: The quota has been updated to unlimited value.
 * 404: The user does not exist
 
-=== Searching user by quota ratio
+==== Searching user by quota ratio
 
 ....
 curl -XGET 'http://ip:port/quota/users?minOccupationRatio=0.8&maxOccupationRatio=0.99&limit=100&offset=200&domain=domain.com'
@@ -1453,7 +1611,7 @@ Response codes:
 * 200: List of users had successfully been returned.
 * 400: Validation issues with parameters
 
-=== Recomputing current quotas for users
+==== Recomputing current quotas for users
 
 ....
 curl -XPOST /quota/users?task=RecomputeCurrentQuotas
@@ -1502,9 +1660,9 @@ The scheduled task will have the following type
 upon a single current quota re-computation. Rerunning the task will
 _eventually_ provide the consistent result.
 
-== Administrating quotas by domains
+=== Administrating quotas by domains
 
-=== Getting the quota for a domain
+==== Getting the quota for a domain
 
 ....
 curl -XGET http://ip:port/quota/domains/{domainToBeUsed}
@@ -1562,7 +1720,7 @@ Response codes:
 * 405: Domain Quota configuration not supported when virtual hosting is
 desactivated.
 
-=== Updating the quota for a domain
+==== Updating the quota for a domain
 
 ....
 curl -XPUT http://ip:port/quota/domains/{domainToBeUsed}
@@ -1590,7 +1748,7 @@ Response codes:
 * 405: Domain Quota configuration not supported when virtual hosting is
 desactivated.
 
-=== Getting the quota count for a domain
+==== Getting the quota count for a domain
 
 ....
 curl -XGET http://ip:port/quota/domains/{domainToBeUsed}/count
@@ -1613,7 +1771,7 @@ domain
 * 405: Domain Quota configuration not supported when virtual hosting is
 desactivated.
 
-=== Updating the quota count for a domain
+==== Updating the quota count for a domain
 
 ....
 curl -XPUT http://ip:port/quota/domains/{domainToBeUsed}/count
@@ -1636,7 +1794,7 @@ Response codes:
 * 405: Domain Quota configuration not supported when virtual hosting is
 desactivated.
 
-=== Deleting the quota count for a domain
+==== Deleting the quota count for a domain
 
 ....
 curl -XDELETE http://ip:port/quota/domains/{domainToBeUsed}/count
@@ -1651,7 +1809,7 @@ Response codes:
 * 405: Domain Quota configuration not supported when virtual hosting is
 desactivated.
 
-=== Getting the quota size for a domain
+==== Getting the quota size for a domain
 
 ....
 curl -XGET http://ip:port/quota/domains/{domainToBeUsed}/size
@@ -1674,7 +1832,7 @@ domain
 * 405: Domain Quota configuration not supported when virtual hosting is
 desactivated.
 
-=== Updating the quota size for a domain
+==== Updating the quota size for a domain
 
 ....
 curl -XPUT http://ip:port/quota/domains/{domainToBeUsed}/size
@@ -1697,7 +1855,7 @@ Response codes:
 * 405: Domain Quota configuration not supported when virtual hosting is
 desactivated.
 
-=== Deleting the quota size for a domain
+==== Deleting the quota size for a domain
 
 ....
 curl -XDELETE http://ip:port/quota/domains/{domainToBeUsed}/size
@@ -1710,9 +1868,9 @@ Response codes:
 * 204: The quota has been updated to unlimited value.
 * 404: The domain does not exist
 
-== Administrating global quotas
+=== Administrating global quotas
 
-=== Getting the global quota
+==== Getting the global quota
 
 ....
 curl -XGET http://ip:port/quota
@@ -1742,7 +1900,7 @@ Response codes:
 
 * 200: The quota was successfully retrieved
 
-=== Updating global quota
+==== Updating global quota
 
 ....
 curl -XPUT http://ip:port/quota
@@ -1765,7 +1923,7 @@ Response codes:
 * 400: The body is not a positive integer neither an unlimited value
 (-1).
 
-=== Getting the global quota count
+==== Getting the global quota count
 
 ....
 curl -XGET http://ip:port/quota/count
@@ -1784,7 +1942,7 @@ Response codes:
 * 200: The quota was successfully retrieved
 * 204: No quota count limit is defined at the global level
 
-=== Updating the global quota count
+==== Updating the global quota count
 
 ....
 curl -XPUT http://ip:port/quota/count
@@ -1802,7 +1960,7 @@ Response codes:
 * 400: The body is not a positive integer neither an unlimited value
 (-1).
 
-=== Deleting the global quota count
+==== Deleting the global quota count
 
 ....
 curl -XDELETE http://ip:port/quota/count
@@ -1812,7 +1970,7 @@ Response codes:
 
 * 204: The quota has been updated to unlimited value.
 
-=== Getting the global quota size
+==== Getting the global quota size
 
 ....
 curl -XGET http://ip:port/quota/size
@@ -1829,7 +1987,7 @@ Response codes:
 * 200: The quota was successfully retrieved
 * 204: No quota size limit is defined at the global level
 
-=== Updating the global quota size
+==== Updating the global quota size
 
 ....
 curl -XPUT http://ip:port/quota/size
@@ -1847,7 +2005,7 @@ Response codes:
 * 400: The body is not a positive integer neither an unlimited value
 (-1).
 
-=== Deleting the global quota size
+==== Deleting the global quota size
 
 ....
 curl -XDELETE http://ip:port/quota/size
@@ -1857,180 +2015,122 @@ Response codes:
 
 * 204: The quota has been updated to unlimited value.
 
-== Cassandra Schema upgrades
+=== Administrating Sieve quotas
 
-Cassandra upgrades implies the creation of a new table. Thus restarting
-James is needed, as new tables are created on restart.
+Some limitations on space Users Sieve script can occupy can be
+configured by default, and overridden by user.
 
-Once done, we ship code that tries to read from new tables, and if not
-possible backs up to old tables. You can thus safely run without running
-additional migrations.
+==== Retrieving global sieve quota
 
-On the fly migration can be enabled. However, one might want to force
-the migration in a controlled fashion, and update automatically current
-schema version used (assess in the database old versions is no more
-used, as the corresponding tables are empty). Note that this process is
-safe: we ensure the service is not running concurrently on this James
-instance, that it does not bump version upon partial failures, that race
-condition in version upgrades will be idempotent, etc…
-
-These schema updates can be triggered by webadmin using the Cassandra
-backend.
-
-Note that currently the progress can be tracked by logs.
-
-* link:#Retrieving_current_Cassandra_schema_version[Retrieving current
-Cassandra schema version]
-* link:#Retrieving_latest_available_Cassandra_schema_version[Retrieving
-latest available Cassandra schema version]
-* link:#Upgrading_to_a_specific_version[Upgrading to a specific version]
-* link:#Upgrading_to_the_latest_version[Upgrading to the latest version]
-
-=== Retrieving current Cassandra schema version
+This endpoints allows to retrieve the global Sieve quota, which will be
+users default:
 
 ....
-curl -XGET http://ip:port/cassandra/version
+curl -XGET http://ip:port/sieve/quota/default
 ....
 
-Will return:
+Will return the bytes count allowed by user per default on this server.
 
 ....
-{"version": 2}
+102400
 ....
-
-Where the number corresponds to the current schema version of the
-database you are using.
 
 Response codes:
 
-* 200: Success
+* 200: Request is a success and the value is returned
+* 204: No default quota is being configured
 
-=== Retrieving latest available Cassandra schema version
+==== Updating global sieve quota
 
-....
-curl -XGET http://ip:port/cassandra/version/latest
-....
-
-Will return:
+This endpoints allows to update the global Sieve quota, which will be
+users default:
 
 ....
-{"version": 3}
+curl -XPUT http://ip:port/sieve/quota/default
 ....
 
-Where the number corresponds to the latest available schema version of
-the database you are using. This means you can be migrating to this
-schema version.
+With the body being the bytes count allowed by user per default on this
+server.
+
+....
+102400
+....
 
 Response codes:
 
-* 200: Success
+* 204: Operation succeeded
+* 400: Invalid payload
 
-=== Upgrading to a specific version
+==== Removing global sieve quota
+
+This endpoints allows to remove the global Sieve quota. There will no
+more be users default:
 
 ....
-curl -XPOST http://ip:port/cassandra/version/upgrade -d '3'
+curl -XDELETE http://ip:port/sieve/quota/default
 ....
-
-Will schedule the run of the migrations you need to reach schema version
-3.
-
-link:#_endpoints_returning_a_task[More details about endpoints returning
-a task].
 
 Response codes:
 
-* 200: Success. The scheduled task `taskId` is returned.
-* 400: The version is invalid. The version should be a strictly positive
-number.
-* 410: Error while planning this migration. This resource is gone away.
-Reason is mentionned in the body.
+* 204: Operation succeeded
 
-Note that several calls to this endpoint will be run in a sequential
-pattern.
+==== Retrieving user sieve quota
 
-If the server restarts during the migration, the migration is silently
-aborted.
-
-The scheduled task will have the following type `cassandra-migration`
-and the following `additionalInformation`:
+This endpoints allows to retrieve the Sieve quota of a user, which will
+be this users quota:
 
 ....
-{"targetVersion":3}
+curl -XGET http://ip:port/sieve/quota/users/user@domain.com
 ....
 
-=== Upgrading to the latest version
+Will return the bytes count allowed for this user.
 
 ....
-curl -XPOST http://ip:port/cassandra/version/upgrade/latest
+102400
 ....
-
-Will schedule the run of the migrations you need to reach the latest
-schema version.
-
-link:#_endpoints_returning_a_task[More details about endpoints returning
-a task].
 
 Response codes:
 
-* 200: Success. The scheduled task `taskId` is returned.
-* 410: Error while planning this migration. This resource is gone away.
-Reason is mentionned in the body.
+* 200: Request is a success and the value is returned
+* 204: No quota is being configured for this user
 
-Note that several calls to this endpoint will be run in a sequential
-pattern.
+==== Updating user sieve quota
 
-If the server restarts during the migration, the migration is silently
-aborted.
-
-The scheduled task will have the following type `cassandra-migration`
-and the following `additionalInformation`:
+This endpoints allows to update the Sieve quota of a user, which will be
+users default:
 
 ....
-{"toVersion":2}
+curl -XPUT http://ip:port/sieve/quota/users/user@domain.com
 ....
 
-== Correcting ghost mailbox
-
-This is a temporary workaround for the *Ghost mailbox* bug encountered
-using the Cassandra backend, as described in MAILBOX-322.
-
-You can use the mailbox merging feature in order to merge the old
-``ghosted'' mailbox with the new one.
+With the body being the bytes count allowed for this user on this
+server.
 
 ....
-curl -XPOST http://ip:port/cassandra/mailbox/merging \
-  -d '{"mergeOrigin":"{id1}", "mergeDestination":"{id2}"}' \
-  -H "Content-Type: application/json"
+102400
 ....
-
-Will scedule a task for :
-
-* Delete references to `id1` mailbox
-* Move it’s messages into `id2` mailbox
-* Union the rights of both mailboxes
-
-link:#_endpoints_returning_a_task[More details about endpoints returning
-a task].
 
 Response codes:
 
-* 201: Task generation succeeded. Corresponding task id is returned.
-* 400: Unable to parse the body.
+* 204: Operation succeeded
+* 400: Invalid payload
 
-The scheduled task will have the following type `mailbox-merging` and
-the following `additionalInformation`:
+==== Removing user sieve quota
+
+This endpoints allows to remove the Sieve quota of a user. There will no
+more quota for this user:
 
 ....
-{
-  "oldMailboxId":"5641376-02ed-47bd-bcc7-76ff6262d92a",
-  "newMailboxId":"4555159-52ae-895f-ccb7-586a4412fb50",
-  "totalMessageCount": 1,
-  "messageMovedCount": 1,
-  "messageFailedCount": 0
-}
+curl -XDELETE http://ip:port/sieve/quota/users/user@domain.com
 ....
 
-== Creating address group
+Response codes:
+
+* 204: Operation succeeded
+
+== Administrating Recipient rewriting
+
+=== Address group
 
 You can use *webadmin* to define address groups.
 
@@ -2049,7 +2149,7 @@ mailet] to be configured.
 Note that email addresses are restricted to ASCII character set. Mail
 addresses not matching this criteria will be rejected.
 
-=== Listing groups
+==== Listing groups
 
 ....
 curl -XGET http://ip:port/address/groups
@@ -2066,7 +2166,7 @@ Response codes:
 
 * 200: Success
 
-=== Listing members of a group
+==== Listing members of a group
 
 ....
 curl -XGET http://ip:port/address/groups/group@domain.com
@@ -2085,7 +2185,7 @@ Response codes:
 * 400: Group structure is not valid
 * 404: The group does not exist
 
-=== Adding a group member
+==== Adding a group member
 
 ....
 curl -XPUT http://ip:port/address/groups/group@domain.com/member@domain.com
@@ -2101,7 +2201,7 @@ Response codes:
 * 400: Domain in the source is not managed by the DomainList
 * 409: Requested group address is already used for another purpose
 
-=== Removing a group member
+==== Removing a group member
 
 ....
 curl -XDELETE http://ip:port/address/groups/group@domain.com/member@domain.com
@@ -2115,7 +2215,7 @@ Response codes:
 * 204: Success
 * 400: Group structure or member is not valid
 
-== Creating address forwards
+=== Address forwards
 
 You can use *webadmin* to define address forwards.
 
@@ -2138,7 +2238,7 @@ mailet] to be configured.
 Note that email addresses are restricted to ASCII character set. Mail
 addresses not matching this criteria will be rejected.
 
-=== Listing Forwards
+==== Listing Forwards
 
 ....
 curl -XGET http://ip:port/address/forwards
@@ -2155,7 +2255,7 @@ Response codes:
 
 * 200: Success
 
-=== Listing destinations in a forward
+==== Listing destinations in a forward
 
 ....
 curl -XGET http://ip:port/address/forwards/user@domain.com
@@ -2177,7 +2277,7 @@ Response codes:
 * 400: Forward structure is not valid
 * 404: The given user don’t have forwards or does not exist
 
-=== Adding a new destination to a forward
+==== Adding a new destination to a forward
 
 ....
 curl -XPUT http://ip:port/address/forwards/user@domain.com/targets/destination@domain.com
@@ -2193,7 +2293,7 @@ Response codes:
 * 400: Domain in the source is not managed by the DomainList
 * 404: Requested forward address does not match an existing user
 
-=== Removing a destination of a forward
+==== Removing a destination of a forward
 
 ....
 curl -XDELETE http://ip:port/address/forwards/user@domain.com/targets/destination@domain.com
@@ -2207,7 +2307,7 @@ Response codes:
 * 204: Success
 * 400: Forward structure or member is not valid
 
-== Creating address aliases
+=== Address aliases
 
 You can use *webadmin* to define aliases for an user.
 
@@ -2225,7 +2325,7 @@ mailet] to be configured.
 Note that email addresses are restricted to ASCII character set. Mail
 addresses not matching this criteria will be rejected.
 
-=== Listing users with aliases
+==== Listing users with aliases
 
 ....
 curl -XGET http://ip:port/address/aliases
@@ -2242,7 +2342,7 @@ Response codes:
 
 * 200: Success
 
-=== Listing alias sources of an user
+==== Listing alias sources of an user
 
 ....
 curl -XGET http://ip:port/address/aliases/user@domain.com
@@ -2263,7 +2363,7 @@ Response codes:
 * 200: Success
 * 400: Alias structure is not valid
 
-=== Adding a new alias to an user
+==== Adding a new alias to an user
 
 ....
 curl -XPUT http://ip:port/address/aliases/user@domain.com/sources/alias@domain.com
@@ -2281,7 +2381,7 @@ Response codes:
 * 400: Domain in the destination or source is not managed by the
 DomainList
 
-=== Removing an alias of an user
+==== Removing an alias of an user
 
 ....
 curl -XDELETE http://ip:port/address/aliases/user@domain.com/sources/alias@domain.com
@@ -2295,7 +2395,7 @@ Response codes:
 * 204: OK
 * 400: Alias structure or member is not valid
 
-== Creating domain mappings
+=== Domain mappings
 
 You can use *webadmin* to define domain mappings.
 
@@ -2319,7 +2419,7 @@ mailet] to be configured.
 Note that email addresses are restricted to ASCII character set. Mail
 addresses not matching this criteria will be rejected.
 
-=== Listing all domain mappings
+==== Listing all domain mappings
 
 ....
 curl -XGET http://ip:port/domainMappings
@@ -2338,7 +2438,7 @@ Response codes:
 
 * 200: OK
 
-=== Listing all destination domains for a source domain
+==== Listing all destination domains for a source domain
 
 ....
 curl -XGET http://ip:port/domainMappings/sourceDomain.tld
@@ -2358,7 +2458,7 @@ Response codes:
 * 400: The `fromDomain` resource name is invalid
 * 404: The `fromDomain` resource name is not found
 
-=== Adding a domain mapping
+==== Adding a domain mapping
 
 ....
 curl -XPUT http://ip:port/domainMappings/sourceDomain.tld
@@ -2380,7 +2480,7 @@ Response codes:
 * 400: The `fromDomain` resource name is invalid
 * 400: The destination domain specified in the body is invalid
 
-=== Removing a domain mapping
+==== Removing a domain mapping
 
 ....
 curl -XDELETE http://ip:port/domainMappings/sourceDomain.tld
@@ -2402,7 +2502,7 @@ Response codes:
 * 400: The `fromDomain` resource name is invalid
 * 400: The destination domain specified in the body is invalid
 
-== Creating regex mapping
+=== Regex mapping
 
 You can use *webadmin* to create regex mappings.
 
@@ -2417,7 +2517,7 @@ and requires the
 https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java[RecipientRewriteTable
 API] to be configured.
 
-=== Adding a regex mapping
+==== Adding a regex mapping
 
 ....
 POST /mappings/regex/mappingSource/targets/regex
@@ -2445,7 +2545,7 @@ Response codes:
 * 400: Invalid `mappingSource` path parameter.
 * 400: Invalid `regex` path parameter.
 
-=== Removing a regex mapping
+==== Removing a regex mapping
 
 ....
 DELETE /mappings/regex/{mappingSource}/targets/{regex}
@@ -2472,7 +2572,7 @@ Response codes:
 * 400: Invalid `mappingSource` path parameter.
 * 400: Invalid `regex` path parameter.
 
-== Address Mappings
+=== Address Mappings
 
 You can use *webadmin* to define address mappings.
 
@@ -2494,7 +2594,7 @@ etc), prefer using the corresponding routes to those types.
 
 Here are the following actions available on address mappings:
 
-=== Add an address mapping
+==== Add an address mapping
 
 ....
 curl -XPOST http://ip:port/mappings/address/{mappingSource}/targets/{destinationAddress}
@@ -2510,7 +2610,7 @@ Response codes:
 * 204: Action successfully performed
 * 400: Invalid parameters
 
-=== Remove an address mapping
+==== Remove an address mapping
 
 ....
 curl -XDELETE http://ip:port/mappings/address/{mappingSource}/targets/{destinationAddress}
@@ -2526,7 +2626,7 @@ Response codes:
 * 204: Action successfully performed
 * 400: Invalid parameters
 
-== List all mappings
+=== List all mappings
 
 ....
 curl -XGET http://ip:port/mappings
@@ -2578,8 +2678,6 @@ Response body:
 Response code:
 
 * 200: OK
-
-== User Mappings
 
 === Listing User Mappings
 
@@ -3171,265 +3269,6 @@ Response codes:
 * 400: Invalid request
 * 404: The mail queue does not exist
 
-== Administrating DLP Configuration
-
-DLP (stands for Data Leak Prevention) is supported by James. A DLP
-matcher will, on incoming emails, execute regular expressions on email
-sender, recipients or content, in order to report suspicious emails to
-an administrator. WebAdmin can be used to manage these DLP rules on a
-per `senderDomain` basis.
-
-`senderDomain` is domain of the sender of incoming emails, for example:
-`apache.org`, `james.org`,… Each `senderDomain` correspond to a distinct
-DLP configuration.
-
-=== List DLP configuration by sender domain
-
-Retrieve a DLP configuration for corresponding `senderDomain`, a
-configuration contains list of configuration items
-
-....
-curl -XGET http://ip:port/dlp/rules/{senderDomain}
-....
-
-Response codes:
-
-* 200: A list of dlp configuration items is returned
-* 400: Invalid `senderDomain` or payload in request
-* 404: The domain does not exist.
-
-This is an example of returned body. The rules field is a list of rules
-as described below.
-
-....
-{"rules : [
-  {
-    "id": "1",
-    "expression": "james.org",
-    "explanation": "Find senders or recipients containing james[any char]org",
-    "targetsSender": true,
-    "targetsRecipients": true,
-    "targetsContent": false
-  },
-  {
-    "id": "2",
-    "expression": "Find senders containing apache[any char]org",
-    "explanation": "apache.org",
-    "targetsSender": true,
-    "targetsRecipients": false,
-    "targetsContent": false
-  }
-]}
-....
-
-=== Store DLP configuration by sender domain
-
-Store a DLP configuration for corresponding `senderDomain`, if any item
-of DLP configuration in the request is stored before, it will not be
-stored anymore
-
-....
-curl -XPUT http://ip:port/dlp/rules/{senderDomain}
-....
-
-The body can contain a list of DLP configuration items formed by those
-fields: - `id`(String) is mandatory, unique identifier of the
-configuration item - `expression`(String) is mandatory, regular
-expression to match contents of targets - `explanation`(String) is
-optional, description of the configuration item -
-`targetsSender`(boolean) is optional and defaults to false. If true,
-`expression` will be applied to Sender and to From headers of the mail -
-`targetsContent`(boolean) is optional and defaults to false. If true,
-`expression` will be applied to Subject headers and textual bodies
-(text/plain and text/html) of the mail - `targetsRecipients`(boolean) is
-optional and defaults to false. If true, `expression` will be applied to
-recipients of the mail
-
-This is an example of returned body. The rules field is a list of rules
-as described below.
-
-....
-{"rules": [
-  {
-    "id": "1",
-    "expression": "james.org",
-    "explanation": "Find senders or recipients containing james[any char]org",
-    "targetsSender": true,
-    "targetsRecipients": true,
-    "targetsContent": false
-  },
-  {
-    "id": "2",
-    "expression": "Find senders containing apache[any char]org",
-    "explanation": "apache.org",
-    "targetsSender": true,
-    "targetsRecipients": false,
-    "targetsContent": false
-  }
-]}
-....
-
-Response codes:
-
-* 204: List of dlp configuration items is stored
-* 400: Invalid `senderDomain` or payload in request
-* 404: The domain does not exist.
-
-=== Remove DLP configuration by sender domain
-
-Remove a DLP configuration for corresponding `senderDomain`
-
-....
-curl -XDELETE http://ip:port/dlp/rules/{senderDomain}
-....
-
-Response codes:
-
-* 204: DLP configuration is removed
-* 400: Invalid `senderDomain` or payload in request
-* 404: The domain does not exist.
-
-=== Fetch a DLP configuration item by sender domain and rule id
-
-Retrieve a DLP configuration rule for corresponding `senderDomain` and a
-`ruleId`
-
-....
-curl -XGET http://ip:port/dlp/rules/{senderDomain}/rules/{ruleId}
-....
-
-Response codes:
-
-* 200: A dlp configuration item is returned
-* 400: Invalid `senderDomain` or payload in request
-* 404: The domain and/or the rule does not exist.
-
-This is an example of returned body.
-
-....
-{
-  "id": "1",
-  "expression": "james.org",
-  "explanation": "Find senders or recipients containing james[any char]org",
-  "targetsSender": true,
-  "targetsRecipients": true,
-  "targetsContent": false
-}
-....
-
-== Administrating Sieve quotas
-
-Some limitations on space Users Sieve script can occupy can be
-configured by default, and overridden by user.
-
-=== Retrieving global sieve quota
-
-This endpoints allows to retrieve the global Sieve quota, which will be
-users default:
-
-....
-curl -XGET http://ip:port/sieve/quota/default
-....
-
-Will return the bytes count allowed by user per default on this server.
-
-....
-102400
-....
-
-Response codes:
-
-* 200: Request is a success and the value is returned
-* 204: No default quota is being configured
-
-=== Updating global sieve quota
-
-This endpoints allows to update the global Sieve quota, which will be
-users default:
-
-....
-curl -XPUT http://ip:port/sieve/quota/default
-....
-
-With the body being the bytes count allowed by user per default on this
-server.
-
-....
-102400
-....
-
-Response codes:
-
-* 204: Operation succeeded
-* 400: Invalid payload
-
-=== Removing global sieve quota
-
-This endpoints allows to remove the global Sieve quota. There will no
-more be users default:
-
-....
-curl -XDELETE http://ip:port/sieve/quota/default
-....
-
-Response codes:
-
-* 204: Operation succeeded
-
-=== Retrieving user sieve quota
-
-This endpoints allows to retrieve the Sieve quota of a user, which will
-be this users quota:
-
-....
-curl -XGET http://ip:port/sieve/quota/users/user@domain.com
-....
-
-Will return the bytes count allowed for this user.
-
-....
-102400
-....
-
-Response codes:
-
-* 200: Request is a success and the value is returned
-* 204: No quota is being configured for this user
-
-=== Updating user sieve quota
-
-This endpoints allows to update the Sieve quota of a user, which will be
-users default:
-
-....
-curl -XPUT http://ip:port/sieve/quota/users/user@domain.com
-....
-
-With the body being the bytes count allowed for this user on this
-server.
-
-....
-102400
-....
-
-Response codes:
-
-* 204: Operation succeeded
-* 400: Invalid payload
-
-=== Removing user sieve quota
-
-This endpoints allows to remove the Sieve quota of a user. There will no
-more quota for this user:
-
-....
-curl -XDELETE http://ip:port/sieve/quota/users/user@domain.com
-....
-
-Response codes:
-
-* 204: Operation succeeded
-
 == Event Dead Letter
 
 The EventBus allows to register `group listeners' that are called in a
@@ -3562,6 +3401,217 @@ Response codes:
 * 201: the taskId of the created task
 * 400: Invalid group name, insertion id or action argument
 * 404: No event with this insertionId
+
+== Cassandra extra operations
+
+Some webadmin features to manage some extra operations on Cassandra
+tables, like solving inconsistencies on projection tables. Such
+inconsistencies can be for example created by a fail of the DAO to add a
+mapping into
+’mappings_sources`, while it was successful regarding the`rrt` table.
+
+=== Operations on mappings sources
+
+You can do a series of action on `mappings_sources` projection table :
+
+....
+curl -XPOST /cassandra/mappings?action={action}
+....
+
+Will return the taskId corresponding to the related task. Actions
+supported so far are :
+
+* SolveInconsistencies : cleans up first all the mappings in
+`mappings_sources` index and then repopulate it correctly. In the
+meantime, listing sources of a mapping might create temporary
+inconsistencies during the process.
+
+For example :
+
+....
+curl -XPOST /cassandra/mappings?action=SolveInconsistencies
+....
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+Response codes :
+
+* 201: the taskId of the created task
+* 400: Invalid action argument for performing operation on mappings data
+
+=== Cassandra Schema upgrades
+
+Cassandra upgrades implies the creation of a new table. Thus restarting
+James is needed, as new tables are created on restart.
+
+Once done, we ship code that tries to read from new tables, and if not
+possible backs up to old tables. You can thus safely run without running
+additional migrations.
+
+On the fly migration can be enabled. However, one might want to force
+the migration in a controlled fashion, and update automatically current
+schema version used (assess in the database old versions is no more
+used, as the corresponding tables are empty). Note that this process is
+safe: we ensure the service is not running concurrently on this James
+instance, that it does not bump version upon partial failures, that race
+condition in version upgrades will be idempotent, etc…
+
+These schema updates can be triggered by webadmin using the Cassandra
+backend.
+
+Note that currently the progress can be tracked by logs.
+
+* link:#Retrieving_current_Cassandra_schema_version[Retrieving current
+Cassandra schema version]
+* link:#Retrieving_latest_available_Cassandra_schema_version[Retrieving
+latest available Cassandra schema version]
+* link:#Upgrading_to_a_specific_version[Upgrading to a specific version]
+* link:#Upgrading_to_the_latest_version[Upgrading to the latest version]
+
+==== Retrieving current Cassandra schema version
+
+....
+curl -XGET http://ip:port/cassandra/version
+....
+
+Will return:
+
+....
+{"version": 2}
+....
+
+Where the number corresponds to the current schema version of the
+database you are using.
+
+Response codes:
+
+* 200: Success
+
+==== Retrieving latest available Cassandra schema version
+
+....
+curl -XGET http://ip:port/cassandra/version/latest
+....
+
+Will return:
+
+....
+{"version": 3}
+....
+
+Where the number corresponds to the latest available schema version of
+the database you are using. This means you can be migrating to this
+schema version.
+
+Response codes:
+
+* 200: Success
+
+==== Upgrading to a specific version
+
+....
+curl -XPOST http://ip:port/cassandra/version/upgrade -d '3'
+....
+
+Will schedule the run of the migrations you need to reach schema version
+3.
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+Response codes:
+
+* 200: Success. The scheduled task `taskId` is returned.
+* 400: The version is invalid. The version should be a strictly positive
+number.
+* 410: Error while planning this migration. This resource is gone away.
+Reason is mentionned in the body.
+
+Note that several calls to this endpoint will be run in a sequential
+pattern.
+
+If the server restarts during the migration, the migration is silently
+aborted.
+
+The scheduled task will have the following type `cassandra-migration`
+and the following `additionalInformation`:
+
+....
+{"targetVersion":3}
+....
+
+==== Upgrading to the latest version
+
+....
+curl -XPOST http://ip:port/cassandra/version/upgrade/latest
+....
+
+Will schedule the run of the migrations you need to reach the latest
+schema version.
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+Response codes:
+
+* 200: Success. The scheduled task `taskId` is returned.
+* 410: Error while planning this migration. This resource is gone away.
+Reason is mentionned in the body.
+
+Note that several calls to this endpoint will be run in a sequential
+pattern.
+
+If the server restarts during the migration, the migration is silently
+aborted.
+
+The scheduled task will have the following type `cassandra-migration`
+and the following `additionalInformation`:
+
+....
+{"toVersion":2}
+....
+
+=== Correcting ghost mailbox
+
+This is a temporary workaround for the *Ghost mailbox* bug encountered
+using the Cassandra backend, as described in MAILBOX-322.
+
+You can use the mailbox merging feature in order to merge the old
+``ghosted'' mailbox with the new one.
+
+....
+curl -XPOST http://ip:port/cassandra/mailbox/merging \
+  -d '{"mergeOrigin":"{id1}", "mergeDestination":"{id2}"}' \
+  -H "Content-Type: application/json"
+....
+
+Will scedule a task for :
+
+* Delete references to `id1` mailbox
+* Move it’s messages into `id2` mailbox
+* Union the rights of both mailboxes
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+Response codes:
+
+* 201: Task generation succeeded. Corresponding task id is returned.
+* 400: Unable to parse the body.
+
+The scheduled task will have the following type `mailbox-merging` and
+the following `additionalInformation`:
+
+....
+{
+  "oldMailboxId":"5641376-02ed-47bd-bcc7-76ff6262d92a",
+  "newMailboxId":"4555159-52ae-895f-ccb7-586a4412fb50",
+  "totalMessageCount": 1,
+  "messageMovedCount": 1,
+  "messageFailedCount": 0
+}
+....
 
 == Deleted Messages Vault
 
@@ -3790,10 +3840,10 @@ The scheduled task will have the following type
 
 while:
 
- * userExportFrom: export deleted messages from this user
- * exportTo: content of deleted messages have been shared to this mail
+* userExportFrom: export deleted messages from this user
+* exportTo: content of deleted messages have been shared to this mail
 address
- * totalExportedMessages: number of deleted messages match with
+* totalExportedMessages: number of deleted messages match with
 json query, then being shared to sharee.
 
 === Purge Deleted Messages
@@ -3852,196 +3902,148 @@ The scheduled task will have the following type
 while: - user: delete deleted messages from this user - deleteMessageId:
 messageId of deleted messages will be delete
 
-== Task management
+== Administrating DLP Configuration
 
-Some webadmin features schedules tasks. The task management API allow to
-monitor and manage the execution of the following tasks.
+DLP (stands for Data Leak Prevention) is supported by James. A DLP
+matcher will, on incoming emails, execute regular expressions on email
+sender, recipients or content, in order to report suspicious emails to
+an administrator. WebAdmin can be used to manage these DLP rules on a
+per `senderDomain` basis.
 
-Note that the `taskId` used in the following APIs is returned by other
-WebAdmin APIs scheduling tasks.
+`senderDomain` is domain of the sender of incoming emails, for example:
+`apache.org`, `james.org`,… Each `senderDomain` correspond to a distinct
+DLP configuration.
 
-=== Getting a task details
+=== List DLP configuration by sender domain
+
+Retrieve a DLP configuration for corresponding `senderDomain`, a
+configuration contains list of configuration items
 
 ....
-curl -XGET http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+curl -XGET http://ip:port/dlp/rules/{senderDomain}
 ....
 
-An Execution Report will be returned:
+Response codes:
+
+* 200: A list of dlp configuration items is returned
+* 400: Invalid `senderDomain` or payload in request
+* 404: The domain does not exist.
+
+This is an example of returned body. The rules field is a list of rules
+as described below.
+
+....
+{"rules : [
+  {
+    "id": "1",
+    "expression": "james.org",
+    "explanation": "Find senders or recipients containing james[any char]org",
+    "targetsSender": true,
+    "targetsRecipients": true,
+    "targetsContent": false
+  },
+  {
+    "id": "2",
+    "expression": "Find senders containing apache[any char]org",
+    "explanation": "apache.org",
+    "targetsSender": true,
+    "targetsRecipients": false,
+    "targetsContent": false
+  }
+]}
+....
+
+=== Store DLP configuration by sender domain
+
+Store a DLP configuration for corresponding `senderDomain`, if any item
+of DLP configuration in the request is stored before, it will not be
+stored anymore
+
+....
+curl -XPUT http://ip:port/dlp/rules/{senderDomain}
+....
+
+The body can contain a list of DLP configuration items formed by those
+fields: - `id`(String) is mandatory, unique identifier of the
+configuration item - `expression`(String) is mandatory, regular
+expression to match contents of targets - `explanation`(String) is
+optional, description of the configuration item -
+`targetsSender`(boolean) is optional and defaults to false. If true,
+`expression` will be applied to Sender and to From headers of the mail -
+`targetsContent`(boolean) is optional and defaults to false. If true,
+`expression` will be applied to Subject headers and textual bodies
+(text/plain and text/html) of the mail - `targetsRecipients`(boolean) is
+optional and defaults to false. If true, `expression` will be applied to
+recipients of the mail
+
+This is an example of returned body. The rules field is a list of rules
+as described below.
+
+....
+{"rules": [
+  {
+    "id": "1",
+    "expression": "james.org",
+    "explanation": "Find senders or recipients containing james[any char]org",
+    "targetsSender": true,
+    "targetsRecipients": true,
+    "targetsContent": false
+  },
+  {
+    "id": "2",
+    "expression": "Find senders containing apache[any char]org",
+    "explanation": "apache.org",
+    "targetsSender": true,
+    "targetsRecipients": false,
+    "targetsContent": false
+  }
+]}
+....
+
+Response codes:
+
+* 204: List of dlp configuration items is stored
+* 400: Invalid `senderDomain` or payload in request
+* 404: The domain does not exist.
+
+=== Remove DLP configuration by sender domain
+
+Remove a DLP configuration for corresponding `senderDomain`
+
+....
+curl -XDELETE http://ip:port/dlp/rules/{senderDomain}
+....
+
+Response codes:
+
+* 204: DLP configuration is removed
+* 400: Invalid `senderDomain` or payload in request
+* 404: The domain does not exist.
+
+=== Fetch a DLP configuration item by sender domain and rule id
+
+Retrieve a DLP configuration rule for corresponding `senderDomain` and a
+`ruleId`
+
+....
+curl -XGET http://ip:port/dlp/rules/{senderDomain}/rules/{ruleId}
+....
+
+Response codes:
+
+* 200: A dlp configuration item is returned
+* 400: Invalid `senderDomain` or payload in request
+* 404: The domain and/or the rule does not exist.
+
+This is an example of returned body.
 
 ....
 {
-    "submitDate": "2017-12-27T15:15:24.805+0700",
-    "startedDate": "2017-12-27T15:15:24.809+0700",
-    "completedDate": "2017-12-27T15:15:24.815+0700",
-    "cancelledDate": null,
-    "failedDate": null,
-    "taskId": "3294a976-ce63-491e-bd52-1b6f465ed7a2",
-    "additionalInformation": {},
-    "status": "completed",
-    "type": "type-of-the-task"
+  "id": "1",
+  "expression": "james.org",
+  "explanation": "Find senders or recipients containing james[any char]org",
+  "targetsSender": true,
+  "targetsRecipients": true,
+  "targetsContent": false
 }
 ....
-
-Note that:
-
-* `status` can have the value:
-** `waiting`: The task is scheduled but its execution did not start yet
-** `inProgress`: The task is currently executed
-** `cancelled`: The task had been cancelled
-** `completed`: The task execution is finished, and this execution is a
-success
-** `failed`: The task execution is finished, and this execution is a
-failure
-* `additionalInformation` is a task specific object giving additional
-information and context about that task. The structure of this
-`additionalInformation` field is provided along the specific task
-submission endpoint.
-
-Response codes:
-
-* 200: The specific task was found and the execution report exposed
-above is returned
-* 400: Invalid task ID
-* 404: Task ID was not found
-
-=== Awaiting a task
-
-One can await the end of a task, then receive it’s final execution
-report.
-
-That feature is especially usefull for testing purpose but still can
-serve real-life scenari.
-
-....
-curl -XGET http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2/await?timeout=duration
-....
-
-An Execution Report will be returned.
-
-`timeout` is optional. By default it is set to 365 days (the maximum
-value). The expected value is expressed in the following format:
-`Nunit`. `N` should be strictly positive. `unit` could be either in the
-short form (`s`, `m`, `h`, etc.), or in the long form (`day`, `week`,
-`month`, etc.).
-
-Examples:
-
-* `30s`
-* `5m`
-* `7d`
-* `1y`
-
-Response codes:
-
-* 200: The specific task was found and the execution report exposed
-above is returned
-* 400: Invalid task ID or invalid timeout
-* 404: Task ID was not found
-* 408: The timeout has been reached
-
-=== Cancelling a task
-
-You can cancel a task by calling:
-
-....
-curl -XDELETE http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-....
-
-Response codes:
-
-* 204: Task had been cancelled
-* 400: Invalid task ID
-
-=== Listing tasks
-
-A list of all tasks can be retrieved:
-
-....
-curl -XGET http://ip:port/tasks
-....
-
-Will return a list of Execution reports
-
-One can filter the above results by status. For example:
-
-....
-curl -XGET http://ip:port/tasks?status=inProgress
-....
-
-Will return a list of Execution reports that are currently in progress.
-
-Response codes:
-
-* 200: A list of corresponding tasks is returned
-* 400: Invalid status value
-
-=== Endpoints returning a task
-
-Many endpoints do generate a task.
-
-Example:
-
-....
-curl -XPOST /endpoint?action={action}
-....
-
-The response to these requests will be the scheduled `taskId` :
-
-....
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-....
-
-Positionned headers:
-
-* Location header indicates the location of the resource associated with
-the scheduled task. Example:
-
-....
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-....
-
-Response codes:
-
-* 201: Task generation succeeded. Corresponding task id is returned.
-* Other response codes might be returned depending on the endpoint
-
-The additional information returned depends on the scheduled task type
-and is documented in the endpoint documentation.
-
-== Cassandra extra operations
-
-Some webadmin features to manage some extra operations on Cassandra
-tables, like solving inconsistencies on projection tables. Such
-inconsistencies can be for example created by a fail of the DAO to add a
-mapping into
-’mappings_sources`, while it was successful regarding the`rrt` table.
-
-=== Operations on mappings sources
-
-You can do a series of action on `mappings_sources` projection table :
-
-....
-curl -XPOST /cassandra/mappings?action={action}
-....
-
-Will return the taskId corresponding to the related task. Actions
-supported so far are :
-
-* SolveInconsistencies : cleans up first all the mappings in
-`mappings_sources` index and then repopulate it correctly. In the
-meantime, listing sources of a mapping might create temporary
-inconsistencies during the process.
-
-For example :
-
-....
-curl -XPOST /cassandra/mappings?action=SolveInconsistencies
-....
-
-link:#_endpoints_returning_a_task[More details about endpoints returning
-a task].
-
-Response codes :
-
-* 201: the taskId of the created task
-* 400: Invalid action argument for performing operation on mappings data
