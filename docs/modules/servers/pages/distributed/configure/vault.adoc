@@ -1,3 +1,31 @@
 = deletedMessageVault.properties
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-vault.xml
+Deleted Messages Vault is the component in charge of retaining messages before they are going to be deleted.
+Messages stored in the Deleted Messages Vault could be deleted after exceeding their retentionPeriod (explained below).
+It also supports to restore or export messages matching with defined criteria in
+xref:distributed/operate/webadmin.adoc#_deleted_messages_vault[WebAdmin deleted messages vault document] by using
+xref:distributed/operate/webadmin.adoc#_deleted_messages_vault[WebAdmin endpoints].
+
+== Deleted Messages Vault Configuration
+
+To make James use DeletedMessageVault, you need to configure the PreDeletionHook for it.
+
+How to do this is doculented in the xref:distributed/configure/listeners.adoc[*listeners.xml*]
+Mailbox Listener Configuration page.
+
+The Deleted Messages Vault also stores and manages deleted messages into a BlobStore. The BlobStore can be either
+based on an object storage or on Cassandra. For configuring the BlobStore the vault will use, you can look at
+xref:distributed/configure/blobstore.adoc[*blobstore.properties*] BlobStore Configuration section.
+
+== deletedMessageVault.properties
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/deletedMessageVault.properties[example]
+to get some examples and hints.
+
+.deletedMessageVault.properties content
+|===
+| Property name | explanation
+
+| retentionPeriod
+| Deleted messages stored in the Deleted Messages Vault are expired after this period (default: 1 year). It can be expressed in *y* years, *d* days, *h* hours, ...
+|===
