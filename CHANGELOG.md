@@ -19,6 +19,9 @@ of tasks being currently executed.
 - JAMES-3117 Add PeriodicalHealthChecks for periodical calling all health checks
 - JAMES-3143 WebAdmin endpoint to solve Cassandra message inconsistencies
 - JAMES-3138 Webadmin endpoint to recompute users current quotas on top of Guice products
+- JAMES-3296 Webadmin endpoint to rebuild RabbitMQMailQueue in the Distributed Server
+- JAMES-3266 Offer an option to disable ElasticSearch in Distributed James product
+- JAMES-3202 Reindex only outdated documents with the Mode option set to CORRECT in reindexing tasks
 
 ### Changed
 - Switch to Java 11 for build and run
@@ -39,6 +42,12 @@ of tasks being currently executed.
 - JAMES-3122 Log4J2 adoption for Spring product. Log file configuration needs to be updated. See upgrade instructions.
 - JAMES-2760 mailqueue.size.metricsEnabled should be false by default
 - JAMES-3252 DomainList autoDetection should be turned off by default. Operators relying on implicit values for enabling DomainList autoDetection now needs to explicitly configure it.
+- JAMES-3295 Multiple IMAP performance enhancements for the Distributed Server. Some enhancement might transfer to other servers as well.
+- JAMES-3184 Throttling mechanism allow an admin to specify the throughput desired for a given WebAdmin task
+- JAMES-3224 Configuration for Cassandra ConsistencyLevel.{QUORUM, SERIAL} (for multi-dc configuration)
+- JAMES-3263 Optimize RecipientRewriteTable::getMappingsForType
+- JAMES-3176 Rewritte MDN parsing with Parboiled scala (avoid asm library dependency clash within the Distributed Server)
+- JAMES-3194 Rely on DTOConverter in TaskRoute
 
 ### Fixed
 - JAMES-2828 & JAMES-2929 bugs affecting JDBCMailRepository usage with PostgresSQL thanks to Jörg Thomas & Sergey B
@@ -59,6 +68,8 @@ of tasks being currently executed.
 - JAMES-2632 JMAP Draft GetMailboxes performance enhancements when retrieving all mailboxes of a user
 - JAMES-2964 Forbid to create User quota/ Domain quota/ Global quota using negative number
 - JAMES-3074 Fixing UidValidity generation, sanitizing of invalid values upon reads. Read upgrade instructions.
+- JAMES-3305 Avoid crashes upon deserialization issues when consuming RabbitMQ messages, leverage dead-letter feature
+- JAMES-3212 JMAP Handle subcrible/unsubcrible child's folder when update mailbox
 
 ### Deprecated
 - HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be 
