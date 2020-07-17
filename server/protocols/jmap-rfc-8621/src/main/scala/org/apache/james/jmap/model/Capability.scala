@@ -34,6 +34,8 @@ object CapabilityIdentifier {
   val JMAP_MAIL: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
   val JAMES_QUOTA: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:quota"
   val JAMES_SHARES: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:shares"
+
+  val SUPPORTED_CAPABILITIES: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL, JAMES_QUOTA, JAMES_SHARES)
 }
 
 sealed trait CapabilityProperties

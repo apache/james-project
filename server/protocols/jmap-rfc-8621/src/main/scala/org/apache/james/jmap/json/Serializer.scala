@@ -236,11 +236,15 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   private implicit def jsErrorWrites: Writes[JsError] = Json.writes[JsError]
 
+  private implicit val problemDetailsWrites: Writes[ProblemDetails] = Json.writes[ProblemDetails]
+
   def serialize(session: Session): JsValue = Json.toJson(session)
 
   def serialize(requestObject: RequestObject): JsValue = Json.toJson(requestObject)
 
   def serialize(responseObject: ResponseObject): JsValue = Json.toJson(responseObject)
+
+  def serialize(problemDetails: ProblemDetails): JsValue = Json.toJson(problemDetails)
 
   def serialize(mailbox: Mailbox)(implicit mailboxWrites: Writes[Mailbox]): JsValue = Json.toJson(mailbox)
 
