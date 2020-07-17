@@ -1,3 +1,32 @@
 = domainlist.xml
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-domainlist.xml
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/domainlist.xml[example]
+to get some examples and hints.
+
+This configuration block is defined by the *domainlist* tag.
+
+.domainlist.xml content
+|===
+| Property name | explanation
+
+| domainnames
+| Domainnames identifies the DNS namespace served by this instance of James.
+These domainnames are used for both matcher/mailet processing and SMTP auth
+to determine when a mail is intended for local delivery - Only applicable for XMLDomainList. The entries mentionned here will be created upon start.
+
+|autodetect
+|true or false - If autodetect is true, James wil attempt to discover its own host name AND
+use any explicitly specified servernames.
+If autodetect is false, James will use only the specified domainnames. Defaults to false.
+
+|autodetectIP
+|true or false - If autodetectIP is not false, James will also allow add the IP address for each servername.
+The automatic IP detection is to support RFC 2821, Sec 4.1.3, address literals. Defaults to false.
+
+|defaultDomain
+|Set the default domain which will be used if an email is send to a recipient without a domain part.
+If not defaultdomain is set the first domain of the DomainList get used. If the default is not yet contained by the Domain List, the domain will be created upon start.
+|===
+
+To override autodetected domainames names simply add explicit domainname elements.
+In most cases this will be necessary. By default, the domainname 'localhost' is specified. This can be removed, if required.
