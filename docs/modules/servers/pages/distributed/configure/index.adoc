@@ -37,7 +37,7 @@ The following configuration files are exposed:
 
 == For extensions
 
-** xref:distributed/configure/vault.adoc[*deletedMessageVault.properties*] allows to configure the DeletedMessageVaultlink:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/deletedMessageVault.properties[example]
+** xref:distributed/configure/vault.adoc[*deletedMessageVault.properties*] allows to configure the DeletedMessageVault link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/deletedMessageVault.properties[example]
 ** xref:distributed/configure/listeners.adoc[*listeners.xml*] enables configuration of Mailbox Listeners link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listeners.xml[example]
 ** xref:distributed/configure/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading yours extensions in it link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/extensions.properties[example]
 ** xref:distributed/configure/spam.adoc[This page] documents Anti-Spam setup with SpamAssassin.
