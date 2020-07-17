@@ -26,6 +26,7 @@
 **** xref:distributed/configure/healthcheck.adoc[healthcheck.properties]
 **** xref:distributed/configure/imap.adoc[imapserver.xml]
 **** xref:distributed/configure/jmap.adoc[jmap.properties]
+**** xref:distributed/configure/jmx.adoc[jmx.properties]
 **** xref:distributed/configure/listeners.adoc[listeners.xml]
 **** xref:distributed/configure/mailetcontainer.adoc[mailetcontainer.xml]
 **** xref:distributed/configure/mailrepositorystore.adoc[mailrepositorystore.xml]

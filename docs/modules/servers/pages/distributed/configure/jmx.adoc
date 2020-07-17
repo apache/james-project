@@ -1,3 +1,23 @@
 = jmx.properties
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-system.xml
+This is used to configure the JMX MBean server via which all management is achieved.
+
+Consult thos link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmx.properties[example]
+in GIT to get some examples and hints.
+
+.jmx.properties content
+|===
+| Property name | explanation
+
+| jmx.enabled
+| Boolean. Should the JMX server be enabled? Defaults to `true`.
+
+| jmx.address
+|The IP address (host name) the MBean Server will bind/listen to.
+
+| jmx.port
+| The port number the MBean Server will bind/listen to.
+|===
+
+To access from a remote location, it has been reported that `-Dcom.sun.management.jmxremote.ssl=false` is needed as
+a JVM argument.
