@@ -1,3 +1,14 @@
 = healthcheck.properties
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-healthcheck.xml
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/healthcheck.properties[example]
+to get some examples and hints.
+
+Use this configuration to define the initial delay and period for the PeriodicalHealthChecks. It is only applicable with Guice products.
+
+.healthcheck.properties content
+|===
+| Property name | explanation
+
+| healthcheck.period
+| Define the period between two periodical health checks (default: 60s). Units supported are (ms - millisecond, s - second, m - minute, h - hour, d - day). Default unit is millisecond.
+|===
