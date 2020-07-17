@@ -46,9 +46,10 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.metrics.api.Gauge;
@@ -76,6 +77,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 
 import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -700,7 +702,7 @@ class RabbitMQMailQueueTest {
     private void setUp(CassandraCluster cassandra,
                        MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem,
                        RabbitMQMailQueueConfiguration configuration) throws Exception {
-        CassandraBlobStore blobStore = CassandraBlobStore.forTesting(cassandra.getConf());
+        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf());
         MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
         clock = new UpdatableTickingClock(IN_SLICE_1);
 

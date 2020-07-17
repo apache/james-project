@@ -71,7 +71,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
             .build();
         testee = new MetricableBlobStore(
             metricsTestExtension.getMetricFactory(),
-            new CassandraBlobStore(
+            CassandraBlobStoreFactory.forTesting(
                 blobIdFactory,
                 BucketName.DEFAULT,
                 new CassandraDumbBlobStore(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT)));

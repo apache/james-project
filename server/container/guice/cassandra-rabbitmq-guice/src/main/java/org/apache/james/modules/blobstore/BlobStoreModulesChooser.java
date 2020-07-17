@@ -49,9 +49,12 @@ public class BlobStoreModulesChooser {
         @Override
         protected void configure() {
             install(new CassandraBlobStoreDependenciesModule());
+
+            bind(DumbBlobStore.class).to(CassandraDumbBlobStore.class);
+
             bind(BlobStore.class)
                 .annotatedWith(Names.named(CachedBlobStore.BACKEND))
-                .to(CassandraBlobStore.class);
+                .to(DeDuplicationBlobStore.class);
         }
     }
 

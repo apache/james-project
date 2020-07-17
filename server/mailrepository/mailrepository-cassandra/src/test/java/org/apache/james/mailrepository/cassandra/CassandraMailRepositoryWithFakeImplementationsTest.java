@@ -33,11 +33,12 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -127,7 +128,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             FailingMailDAO mailDAO = new FailingMailDAO();
             keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
-            CassandraBlobStore blobStore = CassandraBlobStore.forTesting(cassandra.getConf());
+            BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf());
 
             cassandraMailRepository = new CassandraMailRepository(URL,
                     keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
@@ -212,7 +213,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             CassandraMailRepositoryMailDaoAPI mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
             FailingKeysDAO keysDAO = new FailingKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
-            CassandraBlobStore blobStore = CassandraBlobStore.forTesting(cassandra.getConf());
+            BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf());
 
             cassandraMailRepository = new CassandraMailRepository(URL,
                     keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());

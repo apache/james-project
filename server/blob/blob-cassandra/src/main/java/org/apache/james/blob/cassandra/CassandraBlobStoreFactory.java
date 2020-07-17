@@ -17,33 +17,30 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james.blob.cassandra;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
-import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
-import org.apache.james.blob.cassandra.CassandraDumbBlobStore;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
+import com.datastax.driver.core.Session;
 
-public class CassandraBlobStoreDependenciesModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(CassandraDefaultBucketDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraBlobStoreFactory.class).in(Scopes.SINGLETON);
-        bind(CassandraDumbBlobStore.class).in(Scopes.SINGLETON);
+public class CassandraBlobStoreFactory {
+    public static BlobStore forTesting(HashBlobId.Factory blobIdFactory,
+                       BucketName defaultBucketName,
+                       CassandraDumbBlobStore dumbBlobStore) {
+        return new DeDuplicationBlobStore(dumbBlobStore, defaultBucketName, blobIdFactory);
+    }
 
-        bind(BucketName.class)
-            .annotatedWith(Names.named(DeDuplicationBlobStore.DEFAULT_BUCKET()))
-            .toInstance(BucketName.DEFAULT);
-
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
+    public static BlobStore forTesting(Session session) {
+        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, session);
+        CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(session);
+        return forTesting(
+            blobIdFactory,
+            BucketName.DEFAULT,
+            new CassandraDumbBlobStore(defaultBucketDAO, bucketDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, BucketName.DEFAULT));
     }
 }

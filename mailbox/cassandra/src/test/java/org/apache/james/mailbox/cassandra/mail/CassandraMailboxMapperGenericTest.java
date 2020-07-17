@@ -24,6 +24,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -38,6 +39,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailboxMapperGenericTest {
     private static final CassandraModule MODULES = CassandraModule.aggregateModules(
+        CassandraBlobModule.MODULE,
         CassandraSchemaVersionModule.MODULE,
         CassandraAclModule.MODULE,
         CassandraMailboxModule.MODULE,

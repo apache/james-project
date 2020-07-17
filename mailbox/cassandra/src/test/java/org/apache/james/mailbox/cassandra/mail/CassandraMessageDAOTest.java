@@ -34,9 +34,10 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -85,7 +86,7 @@ class CassandraMessageDAOTest {
     void setUp(CassandraCluster cassandra) {
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
-        CassandraBlobStore blobStore = CassandraBlobStore.forTesting(cassandra.getConf());
+        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf());
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         testee = new CassandraMessageDAO(
             cassandra.getConf(),
