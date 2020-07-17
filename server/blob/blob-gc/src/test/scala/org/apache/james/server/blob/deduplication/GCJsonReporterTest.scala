@@ -178,8 +178,6 @@ class GCJsonReporterTest extends AnyWordSpec with Matchers {
             lastIteration = gcReportGenNPlus2.iteration,
             targetedGeneration = generationPlusOne.next(2))
 
-          import JsonReport._
-
           val actualJson = Json.toJson(GCJsonReporter.report(ReferenceEvent(reference) :: GCIterationEvent(gcReportGenNPlus2) :: DereferenceEvent(dereference) :: GCIterationEvent(gcReportGenNPlus3) :: Nil))
 
           actualJson should equal(Json.parse(ClassLoaderUtils.getSystemResourceAsString("gcReport.json")))
