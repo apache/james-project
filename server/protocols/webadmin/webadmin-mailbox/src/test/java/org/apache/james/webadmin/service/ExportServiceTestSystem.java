@@ -29,8 +29,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.file.LocalFileBlobExportMechanism;
-import org.apache.james.blob.memory.MemoryBlobStore;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -77,7 +76,7 @@ public class ExportServiceTestSystem {
 
         bobSession = mailboxManager.createSystemSession(BOB);
 
-        blobStore = Mockito.spy(new MemoryBlobStore(FACTORY, new MemoryDumbBlobStore()));
+        blobStore = Mockito.spy(MemoryBlobStoreFactory.create(FACTORY));
         mailetContext = FakeMailContext.builder().postmaster(MailAddressFixture.POSTMASTER_AT_JAMES).build();
         blobExport = new LocalFileBlobExportMechanism(mailetContext, blobStore, fileSystem, dnsService,
             LocalFileBlobExportMechanism.Configuration.DEFAULT_CONFIGURATION);

@@ -29,11 +29,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.FileExtension;
-import org.apache.james.blob.memory.MemoryBlobStore;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.MailAddress;
 import org.apache.james.linshare.client.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,7 +50,7 @@ class LinshareBlobExportMechanismTest {
     @RegisterExtension
     static LinshareExtension linshareExtension = new LinshareExtension();
 
-    private MemoryBlobStore blobStore;
+    private BlobStore blobStore;
     private LinshareBlobExportMechanism testee;
     private HashBlobId.Factory blobIdFactory;
     private LinshareAPIForUserTesting user2API;
@@ -58,7 +58,7 @@ class LinshareBlobExportMechanismTest {
     @BeforeEach
     void setUp() throws Exception {
         blobIdFactory = new HashBlobId.Factory();
-        blobStore = new MemoryBlobStore(blobIdFactory, new MemoryDumbBlobStore());
+        blobStore = MemoryBlobStoreFactory.create(blobIdFactory);
 
         testee = new LinshareBlobExportMechanism(
             linshareExtension.getDelegationAccountAPI(),

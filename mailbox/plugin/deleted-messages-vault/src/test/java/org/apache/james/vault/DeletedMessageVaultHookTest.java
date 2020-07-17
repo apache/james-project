@@ -30,8 +30,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.memory.MemoryBlobStore;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
@@ -110,7 +109,7 @@ class DeletedMessageVaultHookTest {
     void setUp() throws Exception {
         clock = Clock.fixed(DELETION_DATE.toInstant(), ZoneOffset.UTC);
         messageVault = new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
-            new MemoryBlobStore(new HashBlobId.Factory(), new MemoryDumbBlobStore()), new BucketNameGenerator(clock), clock,
+            MemoryBlobStoreFactory.create(new HashBlobId.Factory()), new BucketNameGenerator(clock), clock,
             RetentionConfiguration.DEFAULT);
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();

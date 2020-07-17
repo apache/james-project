@@ -17,35 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.blob.memory;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.DumbBlobStore;
-import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
+public class MemoryBlobStoreFactory {
+    public static BlobStore create(BlobId.Factory factory) {
+        return create(factory, BucketName.DEFAULT);
+    }
 
-public class BlobMemoryModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(HashBlobId.Factory.class).in(Scopes.SINGLETON);
-        bind(BlobId.Factory.class).to(HashBlobId.Factory.class);
-
-        bind(DeDuplicationBlobStore.class).in(Scopes.SINGLETON);
-        bind(BlobStore.class).to(DeDuplicationBlobStore.class);
-
-        bind(MemoryDumbBlobStore.class).in(Scopes.SINGLETON);
-        bind(DumbBlobStore.class).to(MemoryDumbBlobStore.class);
-
-        bind(BucketName.class)
-            .annotatedWith(Names.named(DeDuplicationBlobStore.DEFAULT_BUCKET()))
-            .toInstance(BucketName.DEFAULT);
+    public static BlobStore create(BlobId.Factory factory, BucketName defaultBucketName) {
+        return new DeDuplicationBlobStore(
+            new MemoryDumbBlobStore(),
+            defaultBucketName, factory);
     }
 }

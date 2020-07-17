@@ -36,8 +36,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreException;
-import org.apache.james.blob.memory.MemoryBlobStore;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -152,14 +151,14 @@ class HybridBlobStoreTest implements BlobStoreContract {
     private static final String STRING_CONTENT = "blob content";
     private static final byte [] BLOB_CONTENT = STRING_CONTENT.getBytes();
 
-    private MemoryBlobStore lowCostBlobStore;
-    private MemoryBlobStore highPerformanceBlobStore;
+    private BlobStore lowCostBlobStore;
+    private BlobStore highPerformanceBlobStore;
     private HybridBlobStore hybridBlobStore;
 
     @BeforeEach
     void setup() {
-        lowCostBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
-        highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+        lowCostBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
+        highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
         hybridBlobStore = HybridBlobStore.builder()
             .lowCost(lowCostBlobStore)
             .highPerformance(highPerformanceBlobStore)
@@ -280,7 +279,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
     class LowCostSaveThrowsExceptionDirectly {
         @Test
         void saveShouldFailWhenException() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+            BlobStore highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -293,7 +292,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void saveInputStreamShouldFailWhenException() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+            BlobStore highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -310,7 +309,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void saveShouldFailWhenLowCostCompletedExceptionally() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+            BlobStore highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -323,7 +322,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void saveInputStreamShouldFallBackToPerformingWhenLowCostCompletedExceptionally() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+            BlobStore highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -341,13 +340,13 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void readShouldReturnFallbackToPerformingWhenLowCostGotException() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+            BlobStore highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
                 .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
-            BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+            BlobId blobId = Mono.from(highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
             assertThat(hybridBlobStore.read(hybridBlobStore.getDefaultBucketName(), blobId))
                 .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
@@ -355,14 +354,14 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void readBytesShouldReturnFallbackToPerformingWhenLowCostGotException() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+            BlobStore highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
 
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
                 .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
-            BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+            BlobId blobId = Mono.from(highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
             assertThat(hybridBlobStore.readBytes(hybridBlobStore.getDefaultBucketName(), blobId).block())
                 .isEqualTo(BLOB_CONTENT);
@@ -375,13 +374,13 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void readShouldReturnFallbackToPerformingWhenLowCostCompletedExceptionally() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+            BlobStore highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
                 .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
-            BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+            BlobId blobId = Mono.from(highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
             assertThat(hybridBlobStore.read(hybridBlobStore.getDefaultBucketName(), blobId))
                 .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
@@ -389,13 +388,13 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void readBytesShouldReturnFallbackToPerformingWhenLowCostCompletedExceptionally() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+            BlobStore highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
                 .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
-            BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+            BlobId blobId = Mono.from(highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
             assertThat(hybridBlobStore.readBytes(hybridBlobStore.getDefaultBucketName(), blobId).block())
                 .isEqualTo(BLOB_CONTENT);
@@ -404,7 +403,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
     @Test
     void readShouldReturnFromLowCostWhenAvailable() {
-        BlobId blobId = lowCostBlobStore.save(lowCostBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(lowCostBlobStore.save(lowCostBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
         assertThat(hybridBlobStore.read(hybridBlobStore.getDefaultBucketName(), blobId))
             .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
@@ -412,7 +411,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
     @Test
     void readShouldReturnFromPerformingWhenLowCostNotAvailable() {
-        BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
         assertThat(hybridBlobStore.read(hybridBlobStore.getDefaultBucketName(), blobId))
             .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
@@ -420,7 +419,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
     @Test
     void readBytesShouldReturnFromLowCostWhenAvailable() {
-        BlobId blobId = lowCostBlobStore.save(lowCostBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(lowCostBlobStore.save(lowCostBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
         assertThat(hybridBlobStore.readBytes(lowCostBlobStore.getDefaultBucketName(), blobId).block())
             .isEqualTo(BLOB_CONTENT);
@@ -428,7 +427,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
     @Test
     void readBytesShouldReturnFromPerformingWhenLowCostNotAvailable() {
-        BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
         assertThat(hybridBlobStore.readBytes(hybridBlobStore.getDefaultBucketName(), blobId).block())
             .isEqualTo(BLOB_CONTENT);
@@ -436,34 +435,34 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
     @Test
     void deleteBucketShouldDeleteBothLowCostAndPerformingBuckets() {
-        BlobId blobId1 = highPerformanceBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST).block();
-        BlobId blobId2 = lowCostBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId1 = Mono.from(highPerformanceBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST)).block();
+        BlobId blobId2 = Mono.from(lowCostBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST)).block();
 
         hybridBlobStore.deleteBucket(BucketName.DEFAULT).block();
 
-        assertThatThrownBy(() -> highPerformanceBlobStore.readBytes(BucketName.DEFAULT, blobId1).block())
+        assertThatThrownBy(() -> Mono.from(highPerformanceBlobStore.readBytes(BucketName.DEFAULT, blobId1)).block())
             .isInstanceOf(ObjectStoreException.class);
-        assertThatThrownBy(() -> lowCostBlobStore.readBytes(BucketName.DEFAULT, blobId2).block())
+        assertThatThrownBy(() -> Mono.from(lowCostBlobStore.readBytes(BucketName.DEFAULT, blobId2)).block())
             .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test
     void deleteBucketShouldDeleteLowCostBucketEvenWhenPerformingDoesNotExist() {
-        BlobId blobId = lowCostBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(lowCostBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST)).block();
 
         hybridBlobStore.deleteBucket(BucketName.DEFAULT).block();
 
-        assertThatThrownBy(() -> lowCostBlobStore.readBytes(BucketName.DEFAULT, blobId).block())
+        assertThatThrownBy(() -> Mono.from(lowCostBlobStore.readBytes(BucketName.DEFAULT, blobId)).block())
             .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test
     void deleteBucketShouldDeletePerformingBucketEvenWhenLowCostDoesNotExist() {
-        BlobId blobId = highPerformanceBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(highPerformanceBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST)).block();
 
         hybridBlobStore.deleteBucket(BucketName.DEFAULT).block();
 
-        assertThatThrownBy(() -> highPerformanceBlobStore.readBytes(BucketName.DEFAULT, blobId).block())
+        assertThatThrownBy(() -> Mono.from(highPerformanceBlobStore.readBytes(BucketName.DEFAULT, blobId)).block())
             .isInstanceOf(ObjectStoreException.class);
     }
 
@@ -475,8 +474,8 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
     @Test
     void getDefaultBucketNameShouldThrowWhenBlobStoreDontShareTheSameDefaultBucketName() {
-        lowCostBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, BucketName.of("lowCost"), new MemoryDumbBlobStore());
-        highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, BucketName.of("highPerformance"), new MemoryDumbBlobStore());
+        lowCostBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY, BucketName.of("lowCost"));
+        highPerformanceBlobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY, BucketName.of("highPerformance"));
         hybridBlobStore = HybridBlobStore.builder()
             .lowCost(lowCostBlobStore)
             .highPerformance(highPerformanceBlobStore)
@@ -494,29 +493,29 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         hybridBlobStore.delete(BucketName.DEFAULT, blobId1).block();
 
-        assertThatThrownBy(() -> highPerformanceBlobStore.readBytes(BucketName.DEFAULT, blobId1).block())
+        assertThatThrownBy(() -> Mono.from(highPerformanceBlobStore.readBytes(BucketName.DEFAULT, blobId1)).block())
             .isInstanceOf(ObjectStoreException.class);
-        assertThatThrownBy(() -> lowCostBlobStore.readBytes(BucketName.DEFAULT, blobId2).block())
+        assertThatThrownBy(() -> Mono.from(lowCostBlobStore.readBytes(BucketName.DEFAULT, blobId2)).block())
             .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test
     void deleteShouldDeleteLowCostBlobEvenWhenPerformingDoesNotExist() {
-        BlobId blobId = lowCostBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(lowCostBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST)).block();
 
         hybridBlobStore.delete(BucketName.DEFAULT, blobId).block();
 
-        assertThatThrownBy(() -> lowCostBlobStore.readBytes(BucketName.DEFAULT, blobId).block())
+        assertThatThrownBy(() -> Mono.from(lowCostBlobStore.readBytes(BucketName.DEFAULT, blobId)).block())
             .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test
     void deleteShouldDeletePerformingBlobEvenWhenLowCostDoesNotExist() {
-        BlobId blobId = highPerformanceBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(highPerformanceBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LOW_COST)).block();
 
         hybridBlobStore.delete(BucketName.DEFAULT, blobId).block();
 
-        assertThatThrownBy(() -> highPerformanceBlobStore.readBytes(BucketName.DEFAULT, blobId).block())
+        assertThatThrownBy(() -> Mono.from(highPerformanceBlobStore.readBytes(BucketName.DEFAULT, blobId)).block())
             .isInstanceOf(ObjectStoreException.class);
     }
 
