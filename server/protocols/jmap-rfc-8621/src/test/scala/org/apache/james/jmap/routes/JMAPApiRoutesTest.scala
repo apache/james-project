@@ -38,6 +38,7 @@ import org.apache.james.jmap._
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy}
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
+import org.apache.james.jmap.model.RequestLevelErrorType
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
 import org.apache.james.mailbox.MailboxManager
 import org.apache.james.mailbox.extension.PreDeletionHook
@@ -45,6 +46,7 @@ import org.apache.james.mailbox.inmemory.MemoryMailboxManagerProvider
 import org.apache.james.mailbox.model.TestId
 import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.apache.james.user.memory.MemoryUsersRepository
+import org.hamcrest.Matchers.equalTo
 import org.mockito.Mockito.mock
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
@@ -164,6 +166,32 @@ object JMAPApiRoutesTest {
       |    }
       |}
       |""".stripMargin
+
+  private val NOT_JSON_REQUEST: String =
+    """
+      |{
+      |  "using": [ "urn:ietf:params:jmap:core"],
+      |  "methodCalls": {
+      |      "arg1": "arg1data",
+      |}
+      |""".stripMargin
+
+  private val UNKNOWN_CAPABILITY_REQUEST: String =
+    """
+      |{
+      |  "using": [ "urn:ietf:params:jmap:core1"],
+      |   "methodCalls": [
+      |    [
+      |      "Core/echo",
+      |      {
+      |        "arg1": "arg1data",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c1"
+      |    ]
+      |  ]
+      |}
+      |""".stripMargin
 }
 
 class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
@@ -199,7 +227,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .headers(headers)
       .when()
         .get
-      .then
+      .`then`
         .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
@@ -214,7 +242,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .headers(headers)
       .when()
         .post
-      .then
+      .`then`
         .statusCode(HttpStatus.SC_OK)
   }
 
@@ -230,7 +258,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .body(REQUEST_OBJECT)
       .when()
         .post()
-      .then
+      .`then`
         .statusCode(HttpStatus.SC_OK)
         .contentType(ContentType.JSON)
       .extract()
@@ -253,7 +281,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .body(REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD)
       .when()
         .post()
-      .then
+      .`then`
         .statusCode(HttpStatus.SC_OK)
         .contentType(ContentType.JSON)
       .extract()
@@ -274,7 +302,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .headers(headers)
       .when()
         .get
-      .then
+      .`then`
         .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
@@ -288,7 +316,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .headers(headers)
       .when()
         .post
-      .then
+      .`then`
         .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
@@ -303,7 +331,47 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .body(WRONG_OBJECT_REQUEST)
       .when()
         .post
-      .then
+      .`then`
         .statusCode(HttpStatus.SC_BAD_REQUEST)
+        .body("status", equalTo(400))
+        .body("type", equalTo(RequestLevelErrorType.NOT_REQUEST.value))
+        .body("detail", equalTo("The request was successfully parsed as JSON but did not match the type signature of the Request object: {\"errors\":[{\"path\":\"obj.methodCalls\",\"messages\":[\"error.expected.jsarray\"]}]}"))
+  }
+
+  "RFC-8621 version, POST, with not json request body" should "return 400 status" in {
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
+    RestAssured
+      .`given`()
+        .headers(headers)
+        .body(NOT_JSON_REQUEST)
+      .when()
+        .post
+      .`then`
+        .statusCode(HttpStatus.SC_BAD_REQUEST)
+        .body("status", equalTo(400))
+        .body("type", equalTo(RequestLevelErrorType.NOT_JSON.value))
+        .body("detail", equalTo("The content type of the request was not application/json or the request did not parse as I-JSON: Unexpected character ('}' (code 125)): was expecting double-quote to start field name\n " +
+          "at [Source: (reactor.netty.ByteBufMono$ReleasingInputStream); line: 6, column: 2]"))
+  }
+
+  "RFC-8621 version, POST, with unknown capability" should "return 400 status" in {
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
+    RestAssured
+      .`given`()
+        .headers(headers)
+        .body(UNKNOWN_CAPABILITY_REQUEST)
+      .when()
+        .post
+      .`then`
+        .statusCode(HttpStatus.SC_BAD_REQUEST)
+        .body("status", equalTo(400))
+        .body("type", equalTo(RequestLevelErrorType.UNKNOWN_CAPABILITY.value))
+        .body("detail", equalTo("The request used unsupported capabilities: Set(urn:ietf:params:jmap:core1)"))
   }
 }

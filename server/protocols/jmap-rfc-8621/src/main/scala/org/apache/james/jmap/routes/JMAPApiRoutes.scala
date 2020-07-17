@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
 
+import com.fasterxml.jackson.core.JsonParseException
 import eu.timepit.refined.auto._
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpMethod
@@ -38,7 +39,7 @@ import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.Method
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.model.{Invocation, RequestObject, ResponseObject}
+import org.apache.james.jmap.model._
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
@@ -97,26 +98,33 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   private def parseRequestObject(inputStream: InputStream): SMono[RequestObject] =
     serializer.deserializeRequestObject(inputStream) match {
       case JsSuccess(requestObject, _) => SMono.just(requestObject)
-      case JsError(_) => SMono.raiseError(new IllegalArgumentException("Invalid RequestObject"))
+      case errors: JsError => SMono.raiseError(new IllegalArgumentException(serializer.serialize(errors).toString()))
     }
 
   private def process(requestObject: RequestObject,
                       httpServerResponse: HttpServerResponse,
-                      mailboxSession: MailboxSession): SMono[Void] =
-    requestObject
-      .methodCalls
-      .map(invocation => this.processMethodWithMatchName(requestObject.using.toSet, invocation, mailboxSession))
-      .foldLeft(SFlux.empty[Invocation]) { (flux: SFlux[Invocation], mono: SMono[Invocation]) => flux.mergeWith(mono) }
-      .collectSeq()
-      .flatMap((invocations: Seq[Invocation]) =>
-        SMono.fromPublisher(httpServerResponse.status(OK)
-          .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-          .sendString(
-            SMono.fromCallable(() =>
-              serializer.serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations)).toString),
-            StandardCharsets.UTF_8
-          ).`then`())
-      )
+                      mailboxSession: MailboxSession): SMono[Void] = {
+    val unsupportedCapabilities = requestObject.using.toSet -- CapabilityIdentifier.SUPPORTED_CAPABILITIES
+
+    if (unsupportedCapabilities.nonEmpty) {
+      SMono.raiseError(UnsupportedCapabilitiesException(unsupportedCapabilities))
+    } else {
+      requestObject
+        .methodCalls
+        .map(invocation => this.processMethodWithMatchName(requestObject.using.toSet, invocation, mailboxSession))
+        .foldLeft(SFlux.empty[Invocation]) { (flux: SFlux[Invocation], mono: SMono[Invocation]) => flux.mergeWith(mono) }
+        .collectSeq()
+        .flatMap((invocations: Seq[Invocation]) =>
+          SMono.fromPublisher(httpServerResponse.status(OK)
+            .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+            .sendString(
+              SMono.fromCallable(() =>
+                serializer.serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations)).toString),
+              StandardCharsets.UTF_8
+            ).`then`())
+        )
+    }
+  }
 
   private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     SMono.justOrEmpty(methodsByName.get(invocation.methodName))
@@ -127,11 +135,26 @@ class JMAPApiRoutes (val authenticator: Authenticator,
         invocation.methodCallId)))
 
   private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = throwable match {
-    case exception: IllegalArgumentException => SMono.fromPublisher(httpServerResponse.status(SC_BAD_REQUEST)
-      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-      .sendString(SMono.fromCallable(() => exception.getMessage), StandardCharsets.UTF_8)
-      .`then`)
+    case exception: IllegalArgumentException => respondDetails(httpServerResponse,
+      ProblemDetails(RequestLevelErrorType.NOT_REQUEST, SC_BAD_REQUEST, None,
+        s"The request was successfully parsed as JSON but did not match the type signature of the Request object: ${exception.getMessage}"))
     case exception: UnauthorizedException => SMono(handleAuthenticationFailure(httpServerResponse, JMAPApiRoutes.LOGGER, exception))
+    case exception: JsonParseException => respondDetails(httpServerResponse,
+      ProblemDetails(RequestLevelErrorType.NOT_JSON, SC_BAD_REQUEST, None,
+        s"The content type of the request was not application/json or the request did not parse as I-JSON: ${exception.getMessage}"))
+    case exception: UnsupportedCapabilitiesException => respondDetails(httpServerResponse,
+      ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY,
+        SC_BAD_REQUEST, None,
+        s"The request used unsupported capabilities: ${exception.capabilities}"))
     case _ => SMono.fromPublisher(handleInternalError(httpServerResponse, throwable))
   }
+
+  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Void] =
+    SMono.fromPublisher(httpServerResponse.status(SC_BAD_REQUEST)
+      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+      .sendString(SMono.fromCallable(() => serializer.serialize(details).toString),
+        StandardCharsets.UTF_8)
+      .`then`)
 }
+
+case class UnsupportedCapabilitiesException(capabilities: Set[CapabilityIdentifier]) extends RuntimeException
