@@ -19,22 +19,11 @@
 
 package org.apache.james.modules.blobstore;
 
-import java.io.FileNotFoundException;
-
-import javax.inject.Singleton;
-
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.union.HybridBlobStore;
-import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.modules.objectstorage.ObjectStorageDependenciesModule;
-import org.apache.james.utils.PropertiesProvider;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
 import com.google.inject.multibindings.Multibinder;
 
 public class BlobStoreChoosingModule extends AbstractModule {
@@ -44,17 +33,5 @@ public class BlobStoreChoosingModule extends AbstractModule {
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
-    }
-
-    @Provides
-    @Singleton
-    @VisibleForTesting
-    HybridBlobStore.Configuration providesHybridBlobStoreConfiguration(PropertiesProvider propertiesProvider) {
-        try {
-            Configuration configuration = propertiesProvider.getConfigurations(ConfigurationComponent.NAMES);
-            return HybridBlobStore.Configuration.from(configuration);
-        } catch (FileNotFoundException | ConfigurationException e) {
-            return HybridBlobStore.Configuration.DEFAULT;
-        }
     }
 }

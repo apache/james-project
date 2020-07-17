@@ -46,8 +46,6 @@
                 <dt><strong>implementation</strong></dt>
                 <dd>cassandra: use cassandra based BlobStore</dd>
                 <dd>objectstorage: use Swift/AWS S3 based BlobStore</dd>
-                <dd>hybrid (deprecated, use CachedBlobStore instead): Using both objectstorage for unfrequently read or big blobs &amp; cassandra for small, often read blobs.
-                    Introduced to fasten small blob access, its usage could be compared to a cache, but with a sub-optimal implementation (no eviction, default replication factor, no  circuit breaking).</dd>
             </dl>
 
 
@@ -76,13 +74,6 @@
                     <dd>DEFAULT: 8192, optional, must be a positive integer. Unit: bytes.
                         Supported units: bytes, Kib, MiB, GiB, TiB
                         Maximum size of stored objects expressed in bytes.</dd>
-                </dl>
-            </subsection>
-
-            <subsection name="Hybrid BlobStore size threshold (deprecated)">
-                <dl>
-                    <dt><strong>hybrid.size.threshold</strong></dt>
-                    <dd>DEFAULT: 32768 bytes (32KB), must be positive. Size threshold for considering a blob as 'big', causing it to be saved in the low cost blobStore.</dd>
                 </dl>
             </subsection>
 

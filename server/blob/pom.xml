@@ -42,7 +42,6 @@
         <module>blob-gc</module>
         <module>blob-memory</module>
         <module>blob-objectstorage</module>
-        <module>blob-union</module>
 
         <module>mail-store</module>
     </modules>
