@@ -1,3 +1,54 @@
 = dnsservice.xml
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-dnsservice.xml
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/dnsservice.xml[example]
+to get some examples and hints.
+
+Specifies DNS Server information for use by various components inside Apache James Server.
+
+DNS Transport services are controlled by a configuration block in
+the dnsservice.xml. This block affects SMTP remote delivery.
+
+The dnsservice tag defines the boundaries of the configuration
+block. It encloses all the relevant configuration for the DNS server.
+The behavior of the DNS service is controlled by the attributes and
+children of this tag.
+
+.dnsservice.xml content
+|===
+| Property name | explanation
+
+| servers
+| Information includes a list of DNS Servers to be used by James.  These are
+specified by the server elements, each of which is a child element of the
+servers element.  Each server element is the IP address of a single DNS server.
+The servers element can have multiple server children. Enter ip address of your DNS server, one IP address per server
+element. If no DNS servers are found and you have not specified any below, 127.0.0.1 will be used
+
+| autodiscover
+| true or false -  If you use autodiscover and add DNS servers manually a combination of all the DNS servers will be used
+If autodiscover is true, James will attempt to autodiscover the DNS servers configured on your underlying system.
+Currently, this works if the OS has a unix-like /etc/resolv.xml,
+or the system is Windows based with ipconfig or winipcfg. Change autodiscover to false if you would like to turn off autodiscovery
+and set the DNS servers manually in the servers section
+
+| authoritative
+| *true/false* - This tag specifies whether or not
+to require authoritative (non-cached) DNS records; to only accept DNS responses that are
+authoritative for the domain. It is primarily useful in an intranet/extranet environment.
+This should always be *false* unless you understand the implications.
+
+| maxcachesize
+| Maximum number of entries to maintain in the DNS cache (typically 50000)
+
+| negativeCacheTTL
+| Sets the maximum length of time that negative records will be stored in the DNS negative cache in
+seconds (a negative record means the name has not been found in the DNS). Values for this cache
+can be positive meaning the time in seconds before retrying to resolve the name, zero meaning no
+cache or a negative value meaning infinite caching.
+
+| singleIPperMX
+| true or false (default) - Specifies if Apache James Server must try a single server for each multihomed mx host
+
+| verbose
+| Turn on general debugging statements
+|===
