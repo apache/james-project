@@ -27,34 +27,34 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.mailbox.model.ContentType;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class PDFTextExtractorTest {
+class PDFTextExtractorTest {
 
-    private PDFTextExtractor testee;
+    PDFTextExtractor testee;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         testee = new PDFTextExtractor();
     }
 
     @Test
-    public void extractContentShouldThrowWhenNullInputStream() throws Exception {
+    void extractContentShouldThrowWhenNullInputStream() {
         assertThatThrownBy(() ->
             testee.extractContent(null, ContentType.of("any/any")))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void extractContentShouldThrowWhenNullContentType() throws Exception {
+    void extractContentShouldThrowWhenNullContentType() {
         InputStream inputStream = new ByteArrayInputStream("content".getBytes(StandardCharsets.UTF_8));
         assertThatThrownBy(() -> testee.extractContent(inputStream, null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void extractContentShouldExtractPlainText() throws Exception {
+    void extractContentShouldExtractPlainText() throws Exception {
         String content = "content";
         InputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
 
@@ -64,7 +64,7 @@ public class PDFTextExtractorTest {
     }
 
     @Test
-    public void extractContentShouldExtractPDF() throws Exception {
+    void extractContentShouldExtractPDF() throws Exception {
         String content = "Little PDF\n";
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("pdf.pdf");
 
