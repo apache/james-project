@@ -1,3 +1,35 @@
 = mailrepositorystore.xml
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-mailrepositorystore.xml
+A `mail repository` allows storage of a mail as part of its
+processing. Standard configuration relies on the following mail
+repository.
+
+A mail repository is identified by its *url*, constituted of a *protocol* and a *path*.
+
+For instance in the url `cassandra://var/mail/error/` `cassandra` is the protocol and `var/mail/error` the path.
+
+The *mailrepositorystore.xml* file allow registration of available protocols, and their binding to actual MailRepository
+implementation. Note that extension developers can write their own MailRepository implementations, load them via the
+`extensions-jars` mechanism as documented in xref:distributed/extend/index.adoc['writing your own extensions'], and finally
+associated to a protocol in *mailrepositorystore.xml* for a usage in *mailetcontainer.xml*.
+
+== Configuration
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/mailrepositorystore.xml[example]
+to get some examples and hints.
+
+....
+<mailrepositorystore>
+    <defaultProtocol>cassandra</defaultProtocol>
+    <mailrepositories>
+        <mailrepository class="org.apache.james.mailrepository.cassandra.CassandraMailRepository">
+            <protocols>
+                <protocol>cassandra</protocol>
+            </protocols>
+        </mailrepository>
+    </mailrepositories>
+</mailrepositorystore>
+....
+
+Only the *CassandraMailRepository* is available by default for the Distributed Server. Mails metadata are stored in
+Cassandra while the headers and bodies are stored within the xref:distributed/architecture.adoc#_blobstore[BlobStore].
