@@ -1,3 +1,53 @@
 = usersrepository.xml
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-users.xml
+User repositories are required to store James user information and authentication data.
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/usersrepository.xml[example]
+to get some examples and hints.
+
+== The user data model
+
+A user has two attributes: username and password.
+
+A valid user should satisfy these criteria:
+
+* username and password cannot be null or empty
+* username should not be longer than 255 characters
+* username can not contain '/'
+* username can not contain multiple domain delimiter('@')
+* A username can have only a local part when virtualHosting is disabled. E.g.'myUser'
+* When virtualHosting is enabled, a username should have a domain part, and the domain part should be concatenated
+after a domain delimiter('@'). E.g. 'myuser@james.org'
+
+A user is always considered as lower cased, so 'myUser' and 'myuser' are the same user, and can be used as well as
+recipient local part than as login for different protocols.
+
+== Configuration
+
+.usersrepository.xml content
+|===
+| Property name | explanation
+
+| enableVirtualHosting
+| true or false. Add domain support for users (default: false, except for Cassandra Users Repository)
+
+| administratorId
+|user's name. Allow a user to access to the https://tools.ietf.org/html/rfc4616#section-2[impersonation command],
+acting on the behalf of any user.
+
+|===
+
+== Configuring a LDAP
+
+If you run the LDAP fashion of the distributed server, you need to configure the properties for accessing
+your LDAP server in this file.
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf/usersrepository.xml[example]
+to get some examples and hints.
+
+Example:
+
+....
+<repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"/>;
+....
