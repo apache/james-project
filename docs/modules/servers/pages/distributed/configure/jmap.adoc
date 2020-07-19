@@ -1,3 +1,37 @@
 = jmap.properties
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-jmap.xml
+https://jmap.io/[JMAP]  is intended to be a new standard for email clients to connect to mail
+stores. It therefore intends to primarily replace IMAP + SMTP submission. It is also designed to be more
+generic. It does not replace MTA-to-MTA SMTP transmission.
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmap.properties[example]
+to get some examples and hints.
+
+.jmap.properties content
+|===
+| Property name | explanation
+
+| enabled
+| true/false. Governs whether JMAP should be enabled
+
+| jmap.port
+| Optional. Defaults to 80. The port this server will be listening on. This value must be a valid
+port, ranging between 1 and 65535 (inclusive)
+
+| tls.keystoreURL
+| Keystore to be used for generating authentication tokens for password authentication mechanism.
+This should not be the same keystore than the ones used by TLS based protocols.
+
+| tls.secret
+| Password used to read the keystore
+
+| jwt.publickeypem.url
+| Optional. JWT tokens allows request to bypass authentication
+
+|===
+
+== Wire tapping
+
+Enabling *TRACE* on `org.apache.james.jmap.wire` enables reactor-netty wiretap, logging of
+all incoming and outgoing requests, outgoing requests. This will log also potentially sensible information
+like authentication credentials.
