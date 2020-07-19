@@ -1,3 +1,57 @@
 = pop3server.xml
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-pop3.xml
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/pop3server.xml[example]
+to get some examples and hints.
+
+The POP3 service is controlled by a configuration block in the pop3server.xml.
+The pop3server tag defines the boundaries of the configuration block.  It encloses
+all the relevant configuration for the POP3 server.  The behavior of the POP service is
+controlled by the attributes and children of this tag.
+
+This tag has an optional boolean attribute - *enabled* - that defines whether the service is active or not.
+The value defaults to "true" if not present.
+
+The standard children of the pop3server tag are:
+
+.jmx.properties content
+|===
+| Property name | explanation
+
+| bind
+| Configure this to bind to a specific inetaddress. This is an optional integer value.
+This value is the port on which this POP3 server is configured
+to listen. If the tag or value is absent then the service
+will bind to all network interfaces for the machine If the tag or value is omitted,
+the value will default to the standard POP3 port, 11
+port 995 is the well-known/IANA registered port for POP3S  ie over SSL/TLS
+port 110 is the well-known/IANA registered port for Standard POP3
+
+| connectionBacklog
+|
+
+| tls
+| Set to true to support STARTTLS or SSL for the Socket.
+To create a new keystore execute:
+`keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore`
+Please note that each POP3 server exposed on different port can specify its own keystore, independently from any other
+TLS based protocols. Read xref:distributed/configure/ssl.adoc[SSL configuration page] for more information.
+
+| handler.helloName
+| This is the name used by the server to identify itself in the POP3
+protocol.  If autodetect is TRUE, the server will discover its
+own host name and use that in the protocol.  If discovery fails,
+the value of 'localhost' is used.  If autodetect is FALSE, James
+will use the specified value.
+
+| handler.connectiontimeout
+| Connection timeout in seconds
+
+| handler.connectionLimit
+| Set the maximum simultaneous incoming connections for this service
+
+| handler.connectionLimitPerIP
+| Set the maximum simultaneous incoming connections per IP for this service
+
+| handler.handlerchain
+| This loads the core CommandHandlers. Only remove this if you really know what you are doing.
+|===
