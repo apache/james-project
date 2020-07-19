@@ -457,8 +457,7 @@ curl -XHEAD http://ip:port/users/usernameToBeUsed
 ....
 
 Resource name ``usernameToBeUsed'' represents a valid user, hence it
-should match the criteria at (TODO) link:/server/config-users.html[User
-Repositories documentation]
+should match the criteria at xref:distributed/configure/usersrepository.adoc[User Repositories documentation]
 
 Response codes:
 
