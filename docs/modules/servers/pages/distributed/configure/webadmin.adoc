@@ -1,3 +1,60 @@
 = webadmin.properties
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-webadmin.xml
+The web administration supports for now the CRUD operations on the domains, the users, their mailboxes and their quotas,
+managing mail repositories, performing cassandra migrations, and much more, as described in the following sections.
+
+*WARNING*: This API allow authentication only via the use of JWT. If not
+configured with JWT, an administrator should ensure an attacker can not
+use this API.
+
+By the way, some endpoints are not filtered by authentication. Those endpoints are not related to data stored in James,
+for example: Swagger documentation & James health checks.
+
+== Configuration
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/webadmin.properties[example]
+to get some examples and hints.
+
+.webadmin.properties content
+|===
+| Property name | explanation
+
+| enabled
+| Define if WebAdmin is launched (default: false)
+
+| port
+| Define WebAdmin's port (default: 8080)
+
+| host
+| Define WebAdmin's host (default: localhost)
+
+| cors.enable
+| Allow the Cross-origin resource sharing (default: false)
+
+| cors.origin
+| Specify ths CORS origin (default: null)
+
+| jwt.enable
+| Allow JSON Web Token as an authentication mechanism (default: false)
+
+| https.enable
+| Use https (default: false)
+
+| https.keystore
+| Specify a keystore file for https (default: null)
+
+| https.password
+| Specify the keystore password (default: null)
+
+| https.trust.keystore
+| Specify a truststore file for https (default: null)
+
+| https.trust.password
+| Specify the truststore password (default: null)
+
+| extensions.routes
+| List of Routes specified as fully qualified class name that should be loaded in addition to your product routes list. Routes
+needs to be on the classpath or in the ./extensions-jars folder. Read mode about
+xref:distributed/extend/webadmin-routes.adoc[creating you own webadmin routes].
+
+|===
