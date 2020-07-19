@@ -1,3 +1,67 @@
 = rabbitmq.properties
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-rabbitmq.xml
+This configuration helps you configure components using RabbitMQ.
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[example]
+to get some examples and hints.
+
+== RabbitMQ Configuration
+
+.rabbitmq.properties content
+|===
+| Property name | explanation
+
+| uri
+| the amqp URI pointing to RabbitMQ server. Details about amqp URI format is in https://www.rabbitmq.com/uri-spec.html[RabbitMQ URI Specification]
+
+| management.uri
+| the URI pointing to RabbitMQ Management Service. James need to retrieve some information about listing queues
+from this service in runtime.
+Details about URI format is in https://www.rabbitmq.com/management.html#usage-ui[RabbitMQ Management URI]
+
+| management.user
+| username used to access management service
+
+| management.password
+| password used to access management service
+
+|===
+
+== RabbitMQ MailQueue Configuration
+
+James mail queue is a component acting like a queue where it can enqueue and dequeue mails.
+Beside of the basic features, it also allows some extra operations like getting size, browsing all items in the mail queue...
+One of the mailqueue implementation is using RabbitMQ.
+As RabbitMQ doesn't offer enough features to implement efficiently all mailqueue operations,
+this implementation relies on Cassandra.
+
+.rabbitmq.properties content
+|===
+| Property name | explanation
+
+| mailqueue.view.sliceWindow
+| James divide the view into slices, each slice contains data for a given period, sliceWindow parameter controls this period.
+This dividing of periods allows faster browsing of the mail queue. Tips for choosing sliceWindow are explained in
+https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[rabbitmq.properties]
+
+| mailqueue.view.bucketCount
+| Mails in a mail queue are distributed across the underlying storage service.
+BucketCount describes how to be distributing mails to fit with your James setup
+Tips for choosing bucketCount are explained in
+https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[rabbitmq.properties]
+
+| mailqueue.view.updateBrowseStartPace
+| To browse, James needs a starting point and to continuously update that point in runtime.
+UpdateBrowseStartPace describes the probability to update the starting point.
+Tips for choosing updateBrowseStartPace are explained in
+https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[rabbitmq.properties]
+
+| mailqueue.size.metricsEnabled
+|  By default, the metrics are disabled for the mail queue size.
+As computing the size of the mail queue is currently implemented on top of browse operation and thus have a linear complexity,
+sometimes it can get too big, making it impossible for the ES reporter to handle it correctly without crashing.
+It can be useful then to disable it.
+Tips for choosing metricsEnabled are explained in
+https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[rabbitmq.properties]
+
+|===
