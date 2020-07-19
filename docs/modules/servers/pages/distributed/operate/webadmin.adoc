@@ -441,8 +441,7 @@ curl -XPUT http://ip:port/users/usernameToBeUsed \
 ....
 
 Resource name usernameToBeUsed representing valid users, hence it should
-match the criteria at (TODO) link:/server/config-users.html[User Repositories
-documentation]
+match the criteria at xref:distributed/confgure/usersrepository.adoc[User Repositories documentation]
 
 Response codes:
 
@@ -458,8 +457,7 @@ curl -XHEAD http://ip:port/users/usernameToBeUsed
 ....
 
 Resource name ``usernameToBeUsed'' represents a valid user, hence it
-should match the criteria at (TODO) link:/server/config-users.html[User
-Repositories documentation]
+should match the criteria at xref:distributed/configure/usersrepository.adoc[User Repositories documentation]
 
 Response codes:
 
