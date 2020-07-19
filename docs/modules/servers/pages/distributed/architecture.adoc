@@ -23,7 +23,7 @@ The following protocols are supported and can be used to interact with the Distr
 
 * *SMTP*
 * *IMAP*
-* xref:distributed/operate/webadmin.adoc[WebAdmin] REST Administration API
+* xref:distributed/operate/webadmin.adoc[WebAdmin]] REST Administration API
 * *LMTP*
 
 The following protocols should be considered experimental
@@ -204,7 +204,7 @@ and by that we mean when they try to definitely delete them by emptying
 the trash, James will retain these mails into the Deleted Messages
 Vault, before an email or a mailbox is going to be deleted. And only
 administrators can interact with this component via
-wref:webadmin.adoc#_deleted-messages-vault[WebAdmin REST APIs].
+wref:webadmin.adoc#_deleted-messages-vault[WebAdmin] REST APIs].
 
 However, mails are not retained forever as you have to configure a
 retention period before using it (with one-year retention by default if
@@ -221,6 +221,37 @@ Users can be managed in Cassandra, or via a LDAP (read only).
 === Recipient rewrite tables
 
 Storage of Recipients Rewritting rules, in Cassandra.
+
+==== Mapping types
+
+James allow using various mapping types for better expressing the intent of your address rewritting logic:
+
+* *Domain mapping*: Rewrites the domain of mail addresses. Use it for technical purposes, user will not
+be allowed to use the source in their FROM address headers. Domain mappings can be managed via the CLI and
+added via xref:distributed/operate/webadmin.adoc#_domain_mappings[WebAdmin]
+* *Domain aliases*: Rewrites the domain of mail addresses. Express the idea that both domain can be used
+inter-changeably. User will be allowed to use the source in their FROM address headers. Domain aliases can
+be managed via xref:distributed/operate/webadmin.adoc#_get_the_list_of_aliases_for_a_domain[WebAdmin]
+* *Forwards*: Replaces the source address by another one. Vehicles the intent of forwarding incoming mails
+to other users. Listing the forward source in the forward destinations keeps a local copy. User will not be
+allowed to use the source in their FROM address headers. Forward can
+be managed via xref:distributed/operate/webadmin.adoc#_address_forwards[WebAdmin]
+* *Groups*: Replaces the source address by another one. Vehicles the intent of a group registration: group
+address will be swapped by group member addresses (Feature poor mailing list). User will not be
+allowed to use the source in their FROM address headers. Groups can
+be managed via xref:distributed/operate/webadmin.adoc#_address_group[WebAdmin]
+* *Aliases*: Replaces the source address by another one. Represents user owned mail address, with which
+he can interact as if it was his main mail address. User will be allowed to use the source in their FROM
+address headers. Aliases can be managed via xref:distributed/operate/webadmin.adoc#_address_aliases[WebAdmin]
+* *Address mappings*: Replaces the source address by another one. Use for technical purposes, this mapping type do
+not hold specific intent. Prefer using one of the above mapping types... User will not be allowed to use the source
+in their FROM address headers. Address mappings can be managed via the CLI or via
+xref:distributed/operate/webadmin.adoc#_address_mappings[WebAdmin]
+* *Regex mappings*: Applies the regex on the supplied address. User will not be allowed to use the source
+in their FROM address headers. Regex mappings can be managed via the CLI or via
+xref:distributed/operate/webadmin.adoc#_regex_mapping[WebAdmin]
+* *Error*: Throws an error upon processing. User will not be allowed to use the source
+in their FROM address headers. Errors can be managed via the CLI
 
 === BlobStore
 

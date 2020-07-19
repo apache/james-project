@@ -1,3 +1,18 @@
 = recipientrewritetable.xml
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-recipientrewritetable.xml
+Here are explanations on the different kinds about xref:distributed/architecture.adoc#_recipient_rewrite_tables[recipient rewritting].
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/recipientrewritetable.xml[example]
+to get some examples and hints.
+
+.recipientrewritetable.xml
+|===
+| Property name | explanation
+
+| recursiveMapping
+| If set recursiveMapping false only the first mapping will get processed - Default true.
+
+| mappingLimit
+|By setting the mappingLimit you can specify how much mapping will get processed before a bounce will send. This avoid infinity loops. Default 10.
+|===
+
