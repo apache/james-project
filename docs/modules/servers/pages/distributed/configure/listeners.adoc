@@ -1,3 +1,48 @@
 = listeners.xml
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-listeners.xml
+Distributed James relies on an event bus system to enrich mailbox capabilities. Each
+operation performed on the mailbox will trigger related events, that can
+be processed asynchronously by potentially any James node on a
+distributed system.
+
+Mailbox listeners can register themselves on this event bus system to be
+called when an event is fired, allowing to do different kind of extra
+operations on the system.
+
+Distributed James allow the user to register potentially user defined additional mailbox listeners.
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listener.xml[example]
+to get some examples and hints.
+
+== Configuration
+
+Mailbox listener configuration is under the XML element <listener>.
+
+Some MailboxListener allows you to specify if you want to run them synchronously or asynchronously. To do so,
+for MailboxListener that supports this, you can use the *async* attribute (optional, per mailet default) to govern the execution mode.
+If *true* the execution will be scheduled in a reactor elastic scheduler. If *false*, the execution is synchronous.
+
+Already provided additional listeners includes:
+
+* `org.apache.james.mailbox.spamassassin.SpamAssassinListener`:
+Provides per user real-time HAM/SPAM feedback to a SpamAssassin server depending on user actions.
+Please note that a `spamassassin.properties` file is needed.<br/>
+This mailet is asynchronous by default, but this behaviour can be overridden by the <b>async</b>
+configuration property.
+* `org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener`:
+For Cassandra guice wiring. Provides more insights on mailbox operations
+* `org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener`:
+For Cassandra guice wiring. Sends emails to users exceeding 80% and 99% of their quota to warn them
+
+== PreDeletionHook configuration
+
+Before deleting a message in James, this message and some related information about the deletion will be passed to a set of PreDeletionHook instances,
+This process is called notifying, and it acts sequentially. If the notifying process for all PreDeletionHooks finish successfully, then the message will be processed to be deleted.
+Otherwise, that message won't be deleted.
+
+Pre Deletion Hook configuration is under the XML element <preDeletionHook>
+
+Already provided additional pre deletion hooks includes:
+
+* `org.apache.james.vault.DeletedMessageVaultHook`: Storing messages about being deleted into
+`org.apache.james.vault.DeletedMessageVault`
