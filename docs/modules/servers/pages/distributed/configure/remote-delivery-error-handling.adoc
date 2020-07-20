@@ -35,6 +35,15 @@ mail repositories.
 instance via a CRON job calling the right webadmin endpoint.
 - A counter ensures that a configured number of delivery tries is not exceeded.
 
+=== Limitation
+
+MailRepositories are not meant for transient data storage, and thus are prone to tombstone issues.
+
+This might be acceptable if you need to send mail to well-known peers. For instance handling your mail gateway failures.
+However a Mail Exchange server doing relay on the internet would quickly hit this limitation.
+
+Also note that external triggering of the retry process is needed.
+
 == Operation
 
 Here is an example of configuration achieving the proposed solution:
