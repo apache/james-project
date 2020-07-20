@@ -38,6 +38,7 @@
 **** xref:distributed/configure/webadmin.adoc[webadmin.properties]
 **** xref:distributed/configure/ssl.adoc[SSL & TLS]
 **** xref:distributed/configure/spam.adoc[Anti-Spam setup]
+**** xref:distributed/configure/remote-delivery-error-handling.adoc[About RemoteDelivery error handling]
 *** xref:distributed/operate/index.adoc[Operate]
 **** xref:distributed/operate/guide.adoc[]
 **** xref:distributed/operate/logging.adoc[]
