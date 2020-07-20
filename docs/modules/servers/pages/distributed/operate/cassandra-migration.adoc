@@ -1,0 +1,26 @@
+= Cassandra migration
+
+Cassandra upgrades implies the creation of a new table. Thus restarting James is needed, as new tables are created on restart.
+
+Once done, we ship code that tries to read from new tables, and if not possible backs up to old tables. You can thus safely run
+without running additional migrations.
+
+On the fly migration can be enabled. However, one might want to force the migration in a controlled fashion, and update
+automatically current schema version used (assess in the database old versions is no more used, as the corresponding tables are empty).
+Note that this process is safe: we ensure the service is not running concurrently on this James instance, that it does not bump
+version upon partial failures, that race condition in version upgrades will be idempotent, etc...
+
+These schema updates can be triggered by xref:distributed/operate/webadmin.adoc#_cassandra_schema_upgrades[webadmin].
+
+Note that currently the progress can be tracked by logs.
+
+Here are the implemented migrations:
+
+* *From V5 to V6* : Goal is to no longer rely on an UDT partition key for mailboxPath tables. Entries will be migrated
+to mailboxPathV2 table relying on a composite primary key.
+* *From V6 to V7* : Goal is to populate mapping_sources projection table. This table allows finding the source of a given redirection, which is
+handy for things like mail aliases (I want to list aliases rewritting things to bob). Without this projection table being available,
+(ie we rely on schema version 6 or less) such information is obtained through a full table scan, unoptimized. From schema version 7,
+the optimized projection can safely be used.
+
+The xref:distributed/operate/guide.adoc#_updating_cassandra_schema_version[Operator guide] further details the migration process.

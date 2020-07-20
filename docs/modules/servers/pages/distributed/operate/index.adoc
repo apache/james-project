@@ -18,5 +18,7 @@ server components. However it relies on JMX technologies and its use is discoura
 The xref:distributed/operate/metrics.adoc[metrics] allows to build latency and throughput
 graphs, that can be visualized, for instance in *Grafana*.
 
-Finally, we did put together a xref:distributed/operate/guide.adoc[detailed guide] for
+We did put together a xref:distributed/operate/guide.adoc[detailed guide] for
 distributed James operators.
+
+Read more about xref:distributed/operate/cassandra-migration.adoc[Cassandra data migration].
