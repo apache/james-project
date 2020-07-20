@@ -1,7 +1,7 @@
 = About RemoteDelivery error handling
 
 The advanced server mailQueue implemented by combining RabbitMQ for messaging and Cassandra for administrative operation
-do not support delays.
+does not support delays.
 
 Delays are an important feature for Mail Exchange servers, allowing to defer in time the retries, potentially letting the
 time for the remote server to recover. Furthermore, they enable implementation of advanced features like throttling and
