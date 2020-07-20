@@ -83,7 +83,7 @@ Mails exceeding the AtMost condition are considered as permanent delivery errors
 - Permanent relay errors are stored in `cassandra://var/mail/error/remote-delivery/permanent/`.
 - Temporary relay errors are stored in `cassandra://var/mail/error/remote-delivery/temporary/`.
 
-In order to retry the relay of temporary failed emails, operators will have to configured a cron job for reprocessing
+In order to retry the relay of temporary failed emails, operators will have to configure a cron job for reprocessing
 emails from *cassandra://var/mail/error/remote-delivery/temporary/* mailRepository into the *relay* processor.
 
 This can be achieved via the following webAdmin call :
