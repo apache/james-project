@@ -1,7 +1,7 @@
 = About RemoteDelivery error handling
 
 The advanced server mailQueue implemented by combining RabbitMQ for messaging and Cassandra for administrative operation
-do not support delays.
+does not support delays.
 
 Delays are an important feature for Mail Exchange servers, allowing to defer in time the retries, potentially letting the
 time for the remote server to recover. Furthermore, they enable implementation of advanced features like throttling and
@@ -34,6 +34,15 @@ mail repositories.
 - A reprocessing of the temporary delivery errors mailRepository needs to be scheduled in a recurring basis. For
 instance via a CRON job calling the right webadmin endpoint.
 - A counter ensures that a configured number of delivery tries is not exceeded.
+
+=== Limitation
+
+MailRepositories are not meant for transient data storage, and thus are prone to tombstone issues.
+
+This might be acceptable if you need to send mail to well-known peers. For instance handling your mail gateway failures.
+However a Mail Exchange server doing relay on the internet would quickly hit this limitation.
+
+Also note that external triggering of the retry process is needed.
 
 == Operation
 
@@ -77,13 +86,13 @@ Here is an example of configuration achieving the proposed solution:
 Note:
 
 - The *relay* processor holds a RemoteDelivery mailet configured to do a single try, at most 5 times (see the AtMost matcher).
-Mails exceeding the AtMost condition are concidered as permanent delivery errors. Delivery errors are sent to the
+Mails exceeding the AtMost condition are considered as permanent delivery errors. Delivery errors are sent to the
 *remote-delivery-error* processor.
 - The *remote-delivery-error* stores temporary and permanent errors.
 - Permanent relay errors are stored in `cassandra://var/mail/error/remote-delivery/permanent/`.
 - Temporary relay errors are stored in `cassandra://var/mail/error/remote-delivery/temporary/`.
 
-In order to retry the relay of temporary failed emails, operators will have to configured a cron job for reprocessing
+In order to retry the relay of temporary failed emails, operators will have to configure a cron job for reprocessing
 emails from *cassandra://var/mail/error/remote-delivery/temporary/* mailRepository into the *relay* processor.
 
 This can be achieved via the following webAdmin call :
