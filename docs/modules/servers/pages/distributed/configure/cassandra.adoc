@@ -1,3 +1,169 @@
 = cassandra.properties
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-cassandra.xml
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/cassandra.properties[example]
+to get some examples and hints.
+
+== Configuration
+
+Here are generic properties:
+
+.cassandra.properties content
+|===
+| Property name | explanation
+
+| cassandra.nodes
+| List of some nodes of the cassandra's cluster in following format host:port or host, if the port is not specified we use 9042
+
+|cassandra.keyspace.create
+|Indicate if the keyspace should be created by James. Optional, default value: *false*
+If set to true James will attempt to create the keyspace when starting up.
+
+|cassandra.keyspace
+|Is the name of the keyspace used by James. Optional, default value: *apache_james*
+
+|cassandra.user
+|Username used as a credential for contacting Cassandra cluster. Optional, default is absent,
+required if *cassandra.password* is supplied
+
+|cassandra.password
+|Password used as a credential for contacting Cassandra cluster. Optional, default is absent,
+required if <strong>cassandra.user</strong> is supplied
+
+|cassandra.ssl
+|Whether SSL should be enabled on the communications with Cassandra cluster. Optional, defaults to false.
+
+The keystore used for trusting SSL server socket can be set via JSSE system properties as explained on
+https://docs.datastax.com/en/developer/java-driver/3.7/manual/ssl/[Cassandra driver manual].
+
+|cassandra.replication.factor
+|Is the replication factor used upon keyspace creation. Modifying this property while the keyspace already exists
+will have no effect. Optional. Default value 1.
+
+|cassandra.query.logger.constant.threshold
+| If specified all queries that take more than the given integer in millisecond will be considered slow and logged.
+If not specified by default a DynamicThresholdQueryLogger will be used (see above)
+
+|cassandra.query.slow.query.latency.threshold.percentile
+| Default is com.datastax.driver.core.QueryLogger.DEFAULT_SLOW_QUERY_THRESHOLD_PERCENTILE.
+The latency percentile beyond which queries are considered 'slow' and will be logged.
+If you specify cassandra.query.logger.constant.threshold, you should not specify this property
+
+|cassandra.query.logger.max.query.string.length
+|Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_QUERY_STRING.LENGTH.
+The maximum length of a CQL query string that can be logged verbatim by the cassandra driver
+
+|cassandra.query.logger.max.logged.parameters
+|Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_LOGGED_PARAMETERS.
+The maximum number of query parameters that can be logged by the cassandra driver
+
+|cassandra.query.logger.max.parameter.value.length
+|Default is com.datastax.driver.core.QueryLogger.DEFAULT_MAX_PARAMETER_VALUE_LENGTH.
+The maximum length of query parameter value that can be logged by the cassandra driver
+
+|cassandra.readTimeoutMillis
+|Optional.
+If specified defines the Cassandra https://docs.datastax.com/en/developer/java-driver/3.5/manual/socket_options/[driver read timeout].
+
+|cassandra.consistency_level.regular
+|Optional. Allows specifying the driver default consistency level. Defaults to QUORUM.
+Allowed values: https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html[QUORUM, LOCAL_QUORUM, or EACH_QUORUM]
+
+|cassandra.consistency_level.lightweight_transaction
+|Optional. Allows specifying the driver serial consistency level. Defaults to SERIAL.
+Allowed values: https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html[SERIAL or LOCAL_SERIAL]
+
+|===
+
+== Pooling options
+
+Here are some properties for Pooling options:
+
+....
+# Read com.datastax.driver.core.PoolingOptions for knowing defaults value
+# No value here will default to driver's default value
+
+# cassandra.pooling.local.max.connections=8
+# cassandra.pooling.local.max.requests=128
+## In ms. Should be higher than socket read timeout
+# cassandra.pooling.timeout=5000
+## In seconds.
+# cassandra.pooling.heartbeat.timeout=30
+# cassandra.pooling.max.queue.size=256
+....
+
+.cassandra.properties content
+|===
+| Property name | explanation
+
+| cassandra.pooling.local.max.connections
+| Optional. Defaults to 8.
+If specified defines the Cassandra
+https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#pool-size[maximum number of connections to hosts]
+(remote and local).
+
+| cassandra.pooling.local.max.requests
+| Optional. Defaults to 128.
+If specified defines the Cassandra
+https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/[maximum number of concurrent requests per connection].
+
+| cassandra.pooling.timeout
+| Optional. Defaults to 5000 (ms).
+If specified defines the Cassandra
+https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#acquisition-queue[timeout for waiting in the pool queue].
+Should be higher than sockets timeout.
+
+| cassandra.pooling.heartbeat.timeout
+| Optional. Defaults to 30 (s).
+If specified defines the Cassandra
+https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#heartbeat[heartbeat timeout].
+
+| cassandra.pooling.max.queue.size
+| Optional. Defaults to 256.
+If specified defines the Cassandra
+https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#acquisition-queue[maximum size of the connection pool queue].
+
+|===
+
+If you want more explanation about Cassandra configuration, you should visit the dedicated https://docs.datastax.com/en/developer/java-driver/3.9[documentation].
+
+== Cassandra Mailbox Configuration
+
+*cassandra.properties* file furthermore expose some options to tune the Cassandra Mailbox behaviour.
+
+.cassandra.properties content
+|===
+| Property name | explanation
+
+| mailbox.max.retry.acl
+| Optional. Defaults to 1000.
+Controls the number of retries upon Cassandra ACL updates.
+
+| mailbox.max.retry.modseq
+| Optional. Defaults to 100000.
+Controls the number of retries upon Cassandra ModSeq generation.
+
+| mailbox.max.retry.uid
+| Optional. Defaults to 100000.
+Controls the number of retries upon Cassandra Uid generation.
+
+| mailbox.max.retry.message.flags.update
+| Optional. Defaults to 1000.
+Controls the number of retries upon Cassandra flags update, in MessageMapper.
+
+| mailbox.max.retry.message.id.flags.update
+| Optional. Defaults to 1000.
+Controls the number of retries upon Cassandra flags update, in MessageIdMapper.
+
+| fetch.advance.row.count
+| Optional. Defaults to 1000.
+Controls the number of remaining rows we should wait before prefetch when paging.
+
+| chunk.size.message.read
+| Optional. Defaults to 100.
+Controls the number of messages to be retrieved in parallel.
+
+| mailbox.blob.part.size
+| Optional. Defaults to 102400 (100KB).
+Controls the size of blob parts used to store messages in the Cassandra blobStore.
+
+|===
