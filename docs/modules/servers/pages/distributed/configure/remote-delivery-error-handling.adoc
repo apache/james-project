@@ -1,0 +1,107 @@
+= About RemoteDelivery error handling
+
+The advanced server mailQueue implemented by combining RabbitMQ for messaging and Cassandra for administrative operation
+do not support delays.
+
+Delays are an important feature for Mail Exchange servers, allowing to defer in time the retries, potentially letting the
+time for the remote server to recover. Furthermore, they enable implementation of advanced features like throttling and
+rate limiting of emails sent to a given domain.
+
+As such, the use of the distributed server as a Mail Exchange server is currently discouraged.
+
+However, for operators willing to inter-operate with a limited set of well-identified, trusted remote mail servers, such
+limitation can be reconsidered. The main concern then become error handling for remote mail server failures. The following
+document will present a well tested strategy for Remote Delivery error handling leveraging standards Mail Processing components
+and mechanisms.
+
+== Expectations
+
+Such a solution should:
+
+- Attempt delivery a single time
+- Store transient and permanent failure in different mail repositories
+- After a given number of tries, transient failures should be considered permanent
+
+== Design
+
+image::remote-delivery-error-handling.png[Schema detailing the proposed solution]
+
+- Remote Delivery is configured for performing a single retry.
+- Remote Delivery attaches the error code and if the failure is permanent/temporary when transferring failed emails to the
+bounce processor.
+- The specified bounce processor will categorise the failure, and store temporary and permanent failures in different
+mail repositories.
+- A reprocessing of the temporary delivery errors mailRepository needs to be scheduled in a recurring basis. For
+instance via a CRON job calling the right webadmin endpoint.
+- A counter ensures that a configured number of delivery tries is not exceeded.
+
+== Operation
+
+Here is an example of configuration achieving the proposed solution:
+
+....
+        <processor state="relay" enableJmx="true">
+            <!-- Perform at most 5 RemoteDelivery attemps -->
+            <mailet match="AtMost=5" class="RemoteDelivery">
+                <outgoingQueue>outgoing</outgoingQueue>
+                <maxRetries>0</maxRetries>
+                <maxDnsProblemRetries>0</maxDnsProblemRetries>
+                <deliveryThreads>10</deliveryThreads>
+                <sendpartial>true</sendpartial>
+                <!-- Use a custom processor for error handling -->
+                <bounceProcessor>remote-delivery-error</bounceProcessor>
+            </mailet>
+            <!-- When retries are exceeded, consider the mail as a permanent failure -->
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/error/remote-delivery/permanent/</repositoryPath>
+            </mailet>
+        </processor>
+
+        <processor state="remote-delivery-error" enableJmx="true">
+            <!-- Store temporary failures separately for later retries -->
+            <mailet match="IsRemoteDeliveryTemporaryError" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/error/remote-delivery/temporary/</repositoryPath>
+            </mailet>
+            <!-- Store permanent failures for audit -->
+            <mailet match="IsRemoteDeliveryPermanentError" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/error/remote-delivery/permanent/</repositoryPath>
+            </mailet>
+            <!-- Mail getting that far were not processed by remote delivery.
+             Likely a configuration error. -->
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/error/</repositoryPath>
+            </mailet>
+        </processor>
+....
+
+Note:
+
+- The *relay* processor holds a RemoteDelivery mailet configured to do a single try, at most 5 times (see the AtMost matcher).
+Mails exceeding the AtMost condition are concidered as permanent delivery errors. Delivery errors are sent to the
+*remote-delivery-error* processor.
+- The *remote-delivery-error* stores temporary and permanent errors.
+- Permanent relay errors are stored in `cassandra://var/mail/error/remote-delivery/permanent/`.
+- Temporary relay errors are stored in `cassandra://var/mail/error/remote-delivery/temporary/`.
+
+In order to retry the relay of temporary failed emails, operators will have to configured a cron job for reprocessing
+emails from *cassandra://var/mail/error/remote-delivery/temporary/* mailRepository into the *relay* processor.
+
+This can be achieved via the following webAdmin call :
+
+....
+curl -XPATCH 'http://ip:8000/mailRepositories/cassandra%3A%2F%2Fvar%2Fmail%2Ferror%2Fremote-delivery%2Ftemporary%2F/mails?action=reprocess&processor=relay'
+....
+
+See xref:distributed/operate/webadmin.adoc#_reprocessing_mails_from_a_mail_repository[the documentation].
+
+Administrator need to keep a close eye on permanent errors (that might require audit, and potentially contacting the remote
+service supplier).
+
+To do so, one should regularly audit the content of *cassandra://var/mail/error/remote-delivery/permanent/*. This can be done
+via webAdmin calls:
+
+....
+curl -XGET 'http://ip:8000/mailRepositories/cassandra%3A%2F%2Fvar%2Fmail%2Ferror%2Fremote-delivery%2Ftemporary%2F/mails'
+....
+
+See xref:distributed/operate/webadmin.adoc#_listing_mails_contained_in_a_mail_repository[the documentation].
