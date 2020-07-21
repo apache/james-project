@@ -1,3 +1,89 @@
 = Anti-Spam configuration
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-antispam.xml
+Anti-Spam system can be configured via two main different mechanisms:
+
+* SMTP Hooks;
+* Mailets;
+
+== AntiSpam SMTP Hooks
+
+"FastFail" SMTP Hooks acts to reject before spooling
+on the SMTP level. SpamAssasin hook can be used as a fastfail hook, therefore
+SpamAssassin must run as a server on the same machine as the Apache James Server.
+
+SMTP Hooks for non-existent users, DSN filter, domains with invalid MX record,
+can also be configured.
+
+*SpamAssassinHandler* (experimental) also enables to classify the messages as spam or not
+with an configurable score threshold (`0.0`, non configurable). Only a global database is supported. Per user spam
+detection is not supported by this hook.
+
+== AntiSpam Mailets
+
+* *SpamAssassin* Mailet is designed to classify the messages as spam or not
+with an configurable score threshold. Usually a message will only be
+considered as spam if it matches multiple criteria; matching just a single test
+will not usually be enough to reach the threshold. Note that this mailet is executed on a per-user basis.
+
+Here is an example of mailet pipeline conducting out SpamAssassin execution:
+
+....
+<mailet match="All" class="SpamAssassin">
+    <onMailetException>ignore</onMailetException>
+    <spamdHost>spamassassin</spamdHost>
+    <spamdPort>783</spamdPort>
+</mailet>
+<mailet match="All" class="MailAttributesToMimeHeaders">
+    <!-- This mailet is not required, but useful to have SpamAssassin score in headers-->
+    <simplemapping>org.apache.james.spamassassin.status; X-JAMES-SPAMASSASSIN-STATUS</simplemapping>
+    <simplemapping>org.apache.james.spamassassin.flag; X-JAMES-SPAMASSASSIN-FLAG</simplemapping>
+</mailet>
+<mailet match="IsMarkedAsSpam" class="WithStorageDirective">
+    <targetFolderName>Spam</targetFolderName>
+</mailet>
+....
+
+* *BayesianAnalysis* (unsupported) in the Mailet uses Bayesian probability to classify mail as
+spam or not spam. It relies on the training data coming from the users’ judgment.
+Users need to manually judge as spam and send to spam@thisdomain.com, oppositely,
+if not spam they then send to not.spam@thisdomain.com. BayesianAnalysisfeeder learns
+from this training dataset, and build predictive models based on Bayesian probability.
+There will be a certain table for maintaining the frequency of Corpus for keywords
+in the database. Every 10 mins a thread in the BayesianAnalysis will check and update
+the table. Also, the correct approach is to send the original spam or non-spam
+as an attachment to another message sent to the feeder in order to avoid bias from the
+current sender's email header.
+
+== Feedback for SpamAssassin
+
+If enabled, the `SpamAssassinListener` will asynchronously report users mails moved to the `Spam` mailbox as Spam,
+and other mails as `Ham`, effectively populating the user database for per user spam detection. This enables a per-user
+Spam categorization to be conducted out by the SpamAssassin mailet, the SpamAssassin hook being unaffected.
+
+The SpamAssassin listener requires an extra configuration file `spamassassin.properties` to configure SpamAssassin connection (optional):
+
+.spamassassin.properties content
+|===
+| Property name | explanation
+
+| spamassassin.host
+| Hostname of the SpamAssassin server. Defaults to 127.0.0.1.
+
+| spamassassin.port
+| Port of the SpamAssassin server. Defaults to 783.
+|===
+
+Note that this configuration file only affects the listener, and not the hook or mailet.
+
+The SpamAssassin listener needs to explicitly be registered with xref:distributed/configure/listeners.adoc[listeners.xml].
+
+Example:
+
+....
+<listeners>
+  <listener>
+    <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
+    <async>true</async>
+  </listener>
+</listeners>
+....
