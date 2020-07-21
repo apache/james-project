@@ -10,9 +10,8 @@ to get some examples and hints.
 | Property name | explanation
 
 | recursiveMapping
-| If set recursiveMapping false only the first mapping will get processed - Default true.
+| If set to false only the first mapping will get processed - Default true.
 
 | mappingLimit
-|By setting the mappingLimit you can specify how much mapping will get processed before a bounce will send. This avoid infinity loops. Default 10.
+|By setting the mappingLimit you can specify how much mapping will get processed before a bounce will send. This avoids infinity loops. Default 10.
 |===
-

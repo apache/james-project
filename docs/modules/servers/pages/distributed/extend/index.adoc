@@ -22,6 +22,6 @@ add features to the WebAdmin REST API.
 (TODO)
 
  - Using injections defined by the Distributing Server
- - Adding custom injections injections to the one of the Distributed Server for injections in your extensions.
+ - Adding custom injections to one of the Distributed Server for injections in your extensions.
 
 Note that overriding injection definitions of the Distributed Server for your injections is not supported.

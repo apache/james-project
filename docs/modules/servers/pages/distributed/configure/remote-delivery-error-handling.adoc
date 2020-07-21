@@ -103,7 +103,7 @@ curl -XPATCH 'http://ip:8000/mailRepositories/cassandra%3A%2F%2Fvar%2Fmail%2Ferr
 
 See xref:distributed/operate/webadmin.adoc#_reprocessing_mails_from_a_mail_repository[the documentation].
 
-Administrator need to keep a close eye on permanent errors (that might require audit, and potentially contacting the remote
+Administrators need to keep a close eye on permanent errors (that might require audit, and potentially contacting the remote
 service supplier).
 
 To do so, one should regularly audit the content of *cassandra://var/mail/error/remote-delivery/permanent/*. This can be done

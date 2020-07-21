@@ -10,7 +10,7 @@ xref:distributed/operate/webadmin.adoc#_deleted_messages_vault[WebAdmin endpoint
 
 To make James use DeletedMessageVault, you need to configure the PreDeletionHook for it.
 
-How to do this is doculented in the xref:distributed/configure/listeners.adoc[*listeners.xml*]
+How to do this is documented in the xref:distributed/configure/listeners.adoc[*listeners.xml*]
 Mailbox Listener Configuration page.
 
 The Deleted Messages Vault also stores and manages deleted messages into a BlobStore. The BlobStore can be either

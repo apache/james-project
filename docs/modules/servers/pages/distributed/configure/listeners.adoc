@@ -9,7 +9,7 @@ Mailbox listeners can register themselves on this event bus system to be
 called when an event is fired, allowing to do different kind of extra
 operations on the system.
 
-Distributed James allow the user to register potentially user defined additional mailbox listeners.
+Distributed James allows the user to register potentially user defined additional mailbox listeners.
 
 Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listener.xml[example]
 to get some examples and hints.
