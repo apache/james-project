@@ -49,10 +49,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
-
 import reactor.core.publisher.Mono;
 
-public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
+public class CassandraPassTroughBlobStoreTest implements MetricableBlobStoreContract {
     private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
 
@@ -72,11 +71,11 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
             .build();
         testee = new MetricableBlobStore(
             metricsTestExtension.getMetricFactory(),
-            BlobStoreFactory.builder()
-                .dumbBlobStore(new CassandraDumbBlobStore(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT))
-                .blobIdFactory(blobIdFactory)
-                .defaultBucketName()
-                .deduplication());
+                BlobStoreFactory.builder()
+                    .dumbBlobStore(new CassandraDumbBlobStore(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT))
+                    .blobIdFactory(blobIdFactory)
+                    .defaultBucketName()
+                    .passthrough());
     }
 
     @Override

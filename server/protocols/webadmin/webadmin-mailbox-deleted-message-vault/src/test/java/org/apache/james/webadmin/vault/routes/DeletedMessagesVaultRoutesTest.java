@@ -176,7 +176,10 @@ class DeletedMessagesVaultRoutesTest {
     @BeforeEach
     void beforeEach() throws Exception {
         blobIdFactory = new HashBlobId.Factory();
-        blobStore = spy(MemoryBlobStoreFactory.create(blobIdFactory));
+        blobStore = spy(MemoryBlobStoreFactory.builder()
+            .blobIdFactory(blobIdFactory)
+            .defaultBucketName()
+            .passthrough());
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             blobStore, new BucketNameGenerator(clock), clock,

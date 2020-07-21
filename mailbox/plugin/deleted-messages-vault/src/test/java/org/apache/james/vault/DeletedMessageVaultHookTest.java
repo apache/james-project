@@ -109,7 +109,10 @@ class DeletedMessageVaultHookTest {
     void setUp() throws Exception {
         clock = Clock.fixed(DELETION_DATE.toInstant(), ZoneOffset.UTC);
         messageVault = new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
-            MemoryBlobStoreFactory.create(new HashBlobId.Factory()), new BucketNameGenerator(clock), clock,
+            MemoryBlobStoreFactory.builder()
+                .blobIdFactory(new HashBlobId.Factory())
+                .defaultBucketName()
+                .passthrough(), new BucketNameGenerator(clock), clock,
             RetentionConfiguration.DEFAULT);
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();

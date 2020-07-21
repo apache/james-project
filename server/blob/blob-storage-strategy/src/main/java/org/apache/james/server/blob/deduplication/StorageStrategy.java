@@ -16,36 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.server.blob.deduplication;
 
-package org.apache.james.blob.memory;
-
-import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.api.MetricableBlobStore;
-import org.apache.james.blob.api.MetricableBlobStoreContract;
-import org.junit.jupiter.api.BeforeEach;
-
-public class MemoryBlobStoreTest implements MetricableBlobStoreContract {
-
-    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
-    private BlobStore blobStore;
-
-    @BeforeEach
-    void setUp() {
-        blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), new MetricableBlobStore(metricsTestExtension.getMetricFactory(), MemoryBlobStoreFactory.builder()
-                .blobIdFactory(BLOB_ID_FACTORY)
-                .defaultBucketName()
-                .deduplication()));
-    }
-
-    @Override
-    public BlobStore testee() {
-        return blobStore;
-    }
-
-    @Override
-    public BlobId.Factory blobIdFactory() {
-        return BLOB_ID_FACTORY;
-    }
+public enum StorageStrategy {
+    PASSTHROUGH,
+    DEDUPLICATION
 }

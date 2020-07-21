@@ -64,7 +64,10 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
         clock = new UpdatableTickingClock(NOW.toInstant());
         metricFactory = new RecordingMetricFactory();
         messageVault = new BlobStoreDeletedMessageVault(metricFactory, new MemoryDeletedMessageMetadataVault(),
-            MemoryBlobStoreFactory.create(new HashBlobId.Factory()),
+            MemoryBlobStoreFactory.builder()
+                .blobIdFactory(new HashBlobId.Factory())
+                .defaultBucketName()
+                .passthrough(),
             new BucketNameGenerator(clock), clock, RetentionConfiguration.DEFAULT);
     }
 

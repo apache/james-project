@@ -19,19 +19,10 @@
 
 package org.apache.james.blob.memory;
 
-import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
+import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 
 public class MemoryBlobStoreFactory {
-    public static BlobStore create(BlobId.Factory factory) {
-        return create(factory, BucketName.DEFAULT);
-    }
-
-    public static BlobStore create(BlobId.Factory factory, BucketName defaultBucketName) {
-        return new DeDuplicationBlobStore(
-            new MemoryDumbBlobStore(),
-            defaultBucketName, factory);
+    public static BlobStoreFactory.RequireBlobIdFactory builder() {
+        return BlobStoreFactory.builder().dumbBlobStore(new MemoryDumbBlobStore());
     }
 }

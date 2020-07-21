@@ -67,7 +67,10 @@ class LocalFileBlobExportMechanismTest {
     @BeforeEach
     void setUp(FileSystem fileSystem) throws Exception {
         mailetContext = FakeMailContext.builder().postmaster(MailAddressFixture.POSTMASTER_AT_JAMES).build();
-        blobStore = MemoryBlobStoreFactory.create(new HashBlobId.Factory());
+        blobStore = MemoryBlobStoreFactory.builder()
+            .blobIdFactory(new HashBlobId.Factory())
+            .defaultBucketName()
+            .passthrough();
 
         InetAddress localHost = mock(InetAddress.class);
         when(localHost.getHostName()).thenReturn(JAMES_HOST);

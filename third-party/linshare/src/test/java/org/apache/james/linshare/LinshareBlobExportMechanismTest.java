@@ -58,7 +58,10 @@ class LinshareBlobExportMechanismTest {
     @BeforeEach
     void setUp() throws Exception {
         blobIdFactory = new HashBlobId.Factory();
-        blobStore = MemoryBlobStoreFactory.create(blobIdFactory);
+        blobStore = MemoryBlobStoreFactory.builder()
+            .blobIdFactory(blobIdFactory)
+            .defaultBucketName()
+            .passthrough();
 
         testee = new LinshareBlobExportMechanism(
             linshareExtension.getDelegationAccountAPI(),

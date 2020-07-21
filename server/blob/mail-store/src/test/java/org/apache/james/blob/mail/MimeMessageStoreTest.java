@@ -47,7 +47,10 @@ class MimeMessageStoreTest {
 
     @BeforeEach
     void setUp() {
-        blobStore = MemoryBlobStoreFactory.create(BLOB_ID_FACTORY);
+        blobStore = MemoryBlobStoreFactory.builder()
+            .blobIdFactory(BLOB_ID_FACTORY)
+            .defaultBucketName()
+            .passthrough();
         testee = MimeMessageStore.factory(blobStore).mimeMessageStore();
     }
 
