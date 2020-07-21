@@ -1,5 +1,7 @@
 = blobstore.properties
 
+This file is optional. If omitted, the *cassandra* blob store will be used.
+
 (TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-blobstore.xml
 
 & https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-blob-export.xml

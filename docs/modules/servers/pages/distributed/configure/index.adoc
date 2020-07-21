@@ -2,9 +2,15 @@
 
 This section presents how to configure the Distributed server.
 
+The Distributed Server relies on separated files for configuring various components. Some files follow an *xml* format
+and some others follow a *property* format. Some files can be ommited, in which case the functionality can be disabled,
+or rely on reasonable defaults.
+
 The following configuration files are exposed:
 
 == For protocols
+
+By omitting these files, the underlying protocols will be disabled.
 
 ** xref:distributed/configure/imap.adoc[*imapserver.xml*] allows configuration for the IMAP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/imapserver.xml[example]
 ** xref:distributed/configure/jmap.adoc[*jmap.properties*] allows to configure the JMAP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmap.properties[example]
@@ -18,6 +24,8 @@ The following configuration files are exposed:
 
 == For storage dependencies
 
+Except specific documented cases, these files are required, at least to establish a connection with the storage components.
+
 ** xref:distributed/configure/blobstore.adoc[*blobstore.properties*] allows to configure the BlobStore link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties[example]
 ** xref:distributed/configure/cassandra.adoc[*cassandra.properties*] allows to configure the Cassandra driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/cassandra.properties[example]
 ** xref:distributed/configure/elasticsearch.adoc[*elasticsearch.properties*] allows to configure ElasticSearch driverlink:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/elasticsearch.properties[example]
@@ -25,6 +33,8 @@ The following configuration files are exposed:
 ** xref:distributed/configure/elasticsearch.adoc#_tika_configuration[*tika.properties*] allows configuring Tika as a backend for text extraction link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/tika.properties[example]
 
 == For core components
+
+By omitting these files, sane default values are used.
 
 ** xref:distributed/configure/batchsizes.adoc[*batchsizes.properties*] allows to configure mailbox read batch sizes link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/batchsizes.properties[example]
 ** xref:distributed/configure/dns.adoc[*dnsservice.xml*] allows to configure DNS resolution link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/dnsservice.xml[example]
@@ -36,6 +46,8 @@ The following configuration files are exposed:
 ** xref:distributed/configure/usersrepository.adoc[*usersrepository.xml*] allows configuration of user storage link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/usersrepository.xml[example]
 
 == For extensions
+
+By omitting these files, no extra behaviour is added.
 
 ** xref:distributed/configure/vault.adoc[*deletedMessageVault.properties*] allows to configure the DeletedMessageVault link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/deletedMessageVault.properties[example]
 ** xref:distributed/configure/listeners.adoc[*listeners.xml*] enables configuration of Mailbox Listeners link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listeners.xml[example]
