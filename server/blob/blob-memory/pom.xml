@@ -44,7 +44,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>blob-deduplicating</artifactId>
+            <artifactId>blob-storage-strategy</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

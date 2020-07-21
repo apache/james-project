@@ -27,7 +27,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>blob-deduplicating</artifactId>
+    <artifactId>blob-storage-strategy</artifactId>
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Blob :: Deduplicating Blob Storage</name>

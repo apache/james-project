@@ -34,7 +34,7 @@
 
     <modules>
         <module>blob-api</module>
-        <module>blob-deduplicating</module>
+        <module>blob-storage-strategy</module>
         <module>blob-cassandra</module>
         <module>blob-common</module>
         <module>blob-export-api</module>
