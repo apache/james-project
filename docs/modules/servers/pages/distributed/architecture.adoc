@@ -42,11 +42,11 @@ Here is a high level view of the various server components and their interaction
 
 image::server-components.png[Server components mobilized for SMTP & IMAP]
 
- - The SMTP protcol receives a mail, and enqueue it on the MailQueue
+ - The SMTP protocol receives a mail, and enqueue it on the MailQueue
  - The MailetContainer will start processing the mail Asynchronously and will take business decisions like storing the
  email localy in a user mailbox. The behaviour of the MailetContainer is highly customizable thanks to the Mailets and
  the Matcher composibility.
- - The Mailbox component is responsible of storing a user mails0
+ - The Mailbox component is responsible of storing a user's mails.
  - The user can use the IMAP or the JMAP protocol to retrieve and read his mails.
 
 These components will be presented more in depth below.
@@ -224,7 +224,7 @@ Storage of Recipients Rewritting rules, in Cassandra.
 
 ==== Mapping types
 
-James allow using various mapping types for better expressing the intent of your address rewritting logic:
+James allows using various mapping types for better expressing the intent of your address rewritting logic:
 
 * *Domain mapping*: Rewrites the domain of mail addresses. Use it for technical purposes, user will not
 be allowed to use the source in their FROM address headers. Domain mappings can be managed via the CLI and
@@ -291,4 +291,3 @@ A short list of usage are:
 * Validation of the MailQueue configuration
 * Sending email warnings to user close to their quota
 * Implementation of the TaskManager
-
