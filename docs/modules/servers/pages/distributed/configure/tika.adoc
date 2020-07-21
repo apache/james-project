@@ -1,0 +1,50 @@
+= tika.properties
+
+When using ElasticSearch, you can configure an external Tika server for extracting and indexing text from attachments.
+Thus you can significantly improve user experience upon text searches.
+
+Note: You can launch a tika server using this command line:
+
+....
+docker run --name tika linagora/docker-tikaserver:1.24
+....
+
+Here are the different properties:
+
+.elasticsearch.properties content
+|===
+| Property name | explanation
+
+| tika.enabled
+| Should Tika text extractor be used?
+If true, the TikaTextExtractor will be used behind a cache.
+If false, the DefaultTextExtractor will be used (naive implementation only supporting text).
+Defaults to false.
+
+| tika.host
+| IP or domain name of your Tika server. The default value is 127.0.0.1
+
+| tika.port
+| Port of your tika server. The default value is 9998
+
+| tika.timeoutInMillis
+| Timeout when issuing request to the tika server. The default value is 3 seconds.
+
+| tika.cache.eviction.period
+| A cache is used to avoid, when possible, query Tika multiple time for the same attachments.
+This entry determines how long after the last read an entry vanishes.
+Please note that units are supported (ms - millisecond, s - second, m - minute, h - hour, d - day). Default unit is seconds.
+Default value is *1 day*
+
+| tika.cache.enabled
+| Should the cache be used? False by default
+
+| tika.cache.weight.max
+| Maximum weight of the cache.
+A value of *0* disables the cache
+Please note that units are supported (K for KB, M for MB, G for GB). Defaults is no units, so in bytes.
+Default value is *100 MB*.
+
+| tika.contentType.blacklist
+| Blacklist of content type is known-to-be-failing with Tika. Specify the list with comma separator.
+|===

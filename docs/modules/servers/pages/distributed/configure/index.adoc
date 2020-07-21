@@ -30,7 +30,7 @@ Except specific documented cases, these files are required, at least to establis
 ** xref:distributed/configure/cassandra.adoc[*cassandra.properties*] allows to configure the Cassandra driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/cassandra.properties[example]
 ** xref:distributed/configure/elasticsearch.adoc[*elasticsearch.properties*] allows to configure ElasticSearch driverlink:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/elasticsearch.properties[example]
 ** xref:distributed/configure/rabbitmq.adoc[*rabbitmq.properties*] allows configuration for the RabbitMQ driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[example]
-** xref:distributed/configure/elasticsearch.adoc#_tika_configuration[*tika.properties*] allows configuring Tika as a backend for text extraction link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/tika.properties[example]
+** xref:distributed/configure/tika.adoc[*tika.properties*] allows configuring Tika as a backend for text extraction link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/tika.properties[example]
 
 == For core components
 

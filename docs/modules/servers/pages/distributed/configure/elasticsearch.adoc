@@ -1,5 +1,197 @@
 = elasticsearch.properties
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-elasticsearch.xml
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/cassandra.properties[example]
+to get some examples and hints.
 
-== Tika Configuration
+If you want more explanation about ElasticSearch configuration, you should visit the dedicated https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html[documentation].
+
+== ElasticSearch Configuration
+
+This file section is used to configure the connection tp an ElasticSearch cluster.
+
+Here are the properties allowing to do so :
+
+.elasticsearch.properties content
+|===
+| Property name | explanation
+
+| elasticsearch.clusterName
+| Is the name of the cluster used by James.
+
+| elasticsearch.nb.shards
+| Number of shards for index provisionned by James
+
+| elasticsearch.nb.replica
+| Number of replica for index provisionned by James (default: 0)
+
+| elasticsearch.index.waitForActiveShards
+| Wait for a certain number of active shard copies before proceeding with the operation. Defaults to 1.
+You may consult the https://www.elastic.co/guide/en/elasticsearch/reference/6.3/docs-index_.html#index-wait-for-active-shards[documentation] for more information.
+
+| elasticsearch.retryConnection.maxRetries
+| Number of retries when connecting the cluster
+
+| elasticsearch.retryConnection.minDelay
+| Minimum delay between connection attempts
+|===
+
+=== Mailbox search
+
+The main use of ElasticSearch within the Distributed Server is indexing the mailbox content of users in order to enable
+powerful and efficient full-text search of the mailbox content.
+
+Data indexing is performed asynchronously in a reliable fashion via a MailboxListener.
+
+Here are the properties related to the use of ElasticSearch for Mailbox Search:
+
+.elasticsearch.properties content
+|===
+| Property name | explanation
+
+| elasticsearch.index.mailbox.name
+| Name of the mailbox index backed by the alias. It will be created if missing.
+
+| elasticsearch.index.name
+| *Deprecated* Use *elasticsearch.index.mailbox.name* instead.
+Name of the mailbox index backed by the alias. It will be created if missing.
+
+| elasticsearch.alias.read.mailbox.name
+| Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
+The target of the alias is the index name configured above.
+
+| elasticsearch.alias.read.name
+| *Deprecated* Use *elasticsearch.alias.read.mailbox.name* instead.
+Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
+The target of the alias is the index name configured above.
+
+| elasticsearch.alias.write.mailbox.name
+| Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
+The target of the alias is the index name configured above.
+
+| elasticsearch.alias.write.name
+| *Deprecated* Use *elasticsearch.alias.write.mailbox.name* instead.
+Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
+The target of the alias is the index name configured above.
+
+| elasticsearch.indexAttachments
+| Indicates if you wish to index attachments or not (default: true).
+|===
+
+=== Quota search
+
+Users are indexed by quota usage, allowing operators a quick audit of users quota occupation.
+
+Users quota are asynchronously indexed upon quota changes via a dedicated MailboxListener.
+
+The following properties affect quota search :
+
+.elasticsearch.properties content
+|===
+| Property name | explanation
+
+| elasticsearch.index.quota.ratio.name
+| Specify the ElasticSearch alias name used for quotas
+
+| elasticsearch.alias.read.quota.ratio.name
+| Specify the ElasticSearch alias name used for reading quotas
+
+| elasticsearch.alias.write.quota.ratio.name
+| Specify the ElasticSearch alias name used for writing quotas
+|===
+
+=== Disabling ElasticSearch
+
+ElasticSearch component can be disabled but consider it would make search feature to not work. In particular it will break JMAP protocol and SEARCH IMAP comment in an nondeterministic way.
+This is controlled in the `search.properties` file via the `implementation` property (defaults
+to `ElasticSearch`). Setting this configuration parameter to `scanning` will effectively disable ElasticSearch, no
+further indexation will be done however searches will rely on the scrolling search, leading to expensive and longer
+searches. Disabling ElasticSearch requires no extra action, however
+xref:distributed/operate/webadmin.adoc#reindexing_all_mails[a full re-indexing]needs to be carried out when enabling ElasticSearch.
+
+== Exporting metrics directly to ElasticSearch
+
+For configuring the metric reporting on ElasticSearch :
+
+.elasticsearch.properties content
+|===
+| Property name | explanation
+
+| elasticsearch.http.host
+| Optional. Host to report metrics on. Defaults to master host. Must be specified if metric export to ElasticSearch is enabled.
+
+| elasticsearch.http.port
+| Optional. Http port to use for publishing metrics. Must be specified if metric export to ElasticSearch is enabled.
+
+| elasticsearch.metrics.reports.enabled
+| Optional. Boolean value. Enables metrics reporting. Defaults to false.
+
+| elasticsearch.metrics.reports.period
+| Optional. Seconds between metric reports. Defaults to 60 seconds.
+
+| elasticsearch.metrics.reports.index
+| Optional. Index to publish metrics on. Defaults to `james-metrics`.
+
+|===
+
+== SSL Trusting Configuration
+
+By default James will use the system TrustStore to validate https server certificates, if the certificate on
+ES side is already in the system TrustStore, you can leave the sslValidationStrategy property empty or set it to default.
+
+.elasticsearch.properties content
+|===
+| Property name | explanation
+
+| elasticsearch.hostScheme.https.sslValidationStrategy
+| Optional. Accept only *default*, *ignore*, *override*. Default is *default*. default: Use the default SSL TrustStore of the system.
+ignore: Ignore SSL Validation check (not recommended).
+override: Override the SSL Context to use a custom TrustStore containing ES server's certificate.
+
+|===
+
+In some cases, you want to secure the connection from clients to ES by setting up a *https* protocol
+with a self signed certificate. And you prefer to left the system ca-certificates un touch.
+There are possible solutions to let the ES RestHighLevelClient to trust your self signed certificate.
+
+Second solution: importing a TrustStore containing the certificate into SSL context.
+A certificate normally contains two parts: a public part in .crt file, another private part in .key file.
+To trust the server, the client needs to be acknowledged that the server's certificate is in the list of
+client's TrustStore. Basically, you can create a local TrustStore file containing the public part of a remote server
+by execute this command:
+
+....
+keytool -import -v -trustcacerts -file certificatePublicFile.crt -keystore trustStoreFileName.jks -keypass fillThePassword -storepass fillThePassword
+....
+
+When there is a TrustStore file and the password to read, fill two options *trustStorePath*
+and *trustStorePassword* with the TrustStore location and the password. ES client will accept
+the certificate of ES service.
+
+.elasticsearch.properties content
+|===
+| Property name | explanation
+
+| elasticsearch.hostScheme.https.trustStorePath
+| Optional. Use it when https is configured in elasticsearch.hostScheme, and sslValidationStrategy is *override*
+Configure Elasticsearch rest client to use this trustStore file to recognize nginx's ssl certificate.
+Once you chose *override*, you need to specify both trustStorePath and trustStorePassword.
+
+| elasticsearch.hostScheme.https.trustStorePassword
+| Optional. Use it when https is configured in elasticsearch.hostScheme, and sslValidationStrategy is *override*
+Configure Elasticsearch rest client to use this trustStore file with the specified password.
+Once you chose *override*, you need to specify both trustStorePath and trustStorePassword.
+
+|===
+
+During SSL handshaking, the client can determine whether accept or reject connecting to a remote server by its hostname.
+You can configure to use which HostNameVerifier in the client.
+
+.elasticsearch.properties content
+|===
+| Property name | explanation
+
+| elasticsearch.hostScheme.https.hostNameVerifier
+| Optional. Default is *default*. default: using the default hostname verifier provided by apache http client.
+accept_any_hostname: accept any host (not recommended).
+
+|===

@@ -22,6 +22,7 @@
 ***** xref:distributed/configure/cassandra.adoc[cassandra.properties]
 ***** xref:distributed/configure/elasticsearch.adoc[elasticsearch.properties]
 ***** xref:distributed/configure/rabbitmq.adoc[rabbitmq.properties]
+***** xref:distributed/configure/tika.adoc[tika.properties]
 **** Core components
 ***** xref:distributed/configure/batchsizes.adoc[batchsizes.properties]
 ***** xref:distributed/configure/dns.adoc[dnsservice.xml]
