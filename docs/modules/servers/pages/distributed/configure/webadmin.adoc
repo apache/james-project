@@ -3,7 +3,7 @@
 The web administration supports for now the CRUD operations on the domains, the users, their mailboxes and their quotas,
 managing mail repositories, performing cassandra migrations, and much more, as described in the following sections.
 
-*WARNING*: This API allow authentication only via the use of JWT. If not
+*WARNING*: This API allows authentication only via the use of JWT. If not
 configured with JWT, an administrator should ensure an attacker can not
 use this API.
 

@@ -40,7 +40,7 @@ this implementation relies on Cassandra.
 | Property name | explanation
 
 | mailqueue.view.sliceWindow
-| James divide the view into slices, each slice contains data for a given period, sliceWindow parameter controls this period.
+| James divides the view into slices, each slice contains data for a given period, sliceWindow parameter controls this period.
 This dividing of periods allows faster browsing of the mail queue. Tips for choosing sliceWindow are explained in
 https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[rabbitmq.properties]
 
@@ -58,7 +58,7 @@ https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassan
 
 | mailqueue.size.metricsEnabled
 |  By default, the metrics are disabled for the mail queue size.
-As computing the size of the mail queue is currently implemented on top of browse operation and thus have a linear complexity,
+As computing the size of the mail queue is currently implemented on top of browse operation and thus has a linear complexity,
 sometimes it can get too big, making it impossible for the ES reporter to handle it correctly without crashing.
 It can be useful then to disable it.
 Tips for choosing metricsEnabled are explained in

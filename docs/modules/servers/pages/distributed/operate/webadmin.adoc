@@ -145,7 +145,7 @@ Response codes:
 
 == Task management
 
-Some webadmin features schedules tasks. The task management API allow to
+Some webadmin features schedule tasks. The task management API allow to
 monitor and manage the execution of the following tasks.
 
 Note that the `taskId` used in the following APIs is returned by other
@@ -197,7 +197,7 @@ above is returned
 
 === Awaiting a task
 
-One can await the end of a task, then receive it’s final execution
+One can await the end of a task, then receive its final execution
 report.
 
 That feature is especially usefull for testing purpose but still can

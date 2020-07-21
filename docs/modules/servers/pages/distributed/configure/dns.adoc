@@ -21,11 +21,11 @@ children of this tag.
 | Information includes a list of DNS Servers to be used by James.  These are
 specified by the server elements, each of which is a child element of the
 servers element.  Each server element is the IP address of a single DNS server.
-The servers element can have multiple server children. Enter ip address of your DNS server, one IP address per server
+The server elements can have multiple server children. Enter ip address of your DNS server, one IP address per server
 element. If no DNS servers are found and you have not specified any below, 127.0.0.1 will be used
 
 | autodiscover
-| true or false -  If you use autodiscover and add DNS servers manually a combination of all the DNS servers will be used
+| true or false -  If you use autodiscover and add DNS servers manually a combination of all the DNS servers will be used.
 If autodiscover is true, James will attempt to autodiscover the DNS servers configured on your underlying system.
 Currently, this works if the OS has a unix-like /etc/resolv.xml,
 or the system is Windows based with ipconfig or winipcfg. Change autodiscover to false if you would like to turn off autodiscovery

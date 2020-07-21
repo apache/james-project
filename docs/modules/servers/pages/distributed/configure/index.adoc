@@ -14,7 +14,7 @@ By omitting these files, the underlying protocols will be disabled.
 
 ** xref:distributed/configure/imap.adoc[*imapserver.xml*] allows configuration for the IMAP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/imapserver.xml[example]
 ** xref:distributed/configure/jmap.adoc[*jmap.properties*] allows to configure the JMAP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmap.properties[example]
-** xref:distributed/configure/jmx.adoc[*jmx.properties*] allows configuration of JMX being use by the Command Line Interface link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmx.properties[example]
+** xref:distributed/configure/jmx.adoc[*jmx.properties*] allows configuration of JMX being used by the Command Line Interface link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmx.properties[example]
 ** xref:distributed/configure/smtp.adoc#_lmtp_configuration[*lmtpserver.xml*] allows configuring the LMTP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/lmtpserver.xml[example]
 ** *managesieveserver.xml* allows configuration for ManagedSieve (unsupported) link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/managesieveserver.xml[example]
 ** xref:distributed/configure/pop3.adoc[*pop3server.xml*] allows configuration for the POP3 protocol (experimental) link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/pop3server.xml[example]
@@ -28,7 +28,7 @@ Except specific documented cases, these files are required, at least to establis
 
 ** xref:distributed/configure/blobstore.adoc[*blobstore.properties*] allows to configure the BlobStore link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties[example]
 ** xref:distributed/configure/cassandra.adoc[*cassandra.properties*] allows to configure the Cassandra driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/cassandra.properties[example]
-** xref:distributed/configure/elasticsearch.adoc[*elasticsearch.properties*] allows to configure ElasticSearch driverlink:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/elasticsearch.properties[example]
+** xref:distributed/configure/elasticsearch.adoc[*elasticsearch.properties*] allows to configure ElasticSearch driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/elasticsearch.properties[example]
 ** xref:distributed/configure/rabbitmq.adoc[*rabbitmq.properties*] allows configuration for the RabbitMQ driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[example]
 ** xref:distributed/configure/tika.adoc[*tika.properties*] allows configuring Tika as a backend for text extraction link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/tika.properties[example]
 
@@ -51,6 +51,6 @@ By omitting these files, no extra behaviour is added.
 
 ** xref:distributed/configure/vault.adoc[*deletedMessageVault.properties*] allows to configure the DeletedMessageVault link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/deletedMessageVault.properties[example]
 ** xref:distributed/configure/listeners.adoc[*listeners.xml*] enables configuration of Mailbox Listeners link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listeners.xml[example]
-** xref:distributed/configure/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading yours extensions in it link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/extensions.properties[example]
+** xref:distributed/configure/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading your extensions in it link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/extensions.properties[example]
 ** xref:distributed/configure/spam.adoc[This page] documents Anti-Spam setup with SpamAssassin.
 ** xref:distributed/configure/remote-delivery-error-handling.adoc[This page] proposes a simple strategy for RemoteDelivery error handling.

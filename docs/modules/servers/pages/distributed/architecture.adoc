@@ -229,7 +229,7 @@ James allows using various mapping types for better expressing the intent of you
 * *Domain mapping*: Rewrites the domain of mail addresses. Use it for technical purposes, user will not
 be allowed to use the source in their FROM address headers. Domain mappings can be managed via the CLI and
 added via xref:distributed/operate/webadmin.adoc#_domain_mappings[WebAdmin]
-* *Domain aliases*: Rewrites the domain of mail addresses. Express the idea that both domain can be used
+* *Domain aliases*: Rewrites the domain of mail addresses. Express the idea that both domains can be used
 inter-changeably. User will be allowed to use the source in their FROM address headers. Domain aliases can
 be managed via xref:distributed/operate/webadmin.adoc#_get_the_list_of_aliases_for_a_domain[WebAdmin]
 * *Forwards*: Replaces the source address by another one. Vehicles the intent of forwarding incoming mails
