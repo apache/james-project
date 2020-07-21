@@ -1,3 +1,33 @@
 = batchsizes.properties
 
-(TODO)
+This files allow to define the amount of data that should be fetched 'at once' when interacting with the mailbox. This is
+needed as IMAP can generate some potentially large requests.
+
+Increasing these values tend to fasten individual requests, at the cost of enabling potential higher load.
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/batchsizes.properties[example]
+to get some examples and hints.
+
+.batchsizes.properties content
+|===
+| Property name | explanation
+
+| fetch.metadata
+| Optional, defaults to 200. How many messages should be read in a batch when using FetchType.MetaData
+
+| fetch.headers
+| Optional, defaults to 200. How many messages should be read in a batch when using FetchType.Header
+
+| fetch.body
+| Optional, defaults to 100. How many messages should be read in a batch when using FetchType.Body
+
+| fetch.full
+| Optional, defaults to 50. How many messages should be read in a batch when using FetchType.Full
+
+| copy
+| Optional, defaults to 200. How many messages should be copied in a batch.
+
+| move
+| Optional, defaults to 200. How many messages should be moved in a batch.
+
+|===
