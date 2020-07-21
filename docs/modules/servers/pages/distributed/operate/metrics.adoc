@@ -7,7 +7,8 @@ Such metrics are made available via JMX. You can connect for instance using Visu
 mbean plugins.
 
 You can also export the metrics to ElasticSearch and visualize them with https://grafana.com/[Grafana].
-See (TODO) elaticseach.properties documentation for more details on how to set this up.
+See xref:distributed/configure/elasticsearch.adoc#_exporting_metrics_directly_to_elasticsearch[elaticseach.properties]
+documentation for more details on how to set this up.
 
 If some metrics seem abnormally slow despite in depth database
 performance tuning, feedback is appreciated as well on the bug tracker,
