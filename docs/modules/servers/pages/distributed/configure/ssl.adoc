@@ -1,3 +1,146 @@
 = SSL & TLS configuration
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-ssl-tls.xml
+This document explains how to enable James 3.0 servers to use Transport Layer Security (TLS)
+for encrypted client-server communication.
+
+== Configure a Server to Use SSL/TLS
+
+Each of the servers xref:distributed/configure/smtp.adoc[SMTP - LMTP],
+xref:distributed/configure/pop3.adoc[POP3] and xref:distributed/configure/imap.adoc[IMAP]
+supports use of SSL/TLS.
+
+TLS (Transport Layer Security) and SSL (Secure Sockets Layer) are protocols that provide
+data encryption and authentication between applications in scenarios where that data is
+being sent across an insecure network, such as checking your email
+(How does the Secure Socket Layer work?). The terms SSL and TLS are often used
+interchangeably or in conjunction with each other (TLS/SSL),
+but one is in fact the predecessor of the other — SSL 3.0 served as the basis
+for TLS 1.0 which, as a result, is sometimes referred to as SSL 3.1.
+
+You need to add a block in the corresponding configuration file (smtpserver.xml, pop3server.xml, imapserver.xml,..)
+
+....
+<tls socketTLS="false" startTLS="false">
+  <keystore>file://conf/keystore</keystore>
+  <secret>yoursecret</secret>
+  <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+</tls>
+....
+
+Each of these block has an optional boolean configuration element <b>socketTLS</b> and <b>startTLS</b> which is used to toggle
+use of SSL or TLS for the service.
+
+With socketTLS (SSL/TLS in Thunderbird), all the communication is encrypted.
+
+With startTLS (STARTTLS in Thunderbird), the preamble is readable, but the rest is encrypted.
+
+....
+* OK JAMES IMAP4rev1 Server  Server 192.168.1.4 is ready.
+* CAPABILITY IMAP4rev1 LITERAL+ CHILDREN WITHIN STARTTLS IDLE NAMESPACE UIDPLUS UNSELECT AUTH=PLAIN
+1 OK CAPABILITY completed.
+2 OK STARTTLS Begin TLS negotiation now.
+... rest is encrypted...
+....
+
+You can only enable one of the both at the same time for a service.
+
+It is also recommended to change the port number on which the service will listen:
+
+* POP3 - port 110, Secure POP3 - port 995
+* IMAP - port 143, Secure IMAP4 - port 993
+* SMTP - port 25, Secure SMTP - port 465
+
+You will now need to create your certificate store and place it in the james/conf/ folder with the name you defined in the keystore tag.
+
+== Certificate Keystores
+
+To use TLS/SSL inside James you will need a certificate keystore.
+
+
+=== Creating your own Certificate Keystore
+
+(Adapted from the Tomcat 4.1 documentation)
+
+James currently operates only on JKS format keystores. This is Java's standard "Java KeyStore" format, and is the format
+created by the keytool command-line utility. This tool is included in the JDK.
+
+To import an existing certificate into a JKS keystore, please read the documentation (in your JDK documentation package)
+about keytool.
+
+To create a new keystore from scratch, containing a single self-signed Certificate, execute the following from a terminal
+command line:
+
+....
+keytool -genkey -alias james -keyalg RSA -keystore your_keystore_filename
+....
+
+(The RSA algorithm should be preferred as a secure algorithm, and this also ensures general compatibility with other
+servers and components.)
+
+As a suggested standard, create the keystore in the james/conf directory, with a name like james.keystore.
+
+After executing this command, you will first be prompted for the keystore password.
+
+Next, you will be prompted for general information about this Certificate, such as company, contact name, and so on.
+This information may be displayed to users when importing into the certificate store of the client, so make sure that
+the information provided here matches what they will expect.
+
+Important: in the "distinguished name", set the "common name" (CN) to the DNS name of your James server, the one
+you will use to access it from your mail client (like "mail.xyz.com").
+
+Finally, you will be prompted for the key password, which is the password specifically for this Certificate
+(as opposed to any other Certificates stored in the same keystore file).
+
+If everything was successful, you now have a keystore file with a Certificate that can be used by your server.
+
+You MUST have only one certificate in the keystore file used by James.
+
+=== Installing a Certificate provided by a Certificate Authority
+
+(Adapted from the Tomcat 4.1 documentation
+
+To obtain and install a Certificate from a Certificate Authority (like verisign.com, thawte.com or trustcenter.de)
+you should have read the previous section and then follow these instructions:
+
+==== Create a local Certificate Signing Request (CSR)
+
+In order to obtain a Certificate from the Certificate Authority of your choice you have to create a so called
+Certificate Signing Request (CSR). That CSR will be used by the Certificate Authority to create a Certificate
+that will identify your James server as "secure". To create a CSR follow these steps:
+
+* Create a local Certificate as described in the previous section.
+
+The CSR is then created with:
+
+....
+  keytool -certreq -keyalg RSA -alias james -file certreq.csr -keystore your_keystore_filename
+....
+
+Now you have a file called certreq.csr. The file is encoded in PEM format. You can submit it to the Certificate Authority
+(look at the documentation of the Certificate Authority website on how to do this). In return you get a Certificate.
+
+Now that you have your Certificate you can import it into you local keystore. First of all you may have to import a so
+called Chain Certificate or Root Certificate into your keystore (the major Certificate Authorities are already in place,
+so it's unlikely that you will need to perform this step). After that you can procede with importing your Certificate.
+
+==== Optionally Importing a so called Chain Certificate or Root Certificate
+
+Download a Chain Certificate from the Certificate Authority you obtained the Certificate from.
+
+* For Verisign.com go to: http://www.verisign.com/support/install/intermediate.html
+* For Trustcenter.de go to: http://www.trustcenter.de/certservices/cacerts/en/en.htm#server
+* For Thawte.com go to: http://www.thawte.com/certs/trustmap.html (seems no longer valid)
+
+==== Import the Chain Certificate into you keystore
+
+....
+keytool -import -alias root -keystore your_keystore_filename -trustcacerts -file filename_of_the_chain_certificate
+....
+
+And finally import your new Certificate (It must be in X509 format):
+
+....
+keytool -import -alias james -keystore your_keystore_filename -trustcacerts -file your_certificate_filename
+....
+
+See also http://www.agentbob.info/agentbob/79.html[this page]
