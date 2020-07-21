@@ -224,7 +224,7 @@ Storage of Recipients Rewritting rules, in Cassandra.
 
 ==== Mapping types
 
-James allow using various mapping types for better expressing the intent of your address rewritting logic:
+James allows using various mapping types for better expressing the intent of your address rewritting logic:
 
 * *Domain mapping*: Rewrites the domain of mail addresses. Use it for technical purposes, user will not
 be allowed to use the source in their FROM address headers. Domain mappings can be managed via the CLI and
