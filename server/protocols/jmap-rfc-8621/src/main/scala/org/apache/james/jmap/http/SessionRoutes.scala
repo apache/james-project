@@ -42,12 +42,11 @@ import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.HttpServerResponse
 
 object SessionRoutes {
-  private val JMAP_SESSION = "/jmap/session"
+  private val JMAP_SESSION: String = "/jmap/session"
   private val LOGGER = LoggerFactory.getLogger(classOf[SessionRoutes])
 }
 
-@Inject
-class SessionRoutes(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
+class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                     val serializer: Serializer,
                     val sessionSupplier: SessionSupplier = new SessionSupplier()) extends JMAPRoutes {
 
