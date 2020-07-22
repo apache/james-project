@@ -66,7 +66,6 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
@@ -145,7 +144,6 @@ class SelectedMailboxImplTest {
         assertThat(selectedMailbox.getLastUid().get()).isEqualTo(EMITTED_EVENT_UID);
     }
 
-    @Disabled("JAMES-3177 SelectedMailboxImpl is not thread safe")
     @Test
     void customFlagsEventShouldNotFailWhenConcurrentWithCreation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);
@@ -158,7 +156,6 @@ class SelectedMailboxImplTest {
         assertThat(successCount.get()).isEqualTo(1);
     }
 
-    @Disabled("JAMES-3177 SelectedMailboxImpl is not thread safe")
     @Test
     void applicableFlagsShouldBeWellUpdatedWhenConcurrentWithCreation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);

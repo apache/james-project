@@ -122,12 +122,13 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     private final Set<MessageUid> flagUpdateUids = new TreeSet<>();
     private final Flags.Flag uninterestingFlag = Flags.Flag.RECENT;
     private final Set<MessageUid> expungedUids = new TreeSet<>();
+    private final Object applicableFlagsLock = new Object();
 
     private boolean recentUidRemoved = false;
     private boolean isDeletedByOtherSession = false;
     private boolean sizeChanged = false;
     private boolean silentFlagChanges = false;
-    private ApplicableFlags applicableFlags;
+    private ApplicableFlags applicableFlags = ApplicableFlags.from(new Flags());
 
     public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MessageManager messageManager) throws MailboxException {
         this.session = session;
@@ -147,7 +148,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
             .subscribeOn(Schedulers.elastic())
             .block();
 
-        applicableFlags = ApplicableFlags.from(messageManager.getApplicableFlags(mailboxSession));
+        synchronized (applicableFlagsLock) {
+            applicableFlags = applicableFlags.updateWithNewFlags(messageManager.getApplicableFlags(mailboxSession));
+        }
         try (Stream<MessageUid> stream = messageManager.search(SearchQuery.of(SearchQuery.all()), mailboxSession)) {
             uidMsnConverter.addAll(stream.collect(Guavate.toImmutableList()));
         }
@@ -236,7 +239,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         sizeChanged = false;
         flagUpdateUids.clear();
         isDeletedByOtherSession = false;
-        applicableFlags = applicableFlags.ackUpdates();
+        synchronized (applicableFlagsLock) {
+            applicableFlags = applicableFlags.ackUpdates();
+        }
     }
 
     @Override
@@ -340,20 +345,22 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     @Override
-    public synchronized Flags getApplicableFlags() {
+    public Flags getApplicableFlags() {
         return applicableFlags.flags();
     }
 
     
     @Override
-    public synchronized boolean hasNewApplicableFlags() {
+    public boolean hasNewApplicableFlags() {
         return applicableFlags.updated();
     }
 
     
     @Override
     public synchronized void resetNewApplicableFlags() {
-        applicableFlags = applicableFlags.ackUpdates();
+        synchronized (applicableFlagsLock) {
+            applicableFlags = applicableFlags.ackUpdates();
+        }
     }
 
     
@@ -426,7 +433,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
                 }
             }
         }
-        applicableFlags = updateApplicableFlags(applicableFlags, updated);
+        synchronized (applicableFlagsLock) {
+            applicableFlags = updateApplicableFlags(applicableFlags, updated);
+        }
         return VOID;
     }
 
