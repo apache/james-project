@@ -1,5 +1,170 @@
 = smtpserver.xml
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-smtp-lmtp.xml
+== Incoming SMTP
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/smtpserver.xml[example]
+to get some examples and hints.
+
+The SMTP service is controlled by a configuration block in the smptserver.xml.
+The smtpserver tag defines the boundaries of the configuration block.  It encloses
+all the relevant configuration for the SMTP server. The behavior of the SMTP service is
+controlled by the attributes and children of this tag.
+
+This tag has an optional boolean attribute - *enabled* - that defines whether the service is active or not.  The value defaults to "true" if
+not present.
+
+The standard children of the smtpserver tag are:
+
+.smtpserver.xml content
+|===
+| Property name | explanation
+
+| bind
+| A list of address:port separed by comma - This is an optional value.  If present, this value is a string describing
+the IP address to which this service should be bound.  If the tag or value is absent then the service
+will bind to all network interfaces for the machine on port 25. Port 25 is the well-known/IANA registered port for SMTP.
+Port 465 is the well-known/IANA registered port for SMTP over TLS.
+
+| connectBacklog
+|The IP address (host name) the MBean Server will bind/listen to.
+
+| tls
+| Set to true to support STARTTLS or SSL for the Socket.
+To use this you need to copy sunjce_provider.jar to /path/james/lib directory. To create a new keystore execute:
+`keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore`.
+The algorithm is optional and only needs to be specified when using something other
+than the Sun JCE provider - You could use IbmX509 with IBM Java runtime.
+Please note that each SMTP/LMTP server exposed on different port can specify its own keystore, independently from any other
+TLS based protocols.
+
+| helloName
+| This is a required tag with an optional body that defines the server name
+used in the initial service greeting.  The tag may have an optional attribute - *autodetect*.  If
+the autodetect attribute is present and true, the service will use the local hostname
+returned by the Java libraries.  If autodetect is absent or false, the body of the tag will be used.  In
+this case, if no body is present, the value "localhost" will be used.
+
+| connectionTimeout
+| This is an optional tag with a non-negative integer body. Connection timeout in seconds.
+
+| connectionLimit
+| Set the maximum simultaneous incoming connections for this service.
+
+| connectionLimitPerIP
+| Set the maximum simultaneous incoming connections per IP for this service.
+
+| handler.authRequired
+| This is an optional tag with a boolean body.  If true, then the server will
+require authentication before delivering mail to non-local email addresses.  If this tag is absent, or the value
+is false then the client will not be prompted for authentication.  Only simple user/password authentication is
+supported at this time. supported values:
+
+* true: required but announced only to not authorizedAddresses
+* false: don't use AUTH
+* announce: like true, but always announce AUTH capability to clients
+
+The correct behaviour per RFC value would be false or announce
+but we still support true for backward compatibility and because
+some webmail client fails when AUTH is announced but no authentication
+information has been provided
+
+| authorizedAddresses
+| Authorize specific addresses/networks.
+
+If you use SMTP AUTH, addresses that match those specified here will
+be permitted to relay without SMTP AUTH.  If you do not use SMTP
+AUTH, and you specify addreses here, then only addresses that match
+those specified will be permitted to relay.
+
+Addresses may be specified as a an IP address or domain name, with an
+optional netmask, e.g.,
+
+127.*, 127.0.0.0/8, 127.0.0.0/255.0.0.0, and localhost/8 are all the same
+
+See also the RemoteAddrNotInNetwork matcher in the transport processor.
+You would generally use one OR the other approach.
+
+| verifyIdentity
+| This is an optional tag with a boolean body.  This option can only be used
+if SMTP authentication is required.  If the parameter is set to true then the sender address for the submitted message
+will be verified against the authenticated subject. Verify sender addresses, ensuring that
+the sender address matches the user who has authenticated.
+It will verify that the sender address matches the address of the user or one of its alias (from user or domain aliases).
+This prevents a user of your mail server from acting as someone else
+If unspecified, default value is true.
+
+| maxmessagesize
+| This is an optional tag with a non-negative integer body.  It specifies the maximum
+size, in kbytes, of any message that will be transmitted by this SMTP server.  It is a service-wide, as opposed to
+a per user, limit.  If the value is zero then there is no limit.  If the tag isn't specified, the service will
+default to an unlimited message size.
+
+| heloEhloEnforcement
+| This sets whether to enforce the use of HELO/EHLO salutation before a
+MAIL command is accepted. If unspecified, the value defaults to true.
+
+| smtpGreeting
+| This sets the SMTPGreeting which will be used when connect to the smtpserver
+If none is specified a default is generated
+
+| handlerchain
+| The configuration handler chain
+|===
+
+== About open relays
+
+Authenticated SMTP is a method of securing your SMTP server.  With SMTP AUTH enabled senders who wish to
+relay mail through the SMTP server (that is, send mail that is eventually to be delivered to another SMTP
+server) must authenticate themselves to Apache James Server before sending their message.  Mail that is to be delivered
+locally does not require authentication.  This method ensures that spammers cannot use your SMTP server
+to send unauthorized mail, while still enabling users who may not have fixed IP addresses to send their
+messages.
+
+Mail servers that allow spammers to send unauthorized email are known as open relays.  So SMTP AUTH
+is a mechanism for ensuring that your server is not an open relay.
+
+It is extremely important that your server not be configured as an open relay.  Aside from potential
+costs associated with usage by spammers, connections from servers that are determined to be open relays
+are routinely rejected by SMTP servers.  This can severely impede the ability of your mail server to
+send mail.
+
+At this time Apache James Server only supports simple user name / password authentication.
+
+As mentioned above, SMTP AUTH requires that Apache James Server be able to distinguish between mail intended
+for local delivery and mail intended for remote delivery. Apache James Server makes this determination by matching the
+domain to which the mail was sent against the *DomainList* component, configured by
+xref:distributed/configure/domainlist.adoc[*domainlist.xml*].
+
+The Distributed Server is configured out of the box so as to not serve as an open relay for spammers.  This is done
+by relayed emails originate from a trusted source. This includes:
+
+* Authenticated SMTP/JMAP users
+* Mails generated by the server (eg: bounces)
+* Mails originating froma trusted network as configured in *smtpserver.xml*
+
+If you wish to ensure that authenticated users can only send email from their own account, you may
+optionally set the verifyIdentity element of the smtpserver configuration block to "true".
+
+=== Verification
+
+Verify that you have not inadvertently configured your server as an open relay. This is most easily
+accomplished by using the service provided at https://mxtoolbox.com/diagnostic.aspx[mxtoolbox.com]. mxtoolbox.com will
+check your mail server and inform you if it is an open relay. This tool further more verifies additional propertiess like:
+
+* Your DNS condifuration, especially that you mail server IP has a valid reverse DNS entry
+* That your SMTP connection is secured
+* That you are not an OpenRelay
+* This website also allow a quick lookup to ensure your mail server is not in public blacklists.
+
+Of course it is also necessary to confirm that users and log in and send
+mail through your server.  This can be accomplished using any standard mail client (i.e. Thunderbird, Outlook,
+Eudora, Evolution).
 
 == LMTP Configuration
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/lmtpserver.xml[example]
+to get some examples and hints.
+
+The configuration is the same of for SMTP.
+
+By default, it is deactivated. You can activate it alongside SMTP and bind for example on port 24.
