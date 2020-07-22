@@ -52,20 +52,6 @@ object MailboxGetMethodContract {
   private val READ: String = Right.Read.asCharacter.toString
   private val ADMINISTER: String = Right.Administer.asCharacter.toString
 
-  private val GET_ALL_MAILBOXES_REQUEST: String =
-    """{
-    |  "using": [
-    |    "urn:ietf:params:jmap:core",
-    |    "urn:ietf:params:jmap:mail"],
-    |  "methodCalls": [[
-    |      "Mailbox/get",
-    |      {
-    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-    |        "ids": null
-    |      },
-    |      "c1"]]
-    |}""".stripMargin
-
   private val GET_ALL_MAILBOXES_REQUEST_NULL_PROPERTIES: String =
     """{
     |  "using": [

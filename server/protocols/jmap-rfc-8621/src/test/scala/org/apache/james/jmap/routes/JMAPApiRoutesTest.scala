@@ -35,15 +35,15 @@ import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.domainlist.memory.MemoryDomainList
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap._
-import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy}
+import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, MailboxesProvisioner, UserProvisioning}
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
 import org.apache.james.jmap.model.RequestLevelErrorType
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
-import org.apache.james.mailbox.MailboxManager
 import org.apache.james.mailbox.extension.PreDeletionHook
-import org.apache.james.mailbox.inmemory.MemoryMailboxManagerProvider
+import org.apache.james.mailbox.inmemory.{InMemoryMailboxManager, MemoryMailboxManagerProvider}
 import org.apache.james.mailbox.model.TestId
+import org.apache.james.mailbox.store.StoreSubscriptionManager
 import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.apache.james.user.memory.MemoryUsersRepository
 import org.hamcrest.Matchers.equalTo
@@ -67,13 +67,17 @@ object JMAPApiRoutesTest {
   private val usersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList)
   usersRepository.addUser(Username.of("user1"), "password")
 
-  private val mailboxManager: MailboxManager = MemoryMailboxManagerProvider.provideMailboxManager(empty_set)
+  private val mailboxManager: InMemoryMailboxManager = MemoryMailboxManagerProvider.provideMailboxManager(empty_set)
   private val authenticationStrategy: BasicAuthenticationStrategy = new BasicAuthenticationStrategy(usersRepository, mailboxManager)
   private val AUTHENTICATOR: Authenticator = Authenticator.of(new RecordingMetricFactory, authenticationStrategy)
 
+  private val userProvisionner: UserProvisioning = new UserProvisioning(usersRepository, new RecordingMetricFactory)
+  private val subscriptionManager: StoreSubscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory)
+  private val mailboxesProvisioner: MailboxesProvisioner = new MailboxesProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory)
+
   private val JMAP_METHODS: Set[Method] = Set(new CoreEchoMethod)
 
-  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, SERIALIZER, JMAP_METHODS)
+  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, SERIALIZER, userProvisionner, mailboxesProvisioner, JMAP_METHODS)
   private val ROUTES_HANDLER: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, JMAP_API_ROUTE))
 
   private val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))
