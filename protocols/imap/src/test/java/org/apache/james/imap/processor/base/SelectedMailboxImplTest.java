@@ -67,6 +67,7 @@ import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -242,77 +243,80 @@ class SelectedMailboxImplTest {
             .build();
     }
 
-    @Test
-    void updateApplicableFlagsShouldNotUpdateWhenEmptyFlagsUpdate() {
-        ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
-        MailboxListener.FlagsUpdated flagsUpdated = flagsUpdated(updatedFlags().noOldFlag().noNewFlag());
-        ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
-        assertThat(actual).satisfies(ap -> {
-            assertThat(ap.updated()).isFalse();
-            assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
-        });
-    }
+    @Nested
+    class ApplicableFlagsTests {
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenEmptyFlagsUpdate() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated = flagsUpdated(updatedFlags().noOldFlag().noNewFlag());
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
+            });
+        }
 
-    @Test
-    void updateApplicableFlagsShouldNotUpdateWhenNewFlag() {
-        ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
-        MailboxListener.FlagsUpdated flagsUpdated =
-            flagsUpdated(updatedFlags().noOldFlag().newFlags(flags -> flags.add(ANSWERED)));
-        ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
-        assertThat(actual).satisfies(ap -> {
-            assertThat(ap.updated()).isFalse();
-            assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add(ANSWERED).build());
-        });
-    }
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenNewFlag() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(updatedFlags().noOldFlag().newFlags(flags -> flags.add(ANSWERED)));
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add(ANSWERED).build());
+            });
+        }
 
-    @Test
-    void updateApplicableFlagsShouldNotUpdateWhenSeveralUpdatedFlagsNewFlag() {
-        ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
-        MailboxListener.FlagsUpdated flagsUpdated =
-            flagsUpdated(
-                updatedFlags().noOldFlag().newFlags(flags -> flags.add(ANSWERED)),
-                updatedFlags().noOldFlag().newFlags(flags -> flags.add(FLAGGED)));
-        ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
-        assertThat(actual).satisfies(ap -> {
-            assertThat(ap.updated()).isFalse();
-            assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add(ANSWERED).add(FLAGGED).build());
-        });
-    }
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenSeveralUpdatedFlagsNewFlag() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(
+                    updatedFlags().noOldFlag().newFlags(flags -> flags.add(ANSWERED)),
+                    updatedFlags().noOldFlag().newFlags(flags -> flags.add(FLAGGED)));
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add(ANSWERED).add(FLAGGED).build());
+            });
+        }
 
-    @Test
-    void updateApplicableFlagsShouldNotUpdateWhenOldFlagRemoved() {
-        ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
-        MailboxListener.FlagsUpdated flagsUpdated =
-            flagsUpdated(updatedFlags().oldFlags(flags -> flags.add(SEEN)).noNewFlag());
-        ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
-        assertThat(actual).satisfies(ap -> {
-            assertThat(ap.updated()).isFalse();
-            assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
-        });
-    }
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenOldFlagRemoved() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(updatedFlags().oldFlags(flags -> flags.add(SEEN)).noNewFlag());
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
+            });
+        }
 
-    @Test
-    void updateApplicableFlagsShouldNotIncludeRecent() {
-        ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
-        MailboxListener.FlagsUpdated flagsUpdated =
-            flagsUpdated(updatedFlags().noOldFlag().newFlags(flags -> flags.add(RECENT)));
-        ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
-        assertThat(actual).satisfies(ap -> {
-            assertThat(ap.updated()).isFalse();
-            assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
-        });
-    }
+        @Test
+        void updateApplicableFlagsShouldNotIncludeRecent() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(updatedFlags().noOldFlag().newFlags(flags -> flags.add(RECENT)));
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
+            });
+        }
 
-    @Test
-    void updateApplicableFlagsShouldNotUpdateWhenNewUserFlag() {
-        ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
-        MailboxListener.FlagsUpdated flagsUpdated =
-            flagsUpdated(updatedFlags().noOldFlag().newFlags(flags -> flags.add("Foo")));
-        ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
-        assertThat(actual).satisfies(ap -> {
-            assertThat(ap.updated()).isTrue();
-            assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add("Foo").build());
-        });
+        @Test
+        void updateApplicableFlagsShouldUpdateWhenNewUserFlag() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(updatedFlags().noOldFlag().newFlags(flags -> flags.add("Foo")));
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isTrue();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add("Foo").build());
+            });
+        }
     }
 
     private static FlagsBuilder flagsBuilder() {
