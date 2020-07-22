@@ -46,6 +46,15 @@
                 <dt><strong>implementation</strong></dt>
                 <dd>cassandra: use cassandra based BlobStore</dd>
                 <dd>objectstorage: use Swift/AWS S3 based BlobStore</dd>
+
+                <dt><strong>deduplication/enable</strong></dt>
+                <dd>Mandatory. Supported value: true and false.</dd>
+                <dd>If you choose to enable deduplication, the mails with the same content will be stored only once.</dd>
+                <dd>Warning: Once this feature is enabled, there is no turning back as turning it off will lead to the deletion of all</dd>
+                <dd>the mails sharing the same content once one is deleted.</dd>
+                <dd>This feature also requires a garbage collector mechanism to effectively drop blobs, which is not implemented yet.</dd>
+                <dd>Consequently, all the requested deletions will not be performed, meaning that blobstore will only grow.</dd>
+                <dd>Upgrade note: If you are upgrading from James 3.5 or older, the deduplication was enabled.</dd>
             </dl>
 
 
