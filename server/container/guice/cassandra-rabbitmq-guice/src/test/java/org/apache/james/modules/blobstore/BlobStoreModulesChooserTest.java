@@ -27,15 +27,21 @@ class BlobStoreModulesChooserTest {
 
     @Test
     void provideBlobStoreShouldReturnObjectStoreBlobStoreWhenObjectStoreConfigured() {
-        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.objectStorage().disableCache()))
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+                    .objectStorage()
+                    .disableCache()
+                    .deduplication()))
             .first()
-            .isInstanceOf(BlobStoreModulesChooser.ObjectStorageDeclarationModule.class);
+            .isInstanceOf(BlobStoreModulesChooser.ObjectStorageDumdBlobStoreDeclarationModule.class);
     }
 
     @Test
     void provideBlobStoreShouldReturnCassandraBlobStoreWhenCassandraConfigured() {
-        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.cassandra()))
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+                .cassandra()
+                .disableCache()
+                .passthrough()))
             .first()
-            .isInstanceOf(BlobStoreModulesChooser.CassandraDeclarationModule.class);
+            .isInstanceOf(BlobStoreModulesChooser.CassandraDumbBlobStoreDeclarationModule.class);
     }
 }

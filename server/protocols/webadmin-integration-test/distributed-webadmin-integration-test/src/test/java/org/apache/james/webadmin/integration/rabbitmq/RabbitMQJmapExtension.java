@@ -150,7 +150,10 @@ public class RabbitMQJmapExtension implements BeforeAllCallback, AfterAllCallbac
         CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .blobStore(BlobStoreConfiguration.builder()
+                    .objectStorage()
+                    .disableCache()
+                    .deduplication())
             .searchConfiguration(SearchConfiguration.elasticSearch())
             .build();
 
