@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -47,7 +48,7 @@ class ClusterFactoryTest {
     @Test
     void consistencyLevelShouldBeEqualToQuorum(DockerCassandra dockerCassandra) {
         Cluster cluster = ClusterFactory.create(dockerCassandra.configurationBuilder()
-            .build());
+            .build(), CassandraConsistenciesConfiguration.DEFAULT);
 
         ConsistencyLevel consistencyLevel = cluster.getConfiguration()
             .getQueryOptions()
@@ -62,14 +63,14 @@ class ClusterFactoryTest {
 
         assertThatThrownBy(() -> ClusterFactory.create(
             dockerCassandra.configurationBuilder()
-                .build()))
+                .build(), CassandraConsistenciesConfiguration.DEFAULT))
             .isInstanceOf(NoHostAvailableException.class);
     }
 
     @Test
     void createShouldReturnAContactableCluster(DockerCassandra dockerCassandra) {
         Cluster cluster = ClusterFactory.create(dockerCassandra.configurationBuilder()
-            .build());
+            .build(), CassandraConsistenciesConfiguration.DEFAULT);
 
         assertThatClusterIsContactable(cluster);
     }

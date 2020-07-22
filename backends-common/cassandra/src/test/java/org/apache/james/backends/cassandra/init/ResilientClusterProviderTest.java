@@ -26,6 +26,7 @@ import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -38,7 +39,7 @@ class ResilientClusterProviderTest {
 
     @Test
     void getShouldNotThrowWhenHealthyCassandra() {
-        assertThatCode(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration().build())
+        assertThatCode(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration().build(), CassandraConsistenciesConfiguration.DEFAULT)
                 .get())
             .doesNotThrowAnyException();
     }
@@ -50,7 +51,7 @@ class ResilientClusterProviderTest {
             assertThatThrownBy(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration()
                     .maxRetry(1)
                     .minDelay(1)
-                    .build())
+                    .build(), CassandraConsistenciesConfiguration.DEFAULT)
                 .get())
                 .isInstanceOf(Exception.class);
         } finally {
@@ -68,7 +69,8 @@ class ResilientClusterProviderTest {
                 .subscribeOn(Schedulers.elastic())
                 .subscribe();
 
-            assertThatCode(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration().build())
+            assertThatCode(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration().build(),
+                    CassandraConsistenciesConfiguration.DEFAULT)
                 .get())
                 .doesNotThrowAnyException();
         } finally {
