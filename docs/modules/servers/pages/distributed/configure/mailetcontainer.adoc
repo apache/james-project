@@ -1,3 +1,88 @@
 = mailetcontainer.xml
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-mailetcontainer.xml
+This documents explains how to configure Mail processing. Mails pass through the MailetContainer. The
+MailetContainer is a Matchers (condition for executing a mailet) and Mailets (execution units that perform
+actions based on incoming mail) pipeline arranged into processors (List of mailet/matcher pairs allowing
+better logical organisation). You can read more about these concepts on
+xref:distributed/architecture.adoc#_mail_processing[the mailet container feature description].
+
+Apache James Server includes a number of xref:distributed/configure/mailets.adoc[Packaged Mailets] and
+xref:distributed/configure/matchers.adoc[Packaged Matchers].
+
+Futhermore, you can write and use with James xref:distributed/extend/mail-processing.adoc[your own mailet and matchers].
+
+Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/mailetcontainer.xml[example]
+to get some examples and hints.
+
+.mailetcontainer.xml content
+|===
+| Property name | explanation
+
+| context.postmaster
+| The body of this element is the address that the server
+will consider its postmaster address.  This address will be listed as the sender address
+of all error messages that originate from James.  Also, all messages addressed to
+postmaster@<servername>, where <servername> is one of the domain names whose
+mail is being handled by James, will be redirected to this email address.
+Set this to the appropriate email address for error reports
+If this is set to a non-local email address, the mail server
+will still function, but will generate a warning on startup.
+
+| spooler.threads
+| Number of simultaneous threads used to spool the mails.
+
+| spooler.errorRepository
+| Mail repository to store email in after several unrecoverable errors. Mails failing processing, for which
+the Mailet Container could not handle Error, will be stored there after their processing had been attempted
+5 times. Note that if standard java Exception occurs, *Error handling* section below will be applied
+instead.
+|===
+
+== The Mailet Tag
+
+Consider the following simple *mailet* tag:</p>
+
+....
+<mailet match="RemoteAddrNotInNetwork=127.0.0.1" class="ToProcessor">
+    <processor>spam</processor>
+</mailet>
+....
+
+The mailet tag has two required attributes, *match* and *class*.
+
+The *match* attribute is set to the value of the specific Matcher class to be instantiated with a an
+optional argument.  If present, the argument is separated from the Matcher class name by an '='.  Semantic
+interpretation of the argument is left to the particular mailet.
+
+The *class* attribute is set to the value of the Mailet class that is to be instantiated.
+
+Finally, the children of the *mailet* tag define the configuration that is passed to the Mailet.  The
+tags used in this section should have no attributes or children.  The names and bodies of the elements will be passed to
+the mailet as (name, value) pairs.
+
+So in the example above, a Matcher instance of RemoteAddrNotInNetwork would be instantiated, and the value "127.0.0.1"
+would be passed to the matcher.  The Mailet of the pair will be an instance of ToProcessor, and it will be passed the (name, value)
+pair of ("processor", "spam").
+
+== Error handling
+
+If an exception is encountered during the execution of a mailet or a matcher, the default behaviour is to
+process the mail using the *error* processor.
+
+The *onMailetException* property allows you to override this behaviour. You can specify another
+processor than the *error* one for handling the errors of this mailet. The *ignore* special value also
+allows to continue processing and ignore the error.
+
+Moreover, the *onMatcherException* allows you to override matcher error handling. You can
+specify another processor than the *error* one for handling the errors of this mailet. The *matchall*
+special value also allows you to match all recipients when there is an error. The *nomatch*
+special value also allows you to match no recipients when there is an error.
+
+Here is a short example to illustrate this:
+
+....
+<mailet match=RecipientIsLocal class="LocalDelivery">
+    <onMailetException>deliveryError</onMailetException>
+    <onMatcherException>nomatch</onMatcherException>
+</mailet>
+....
