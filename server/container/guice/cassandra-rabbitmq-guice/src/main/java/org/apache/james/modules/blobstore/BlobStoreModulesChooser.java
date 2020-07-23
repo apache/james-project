@@ -26,6 +26,12 @@ import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.cassandra.CassandraDumbBlobStore;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.lifecycle.api.StartUpCheck;
+import org.apache.james.modules.blobstore.validation.EventsourcingStorageStrategy;
+import org.apache.james.modules.blobstore.validation.StorageStrategyModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
 import org.apache.james.modules.objectstorage.ObjectStorageDependenciesModule;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
@@ -36,6 +42,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class BlobStoreModulesChooser {
@@ -59,10 +68,32 @@ public class BlobStoreModulesChooser {
         }
     }
 
+    static class StoragePolicyConfigurationSanityEnforcementModule extends AbstractModule {
+        private BlobStoreConfiguration choosingConfiguration;
+
+        StoragePolicyConfigurationSanityEnforcementModule(BlobStoreConfiguration choosingConfiguration) {
+            this.choosingConfiguration = choosingConfiguration;
+        }
+
+        @Override
+        protected void configure() {
+            Multibinder<EventDTOModule<? extends Event, ? extends EventDTO>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {});
+            eventDTOModuleBinder.addBinding().toInstance(StorageStrategyModule.STORAGE_STRATEGY);
+
+            bind(BlobStoreConfiguration.class).toInstance(choosingConfiguration);
+            bind(EventsourcingStorageStrategy.class).in(Scopes.SINGLETON);
+
+            Multibinder.newSetBinder(binder(), StartUpCheck.class)
+                .addBinding()
+                .to(BlobStoreConfigurationValidationStartUpCheck.class);
+        }
+    }
+
     @VisibleForTesting
     public static List<Module> chooseModules(BlobStoreConfiguration choosingConfiguration) {
-        ImmutableList.Builder<Module> moduleBuilder = ImmutableList.<Module>builder().add(
-            chooseDumBlobStoreModule(choosingConfiguration.getImplementation()));
+        ImmutableList.Builder<Module> moduleBuilder = ImmutableList.<Module>builder()
+            .add(chooseDumBlobStoreModule(choosingConfiguration.getImplementation()))
+            .add( new StoragePolicyConfigurationSanityEnforcementModule(choosingConfiguration));
 
         //TODO JAMES-3028 add the storage policy module for all implementation and unbind the ObjectStorageBlobStore
         if (choosingConfiguration.getImplementation() == BlobStoreConfiguration.BlobStoreImplName.CASSANDRA) {
