@@ -79,7 +79,7 @@ object SessionSerializationTest {
     emailQuerySortOptions = EMAIL_QUERY_SORT_OPTIONS,
     mayCreateTopLevelMailbox = MAY_CREATE_TOP_LEVEL_MAILBOX))
 
-  private val CAPABILITIES = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
+  private val CAPABILITIES = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, QuotaCapability(), SharesCapability())
 
   private val IS_PERSONAL : IsPersonal = IsPersonal(true)
   private val IS_NOT_PERSONAL : IsPersonal = IsPersonal(false)

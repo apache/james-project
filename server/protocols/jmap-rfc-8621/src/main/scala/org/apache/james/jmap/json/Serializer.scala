@@ -93,9 +93,13 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
   private implicit val coreCapabilityWrites: Writes[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]
   private implicit val mailCapabilityWrites: Writes[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
+  private implicit val quotaCapabilityWrites: Writes[QuotaCapabilityProperties] = OWrites[QuotaCapabilityProperties](_ => Json.obj())
+  private implicit val sharesCapabilityWrites: Writes[SharesCapabilityProperties] = OWrites[SharesCapabilityProperties](_ => Json.obj())
 
   private implicit def setCapabilityWrites(implicit corePropertiesWriter: Writes[CoreCapabilityProperties],
-                                   mailCapabilityWrites: Writes[MailCapabilityProperties]): Writes[Set[_ <: Capability]] =
+                                   mailCapabilityWrites: Writes[MailCapabilityProperties],
+                                   quotaCapabilityWrites: Writes[QuotaCapabilityProperties],
+                                   sharesCapabilityWrites: Writes[SharesCapabilityProperties]): Writes[Set[_ <: Capability]] =
     (set: Set[_ <: Capability]) => {
       set.foldLeft(JsObject.empty)((jsObject, capability) => {
         capability match {
@@ -103,12 +107,16 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
             jsObject.+(capability.identifier.value, corePropertiesWriter.writes(capability.properties)))
           case capability: MailCapability => (
             jsObject.+(capability.identifier.value, mailCapabilityWrites.writes(capability.properties)))
+          case capability: QuotaCapability => (
+            jsObject.+(capability.identifier.value, quotaCapabilityWrites.writes(capability.properties)))
+          case capability: SharesCapability => (
+            jsObject.+(capability.identifier.value, sharesCapabilityWrites.writes(capability.properties)))
           case _ => jsObject
         }
       })
     }
 
-  private implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(Set(capabilities.coreCapability, capabilities.mailCapability))
+  private implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(capabilities.toSet)
 
   private implicit val accountIdWrites: Format[AccountId] = Json.valueFormat[AccountId]
   private implicit def identifierMapWrite[Any](implicit idWriter: Writes[AccountId]): Writes[Map[CapabilityIdentifier, Any]] =

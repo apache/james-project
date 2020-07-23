@@ -31,7 +31,6 @@ import org.apache.http.HttpStatus
 import org.apache.james.core.Username
 import org.apache.james.jmap._
 import org.apache.james.jmap.http.SessionRoutesTest.{BOB, TEST_CONFIGURATION}
-import org.apache.james.jmap.json.Fixture.expected_session_object_json
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.TestId
@@ -101,7 +100,72 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .thenReturn
         .getBody
         .asString()
+    val expectedJson = """{
+                         |  "capabilities" : {
+                         |    "urn:ietf:params:jmap:core" : {
+                         |      "maxSizeUpload" : 10000000,
+                         |      "maxConcurrentUpload" : 4,
+                         |      "maxSizeRequest" : 10000000,
+                         |      "maxConcurrentRequests" : 4,
+                         |      "maxCallsInRequest" : 16,
+                         |      "maxObjectsInGet" : 500,
+                         |      "maxObjectsInSet" : 500,
+                         |      "collationAlgorithms" : [ "i;unicode-casemap" ]
+                         |    },
+                         |    "urn:ietf:params:jmap:mail" : {
+                         |      "maxMailboxesPerEmail" : 10000000,
+                         |      "maxMailboxDepth" : null,
+                         |      "maxSizeMailboxName" : 200,
+                         |      "maxSizeAttachmentsPerEmail" : 20000000,
+                         |      "emailQuerySortOptions" : [ "receivedAt", "cc", "from", "to", "subject", "size", "sentAt", "hasKeyword", "uid", "Id" ],
+                         |      "mayCreateTopLevelMailbox" : true
+                         |    },
+                         |    "urn:apache:james:params:jmap:mail:quota": {},
+                         |    "urn:apache:james:params:jmap:mail:shares": {}
+                         |  },
+                         |  "accounts" : {
+                         |    "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401" : {
+                         |      "name" : "bob@james.org",
+                         |      "isPersonal" : true,
+                         |      "isReadOnly" : false,
+                         |      "accountCapabilities" : {
+                         |        "urn:ietf:params:jmap:core" : {
+                         |          "maxSizeUpload" : 10000000,
+                         |          "maxConcurrentUpload" : 4,
+                         |          "maxSizeRequest" : 10000000,
+                         |          "maxConcurrentRequests" : 4,
+                         |          "maxCallsInRequest" : 16,
+                         |          "maxObjectsInGet" : 500,
+                         |          "maxObjectsInSet" : 500,
+                         |          "collationAlgorithms" : [ "i;unicode-casemap" ]
+                         |        },
+                         |        "urn:ietf:params:jmap:mail" : {
+                         |          "maxMailboxesPerEmail" : 10000000,
+                         |          "maxMailboxDepth" : null,
+                         |          "maxSizeMailboxName" : 200,
+                         |          "maxSizeAttachmentsPerEmail" : 20000000,
+                         |          "emailQuerySortOptions" : [ "receivedAt", "cc", "from", "to", "subject", "size", "sentAt", "hasKeyword", "uid", "Id" ],
+                         |          "mayCreateTopLevelMailbox" : true
+                         |        },
+                         |        "urn:apache:james:params:jmap:mail:quota": {},
+                         |        "urn:apache:james:params:jmap:mail:shares": {}
+                         |      }
+                         |    }
+                         |  },
+                         |  "primaryAccounts" : {
+                         |    "urn:ietf:params:jmap:core" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
+                         |    "urn:ietf:params:jmap:mail" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
+                         |    "urn:apache:james:params:jmap:mail:quota": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
+                         |    "urn:apache:james:params:jmap:mail:shares": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401"
+                         |  },
+                         |  "username" : "bob@james.org",
+                         |  "apiUrl" : "http://this-url-is-hardcoded.org/jmap",
+                         |  "downloadUrl" : "http://this-url-is-hardcoded.org/download",
+                         |  "uploadUrl" : "http://this-url-is-hardcoded.org/upload",
+                         |  "eventSourceUrl" : "http://this-url-is-hardcoded.org/eventSource",
+                         |  "state" : "000001"
+                         |}""".stripMargin
 
-    Json.parse(sessionJson) should equal(expected_session_object_json)
+    Json.parse(sessionJson) should equal(Json.parse(expectedJson))
   }
 }

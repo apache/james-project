@@ -19,6 +19,7 @@
 package org.apache.james.jmap.model
 
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 
 object DefaultCapabilities {
   val CORE_CAPABILITY = CoreCapability(
@@ -43,9 +44,15 @@ object DefaultCapabilities {
     )
   )
 
-  val SUPPORTED = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
+  val QUOTA_CAPABILITY = QuotaCapability()
+
+  val SHARES_CAPABILITY = SharesCapability()
+
+  val SUPPORTED = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, QUOTA_CAPABILITY, SHARES_CAPABILITY)
 }
 
-case class Capabilities(coreCapability: CoreCapability, mailCapability: MailCapability) {
-  def toSet : Set[Capability] = Set(coreCapability, mailCapability)
+case class Capabilities(capabilities: Capability*) {
+  def toSet : Set[Capability] = capabilities.toSet
+
+  def ids : Set[CapabilityIdentifier] = toSet.map(_.identifier())
 }

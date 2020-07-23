@@ -104,7 +104,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   private def process(requestObject: RequestObject,
                       httpServerResponse: HttpServerResponse,
                       mailboxSession: MailboxSession): SMono[Void] = {
-    val unsupportedCapabilities = requestObject.using.toSet -- CapabilityIdentifier.SUPPORTED_CAPABILITIES
+    val unsupportedCapabilities = requestObject.using.toSet -- DefaultCapabilities.SUPPORTED.ids
 
     if (unsupportedCapabilities.nonEmpty) {
       SMono.raiseError(UnsupportedCapabilitiesException(unsupportedCapabilities))
