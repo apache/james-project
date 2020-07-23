@@ -22,17 +22,128 @@ Some MailboxListener allows you to specify if you want to run them synchronously
 for MailboxListener that supports this, you can use the *async* attribute (optional, per mailet default) to govern the execution mode.
 If *true* the execution will be scheduled in a reactor elastic scheduler. If *false*, the execution is synchronous.
 
-Already provided additional listeners includes:
+Already provided additional listeners are docmented below.
 
-* `org.apache.james.mailbox.spamassassin.SpamAssassinListener`:
+=== SpamAssassinListener
+
 Provides per user real-time HAM/SPAM feedback to a SpamAssassin server depending on user actions.
-Please note that a `spamassassin.properties` file is needed.<br/>
-This mailet is asynchronous by default, but this behaviour can be overridden by the <b>async</b>
+
+This mailet is asynchronous by default, but this behaviour can be overridden by the *async*
 configuration property.
-* `org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener`:
-For Cassandra guice wiring. Provides more insights on mailbox operations
-* `org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener`:
-For Cassandra guice wiring. Sends emails to users exceeding 80% and 99% of their quota to warn them
+
+This MailboxListener is supported.
+
+Example:
+
+....
+<listeners>
+  <!-- ... -->
+  <listener>
+    <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
+  </listener>
+</listeners>
+....
+
+Please note that a `spamassassin.properties` file is needed. Read also
+xref:distributed/configure/spam.adoc[this page] for extra configuration required to support this feature.
+
+=== MailboxOperationLoggingListener
+
+Provides more insights on mailbox operationsby logging them.
+
+This MailboxListener is supported.
+
+Example:
+
+....
+<listeners>
+  <listener>
+    <class>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</class>
+  </listener>
+  <!-- ... -->
+</listeners>
+....
+
+=== QuotaThresholdCrossingListener
+
+Sends emails to users exceeding 80% and 99% of their quota to warn them (for instance).
+
+Here are the following properties you can configure:
+
+.QuotaThresholdCrossingListener configuration properties
+|===
+| Property name | explanation
+
+| name
+| Useful when configuring several time this listener. You might want to do so to use different rendering templates for
+different occupation thresholds.
+
+| gracePeriod
+| Period during which no more email for a given threshold should be sent.
+
+| subjectTemplate
+| Mustache template for rendering the subject of the warning email.
+
+| bodyTemplate
+| Mustache template for rendering the body of the warning email.
+
+| thresholds
+| Floating number between 0 and 1 representing the threshold of quota occupation from which a mail should be sent.
+Configuring several thresholds is supported.
+
+|===
+
+Example:
+
+....
+<listeners>
+  <!-- ... -->
+  <listener>
+    <class>org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener</class>
+    <group>QuotaThresholdCrossingListener-upper-threshold</group>
+    <configuration>
+      <thresholds>
+        <threshold>
+          <value>0.8</value>
+        </threshold>
+      </thresholds>
+      <name>thirst</name>
+      <subjectTemplate>conf://templates/QuotaThresholdMailSubject.mustache</subjectTemplate>
+      <bodyTemplate>conf://templates/QuotaThresholdMailBody.mustache</bodyTemplate>
+      <gracePeriod>1week/</gracePeriod>
+    </configuration>
+  </listener>
+</listeners>
+....
+
+Here are examples of templates you can use:
+
+* For subject template: `conf://templates/QuotaThresholdMailSubject.mustache`
+
+....
+Warning: Your email usage just exceeded a configured threshold
+....
+
+* For body template: `conf://templates/QuotaThresholdMailBody.mustache`
+
+....
+You receive this email because you recently exceeded a threshold related to the quotas of your email account.
+
+{{#hasExceededSizeThreshold}}
+You currently occupy more than {{sizeThreshold}} % of the total size allocated to you.
+You currently occupy {{usedSize}}{{#hasSizeLimit}} on a total of {{limitSize}} allocated to you{{/hasSizeLimit}}.
+
+{{/hasExceededSizeThreshold}}
+{{#hasExceededCountThreshold}}
+You currently occupy more than {{countThreshold}} % of the total message count allocated to you.
+You currently have {{usedCount}} messages{{#hasCountLimit}} on a total of {{limitCount}} allowed for you{{/hasCountLimit}}.
+
+{{/hasExceededCountThreshold}}
+You need to be aware that actions leading to exceeded quotas will be denied. This will result in a degraded service.
+To mitigate this issue you might reach your administrator in order to increase your configured quota. You might also delete some non important emails.
+....
+
+This MailboxListener is supported.
 
 == PreDeletionHook configuration
 
@@ -46,3 +157,17 @@ Already provided additional pre deletion hooks includes:
 
 * `org.apache.james.vault.DeletedMessageVaultHook`: Storing messages about being deleted into
 `org.apache.james.vault.DeletedMessageVault`
+
+
+Example:
+
+....
+<listeners>
+  <!-- ... -->
+  <preDeletionHook>
+    <class>org.apache.james.vault.DeletedMessageVaultHook</class>
+  </preDeletionHook>
+</listeners>
+....
+
+Read also xref:distributed/configure/vault.adoc[this page] for extra configuration required to support this feature.
