@@ -1,0 +1,280 @@
+= SMTP Hooks
+
+This documentation page lists and documents SMTP hooks that can be used within the
+Distributed Server SMTP protocol stack in order to customize the way your SMTP server
+behaves with out of the box components.
+
+== DNSRBLHandler
+
+This command handler check against https://www.wikiwand.com/en/Domain_Name_System-based_Blackhole_List[RBL-Lists]
+(Real-time Blackhole List).
+
+If getDetail is set to true it try to retrieve information from TXT Record
+why the ip was blocked. Default to false.
+
+before you enable out the DNS RBL handler documented as an example below,
+please take a moment to review each block in the list.
+We have included some that various JAMES committers use,
+but you must decide which, if any, are appropriate
+for your environment.
+
+The mail servers hosting
+@apache.org mailing lists, for example, use a
+slightly different list than we have included below.
+And it is likely that most JAMES committers also have
+slightly different sets of lists.
+
+The SpamAssassin user's list would be one good place to discuss the
+measured quality of various block lists.
+
+NOTA BENE: the domain names, below, are terminated
+with '.' to ensure that they are absolute names in
+DNS lookups.  Under some circumstances, names that
+are not explicitly absolute could be treated as
+relative names, leading to incorrect results.  This
+has been observed on *nix and MS-Windows platforms
+by users of multiple mail servers, and is not JAMES
+specific.  If you are unsure what this means for you,
+please speak with your local system/network admins.
+
+This handler should be considered experimental.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.fastfail.DNSRBLHandler">
+        <getDetail>false</getDetail>
+        <rblservers>
+            <whitelist>query.bondedsender.org.</whitelist>
+            <blacklist>sbl-xbl.spamhaus.org.</blacklist>
+            <blacklist>dul.dnsbl.sorbs.net.</blacklist>
+            <blacklist>list.dsbl.org.</blacklist>
+        </rblservers>
+    </handler>
+</handlerchain>
+....
+
+== MailPriorityHandler
+
+This handler can add a hint to the mail which tells the MailQueue which email should get processed first.
+
+Normally the MailQueue will just handles Mails in FIFO manner.
+
+Valid priority values are 1,5,9 where 9 is the highest.
+
+This handler should be considered experimental.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.MailPriorityHandler">
+        <priorityEntries>
+            <priorityEntry>
+               <domain>yourdomain1</domain>
+               <priority>1</priority>
+            </priorityEntry>
+            <priorityEntry>
+               <domain>yourdomain2</domain>
+               <priority>9</priority>
+            </priorityEntry>
+        <priorityEntries>
+    </handler>
+</handlerchain>
+....
+
+== MaxRcptHandler
+If activated you can limit the maximal recipients.
+
+This handler should be considered experimental.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.fastfail.MaxRcptHandler">
+        <maxRcpt>10</maxRcpt>
+    </handler>
+</handlerchain>
+....
+
+== POP3BeforeSMTPHandler
+
+This connect handler can be used to enable POP3 before SMTP support.
+
+Please note that only the ip get stored to identify an authenticated client.
+
+The expireTime is the time after which an ipAddress is handled as expired.
+
+This handler should be considered as unsupported.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.POP3BeforeSMTPHandler">
+        <expireTime>1 hour</expireTime>
+    </handler>
+</handlerchain>
+....
+
+== ResolvableEhloHeloHandler
+
+Checks for resolvable HELO/EHLO before accept the HELO/EHLO.
+
+If checkAuthNetworks is set to true sender domain will be checked also for clients that
+are allowed to relay. Default is false.
+
+This handler should be considered experimental.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.fastfail.ResolvableEhloHeloHandler"/>
+</handlerchain>
+....
+
+== ReverseEqualsEhloHeloHandler
+
+Checks HELO/EHLO is equal the reverse of the connecting client before accept it
+If checkAuthNetworks is set to true sender domain will be checked also for clients that
+are allowed to relay. Default is false.
+
+This handler should be considered experimental.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.fastfail.ReverseEqualsEhloHeloHandler"/>
+</handlerchain>
+....
+
+== SetMimeHeaderHandler
+
+This handler allows you to add mime headers to the processed mails.
+
+This handler should be considered experimental.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.SetMimeHeaderHandler">
+        <headername>SPF-test</headername>
+        <headervalue>passed</headervalue>
+    </handler>
+</handlerchain>
+....
+
+== SpamAssassinHandler
+
+This MessageHandler could be used to check message against spamd before
+accept the email. So its possible to reject a message on smtplevel if a
+configured hits amount is reached.
+
+This handler should be considered experimental.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.fastfail.SpamAssassinHandler">
+        <spamdHost>127.0.0.1</spamdHost>
+        <spamdPort>783</spamdPort>
+        <spamdRejectionHits>10</spamdRejectionHits>
+    </handler>
+</handlerchain>
+....
+
+== SPFHandler
+
+This command handler can be used to reject emails with not match the SPF record of the sender domain.
+
+If checkAuthNetworks is set to true sender domain will be checked also for clients that
+are allowed to relay. Default is false.
+
+This handler should be considered experimental.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.fastfail.SPFHandler">
+        <blockSoftFail>false</blockSoftFail>
+        <blockPermError>true</blockPermError>
+    </handler>
+</handlerchain>
+....
+
+== URIRBLHandler
+
+This MessageHandler could be used to extract domain out of the message and check
+this domains against uriRbllists. See http://www.surbl.org for more information.
+The message get rejected if a domain matched.
+
+This handler should be considered experimental.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.fastfail.URIRBLHandler">
+        <action>reject</action>
+        <getDetail>true</getDetail>
+        <uriRblServers>
+            <server>multi.surbl.org</server>
+        </uriRblServers>
+    </handler>
+</handlerchain>
+....
+
+== ValidRcptHandler
+
+With ValidRcptHandler, all email will get rejected which has no valid user.
+
+You need to add the recipient to the validRecipient list if you want
+to accept email for a recipient which not exist on the server.
+
+If you want James to act as a spamtrap or honeypot, you may comment ValidRcptHandler
+and implement the needed processors in spoolmanager.xml.
+
+This handler should be considered stable.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
+</handlerchain>
+....
+
+== ValidSenderDomainHandler
+
+If activated mail is only accepted if the sender contains
+a resolvable domain having a valid MX Record or A Record associated!
+
+If checkAuthNetworks is set to true sender domain will be checked also for clients that
+are allowed to relay. Default is false.
+
+Example configuration:
+
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.fastfail.ValidSenderDomainHandler"/>
+</handlerchain>
+....

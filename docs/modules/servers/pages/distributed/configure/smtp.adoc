@@ -108,7 +108,9 @@ MAIL command is accepted. If unspecified, the value defaults to true.
 If none is specified a default is generated
 
 | handlerchain
-| The configuration handler chain
+| The configuration handler chain. See xref:distributed/configure/smtp-hooks.adoc[this page] for configuring out-of the
+box extra SMTP handlers and hooks.
+
 |===
 
 == About open relays
