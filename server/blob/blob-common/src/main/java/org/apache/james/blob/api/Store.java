@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -34,6 +35,8 @@ public interface Store<T, I> {
     Mono<I> save(T t);
 
     Mono<T> read(I blobIds);
+
+    Publisher<Void> delete(I blobIds);
 
     class Impl<T, I extends BlobPartsId> implements Store<T, I> {
 
@@ -100,6 +103,12 @@ public interface Store<T, I> {
                 .collectList()
                 .map(Collection::stream)
                 .map(decoder::decode);
+        }
+
+        @Override
+        public Publisher<Void> delete(I blobIds) {
+            return Flux.fromIterable(blobIds.asMap().values())
+                .flatMap(id -> blobStore.delete(blobStore.getDefaultBucketName(), id));
         }
     }
 }

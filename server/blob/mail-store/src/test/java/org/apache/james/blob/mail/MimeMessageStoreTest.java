@@ -20,6 +20,7 @@
 package org.apache.james.blob.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
@@ -29,6 +30,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -81,6 +83,34 @@ class MimeMessageStoreTest {
 
         assertThat(MimeMessageUtil.asString(retrievedMessage))
             .isEqualTo(MimeMessageUtil.asString(message));
+    }
+
+    @Test
+    void readShouldNotReturnDeletedMessage() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom("any@any.com")
+            .addToRecipient("toddy@any.com")
+            .setSubject("Important Mail")
+            .setText("Important mail content")
+            .build();
+
+        MimeMessagePartsId parts = testee.save(message).block();
+
+        Mono.from(testee.delete(parts)).block();
+
+        assertThatThrownBy(() -> testee.read(parts).block())
+            .isInstanceOf(ObjectNotFoundException.class);
+    }
+
+    @Test
+    void deleteShouldNotThrowWhenCalledOnNonExistingData() throws Exception {
+        MimeMessagePartsId parts = MimeMessagePartsId.builder()
+            .headerBlobId(BLOB_ID_FACTORY.randomId())
+            .bodyBlobId(BLOB_ID_FACTORY.randomId())
+            .build();
+
+        assertThatCode(() -> Mono.from(testee.delete(parts)).block())
+            .doesNotThrowAnyException();
     }
 
     @Test
