@@ -95,6 +95,6 @@ class DeDuplicationBlobStore @Inject()(dumbBlobStore: DumbBlobStore,
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(blobId)
 
-    dumbBlobStore.delete(bucketName, blobId)
+    SMono.empty
   }
 }
