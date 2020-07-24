@@ -20,12 +20,11 @@
 package org.apache.james.mailrepository.cassandra;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
-
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -35,11 +34,9 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.api.Store;
 import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
-import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailKey;
@@ -55,7 +52,6 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 
 import reactor.core.publisher.Mono;
-
 
 class CassandraMailRepositoryWithFakeImplementationsTest {
     @RegisterExtension
@@ -78,26 +74,20 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             CassandraMailRepositoryMailDaoAPI mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
             keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
+            BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+                .deduplication();
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                    keysDAO, countDAO, mailDAO, new FailingStore());
-        }
-
-        class FailingStore implements Store<MimeMessage, MimeMessagePartsId> {
-
-            @Override
-            public Mono<MimeMessagePartsId> save(MimeMessage mimeMessage) {
-                return Mono.error(new RuntimeException("Expected failure while saving"));
-            }
-
-            @Override
-            public Mono<MimeMessage> read(MimeMessagePartsId blobIds) {
-                return Mono.error(new RuntimeException("Expected failure while reading"));
-            }
+                    keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
         }
 
         @Test
-        void keysShouldNotBeStoredWhenStoringMimeMessageHasFailed() throws Exception {
+        void keysShouldNotBeStoredWhenStoringMimeMessageHasFailed(CassandraCluster cassandra) throws Exception {
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("INSERT INTO blobParts (id,chunkNumber,data) VALUES (:id,:chunkNumber,:data);"));
+
             MailImpl mail = MailImpl.builder()
                 .name("mymail")
                 .sender("sender@localhost")
@@ -112,7 +102,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessage("Expected failure while saving");
+                    .hasMessage("Injected failure");
 
             assertThat(keysDAO.list(URL).collectList().block()).isEmpty();
         }
