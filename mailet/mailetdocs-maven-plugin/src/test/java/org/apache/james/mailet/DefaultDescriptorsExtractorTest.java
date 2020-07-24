@@ -28,26 +28,26 @@ import java.util.List;
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class DefaultDescriptorsExtractorTest {
+class DefaultDescriptorsExtractorTest {
 
-    private MavenProject mavenProject;
-    private Log log;
-    private DefaultDescriptorsExtractor testee;
+    MavenProject mavenProject;
+    Log log;
+    DefaultDescriptorsExtractor testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         mavenProject = mock(MavenProject.class);
         log = mock(Log.class);
         testee = new DefaultDescriptorsExtractor();
     }
 
     @Test
-    public void extractShouldSetExperimentalAttributeWhenScanningMailets() {
+    void extractShouldSetExperimentalAttributeWhenScanningMailets() {
         when(mavenProject.getCompileSourceRoots())
             .thenReturn(ImmutableList.of("src/test/java/org/apache/james/mailet/experimental"));
 
@@ -73,7 +73,7 @@ public class DefaultDescriptorsExtractorTest {
     }
     
     @Test
-    public void extractShouldExcludeAnnotatedClassesWhenScanningMailets() {
+    void extractShouldExcludeAnnotatedClassesWhenScanningMailets() {
         when(mavenProject.getCompileSourceRoots())
             .thenReturn(ImmutableList.of("src/test/java/org/apache/james/mailet/excluded"));
 
