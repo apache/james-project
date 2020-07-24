@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -34,6 +35,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.MailboxSession;
@@ -157,6 +159,28 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
                     .doesNotContain(cassandraMessageId);
             });
+        }
+
+        @Test
+        void deleteMailboxShouldDeleteMessageAndAttachmentBlobs(CassandraCluster cassandraCluster) throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            assertThat(cassandraCluster.getConf().execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
+                .isEmpty();
+        }
+
+        @Test
+        void deleteMessageShouldDeleteMessageAndAttachmentBlobs(CassandraCluster cassandraCluster) throws Exception {
+            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
+
+            inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
+
+            assertThat(cassandraCluster.getConf().execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
+                .isEmpty();
         }
 
         @Test

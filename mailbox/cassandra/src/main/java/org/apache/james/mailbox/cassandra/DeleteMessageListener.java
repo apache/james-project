@@ -26,6 +26,7 @@ import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -88,13 +89,14 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
     private final CassandraDeletedMessageDAO deletedMessageDAO;
     private final CassandraMailboxCounterDAO counterDAO;
     private final CassandraMailboxRecentsDAO recentsDAO;
+    private final BlobStore blobStore;
 
     @Inject
     public DeleteMessageListener(CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
                                  CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
                                  CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraACLMapper aclMapper,
                                  CassandraUserMailboxRightsDAO rightsDAO, CassandraApplicableFlagDAO applicableFlagDAO,
-                                 CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO, CassandraMailboxCounterDAO counterDAO, CassandraMailboxRecentsDAO recentsDAO) {
+                                 CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO, CassandraMailboxCounterDAO counterDAO, CassandraMailboxRecentsDAO recentsDAO, BlobStore blobStore) {
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAO = messageDAO;
@@ -108,6 +110,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
         this.deletedMessageDAO = deletedMessageDAO;
         this.counterDAO = counterDAO;
         this.recentsDAO = recentsDAO;
+        this.blobStore = blobStore;
     }
 
     @Override
@@ -172,6 +175,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
             .filterWhen(this::isReferenced)
             .flatMap(id -> readMessage(id)
                 .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
+                .flatMap(this::deleteMessageBlobs)
                 .flatMap(this::deleteAttachmentMessageIds)
                 .then(messageDAO.delete(messageId)));
     }
@@ -181,8 +185,17 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
             .filterWhen(id -> isReferenced(id, excludedId))
             .flatMap(id -> readMessage(id)
                 .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
+                .flatMap(this::deleteMessageBlobs)
                 .flatMap(this::deleteAttachmentMessageIds)
                 .then(messageDAO.delete(messageId)));
+    }
+
+    private Mono<MessageRepresentation> deleteMessageBlobs(MessageRepresentation message) {
+        return Flux.merge(
+                blobStore.delete(blobStore.getDefaultBucketName(), message.getHeaderId()),
+                blobStore.delete(blobStore.getDefaultBucketName(), message.getBodyId()))
+            .then()
+            .thenReturn(message);
     }
 
     private Mono<MessageRepresentation> readMessage(CassandraMessageId id) {
@@ -193,7 +206,10 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
         return Flux.fromIterable(message.getAttachments())
             .filterWhen(attachment -> ownerDAO.retrieveOwners(attachment.getAttachmentId()).hasElements().map(negate()))
             .filterWhen(attachment -> hasOtherMessagesReferences(message, attachment))
-            .concatMap(attachment -> attachmentDAO.delete(attachment.getAttachmentId()))
+            .concatMap(attachment -> attachmentDAO.getAttachment(attachment.getAttachmentId())
+                .map(CassandraAttachmentDAOV2.DAOAttachment::getBlobId)
+                .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)))
+                .then(attachmentDAO.delete(attachment.getAttachmentId())))
             .then();
     }
 

@@ -245,7 +245,11 @@ public class CassandraMessageDAO {
         }
 
         Row row = rows.one();
-        return buildContentRetriever(fetchType, row).map(content ->
+        BlobId headerId = retrieveBlobId(HEADER_CONTENT, row);
+        BlobId bodyId = retrieveBlobId(BODY_CONTENT, row);
+        int bodyStartOctet = row.getInt(BODY_START_OCTET);
+
+        return buildContentRetriever(fetchType, headerId, bodyId, bodyStartOctet).map(content ->
             new MessageRepresentation(
                 cassandraMessageId,
                 row.getTimestamp(INTERNAL_DATE),
@@ -253,7 +257,9 @@ public class CassandraMessageDAO {
                 row.getInt(BODY_START_OCTET),
                 new SharedByteArrayInputStream(content),
                 getPropertyBuilder(row),
-                getAttachments(row).collect(Guavate.toImmutableList())));
+                getAttachments(row).collect(Guavate.toImmutableList()),
+                headerId,
+                bodyId));
     }
 
     private PropertyBuilder getPropertyBuilder(Row row) {
@@ -293,15 +299,15 @@ public class CassandraMessageDAO {
             .setUUID(MESSAGE_ID, messageId.get()));
     }
 
-    private Mono<byte[]> buildContentRetriever(FetchType fetchType, Row row) {
+    private Mono<byte[]> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId, int bodyStartOctet) {
         switch (fetchType) {
             case Full:
-                return getFullContent(row);
+                return getFullContent(headerId, bodyId);
             case Headers:
-                return getHeaderContent(row);
+                return getContent(headerId);
             case Body:
-                return getBodyContent(row)
-                    .map(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
+                return getContent(bodyId)
+                    .map(data -> Bytes.concat(new byte[bodyStartOctet], data));
             case Metadata:
                 return Mono.just(EMPTY_BYTE_ARRAY);
             default:
@@ -309,20 +315,16 @@ public class CassandraMessageDAO {
         }
     }
 
-    private Mono<byte[]> getFullContent(Row row) {
-        return getHeaderContent(row)
-            .zipWith(getBodyContent(row), Bytes::concat);
+    private Mono<byte[]> getFullContent(BlobId headerId, BlobId bodyId) {
+        return getContent(headerId)
+            .zipWith(getContent(bodyId), Bytes::concat);
     }
 
-    private Mono<byte[]> getBodyContent(Row row) {
-        return getFieldContent(BODY_CONTENT, row);
+    private Mono<byte[]> getContent(BlobId blobId) {
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobId));
     }
 
-    private Mono<byte[]> getHeaderContent(Row row) {
-        return getFieldContent(HEADER_CONTENT, row);
-    }
-
-    private Mono<byte[]> getFieldContent(String field, Row row) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.from(row.getString(field))));
+    private BlobId retrieveBlobId(String field, Row row) {
+        return blobIdFactory.from(row.getString(field));
     }
 }

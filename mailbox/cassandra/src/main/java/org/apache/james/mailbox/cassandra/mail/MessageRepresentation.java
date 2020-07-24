@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
@@ -38,9 +39,11 @@ public class MessageRepresentation {
     private final SharedByteArrayInputStream content;
     private final PropertyBuilder propertyBuilder;
     private final List<MessageAttachmentRepresentation> attachments;
+    private final BlobId headerId;
+    private final BlobId bodyId;
 
     public MessageRepresentation(MessageId messageId, Date internalDate, Long size, Integer bodySize, SharedByteArrayInputStream content,
-                                 PropertyBuilder propertyBuilder, List<MessageAttachmentRepresentation> attachments) {
+                                 PropertyBuilder propertyBuilder, List<MessageAttachmentRepresentation> attachments, BlobId headerId, BlobId bodyId) {
         this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
@@ -48,6 +51,8 @@ public class MessageRepresentation {
         this.content = content;
         this.propertyBuilder = propertyBuilder;
         this.attachments = attachments;
+        this.headerId = headerId;
+        this.bodyId = bodyId;
     }
 
     public SimpleMailboxMessage toMailboxMessage(ComposedMessageIdWithMetaData metadata, List<MessageAttachmentMetadata> attachments) {
@@ -80,5 +85,13 @@ public class MessageRepresentation {
 
     public List<MessageAttachmentRepresentation> getAttachments() {
         return attachments;
+    }
+
+    public BlobId getHeaderId() {
+        return headerId;
+    }
+
+    public BlobId getBodyId() {
+        return bodyId;
     }
 }
