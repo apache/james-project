@@ -59,7 +59,7 @@ public class GuiceUtils {
         return Modules.combine(
             binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
             binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
-            binder -> binder.bind(BlobStore.class).toInstance(CassandraBlobStoreFactory.forTesting(session)),
+            binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session)),
             binder -> binder.bind(Session.class).toInstance(session),
             binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
             binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration),
