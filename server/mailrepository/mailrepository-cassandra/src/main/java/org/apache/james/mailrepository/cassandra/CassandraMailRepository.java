@@ -23,11 +23,13 @@ import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
@@ -46,16 +48,18 @@ public class CassandraMailRepository implements MailRepository {
     private final CassandraMailRepositoryCountDAO countDAO;
     private final CassandraMailRepositoryMailDaoAPI mailDAO;
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
+    private final BlobStore blobStore;
 
     @Inject
     CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
                             CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDaoAPI mailDAO,
-                            MimeMessageStore.Factory mimeMessageStoreFactory) {
+                            MimeMessageStore.Factory mimeMessageStoreFactory, BlobStore blobStore) {
         this.url = url;
         this.keysDAO = keysDAO;
         this.countDAO = countDAO;
         this.mailDAO = mailDAO;
         this.mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
+        this.blobStore = blobStore;
     }
 
     @Override
@@ -127,9 +131,20 @@ public class CassandraMailRepository implements MailRepository {
     }
 
     private Mono<Void> removeAsync(MailKey key) {
-        return keysDAO.remove(url, key)
-            .flatMap(this::decreaseSizeIfDeleted)
-            .then(mailDAO.remove(url, key));
+        return mailDAO.read(url, key)
+            .flatMap(maybeMailDTO ->
+                keysDAO.remove(url, key)
+                    .flatMap(this::decreaseSizeIfDeleted)
+                    .then(mailDAO.remove(url, key))
+                    .then(deleteBlobs(maybeMailDTO)));
+    }
+
+    private Mono<Void> deleteBlobs(Optional<MailDTO> maybeMailDTO) {
+        return Mono.justOrEmpty(maybeMailDTO)
+            .flatMap(mailDTO -> Flux.merge(
+                    blobStore.delete(blobStore.getDefaultBucketName(), mailDTO.getHeaderBlobId()),
+                    blobStore.delete(blobStore.getDefaultBucketName(), mailDTO.getBodyBlobId()))
+                .then());
     }
 
     private Mono<Void> decreaseSizeIfDeleted(Boolean isDeleted) {

@@ -70,7 +70,7 @@ class CassandraMailRepositoryTest {
                 .passthrough();
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore));
+                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore), blobStore);
         }
 
         @Override
@@ -84,7 +84,6 @@ class CassandraMailRepositoryTest {
         public void sizeShouldBeIncrementedByOneWhenDuplicates() {
         }
 
-        @Disabled("Failing")
         @Test
         void removeShouldDeleteStoredBlobs(CassandraCluster cassandra) throws Exception {
             MailRepository testee = retrieveRepository();
@@ -111,7 +110,7 @@ class CassandraMailRepositoryTest {
                 .deduplication();
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore));
+                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore), blobStore);
         }
 
         @Override
