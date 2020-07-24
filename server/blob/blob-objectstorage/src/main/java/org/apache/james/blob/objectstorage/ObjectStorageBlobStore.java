@@ -214,4 +214,11 @@ public class ObjectStorageBlobStore implements BlobStore {
         return Mono.<Void>fromRunnable(() -> blobStore.removeBlob(resolvedBucketName.asString(), blobId.asString()))
             .subscribeOn(Schedulers.elastic());
     }
+
+    // Workaround while waiting for DumbBlobStore extraction
+    public Mono<Void> deleteEffectively(BucketName bucketName, BlobId blobId) {
+        ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        return Mono.<Void>fromRunnable(() -> blobStore.removeBlob(resolvedBucketName.asString(), blobId.asString()))
+            .subscribeOn(Schedulers.elastic());
+    }
 }

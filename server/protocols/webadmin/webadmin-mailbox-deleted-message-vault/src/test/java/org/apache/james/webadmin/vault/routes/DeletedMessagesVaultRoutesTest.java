@@ -76,7 +76,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
-import org.apache.james.blob.memory.MemoryBlobStoreFactory;
+import org.apache.james.blob.memory.MemoryDumbBlobStore;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -102,6 +102,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -181,13 +182,15 @@ class DeletedMessagesVaultRoutesTest {
     @BeforeEach
     void beforeEach() throws Exception {
         blobIdFactory = new HashBlobId.Factory();
-        blobStore = spy(MemoryBlobStoreFactory.builder()
+        MemoryDumbBlobStore dumbBlobStore = new MemoryDumbBlobStore();
+        blobStore = spy(BlobStoreFactory.builder()
+            .dumbBlobStore(dumbBlobStore)
             .blobIdFactory(blobIdFactory)
             .defaultBucketName()
             .passthrough());
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
-            blobStore, new BucketNameGenerator(clock), clock,
+            blobStore, dumbBlobStore, new BucketNameGenerator(clock), clock,
             RetentionConfiguration.DEFAULT));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());

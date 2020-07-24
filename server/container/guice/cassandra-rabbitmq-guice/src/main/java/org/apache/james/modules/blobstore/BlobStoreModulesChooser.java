@@ -54,6 +54,7 @@ public class BlobStoreModulesChooser {
         @Override
         protected void configure() {
             install(new ObjectStorageDependenciesModule());
+            bind(DumbBlobStore.class).to(NoopDumbBlobStore.class);
             bind(BlobStore.class)
                 .annotatedWith(Names.named(CachedBlobStore.BACKEND))
                 .to(ObjectStorageBlobStore.class);
