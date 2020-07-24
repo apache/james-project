@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
@@ -29,35 +30,32 @@ import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.model.Calendar;
 
-public class ICALToHeadersTest {
+class ICALToHeadersTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    ICALToHeader testee;
 
-    private ICALToHeader testee;
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         testee = new ICALToHeader();
     }
 
     @Test
-    public void getMailetInfoShouldReturnExpectedValue() {
+    void getMailetInfoShouldReturnExpectedValue() {
         assertThat(testee.getMailetInfo()).isEqualTo("ICALToHeader Mailet");
     }
 
     @Test
-    public void initShouldSetAttributeWhenAbsent() throws Exception {
+    void initShouldSetAttributeWhenAbsent() throws Exception {
         testee.init(FakeMailetConfig.builder()
             .mailetName("ICALToHeader")
             .build());
@@ -66,7 +64,7 @@ public class ICALToHeadersTest {
     }
 
     @Test
-    public void initShouldSetAttributeWhenPresent() throws Exception {
+    void initShouldSetAttributeWhenPresent() throws Exception {
         String attribute = "attribute";
         testee.init(FakeMailetConfig.builder()
             .mailetName("ICALToHeader")
@@ -77,17 +75,16 @@ public class ICALToHeadersTest {
     }
 
     @Test
-    public void initShouldThrowOnEmptyAttribute() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        testee.init(FakeMailetConfig.builder()
-            .mailetName("ICALToHeader")
-            .setProperty(ICALToHeader.ATTRIBUTE_PROPERTY, "")
-            .build());
+    void initShouldThrowOnEmptyAttribute() {
+        assertThatThrownBy(() -> testee.init(FakeMailetConfig.builder()
+                .mailetName("ICALToHeader")
+                .setProperty(ICALToHeader.ATTRIBUTE_PROPERTY, "")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void serviceShouldNotModifyMailsWithoutIcalAttribute() throws Exception {
+    void serviceShouldNotModifyMailsWithoutIcalAttribute() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
         Mail mail = FakeMail.builder()
             .name("mail")
@@ -100,7 +97,7 @@ public class ICALToHeadersTest {
     }
 
     @Test
-    public void serviceShouldNotFailOnMailsWithWrongAttributeType() throws Exception {
+    void serviceShouldNotFailOnMailsWithWrongAttributeType() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
         Mail mail = FakeMail.builder()
             .name("mail")
@@ -114,7 +111,7 @@ public class ICALToHeadersTest {
     }
 
     @Test
-    public void serviceShouldNotFailOnMailsWithWrongParametrizedAttribute() throws Exception {
+    void serviceShouldNotFailOnMailsWithWrongParametrizedAttribute() throws Exception {
         ImmutableMap<String, String> wrongParametrizedMap = ImmutableMap.<String, String>builder()
             .put("key", "value")
             .build();
@@ -132,7 +129,7 @@ public class ICALToHeadersTest {
     }
 
     @Test
-    public void serviceShouldWriteSingleICalendarToHeaders() throws Exception {
+    void serviceShouldWriteSingleICalendarToHeaders() throws Exception {
         Calendar calendar = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
         ImmutableMap<String, Calendar> icals = ImmutableMap.<String, Calendar>builder()
             .put("key", calendar)
@@ -147,16 +144,19 @@ public class ICALToHeadersTest {
 
         testee.service(mail);
 
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_METHOD_HEADER)).containsOnly("REQUEST");
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER))
-            .containsOnly("f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc");
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_DTSTAMP_HEADER)).containsOnly("20170106T115036Z");
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_RECURRENCE_ID_HEADER)).isNull();
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_SEQUENCE_HEADER)).containsOnly("0");
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_METHOD_HEADER)).containsOnly("REQUEST");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER))
+                .containsOnly("f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_DTSTAMP_HEADER)).containsOnly("20170106T115036Z");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_RECURRENCE_ID_HEADER)).isNull();
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_SEQUENCE_HEADER)).containsOnly("0");
+        }));
+
     }
 
     @Test
-    public void serviceShouldNotWriteHeaderWhenPropertyIsAbsent() throws Exception {
+    void serviceShouldNotWriteHeaderWhenPropertyIsAbsent() throws Exception {
         Calendar calendar = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting_without_dtstamp.ics"));
         ImmutableMap<String, Calendar> icals = ImmutableMap.<String, Calendar>builder()
             .put("key", calendar)
@@ -171,16 +171,18 @@ public class ICALToHeadersTest {
 
         testee.service(mail);
 
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_METHOD_HEADER)).containsOnly("REQUEST");
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER))
-            .containsOnly("f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc");
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_DTSTAMP_HEADER)).isNull();
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_RECURRENCE_ID_HEADER)).isNull();
-        assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_SEQUENCE_HEADER)).containsOnly("0");
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_METHOD_HEADER)).containsOnly("REQUEST");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER))
+                .containsOnly("f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_DTSTAMP_HEADER)).isNull();
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_RECURRENCE_ID_HEADER)).isNull();
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_SEQUENCE_HEADER)).containsOnly("0");
+        }));
     }
 
     @Test
-    public void serviceShouldWriteOnlyOneICalendarToHeaders() throws Exception {
+    void serviceShouldWriteOnlyOneICalendarToHeaders() throws Exception {
         Calendar calendar = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
         Calendar calendar2 = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting_2.ics"));
         ImmutableMap<String, Calendar> icals = ImmutableMap.<String, Calendar>builder()
@@ -201,7 +203,7 @@ public class ICALToHeadersTest {
     }
 
     @Test
-    public void serviceShouldNotFailOnEmptyMaps() throws Exception {
+    void serviceShouldNotFailOnEmptyMaps() throws Exception {
         ImmutableMap<String, Calendar> icals = ImmutableMap.<String, Calendar>builder()
             .build();
 
