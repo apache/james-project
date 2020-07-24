@@ -20,7 +20,6 @@
 package org.apache.james.blob.cassandra;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
@@ -28,14 +27,13 @@ import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import com.datastax.driver.core.Session;
 
 public class CassandraBlobStoreFactory {
-    public static BlobStore forTesting(Session session) {
+    public static BlobStoreFactory.RequireStoringStrategy forTesting(Session session) {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, session);
         CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(session);
         CassandraDumbBlobStore dumbBlobStore = new CassandraDumbBlobStore(defaultBucketDAO, bucketDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, BucketName.DEFAULT);
         return BlobStoreFactory.builder().dumbBlobStore(dumbBlobStore)
             .blobIdFactory(blobIdFactory)
-            .defaultBucketName()
-            .passthrough();
+            .defaultBucketName();
     }
 }

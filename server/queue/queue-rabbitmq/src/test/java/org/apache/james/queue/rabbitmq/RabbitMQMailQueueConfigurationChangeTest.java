@@ -94,7 +94,8 @@ class RabbitMQMailQueueConfigurationChangeTest {
 
     @BeforeEach
     void setup(CassandraCluster cassandra) throws Exception {
-        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf());
+        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+            .passthrough();
         mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
         clock = new UpdatableTickingClock(IN_SLICE_1);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());

@@ -19,6 +19,9 @@
 
 package org.apache.james.mailrepository.cassandra;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -30,14 +33,16 @@ import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.MailRepositoryContract;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraMailRepositoryTest implements MailRepositoryContract {
+class CassandraMailRepositoryTest {
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
@@ -50,29 +55,86 @@ class CassandraMailRepositoryTest implements MailRepositoryContract {
 
     CassandraMailRepository cassandraMailRepository;
 
+    @Nested
+    class PassThroughTest implements MailRepositoryContract {
+        @BeforeEach
+        void setup(CassandraCluster cassandra) {
+            CassandraMailRepositoryMailDAO v1 = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
+            CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
+            CassandraMailRepositoryMailDaoAPI mailDAO = new MergingCassandraMailRepositoryMailDao(v1, v2);
+            CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+            CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
+            BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+                .passthrough();
 
-    @BeforeEach
-    void setup(CassandraCluster cassandra) {
-        CassandraMailRepositoryMailDAO v1 = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
-        CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
-        CassandraMailRepositoryMailDaoAPI mailDAO = new MergingCassandraMailRepositoryMailDao(v1, v2);
-        CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-        CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
-        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf());
+            cassandraMailRepository = new CassandraMailRepository(URL,
+                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
+        }
 
-        cassandraMailRepository = new CassandraMailRepository(URL,
-            keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
+        @Override
+        public MailRepository retrieveRepository() {
+            return cassandraMailRepository;
+        }
+
+        @Test
+        @Disabled("key is unique in Cassandra")
+        @Override
+        public void sizeShouldBeIncrementedByOneWhenDuplicates() {
+        }
+
+        @Disabled("Failing")
+        @Test
+        void removeShouldDeleteStoredBlobs(CassandraCluster cassandra) throws Exception {
+            MailRepository testee = retrieveRepository();
+
+            MailKey key1 = testee.store(createMail(MAIL_1));
+
+            testee.remove(key1);
+
+            assertThat(cassandra.getConf().execute("SELECT * FROM blobs;"))
+                .isEmpty();
+        }
     }
 
-    @Override
-    public MailRepository retrieveRepository() {
-        return cassandraMailRepository;
-    }
+    @Nested
+    class DeDuplicationTest implements MailRepositoryContract {
+        @BeforeEach
+        void setup(CassandraCluster cassandra) {
+            CassandraMailRepositoryMailDAO v1 = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
+            CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
+            CassandraMailRepositoryMailDaoAPI mailDAO = new MergingCassandraMailRepositoryMailDao(v1, v2);
+            CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+            CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
+            BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+                .deduplication();
 
-    @Test
-    @Disabled("key is unique in Cassandra")
-    @Override
-    public void sizeShouldBeIncrementedByOneWhenDuplicates() {
+            cassandraMailRepository = new CassandraMailRepository(URL,
+                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
+        }
+
+        @Override
+        public MailRepository retrieveRepository() {
+            return cassandraMailRepository;
+        }
+
+        @Test
+        @Disabled("key is unique in Cassandra")
+        @Override
+        public void sizeShouldBeIncrementedByOneWhenDuplicates() {
+        }
+
+        @Test
+        void removeShouldNotAffectMailsWithTheSameContent() throws Exception {
+            MailRepository testee = retrieveRepository();
+
+            MailKey key1 = testee.store(createMail(MAIL_1));
+            MailKey key2 = testee.store(createMail(MAIL_2));
+
+            testee.remove(key1);
+
+            assertThatCode(() -> testee.retrieve(key2))
+                .doesNotThrowAnyException();
+        }
     }
 
 }
