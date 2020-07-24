@@ -195,8 +195,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
 
             assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
-                "SELECT messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,textualLineCount,properties,attachments " +
-                    "FROM messageV2 WHERE messageId=:messageId;")))
+                "SELECT * FROM messageV2 WHERE messageId=:messageId;")))
                 .hasSize(limit);
         }
 
