@@ -43,6 +43,8 @@ import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers._
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
+import scala.jdk.CollectionConverters._
+
 object MailboxGetMethodContract {
   private val ARGUMENTS: String = "methodResponses[0][1]"
   private val FIRST_MAILBOX: String = ARGUMENTS + ".list[0]"
@@ -51,143 +53,6 @@ object MailboxGetMethodContract {
   private val LOOKUP: String = Right.Lookup.asCharacter.toString
   private val READ: String = Right.Read.asCharacter.toString
   private val ADMINISTER: String = Right.Administer.asCharacter.toString
-
-  private val GET_ALL_MAILBOXES_REQUEST_NULL_PROPERTIES: String =
-    """{
-    |  "using": [
-    |    "urn:ietf:params:jmap:core",
-    |    "urn:ietf:params:jmap:mail"],
-    |  "methodCalls": [[
-    |      "Mailbox/get",
-    |      {
-    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-    |        "properties": null,
-    |        "ids": null
-    |      },
-    |      "c1"]]
-    |}""".stripMargin
-
-  private val GET_ALL_MAILBOXES_REQUEST_EMPTY_PROPERTIES: String =
-    """{
-    |  "using": [
-    |    "urn:ietf:params:jmap:core",
-    |    "urn:ietf:params:jmap:mail"],
-    |  "methodCalls": [[
-    |      "Mailbox/get",
-    |      {
-    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-    |        "properties": [],
-    |        "ids": null
-    |      },
-    |      "c1"]]
-    |}""".stripMargin
-
-  private val GET_ALL_MAILBOXES_REQUEST_NAME_AND_ID_PROPERTIES: String =
-    """{
-    |  "using": [
-    |    "urn:ietf:params:jmap:core",
-    |    "urn:ietf:params:jmap:mail"],
-    |  "methodCalls": [[
-    |      "Mailbox/get",
-    |      {
-    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-    |        "properties": ["id", "name"],
-    |        "ids": null
-    |      },
-    |      "c1"]]
-    |}""".stripMargin
-
-  private val GET_ALL_MAILBOXES_REQUEST_NAME_PROPERTIES: String =
-    """{
-    |  "using": [
-    |    "urn:ietf:params:jmap:core",
-    |    "urn:ietf:params:jmap:mail"],
-    |  "methodCalls": [[
-    |      "Mailbox/get",
-    |      {
-    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-    |        "properties": ["name"],
-    |        "ids": null
-    |      },
-    |      "c1"]]
-    |}""".stripMargin
-
-  private val GET_ALL_MAILBOXES_REQUEST_INVALID_PROPERTIES: String =
-    """{
-    |  "using": [
-    |    "urn:ietf:params:jmap:core",
-    |    "urn:ietf:params:jmap:mail"],
-    |  "methodCalls": [[
-    |      "Mailbox/get",
-    |      {
-    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-    |        "properties": ["invalidProperty"],
-    |        "ids": null
-    |      },
-    |      "c1"]]
-    |}""".stripMargin
-
-  private val GET_ALL_MAILBOXES_REQUEST_WITH_QUOTA: String =
-    """{
-    |  "using": [
-    |    "urn:ietf:params:jmap:core",
-    |    "urn:ietf:params:jmap:mail",
-    |    "urn:apache:james:params:jmap:mail:quota"],
-    |  "methodCalls": [[
-    |      "Mailbox/get",
-    |      {
-    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-    |        "ids": null
-    |      },
-    |      "c1"]]
-    |}""".stripMargin
-
-  private val GET_ALL_MAILBOXES_REQUEST_WITH_SHARES: String =
-    """{
-    |  "using": [
-    |    "urn:ietf:params:jmap:core",
-    |    "urn:ietf:params:jmap:mail",
-    |    "urn:apache:james:params:jmap:mail:shares"],
-    |  "methodCalls": [[
-    |      "Mailbox/get",
-    |      {
-    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-    |        "ids": null
-    |      },
-    |      "c1"]]
-    |}""".stripMargin
-
-  private val GET_ALL_MAILBOXES_REQUEST_WITH_SHARES_WITH_ONLY_ID_NAME_AND_RIGHTS: String =
-    """{
-      |  "using": [
-      |    "urn:ietf:params:jmap:core",
-      |    "urn:ietf:params:jmap:mail",
-      |    "urn:apache:james:params:jmap:mail:shares"],
-      |  "methodCalls": [[
-      |      "Mailbox/get",
-      |      {
-      |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-      |        "properties": ["id", "name", "rights"],
-      |        "ids": null
-      |      },
-      |      "c1"]]
-      |}""".stripMargin
-
-  private val GET_ALL_MAILBOXES_REQUEST_WITH_BOTH: String =
-    """{
-    |  "using": [
-    |    "urn:ietf:params:jmap:core",
-    |    "urn:ietf:params:jmap:mail",
-    |    "urn:apache:james:params:jmap:mail:quota",
-    |    "urn:apache:james:params:jmap:mail:shares"],
-    |  "methodCalls": [[
-    |      "Mailbox/get",
-    |      {
-    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-    |        "ids": null
-    |      },
-    |      "c1"]]
-    |}""".stripMargin
 }
 
 trait MailboxGetMethodContract {
@@ -209,61 +74,6 @@ trait MailboxGetMethodContract {
   }
 
   @Test
-  def getMailboxesShouldReturnExistingMailbox(server: GuiceJamesServer): Unit = {
-    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
-      .serialize
-
-    val response: String = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
-
-    assertThatJson(response).isEqualTo(
-      s"""{
-         |  "sessionState": "75128aab4b1b",
-         |  "methodResponses": [[
-         |    "Mailbox/get",
-         |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
-         |      "list": [
-         |        {
-         |          "id": "${mailboxId}",
-         |          "name": "custom",
-         |          "sortOrder": 1000,
-         |          "totalEmails": 0,
-         |          "unreadEmails": 0,
-         |          "totalThreads": 0,
-         |          "unreadThreads": 0,
-         |          "myRights": {
-         |            "mayReadItems": true,
-         |            "mayAddItems": true,
-         |            "mayRemoveItems": true,
-         |            "maySetSeen": true,
-         |            "maySetKeywords": true,
-         |            "mayCreateChild": true,
-         |            "mayRename": true,
-         |            "mayDelete": true,
-         |            "maySubmit": true
-         |          },
-         |          "isSubscribed": false
-         |        }
-         |      ],
-         |      "notFound": []
-         |    },
-         |    "c1"]]
-         |}""".stripMargin)
-  }
-
-  @Test
   def getMailboxesShouldIncludeRightsAndNamespaceIfSharesCapabilityIsUsed(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "custom"))
@@ -271,7 +81,19 @@ trait MailboxGetMethodContract {
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -328,7 +150,19 @@ trait MailboxGetMethodContract {
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_WITH_QUOTA)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:quota"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -389,7 +223,20 @@ trait MailboxGetMethodContract {
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_WITH_BOTH)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares",
+               |    "urn:apache:james:params:jmap:mail:quota"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -445,61 +292,6 @@ trait MailboxGetMethodContract {
   }
 
   @Test
-  def getMailboxesShouldReturnAllPropertiesWhenNotSupplied(server: GuiceJamesServer): Unit = {
-    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
-      .serialize
-
-    val response: String = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
-
-    assertThatJson(response).isEqualTo(
-      s"""{
-         |  "sessionState": "75128aab4b1b",
-         |  "methodResponses": [[
-         |    "Mailbox/get",
-         |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
-         |      "list": [
-         |        {
-         |          "id": "${mailboxId}",
-         |          "name": "custom",
-         |          "sortOrder": 1000,
-         |          "totalEmails": 0,
-         |          "unreadEmails": 0,
-         |          "totalThreads": 0,
-         |          "unreadThreads": 0,
-         |          "myRights": {
-         |            "mayReadItems": true,
-         |            "mayAddItems": true,
-         |            "mayRemoveItems": true,
-         |            "maySetSeen": true,
-         |            "maySetKeywords": true,
-         |            "mayCreateChild": true,
-         |            "mayRename": true,
-         |            "mayDelete": true,
-         |            "maySubmit": true
-         |          },
-         |          "isSubscribed": false
-         |        }
-         |      ],
-         |      "notFound": []
-         |    },
-         |    "c1"]]
-         |}""".stripMargin)
-  }
-
-  @Test
   def getMailboxesShouldReturnAllPropertiesWhenNull(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "custom"))
@@ -507,7 +299,19 @@ trait MailboxGetMethodContract {
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_NULL_PROPERTIES)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "properties": null,
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -562,7 +366,19 @@ trait MailboxGetMethodContract {
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_EMPTY_PROPERTIES)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "properties": [],
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -590,6 +406,7 @@ trait MailboxGetMethodContract {
          |    "c1"]]
          |}""".stripMargin)
   }
+
   @Test
   def getMailboxesShouldReturnOnlyNameAndIdWhenPropertiesRequested(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
@@ -598,7 +415,19 @@ trait MailboxGetMethodContract {
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_NAME_AND_ID_PROPERTIES)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "properties": ["id", "name"],
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -636,7 +465,19 @@ trait MailboxGetMethodContract {
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_NAME_PROPERTIES)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "properties": ["name"],
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -674,7 +515,20 @@ trait MailboxGetMethodContract {
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES_WITH_ONLY_ID_NAME_AND_RIGHTS)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |    "Mailbox/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "properties": ["id", "name", "rights"],
+               |      "ids": ["${mailboxId}"]
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -707,12 +561,25 @@ trait MailboxGetMethodContract {
 
   @Test
   def getMailboxesShouldReturnInvalidArgumentsErrorWhenInvalidProperty(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .serialize
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_INVALID_PROPERTIES)
+      .body(s"""{
+              |  "using": [
+              |    "urn:ietf:params:jmap:core",
+              |    "urn:ietf:params:jmap:mail"],
+              |  "methodCalls": [[
+              |      "Mailbox/get",
+              |      {
+              |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+              |        "properties": ["invalidProperty"],
+              |        "ids": ["${mailboxId}"]
+              |      },
+              |      "c1"]]
+              |}""".stripMargin)
     .when
       .post
     .`then`
@@ -736,29 +603,13 @@ trait MailboxGetMethodContract {
 
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
-  def getMailboxesShouldReturnEmptyWhenNone(): Unit = {
-    `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .body(s"$ARGUMENTS.list", empty)
-  }
-
-  @Test
-  @Tag(CategoryTags.BASIC_FEATURE)
   def getMailboxesShouldReturnAllExistingMailboxes(server: GuiceJamesServer): Unit = {
-    val firstMailboxName: String = "custom"
-    val mailboxId1: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, firstMailboxName))
+    val customMailbox: String = "custom"
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, customMailbox))
       .serialize
 
-    val secondMailboxName: String = "othercustom"
-    val mailboxId2: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, secondMailboxName))
-      .serialize
+    val expectedList = DefaultMailboxes.DEFAULT_MAILBOXES.asScala ++ List(customMailbox)
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -767,21 +618,15 @@ trait MailboxGetMethodContract {
       .post
     .`then`
       .statusCode(SC_OK)
-      .body(s"$ARGUMENTS.list", hasSize(2))
-      .body(s"$FIRST_MAILBOX.id", equalTo(mailboxId1))
-      .body(s"$FIRST_MAILBOX.name", equalTo(firstMailboxName))
-      .body(s"$SECOND_MAILBOX.id", equalTo(mailboxId2))
-      .body(s"$SECOND_MAILBOX.name", equalTo(secondMailboxName))
+      .body(s"$ARGUMENTS.list", hasSize(7))
+      .body(s"$ARGUMENTS.list.name", hasItems(expectedList.toArray:_*))
   }
 
   @Test
   def getMailboxesShouldReturnOnlyMailboxesOfCurrentUser(server: GuiceJamesServer): Unit = {
-    val mailboxName: String = "custom"
-    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
-      .serialize
+    val andreMailbox: String = "andrecustom"
     server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(ANDRE, "andrecustom"))
+      .createMailbox(MailboxPath.forUser(ANDRE, andreMailbox))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -790,9 +635,9 @@ trait MailboxGetMethodContract {
       .post
     .`then`
       .statusCode(SC_OK)
-      .body(s"$ARGUMENTS.list", hasSize(1))
-      .body(s"$FIRST_MAILBOX.id", equalTo(mailboxId))
-      .body(s"$FIRST_MAILBOX.name", equalTo(mailboxName))
+      .body(s"$ARGUMENTS.list", hasSize(6))
+      .body(s"$ARGUMENTS.list.name", hasItems(DefaultMailboxes.DEFAULT_MAILBOXES.toArray:_*))
+      .body(s"$ARGUMENTS.list.name", not(hasItem(andreMailbox)))
   }
 
   @Test
@@ -800,7 +645,7 @@ trait MailboxGetMethodContract {
     val targetUser1: String = "touser1@" + DOMAIN.asString
     val targetUser2: String = "touser2@" + DOMAIN.asString
     val mailboxName: String = "myMailbox"
-    server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, mailboxName))
       .serialize
 
@@ -811,7 +656,19 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -827,7 +684,7 @@ trait MailboxGetMethodContract {
   def getMailboxesShouldReturnDelegatedNamespaceWhenSharedMailbox(server: GuiceJamesServer): Unit = {
     val sharedMailboxName = "AndreShared"
     val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
-    server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
@@ -836,7 +693,19 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -853,7 +722,7 @@ trait MailboxGetMethodContract {
     val toUser1: String = "touser1@" + DOMAIN.asString
     val sharedMailboxName: String = "AndreShared"
     val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
-    server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
@@ -864,7 +733,19 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_WITH_SHARES)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -880,7 +761,7 @@ trait MailboxGetMethodContract {
     val toUser1: String = "touser1@" + DOMAIN.asString
     val sharedMailboxName: String = "AndreShared"
     val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
-    server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
@@ -891,7 +772,18 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -913,7 +805,7 @@ trait MailboxGetMethodContract {
   @Tag(CategoryTags.BASIC_FEATURE)
   def getMailboxesShouldNotReturnInboxRoleToShareeWhenDelegatedInbox(server: GuiceJamesServer): Unit = {
     val andreMailboxPath = MailboxPath.forUser(ANDRE, DefaultMailboxes.INBOX)
-    server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
@@ -922,7 +814,18 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -935,13 +838,24 @@ trait MailboxGetMethodContract {
 
   @Test
   def getMailboxesShouldReturnCorrectMailboxRole(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
       .serialize
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -961,7 +875,7 @@ trait MailboxGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
       .serialize
 
@@ -975,7 +889,19 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_WITH_QUOTA)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:quota"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -995,13 +921,25 @@ trait MailboxGetMethodContract {
     server.getProbe(classOf[QuotaProbesImpl])
       .setGlobalMaxMessageCount(QuotaCountLimit.count(31))
 
-    server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
       .serialize
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST_WITH_QUOTA)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:quota"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
     .when
       .post
     .`then`
@@ -1023,7 +961,18 @@ trait MailboxGetMethodContract {
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(s"""{
+              |  "using": [
+              |    "urn:ietf:params:jmap:core",
+              |    "urn:ietf:params:jmap:mail"],
+              |  "methodCalls": [[
+              |      "Mailbox/get",
+              |      {
+              |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+              |        "ids": ["${mailboxId1}", "${mailboxId2}"]
+              |      },
+              |      "c1"]]
+              |}""".stripMargin)
     .when
       .post
     .`then`
