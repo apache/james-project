@@ -20,154 +20,148 @@
 package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Test;
 
-public class MailetUtilTest {
+class MailetUtilTest {
 
-    private static final String A_PARAMETER = "aParameter";
-    public static final int DEFAULT_VALUE = 36;
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    static final String A_PARAMETER = "aParameter";
+    static final int DEFAULT_VALUE = 36;
 
     @Test
-    public void getInitParameterShouldReturnTrueWhenIsValueTrueLowerCase() {
+    void getInitParameterShouldReturnTrueWhenIsValueTrueLowerCase() {
         assertThat(getParameterValued("true", false)).isTrue();
     }
 
     @Test
-    public void getInitParameterShouldReturnTrueWhenIsValueTrueUpperCase() {
+    void getInitParameterShouldReturnTrueWhenIsValueTrueUpperCase() {
         assertThat(getParameterValued("TRUE", false)).isTrue();
     }
 
     @Test
-    public void getInitParameterShouldReturnTrueWhenIsValueTrueMixedCase() {
+    void getInitParameterShouldReturnTrueWhenIsValueTrueMixedCase() {
         assertThat(getParameterValued("trUE", false)).isTrue();
     }
 
     @Test
-    public void getInitParameterShouldReturnFalseWhenIsValueFalseLowerCase() {
+    void getInitParameterShouldReturnFalseWhenIsValueFalseLowerCase() {
         assertThat(getParameterValued("false", true)).isFalse();
     }
 
     @Test
-    public void getInitParameterShouldReturnFalseWhenIsValueFalseUpperCase() {
+    void getInitParameterShouldReturnFalseWhenIsValueFalseUpperCase() {
         assertThat(getParameterValued("FALSE", true)).isFalse();
     }
 
     @Test
-    public void getInitParameterShouldReturnFalseWhenIsValueFalseMixedCase() {
+    void getInitParameterShouldReturnFalseWhenIsValueFalseMixedCase() {
         assertThat(getParameterValued("fALSe", true)).isFalse();
     }
 
     @Test
-    public void getInitParameterShouldReturnDefaultValueAsTrueWhenBadValue() {
-        assertThat(getParameterValued("fals", true)).isTrue();
-        assertThat(getParameterValued("TRU", true)).isTrue();
-        assertThat(getParameterValued("FALSEest", true)).isTrue();
-        assertThat(getParameterValued("", true)).isTrue();
-        assertThat(getParameterValued("gubbins", true)).isTrue();
+    void getInitParameterShouldReturnDefaultValueAsTrueWhenBadValue() {
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(getParameterValued("fals", true)).isTrue();
+            softly.assertThat(getParameterValued("TRU", true)).isTrue();
+            softly.assertThat(getParameterValued("FALSEest", true)).isTrue();
+            softly.assertThat(getParameterValued("", true)).isTrue();
+            softly.assertThat(getParameterValued("gubbins", true)).isTrue();
+        });
+
     }
 
     @Test
-    public void getInitParameterShouldReturnDefaultValueAsFalseWhenBadValue() {
-        assertThat(getParameterValued("fals", false)).isFalse();
-        assertThat(getParameterValued("TRU", false)).isFalse();
-        assertThat(getParameterValued("FALSEest", false)).isFalse();
-        assertThat(getParameterValued("", false)).isFalse();
-        assertThat(getParameterValued("gubbins", false)).isFalse();
+    void getInitParameterShouldReturnDefaultValueAsFalseWhenBadValue() {
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(getParameterValued("fals", false)).isFalse();
+            softly.assertThat(getParameterValued("TRU", false)).isFalse();
+            softly.assertThat(getParameterValued("FALSEest", false)).isFalse();
+            softly.assertThat(getParameterValued("", false)).isFalse();
+            softly.assertThat(getParameterValued("gubbins", false)).isFalse();
+        });
     }
 
     @Test
-    public void getInitParameterShouldReturnAbsentWhenNull() {
+    void getInitParameterShouldReturnAbsentWhenNull() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .build();
+
         assertThat(MailetUtil.getInitParameter(mailetConfig, A_PARAMETER)).isEmpty();
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnEmptyString() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        MailetUtil.getInitParameterAsStrictlyPositiveInteger("");
+    void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnEmptyString() {
+        assertThatThrownBy(() -> MailetUtil.getInitParameterAsStrictlyPositiveInteger(""))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnNull() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        MailetUtil.getInitParameterAsStrictlyPositiveInteger(null);
+    void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnNull() {
+        assertThatThrownBy(() -> MailetUtil.getInitParameterAsStrictlyPositiveInteger(null))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnInvalid() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        MailetUtil.getInitParameterAsStrictlyPositiveInteger("invalid");
+    void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnInvalid() {
+        assertThatThrownBy(() -> MailetUtil.getInitParameterAsStrictlyPositiveInteger("invalid"))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnNegativeNumber() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        MailetUtil.getInitParameterAsStrictlyPositiveInteger("-1");
+    void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnNegativeNumber() {
+        assertThatThrownBy(() -> MailetUtil.getInitParameterAsStrictlyPositiveInteger("-1"))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnZero() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        MailetUtil.getInitParameterAsStrictlyPositiveInteger("0");
+    void getInitParameterAsStrictlyPositiveIntegerShouldThrowOnZero() {
+        assertThatThrownBy(() -> MailetUtil.getInitParameterAsStrictlyPositiveInteger("0"))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerShouldParseCorrectValue() throws Exception {
+    void getInitParameterAsStrictlyPositiveIntegerShouldParseCorrectValue() throws Exception {
         assertThat(MailetUtil.getInitParameterAsStrictlyPositiveInteger("1"))
             .isEqualTo(1);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnEmptyString() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        MailetUtil.getInitParameterAsStrictlyPositiveInteger("", DEFAULT_VALUE);
+    void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnEmptyString() {
+        assertThatThrownBy(() -> MailetUtil.getInitParameterAsStrictlyPositiveInteger("", DEFAULT_VALUE))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldReturnDefaultValueOnNull() throws Exception {
+    void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldReturnDefaultValueOnNull() throws Exception {
         assertThat(MailetUtil.getInitParameterAsStrictlyPositiveInteger(null, DEFAULT_VALUE))
             .isEqualTo(DEFAULT_VALUE);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnInvalid() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        MailetUtil.getInitParameterAsStrictlyPositiveInteger("invalid", DEFAULT_VALUE);
+    void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnInvalid() {
+        assertThatThrownBy(() -> MailetUtil.getInitParameterAsStrictlyPositiveInteger("invalid", DEFAULT_VALUE))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnNegativeNumber() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        MailetUtil.getInitParameterAsStrictlyPositiveInteger("-1", DEFAULT_VALUE);
+    void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnNegativeNumber() {
+        assertThatThrownBy(() -> MailetUtil.getInitParameterAsStrictlyPositiveInteger("-1", DEFAULT_VALUE))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnZero() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        MailetUtil.getInitParameterAsStrictlyPositiveInteger("0", DEFAULT_VALUE);
+    void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldThrowOnZero() {
+        assertThatThrownBy(() -> MailetUtil.getInitParameterAsStrictlyPositiveInteger("0", DEFAULT_VALUE))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldParseCorrectValue() throws Exception {
+    void getInitParameterAsStrictlyPositiveIntegerWithDefaultValueShouldParseCorrectValue() throws Exception {
         assertThat(MailetUtil.getInitParameterAsStrictlyPositiveInteger("1", DEFAULT_VALUE))
             .isEqualTo(1);
     }
