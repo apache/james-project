@@ -1,0 +1,33 @@
+= James Distributed Server &mdash; Objectives
+:navtitle: Objectives
+
+The objective of the Distributed Server is to provided facilities to execute
+an advanced, extendable, and distributed email system. It is intended for
+organization with serious requirements, such as high-throughput or very large
+data sets. Companies tend to use James for their email solution because
+[why???].
+
+
+In relation to its complexity, the James community has tried to make the server
+as easy-to-use as possible. Nonetheless, due to all the various moving parts,
+operation of this server requires advanced technical knowledge, and its use is
+not for the faint-of-heart. There are numerous
+xref:distributed/concepts.adoc[concepts] that you need to know before
+you can successfully operate this server.
+
+The Distributed Server supports the following protocols:
+
+ * Secure SMTP (SSL/TLS)
+ * Secure IMAP4 (SSL/TLS)
+ * LMTP
+ * Local Mailbox support
+  ** Files are stored locally on the filesystem
+  ** Optionally use a volume if you are a Docker or Kubernetes user
+ * Multi-domain (virtual domain) support
+ * Administration of users via the WebAmin REST API
+
+Additionally these protocols are provided on an experimental (non-supported) basis:
+
+ * JMAP (draft specification as defined here)
+ * POP3
+

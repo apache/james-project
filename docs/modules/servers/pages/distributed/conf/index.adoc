@@ -1,0 +1,151 @@
+= James Basic Mail Server Configuration
+:navtitle: Configuration
+
+== JIRA Issues
+
+* dnsservice.xml - DNS Service Configuration -> https://issues.apache.org/jira/browse/JAMES-3219
+  ** Status: to be removed
+* domainlist.xml - Domain List Configuration -> https://issues.apache.org/jira/browse/JAMES-3220
+  ** Status: to be removed
+* events.xml - Event system Configuration (Spring only)
+  ** Status: Spring only, so n/a
+* fetchmail.xml- FetchMail Configuration (Spring only) 
+  ** Status: Spring only, so n/a
+* imapserver.xml - IMAP4 Configuration -> https://issues.apache.org/jira/browse/JAMES-3229
+  ** Status: 
+* jmap.properties - JMAP Configuration (Guice only) -> https://issues.apache.org/jira/browse/JAMES-3230
+  ** Status:
+* lmtpserver.xml - LMTP Configuration -> https://issues.apache.org/jira/browse/JAMES-3231
+  ** Status: 
+* mailrepositorystore.xml - Mail Repository Stores Configuration -> https://issues.apache.org/jira/browse/JAMES-3232
+  ** Status: 
+* mailbox.xml - Mailbox Configuration (Spring only)
+  ** Status: Spring only, so n/a
+* mailetcontainer.xml - Mailet Container Configuration -> https://issues.apache.org/jira/browse/JAMES-3233
+  ** Status: 
+* pop3server.xml - POP3 Configuration -> https://issues.apache.org/jira/browse/JAMES-3234
+  ** Status:
+* mailbox.xml - Quota Configuration (Spring only)
+  ** Status: Spring only, so n/a
+* recipientrewritetable.xml - Recipient Rewrite Table Configuration -> https://issues.apache.org/jira/browse/JAMES-3235
+  ** Status: 
+* smtpserver.xml - SMTP Configuration -> https://issues.apache.org/jira/browse/JAMES-3236
+  ** Status:
+* usersrepository.xml - Users Configuration -> https://issues.apache.org/jira/browse/JAMES-3237
+  ** Status:  
+* webadmin.properties - WebAdmin Configuration -> https://issues.apache.org/jira/browse/JAMES-3238
+  ** Status: 
+* jmx.properties -> https://issues.apache.org/jira/browse/JAMES-3240
+  ** Status: 
+* extensions.properties -> https://issues.apache.org/jira/browse/JAMES-3241
+  ** Status: 
+* jwt_publickey -> https://issues.apache.org/jira/browse/JAMES-3242a
+  ** Status:
+* healthcheck.properties -> https://issues.apache.org/jira/browse/JAMES-3243
+  ** Status: 
+* listeners.xml -> https://issues.apache.org/jira/browse/JAMES-3244
+  ** Status: 
+* managesieveserver.xml -> https://issues.apache.org/jira/browse/JAMES-3245
+  ** Status: 
+* spring-server.xml - System Configuration
+  ** Status: Spring only, so n/a
+* james-database.properties & META-INF/persistence.xml -> https://issues.apache.org/jira/browse/JAMES-3246 
+  ** Status: 
+* log4j.properties & logback.xml -> https://issues.apache.org/jira/browse/JAMES-3239
+  ** Status:
+
+
+== Configuration by feature
+
+ * Domain names &mdash; provide the default domain names that ????
+ * Database (james-database.properties)
+ * LMTP (lmtpserver.xml)
+ * POP3 (pop3server.xml)
+ * DNS (dnsservice.xml)
+   ** Waiting for confirmation: can this be removed from Basic?
+ * Loggin (logback.xml)
+ * James CLI (jmx.properties)
+ * Email rewriting (recipientrewritetable.xml)
+ * Guice extensions (extensions.properties)
+ * JWT (jwt_publickey)
+ * Mailets (mailetcontainer.xml)
+ * SMTP (smtpserver.xml)
+ * Health checks (healthcheck.properties)
+ * Mail storage (mailrepositorystore.xml)
+ * User storage (usersrepository.xml)
+ * IMAP (imapserver.xml)
+ * Mailbox event listeners (listeners.xml)
+ * Sieve filters (managesieveserver.xml)
+ * Web admin (webadmin.properties)
+
+== Configuration file index
+
+ * Domain names (domainlist.xml)
+ * Database (james-database.properties)
+ * LMTP (lmtpserver.xml)
+ * POP3 (pop3server.xml)
+ * DNS (dnsservice.xml)
+ * Loggin (logback.xml)
+ * James CLI (jmx.properties)
+ * Email rewriting (recipientrewritetable.xml)
+ * Guice extensions (extensions.properties)
+ * JWT (jwt_publickey)
+ * Mailets (mailetcontainer.xml)
+ * SMTP (smtpserver.xml)
+ * Health checks (healthcheck.properties)
+ * Mail storage (mailrepositorystore.xml)
+ * User storage (usersrepository.xml)
+ * IMAP (imapserver.xml)
+ * Mailbox event listeners (listeners.xml)
+ * Sieve filters (managesieveserver.xml)
+ * Web admin (webadmin.properties)
+
+
+== Notes
+Jmx protocol is used by James cli to interact with the server. Jmx is known to be insecure, and we have as a project to rewrite the cli for james servers in order to rely on webadmin.
+
+
+
+Scenarios for address rewriting
+
+The following scenarios are examples of how you can use address rewriting:
+
+Group consolidation: Some organizations segment their internal businesses into separate domains that are based on business or technical requirements. This configuration can cause email messages to appear as if they come from separate groups or even separate organizations.
+
+The following example shows how an organization, Contoso, Ltd., can hide its internal subdomains from external recipients:
+
+Outbound messages from the northamerica.contoso.com, europe.contoso.com, and asia.contoso.com domains are rewritten so they appear to originate from a single contoso.com domain. All messages are rewritten as they pass through Edge Transport servers that provide SMTP connectivity between the whole organization and the Internet.
+
+Inbound messages to contoso.com recipients are relayed by the Edge Transport server to a Mailbox server. The message is delivered to the correct recipient based on the proxy address that's configured on the recipient's mailbox.
+
+Mergers and acquisitions: An acquired company might continue to run as a separate business, but you can use address rewriting to make the two organizations appear as if they're one integrated organization.
+
+The following example shows how Contoso, Ltd. can hide the email domain of the newly acquired company, Fourth Coffee:
+
+Contoso, Ltd. wants all outbound messages from Fourth Coffee's Exchange organization to appear as if they originate from contoso.com. All messages from both organizations are sent through the Edge Transport servers at Contoso, Ltd., where email messages are rewritten from user@fourthcoffee.com to user@contoso.com.
+
+Inbound messages to user@contoso.com are rewritten and routed to user@fourthcoffee.com mailboxes. Inbound messages that are sent to user@fourthcoffee.com are routed directly to Fourth Coffee's email servers.
+
+Partners: Many organizations use external partners to provide services for their customers, other organizations, or their own organization. To avoid confusion, the organization might replace the email domain of the partner organization with its own email domain.
+
+The following example shows how Contoso, Ltd. can hide a partner's email domain:
+
+Contoso, Ltd. provides support for the larger Wingtip Toys organization. Wingtip Toys wants a unified email experience for its customers, and it requires all messages from support personnel at Contoso, Ltd. to appear as if they were sent from Wingtip Toys. All outbound messages that relate to Wingtip Toys are sent through their Edge Transport servers, and all contoso.com email addresses are rewritten to wingtiptoys.com email addresses.
+
+Inbound messages for support@wingtiptoys.com are accepted by Wingtip Toy's Edge Transport servers, rewritten, and then routed to the support@contoso.com email address.
+
+Message properties modified by address rewriting
+
+A standard SMTP email message consists of a message envelope and message content. The message envelope contains information that's required for transmitting and delivering the message between SMTP messaging servers. The message content contains message header fields (collectively called the message header) and the message body. The message envelope is described in RFC 2821, and the message header is described in RFC 2822.
+
+When a sender composes an email message and submits it for delivery, the message contains the basic information that's required to comply with SMTP standards, such as a sender, a recipient, the date and time that the message was composed, an optional subject line, and an optional message body. This information is contained in the message itself and, by definition, in the message header.
+
+The sender's mail server generates a message envelope for the message by using the sender's and recipient's information found in the message header. It then transmits the message to the Internet for delivery to the recipient's messaging server. Recipients never see the message envelope because it's generated by the message transmission process, and it isn't actually part of the message.
+
+Address rewriting changes an email address by rewriting specific fields in the message header or message envelope. Address rewriting changes several fields in outbound messages, but only one field in inbound email messages. The following table shows which SMTP header fields are rewritten in outbound and inbound messages.
+
+
+
+
+https://www.exim.org/exim-html-current/doc/html/spec_html/ch-address_rewriting.html
+

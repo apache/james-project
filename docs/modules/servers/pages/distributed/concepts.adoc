@@ -1,0 +1,20 @@
+= James Distributed Server &mdash; Background Concepts
+:navtitle: Concepts
+
+This section describes the concepts upon which the
+**James Distributed Server** was based.
+
+[TODO: provide links to each of these topics - Ensure there are no duplicates etc.]
+
+ * xref:servers/extendable/concepts.adoc[All of the concepts for the Extendable Server]
+ * https://en.wikipedia.org/wiki/NoSQL[NoSQL data storage]
+  ** https://cassandra.apache.org/[Apache Cassandra]
+ * Sharding
+ * Load balancing
+ * Mail Processing
+ * Queuing
+ * Storage
+ * BlobStore
+ * Task Management
+ * Event Processing
+ * ???

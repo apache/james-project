@@ -1,0 +1,23 @@
+= Operating the Distributed server
+:navtitle: Operating
+
+The following pages detail how to operating the Distributed server.
+
+Once you have a Distributed James server up and running you then need to ensure it operatings correctly.
+You may also need to perform some operation maintenance or recover from incidents. This section covers
+these topics.
+
+Read more about xref:distributed/operating/logging.adoc[Logging].
+
+The xref:distributed/operating/webadmin.adoc[WebAdmin Restfull administration API] is the
+recommended way to operating the Distributed James server. It allows managing and interacting with most
+server components.
+
+The xref:distributed/operating/cli.adoc[Command line interface] allows to interact with some
+server components. However it relies on JMX technologies and its use is discouraged.
+
+The xref:distributed/operating/metrics.adoc[metrics] allows to build latency and throughput
+graphs, that can be visualized, for instance in *Grafana*.
+
+Finally, we did put together a xref:distributed/operating/guide.adoc[detailed guide] for
+distributed James operators.
