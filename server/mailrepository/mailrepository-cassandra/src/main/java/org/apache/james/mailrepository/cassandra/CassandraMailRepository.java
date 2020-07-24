@@ -51,17 +51,11 @@ public class CassandraMailRepository implements MailRepository {
     CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
                             CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDaoAPI mailDAO,
                             MimeMessageStore.Factory mimeMessageStoreFactory) {
-        this(url, keysDAO, countDAO, mailDAO, mimeMessageStoreFactory.mimeMessageStore());
-    }
-
-    CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
-                            CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDaoAPI mailDAO,
-                            Store<MimeMessage, MimeMessagePartsId> mimeMessageStore) {
         this.url = url;
         this.keysDAO = keysDAO;
         this.countDAO = countDAO;
         this.mailDAO = mailDAO;
-        this.mimeMessageStore = mimeMessageStore;
+        this.mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
     }
 
     @Override

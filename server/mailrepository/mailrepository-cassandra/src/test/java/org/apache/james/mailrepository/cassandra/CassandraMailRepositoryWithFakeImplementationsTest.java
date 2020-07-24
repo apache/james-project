@@ -70,7 +70,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             .passthrough();
 
         cassandraMailRepository = new CassandraMailRepository(URL,
-            keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
+            keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore));
     }
 
     @Nested

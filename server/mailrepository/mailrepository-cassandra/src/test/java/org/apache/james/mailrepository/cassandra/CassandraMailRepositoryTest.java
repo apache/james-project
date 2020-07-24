@@ -70,7 +70,7 @@ class CassandraMailRepositoryTest {
                 .passthrough();
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
+                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore));
         }
 
         @Override
@@ -111,7 +111,7 @@ class CassandraMailRepositoryTest {
                 .deduplication();
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
+                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore));
         }
 
         @Override
