@@ -39,7 +39,7 @@ import com.google.common.base.Strings;
 
 import reactor.core.publisher.Mono;
 
-public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobStoreContract {
+public interface BlobStoreContract extends BucketBlobStoreContract {
 
     static Stream<Arguments> storagePolicies() {
         return Stream.of(

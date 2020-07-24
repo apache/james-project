@@ -21,12 +21,13 @@ package org.apache.james.blob.memory;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.DeleteBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
 import org.junit.jupiter.api.BeforeEach;
 
-public class MemoryBlobStorePassThroughTest implements MetricableBlobStoreContract {
+public class MemoryBlobStorePassThroughTest implements DeleteBlobStoreContract, MetricableBlobStoreContract {
 
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private BlobStore blobStore;
