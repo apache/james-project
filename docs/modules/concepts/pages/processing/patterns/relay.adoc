@@ -5,4 +5,50 @@
 
 (TODO: update image as per comments on mailing list)
 
+Notes from mailing list:
+
+    The only wrong thing about this picture is the SMTP Service before "Outgoing".
+    As weird as it is, the delivery of messages to a remote server is done by a Mailet called RemoteDelivery and it's not handled by the SMTP Service.
+    As far as I know, a lot of people are actually forking this Mailet because they want specific behaviors for delivery so I think this design makes sense.
+
+    doesn’t that Mailet have to “speak” SMTP?
+
+
+    No they don't.
+    
+    They encapsulate what a "Mail" (a Mime message with its transport
+    context) is and transform it.
+    
+    They can for instance be used after a JMAP submission servers (as users
+    can send mails via JMAP too)
+    
+    Mailet are just a very simple Java interface. There is no hard
+    dependency to SMTP.
+
+> I looked at org.apache.james.transport.mailets.RemoteDelivery, with the assumption that it is the correct Mailet.
+Correct
+> First, the javadoc says:
+>> The RemoteDelivery mailet delivers messages to a remote SMTP server able to deliver or forward messages to their final destination.
+> That is consistent with what you wrote. So I looked at the code to try to get a sense of *how* it does this. 
+Ouch. Complex and old code relying on javax.mail is waiting you ^^
+> What I could gather is that the magic is actually done with org.apache.james.queue.api.MailQueue. All RemoteDelivery does is enqueue the Mail, then it’s done.
+It do start DeliveryRunnable that consume the outgoing queue. Relaying
+happens there.
+> So the queue-api seems now quite important. 
+I confirm it is.
+> I also gather that it is the same queue that accepts mails from the incoming SMTP Service in the figure. However, by looking at the api code and the sparse javadocs that come with it, I am getting few clues as to what it does or how it works.
+>
+> I can only guess that the actual heavy lifting is done with an implementation that gets wired with Guice.
+
+
+
+> It is guice agnostic. Look inside RemoteDelivery::init...
+> 
+> client -> SMTP (in, as a server) -> queue (spool) -> Processing chain -> Queue (outgoing) -> RemoteDelivery runnable
+> 
+> Also as Matthieu said, RemoteDelivery is a side effect of the current Processing chain.
+
+
+
+
 image::SMTP_Relay.png[]
