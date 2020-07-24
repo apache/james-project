@@ -1,0 +1,33 @@
+= James Distributed Mail Server
+:navtitle: Distributed
+
+////
+// dml: Comment for discussion (to be removed)
+ If possible, I think that the Distributed Server should be easily migratable
+ from the Extendable Server. With this in mind, I propose some updates to the
+ description. I also tried to remove "technical" elements from the overview.
+ They are necessary, but IMO should be avoided here because many different people
+ read the overview to decide if it is relevant to them or not.
+////
+
+The Distributed Server is based on the 
+xref:servers/extendable/index.adoc[Extendable Server],
+but was built for a high-throughput distributed scenario.
+Although it does assume that you have advanced technical knowledge, 
+it is intended to be easy to operate for large deployments.
+
+This server is:
+
+* Intended for use by experts only
+* Used for large-scale distributed deployments
+* Designed mainly for xref:concepts/???.adoc[Mail Delivery],
+  but can also be used for xref:concepts/???.adoc[Mail Processing]
+* The most feature-rich server, but also by far the most complex
+
+You will find information about its
+xref:distributed/architecture.adoc[architecture], how to
+xref:distributed/run.adoc[run it], how to
+xref:distributed/run-docker.adoc[run it with Docker], how to
+xref:distributed/configure/index.adoc[configure it], how to
+xref:distributed/operate/index.adoc[operate it], how to
+xref:distributed/extend/index.adoc[extend it].

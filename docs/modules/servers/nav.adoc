@@ -10,7 +10,7 @@
 *** xref:basic/conf/index.adoc[]
 *** xref:basic/help.adoc[]
 ** xref:extendable.adoc[]
-** xref:distributed.adoc[]
+** xref:distributed/index.adoc[]
 *** xref:distributed/architecture.adoc[]
 *** xref:distributed/run.adoc[]
 *** xref:distributed/run-docker.adoc[]
