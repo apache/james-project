@@ -19,6 +19,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -34,38 +35,33 @@ import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import net.fortuna.ical4j.model.Calendar;
 
-public class ICalendarParserTest {
-    private static final String DESTINATION_ATTRIBUTE = "destinationAttribute";
-    private static final String SOURCE_ATTRIBUTE = "sourceAttribute";
+class ICalendarParserTest {
+    static final String DESTINATION_ATTRIBUTE = "destinationAttribute";
+    static final String SOURCE_ATTRIBUTE = "sourceAttribute";
 
-    private static final String DESTINATION_CUSTOM_ATTRIBUTE = "ics.dest.attribute";
-    private static final AttributeName DESTINATION_CUSTOM_ATTRIBUTE_NAME = AttributeName.of(DESTINATION_CUSTOM_ATTRIBUTE);
-    private static final String SOURCE_CUSTOM_ATTRIBUTE = "ics.source.attribute";
-    private static final AttributeName SOURCE_CUSTOM_ATTRIBUTE_NAME = AttributeName.of(SOURCE_CUSTOM_ATTRIBUTE);
+    static final String DESTINATION_CUSTOM_ATTRIBUTE = "ics.dest.attribute";
+    static final AttributeName DESTINATION_CUSTOM_ATTRIBUTE_NAME = AttributeName.of(DESTINATION_CUSTOM_ATTRIBUTE);
+    static final String SOURCE_CUSTOM_ATTRIBUTE = "ics.source.attribute";
+    static final AttributeName SOURCE_CUSTOM_ATTRIBUTE_NAME = AttributeName.of(SOURCE_CUSTOM_ATTRIBUTE);
 
-    private static final String RIGHT_ICAL_VALUE = "BEGIN:VCALENDAR\n" +
+    static final String RIGHT_ICAL_VALUE = "BEGIN:VCALENDAR\n" +
         "END:VCALENDAR";
 
-    private static final String WRONG_ICAL_VALUE = "anyValue";
+    static final String WRONG_ICAL_VALUE = "anyValue";
     @SuppressWarnings("unchecked")
-    public static final Class<Map<String, Calendar>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, Calendar>>) (Object) Map.class;
+    static final Class<Map<String, Calendar>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, Calendar>>) (Object) Map.class;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    private ICalendarParser mailet = new ICalendarParser();
+    ICalendarParser mailet = new ICalendarParser();
 
     @Test
-    public void initShouldSetSourceAttributeWhenAbsent() throws Exception {
+    void initShouldSetSourceAttributeWhenAbsent() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
             .build());
@@ -74,7 +70,7 @@ public class ICalendarParserTest {
     }
 
     @Test
-    public void initShouldSetDestinationAttributeWhenAbsent() throws Exception {
+    void initShouldSetDestinationAttributeWhenAbsent() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
             .build());
@@ -83,7 +79,7 @@ public class ICalendarParserTest {
     }
 
     @Test
-    public void initShouldSetSourceAttributeWhenPresent() throws Exception {
+    void initShouldSetSourceAttributeWhenPresent() throws Exception {
         String sourceAttribute = "sourceAttribute";
         mailet.init(FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
@@ -94,7 +90,7 @@ public class ICalendarParserTest {
     }
 
     @Test
-    public void initShouldSetDestinationAttributeWhenPresent() throws Exception {
+    void initShouldSetDestinationAttributeWhenPresent() throws Exception {
         String destinationAttribute = "destinationAttribute";
         mailet.init(FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
@@ -105,31 +101,30 @@ public class ICalendarParserTest {
     }
 
     @Test
-    public void initShouldThrowOnEmptySourceAttribute() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        mailet.init(FakeMailetConfig.builder()
-            .mailetName("ICalendarParser")
-            .setProperty(ICalendarParser.SOURCE_ATTRIBUTE_PARAMETER_NAME, "")
-            .build());
+    void initShouldThrowOnEmptySourceAttribute() {
+        assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
+                .mailetName("ICalendarParser")
+                .setProperty(ICalendarParser.SOURCE_ATTRIBUTE_PARAMETER_NAME, "")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowOnEmptyDestinationAttribute() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        mailet.init(FakeMailetConfig.builder()
-            .mailetName("ICalendarParser")
-            .setProperty(ICalendarParser.DESTINATION_ATTRIBUTE_PARAMETER_NAME, "")
-            .build());
+    void initShouldThrowOnEmptyDestinationAttribute() {
+        assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
+                .mailetName("ICalendarParser")
+                .setProperty(ICalendarParser.DESTINATION_ATTRIBUTE_PARAMETER_NAME, "")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void serviceShouldNotSetCalendarDataIntoMailAttributeWhenNoSourceAttribute() throws Exception {
+    void serviceShouldNotSetCalendarDataIntoMailAttributeWhenNoSourceAttribute() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
             .setProperty(DESTINATION_ATTRIBUTE, DESTINATION_CUSTOM_ATTRIBUTE)
             .build();
+
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
@@ -142,12 +137,13 @@ public class ICalendarParserTest {
     }
 
     @Test
-    public void serviceShouldSetEmptyCalendarDataIntoMailAttributeWhenEmptyICSAttachments() throws Exception {
+    void serviceShouldSetEmptyCalendarDataIntoMailAttributeWhenEmptyICSAttachments() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
             .setProperty(SOURCE_ATTRIBUTE, SOURCE_CUSTOM_ATTRIBUTE)
             .setProperty(DESTINATION_ATTRIBUTE, DESTINATION_CUSTOM_ATTRIBUTE)
             .build();
+
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
@@ -163,12 +159,13 @@ public class ICalendarParserTest {
     }
 
     @Test
-    public void serviceShouldNotSetCalendarDataIntoMailAttributeWhenSourceAttributeIsNotAMap() throws Exception {
+    void serviceShouldNotSetCalendarDataIntoMailAttributeWhenSourceAttributeIsNotAMap() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
             .setProperty(SOURCE_ATTRIBUTE, SOURCE_CUSTOM_ATTRIBUTE)
             .setProperty(DESTINATION_ATTRIBUTE, DESTINATION_CUSTOM_ATTRIBUTE)
             .build();
+
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
@@ -183,12 +180,13 @@ public class ICalendarParserTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void serviceShouldReturnRightMapOfCalendarWhenRightAttachments() throws Exception {
+    void serviceShouldReturnRightMapOfCalendarWhenRightAttachments() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
             .setProperty(SOURCE_ATTRIBUTE, SOURCE_CUSTOM_ATTRIBUTE)
             .setProperty(DESTINATION_ATTRIBUTE, DESTINATION_CUSTOM_ATTRIBUTE)
             .build();
+
         mailet.init(mailetConfiguration);
 
         Map<String, byte[]> attachments = ImmutableMap.<String, byte[]>builder()
@@ -211,12 +209,13 @@ public class ICalendarParserTest {
     }
 
     @Test
-    public void serviceShouldFilterResultWhenErrorParsing() throws Exception {
+    void serviceShouldFilterResultWhenErrorParsing() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
             .setProperty(SOURCE_ATTRIBUTE, SOURCE_CUSTOM_ATTRIBUTE)
             .setProperty(DESTINATION_ATTRIBUTE, DESTINATION_CUSTOM_ATTRIBUTE)
             .build();
+
         mailet.init(mailetConfiguration);
 
         Map<String, byte[]> attachments = ImmutableMap.<String, byte[]>builder()
@@ -240,17 +239,18 @@ public class ICalendarParserTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturn() throws MessagingException {
+    void getMailetInfoShouldReturn() throws MessagingException {
         assertThat(mailet.getMailetInfo()).isEqualTo("Calendar Parser");
     }
 
     @Test
-    public void parsingShouldBeLenient() throws Exception {
+    void parsingShouldBeLenient() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
             .setProperty(SOURCE_ATTRIBUTE, SOURCE_CUSTOM_ATTRIBUTE)
             .setProperty(DESTINATION_ATTRIBUTE, DESTINATION_CUSTOM_ATTRIBUTE)
             .build();
+
         mailet.init(mailetConfiguration);
 
         Map<String, byte[]> attachments = ImmutableMap.<String, byte[]>builder()
