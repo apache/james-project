@@ -29,7 +29,7 @@ import org.awaitility.core.ConditionFactory;
 public interface EventBusContract {
 
     enum EnvironmentSpeedProfile {
-        SLOW(Duration.ofSeconds(5), Duration.ofSeconds(30)),
+        SLOW(Duration.ofSeconds(2), Duration.ofSeconds(10)),
         FAST(Duration.ofMillis(200), Duration.ofSeconds(5));
 
         private final Duration shortWaitTime;
