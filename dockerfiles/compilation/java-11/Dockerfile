@@ -12,7 +12,8 @@ RUN apt-get install -y git wget unzip
 
 # Install Maven
 WORKDIR /root
-RUN wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+RUN wget http://apache.mirrors.pair.com/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+#RUN wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
 RUN tar -xvf apache-maven-3.6.3-bin.tar.gz
 RUN ln -s /root/apache-maven-3.6.3/bin/mvn /usr/bin/mvn
 
