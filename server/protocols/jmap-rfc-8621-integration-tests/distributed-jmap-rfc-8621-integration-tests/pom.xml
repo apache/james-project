@@ -124,8 +124,8 @@
                 <configuration>
                     <argLine>-Xms512m -Xmx1024m</argLine>
                     <reuseForks>true</reuseForks>
-                    <!-- Fail tests longer than 2 hours, prevent form random locking tests -->
-                    <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
+                    <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
+                    <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
                     <!-- Junit 5 move from Category to Tag, and it need tag's name as parameter -->
                     <groups combine.self="override">BasicFeature</groups>
                     <properties>
