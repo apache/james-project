@@ -148,7 +148,9 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
           |      "maxSizeAttachmentsPerEmail": 890099,
           |      "emailQuerySortOptions": ["size"],
           |      "mayCreateTopLevelMailbox": true
-          |    }
+          |    },
+          |    "urn:apache:james:params:jmap:mail:quota":{},
+          |    "urn:apache:james:params:jmap:mail:shares":{}
           |  },
           |  "accounts": {
           |    "807a5306ccb4527af7790a0f9b48a776514bdbfba064e355461a76bcffbf2c90": {
