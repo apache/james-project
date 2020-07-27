@@ -966,7 +966,6 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox2");
         ComposedMessageId message2 = mailboxProbe.appendMessage(ALICE.asString(), MailboxPath.forUser(ALICE, "mailbox2"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        await();
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, otherUser, "mailbox");
         mailboxProbe.appendMessage(otherUser, MailboxPath.forUser(Username.of(otherUser), "mailbox"),
