@@ -27,16 +27,11 @@ import org.apache.james.jmap.draft.methods.integration.SetMailboxesMethodTest;
 import org.junit.Rule;
 
 public class MemorySetMailboxesMethodTest extends SetMailboxesMethodTest {
-
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
         return memoryJmap.jmapServer();
-    }
-    
-    @Override
-    protected void await() {
     }
 }

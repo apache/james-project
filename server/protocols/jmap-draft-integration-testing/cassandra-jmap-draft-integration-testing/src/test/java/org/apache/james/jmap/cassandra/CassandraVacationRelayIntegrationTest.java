@@ -47,11 +47,6 @@ public class CassandraVacationRelayIntegrationTest extends VacationRelayIntegrat
     }
 
     @Override
-    protected void await() {
-        rule.await();
-    }
-
-    @Override
     protected InMemoryDNSService getInMemoryDns() {
         return inMemoryDNSService;
     }

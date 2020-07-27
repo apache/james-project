@@ -72,8 +72,6 @@ public abstract class SetMessagesMethodReRoutingTest {
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
-    protected abstract void await();
-
     private GuiceJamesServer jmapServer;
     private MailboxProbe mailboxProbe;
     private DataProbe dataProbe;

@@ -73,8 +73,6 @@ public abstract class VacationIntegrationTest {
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
-    protected abstract void await();
-
     @Before
     public void setUp() throws Exception {
         guiceJamesServer = createJmapServer();
@@ -90,7 +88,6 @@ public abstract class VacationIntegrationTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2.asString(), DefaultMailboxes.SENT);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_1.asString(), DefaultMailboxes.INBOX);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2.asString(), DefaultMailboxes.INBOX);
-        await();
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
         RestAssured.requestSpecification = jmapRequestSpecBuilder

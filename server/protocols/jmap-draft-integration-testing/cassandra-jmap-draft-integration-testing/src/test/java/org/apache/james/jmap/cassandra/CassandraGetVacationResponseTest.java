@@ -41,9 +41,4 @@ public class CassandraGetVacationResponseTest extends GetVacationResponseTest {
         return rule.jmapServer(cassandra.getModule())
                 .overrideWith(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }
-
-    @Override
-    protected void await() {
-        rule.await();
-    }
 }

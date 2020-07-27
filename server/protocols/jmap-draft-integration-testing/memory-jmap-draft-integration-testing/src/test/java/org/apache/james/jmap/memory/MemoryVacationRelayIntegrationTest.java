@@ -36,11 +36,6 @@ public class MemoryVacationRelayIntegrationTest extends VacationRelayIntegration
     private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
 
     @Override
-    protected void await() {
-
-    }
-
-    @Override
     protected GuiceJamesServer getJmapServer() throws IOException {
         return memoryJmap.jmapServer((binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }

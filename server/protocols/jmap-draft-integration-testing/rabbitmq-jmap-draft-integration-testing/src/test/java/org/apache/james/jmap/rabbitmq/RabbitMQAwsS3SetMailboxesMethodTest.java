@@ -28,7 +28,6 @@ import org.apache.james.jmap.draft.methods.integration.SetMailboxesMethodTest;
 import org.junit.Rule;
 
 public class RabbitMQAwsS3SetMailboxesMethodTest extends SetMailboxesMethodTest {
-
     @Rule
     public DockerCassandraRule cassandra = new DockerCassandraRule();
 
@@ -39,11 +38,5 @@ public class RabbitMQAwsS3SetMailboxesMethodTest extends SetMailboxesMethodTest 
     protected GuiceJamesServer createJmapServer() throws IOException {
         return rule.jmapServer(cassandra.getModule());
     }
-
-    @Override
-    protected void await() {
-        rule.await();
-    }
-
 }
 

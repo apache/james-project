@@ -62,8 +62,6 @@ public abstract class GetVacationResponseTest {
 
     protected abstract GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) throws IOException;
 
-    protected abstract void await();
-
     private AccessToken accessToken;
     private GuiceJamesServer jmapServer;
     private FixedDateZonedDateTimeProvider fixedDateZonedDateTimeProvider;

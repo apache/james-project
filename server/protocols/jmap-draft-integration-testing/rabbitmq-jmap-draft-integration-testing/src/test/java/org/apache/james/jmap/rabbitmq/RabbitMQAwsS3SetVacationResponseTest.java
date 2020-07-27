@@ -39,11 +39,5 @@ public class RabbitMQAwsS3SetVacationResponseTest extends SetVacationResponseTes
     protected GuiceJamesServer createJmapServer() throws IOException {
         return rule.jmapServer(cassandra.getModule());
     }
-
-    @Override
-    protected void await() {
-        rule.await();
-    }
-
 }
 

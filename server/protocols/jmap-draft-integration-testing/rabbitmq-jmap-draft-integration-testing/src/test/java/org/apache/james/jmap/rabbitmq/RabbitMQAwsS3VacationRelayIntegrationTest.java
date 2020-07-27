@@ -30,7 +30,6 @@ import org.apache.james.jmap.VacationRelayIntegrationTest;
 import org.junit.Rule;
 
 public class RabbitMQAwsS3VacationRelayIntegrationTest extends VacationRelayIntegrationTest {
-
     private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
 
     @Rule
@@ -44,11 +43,6 @@ public class RabbitMQAwsS3VacationRelayIntegrationTest extends VacationRelayInte
         return rule.jmapServer(
                 cassandra.getModule(),
                 (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
-    }
-
-    @Override
-    protected void await() {
-        rule.await();
     }
 
     @Override

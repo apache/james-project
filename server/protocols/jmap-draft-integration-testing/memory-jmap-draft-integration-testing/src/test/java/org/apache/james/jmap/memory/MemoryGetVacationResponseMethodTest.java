@@ -28,7 +28,6 @@ import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Rule;
 
 public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest {
-    
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
@@ -36,9 +35,5 @@ public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest
     protected GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) throws IOException {
         return memoryJmap.jmapServer()
                     .overrideWith(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
-    }
-    
-    @Override
-    protected void await() {
     }
 }

@@ -28,7 +28,6 @@ import org.apache.james.jmap.draft.methods.integration.SetVacationResponseTest;
 import org.junit.Rule;
 
 public class CassandraSetVacationResponseTest extends SetVacationResponseTest {
-
     @Rule
     public DockerCassandraRule cassandra = new DockerCassandraRule();
 
@@ -39,10 +38,4 @@ public class CassandraSetVacationResponseTest extends SetVacationResponseTest {
     protected GuiceJamesServer createJmapServer() throws IOException {
         return rule.jmapServer(cassandra.getModule());
     }
-
-    @Override
-    protected void await() {
-        rule.await();
-    }
-    
 }

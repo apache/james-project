@@ -28,7 +28,6 @@ import org.apache.james.jmap.draft.methods.integration.SetMessagesMethodReRoutin
 import org.junit.Rule;
 
 public class RabbitMQAwsS3SetMessagesMethodReRoutingTest extends SetMessagesMethodReRoutingTest {
-
     @Rule
     public DockerCassandraRule cassandra = new DockerCassandraRule();
 
@@ -38,11 +37,6 @@ public class RabbitMQAwsS3SetMessagesMethodReRoutingTest extends SetMessagesMeth
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
         return rule.jmapServer(cassandra.getModule());
-    }
-
-    @Override
-    protected void await() {
-        rule.await();
     }
 }
 

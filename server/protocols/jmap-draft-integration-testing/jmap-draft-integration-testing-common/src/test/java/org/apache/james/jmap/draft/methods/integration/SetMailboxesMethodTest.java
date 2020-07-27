@@ -87,8 +87,6 @@ public abstract class SetMailboxesMethodTest {
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
-    protected abstract void await();
-
     private AccessToken accessToken;
     private Username username;
     private GuiceJamesServer jmapServer;

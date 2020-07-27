@@ -61,8 +61,6 @@ public abstract class VacationRelayIntegrationTest {
     private GuiceJamesServer guiceJamesServer;
     private JmapGuiceProbe jmapGuiceProbe;
 
-    protected abstract void await();
-
     protected abstract GuiceJamesServer getJmapServer() throws IOException;
 
     protected abstract InMemoryDNSService getInMemoryDns();
@@ -81,7 +79,6 @@ public abstract class VacationRelayIntegrationTest {
         MailboxProbe mailboxProbe = guiceJamesServer.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_WITH_DOMAIN, DefaultMailboxes.SENT);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_WITH_DOMAIN, DefaultMailboxes.INBOX);
-        await();
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
     }

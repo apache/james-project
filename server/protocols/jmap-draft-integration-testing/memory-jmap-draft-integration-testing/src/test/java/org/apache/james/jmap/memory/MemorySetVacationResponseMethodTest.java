@@ -27,16 +27,11 @@ import org.apache.james.jmap.draft.methods.integration.SetVacationResponseTest;
 import org.junit.Rule;
 
 public class MemorySetVacationResponseMethodTest extends SetVacationResponseTest {
-    
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
         return memoryJmap.jmapServer();
-    }
-    
-    @Override
-    protected void await() {
     }
 }

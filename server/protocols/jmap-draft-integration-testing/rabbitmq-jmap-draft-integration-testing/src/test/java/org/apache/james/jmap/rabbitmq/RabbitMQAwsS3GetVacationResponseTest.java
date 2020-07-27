@@ -29,7 +29,6 @@ import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Rule;
 
 public class RabbitMQAwsS3GetVacationResponseTest extends GetVacationResponseTest {
-
     @Rule
     public DockerCassandraRule cassandra = new DockerCassandraRule();
 
@@ -40,11 +39,6 @@ public class RabbitMQAwsS3GetVacationResponseTest extends GetVacationResponseTes
     protected GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) throws IOException {
         return rule.jmapServer(cassandra.getModule())
             .overrideWith(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
-    }
-
-    @Override
-    protected void await() {
-        rule.await();
     }
 }
 

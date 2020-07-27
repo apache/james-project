@@ -60,8 +60,6 @@ public abstract class SetVacationResponseTest {
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
-    protected abstract void await();
-
     private AccessToken accessToken;
     private GuiceJamesServer jmapServer;
 
