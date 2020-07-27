@@ -87,7 +87,7 @@ public interface GroupContract {
                         rateExceeded.set(true);
                     }
                     nbCalls.incrementAndGet();
-                    Thread.sleep(Duration.ofMillis(200).toMillis());
+                    Thread.sleep(Duration.ofMillis(20).toMillis());
                     finishedExecutions.incrementAndGet();
 
                 }
