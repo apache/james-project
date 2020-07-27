@@ -21,6 +21,7 @@ package org.apache.james.backends.rabbitmq;
 import static org.apache.james.backends.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -115,7 +116,10 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
         RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
         connectionPool = new SimpleConnectionPool(connectionFactory);
-        channelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(), 5);
+        Duration minBorrowDelay = Duration.ofMillis(5);
+        int retries = 2;
+        channelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(2, Duration.ofMillis(5)), 5,
+            minBorrowDelay, retries);
         channelPool.start();
     }
 

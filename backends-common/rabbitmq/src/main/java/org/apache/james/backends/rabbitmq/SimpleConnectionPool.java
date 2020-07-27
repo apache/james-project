@@ -59,6 +59,10 @@ public class SimpleConnectionPool implements AutoCloseable {
     public Mono<Connection> getResilientConnection() {
         int numRetries = 10;
         Duration initialDelay = Duration.ofMillis(100);
+        return getResilientConnection(numRetries, initialDelay);
+    }
+
+    public Mono<Connection> getResilientConnection(int numRetries, Duration initialDelay) {
         return Mono.defer(this::getOpenConnection)
             .retryWhen(Retry.backoff(numRetries, initialDelay).scheduler(Schedulers.elastic()));
     }

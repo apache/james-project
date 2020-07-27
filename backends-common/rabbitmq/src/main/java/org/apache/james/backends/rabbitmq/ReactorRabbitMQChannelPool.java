@@ -63,13 +63,14 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
         private static final Logger LOGGER = LoggerFactory.getLogger(ChannelFactory.class);
 
-        private static final int MAX_RETRIES = 5;
-        private static final Duration RETRY_FIRST_BACK_OFF = Duration.ofMillis(100);
-
         private final Mono<Connection> connectionMono;
+        private final Duration minBorrowDelay;
+        private final int retries;
 
-        ChannelFactory(Mono<Connection> connectionMono) {
+        ChannelFactory(Mono<Connection> connectionMono, Duration minBorrowDelay, int retries) {
             this.connectionMono = connectionMono;
+            this.minBorrowDelay = minBorrowDelay;
+            this.retries = retries;
         }
 
         @Override
@@ -83,7 +84,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
             return Mono.fromCallable(connection::openChannel)
                 .map(maybeChannel ->
                     maybeChannel.orElseThrow(() -> new RuntimeException("RabbitMQ reached to maximum opened channels, cannot get more channels")))
-                .retryWhen(Retry.backoff(MAX_RETRIES, RETRY_FIRST_BACK_OFF).scheduler(Schedulers.elastic()))
+                .retryWhen(Retry.backoff(retries, minBorrowDelay).scheduler(Schedulers.elastic()))
                 .doOnError(throwable -> LOGGER.error("error when creating new channel", throwable));
         }
 
@@ -110,20 +111,24 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     private final Mono<Connection> connectionMono;
     private final GenericObjectPool<Channel> pool;
     private final ConcurrentSkipListSet<Channel> borrowedChannels;
+    private final Duration minBorrowDelay;
+    private final int retries;
     private Sender sender;
 
     public ReactorRabbitMQChannelPool(SimpleConnectionPool simpleConnectionPool) {
-        this(simpleConnectionPool.getResilientConnection(), MAX_CHANNELS_NUMBER);
+        this(simpleConnectionPool.getResilientConnection(), MAX_CHANNELS_NUMBER, MIN_BORROW_DELAY, MAX_BORROW_RETRIES);
     }
 
-    public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, int poolSize) {
+    public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, int poolSize, Duration minBorrowDelay, int retries) {
         this.connectionMono = connectionMono;
-        ChannelFactory channelFactory = new ChannelFactory(connectionMono);
+        this.retries = retries;
+        ChannelFactory channelFactory = new ChannelFactory(connectionMono, minBorrowDelay, retries);
 
         GenericObjectPoolConfig<Channel> config = new GenericObjectPoolConfig<>();
         config.setMaxTotal(poolSize);
         this.pool = new GenericObjectPool<>(channelFactory, config);
         this.borrowedChannels = new ConcurrentSkipListSet<>(Comparator.comparingInt(System::identityHashCode));
+        this.minBorrowDelay = minBorrowDelay;
     }
 
     public void start() {
@@ -146,7 +151,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     private Mono<Channel> borrow() {
         return tryBorrowFromPool()
             .doOnError(throwable -> LOGGER.warn("Cannot borrow channel", throwable))
-            .retryWhen(Retry.backoff(MAX_BORROW_RETRIES, MIN_BORROW_DELAY).scheduler(Schedulers.elastic()))
+            .retryWhen(Retry.backoff(retries, minBorrowDelay).scheduler(Schedulers.elastic()))
             .onErrorMap(this::propagateException)
             .subscribeOn(Schedulers.elastic())
             .doOnNext(borrowedChannels::add);
