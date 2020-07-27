@@ -219,6 +219,12 @@ This time you will receive a `404` code because the `test.local` domain no longe
 Documentation for the webadmin is available at: http://james.apache.org/server/manage-webadmin.html
 
 
+== Optional
+
+ * Connect manually with SMTP (~5 minutes)
+ * Connect manually with POP (~5 minutes)
+ * Connect manually with IMAP (~5 minutes)
+
 == Stop the demo
 
 To shutdown the server:

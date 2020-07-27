@@ -163,9 +163,4 @@ public interface MessageResult extends Comparable<MessageResult> {
      */
     List<MessageAttachmentMetadata> getLoadedAttachments() throws MailboxException;
 
-    /**
-     * Indicates if the message have attachments, regardless of loaded attachments.
-     */
-    boolean hasAttachments() throws MailboxException;
-
 }

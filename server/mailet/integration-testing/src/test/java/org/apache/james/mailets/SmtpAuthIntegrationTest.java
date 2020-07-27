@@ -39,9 +39,9 @@ import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -71,7 +71,7 @@ public class SmtpAuthIntegrationTest {
                 .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(MailetConfiguration.TO_BOUNCE);
 
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(rootProcessor)
             .putProcessor(CommonProcessors.deliverOnlyTransport())
             .putProcessor(bounces());
@@ -80,6 +80,7 @@ public class SmtpAuthIntegrationTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

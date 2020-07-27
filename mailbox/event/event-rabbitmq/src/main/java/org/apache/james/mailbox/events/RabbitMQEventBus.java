@@ -40,7 +40,9 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private static final Set<RegistrationKey> NO_KEY = ImmutableSet.of();
     private static final String NOT_RUNNING_ERROR_MESSAGE = "Event Bus is not running";
     static final String MAILBOX_EVENT = "mailboxEvent";
+    static final String MAILBOX_EVENT_DEAD_LETTER_QUEUE = MAILBOX_EVENT + "-dead-letter-queue";
     static final String MAILBOX_EVENT_EXCHANGE_NAME = MAILBOX_EVENT + "-exchange";
+    static final String MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME = MAILBOX_EVENT + "-dead-letter-exchange";
     static final String EVENT_BUS_ID = "eventBusId";
 
     private final EventSerializer eventSerializer;

@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -87,7 +88,7 @@ public class SpamAssassin extends GenericMailet {
     @Override
     public void init() throws MessagingException {
         spamdHost = Optional.ofNullable(getInitParameter(SPAMD_HOST))
-            .filter(s -> !Strings.isNullOrEmpty(s))
+            .filter(Predicate.not(Strings::isNullOrEmpty))
             .orElse(DEFAULT_HOST);
 
         spamdPort = MailetUtil.getInitParameterAsStrictlyPositiveInteger(getInitParameter(SPAMD_PORT), DEFAULT_PORT);

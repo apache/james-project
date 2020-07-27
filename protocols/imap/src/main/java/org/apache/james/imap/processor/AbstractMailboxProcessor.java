@@ -60,12 +60,10 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
-import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
-import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -73,6 +71,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Flux;
 
 public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends AbstractChainedProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
@@ -242,12 +242,15 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                                    MessageRange messageSet, MessageManager mailbox,
                                    boolean isModSeqPermanent,
                                    MailboxSession mailboxSession) throws MailboxException {
-        final MessageResultIterator it = mailbox.getMessages(messageSet, FetchGroup.MINIMAL,  mailboxSession);
+        Iterator<ComposedMessageIdWithMetaData> it = Flux.from(
+            mailbox.listMessagesMetadata(messageSet, mailboxSession))
+            .toStream()
+            .iterator();
         final boolean qresyncEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC);
         final boolean condstoreEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_CONDSTORE);
         while (it.hasNext()) {
-            MessageResult mr = it.next();
-            final MessageUid uid = mr.getUid();
+            ComposedMessageIdWithMetaData mr = it.next();
+            final MessageUid uid = mr.getComposedMessageId().getUid();
             selected.msn(uid).fold(() -> {
                 LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getMailboxId().serialize());
                 // skip this as it was not found in the mapping

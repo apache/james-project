@@ -32,8 +32,8 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.AddDeliveredToHeader;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -53,6 +53,7 @@ public class AddDeliveredToHeaderTest {
     @Before
     public void setup() throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

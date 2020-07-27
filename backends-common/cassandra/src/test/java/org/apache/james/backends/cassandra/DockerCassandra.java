@@ -21,6 +21,7 @@ package org.apache.james.backends.cassandra;
 
 import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.KeyspaceFactory;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.util.Host;
@@ -34,7 +35,6 @@ import org.testcontainers.images.builder.dockerfile.DockerfileBuilder;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.github.dockerjava.api.DockerClient;
 import com.google.common.collect.ImmutableMap;
 
@@ -59,25 +59,11 @@ public class DockerCassandra {
         }
 
         public void initializeKeyspace(KeyspaceConfiguration configuration) {
-            try (Cluster privilegedCluster = ClusterFactory.create(cassandra.superUserConfigurationBuilder().build())) {
+            try (Cluster privilegedCluster = ClusterFactory.create(cassandra.superUserConfigurationBuilder().build(),
+                    CassandraConsistenciesConfiguration.DEFAULT)) {
                 provisionNonPrivilegedUser(privilegedCluster);
                 KeyspaceFactory.createKeyspace(configuration, privilegedCluster);
                 grantPermissionToTestingUser(privilegedCluster, configuration.getKeyspace());
-            }
-        }
-
-        public void dropKeyspace(String keyspace) {
-            try (Cluster cluster = ClusterFactory.create(cassandra.superUserConfigurationBuilder().build())) {
-                try (Session cassandraSession = cluster.newSession()) {
-                    boolean applied = cassandraSession.execute(
-                        SchemaBuilder.dropKeyspace(keyspace)
-                            .ifExists())
-                        .wasApplied();
-
-                    if (!applied) {
-                        throw new IllegalStateException("cannot drop keyspace '" + keyspace + "'");
-                    }
-                }
             }
         }
 

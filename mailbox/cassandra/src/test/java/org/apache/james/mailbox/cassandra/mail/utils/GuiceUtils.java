@@ -19,17 +19,14 @@
 
 package org.apache.james.mailbox.cassandra.mail.utils;
 
-import static com.google.inject.Scopes.SINGLETON;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.cassandra.CassandraBlobStore;
-import org.apache.james.blob.cassandra.CassandraDumbBlobStore;
+import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 
@@ -37,7 +34,6 @@ import com.datastax.driver.core.Session;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
 public class GuiceUtils {
@@ -48,15 +44,6 @@ public class GuiceUtils {
         CassandraConfiguration configuration = CassandraConfiguration.DEFAULT_CONFIGURATION;
 
         return testInjector(session, typesProvider, messageIdFactory, configuration);
-    }
-
-    public static Injector testInjector(Session session, CassandraTypesProvider typesProvider,
-                                        CassandraMessageId.Factory messageIdFactory,
-                                        CassandraConfiguration configuration, Module... guiceModules) {
-        return Guice.createInjector(
-            Modules.combine(
-                Modules.combine(commonModules(session, typesProvider, messageIdFactory, configuration)),
-                Modules.combine(guiceModules)));
     }
 
     public static Injector testInjector(Session session, CassandraTypesProvider typesProvider,
@@ -72,13 +59,11 @@ public class GuiceUtils {
         return Modules.combine(
             binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
             binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
-            binder -> binder.bind(BlobStore.class).to(CassandraBlobStore.class),
-            binder -> binder.bind(CassandraDumbBlobStore.class).in(SINGLETON),
-                binder -> binder.bind(BucketName.class)
-                    .annotatedWith(Names.named(CassandraDumbBlobStore.DEFAULT_BUCKET))
-                    .toInstance(BucketName.DEFAULT),
+            binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session)),
             binder -> binder.bind(Session.class).toInstance(session),
             binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
-            binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration));
+            binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration),
+            binder -> binder.bind(CassandraConsistenciesConfiguration.class)
+                .toInstance(CassandraConsistenciesConfiguration.fromConfiguration(configuration)));
     }
 }

@@ -224,9 +224,8 @@ public class MessageContentExtractor {
 
         public Optional<String> extractMainTextContent(HtmlTextExtractor htmlTextExtractor) {
             return htmlBody.map(htmlTextExtractor::toPlainText)
-                .filter(s -> !Strings.isNullOrEmpty(s))
-                .map(Optional::of)
-                .orElse(textBody);
+                .filter(Predicate.not(Strings::isNullOrEmpty))
+                .or(() -> textBody);
         }
 
         @Override

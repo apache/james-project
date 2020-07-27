@@ -42,6 +42,7 @@ class WebAdminSingleMailboxReprocessingDTOTest {
     private final String serializedAdditionalInformation = "{" +
         "  \"type\":\"mailbox-reindexing\"," +
         "  \"mailboxId\":\"1\"," +
+        "  \"runningOptions\":{\"messagesPerSecond\":50,\"mode\":\"REBUILD_ALL\"}," +
         "  \"successfullyReprocessedMailCount\":42," +
         "  \"failedReprocessedMailCount\":2," +
         "  \"messageFailures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +

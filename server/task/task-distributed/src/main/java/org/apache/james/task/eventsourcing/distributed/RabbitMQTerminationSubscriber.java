@@ -56,9 +56,9 @@ import reactor.rabbitmq.Sender;
 
 public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Startable, Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQTerminationSubscriber.class);
-    private static final String EXCHANGE_NAME = "terminationSubscriberExchange";
-    private static final String QUEUE_NAME_PREFIX = "terminationSubscriber";
-    private static final String ROUTING_KEY = "terminationSubscriberRoutingKey";
+    static final String EXCHANGE_NAME = "terminationSubscriberExchange";
+    static final String QUEUE_NAME_PREFIX = "terminationSubscriber";
+    static final String ROUTING_KEY = "terminationSubscriberRoutingKey";
 
     private final JsonEventSerializer serializer;
     private final Sender sender;

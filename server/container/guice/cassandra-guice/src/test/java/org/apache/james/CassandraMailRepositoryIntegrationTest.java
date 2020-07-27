@@ -47,7 +47,7 @@ class CassandraMailRepositoryIntegrationTest {
     private SMTPMessageSender smtpMessageSender = new SMTPMessageSender("other.com");
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)

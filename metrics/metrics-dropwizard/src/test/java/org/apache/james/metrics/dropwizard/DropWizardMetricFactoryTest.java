@@ -61,6 +61,36 @@ class DropWizardMetricFactoryTest implements MetricFactoryContract {
     }
 
     @Test
+    void decoratePublisherWithTimerMetricShouldRecordAtLeastTheMonoDelayWhenWrappedInAFlux() {
+        Duration duration = Duration.ofMillis(100);
+        Flux.from(testee.decoratePublisherWithTimerMetric("any", Mono.delay(duration)))
+            .blockLast();
+
+        assertThat(testee.timer("any").getTimer().getSnapshot().get99thPercentile())
+            .isGreaterThan(duration.get(ChronoUnit.NANOS));
+    }
+
+    @Test
+    void decoratePublisherWithTimerMetricShouldRecordAtLeastTheMonoDelayWhenWrappedInAMono() {
+        Duration duration = Duration.ofMillis(100);
+        Mono.from(testee.decoratePublisherWithTimerMetric("any", Mono.delay(duration)))
+            .block();
+
+        assertThat(testee.timer("any").getTimer().getSnapshot().get99thPercentile())
+            .isGreaterThan(duration.get(ChronoUnit.NANOS));
+    }
+
+    @Test
+    void decoratePublisherWithTimerMetricShouldRecordAtLeastTheFluxDelayWhenWrappedInAFlux() {
+        Duration duration = Duration.ofMillis(100);
+        Flux.from(testee.decoratePublisherWithTimerMetric("any", Flux.interval(duration).take(1)))
+            .blockLast();
+
+        assertThat(testee.timer("any").getTimer().getSnapshot().get99thPercentile())
+            .isGreaterThan(duration.get(ChronoUnit.NANOS));
+    }
+
+    @Test
     void decoratePublisherWithTimerMetricLogP99ShouldRecordANewValueForEachRetry() {
         Duration duration = Duration.ofMillis(100);
         Mono.from(testee.decoratePublisherWithTimerMetricLogP99("any", Mono.delay(duration)))

@@ -21,29 +21,41 @@ package org.apache.james.mailbox.cassandra.mail.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.junit.jupiter.api.Test;
 
+import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class FlagsUpdateStageResultTest {
 
-    private static final MessageUid UID = MessageUid.of(1L);
-    private static final MessageUid OTHER_UID = MessageUid.of(2L);
+    private static final ComposedMessageId UID = new ComposedMessageId(
+        CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b")),
+        new CassandraMessageId.Factory().of(UUIDs.timeBased()),
+        MessageUid.of(1L));
+    private static final ComposedMessageId OTHER_UID = new ComposedMessageId(
+        CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b")),
+        new CassandraMessageId.Factory().of(UUIDs.timeBased()),
+        MessageUid.of(2L));
     private static final UpdatedFlags UPDATED_FLAGS = UpdatedFlags.builder()
-        .uid(UID)
+        .uid(UID.getUid())
         .modSeq(ModSeq.of(18))
         .oldFlags(new Flags())
         .newFlags(new Flags(Flags.Flag.SEEN))
         .build();
     private static final UpdatedFlags OTHER_UPDATED_FLAGS = UpdatedFlags.builder()
-        .uid(OTHER_UID)
+        .uid(OTHER_UID.getUid())
         .modSeq(ModSeq.of(18))
         .oldFlags(new Flags())
         .newFlags(new Flags(Flags.Flag.SEEN))

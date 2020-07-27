@@ -51,7 +51,10 @@ class CassandraMailboxPathV2DAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraMailboxPathV2DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        testee = new CassandraMailboxPathV2DAO(
+            cassandra.getConf(),
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            cassandraCluster.getCassandraConsistenciesConfiguration());
     }
 
     @Test

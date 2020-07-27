@@ -62,6 +62,7 @@ public class CassandraRabbitMQSwiftJmapTestRule implements TestRule {
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build();
 
         return CassandraRabbitMQJamesServerMain.createServer(configuration)

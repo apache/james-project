@@ -647,7 +647,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
                     while (hasNext()) {
                         try {
                             Message m = messages.nextElement();
-                            return new MailQueueItemView(createMail(m), nextDeliveryDate(m));
+                            return new DefaultMailQueueItemView(createMail(m), nextDeliveryDate(m));
                         } catch (MessagingException | JMSException e) {
                             LOGGER.error("Unable to browse queue", e);
                         }

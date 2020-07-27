@@ -180,7 +180,7 @@ class MailboxesExportRequestToTaskTest {
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("Invalid arguments supplied in the user request"))
-            .body("details", is("The username should not contain multiple domain delimiter."));
+            .body("details", is("The username should not contain multiple domain delimiter. Value: bad@bad@bad"));
     }
 
     @Test

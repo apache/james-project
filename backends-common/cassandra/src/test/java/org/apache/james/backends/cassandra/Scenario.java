@@ -23,14 +23,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
-
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class Scenario {
     public static class InjectedFailureException extends RuntimeException {
@@ -42,10 +41,22 @@ public class Scenario {
     @FunctionalInterface
     interface Behavior {
         Behavior THROW = (session, statement) -> {
+            //JAMES-3289 add a delay in the throwing behavior to avoid the reactor bug defined in https://github.com/reactor/reactor-core/issues/1941
+            //which cause flacky tests.
+            //once this bug is solved this delay could be removed.
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                //DO NOTHING
+            }
             throw new InjectedFailureException();
         };
 
         Behavior EXECUTE_NORMALLY = Session::executeAsync;
+
+        // Hack. We rely on version key unicity (because UUID) to create an empty ResultSet
+        Behavior RETURN_EMPTY = (session, statement) -> session.executeAsync(
+            "SELECT value FROM schemaVersion WHERE key=49128560-bb80-11ea-bad6-e3b96c9cd431;");
 
         static Behavior awaitOn(Barrier barrier, Behavior behavior) {
             return (session, statement) -> {
@@ -153,6 +164,13 @@ public class Scenario {
             return validity -> statementPredicate -> new ExecutionHook(
                 statementPredicate,
                 Behavior.THROW,
+                validity);
+        }
+
+        static RequiresValidity returnEmpty() {
+            return validity -> statementPredicate -> new ExecutionHook(
+                statementPredicate,
+                Behavior.RETURN_EMPTY,
                 validity);
         }
 

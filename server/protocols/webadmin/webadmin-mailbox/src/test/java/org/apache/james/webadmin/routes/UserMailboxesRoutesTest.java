@@ -1239,7 +1239,7 @@ class UserMailboxesRoutesTest {
                     .body("statusCode", Matchers.is(400))
                     .body("type", Matchers.is("InvalidArgument"))
                     .body("message", Matchers.is("Invalid arguments supplied in the user request"))
-                    .body("details", Matchers.is("The username should not contain multiple domain delimiter."));
+                    .body("details", Matchers.is("The username should not contain multiple domain delimiter. Value: bad@bad@bad"));
             }
         }
 
@@ -1265,6 +1265,8 @@ class UserMailboxesRoutesTest {
                     .body("additionalInformation.username", Matchers.is("username"))
                     .body("additionalInformation.successfullyReprocessedMailCount", Matchers.is(0))
                     .body("additionalInformation.failedReprocessedMailCount", Matchers.is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", Matchers.is(50))
+                    .body("additionalInformation.runningOptions.mode", Matchers.is("REBUILD_ALL"))
                     .body("startedDate", Matchers.is(notNullValue()))
                     .body("submitDate", Matchers.is(notNullValue()))
                     .body("completedDate", Matchers.is(notNullValue()));
@@ -1297,6 +1299,43 @@ class UserMailboxesRoutesTest {
                     .body("additionalInformation.username", Matchers.is("username"))
                     .body("additionalInformation.successfullyReprocessedMailCount", Matchers.is(1))
                     .body("additionalInformation.failedReprocessedMailCount", Matchers.is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", Matchers.is(50))
+                    .body("additionalInformation.runningOptions.mode", Matchers.is("REBUILD_ALL"))
+                    .body("startedDate", Matchers.is(notNullValue()))
+                    .body("submitDate", Matchers.is(notNullValue()))
+                    .body("completedDate", Matchers.is(notNullValue()));
+            }
+
+            @Test
+            void userReprocessingWithMessagesPerSecondShouldReturnTaskDetailsWhenMail() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                String taskId = given()
+                    .queryParam("task", "reIndex")
+                    .queryParam("messagesPerSecond", 1)
+                .when()
+                    .post()
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", Matchers.is("completed"))
+                    .body("taskId", Matchers.is(notNullValue()))
+                    .body("type", Matchers.is(UserReindexingTask.USER_RE_INDEXING.asString()))
+                    .body("additionalInformation.username", Matchers.is("username"))
+                    .body("additionalInformation.successfullyReprocessedMailCount", Matchers.is(1))
+                    .body("additionalInformation.failedReprocessedMailCount", Matchers.is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", Matchers.is(1))
+                    .body("additionalInformation.runningOptions.mode", Matchers.is("REBUILD_ALL"))
                     .body("startedDate", Matchers.is(notNullValue()))
                     .body("submitDate", Matchers.is(notNullValue()))
                     .body("completedDate", Matchers.is(notNullValue()));
@@ -1332,6 +1371,8 @@ class UserMailboxesRoutesTest {
                     .body("type", Matchers.is(UserReindexingTask.USER_RE_INDEXING.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", Matchers.is(0))
                     .body("additionalInformation.failedReprocessedMailCount", Matchers.is(1))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", Matchers.is(50))
+                    .body("additionalInformation.runningOptions.mode", Matchers.is("REBUILD_ALL"))
                     .body("additionalInformation.messageFailures.\"" + mailboxId.serialize() + "\"[0].uid", Matchers.is(Long.valueOf(uidAsLong).intValue()))
                     .body("startedDate", Matchers.is(notNullValue()))
                     .body("submitDate", Matchers.is(notNullValue()));
@@ -1389,7 +1430,7 @@ class UserMailboxesRoutesTest {
                     .build();
 
                 // We update on the searchIndex level to try to create inconsistencies
-                searchIndex.update(systemSession, mailbox, ImmutableList.of(updatedFlags)).block();
+                searchIndex.update(systemSession, mailbox.getMailboxId(), ImmutableList.of(updatedFlags)).block();
 
                 String taskId = with()
                     .queryParam("task", "reIndex")
@@ -1408,6 +1449,8 @@ class UserMailboxesRoutesTest {
                     .body("type", Matchers.is(UserReindexingTask.USER_RE_INDEXING.asString()))
                     .body("additionalInformation.successfullyReprocessedMailCount", Matchers.is(2))
                     .body("additionalInformation.failedReprocessedMailCount", Matchers.is(0))
+                    .body("additionalInformation.runningOptions.messagesPerSecond", Matchers.is(50))
+                    .body("additionalInformation.runningOptions.mode", Matchers.is("FIX_OUTDATED"))
                     .body("startedDate", Matchers.is(notNullValue()))
                     .body("submitDate", Matchers.is(notNullValue()))
                     .body("completedDate", Matchers.is(notNullValue()));
@@ -1438,7 +1481,7 @@ class UserMailboxesRoutesTest {
                     .build();
 
                 // We update on the searchIndex level to try to create inconsistencies
-                searchIndex.update(systemSession, mailbox, ImmutableList.of(updatedFlags)).block();
+                searchIndex.update(systemSession, mailbox.getMailboxId(), ImmutableList.of(updatedFlags)).block();
 
                 String taskId = with()
                     .queryParam("task", "reIndex")

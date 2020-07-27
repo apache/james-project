@@ -33,8 +33,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.DataProvisioner;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for the {@link MailboxCopierImpl} implementation.
@@ -43,33 +43,30 @@ import org.junit.Test;
  * Mailbox Manager.
  *
  */
-public class MailboxCopierTest {
+class MailboxCopierTest {
     /**
      * The instance for the test mailboxCopier.
      */
-    private MailboxCopierImpl mailboxCopier;
+    MailboxCopierImpl mailboxCopier;
 
     /**
      * The instance for the source Mailbox Manager.
      */
-    private MailboxManager srcMemMailboxManager;
+    MailboxManager srcMemMailboxManager;
 
     /**
      * The instance for the destination Mailbox Manager.
      */
-    private MailboxManager dstMemMailboxManager;
+    MailboxManager dstMemMailboxManager;
 
     /**
      * Setup the mailboxCopier and the source and destination
      * Mailbox Manager.
      *
      * We use a InMemoryMailboxManager implementation.
-     *
-     * @throws BadCredentialsException
-     * @throws MailboxException
      */
-    @Before
-    public void setup() throws BadCredentialsException, MailboxException {
+    @BeforeEach
+    void setup() {
         mailboxCopier = new MailboxCopierImpl();
 
         srcMemMailboxManager = newInMemoryMailboxManager();
@@ -89,7 +86,7 @@ public class MailboxCopierTest {
      * @throws IOException
      */
     @Test
-    public void testMailboxCopy() throws MailboxException, IOException {
+    void testMailboxCopy() throws MailboxException, IOException {
         DataProvisioner.feedMailboxManager(srcMemMailboxManager);
 
         assertMailboxManagerSize(srcMemMailboxManager, 1);

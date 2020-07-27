@@ -30,6 +30,7 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.mailbox.tools.indexer.ErrorRecoveryIndexationTask;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
+import org.apache.mailbox.tools.indexer.RunningOptionsDTO;
 
 import com.github.steveash.guavate.Guavate;
 
@@ -43,6 +44,7 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
                 })
                 .toDTOConverter((details, type) -> new WebAdminErrorRecoveryIndexationDTO(
                     type,
+                    RunningOptionsDTO.toDTO(details.getRunningOptions()),
                     details.getSuccessfullyReprocessedMailCount(),
                     details.getFailedReprocessedMailCount(),
                     details.failures(),
@@ -51,9 +53,9 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
-        WebAdminErrorRecoveryIndexationDTO(String type, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
+        WebAdminErrorRecoveryIndexationDTO(String type, RunningOptionsDTO runningOptionsDTO, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
                                            ReIndexingExecutionFailures failures, Instant timestamp) {
-            super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
+            super(type, runningOptionsDTO, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
         }
     }
 
@@ -66,6 +68,7 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
                 })
                 .toDTOConverter((details, type) -> new WebAdminFullIndexationDTO(
                     type,
+                    RunningOptionsDTO.toDTO(details.getRunningOptions()),
                     details.getSuccessfullyReprocessedMailCount(),
                     details.getFailedReprocessedMailCount(),
                     details.failures(),
@@ -74,25 +77,25 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
                 .withFactory(AdditionalInformationDTOModule::new);
         }
 
-        WebAdminFullIndexationDTO(String type, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
+        WebAdminFullIndexationDTO(String type, RunningOptionsDTO runningOptions, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
                                   ReIndexingExecutionFailures failures, Instant timestamp) {
-            super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
+            super(type, runningOptions, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
         }
-
     }
 
     protected final String type;
+    protected final RunningOptionsDTO runningOptions;
     protected final int successfullyReprocessedMailCount;
     protected final int failedReprocessedMailCount;
     protected final SerializableReIndexingExecutionFailures messageFailures;
     private final List<String> mailboxFailures;
     protected final Instant timestamp;
 
-
-    WebAdminReprocessingContextInformationDTO(String type, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
+    WebAdminReprocessingContextInformationDTO(String type, RunningOptionsDTO runningOptions, int successfullyReprocessedMailCount, int failedReprocessedMailCount,
                                               ReIndexingExecutionFailures failures,
                                               Instant timestamp) {
         this.type = type;
+        this.runningOptions = runningOptions;
         this.successfullyReprocessedMailCount = successfullyReprocessedMailCount;
         this.failedReprocessedMailCount = failedReprocessedMailCount;
         this.messageFailures = SerializableReIndexingExecutionFailures.from(failures);
@@ -100,6 +103,10 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
             .map(MailboxId::serialize)
             .collect(Guavate.toImmutableList());
         this.timestamp = timestamp;
+    }
+
+    public RunningOptionsDTO getRunningOptions() {
+        return runningOptions;
     }
 
     public int getSuccessfullyReprocessedMailCount() {

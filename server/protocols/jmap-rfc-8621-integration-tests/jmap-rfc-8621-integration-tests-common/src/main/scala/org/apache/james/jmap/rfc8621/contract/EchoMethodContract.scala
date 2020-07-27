@@ -102,7 +102,7 @@ trait EchoMethodContract {
         .body(ECHO_REQUEST_OBJECT)
       .when()
         .post()
-      .then
+      .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
       .extract()
@@ -119,7 +119,7 @@ trait EchoMethodContract {
         .body(REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD)
       .when()
         .post()
-      .then
+      .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
       .extract()

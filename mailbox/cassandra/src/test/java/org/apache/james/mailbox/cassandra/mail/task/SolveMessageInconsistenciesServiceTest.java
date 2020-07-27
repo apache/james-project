@@ -49,7 +49,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -100,7 +99,10 @@ public class SolveMessageInconsistenciesServiceTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+        imapUidDAO = new CassandraMessageIdToImapUidDAO(
+            cassandra.getConf(),
+            cassandraCluster.getCassandraConsistenciesConfiguration(),
+            new CassandraMessageId.Factory());
         messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
         testee = new SolveMessageInconsistenciesService(imapUidDAO, messageIdDAO);
     }

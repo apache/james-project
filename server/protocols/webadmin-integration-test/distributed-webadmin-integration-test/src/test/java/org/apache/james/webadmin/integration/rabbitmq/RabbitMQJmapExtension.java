@@ -29,6 +29,7 @@ import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.DockerElasticSearchRule;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestRabbitMQModule;
@@ -150,6 +151,7 @@ public class RabbitMQJmapExtension implements BeforeAllCallback, AfterAllCallbac
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build();
 
         return CassandraRabbitMQJamesServerMain.createServer(configuration)

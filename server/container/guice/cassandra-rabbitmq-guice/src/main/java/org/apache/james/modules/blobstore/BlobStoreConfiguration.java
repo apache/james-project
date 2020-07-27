@@ -57,8 +57,7 @@ public class BlobStoreConfiguration {
 
     public enum BlobStoreImplName {
         CASSANDRA("cassandra"),
-        OBJECTSTORAGE("objectstorage"),
-        HYBRID("hybrid");
+        OBJECTSTORAGE("objectstorage");
 
         static String supportedImplNames() {
             return Stream.of(BlobStoreImplName.values())
@@ -125,10 +124,6 @@ public class BlobStoreConfiguration {
 
     public static CacheChoice objectStorage() {
         return new CacheChoice(BlobStoreImplName.OBJECTSTORAGE);
-    }
-
-    public static BlobStoreConfiguration hybrid() {
-        return new BlobStoreConfiguration(BlobStoreImplName.HYBRID, !CACHE_ENABLED);
     }
 
     private final BlobStoreImplName implementation;

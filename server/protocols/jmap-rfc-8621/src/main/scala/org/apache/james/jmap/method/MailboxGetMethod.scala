@@ -23,12 +23,14 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail._
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{Invocation, MailboxFactory}
+import org.apache.james.jmap.model.{ErrorCode, Invocation, MailboxFactory}
 import org.apache.james.jmap.utils.quotas.{QuotaLoader, QuotaLoaderWithPreloadedDefaultFactory}
-import org.apache.james.mailbox.model.MailboxMetaData
+import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.search.MailboxQuery
+import org.apache.james.mailbox.model.{MailboxId, MailboxMetaData}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
@@ -43,21 +45,39 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
                                   metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("Mailbox/get")
 
-  override def process(invocation: Invocation, mailboxSession: MailboxSession): Publisher[Invocation] = {
+  object MailboxGetResults {
+    def found(mailbox: Mailbox): MailboxGetResults = MailboxGetResults(Set(mailbox), NotFound(Set.empty))
+    def notFound(mailboxId: MailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(mailboxId)))
+  }
+
+  case class MailboxGetResults(mailboxes: Set[Mailbox], notFound: NotFound) {
+    def merge(other: MailboxGetResults): MailboxGetResults = MailboxGetResults(this.mailboxes ++ other.mailboxes, this.notFound.merge(other.notFound))
+  }
+
+  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession): Publisher[Invocation] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asMailboxGetRequest(invocation.arguments)
-        .flatMap(mailboxGetRequest => getMailboxes(mailboxGetRequest, mailboxSession)
-          .collectSeq()
-          .map(_.sortBy(_.sortOrder))
-          .map(mailboxes => MailboxGetResponse(
-            accountId = mailboxGetRequest.accountId,
-            state = INSTANCE,
-            list = mailboxes.toList,
-            notFound = NotFound(Nil)))
-          .map(mailboxGetResponse => Invocation(
-            methodName = methodName,
-            arguments = Arguments(serializer.serialize(mailboxGetResponse).as[JsObject]),
-            methodCallId = invocation.methodCallId))))
+        .flatMap(mailboxGetRequest => {
+          mailboxGetRequest.properties match {
+            case Some(properties) if !properties.asSetOfString.subsetOf(Mailbox.allProperties) =>
+              SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
+                description = Some(s"The following properties [${properties.asSetOfString.diff(Mailbox.allProperties).mkString(", ")}] do not exist."),
+                methodCallId = invocation.methodCallId))
+            case _ => getMailboxes(mailboxGetRequest, mailboxSession)
+              .reduce(MailboxGetResults(Set.empty, NotFound(Set.empty)), (result1: MailboxGetResults, result2: MailboxGetResults) => result1.merge(result2))
+              .map(mailboxes => MailboxGetResponse(
+                accountId = mailboxGetRequest.accountId,
+                state = INSTANCE,
+                list = mailboxes.mailboxes.toList.sortBy(_.sortOrder),
+                notFound = mailboxes.notFound))
+              .map(mailboxGetResponse => Invocation(
+                methodName = methodName,
+                arguments = Arguments(serializer.serialize(mailboxGetResponse, mailboxGetRequest.properties, capabilities).as[JsObject]),
+                methodCallId = invocation.methodCallId))
+
+          }
+        }
+        ))
   }
 
   private def asMailboxGetRequest(arguments: Arguments): SMono[MailboxGetRequest] = {
@@ -67,10 +87,23 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
     }
   }
 
-  private def getMailboxes(mailboxGetRequest: MailboxGetRequest, mailboxSession: MailboxSession): SFlux[Mailbox] = mailboxGetRequest.ids match {
-    case None => getAllMailboxes(mailboxSession)
-    case _ => SFlux.raiseError(new NotImplementedError("Getting mailboxes by Ids is not supported yet"))
-  }
+  private def getMailboxes(mailboxGetRequest: MailboxGetRequest,
+                           mailboxSession: MailboxSession): SFlux[MailboxGetResults] =
+    mailboxGetRequest.ids match {
+      case None => getAllMailboxes(mailboxSession).map(MailboxGetResults.found)
+      case Some(ids) => SFlux.fromIterable(ids.value)
+        .flatMap(id => getMailboxResultById(id, mailboxSession))
+    }
+
+  private def getMailboxResultById(mailboxId: MailboxId, mailboxSession: MailboxSession): SMono[MailboxGetResults] =
+    quotaFactory.loadFor(mailboxSession)
+      .flatMap(quotaLoader => mailboxFactory.create(mailboxId, mailboxSession, quotaLoader)
+        .map(MailboxGetResults.found)
+        .onErrorResume {
+          case _: MailboxNotFoundException => SMono.just(MailboxGetResults.notFound(mailboxId))
+          case error => SMono.raiseError(error)
+        })
+      .subscribeOn(Schedulers.elastic)
 
   private def getAllMailboxes(mailboxSession: MailboxSession): SFlux[Mailbox] = {
     quotaFactory.loadFor(mailboxSession)
@@ -79,7 +112,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
         getAllMailboxesMetaData(mailboxSession).flatMapMany(mailboxesMetaData =>
           SFlux.fromIterable(mailboxesMetaData)
             .flatMap(mailboxMetaData =>
-              getMailboxOrThrow(mailboxMetaData = mailboxMetaData,
+              getMailboxResult(mailboxMetaData = mailboxMetaData,
                 mailboxSession = mailboxSession,
                 allMailboxesMetadata = mailboxesMetaData,
                 quotaLoader = quotaLoader))))
@@ -89,7 +122,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
     SFlux.fromPublisher(mailboxManager.search(MailboxQuery.builder.matchesAllMailboxNames.build, mailboxSession))
       .collectSeq()
 
-  private def getMailboxOrThrow(mailboxSession: MailboxSession,
+  private def getMailboxResult(mailboxSession: MailboxSession,
                                 allMailboxesMetadata: Seq[MailboxMetaData],
                                 mailboxMetaData: MailboxMetaData,
                                 quotaLoader: QuotaLoader): SMono[Mailbox] =
@@ -97,8 +130,4 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
       mailboxSession = mailboxSession,
       allMailboxesMetadata = allMailboxesMetadata,
       quotaLoader = quotaLoader)
-      .flatMap {
-        case Left(error) => SMono.raiseError(error)
-        case scala.Right(mailbox) => SMono.just(mailbox)
-      }
 }

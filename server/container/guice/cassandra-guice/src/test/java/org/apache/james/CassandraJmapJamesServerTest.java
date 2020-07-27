@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraJmapJamesServerTest implements JmapJamesServerContract {
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)

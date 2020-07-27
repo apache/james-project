@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
@@ -123,7 +124,7 @@ class SessionWithInitializedTablesFactoryTest {
     private static Supplier<Session> createSession(DockerCassandraExtension.DockerCassandra cassandraServer) {
         ClusterConfiguration clusterConfiguration = DockerCassandra.configurationBuilder(cassandraServer.getHost())
             .build();
-        Cluster cluster = ClusterFactory.create(clusterConfiguration);
+        Cluster cluster = ClusterFactory.create(clusterConfiguration, CassandraConsistenciesConfiguration.DEFAULT);
         KeyspaceConfiguration keyspaceConfiguration = DockerCassandra.mainKeyspaceConfiguration();
         KeyspaceFactory.createKeyspace(keyspaceConfiguration, cluster);
         return () -> new SessionWithInitializedTablesFactory(

@@ -39,6 +39,7 @@ import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.AppendResult;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -65,6 +66,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.PreDeletionHooks;
+import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
@@ -75,9 +77,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMailboxManager> {
     public static final Username BOB = Username.of("Bob");
@@ -89,6 +91,11 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         return CassandraMailboxManagerProvider.provideMailboxManager(
             cassandra.getCassandraCluster(),
             new PreDeletionHooks(preDeletionHooks(), new RecordingMetricFactory()));
+    }
+
+    @Override
+    protected SubscriptionManager provideSubscriptionManager() {
+        return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory());
     }
 
     @Override
@@ -756,7 +763,11 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         }
 
         private CassandraACLMapper aclMapper(CassandraCluster cassandraCluster) {
-            return new CassandraACLMapper(cassandraCluster.getConf(), rightsDAO(cassandraCluster), CassandraConfiguration.DEFAULT_CONFIGURATION);
+            return new CassandraACLMapper(
+                cassandraCluster.getConf(),
+                rightsDAO(cassandraCluster),
+                CassandraConfiguration.DEFAULT_CONFIGURATION,
+                cassandra.getCassandraConsistenciesConfiguration());
         }
 
         private CassandraUserMailboxRightsDAO rightsDAO(CassandraCluster cassandraCluster) {
@@ -768,7 +779,10 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         }
 
         private CassandraAttachmentDAOV2 attachmentDAO(CassandraCluster cassandraCluster) {
-            return new CassandraAttachmentDAOV2(new HashBlobId.Factory(), cassandraCluster.getConf());
+            return new CassandraAttachmentDAOV2(
+                new HashBlobId.Factory(),
+                cassandraCluster.getConf(),
+                cassandra.getCassandraConsistenciesConfiguration());
         }
 
         private CassandraMessageIdDAO messageIdDAO(CassandraCluster cassandraCluster) {
@@ -776,12 +790,20 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         }
 
         private CassandraMessageIdToImapUidDAO imapUidDAO(CassandraCluster cassandraCluster) {
-            return new CassandraMessageIdToImapUidDAO(cassandraCluster.getConf(), new CassandraMessageId.Factory());
+            return new CassandraMessageIdToImapUidDAO(
+                cassandraCluster.getConf(),
+                cassandra.getCassandraConsistenciesConfiguration(),
+                new CassandraMessageId.Factory());
         }
 
         private CassandraMessageDAO messageDAO(CassandraCluster cassandraCluster) {
-            return new CassandraMessageDAO(cassandraCluster.getConf(), cassandraCluster.getTypesProvider(),
-                mock(BlobStore.class), new HashBlobId.Factory(), new CassandraMessageId.Factory());
+            return new CassandraMessageDAO(
+                cassandraCluster.getConf(),
+                cassandraCluster.getTypesProvider(),
+                mock(BlobStore.class),
+                new HashBlobId.Factory(),
+                new CassandraMessageId.Factory(),
+                cassandra.getCassandraConsistenciesConfiguration());
         }
     }
 }

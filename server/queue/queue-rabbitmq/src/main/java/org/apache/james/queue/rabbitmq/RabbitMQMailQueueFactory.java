@@ -24,12 +24,12 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
+import static org.apache.james.backends.rabbitmq.Constants.deadLetterQueue;
 import static org.apache.james.queue.api.MailQueue.QUEUE_SIZE_METRIC_NAME_PREFIX;
 
 import java.time.Clock;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.mail.internet.MimeMessage;
@@ -46,7 +46,6 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
@@ -65,7 +64,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         private final Sender sender;
         private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
         private final MailReferenceSerializer mailReferenceSerializer;
-        private final Function<MailReferenceDTO, MailWithEnqueueId> mailLoader;
+        private final MailLoader mailLoader;
         private final MailQueueView.Factory mailQueueViewFactory;
         private final Clock clock;
         private final MailQueueItemDecoratorFactory decoratorFactory;
@@ -89,7 +88,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             this.clock = clock;
             this.decoratorFactory = decoratorFactory;
             this.mailReferenceSerializer = new MailReferenceSerializer();
-            this.mailLoader = Throwing.function(new MailLoader(mimeMessageStore, blobIdFactory)::load).sneakyThrow();
+            this.mailLoader = new MailLoader(mimeMessageStore, blobIdFactory);
             this.configuration = configuration;
         }
 
@@ -158,7 +157,15 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             sender.declareExchange(ExchangeSpecification.exchange(exchangeName)
                 .durable(true)
                 .type("direct")),
+            sender.declareExchange(ExchangeSpecification.exchange(mailQueueName.toDeadLetterExchangeName())
+                .durable(true)
+                .type("direct")),
             sender.declareQueue(QueueSpecification.queue(mailQueueName.toWorkQueueName().asString())
+                .durable(DURABLE)
+                .exclusive(!EXCLUSIVE)
+                .autoDelete(!AUTO_DELETE)
+                .arguments(deadLetterQueue(mailQueueName.toDeadLetterExchangeName()))),
+            sender.declareQueue(QueueSpecification.queue(mailQueueName.toDeadLetterQueueName())
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
@@ -166,6 +173,10 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             sender.bind(BindingSpecification.binding()
                 .exchange(mailQueueName.toRabbitExchangeName().asString())
                 .queue(mailQueueName.toWorkQueueName().asString())
+                .routingKey(EMPTY_ROUTING_KEY)),
+            sender.bind(BindingSpecification.binding()
+                .exchange(mailQueueName.toDeadLetterExchangeName())
+                .queue(mailQueueName.toDeadLetterQueueName())
                 .routingKey(EMPTY_ROUTING_KEY)))
             .then()
             .block();

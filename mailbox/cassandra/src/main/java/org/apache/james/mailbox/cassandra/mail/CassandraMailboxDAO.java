@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.ConsistencyLevel.QUORUM;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -36,6 +35,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.UID
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Username;
@@ -46,6 +46,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -66,10 +67,14 @@ public class CassandraMailboxDAO {
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
     private final PreparedStatement updateUidValidityStatement;
+    private final ConsistencyLevel consistencyLevel;
 
     @Inject
-    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils) {
+    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider,
+                               CassandraConsistenciesConfiguration consistenciesConfiguration,
+                               CassandraUtils cassandraUtils) {
         this.executor = new CassandraAsyncExecutor(session);
+        this.consistencyLevel = consistenciesConfiguration.getRegular();
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
         this.insertStatement = prepareInsert(session);
         this.updateStatement = prepareUpdate(session);
@@ -81,8 +86,9 @@ public class CassandraMailboxDAO {
     }
 
     @VisibleForTesting
-    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider) {
-        this(session, typesProvider, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider,
+                               CassandraConsistenciesConfiguration consistenciesConfiguration) {
+        this(session, typesProvider, consistenciesConfiguration, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -145,7 +151,7 @@ public class CassandraMailboxDAO {
     public Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         return executor.executeSingleRow(readStatement.bind()
             .setUUID(ID, mailboxId.asUuid())
-            .setConsistencyLevel(QUORUM))
+            .setConsistencyLevel(consistencyLevel))
             .flatMap(row -> mailboxFromRow(row, mailboxId));
     }
 

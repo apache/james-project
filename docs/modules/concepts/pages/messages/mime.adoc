@@ -1,0 +1,92 @@
+= Multipurpose Internet Mail Extensions
+:navtitle: MIME
+
+== Overview
+
+The base format of an email message is xref:messages/imf.adoc[Internet Message Format"],
+but most contemporary messages use a format called
+https://en.wikipedia.org/wiki/MIME["Multipurpose Internet Mail Extensions"].
+MIME specifies how to extend a valid IMF message, dealing with character encodings, 
+various file formats, and many other odds and ends that make email what it is today.
+
+A user of email rarely has to be concerned with the MIME specifications. Usually the
+communications system should take care of all the nitty gritty, and even then MIME 
+processing is usually at a very low level. For this reason, the blissfully simple 
+conception of a simple "email" is usually just fine from the perspective of a user
+and even in most cases for a developer.
+
+
+
+
+== Specifications
+
+Multipurpose Internet Mail Extensions, or just MIME, functions much like an extension
+to IMF in order to:
+
+ * Add different character sets for internationalization
+ * Allow for processing of media types other than plain text
+
+=== RFC2045
+
+https://tools.ietf.org/html/rfc2045[RFC2045] ("Multipurpose Internet Mail Extensions
+Part One: Format of Internet Message Bodies")
+describes the message body format of an email. It is part of a serious of MIME
+specifications including <<RFC2046>>, <<RFC2047>>, <<RFC2048>>, and <<RFC2049>>.
+This particular document in the series specifies the various headers that
+are used to describe the structure of a MIME message.
+
+
+
+=== RFC2046
+
+https://tools.ietf.org/html/rfc2046[RFC2046] ("Multipurpose Internet Mail Extensions
+Part Two: Media Types") describes the various MIME media types, such as
+plain text, images, videos, etc. It is part of the serious of MIME specifications
+that includes <<RFC2045>>, <<RFC2047>>, <<RFC2048>>, and <<RFC2049>>.
+
+
+
+
+=== RFC2047
+
+https://tools.ietf.org/html/rfc2047[RFC2047] ("MIME Part Three:
+Message Header Extensions for Non-ASCII Text") describes, as the
+title indicates, header extensions for non-ASCII text. It is part
+of the series of MIME specifications that includes
+<<RFC2045>>, <<RFC2046>>, <<RFC2048>>, and <<RFC2049>>.
+
+
+
+
+=== RFC2048
+
+https://tools.ietf.org/html/rfc2048[RFC2048] ("Multipurpose Internet Mail Extensions
+Part Four: Registration Procedures") describes the procedure for registering a MIME
+type. It is not directly relevant to James, but is part of the MIME series that includes
+<<RFC2045>>, <<RFC2046>>, <<RFC2047>>, and <<RFC2049>>.
+
+This specification was obsoleted by https://tools.ietf.org/html/rfc4288[RFC4288]
+(which itself was obsoleted by https://tools.ietf.org/html/rfc6838[RFC6838]) and
+https://tools.ietf.org/html/rfc4289[RFC4289].
+
+
+
+=== RFC2049
+
+https://tools.ietf.org/html/rfc2049[RFC2049] ("Multipurpose Internet Mail Extensions
+Part Five: Conformance Criteria and Examples") mainly describes what portions of MIME
+must be supported by a conformant MIME implementation. It is part of the series that includes
+<<RFC2045>>, <<RFC2046>>, <<RFC2047>>, and <<RFC2049>>.
+
+
+
+== James Model
+
+While a general, non-technical description of MIME is useful for most users
+and developers, it is not sufficient for building a complex system like James. Meanwhile,
+the technical specifications are unfortunately very messy and overly-complex due to 
+their history and the context in which they were developed. To make dealing with 
+emails possible and practical, James has defined its own version of what it means 
+to be an email.
+
+(TODO need a reference, please!)

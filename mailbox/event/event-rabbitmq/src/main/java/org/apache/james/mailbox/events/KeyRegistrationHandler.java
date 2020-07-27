@@ -29,6 +29,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
@@ -57,6 +58,8 @@ class KeyRegistrationHandler {
     private static final String EVENTBUS_QUEUE_NAME_PREFIX = "eventbus-";
     private static final Duration EXPIRATION_TIMEOUT = Duration.ofMinutes(30);
     private static final Map<String, Object> QUEUE_ARGUMENTS = ImmutableMap.of("x-expires", EXPIRATION_TIMEOUT.toMillis());
+
+    private static final Duration TOPOLOGY_CHANGES_TIMEOUT = Duration.ofMinutes(1);
 
     private final EventBusId eventBusId;
     private final LocalListenerRegistry localListenerRegistry;
@@ -100,11 +103,13 @@ class KeyRegistrationHandler {
 
     @VisibleForTesting
     void declareQueue() {
-        sender.declareQueue(QueueSpecification.queue(EVENTBUS_QUEUE_NAME_PREFIX + eventBusId.asString())
-            .durable(DURABLE)
-            .exclusive(!EXCLUSIVE)
-            .autoDelete(AUTO_DELETE)
-            .arguments(QUEUE_ARGUMENTS))
+        sender.declareQueue(
+            QueueSpecification.queue(EVENTBUS_QUEUE_NAME_PREFIX + eventBusId.asString())
+                .durable(DURABLE)
+                .exclusive(!EXCLUSIVE)
+                .autoDelete(AUTO_DELETE)
+                .arguments(QUEUE_ARGUMENTS))
+            .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .map(AMQP.Queue.DeclareOk::getQueue)
             .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()))
             .doOnSuccess(queueName -> {
@@ -117,10 +122,11 @@ class KeyRegistrationHandler {
     }
 
     void stop() {
-        receiverSubscriber.filter(subscriber -> !subscriber.isDisposed())
+        receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
             .ifPresent(Disposable::dispose);
         receiver.close();
         sender.delete(QueueSpecification.queue(registrationQueue.asString()))
+            .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
             .block();
     }
@@ -132,6 +138,7 @@ class KeyRegistrationHandler {
             .thenReturn(new KeyRegistration(() -> {
                 if (registration.unregister().lastListenerRemoved()) {
                     registrationBinder.unbind(key)
+                        .timeout(TOPOLOGY_CHANGES_TIMEOUT)
                         .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
                         .subscribeOn(Schedulers.elastic())
                         .block();
@@ -142,6 +149,7 @@ class KeyRegistrationHandler {
     private Mono<Void> registerIfNeeded(RegistrationKey key, LocalListenerRegistry.LocalRegistration registration) {
         if (registration.isFirstListener()) {
             return registrationBinder.bind(key)
+                .timeout(TOPOLOGY_CHANGES_TIMEOUT)
                 .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()));
         }
         return Mono.empty();

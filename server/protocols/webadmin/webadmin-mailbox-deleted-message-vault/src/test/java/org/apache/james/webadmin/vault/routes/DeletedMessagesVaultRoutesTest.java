@@ -72,11 +72,11 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
-import org.apache.james.blob.memory.MemoryBlobStore;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -138,19 +138,24 @@ import reactor.core.publisher.Mono;
 
 class DeletedMessagesVaultRoutesTest {
 
-    private class NoopBlobExporting implements BlobExportMechanism {
+    private static class NoopBlobExporting implements BlobExportMechanism {
+        private Optional<BlobId> exportedBlobId = Optional.empty();
+
         @Override
         public ShareeStage blobId(BlobId blobId) {
-            return exportTo -> explanation -> fileCustomPrefix -> fileExtension -> () -> export(exportTo, explanation);
+            return exportTo -> explanation -> fileCustomPrefix -> fileExtension -> () -> export(exportTo, explanation, blobId);
         }
 
-        void export(MailAddress exportTo, String explanation) {
-            // do nothing
+        void export(MailAddress exportTo, String explanation, BlobId blobId) {
+            this.exportedBlobId = Optional.of(blobId);
+        }
+
+        public Optional<BlobId> getExportedBlobId() {
+            return exportedBlobId;
         }
     }
 
     private static final ZonedDateTime NOW = ZonedDateTime.parse("2015-10-30T16:12:00Z");
-    private static final ZonedDateTime OLD_DELIVERY_DATE = ZonedDateTime.parse("2010-10-30T14:12:00Z");
     private static final ZonedDateTime OLD_DELETION_DATE = ZonedDateTime.parse("2010-10-30T15:12:00Z");
     private static final String MATCH_ALL_QUERY = "{" +
         "\"combinator\": \"and\"," +
@@ -166,7 +171,7 @@ class DeletedMessagesVaultRoutesTest {
     private InMemoryMailboxManager mailboxManager;
     private MemoryTaskManager taskManager;
     private NoopBlobExporting blobExporting;
-    private MemoryBlobStore blobStore;
+    private BlobStore blobStore;
     private DeletedMessageZipper zipper;
     private MemoryUsersRepository usersRepository;
     private ExportService exportService;
@@ -176,7 +181,10 @@ class DeletedMessagesVaultRoutesTest {
     @BeforeEach
     void beforeEach() throws Exception {
         blobIdFactory = new HashBlobId.Factory();
-        blobStore = spy(new MemoryBlobStore(blobIdFactory, new MemoryDumbBlobStore()));
+        blobStore = spy(MemoryBlobStoreFactory.builder()
+            .blobIdFactory(blobIdFactory)
+            .defaultBucketName()
+            .passthrough());
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             blobStore, new BucketNameGenerator(clock), clock,
@@ -1888,7 +1896,7 @@ class DeletedMessagesVaultRoutesTest {
                 .get(taskId + "/await");
 
             verify(blobExporting, times(1))
-                .export(eq(USERNAME_2.asMailAddress()), any());
+                .export(eq(USERNAME_2.asMailAddress()), any(), any());
         }
 
         @Test
@@ -1932,7 +1940,7 @@ class DeletedMessagesVaultRoutesTest {
 
             byte[] expectedZippedData = zippedMessagesData();
 
-            assertThat(blobStore.read(blobStore.getDefaultBucketName(), blobIdFactory.forPayload(expectedZippedData)))
+            assertThat(blobStore.read(blobStore.getDefaultBucketName(), blobExporting.getExportedBlobId().get()))
                 .hasSameContentAs(new ByteArrayInputStream(expectedZippedData));
         }
 

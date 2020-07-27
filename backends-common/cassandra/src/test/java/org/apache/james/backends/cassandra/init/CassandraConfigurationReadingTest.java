@@ -60,6 +60,8 @@ class CassandraConfigurationReadingTest {
                 .blobPartSize(9)
                 .attachmentV2MigrationReadTimeout(10)
                 .messageAttachmentIdsReadTimeout(11)
+                .consistencyLevelRegular("LOCAL_QUORUM")
+                .consistencyLevelLightweightTransaction("LOCAL_SERIAL")
                 .build());
     }
 

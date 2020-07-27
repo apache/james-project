@@ -46,8 +46,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraDumbBlobStore implements DumbBlobStore {
-
-    public static final String DEFAULT_BUCKET = "cassandraDefault";
     public static final boolean LAZY = false;
 
     private final CassandraDefaultBucketDAO defaultBucketDAO;
@@ -61,7 +59,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     public CassandraDumbBlobStore(CassandraDefaultBucketDAO defaultBucketDAO,
                                   CassandraBucketDAO bucketDAO,
                                   CassandraConfiguration cassandraConfiguration,
-                                  @Named(DEFAULT_BUCKET) BucketName defaultBucket) {
+                                  @Named("defaultBucket") BucketName defaultBucket) {
         this.defaultBucketDAO = defaultBucketDAO;
         this.bucketDAO = bucketDAO;
         this.configuration = cassandraConfiguration;

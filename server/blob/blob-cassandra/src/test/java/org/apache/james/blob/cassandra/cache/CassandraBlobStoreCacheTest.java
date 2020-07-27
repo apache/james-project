@@ -38,9 +38,9 @@ public class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobCacheModule.MODULE);
 
-    private final Duration DEFAULT_READ_TIMEOUT = Duration.ofSeconds(50);
-    private final int DEFAULT_THRESHOLD_IN_BYTES = EIGHT_KILOBYTES.length;
-    private final Duration _2_SEC_TTL = Duration.ofSeconds(2);
+    private static final Duration DEFAULT_READ_TIMEOUT = Duration.ofSeconds(50);
+    private static final int DEFAULT_THRESHOLD_IN_BYTES = EIGHT_KILOBYTES.length;
+    private static final Duration _2_SEC_TTL = Duration.ofSeconds(2);
 
     private BlobStoreCache testee;
     private HashBlobId.Factory blobIdFactory;

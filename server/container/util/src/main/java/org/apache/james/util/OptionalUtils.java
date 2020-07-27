@@ -20,6 +20,7 @@ package org.apache.james.util;
 
 import java.util.Optional;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 public class OptionalUtils {
 
@@ -37,7 +38,7 @@ public class OptionalUtils {
 
     public static <T> boolean containsDifferent(Optional<T> requestValue, T storeValue) {
         return requestValue
-            .filter(value -> !value.equals(storeValue))
+            .filter(Predicate.not(Predicate.isEqual(storeValue)))
             .isPresent();
     }
 

@@ -1128,6 +1128,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>blob-storage-strategy</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>blob-export-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1190,11 +1195,6 @@
                 <artifactId>blob-memory</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>blob-union</artifactId>
-                <version>${project.version}</version>
             </dependency>
              <dependency>
                 <groupId>${james.groupId}</groupId>
@@ -1877,6 +1877,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-webadmin-rabbitmq</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-webadmin-swagger</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -2204,7 +2209,7 @@
             <dependency>
                 <groupId>io.vavr</groupId>
                 <artifactId>vavr</artifactId>
-                <version>0.9.0</version>
+                <version>0.10.3</version>
             </dependency>
             <dependency>
                 <groupId>javax.activation</groupId>
@@ -3305,6 +3310,7 @@
                     </includeOnlyProperties>
                     <skip>false</skip>
                     <useNativeGit>true</useNativeGit>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <gitDescribe>
                         <skip>false</skip>
                         <always>false</always>

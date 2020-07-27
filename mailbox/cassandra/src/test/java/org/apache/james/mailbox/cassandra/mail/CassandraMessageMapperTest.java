@@ -46,9 +46,9 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 class CassandraMessageMapperTest extends MessageMapperTest {
     @RegisterExtension
@@ -56,11 +56,39 @@ class CassandraMessageMapperTest extends MessageMapperTest {
     
     @Override
     protected MapperProvider createMapperProvider() {
-        return new CassandraMapperProvider(cassandraCluster.getCassandraCluster());
+        return new CassandraMapperProvider(
+            cassandraCluster.getCassandraCluster(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
     }
 
     @Nested
     class StatementLimitationTests {
+        @Test
+        void updateFlagsShouldNotRetryOnDeletedMessages(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+
+            cassandra.getConf().printStatements();
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .forever()
+                    .whenQueryStartsWith("DELETE FROM messageIdTable WHERE mailboxId=:mailboxId AND uid=:uid;"));
+            try {
+                messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
+            } catch (Exception e) {
+                // expected
+            }
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+
+            FlagsUpdateCalculator markAsRead = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD);
+            messageMapper.updateFlags(benwaInboxMailbox, markAsRead, MessageRange.all());
+
+            assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
+                "UPDATE modseq SET nextModseq=:nextModseq WHERE mailboxId=:mailboxId IF nextModseq=:modSeqCondition;")))
+                .hasSize(2);
+        }
+
         @Test
         void deleteMessagesShouldGroupMessageReads(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
@@ -298,7 +326,10 @@ class CassandraMessageMapperTest extends MessageMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(
+                cassandra.getConf(),
+                cassandraCluster.getCassandraConsistenciesConfiguration(),
+                new CassandraMessageId.Factory());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))

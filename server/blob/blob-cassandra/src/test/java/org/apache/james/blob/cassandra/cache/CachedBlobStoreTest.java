@@ -45,7 +45,7 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +61,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
     private static final BucketName DEFAULT_BUCKETNAME = DEFAULT;
     private static final BucketName TEST_BUCKETNAME = BucketName.of("test");
-    byte[] APPROXIMATELY_FIVE_KILOBYTES = Strings.repeat("0123456789\n", 500).getBytes(StandardCharsets.UTF_8);
+    private static final byte[] APPROXIMATELY_FIVE_KILOBYTES = Strings.repeat("0123456789\n", 500).getBytes(StandardCharsets.UTF_8);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
@@ -74,7 +74,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        backend = CassandraBlobStore.forTesting(cassandra.getConf());
+        backend = CassandraBlobStoreFactory.forTesting(cassandra.getConf());
         CassandraCacheConfiguration cacheConfig = new CassandraCacheConfiguration.Builder()
             .sizeThresholdInBytes(EIGHT_KILOBYTES.length + 1)
             .timeOut(Duration.ofSeconds(60))

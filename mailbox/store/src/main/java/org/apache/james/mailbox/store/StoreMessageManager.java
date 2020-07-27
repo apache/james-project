@@ -60,6 +60,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -97,6 +98,7 @@ import org.apache.james.util.IteratorWrapper;
 import org.apache.james.util.io.BodyOffsetInputStream;
 import org.apache.james.util.io.InputStreamConsummer;
 import org.apache.james.util.streams.Iterators;
+import org.reactivestreams.Publisher;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
@@ -651,6 +653,12 @@ public class StoreMessageManager implements MessageManager {
         return new StoreMessageResultIterator(messageMapper, mailbox, set, batchSizes, fetchGroup);
     }
 
+    @Override
+    public Publisher<ComposedMessageIdWithMetaData> listMessagesMetadata(MessageRange set, MailboxSession session) {
+        MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
+        return messageMapper.listMessagesMetadata(mailbox, set);
+    }
+
     /**
      * Return a List which holds all uids of recent messages and optional reset
      * the recent flag on the messages for the uids
@@ -819,7 +827,7 @@ public class StoreMessageManager implements MessageManager {
 
     private Iterator<MailboxMessage> retrieveOriginalRows(MessageRange set, MailboxSession session) throws MailboxException {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
-        return messageMapper.findInMailbox(mailbox, set, FetchType.Full, UNLIMITED);
+        return messageMapper.findInMailbox(mailbox, set, FetchType.Metadata, UNLIMITED);
     }
 
     private SortedMap<MessageUid, MessageMetaData> collectMetadata(Iterator<MessageMetaData> ids) {

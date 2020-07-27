@@ -30,6 +30,8 @@ class CassandraMessageWithAttachmentMapperTest extends MessageWithAttachmentMapp
     
     @Override
     protected MapperProvider createMapperProvider() {
-        return new CassandraMapperProvider(cassandraCluster.getCassandraCluster());
+        return new CassandraMapperProvider(
+            cassandraCluster.getCassandraCluster(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
     }
 }

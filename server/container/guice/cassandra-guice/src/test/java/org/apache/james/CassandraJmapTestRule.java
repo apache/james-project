@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
@@ -55,9 +54,10 @@ public class CassandraJmapTestRule implements TestRule {
     }
 
     public GuiceJamesServer jmapServer(Module... additionals) throws IOException {
-        Configuration configuration = Configuration.builder()
+        CassandraJamesServerConfiguration configuration = CassandraJamesServerConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build();
 
         return CassandraJamesServerMain.createServer(configuration)

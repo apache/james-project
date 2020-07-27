@@ -22,6 +22,7 @@ package org.apache.james.jmap.draft.model;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.mail.internet.AddressException;
 
@@ -40,6 +41,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(builder = Emailer.Builder.class)
@@ -141,7 +143,7 @@ public class Emailer {
         }
 
         private Optional<String> replaceIfNeeded(Optional<String> value) {
-            return value.filter(s -> !s.isEmpty());
+            return value.filter(Predicate.not(Strings::isNullOrEmpty));
         }
     }
 

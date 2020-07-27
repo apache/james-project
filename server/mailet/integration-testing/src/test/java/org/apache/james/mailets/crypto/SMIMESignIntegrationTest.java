@@ -43,8 +43,8 @@ import org.apache.james.transport.matchers.HasMailAttribute;
 import org.apache.james.transport.matchers.SenderIsLocal;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -95,6 +95,7 @@ public class SMIMESignIntegrationTest {
             .withOverrides(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015))
             .withMailetContainer(mailetContainer)
             .build(workingDir);
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

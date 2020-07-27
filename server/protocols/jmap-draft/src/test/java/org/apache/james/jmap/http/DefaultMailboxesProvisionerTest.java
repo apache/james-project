@@ -21,6 +21,7 @@ package org.apache.james.jmap.http;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.util.function.Predicate;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -70,7 +71,7 @@ public class DefaultMailboxesProvisionerTest {
     public void createMailboxesIfNeededShouldCreateSpamWhenOtherSystemMailboxesExist() throws Exception {
         DefaultMailboxes.DEFAULT_MAILBOXES
             .stream()
-            .filter(mailbox -> !DefaultMailboxes.SPAM.equals(mailbox))
+            .filter(Predicate.not(Predicate.isEqual(DefaultMailboxes.SPAM)))
             .forEach(Throwing.consumer(mailbox -> mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, mailbox), session)));
 
         testee.createMailboxesIfNeeded(session).block();

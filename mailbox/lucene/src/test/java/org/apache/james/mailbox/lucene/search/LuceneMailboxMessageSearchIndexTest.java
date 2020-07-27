@@ -631,7 +631,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .newFlags(newFlags)
             .build();
 
-        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+        index.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
 
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.DRAFT));
         assertThat(index.search(session, mailbox, query))
@@ -648,7 +648,7 @@ class LuceneMailboxMessageSearchIndexTest {
             .newFlags(newFlags)
             .build();
 
-        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+        index.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
 
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.DRAFT));
         assertThat(index.search(session, mailbox, query))
@@ -665,8 +665,8 @@ class LuceneMailboxMessageSearchIndexTest {
             .newFlags(newFlags)
             .build();
 
-        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
-        index.update(session, mailbox, Lists.newArrayList(updatedFlags)).block();
+        index.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
+        index.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
 
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.DRAFT));
         assertThat(index.search(session, mailbox, query))

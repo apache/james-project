@@ -37,8 +37,8 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.GroupsRoutes;
@@ -76,7 +76,7 @@ public class GroupMappingRelayTest {
 
     @Before
     public void setup() throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.rrtErrorEnabledTransport()
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(All.class)
@@ -86,6 +86,7 @@ public class GroupMappingRelayTest {
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN1);

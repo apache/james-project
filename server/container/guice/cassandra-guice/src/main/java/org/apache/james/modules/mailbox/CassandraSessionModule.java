@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.init.KeyspaceFactory;
 import org.apache.james.backends.cassandra.init.ResilientClusterProvider;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraHealthCheck;
@@ -133,6 +134,13 @@ public class CassandraSessionModule extends AbstractModule {
         } catch (FileNotFoundException e) {
             return CassandraConfiguration.DEFAULT_CONFIGURATION;
         }
+    }
+
+    @VisibleForTesting
+    @Provides
+    @Singleton
+    CassandraConsistenciesConfiguration provideCassandraConsistenciesConfiguration(CassandraConfiguration configuration) {
+        return CassandraConsistenciesConfiguration.fromConfiguration(configuration);
     }
 
     @Provides

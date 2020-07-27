@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -70,7 +71,7 @@ public class MailboxPath {
     
     public MailboxPath(String namespace, Username user, String name) {
         this.namespace = Optional.ofNullable(namespace)
-            .filter(s -> !s.isEmpty())
+            .filter(Predicate.not(String::isEmpty))
             .orElse(MailboxConstants.USER_NAMESPACE);
         this.user = user;
         this.name = name;

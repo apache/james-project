@@ -41,6 +41,7 @@ class WebAdminReprocessingContextInformationDTOTest {
 
     private final String serializedErrorRecoveryAdditionalInformation = "{" +
         "  \"type\":\"error-recovery-indexation\"," +
+        "  \"runningOptions\":{\"messagesPerSecond\":50,\"mode\":\"REBUILD_ALL\"}," +
         "  \"successfullyReprocessedMailCount\":42," +
         "  \"failedReprocessedMailCount\":2," +
         "  \"messageFailures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +
@@ -48,6 +49,7 @@ class WebAdminReprocessingContextInformationDTOTest {
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private final String serializedFullAdditionalInformation = "{" +
         "  \"type\":\"full-reindexing\"," +
+        "  \"runningOptions\":{\"messagesPerSecond\":50,\"mode\":\"REBUILD_ALL\"}," +
         "  \"successfullyReprocessedMailCount\":42," +
         "  \"failedReprocessedMailCount\":2," +
         "  \"messageFailures\":{\"1\":[{\"uid\":10}],\"2\":[{\"uid\":20}]}," +

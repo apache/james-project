@@ -19,7 +19,7 @@
 
 package org.apache.james.mailrepository.jpa;
 
-import org.apache.james.mailrepository.api.MailRepositoryUrlStoreContract;
+import org.apache.james.mailrepository.MailRepositoryUrlStoreContract;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(JPAMailRepositoryUrlStoreExtension.class)

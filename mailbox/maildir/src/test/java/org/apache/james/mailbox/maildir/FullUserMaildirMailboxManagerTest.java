@@ -18,10 +18,14 @@
  ****************************************************************/
 package org.apache.james.mailbox.maildir;
 
+import java.util.Optional;
+
 import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.mailbox.MailboxManagerTest;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -36,9 +40,22 @@ class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxM
 
     @RegisterExtension
     TemporaryFolderExtension temporaryFolder = new TemporaryFolderExtension();
-    
+    Optional<StoreMailboxManager> mailboxManager = Optional.empty();
+
     @Override
     protected StoreMailboxManager provideMailboxManager() {
+        if (!mailboxManager.isPresent()) {
+            mailboxManager = Optional.of(createMailboxManager());
+        }
+        return mailboxManager.get();
+    }
+
+    @Override
+    protected SubscriptionManager provideSubscriptionManager() {
+        return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory());
+    }
+
+    private StoreMailboxManager createMailboxManager() {
         try {
             return MaildirMailboxManagerProvider.createMailboxManager("/%fulluser", temporaryFolder.getTemporaryFolder().getTempDir());
         } catch (Exception e) {

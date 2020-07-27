@@ -228,7 +228,6 @@
                 </item>
                 <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MPT" />
                 <item name='Main Library' href='/mpt/main'/>
-                <item name='AntLib' href='/mpt/antlib'/>
                 <item name='Application' href='/mpt/app'/>
                 <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_MPT" />
             </item>

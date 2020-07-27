@@ -1189,18 +1189,18 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
+    public Mono<Void> update(MailboxSession session, MailboxId mailboxId, List<UpdatedFlags> updatedFlagsList) {
         return Mono.fromRunnable(Throwing.runnable(() -> {
             for (UpdatedFlags updatedFlags : updatedFlagsList) {
-                update(mailbox, updatedFlags.getUid(), updatedFlags.getNewFlags());
+                update(mailboxId, updatedFlags.getUid(), updatedFlags.getNewFlags());
             }
         }));
     }
 
-    private void update(Mailbox mailbox, MessageUid uid, Flags f) throws IOException {
+    private void update(MailboxId mailboxId, MessageUid uid, Flags f) throws IOException {
         try (IndexSearcher searcher = new IndexSearcher(IndexReader.open(writer, true))) {
             BooleanQuery query = new BooleanQuery();
-            query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
+            query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailboxId.serialize())), BooleanClause.Occur.MUST);
             query.add(createQuery(MessageRange.one(uid)), BooleanClause.Occur.MUST);
             query.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST);
 
@@ -1269,13 +1269,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public Mono<Void> delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
-        return Mono.fromRunnable(Throwing.runnable(() -> {
-            Collection<MessageRange> messageRanges = MessageRange.toRanges(expungedUids);
-            for (MessageRange messageRange : messageRanges) {
-                delete(mailbox.getMailboxId(), messageRange);
-            }
-        }));
+    public Mono<Void> delete(MailboxSession session, MailboxId mailboxId, Collection<MessageUid> expungedUids) {
+        return Mono.fromRunnable(Throwing.runnable(() -> MessageRange.toRanges(expungedUids)
+            .forEach(Throwing.<MessageRange>consumer(messageRange -> delete(mailboxId, messageRange))
+                .sneakyThrow())));
     }
 
     @Override

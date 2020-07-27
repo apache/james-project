@@ -49,7 +49,9 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.init.ClusterFactory;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.AccessToken;
@@ -115,6 +117,7 @@ class FixingGhostMailboxTest {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
@@ -159,7 +162,7 @@ class FixingGhostMailboxTest {
 
         CassandraProbe probe = server.getProbe(CassandraProbe.class);
         ClusterConfiguration cassandraConfiguration = probe.getConfiguration();
-        try (Cluster cluster = ClusterFactory.create(cassandraConfiguration)) {
+        try (Cluster cluster = ClusterFactory.create(cassandraConfiguration, CassandraConsistenciesConfiguration.DEFAULT)) {
             try (Session session = cluster.connect(probe.getMainKeyspaceConfiguration().getKeyspace())) {
                 simulateGhostMailboxBug(session);
             }

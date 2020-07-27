@@ -39,9 +39,9 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RemoteAddrInNetwork;
 import org.apache.james.transport.matchers.RemoteAddrNotInNetwork;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,10 +63,11 @@ public class NetworkMatcherIntegrationTest {
     private TemporaryJamesServer createJamesServerWithRootProcessor(ProcessorConfiguration.Builder rootProcessor) throws Exception {
         TemporaryJamesServer temporaryJamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .withMailetContainer(TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.defaultMailetContainerConfiguration()
                 .putProcessor(rootProcessor)
                 .putProcessor(CommonProcessors.deliverOnlyTransport()))
             .build(temporaryFolder.newFolder());
+        temporaryJamesServer.start();
 
         DataProbe dataProbe = temporaryJamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

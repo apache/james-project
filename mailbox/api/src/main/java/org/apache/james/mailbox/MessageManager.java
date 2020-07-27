@@ -39,6 +39,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -53,6 +54,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
+import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -320,6 +322,8 @@ public interface MessageManager {
      * @return MessageResult with the fields defined by FetchGroup
      */
     MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException;
+
+    Publisher<ComposedMessageIdWithMetaData> listMessagesMetadata(MessageRange set, MailboxSession session);
 
     /**
      * Return the underlying {@link Mailbox}

@@ -43,6 +43,7 @@ public class WithCacheExtension implements BeforeAllCallback, AfterAllCallback, 
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .blobStore(BlobStoreConfiguration.objectStorage().enableCache())
+                .searchConfiguration(SearchConfiguration.elasticSearch())
                 .build())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())

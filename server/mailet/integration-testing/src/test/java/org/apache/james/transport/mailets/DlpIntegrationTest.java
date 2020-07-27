@@ -41,8 +41,8 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.transport.matchers.dlp.Dlp;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.mailet.base.test.FakeMail;
@@ -71,7 +71,7 @@ public class DlpIntegrationTest {
     private RequestSpecification specification;
 
     private void createJamesServer(MailetConfiguration.Builder dlpMailet) throws Exception {
-        MailetContainer.Builder mailets = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(
                 ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
@@ -82,6 +82,7 @@ public class DlpIntegrationTest {
             .withBase(Modules.combine(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE, MemoryJamesServerMain.WEBADMIN_TESTING))
             .withMailetContainer(mailets)
             .build(folder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

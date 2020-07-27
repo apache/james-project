@@ -65,6 +65,7 @@ public class SizeGreaterThanIntegrationTest {
             .withMailetContainer(
                 generateMailetContainerConfiguration())
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()
@@ -99,7 +100,7 @@ public class SizeGreaterThanIntegrationTest {
     }
 
     private MailetContainer.Builder generateMailetContainerConfiguration() {
-        return TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+        return TemporaryJamesServer.defaultMailetContainerConfiguration()
                 .postmaster(POSTMASTER)
                 .putProcessor(ProcessorConfiguration.transport()
                         .addMailet(MailetConfiguration.builder()

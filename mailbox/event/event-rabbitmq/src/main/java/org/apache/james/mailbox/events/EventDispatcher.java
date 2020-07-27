@@ -20,9 +20,15 @@
 package org.apache.james.mailbox.events;
 
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
+import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
+import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
+import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME;
+import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_DEAD_LETTER_QUEUE;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 
 import java.nio.charset.StandardCharsets;
@@ -46,8 +52,10 @@ import com.rabbitmq.client.AMQP;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoProcessor;
+import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
+import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Sender;
 import reactor.util.function.Tuples;
 
@@ -83,9 +91,23 @@ public class EventDispatcher {
     }
 
     void start() {
-        sender.declareExchange(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME)
-            .durable(DURABLE)
-            .type(DIRECT_EXCHANGE))
+        Flux.concat(
+            sender.declareExchange(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME)
+                .durable(DURABLE)
+                .type(DIRECT_EXCHANGE)),
+            sender.declareExchange(ExchangeSpecification.exchange(MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME)
+                .durable(DURABLE)
+                .type(DIRECT_EXCHANGE)),
+            sender.declareQueue(QueueSpecification.queue(MAILBOX_EVENT_DEAD_LETTER_QUEUE)
+                .durable(DURABLE)
+                .exclusive(!EXCLUSIVE)
+                .autoDelete(!AUTO_DELETE)
+                .arguments(NO_ARGUMENTS)),
+            sender.bind(BindingSpecification.binding()
+                .exchange(MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME)
+                .queue(MAILBOX_EVENT_DEAD_LETTER_QUEUE)
+                .routingKey(EMPTY_ROUTING_KEY)))
+            .then()
             .block();
     }
 

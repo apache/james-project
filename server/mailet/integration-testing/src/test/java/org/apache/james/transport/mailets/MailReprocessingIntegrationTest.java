@@ -71,7 +71,7 @@ public class MailReprocessingIntegrationTest {
 
     @Before
     public void createJamesServer() throws Exception {
-        MailetContainer.Builder mailets = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
                     .addMailet(MailetConfiguration.builder()
@@ -88,6 +88,7 @@ public class MailReprocessingIntegrationTest {
             .withBase(Modules.combine(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE, MemoryJamesServerMain.WEBADMIN_TESTING))
             .withMailetContainer(mailets)
             .build(folder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

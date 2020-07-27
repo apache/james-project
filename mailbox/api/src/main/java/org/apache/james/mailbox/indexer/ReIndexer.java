@@ -46,10 +46,6 @@ public interface ReIndexer {
                 return this;
             }
 
-            public Builder messagesPerSeconds(int messagesPerSecond) {
-                return messagesPerSeconds(Optional.of(messagesPerSecond));
-            }
-
             public Builder mode(Optional<Mode> mode) {
                 this.mode = mode;
                 return this;

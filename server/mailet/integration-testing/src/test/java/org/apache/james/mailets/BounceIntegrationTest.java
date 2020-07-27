@@ -26,9 +26,9 @@ import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.internet.MimeMessage;
-
 import java.util.Arrays;
+
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.MemoryJamesServerMain;
@@ -49,8 +49,8 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIs;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.Mailet;
 import org.junit.After;
 import org.junit.Rule;
@@ -146,6 +146,7 @@ public class BounceIntegrationTest {
                 .withMailetContainer(
                         generateMailetContainerConfiguration(mailetConfiguration))
                 .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
                 .fluent()
@@ -235,7 +236,7 @@ public class BounceIntegrationTest {
     }
 
     private MailetContainer.Builder generateMailetContainerConfiguration(MailetConfiguration.Builder redirectionMailetConfiguration) {
-        return TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+        return TemporaryJamesServer.defaultMailetContainerConfiguration()
             .postmaster(POSTMASTER)
             .putProcessor(transport())
             .putProcessor(bounces(redirectionMailetConfiguration));

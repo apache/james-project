@@ -157,7 +157,7 @@
                 </tr>
                 <tr>
                     <td>Cassandra Mailbox</td>
-                    <td>Experimental</td>
+                    <td>Beta</td>
                     <td>yes</td>
                     <td>no</td>
                     <td>3.0.0</td>
@@ -237,7 +237,7 @@
                 </tr>
                 <tr>
                     <td>Cassandra Users</td>
-                    <td>Experimental</td>
+                    <td>Beta</td>
                     <td>yes</td>
                     <td>no</td>
                     <td>3.0.0</td>

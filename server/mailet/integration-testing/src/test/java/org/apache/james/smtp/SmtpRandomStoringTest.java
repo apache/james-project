@@ -50,8 +50,8 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.mailets.RandomStoring;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.Mail;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
@@ -131,7 +131,7 @@ public class SmtpRandomStoringTest {
     }
 
     private void createJamesServer() throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(RANDOM_STORING)
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));
@@ -140,6 +140,7 @@ public class SmtpRandomStoringTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
     }
 
     private void sendMails() throws Exception {

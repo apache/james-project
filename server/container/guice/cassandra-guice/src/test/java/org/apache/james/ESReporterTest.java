@@ -61,7 +61,7 @@ class ESReporterTest {
     static final DockerElasticSearchExtension elasticSearchExtension = new DockerElasticSearchExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
         .extension(elasticSearchExtension)
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)

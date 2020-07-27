@@ -47,7 +47,10 @@ class CassandraAttachmentDAOV2Test {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
+        testee = new CassandraAttachmentDAOV2(
+            BLOB_ID_FACTORY,
+            cassandra.getConf(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
     }
 
     @Test

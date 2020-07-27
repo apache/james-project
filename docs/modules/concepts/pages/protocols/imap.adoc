@@ -1,0 +1,184 @@
+= Internet Message Access Protocol (IMAP)
+:navtitle: IMAP
+
+== Overview
+
+https://en.wikipedia.org/wiki/Internet_Message_Access_Protocol[Internet Message Access Protocol],
+or IMAP, is a protocol used by email clients to retrieve 
+xref:messages/index.adoc[email messages] from a xref:glossary.adoc#email_server[mail server].
+One could say that it is effectively in competition with xref:protocols/pop.adoc[POP]
+because it accomplishes a function similar in nature, and most clients will force you
+to choose one or the other..
+These days, the natural choice of protocol tends to be IMAP rather than POP.
+
+The main difference between IMAP and POP is that messages are kept on the server, which
+keeps a kind of master reference. Instead of transferring the message to the client,
+only an image, or copy of the message is kept locally. When the client synchronises with
+the state of the server, it will tend to mimic that state. So if a new message is stored
+in a mailbox, it will appear on the client, or if a message is deleted from the server,
+it will also be deleted from the client.
+
+The user can control the state of server from the client by adding, deleting, or moving
+messages between folders. The user can also add folders from the client, the state of which
+will be stored on the server.
+
+
+== Specifications
+
+=== IMAP
+
+Apparently, no official specification exists for the original IMAP.
+It became a specification with the publication of <<IMAP2>>
+
+
+=== IMAP2
+
+==== RFC1064
+
+https://tools.ietf.org/html/rfc1064[RFC1064] ("Interactive Mail Access Protocol - Version 2")
+was the original IMAP2 specification, published in 1988. The specification was obsoleted
+by <<RFC1176>>.
+
+==== RFC1176
+
+https://tools.ietf.org/html/rfc1176[RFC1176] ("Interactive Mail Access Protocol - Version 2")
+provides various, somewhat minor updates to <<RFC1064>>. This specification was supseded by
+the first IMAP3 specification, <<RFC1203>>.
+
+=== IMAP3
+
+==== RFC1203
+
+https://tools.ietf.org/html/rfc1203[RFC1203] ("Interactive Mail Access Protocol - Version 3")
+obsoletes <<RFC1064>>, and presumedly also <<RFC1176>>.
+It appears to be the only version of IMAP3 that was published. Apparently, IMAP3 is a rare
+version, and was never really adopted by the marketplace.
+
+
+=== IMAP4
+
+==== RFC1730
+https://tools.ietf.org/html/rfc1730[RFC1730] ("Interactive Message Access Protocol - Version 4")
+was the first version of IMAP4, published in 1994. Note that the "M" in the name was changed
+from "Mail" to "Message".
+It was obsoleted two years later by <<RFC2060>>.
+
+
+==== RFC2060
+
+https://tools.ietf.org/html/rfc2060[RFC2060] ("Interactive Message Access Protocol - Version 4rev1")
+was the first revision of the original IMAP4 specification. It was obsoleted by <<RFC3501>>.
+
+
+==== RFC3501
+
+https://tools.ietf.org/html/rfc3501[RFC3501] ("Interactive Message Access Protocol - Version 4rev1")
+is the current IMAP4 standard in use. Though the name is confusing, is was the second revision since
+the publication of the original IMAP4 specification. This version was published in 2003. Likely,
+there has not been a need to update this specification as instead updates are published as extensions.
+Extensions to IMAP have been published as recently as in 2018.
+
+==== Extensions to RFC3501
+
+For brevity, we simply refence a number of extentions to RFC3501: 
+
+ * https://tools.ietf.org/html/rfc4466[RFC4466] ("Collected Extensions to IMAP4 ABNF")
+ * https://tools.ietf.org/html/rfc4469[RFC4469] ("Internet Message Access Protocol (IMAP) CATENATE Extension")
+ * https://tools.ietf.org/html/rfc4551[RFC4551] ("IMAP Extension for Conditional STORE Operation or Quick Flag Changes Resynchronization")
+ * https://tools.ietf.org/html/rfc5032[RFC5032] ("WITHIN Search Extension to the IMAP Protocol")
+ * https://tools.ietf.org/html/rfc5182[RFC5182] ("IMAP Extension for Referencing the Last SEARCH Result")
+ * https://tools.ietf.org/html/rfc5738[RFC5738] ("IMAP Support for UTF-8")
+ * https://tools.ietf.org/html/rfc6186[RFC6186] ("Use of SRV Records for Locating Email Submission/Access Services")
+ * https://tools.ietf.org/html/rfc6858[RFC6858] ("Simplified POP and IMAP Downgrading for Internationalized Email")
+ * https://tools.ietf.org/html/rfc7817[RFC7817] ("Updated Transport Layer Security (TLS) Server Identity Check Procedure for Email-Related Protocols")
+ * https://tools.ietf.org/html/rfc8314[RFC8314] ("Cleartext Considered Obsolete: Use of Transport Layer Security (TLS) for Email Submission and Access")
+ * https://tools.ietf.org/html/rfc8437[RFC8437] ("IMAP UNAUTHENTICATE Extension for Connection Reuse")
+ * https://tools.ietf.org/html/rfc8474[RFC8474] ("IMAP Extension for Object Identifiers")
+
+
+
+== Related Concepts
+
+IMAP is related to...
+
+ * *xref:protocols/pop.adoc[POP]* as a "competing" protocol
+ * *xref:glossary.adoc#email_client[Email clients]*, as the client will provide the functionality of
+   an IMAP Client and connect to the IMAP Server
+ * *xref:protocols/smtp.adoc[SMTP]*, in that messages will normally be
+   delivered to the IMAP Server via SMTP.
+
+
+
+== Try It!
+
+You can connect manually to James using the IMAP protocol by opening a
+telnet session.
+
+Requirements:
+
+ * Run the long demo (without stopping)
+ * Telnet
+
+Approximate duration: 5 minutes
+
+====
+Note: extra lines are inserted below to help show you what you need to type.
+====
+
+[source,telnet]
+----
+$ telnet 127.0.0.1 143
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+* OK JAMES IMAP4rev1 Server  Server faef5a990fbb is ready.
+
+01 login user01@james.local 1234 <1>
+
+01 OK LOGIN completed.
+
+l list "" "*" <2>
+
+* LIST (\HasNoChildren) "." "INBOX"
+l OK LIST completed.
+
+s select INBOX <3>
+
+* FLAGS (\Answered \Deleted \Draft \Flagged \Seen)
+* 1 EXISTS
+* 1 RECENT
+* OK [UIDVALIDITY 749313882] UIDs valid
+* OK [UNSEEN 1] MailboxMessage 2 is first unseen
+* OK [PERMANENTFLAGS (\Answered \Deleted \Draft \Flagged \Seen \*)] Limited
+* OK [HIGHESTMODSEQ 5] Highest
+* OK [UIDNEXT 2] Predicted next UID
+s OK [READ-WRITE] SELECT completed.
+
+f FETCH 1:* (FLAGS BODY.PEEK[HEADER.FIELDS (SUBJECT)]) <4>
+
+* 1 FETCH (FLAGS (\Seen) BODY[HEADER.FIELDS (SUBJECT)] {75}
+Subject: Test Message
+
+)
+f OK FETCH completed.
+
+d store 1 +FLAGS (\Deleted) <5>
+
+* 1 FETCH (FLAGS (\Deleted \Seen))
+d OK STORE completed.
+
+e expunge <6>
+
+* 1 EXPUNGE
+e OK EXPUNGE completed.
+
+l logout <7>
+----
+<1> Login as user `user01@james.local`
+<2> List the contents of the Mailbox
+<3> Select `INBOX` as the current folder
+<4> Fetch the contents of the INBOX folder, showing only the subject
+<5> Mark the message for deletion
+<6> Epunge the INBOX by deleting mails marked for deletion
+<7> Exit the session
+

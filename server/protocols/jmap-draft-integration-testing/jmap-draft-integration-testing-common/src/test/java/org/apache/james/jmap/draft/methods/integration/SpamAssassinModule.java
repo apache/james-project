@@ -23,7 +23,6 @@ import java.util.Optional;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.BaseConfiguration;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinListener;
 import org.apache.james.mailetcontainer.impl.MailetConfigImpl;

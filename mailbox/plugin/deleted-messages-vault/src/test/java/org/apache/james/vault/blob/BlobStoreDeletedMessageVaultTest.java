@@ -27,9 +27,9 @@ import static org.apache.james.vault.DeletedMessageFixture.NOW;
 import static org.apache.james.vault.DeletedMessageFixture.OLD_DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
 import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.APPEND_METRIC_NAME;
+import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.DELETE_EXPIRED_MESSAGES_METRIC_NAME;
 import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.DELETE_METRIC_NAME;
 import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.LOAD_MIME_MESSAGE_METRIC_NAME;
-import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.DELETE_EXPIRED_MESSAGES_METRIC_NAME;
 import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.SEARCH_METRIC_NAME;
 import static org.apache.james.vault.search.Query.ALL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,8 +40,7 @@ import java.time.ZonedDateTime;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.memory.MemoryBlobStore;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessageVault;
@@ -65,7 +64,10 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
         clock = new UpdatableTickingClock(NOW.toInstant());
         metricFactory = new RecordingMetricFactory();
         messageVault = new BlobStoreDeletedMessageVault(metricFactory, new MemoryDeletedMessageMetadataVault(),
-            new MemoryBlobStore(new HashBlobId.Factory(), new MemoryDumbBlobStore()),
+            MemoryBlobStoreFactory.builder()
+                .blobIdFactory(new HashBlobId.Factory())
+                .defaultBucketName()
+                .passthrough(),
             new BucketNameGenerator(clock), clock, RetentionConfiguration.DEFAULT);
     }
 

@@ -377,9 +377,6 @@ public final class FetchResponse implements ImapResponseMessage {
          */
         interface Address {
 
-            /** Empty array */
-            Address[] EMPTY = {};
-
             /**
              * Gets the personal name.
              * 

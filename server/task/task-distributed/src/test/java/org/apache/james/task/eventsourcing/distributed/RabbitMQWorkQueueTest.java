@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.TWO_SECONDS;
-import static org.mockito.Mockito.spy;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
@@ -67,7 +66,7 @@ class RabbitMQWorkQueueTest {
 
     @BeforeEach
     void setUp() {
-        worker = spy(new ImmediateWorker());
+        worker = new ImmediateWorker();
         serializer = JsonTaskSerializer.of(TestTaskDTOModules.COMPLETED_TASK_MODULE, TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore()));
         testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer);
         testee.start();
@@ -160,7 +159,5 @@ class RabbitMQWorkQueueTest {
 
         assertThatThrownBy(() -> await().atMost(FIVE_HUNDRED_MILLISECONDS).untilAtomic(counter, CoreMatchers.equalTo(3L))).isInstanceOf(ConditionTimeoutException.class);
         assertThatCode(() -> await().atMost(TWO_SECONDS).untilAtomic(counter, CoreMatchers.equalTo(3L))).doesNotThrowAnyException();
-
     }
-
 }

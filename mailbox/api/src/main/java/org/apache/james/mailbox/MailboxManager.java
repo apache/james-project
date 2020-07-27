@@ -21,6 +21,7 @@ package org.apache.james.mailbox;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.mailbox.exception.MailboxException;
@@ -163,6 +164,51 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      */
     Mailbox deleteMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException;
 
+    class MailboxRenamedResult {
+        private final MailboxId mailboxId;
+        private final MailboxPath originPath;
+        private final MailboxPath destinationPath;
+
+        public MailboxRenamedResult(MailboxId mailboxId, MailboxPath originPath, MailboxPath destinationPath) {
+            this.mailboxId = mailboxId;
+            this.originPath = originPath;
+            this.destinationPath = destinationPath;
+        }
+
+        public MailboxId getMailboxId() {
+            return mailboxId;
+        }
+
+        public MailboxPath getOriginPath() {
+            return originPath;
+        }
+
+        public MailboxPath getDestinationPath() {
+            return destinationPath;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MailboxRenamedResult) {
+                MailboxRenamedResult that = (MailboxRenamedResult) o;
+
+                return Objects.equals(this.mailboxId, that.mailboxId)
+                    && Objects.equals(this.originPath, that.originPath)
+                    && Objects.equals(this.destinationPath, that.destinationPath);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(mailboxId, originPath, destinationPath);
+        }
+    }
+
+    enum RenameOption {
+        NONE, RENAME_SUBSCRIPTIONS
+    }
+
     /**
      * Renames a mailbox.
      * 
@@ -179,7 +225,11 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @throws MailboxNotFoundException
      *            when the <code>from</code> mailbox does not exist
      */
-    void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;
+    List<MailboxRenamedResult> renameMailbox(MailboxPath from, MailboxPath to, RenameOption option, MailboxSession session) throws MailboxException;
+
+    default List<MailboxRenamedResult> renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
+        return renameMailbox(from, to, RenameOption.NONE, session);
+    }
 
     /**
      * Renames a mailbox.
@@ -197,7 +247,11 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @throws MailboxNotFoundException
      *            when the <code>mailboxId</code> original mailbox does not exist
      */
-    void renameMailbox(MailboxId mailboxId, MailboxPath newMailboxPath, MailboxSession session) throws MailboxException;
+    List<MailboxRenamedResult> renameMailbox(MailboxId mailboxId, MailboxPath newMailboxPath, RenameOption option, MailboxSession session) throws MailboxException;
+
+    default List<MailboxRenamedResult> renameMailbox(MailboxId mailboxId, MailboxPath newMailboxPath, MailboxSession session) throws MailboxException {
+        return renameMailbox(mailboxId, newMailboxPath, RenameOption.NONE, session);
+    }
 
     /**
      * Copy the given {@link MessageRange} from one Mailbox to the other. 

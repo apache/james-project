@@ -21,20 +21,22 @@ package org.apache.james.blob.memory;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.DumbBlobStore;
+import org.apache.james.blob.api.DeduplicationBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
 import org.junit.jupiter.api.BeforeEach;
 
-public class MemoryBlobStoreTest implements MetricableBlobStoreContract {
-
+public class MemoryBlobStoreTest implements MetricableBlobStoreContract, DeduplicationBlobStoreContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private BlobStore blobStore;
 
     @BeforeEach
     void setUp() {
-        blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore()));
+        blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), MemoryBlobStoreFactory.builder()
+            .blobIdFactory(BLOB_ID_FACTORY)
+            .defaultBucketName()
+            .deduplication());
     }
 
     @Override

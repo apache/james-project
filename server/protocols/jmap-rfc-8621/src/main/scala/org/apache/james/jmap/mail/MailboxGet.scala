@@ -26,13 +26,18 @@ import org.apache.james.mailbox.model.MailboxId
 
 case class Ids(value: List[MailboxId])
 
-case class Properties(value: List[NonEmptyString])
+case class Properties(value: List[NonEmptyString]) {
+  def asSetOfString: Set[String] = value.map(_.toString()).toSet
+}
+
 
 case class MailboxGetRequest(accountId: AccountId,
                              ids: Option[Ids],
                              properties: Option[Properties])
 
-case class NotFound(value: List[MailboxId])
+case class NotFound(value: Set[MailboxId]) {
+  def merge(other: NotFound): NotFound = NotFound(this.value ++ other.value)
+}
 
 case class MailboxGetResponse(accountId: AccountId,
                               state: State,

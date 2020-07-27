@@ -70,7 +70,8 @@ public class CassandraEventSourcingDLPConfigurationStoreExtension implements Bef
 
         EventStoreDao eventStoreDao = new EventStoreDao(
             cassandraExtension.getCassandraCluster().getConf(),
-            jsonEventSerializer);
+            jsonEventSerializer,
+            cassandraExtension.getCassandraConsistenciesConfiguration());
 
         return new EventSourcingDLPConfigurationStore(new CassandraEventStore(eventStoreDao));
     }

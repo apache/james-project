@@ -32,7 +32,6 @@ import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.user.api.UsersRepository;
-
 import org.junit.Test;
 
 public class ExtractMDNOriginalJMAPMessageIdTest {

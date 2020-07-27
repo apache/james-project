@@ -95,6 +95,11 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     }
 
     @Override
+    public QuotaRoot getQuotaRoot(Mailbox mailbox) throws MailboxException {
+        return getQuotaRoot(mailbox.generateAssociatedPath());
+    }
+
+    @Override
     public QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException {
         return getQuotaRootReactive(mailboxId).block();
     }

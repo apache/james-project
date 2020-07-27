@@ -19,6 +19,7 @@
 package org.apache.james.jmap.method
 
 
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation
 import org.apache.james.jmap.model.Invocation.MethodName
 import org.apache.james.mailbox.MailboxSession
@@ -29,6 +30,6 @@ trait Method {
 
   val methodName: MethodName
 
-  def process(invocation: Invocation, mailboxSession: MailboxSession): Publisher[Invocation]
+  def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession): Publisher[Invocation]
 }
 

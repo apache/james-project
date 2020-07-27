@@ -43,6 +43,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -149,7 +150,7 @@ public abstract class MessageMapperTest {
         saveMessages();
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE);
 
-        messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
 
         assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4);
     }
@@ -157,8 +158,8 @@ public abstract class MessageMapperTest {
     @Test
     void mailboxUnSeenCountShouldBeDecrementedAfterAMessageIsMarkedUnSeen() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(), FlagsUpdateMode.REPLACE));
         assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(5);
     }
 
@@ -316,9 +317,10 @@ public abstract class MessageMapperTest {
     @Test
     void findRecentUidsInMailboxShouldReturnListOfMessagesHoldingFlagsRecent() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
-        messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
+        FlagsUpdateCalculator setRecent = new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REPLACE);
+        messageMapper.updateFlags(benwaInboxMailbox, message2.getUid(), setRecent);
+        messageMapper.updateFlags(benwaInboxMailbox, message4.getUid(), setRecent);
+        messageMapper.updateFlags(benwaWorkMailbox, message6.getUid(), setRecent);
         assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox))
             .containsOnly(message2.getUid(), message4.getUid());
     }
@@ -331,9 +333,10 @@ public abstract class MessageMapperTest {
     @Test
     void resetRecentsShouldRemoveAllRecentFlags() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
-        messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
+        FlagsUpdateCalculator setRecent = new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REPLACE);
+        messageMapper.updateFlags(benwaInboxMailbox, message2.getUid(), setRecent);
+        messageMapper.updateFlags(benwaInboxMailbox, message4.getUid(), setRecent);
+        messageMapper.updateFlags(benwaWorkMailbox, message6.getUid(), setRecent);
 
         messageMapper.resetRecent(benwaInboxMailbox);
 
@@ -344,9 +347,10 @@ public abstract class MessageMapperTest {
     @Test
     void resetRecentsShouldReturnUpdatedFlags() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
-        messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
+        FlagsUpdateCalculator setRecent = new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REPLACE);
+        messageMapper.updateFlags(benwaInboxMailbox, message2.getUid(), setRecent);
+        messageMapper.updateFlags(benwaInboxMailbox, message4.getUid(), setRecent);
+        messageMapper.updateFlags(benwaWorkMailbox, message6.getUid(), setRecent);
 
         assertThat(messageMapper.resetRecent(benwaInboxMailbox))
             .extracting(UpdatedFlags::getUid)
@@ -356,9 +360,10 @@ public abstract class MessageMapperTest {
     @Test
     void deleteShouldUpdateRecentWhenNeeded() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
-        messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
+        FlagsUpdateCalculator setRecent = new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REPLACE);
+        messageMapper.updateFlags(benwaInboxMailbox, message2.getUid(), setRecent);
+        messageMapper.updateFlags(benwaInboxMailbox, message4.getUid(), setRecent);
+        messageMapper.updateFlags(benwaWorkMailbox, message6.getUid(), setRecent);
 
         messageMapper.delete(benwaInboxMailbox, message2);
 
@@ -368,13 +373,32 @@ public abstract class MessageMapperTest {
     @Test
     void deleteShouldNotUpdateRecentWhenNotNeeded() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message2.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
-        messageMapper.updateFlags(benwaWorkMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.REPLACE), MessageRange.one(message6.getUid()));
+        FlagsUpdateCalculator setRecent = new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REPLACE);
+        messageMapper.updateFlags(benwaInboxMailbox, message2.getUid(), setRecent);
+        messageMapper.updateFlags(benwaInboxMailbox, message4.getUid(), setRecent);
+        messageMapper.updateFlags(benwaWorkMailbox, message6.getUid(), setRecent);
 
         messageMapper.delete(benwaInboxMailbox, message1);
 
         assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox)).containsOnly(message2.getUid(), message4.getUid());
+    }
+
+    @Test
+    void deleteMessagesShouldDecrementUnseenToOneWhenDeletingTwoUnseenMessagesOutOfThree() throws MailboxException {
+        saveMessages();
+        FlagsUpdateCalculator setSeen = new FlagsUpdateCalculator(new Flags(Flag.SEEN), FlagsUpdateMode.REPLACE);
+        messageMapper.updateFlags(benwaInboxMailbox, message2.getUid(), setSeen);
+        messageMapper.updateFlags(benwaInboxMailbox, message3.getUid(), setSeen);
+        messageMapper.updateFlags(benwaInboxMailbox, message4.getUid(), setSeen);
+
+        messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
+
+        assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox))
+            .isEqualTo(MailboxCounters.builder()
+                .mailboxId(benwaInboxMailbox.getMailboxId())
+                .count(2)
+                .unseen(1)
+                .build());
     }
 
     @Test
@@ -408,9 +432,10 @@ public abstract class MessageMapperTest {
     @Test
     void findFirstUnseenMessageUidShouldReturnUid2WhenUid2isSeen() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message3.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message5.getUid()));
+        FlagsUpdateCalculator setSeen = new FlagsUpdateCalculator(new Flags(Flag.SEEN), FlagsUpdateMode.REPLACE);
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), setSeen);
+        messageMapper.updateFlags(benwaInboxMailbox, message3.getUid(), setSeen);
+        messageMapper.updateFlags(benwaWorkMailbox, message5.getUid(), setSeen);
         assertThat(messageMapper.findFirstUnseenMessageUid(benwaInboxMailbox)).isEqualTo(message2.getUid());
     }
 
@@ -671,7 +696,7 @@ public abstract class MessageMapperTest {
     @Test
     void flagsReplacementShouldReplaceStoredMessageFlags() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE));
         assertThat(retrieveMessageFromStorage(message1)).hasFlags(new Flags(Flags.Flag.FLAGGED));
     }
 
@@ -679,10 +704,10 @@ public abstract class MessageMapperTest {
     void flagsReplacementShouldReturnAnUpdatedFlagHighlightingTheReplacement() throws MailboxException {
         saveMessages();
         ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
-        Iterator<UpdatedFlags> updatedFlags = messageMapper.updateFlags(benwaInboxMailbox,
-                new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
-        assertThat(Lists.newArrayList(updatedFlags))
-            .containsOnly(UpdatedFlags.builder()
+        Optional<UpdatedFlags> updatedFlags = messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(),
+                new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE));
+        assertThat(updatedFlags)
+            .contains(UpdatedFlags.builder()
                 .uid(message1.getUid())
                 .modSeq(modSeq.next())
                 .oldFlags(new Flags())
@@ -693,11 +718,10 @@ public abstract class MessageMapperTest {
     @Test
     void flagsAdditionShouldReturnAnUpdatedFlagHighlightingTheAddition() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE));
         ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
-        assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid())))
-            .toIterable()
-            .containsOnly(UpdatedFlags.builder()
+        assertThat(messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD)))
+            .contains(UpdatedFlags.builder()
                     .uid(message1.getUid())
                     .modSeq(modSeq.next())
                     .oldFlags(new Flags(Flags.Flag.FLAGGED))
@@ -708,17 +732,17 @@ public abstract class MessageMapperTest {
     @Test
     void flagsAdditionShouldUpdateStoredMessageFlags() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD));
         assertThat(retrieveMessageFromStorage(message1)).hasFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build());
     }
 
     @Test
     void flagsAdditionShouldHaveNoEffectOnStoredFlagsWhenNoop() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE));
 
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flag.FLAGGED), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flag.FLAGGED), FlagsUpdateMode.ADD));
         assertThat(retrieveMessageFromStorage(message1))
             .hasFlags(new FlagsBuilder().add(Flags.Flag.FLAGGED).build());
     }
@@ -726,11 +750,10 @@ public abstract class MessageMapperTest {
     @Test
     void flagsRemovalShouldReturnAnUpdatedFlagHighlightingTheRemoval() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), FlagsUpdateMode.REPLACE));
         ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
-        assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE), MessageRange.one(message1.getUid())))
-            .toIterable()
-            .containsOnly(
+        assertThat(messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE)))
+            .contains(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
                     .modSeq(modSeq.next())
@@ -742,8 +765,8 @@ public abstract class MessageMapperTest {
     @Test
     void flagsRemovalShouldUpdateStoredMessageFlags() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE), MessageRange.one(message1.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), FlagsUpdateMode.REPLACE));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE));
         assertThat(retrieveMessageFromStorage(message1)).hasFlags(new Flags(Flags.Flag.FLAGGED));
     }
 
@@ -847,7 +870,7 @@ public abstract class MessageMapperTest {
     @Test
     void userFlagsShouldBeSupported() throws Exception {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.ADD));
         assertThat(retrieveMessageFromStorage(message1)).hasFlags(new Flags(USER_FLAG));
     }
 
@@ -855,9 +878,8 @@ public abstract class MessageMapperTest {
     void userFlagsUpdateShouldReturnCorrectUpdatedFlags() throws Exception {
         saveMessages();
         ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
-        assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid())))
-            .toIterable()
-            .containsOnly(
+        assertThat(messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.ADD)))
+            .contains(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
                     .modSeq(modSeq.next())
@@ -871,11 +893,9 @@ public abstract class MessageMapperTest {
         saveMessages();
 
         assertThat(
-            messageMapper.updateFlags(benwaInboxMailbox,
-                new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.REMOVE),
-                MessageRange.one(message1.getUid())))
-            .toIterable()
-            .containsOnly(
+            messageMapper.updateFlags(benwaInboxMailbox,message1.getUid(),
+                new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.REMOVE)))
+            .contains(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
                     .modSeq(message1.getModSeq())
@@ -893,9 +913,8 @@ public abstract class MessageMapperTest {
         int threadCount = 2;
         int updateCount = 10;
         ConcurrentTestRunner.builder()
-            .operation((threadNumber, step) -> messageMapper.updateFlags(benwaInboxMailbox,
-                new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD),
-                MessageRange.one(message1.getUid())))
+            .operation((threadNumber, step) -> messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(),
+                new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD)))
             .threadCount(threadCount)
             .operationCount(updateCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
@@ -916,14 +935,12 @@ public abstract class MessageMapperTest {
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (step  < updateCount / 2) {
-                    messageMapper.updateFlags(benwaInboxMailbox,
-                        new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD),
-                        MessageRange.one(message1.getUid()));
+                    messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(),
+                        new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD));
                 } else {
-                    messageMapper.updateFlags(benwaInboxMailbox,
+                    messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(),
                         new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + (updateCount - step - 1)),
-                            FlagsUpdateMode.REMOVE),
-                        MessageRange.one(message1.getUid()));
+                            FlagsUpdateMode.REMOVE));
                 }
             })
             .threadCount(threadCount)
@@ -996,7 +1013,7 @@ public abstract class MessageMapperTest {
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(customFlag), FlagsUpdateMode.ADD);
 
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(FlagsBuilder.builder()
@@ -1014,7 +1031,7 @@ public abstract class MessageMapperTest {
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE);
 
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(new FlagsBuilder()
@@ -1032,7 +1049,7 @@ public abstract class MessageMapperTest {
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE);
 
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(FlagsBuilder.builder()
@@ -1049,7 +1066,7 @@ public abstract class MessageMapperTest {
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(customFlags), FlagsUpdateMode.REMOVE);
 
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(new FlagsBuilder()
@@ -1067,7 +1084,7 @@ public abstract class MessageMapperTest {
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(customFlags), FlagsUpdateMode.REMOVE);
 
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(FlagsBuilder.builder()
@@ -1086,7 +1103,7 @@ public abstract class MessageMapperTest {
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(), FlagsUpdateMode.REPLACE);
 
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(FlagsBuilder.builder()
@@ -1105,7 +1122,7 @@ public abstract class MessageMapperTest {
         FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(), FlagsUpdateMode.REPLACE);
 
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, newFlags, message1.getUid().toRange());
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
 
         assertThat(messageMapper.getApplicableFlag(benwaInboxMailbox))
             .isEqualTo(new FlagsBuilder()
@@ -1200,8 +1217,8 @@ public abstract class MessageMapperTest {
     }
 
     private List<MessageUid> markThenPerformRetrieveMessagesMarkedForDeletion(MessageRange range) throws MailboxException {
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE));
+        messageMapper.updateFlags(benwaInboxMailbox, message4.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE));
         return messageMapper.retrieveMessagesMarkedForDeletion(benwaInboxMailbox, range);
     }
 

@@ -23,6 +23,7 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,15 +53,15 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
-import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
-import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Flux;
 
 public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreProcessor.class);
@@ -122,10 +123,13 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                     if (unchangedSince != -1) {
                         List<MessageUid> uids = new ArrayList<>();
 
-                        MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroup.MINIMAL, mailboxSession);
+                        Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
+                            mailbox.listMessagesMetadata(messageSet, mailboxSession))
+                            .toStream()
+                            .iterator();
                         while (results.hasNext()) {
-                            MessageResult r = results.next();
-                            MessageUid uid = r.getUid();
+                            ComposedMessageIdWithMetaData r = results.next();
+                            MessageUid uid = r.getComposedMessageId().getUid();
 
                             boolean fail = false;
 
@@ -252,11 +256,14 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             //      - QRESYNC was enabled via ENABLE QRESYNC
             //
             if (unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-                MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroup.MINIMAL, mailboxSession);
+                Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
+                    mailbox.listMessagesMetadata(messageSet, mailboxSession))
+                    .toStream()
+                    .iterator();
                 while (results.hasNext()) {
-                    MessageResult r = results.next();
+                    ComposedMessageIdWithMetaData r = results.next();
                     // Store the modseq for the uid for later usage in the response
-                    modSeqs.put(r.getUid(),r.getModSeq());
+                    modSeqs.put(r.getComposedMessageId().getUid(),r.getModSeq());
                 }
             }
             

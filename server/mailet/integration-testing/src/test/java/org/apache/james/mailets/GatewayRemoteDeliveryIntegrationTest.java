@@ -40,8 +40,8 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -90,6 +90,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -110,6 +111,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -129,6 +131,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -149,6 +152,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -170,6 +174,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -195,6 +200,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -216,7 +222,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
                     .addMailet(MailetConfiguration.LOCAL_DELIVERY)
@@ -224,6 +230,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
                         .matcher(All.class)
                         .addProperty("gateway", gatewayProperty))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -246,7 +253,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     private MailetContainer.Builder generateMailetContainerConfiguration(String gatewayProperty) {
-        return TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        return TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(relayAndLocalDeliveryTransport(gatewayProperty));
     }
 

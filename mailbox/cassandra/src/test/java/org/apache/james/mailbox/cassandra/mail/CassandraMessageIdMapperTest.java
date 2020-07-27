@@ -56,7 +56,9 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
     
     @Override
     protected CassandraMapperProvider provideMapper() {
-        return new CassandraMapperProvider(cassandraCluster.getCassandraCluster());
+        return new CassandraMapperProvider(
+            cassandraCluster.getCassandraCluster(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
     }
 
     @Test
@@ -196,7 +198,10 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(
+                cassandra.getConf(),
+                cassandraCluster.getCassandraConsistenciesConfiguration(),
+                new CassandraMessageId.Factory());
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Metadata))

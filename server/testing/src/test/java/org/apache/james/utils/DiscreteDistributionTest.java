@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 
 class DiscreteDistributionTest {
+    public static final Offset<Long> OFFSET = Offset.offset(10_000L);
 
     @Test
     void createShouldNotSupportNegativeDistribution() {
@@ -84,7 +85,8 @@ class DiscreteDistributionTest {
 
         Map<String, Long> experimentOutcome = testee.generateRandomStream().limit(1_000_000)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-        assertThat(experimentOutcome.get("a")).isCloseTo(experimentOutcome.get("b"), Offset.offset(5_000L));
+        assertThat(experimentOutcome.get("a"))
+            .isCloseTo(experimentOutcome.get("b"), OFFSET);
     }
 
     @Test
@@ -96,7 +98,8 @@ class DiscreteDistributionTest {
 
         Map<String, Long> experimentOutcome = testee.generateRandomStream().limit(1_000_000)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-        assertThat(experimentOutcome.get("a")).isCloseTo(experimentOutcome.get("b") * 2, Offset.offset(5_000L));
+        assertThat(experimentOutcome.get("a"))
+            .isCloseTo(experimentOutcome.get("b") * 2, OFFSET);
     }
 
     @Test
@@ -109,7 +112,8 @@ class DiscreteDistributionTest {
 
         Map<String, Long> experimentOutcome = testee.generateRandomStream().limit(1_000_000)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-        assertThat(experimentOutcome.get("a")).isCloseTo(experimentOutcome.get("b") * 2, Offset.offset(5_000L));
+        assertThat(experimentOutcome.get("a"))
+            .isCloseTo(experimentOutcome.get("b") * 2, OFFSET);
     }
 
 }

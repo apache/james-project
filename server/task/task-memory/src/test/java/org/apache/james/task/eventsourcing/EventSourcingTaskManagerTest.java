@@ -20,7 +20,6 @@
 package org.apache.james.task.eventsourcing;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
@@ -34,8 +33,6 @@ import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerContract;
 import org.apache.james.task.TaskManagerWorker;
-import org.awaitility.Awaitility;
-import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,12 +42,6 @@ import reactor.core.publisher.Mono;
 
 @ExtendWith(CountDownLatchExtension.class)
 class EventSourcingTaskManagerTest implements TaskManagerContract {
-    ConditionFactory CALMLY_AWAIT = Awaitility
-        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
-        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
-        .await();
-
-
     private static final Hostname HOSTNAME = new Hostname("foo");
     private EventSourcingTaskManager taskManager;
     private EventStore eventStore;
@@ -92,7 +83,7 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
         TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
         TaskAggregateId aggregateId = new TaskAggregateId(taskId);
 
-        CALMLY_AWAIT.untilAsserted(() ->
+        calmlyAwait.untilAsserted(() ->
             assertThat(Mono.from(eventStore.getEventsOfAggregate(aggregateId)).block().getEventsJava())
                 .filteredOn(event -> event instanceof Started)
                 .extracting("hostname")
@@ -108,7 +99,7 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
         taskManager.cancel(taskId);
 
         TaskAggregateId aggregateId = new TaskAggregateId(taskId);
-        CALMLY_AWAIT.untilAsserted(() ->
+        calmlyAwait.untilAsserted(() ->
             assertThat(Mono.from(eventStore.getEventsOfAggregate(aggregateId)).block().getEventsJava())
                 .filteredOn(event -> event instanceof CancelRequested)
                 .extracting("hostname")

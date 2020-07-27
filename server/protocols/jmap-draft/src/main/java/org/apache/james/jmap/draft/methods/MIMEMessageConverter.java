@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -230,7 +231,7 @@ public class MIMEMessageConverter {
             .filter(MessageAttachmentMetadata::isInline)
             .collect(Guavate.toImmutableList());
         List<MessageAttachmentMetadata> besideAttachments = messageAttachments.stream()
-            .filter(attachment -> !attachment.isInline())
+            .filter(Predicate.not(MessageAttachmentMetadata::isInline))
             .collect(Guavate.toImmutableList());
 
         if (inlineAttachments.size() > 0) {

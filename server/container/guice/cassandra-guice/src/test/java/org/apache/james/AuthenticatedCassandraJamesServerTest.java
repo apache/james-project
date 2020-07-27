@@ -43,7 +43,7 @@ class AuthenticatedCassandraJamesServerTest {
     @Nested
     class AuthenticationTest implements JamesServerContract {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
@@ -59,7 +59,7 @@ class AuthenticatedCassandraJamesServerTest {
     @Nested
     class SslTest {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .disableAutoStart()
@@ -84,7 +84,7 @@ class AuthenticatedCassandraJamesServerTest {
     @Nested
     class AuthenticationFailureTest {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .disableAutoStart()

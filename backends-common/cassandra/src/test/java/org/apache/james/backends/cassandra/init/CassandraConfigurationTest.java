@@ -183,6 +183,20 @@ class CassandraConfigurationTest {
     }
 
     @Test
+    void consistencyLevelRegularShouldThrowOnNotSupportedValue() {
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+            .consistencyLevelRegular("ALL"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void consistencyLevelLightweightTransactionShouldThrowOnNotSupportedValue() {
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .consistencyLevelLightweightTransaction("ALL"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void builderShouldCreateTheRightObject() {
         int aclMaxRetry = 1;
         int modSeqMaxRetry = 2;
@@ -195,6 +209,8 @@ class CassandraConfigurationTest {
         int blobPartSize = 10;
         int attachmentV2MigrationReadTimeout = 11;
         int messageAttachmentIdReadTimeout = 12;
+        String consistencyLevelRegular = "LOCAL_QUORUM";
+        String consistencyLevelLightweightTransaction = "LOCAL_SERIAL";
 
         CassandraConfiguration configuration = CassandraConfiguration.builder()
             .aclMaxRetry(aclMaxRetry)
@@ -208,6 +224,8 @@ class CassandraConfigurationTest {
             .blobPartSize(blobPartSize)
             .attachmentV2MigrationReadTimeout(attachmentV2MigrationReadTimeout)
             .messageAttachmentIdsReadTimeout(messageAttachmentIdReadTimeout)
+            .consistencyLevelRegular(consistencyLevelRegular)
+            .consistencyLevelLightweightTransaction(consistencyLevelLightweightTransaction)
             .build();
 
         SoftAssertions.assertSoftly(softly -> {
@@ -222,6 +240,8 @@ class CassandraConfigurationTest {
             softly.assertThat(configuration.getBlobPartSize()).isEqualTo(blobPartSize);
             softly.assertThat(configuration.getAttachmentV2MigrationReadTimeout()).isEqualTo(attachmentV2MigrationReadTimeout);
             softly.assertThat(configuration.getMessageAttachmentIdsReadTimeout()).isEqualTo(messageAttachmentIdReadTimeout);
+            softly.assertThat(configuration.getConsistencyLevelRegular()).isEqualTo(consistencyLevelRegular);
+            softly.assertThat(configuration.getConsistencyLevelLightweightTransaction()).isEqualTo(consistencyLevelLightweightTransaction);
         });
     }
 

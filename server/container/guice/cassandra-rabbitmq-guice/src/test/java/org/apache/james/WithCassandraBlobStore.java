@@ -42,6 +42,7 @@ public class WithCassandraBlobStore implements BeforeAllCallback, AfterAllCallba
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .blobStore(BlobStoreConfiguration.cassandra())
+                .searchConfiguration(SearchConfiguration.elasticSearch())
                 .build())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())

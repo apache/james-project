@@ -31,4 +31,5 @@ public interface MailboxFixture {
     MailboxPath OUTBOX_ALICE = MailboxPath.forUser(ALICE, "OUTBOX");
     MailboxPath SENT_ALICE = MailboxPath.forUser(ALICE, "SENT");
     MailboxPath INBOX_BOB = MailboxPath.inbox(BOB);
+    MailboxPath BOB_2 = MailboxPath.forUser(BOB, "box2");
 }

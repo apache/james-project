@@ -70,10 +70,10 @@ class RabbitMQWorkQueuePersistenceTest {
      */
     @Test
     void submittedMessageShouldSurviveRabbitMQRestart() throws Exception {
-        Task TASK = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
-        TaskWithId TASK_WITH_ID = new TaskWithId(TASK_ID, TASK);
+        Task task = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
+        TaskWithId taskWithId = new TaskWithId(TASK_ID, task);
 
-        testee.submit(TASK_WITH_ID);
+        testee.submit(taskWithId);
 
         //wait for submit to be effective
         Thread.sleep(500);
@@ -85,7 +85,7 @@ class RabbitMQWorkQueuePersistenceTest {
 
         await().atMost(Duration.ONE_MINUTE).until(() -> !worker.results.isEmpty());
 
-        assertThat(worker.tasks).containsExactly(TASK_WITH_ID);
+        assertThat(worker.tasks).containsExactly(taskWithId);
         assertThat(worker.results).containsExactly(Task.Result.COMPLETED);
     }
 

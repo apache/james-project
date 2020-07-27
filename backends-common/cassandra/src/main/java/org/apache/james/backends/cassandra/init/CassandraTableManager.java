@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.cassandra.init;
 
+import java.util.function.Predicate;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -27,6 +29,7 @@ import org.apache.james.backends.cassandra.components.CassandraTable.Initializat
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 
 import com.datastax.driver.core.KeyspaceMetadata;
+import com.datastax.driver.core.PagingIterable;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
@@ -73,7 +76,7 @@ public class CassandraTableManager {
                         .from(name)
                         .limit(1)
                         .setFetchSize(1))
-                .filter(resultSet -> !resultSet.isExhausted())
+                .filter(Predicate.not(PagingIterable::isExhausted))
                 .flatMap(ignored -> executor.executeVoid(QueryBuilder.truncate(name)));
     }
 }

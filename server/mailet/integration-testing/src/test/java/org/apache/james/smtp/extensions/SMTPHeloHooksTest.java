@@ -41,9 +41,9 @@ import org.apache.james.smtp.extensions.hooks.DenySoftHeloHook;
 import org.apache.james.smtp.extensions.hooks.OkHeloHook;
 import org.apache.james.smtp.extensions.hooks.RecordingHeloHook;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,7 +65,7 @@ public class SMTPHeloHooksTest {
     private TemporaryJamesServer jamesServer;
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.deliverOnlyTransport());
 
         jamesServer = TemporaryJamesServer.builder()
@@ -73,6 +73,7 @@ public class SMTPHeloHooksTest {
             .withSmtpConfiguration(smtpConfiguration)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

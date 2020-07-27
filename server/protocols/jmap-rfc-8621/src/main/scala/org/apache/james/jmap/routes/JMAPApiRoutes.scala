@@ -36,6 +36,7 @@ import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.Method
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{Invocation, RequestObject, ResponseObject}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
@@ -104,7 +105,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
                       mailboxSession: MailboxSession): SMono[Void] =
     requestObject
       .methodCalls
-      .map(invocation => this.processMethodWithMatchName(invocation, mailboxSession))
+      .map(invocation => this.processMethodWithMatchName(requestObject.using.toSet, invocation, mailboxSession))
       .foldLeft(SFlux.empty[Invocation]) { (flux: SFlux[Invocation], mono: SMono[Invocation]) => flux.mergeWith(mono) }
       .collectSeq()
       .flatMap((invocations: Seq[Invocation]) =>
@@ -117,9 +118,9 @@ class JMAPApiRoutes (val authenticator: Authenticator,
           ).`then`())
       )
 
-  private def processMethodWithMatchName(invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
+  private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     SMono.justOrEmpty(methodsByName.get(invocation.methodName))
-      .flatMap(method => SMono.fromPublisher(method.process(invocation, mailboxSession)))
+      .flatMap(method => SMono.fromPublisher(method.process(capabilities, invocation, mailboxSession)))
       .switchIfEmpty(SMono.just(new Invocation(
         MethodName("error"),
         Arguments(Json.obj("type" -> "Not implemented")),

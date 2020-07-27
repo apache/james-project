@@ -50,15 +50,19 @@ import com.google.inject.Module;
 
 public class TemporaryJamesServer {
 
-    public static final MailetContainer.Builder DEFAULT_MAILET_CONTAINER_CONFIGURATION = MailetContainer.builder()
-        .putProcessor(CommonProcessors.root())
-        .putProcessor(CommonProcessors.error())
-        .putProcessor(CommonProcessors.transport());
+    public static MailetContainer.Builder defaultMailetContainerConfiguration() {
+        return MailetContainer.builder()
+            .putProcessor(CommonProcessors.root())
+            .putProcessor(CommonProcessors.error())
+            .putProcessor(CommonProcessors.transport());
+    }
 
-    public static final MailetContainer.Builder SIMPLE_MAILET_CONTAINER_CONFIGURATION = MailetContainer.builder()
-        .putProcessor(CommonProcessors.simpleRoot())
-        .putProcessor(CommonProcessors.error())
-        .putProcessor(CommonProcessors.transport());
+    public static MailetContainer.Builder simpleMailetContainerConfiguration() {
+        return MailetContainer.builder()
+            .putProcessor(CommonProcessors.simpleRoot())
+            .putProcessor(CommonProcessors.error())
+            .putProcessor(CommonProcessors.transport());
+    }
 
 
     public static class Builder {
@@ -106,7 +110,7 @@ public class TemporaryJamesServer {
         public TemporaryJamesServer build(File workingDir) throws Exception {
             return new TemporaryJamesServer(
                 workingDir,
-                mailetConfiguration.orElse(DEFAULT_MAILET_CONTAINER_CONFIGURATION.build()),
+                mailetConfiguration.orElse(defaultMailetContainerConfiguration().build()),
                 smtpConfiguration.orElse(SmtpConfiguration.DEFAULT),
                 module.orElse(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE),
                 overrideModules.build());
@@ -148,7 +152,9 @@ public class TemporaryJamesServer {
             .overrideWith(additionalModules)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith((binder) -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
+    }
 
+    public void start() throws Exception {
         jamesServer.start();
     }
 

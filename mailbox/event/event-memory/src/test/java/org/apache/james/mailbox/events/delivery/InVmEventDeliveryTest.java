@@ -40,7 +40,6 @@ import org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHa
 import org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.BackoffRetryer;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.assertj.core.api.SoftAssertions;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

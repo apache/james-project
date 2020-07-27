@@ -141,11 +141,12 @@ class RemoteDeliveryDKIMIntegrationTest {
             jamesServer = TemporaryJamesServer.builder()
                 .withBase(SMTP_ONLY_MODULE)
                 .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-                .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+                .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                     .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
                         .addProperty("mail.smtp.allow8bitmime", "true")))
                     .putProcessor(CommonProcessors.bounces()))
                 .build(tempDir);
+            jamesServer.start();
 
             dataProbe = jamesServer.getProbe(DataProbeImpl.class);
             dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -181,11 +182,12 @@ class RemoteDeliveryDKIMIntegrationTest {
             jamesServer = TemporaryJamesServer.builder()
                 .withBase(SMTP_ONLY_MODULE)
                 .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-                .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+                .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                     .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
                         .addProperty("mail.smtp.allow8bitmime", "true")))
                     .putProcessor(CommonProcessors.bounces()))
                 .build(tempDir);
+            jamesServer.start();
 
             dataProbe = jamesServer.getProbe(DataProbeImpl.class);
             dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -226,10 +228,11 @@ class RemoteDeliveryDKIMIntegrationTest {
             jamesServer = TemporaryJamesServer.builder()
                 .withBase(SMTP_ONLY_MODULE)
                 .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-                .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+                .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                     .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
                     .putProcessor(CommonProcessors.bounces()))
                 .build(tempDir);
+            jamesServer.start();
 
             dataProbe = jamesServer.getProbe(DataProbeImpl.class);
             dataProbe.addDomain(DEFAULT_DOMAIN);

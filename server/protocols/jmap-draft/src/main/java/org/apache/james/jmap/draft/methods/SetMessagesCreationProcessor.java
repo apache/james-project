@@ -221,7 +221,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private void performCreate(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session)
-        throws MailboxException, InvalidMailboxForCreationException, MessagingException, AttachmentsNotFoundException, IOException {
+        throws MailboxException, MessagingException, AttachmentsNotFoundException, IOException {
 
         if (isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
             sendMailViaOutbox(entry, responseBuilder, session);

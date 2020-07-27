@@ -69,7 +69,10 @@ class CassandraMailboxDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        testee = new CassandraMailboxDAO(
+            cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
 
         mailbox1 = new Mailbox(MailboxPath.forUser(USER, "abcd"),
             UID_VALIDITY_1,

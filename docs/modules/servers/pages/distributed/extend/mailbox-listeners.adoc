@@ -1,0 +1,3 @@
+= Custom Mailbox Listeners
+
+(TODO can http://james.apache.org/howTo/custom-listeners.html be used ?)

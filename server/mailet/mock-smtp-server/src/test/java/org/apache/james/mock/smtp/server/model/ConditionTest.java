@@ -139,7 +139,7 @@ class ConditionTest {
         }
 
         @Test
-        void jacksonShouldThrowWhenDeserializeMatchAllConditionWithMatchingValue(){
+        void jacksonShouldThrowWhenDeserializeMatchAllConditionWithMatchingValue() {
             String json = "{\"operator\":\"matchAll\", \"matchingValue\":\"matchme\"}";
 
             assertThatThrownBy(() -> OBJECT_MAPPER.readValue(json, Condition.class))
@@ -148,7 +148,7 @@ class ConditionTest {
         }
 
         @Test
-        void jacksonShouldThrowWhenDeserializeContainsConditionWithoutMatchingValue(){
+        void jacksonShouldThrowWhenDeserializeContainsConditionWithoutMatchingValue() {
             String json = "{\"operator\":\"contains\"}";
 
             assertThatThrownBy(() -> OBJECT_MAPPER.readValue(json, Condition.class))

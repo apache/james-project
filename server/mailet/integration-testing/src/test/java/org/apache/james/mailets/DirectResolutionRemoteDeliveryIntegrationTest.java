@@ -44,8 +44,8 @@ import org.apache.james.transport.mailets.AddDeliveredToHeader;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -97,10 +97,11 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -123,10 +124,11 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -147,10 +149,11 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(transport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -173,10 +176,11 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(transport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -200,7 +204,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
                     .addMailet(LOCAL_DELIVERY)
@@ -212,6 +216,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
                         .matcher(All.class)))
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

@@ -38,8 +38,8 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.After;
 import org.junit.Before;
@@ -63,7 +63,7 @@ public class AddFooterTest {
     public void setup() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withOverrides(new ActiveMQQueueModule())
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
@@ -71,6 +71,7 @@ public class AddFooterTest {
                         .addProperty("text", MATCH_ME))
                     .addMailetsFrom(CommonProcessors.transport())))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

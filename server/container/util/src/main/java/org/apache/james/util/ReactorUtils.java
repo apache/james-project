@@ -30,6 +30,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -38,13 +40,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SynchronousSink;
 import reactor.util.context.Context;
-import reactor.util.function.Tuple2;
 
 public class ReactorUtils {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReactorUtils.class);
     public static final String MDC_KEY_PREFIX = "MDC-";
-
-    private static final Duration DELAY = Duration.ZERO;
 
     public static <T, U> RequiresQuantity<T, U> throttle() {
         return elements -> duration -> operation -> {
@@ -53,10 +52,14 @@ public class ReactorUtils {
             Preconditions.checkArgument(!duration.isZero(), "'windowDuration' must be strictly positive");
 
             return flux -> flux
-                .windowTimeout(elements, duration)
-                .zipWith(Flux.interval(DELAY, duration))
-                .flatMap(Tuple2::getT1, elements, elements)
-                .flatMap(operation, elements);
+                .onErrorContinue((e, o) -> LOGGER.error("Error encountered while generating throttled entries", e))
+                .window(elements)
+                .delayElements(duration)
+                .concatMap(window -> window.flatMap(operation)
+                    .onErrorResume(e -> {
+                        LOGGER.error("Error encountered while throttling", e);
+                        return Mono.empty();
+                    }));
         };
     }
 

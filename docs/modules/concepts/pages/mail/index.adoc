@@ -11,5 +11,5 @@ consistent and comprehensible way.
 To help you understand how James approaches emails, we have divided this section
 up into the following parts:
 
- * xref:mail/messages/index.adoc[]
- * xref:mail/protocols/index.adoc[]
+ * xref:messages/index.adoc[]
+ * xref:protocols/index.adoc[]

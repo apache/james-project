@@ -31,6 +31,7 @@
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: MailRepository :: API</name>
+    <description>MailRepository allows storing Emails with their delivery context</description>
 
     <dependencies>
         <dependency>

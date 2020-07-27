@@ -42,9 +42,8 @@ public class SimpleMessage implements Message {
     private final Long textualLineCount;
     private final List<Property> properties;
     private final List<MessageAttachmentMetadata> attachments;
-    private final boolean hasAttachments;
 
-    public SimpleMessage(MessageId messageId, SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<MessageAttachmentMetadata> attachments, boolean hasAttachments) {
+    public SimpleMessage(MessageId messageId, SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<MessageAttachmentMetadata> attachments) {
         this.messageId = messageId;
         this.subType = subType;
         this.mediaType = mediaType;
@@ -55,7 +54,6 @@ public class SimpleMessage implements Message {
         this.textualLineCount = textualLineCount;
         this.properties = properties;
         this.attachments = attachments;
-        this.hasAttachments = hasAttachments;
     }
 
     @Override
@@ -125,10 +123,5 @@ public class SimpleMessage implements Message {
     @Override
     public List<MessageAttachmentMetadata> getAttachments() {
         return attachments;
-    }
-
-    @Override
-    public boolean hasAttachment() {
-        return hasAttachments;
     }
 }

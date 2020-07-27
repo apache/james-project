@@ -201,14 +201,17 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
       })
     }
 
-  private implicit val mailboxWrites: Writes[Mailbox] = Json.writes[Mailbox]
+  implicit def mailboxWrites(properties: Set[String]): Writes[Mailbox] = Json.writes[Mailbox]
+    .transform((o: JsObject) => JsObject(o.fields.filter(entry => properties.contains(entry._1))))
 
   private implicit val idsRead: Reads[Ids] = Json.valueReads[Ids]
   private implicit val propertiesRead: Reads[Properties] = Json.valueReads[Properties]
   private implicit val mailboxGetRequest: Reads[MailboxGetRequest] = Json.reads[MailboxGetRequest]
 
-  private implicit val notFoundWrites: Writes[NotFound] = Json.valueWrites[NotFound]
-  private implicit val mailboxGetResponseWrites: Writes[MailboxGetResponse] = Json.writes[MailboxGetResponse]
+  private implicit def notFoundWrites(implicit mailboxIdWrites: Writes[MailboxId]): Writes[NotFound] =
+    notFound => JsArray(notFound.value.toList.map(mailboxIdWrites.writes))
+
+  private implicit def mailboxGetResponseWrites(implicit mailboxWrites: Writes[Mailbox]): Writes[MailboxGetResponse] = Json.writes[MailboxGetResponse]
 
   private implicit val jsonValidationErrorWrites: Writes[JsonValidationError] = error => JsString(error.message)
 
@@ -227,6 +230,10 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
       })
     }
 
+  private def mailboxWritesWithFilteredProperties(properties: Option[Properties], capabilities: Set[CapabilityIdentifier]): Writes[Mailbox] = {
+    mailboxWrites(Mailbox.propertiesFiltered(properties, capabilities))
+  }
+
   private implicit def jsErrorWrites: Writes[JsError] = Json.writes[JsError]
 
   def serialize(session: Session): JsValue = Json.toJson(session)
@@ -235,9 +242,13 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   def serialize(responseObject: ResponseObject): JsValue = Json.toJson(responseObject)
 
-  def serialize(mailbox: Mailbox): JsValue = Json.toJson(mailbox)
+  def serialize(mailbox: Mailbox)(implicit mailboxWrites: Writes[Mailbox]): JsValue = Json.toJson(mailbox)
 
-  def serialize(mailboxGetResponse: MailboxGetResponse): JsValue = Json.toJson(mailboxGetResponse)
+  def serialize(mailboxGetResponse: MailboxGetResponse)(implicit mailboxWrites: Writes[Mailbox]): JsValue = Json.toJson(mailboxGetResponse)
+
+  def serialize(mailboxGetResponse: MailboxGetResponse, properties: Option[Properties], capabilities: Set[CapabilityIdentifier]): JsValue = {
+    serialize(mailboxGetResponse)(mailboxWritesWithFilteredProperties(properties, capabilities))
+  }
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 

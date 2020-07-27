@@ -60,7 +60,7 @@ import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
-import org.apache.james.mailrepository.memory.TestingMailRepositoryLoader;
+import org.apache.james.mailrepository.memory.SimpleMailRepositoryLoader;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -246,7 +246,7 @@ public class SMTPServerTest {
                 MemoryMailRepository.class.getName(),
                 new BaseHierarchicalConfiguration()));
 
-        mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, new TestingMailRepositoryLoader(), configuration);
+        mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, new SimpleMailRepositoryLoader(), configuration);
         mailRepositoryStore.init();
     }
 

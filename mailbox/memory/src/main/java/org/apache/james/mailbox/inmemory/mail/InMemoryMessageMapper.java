@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -93,7 +94,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     private long countUnseenMessagesInMailbox(MailboxId mailboxId) {
         return getMembershipByUidForMailbox(mailboxId).values()
             .stream()
-            .filter(member -> !member.isSeen())
+            .filter(Predicate.not(MailboxMessage::isSeen))
             .count();
     }
 
@@ -139,7 +140,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
         List<MailboxMessage> memberships = new ArrayList<>(getMembershipByUidForMailbox(mailbox).values());
         Collections.sort(memberships);
         return memberships.stream()
-            .filter(m -> !m.isSeen())
+            .filter(Predicate.not(MailboxMessage::isSeen))
             .findFirst()
             .map(MailboxMessage::getUid)
             .orElse(null);

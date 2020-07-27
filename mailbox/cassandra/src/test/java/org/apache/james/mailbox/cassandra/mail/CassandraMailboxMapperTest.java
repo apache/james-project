@@ -89,14 +89,15 @@ class CassandraMailboxMapperTest {
     @BeforeEach
     void setUp() {
         CassandraCluster cassandra = cassandraCluster.getCassandraCluster();
-        mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        mailboxPathDAO = new CassandraMailboxPathDAOImpl(cassandra.getConf(), cassandra.getTypesProvider());
-        mailboxPathV2DAO = new CassandraMailboxPathV2DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), cassandraCluster.getCassandraConsistenciesConfiguration());
+        mailboxPathDAO = new CassandraMailboxPathDAOImpl(cassandra.getConf(), cassandra.getTypesProvider(), cassandraCluster.getCassandraConsistenciesConfiguration());
+        mailboxPathV2DAO = new CassandraMailboxPathV2DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION, cassandraCluster.getCassandraConsistenciesConfiguration());
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         CassandraACLMapper aclMapper = new CassandraACLMapper(
             cassandra.getConf(),
             new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
+            CassandraConfiguration.DEFAULT_CONFIGURATION,
+            cassandraCluster.getCassandraConsistenciesConfiguration());
         testee = new CassandraMailboxMapper(
             mailboxDAO,
             mailboxPathDAO,

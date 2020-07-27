@@ -18,6 +18,7 @@
  * ***************************************************************/
 package org.apache.james.jmap.model
 
+import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import play.api.libs.json._
@@ -33,4 +34,23 @@ object Invocation {
   case class Arguments(value: JsObject) extends AnyVal
   case class MethodCallId(value: NonEmptyString)
 
+
+  def error(errorCode: ErrorCode, description: Option[String], methodCallId: MethodCallId): Invocation = {
+    Invocation(MethodName("error"),
+      Arguments(JsObject(Seq("type" -> JsString(errorCode.code), "description" -> JsString(description.getOrElse(errorCode.defaultDescription))))),
+      methodCallId)
+  }
+}
+
+sealed trait ErrorCode {
+  def code: String
+  def defaultDescription: String
+}
+
+object ErrorCode {
+  case object InvalidArguments extends ErrorCode {
+    override def code: String = "invalidArguments"
+
+    override def defaultDescription: String = "One of the arguments is of the wrong type or otherwise invalid, or a required argument is missing."
+  }
 }

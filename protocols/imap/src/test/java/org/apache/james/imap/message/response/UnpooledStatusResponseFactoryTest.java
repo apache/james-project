@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.message.response;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.AbstractStatusResponseFactoryTest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.junit.jupiter.api.BeforeEach;

@@ -111,11 +111,10 @@ public abstract class FastViewProjectionHealthCheckIntegrationContract {
     }
 
     @Test
-    void checkShouldReturnDegradedAfterFewReadsOnAMissedProjection(GuiceJamesServer guiceJamesServer) {
+    void checkShouldReturnDegradedAfterFewReadsOnAMissedProjection(GuiceJamesServer guiceJamesServer) throws Exception {
         bobSendAMessageToAlice();
 
-        guiceJamesServer.getProbe(JmapGuiceProbe.class)
-            .clearMessageFastViewProjection();
+        makeHealthCheckDegraded(guiceJamesServer);
 
         IntStream.rangeClosed(1, 3) // Will miss at the first time as we cleared the preview
             .forEach(counter -> aliceReadLastMessage());
@@ -132,8 +131,7 @@ public abstract class FastViewProjectionHealthCheckIntegrationContract {
     @Test
     void checkShouldTurnFromDegradedToHealthyAfterMoreReadsOnAMissedProjection(GuiceJamesServer guiceJamesServer) {
         bobSendAMessageToAlice();
-        calmlyAwait.untilAsserted(() -> assertThat(listMessageIdsForAccount(aliceAccessToken))
-            .hasSize(1));
+
         makeHealthCheckDegraded(guiceJamesServer);
 
         IntStream.rangeClosed(1, 100)
@@ -181,7 +179,6 @@ public abstract class FastViewProjectionHealthCheckIntegrationContract {
             .extract()
             .body()
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
-
 
         calmlyAwait.untilAsserted(() -> assertThat(listMessageIdsForAccount(aliceAccessToken))
             .hasSize(1));

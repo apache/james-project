@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.elasticsearch.events;
 
+import static com.github.steveash.guavate.Guavate.toImmutableList;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_ANSWERED;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_DELETED;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_DRAFT;
@@ -69,7 +70,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -77,6 +77,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
+    private static final int FLAGS_UPDATE_PROCESSING_WINDOW_SIZE = 32;
+
     public static class ElasticSearchListeningMessageSearchIndexGroup extends Group {
 
     }
@@ -154,7 +156,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             message.getUid());
 
         RoutingKey from = routingKeyFactory.from(mailbox.getMailboxId());
-        DocumentId id = indexIdFor(mailbox, message.getUid());
+        DocumentId id = indexIdFor(mailbox.getMailboxId(), message.getUid());
 
         return Mono.fromCallable(() -> generateIndexedJson(mailbox, message, session))
             .flatMap(jsonContent -> elasticSearchIndexer.index(id, jsonContent, from))
@@ -176,12 +178,12 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     @Override
-    public Mono<Void> delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
+    public Mono<Void> delete(MailboxSession session, MailboxId mailboxId, Collection<MessageUid> expungedUids) {
         return elasticSearchIndexer
             .delete(expungedUids.stream()
-                .map(uid ->  indexIdFor(mailbox, uid))
-                .collect(Guavate.toImmutableList()),
-                routingKeyFactory.from(mailbox.getMailboxId()))
+                .map(uid ->  indexIdFor(mailboxId, uid))
+                .collect(toImmutableList()),
+                routingKeyFactory.from(mailboxId))
             .then();
     }
 
@@ -196,27 +198,28 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     @Override
-    public Mono<Void> update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
-        RoutingKey routingKey = routingKeyFactory.from(mailbox.getMailboxId());
+    public Mono<Void> update(MailboxSession session, MailboxId mailboxId, List<UpdatedFlags> updatedFlagsList) {
+        RoutingKey routingKey = routingKeyFactory.from(mailboxId);
 
         return Flux.fromIterable(updatedFlagsList)
             .map(Throwing.<UpdatedFlags, UpdatedRepresentation>function(
-                updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
+                updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailboxId, updatedFlags))
                 .sneakyThrow())
-            .collect(Guavate.toImmutableList())
-            .flatMap(updates -> elasticSearchIndexer.update(updates, routingKey))
+            .window(FLAGS_UPDATE_PROCESSING_WINDOW_SIZE)
+            .concatMap(flux -> flux.collect(toImmutableList())
+                .flatMap(updates -> elasticSearchIndexer.update(updates, routingKey)))
             .then();
     }
 
-    private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) throws JsonProcessingException {
+    private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(MailboxId mailboxId, UpdatedFlags updatedFlags) throws JsonProcessingException {
         return new UpdatedRepresentation(
-            indexIdFor(mailbox, updatedFlags.getUid()),
+            indexIdFor(mailboxId, updatedFlags.getUid()),
             messageToElasticSearchJson
                 .getUpdatedJsonMessagePart(updatedFlags.getNewFlags(), updatedFlags.getModSeq()));
     }
 
-    private DocumentId indexIdFor(Mailbox mailbox, MessageUid uid) {
-        return DocumentId.fromString(String.join(ID_SEPARATOR, mailbox.getMailboxId().serialize(), String.valueOf(uid.asLong())));
+    private DocumentId indexIdFor(MailboxId mailboxId, MessageUid uid) {
+        return DocumentId.fromString(String.join(ID_SEPARATOR, mailboxId.serialize(), String.valueOf(uid.asLong())));
     }
 
     private void logIfNoMessageId(SearchResult searchResult) {
@@ -229,7 +232,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     public Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid) {
         RoutingKey routingKey = routingKeyFactory.from(mailbox.getMailboxId());
 
-        return elasticSearchIndexer.get(indexIdFor(mailbox, uid), routingKey)
+        return elasticSearchIndexer.get(indexIdFor(mailbox.getMailboxId(), uid), routingKey)
             .filter(GetResponse::isExists)
             .map(GetResponse::getSourceAsMap)
             .map(this::extractFlags)

@@ -1,0 +1,48 @@
+= SMTP Service Extensions (ESMTP)
+:navtitle: ESMTP
+
+== Overview
+
+https://en.wikipedia.org/wiki/Extended_SMTP[SMTP Service Extensions], written as "ESMTP"
+and characterized in the literature as "Extended SMTP" (and sometimes "Enhanced SMTP")
+is a framework for extending SMTP. Extensions are expected to be registered with
+IANA and negotiated between the client and server.
+
+Whereas SMTP mandates that a session begins with the "HELO" command, ESMTP requires
+the "EHLO" (extended hello) command. Note that nowadays even "standard" SMTP uses
+EHLO as its initial greeting, and only falls back to HELO, so in a sense every
+SMTP server has effectively become an ESMTP server.
+
+The ESMTP specification itself no longer actually exists independently of SMTP.
+We mention it here mostly for completion, historical purposes, and as a reference 
+to a concept that is still very much in use, albeit now as a concept internal to
+SMTP.
+
+
+== Specifications
+
+=== RFC1425
+
+https://tools.ietf.org/html/rfc1425[RFC1425] ("SMTP Service Extensions") is the originally
+published ESMTP specification. It was obsoleted by <<RFC1651>>.
+
+
+=== RFC1651
+
+https://tools.ietf.org/html/rfc1651[RFC1651] ("SMTP Service Extensions") obsoletes <<RFC1425>>
+and was itself obsoleted by <<RFC1869>>.
+
+
+=== RFC1869
+
+https://tools.ietf.org/html/rfc1869[RFC1869] ("SMTP Service Extensions") obsoletes <<RFC1651>>, and
+is essentially the final specification in which ESMTP was defined separately from SMTP. When this
+spec was obsoleted by xref:protocols/smtp.adoc#RFC2821[RFC2821], it was incorporated into the
+SMTP specification.
+ 
+
+== Related Concepts
+
+ * *xref:protocols/smtp.adoc[SMTP]*, because ESMTP defines an extension framework for SMTP
+ * *xref:protocols/lmtp.adoc[LMTP]*, as LMTP is defined by the ESMTP framework
+

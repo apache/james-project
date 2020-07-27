@@ -35,6 +35,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -140,11 +141,10 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-    public void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxException {
-        CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
-        MailboxReactorUtils.block(mailboxMapper.findMailboxById(mailboxId)
-            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxId)))
-            .then(saveMessageMetadata(mailboxMessage, mailboxId)));
+    public void copyInMailbox(MailboxMessage mailboxMessage, Mailbox mailbox) throws MailboxException {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+
+        MailboxReactorUtils.block(saveMessageMetadata(mailboxMessage, mailboxId));
     }
 
     private Mono<Void> saveMessageMetadata(MailboxMessage mailboxMessage, CassandraId mailboxId) {
@@ -172,10 +172,11 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public void delete(MessageId messageId, Collection<MailboxId> mailboxIds) {
-        deleteAsMono(messageId, mailboxIds).block();
+        deleteReactive(messageId, mailboxIds).block();
     }
 
-    public Mono<Void> deleteAsMono(MessageId messageId, Collection<MailboxId> mailboxIds) {
+    @Override
+    public Mono<Void> deleteReactive(MessageId messageId, Collection<MailboxId> mailboxIds) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
         return Flux.fromStream(mailboxIds.stream())
             .flatMap(mailboxId -> retrieveAndDeleteIndices(cassandraMessageId, Optional.of((CassandraId) mailboxId)))
@@ -187,7 +188,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         Flux.fromIterable(ids.asMap()
             .entrySet())
             .publishOn(Schedulers.elastic())
-            .flatMap(entry -> deleteAsMono(entry.getKey(), entry.getValue()), cassandraConfiguration.getExpungeChunkSize())
+            .flatMap(entry -> deleteReactive(entry.getKey(), entry.getValue()), cassandraConfiguration.getExpungeChunkSize())
             .then()
             .block();
     }

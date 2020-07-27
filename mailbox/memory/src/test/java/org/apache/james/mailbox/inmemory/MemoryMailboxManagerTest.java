@@ -20,13 +20,20 @@
 package org.apache.james.mailbox.inmemory;
 
 import org.apache.james.mailbox.MailboxManagerTest;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.store.StoreSubscriptionManager;
 
 class MemoryMailboxManagerTest extends MailboxManagerTest<InMemoryMailboxManager> {
 
     @Override
     protected InMemoryMailboxManager provideMailboxManager() {
         return MemoryMailboxManagerProvider.provideMailboxManager(preDeletionHooks());
+    }
+
+    @Override
+    protected SubscriptionManager provideSubscriptionManager() {
+        return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory());
     }
 
     @Override

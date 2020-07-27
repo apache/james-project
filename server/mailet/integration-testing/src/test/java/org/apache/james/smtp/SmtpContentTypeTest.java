@@ -44,8 +44,8 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.matchers.SMTPIsAuthNetwork;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.Mail;
 import org.junit.After;
 import org.junit.ClassRule;
@@ -70,7 +70,7 @@ public class SmtpContentTypeTest {
     private TemporaryJamesServer jamesServer;
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
@@ -83,6 +83,7 @@ public class SmtpContentTypeTest {
             .withSmtpConfiguration(smtpConfiguration)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

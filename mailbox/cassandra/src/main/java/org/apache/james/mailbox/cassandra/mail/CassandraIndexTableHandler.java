@@ -159,15 +159,15 @@ public class CassandraIndexTableHandler {
     }
 
     private Mono<Void> decrementCountersOnDelete(CassandraId mailboxId, Collection<MessageMetaData> metaData) {
-        long seenCount = metaData.stream()
+        long unseenCount = metaData.stream()
             .map(MessageMetaData::getFlags)
-            .filter(flags -> flags.contains(Flags.Flag.SEEN))
+            .filter(flags -> !flags.contains(Flags.Flag.SEEN))
             .count();
 
         return mailboxCounterDAO.remove(MailboxCounters.builder()
             .mailboxId(mailboxId)
             .count(metaData.size())
-            .unseen(seenCount)
+            .unseen(unseenCount)
             .build());
     }
 

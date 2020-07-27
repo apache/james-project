@@ -72,7 +72,12 @@ class CacheSessionTest {
     }
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
+        CassandraJamesServerConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .build())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)

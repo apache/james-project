@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
+import static org.apache.james.transport.mailets.remote.delivery.Bouncer.IS_DELIVERY_PERMANENT_ERROR;
 
 import java.time.Duration;
 import java.util.Date;
@@ -32,6 +33,8 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
@@ -131,9 +134,14 @@ public class DeliveryRunnable implements Disposable {
                 handleTemporaryFailure(mail, executionResult);
                 break;
             case PERMANENT_FAILURE:
-                bouncer.bounce(mail, executionResult.getException().orElse(null));
+                handlePermanentFailure(mail, executionResult);
                 break;
         }
+    }
+
+    private void handlePermanentFailure(Mail mail, ExecutionResult executionResult) {
+        mail.setAttribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(true)));
+        bouncer.bounce(mail, executionResult.getException().orElse(null));
     }
 
     private void handleTemporaryFailure(Mail mail, ExecutionResult executionResult) throws MailQueue.MailQueueException {
@@ -142,6 +150,7 @@ public class DeliveryRunnable implements Disposable {
             DeliveryRetriesHelper.initRetries(mail);
             mail.setLastUpdated(dateSupplier.get());
         }
+        mail.setAttribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)));
         int retries = DeliveryRetriesHelper.retrieveRetries(mail);
 
         if (retries < configuration.getMaxRetries()) {

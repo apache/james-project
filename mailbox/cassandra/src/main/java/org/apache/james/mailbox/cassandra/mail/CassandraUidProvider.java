@@ -36,6 +36,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -60,10 +61,13 @@ public class CassandraUidProvider implements UidProvider {
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
     private final PreparedStatement selectStatement;
+    private final ConsistencyLevel consistencyLevel;
 
     @Inject
-    public CassandraUidProvider(Session session, CassandraConfiguration cassandraConfiguration) {
+    public CassandraUidProvider(Session session, CassandraConfiguration cassandraConfiguration,
+                                CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.executor = new CassandraAsyncExecutor(session);
+        this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
         this.maxUidRetries = cassandraConfiguration.getUidMaxRetry();
         this.selectStatement = prepareSelect(session);
         this.updateStatement = prepareUpdate(session);
@@ -125,7 +129,7 @@ public class CassandraUidProvider implements UidProvider {
         return executor.executeSingleRow(
             selectStatement.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                .setConsistencyLevel(ConsistencyLevel.SERIAL))
+                .setConsistencyLevel(consistencyLevel))
             .map(row -> MessageUid.of(row.getLong(NEXT_UID)));
     }
 

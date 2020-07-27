@@ -21,12 +21,12 @@ package org.apache.james.linshare;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.linshare.LinshareExtension.LinshareAPIForAdminTesting;
 import static org.apache.james.linshare.LinshareFixture.ACCOUNT_ENABLED;
 import static org.apache.james.linshare.LinshareFixture.ADMIN_ACCOUNT;
 import static org.apache.james.linshare.LinshareFixture.TECHNICAL_ACCOUNT;
 import static org.apache.james.linshare.LinshareFixture.TECHNICAL_PERMISSIONS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.apache.james.linshare.LinshareExtension.LinshareAPIForAdminTesting;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;

@@ -39,6 +39,7 @@ public interface Fixture {
     class MailsFixutre {
         static Mail MAIL_1;
         static Mail MAIL_2;
+
         static {
             try {
                 MAIL_1 = new Mail(

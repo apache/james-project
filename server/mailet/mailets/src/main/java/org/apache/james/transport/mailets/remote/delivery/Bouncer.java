@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
@@ -41,6 +42,9 @@ public class Bouncer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Bouncer.class);
 
     public static final AttributeName DELIVERY_ERROR = AttributeName.of("delivery-error");
+    public static final AttributeName DELIVERY_ERROR_CODE = AttributeName.of("delivery-error-code");
+    public static final AttributeName IS_DELIVERY_PERMANENT_ERROR = AttributeName.of("is-delivery-permanent-error");
+
     private final RemoteDeliveryConfiguration configuration;
     private final MailetContext mailetContext;
 
@@ -54,6 +58,7 @@ public class Bouncer {
             LOGGER.debug("Null Sender: no bounce will be generated for {}", mail.getName());
         } else {
             if (configuration.getBounceProcessor() != null) {
+                computeErrorCode(ex).ifPresent(mail::setAttribute);
                 mail.setAttribute(new Attribute(DELIVERY_ERROR, AttributeValue.of(getErrorMsg(ex))));
                 try {
                     mailetContext.sendMail(mail, configuration.getBounceProcessor());
@@ -66,6 +71,14 @@ public class Bouncer {
         }
     }
 
+    private Optional<Attribute> computeErrorCode(Exception ex) {
+        return Optional.ofNullable(ex)
+            .filter(e -> e instanceof MessagingException)
+            .map(MessagingException.class::cast)
+            .map(EnhancedMessagingException::new)
+            .flatMap(EnhancedMessagingException::getReturnCode)
+            .map(code -> new Attribute(DELIVERY_ERROR_CODE, AttributeValue.of(code)));
+    }
 
     private void bounceWithMailetContext(Mail mail, Exception ex) {
         LOGGER.debug("Sending failure message {}", mail.getName());
@@ -115,7 +128,7 @@ public class Bouncer {
     }
 
     private String sanitizeExceptionMessage(Exception e) {
-        if (e.getMessage() == null) {
+        if (e == null || e.getMessage() == null) {
             return "null";
         } else {
             return e.getMessage().trim();

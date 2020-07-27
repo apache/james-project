@@ -21,11 +21,11 @@ package org.apache.james.backends.cassandra.init;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.QueryOptions;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SocketOptions;
@@ -33,7 +33,7 @@ import com.google.common.base.Preconditions;
 
 public class ClusterFactory {
 
-    public static Cluster create(ClusterConfiguration configuration) {
+    public static Cluster create(ClusterConfiguration configuration, CassandraConsistenciesConfiguration consistenciesConfiguration) {
         Preconditions.checkState(configuration.getUsername().isPresent() == configuration.getPassword().isPresent(), "If you specify username, you must specify password");
 
         Cluster.Builder clusterBuilder = Cluster.builder()
@@ -46,7 +46,7 @@ public class ClusterFactory {
             configuration.getPassword().ifPresent(password ->
                 clusterBuilder.withCredentials(username, password)));
 
-        clusterBuilder.withQueryOptions(queryOptions());
+        clusterBuilder.withQueryOptions(queryOptions(consistenciesConfiguration));
 
         SocketOptions socketOptions = new SocketOptions();
         socketOptions.setReadTimeoutMillis(configuration.getReadTimeoutMillis());
@@ -71,9 +71,10 @@ public class ClusterFactory {
         }
     }
 
-    private static QueryOptions queryOptions() {
+    private static QueryOptions queryOptions(CassandraConsistenciesConfiguration consistenciesConfiguration) {
         return new QueryOptions()
-                .setConsistencyLevel(ConsistencyLevel.QUORUM);
+                .setConsistencyLevel(consistenciesConfiguration.getRegular())
+                .setSerialConsistencyLevel(consistenciesConfiguration.getLightweightTransaction());
     }
 
     private static void ensureContactable(Cluster cluster) {

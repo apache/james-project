@@ -30,6 +30,7 @@ import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class CassandraMappingsSolveInconsistenciesTaskTest {

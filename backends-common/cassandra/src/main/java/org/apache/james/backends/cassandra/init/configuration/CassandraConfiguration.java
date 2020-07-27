@@ -21,17 +21,23 @@ package org.apache.james.backends.cassandra.init.configuration;
 
 import static java.lang.Math.toIntExact;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.apache.commons.configuration2.Configuration;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraConfiguration {
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CassandraConfiguration.class);
+
     public static final int DEFAULT_MESSAGE_CHUNK_SIZE_ON_READ = 100;
     public static final int DEFAULT_EXPUNGE_BATCH_SIZE = 50;
     public static final int DEFAULT_UPDATE_FLAGS_BATCH_SIZE = 20;
@@ -44,7 +50,10 @@ public class CassandraConfiguration {
     public static final int DEFAULT_BLOB_PART_SIZE = 100 * 1024;
     public static final int DEFAULT_ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.HOURS.toMillis(1));
     public static final int DEFAULT_MESSAGE_ATTACHMENT_ID_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.HOURS.toMillis(1));
-
+    public static final String DEFAULT_CONSISTENCY_LEVEL_REGULAR = "QUORUM";
+    public static final String DEFAULT_CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION = "SERIAL";
+    public static final List<String> VALID_CONSISTENCY_LEVEL_REGULAR = ImmutableList.of("QUORUM", "LOCAL_QUORUM", "EACH_QUORUM");
+    public static final List<String> VALID_CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION = ImmutableList.of("SERIAL", "LOCAL_SERIAL");
 
     private static final String MAILBOX_MAX_RETRY_ACL = "mailbox.max.retry.acl";
     private static final String MAILBOX_MAX_RETRY_MODSEQ = "mailbox.max.retry.modseq";
@@ -57,6 +66,8 @@ public class CassandraConfiguration {
     private static final String BLOB_PART_SIZE = "mailbox.blob.part.size";
     private static final String ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = "attachment.v2.migration.read.timeout";
     private static final String MESSAGE_ATTACHMENTID_READ_TIMEOUT = "message.attachmentids.read.timeout";
+    private static final String CONSISTENCY_LEVEL_REGULAR = "cassandra.consistency_level.regular";
+    private static final String CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION = "cassandra.consistency_level.lightweight_transaction";
 
     public static final CassandraConfiguration DEFAULT_CONFIGURATION = builder().build();
 
@@ -72,6 +83,8 @@ public class CassandraConfiguration {
         private Optional<Integer> blobPartSize = Optional.empty();
         private Optional<Integer> attachmentV2MigrationReadTimeout = Optional.empty();
         private Optional<Integer> messageAttachmentIdsReadTimeout = Optional.empty();
+        private Optional<String> consistencyLevelRegular = Optional.empty();
+        private Optional<String> consistencyLevelLightweightTransaction = Optional.empty();
 
         public Builder messageReadChunkSize(int value) {
             Preconditions.checkArgument(value > 0, "messageReadChunkSize needs to be strictly positive");
@@ -194,7 +207,39 @@ public class CassandraConfiguration {
             return this;
         }
 
+        public Builder consistencyLevelRegular(String value) {
+            Preconditions.checkArgument(VALID_CONSISTENCY_LEVEL_REGULAR.contains(value),
+                "consistencyLevelRegular needs to be one of the following: " + String.join(", ", VALID_CONSISTENCY_LEVEL_REGULAR));
+            this.consistencyLevelRegular = Optional.of(value);
+            return this;
+        }
+
+        public Builder consistencyLevelLightweightTransaction(String value) {
+            Preconditions.checkArgument(VALID_CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION.contains(value),
+                "consistencyLevelLightweightTransaction needs to be one of the following: " + String.join(", ", VALID_CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION));
+            this.consistencyLevelLightweightTransaction = Optional.of(value);
+            return this;
+        }
+
+        public Builder consistencyLevelRegular(Optional<String> value) {
+            value.ifPresent(this::consistencyLevelRegular);
+            return this;
+        }
+
+        public Builder consistencyLevelLightweightTransaction(Optional<String> value) {
+            value.ifPresent(this::consistencyLevelLightweightTransaction);
+            return this;
+        }
+
         public CassandraConfiguration build() {
+            String consistencyLevelRegular = this.consistencyLevelRegular.orElse(DEFAULT_CONSISTENCY_LEVEL_REGULAR);
+            String consistencyLevelLightweightTransaction = this.consistencyLevelLightweightTransaction.orElse(DEFAULT_CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION);
+            Predicate<String> isLocal = consistencyLevel -> consistencyLevel.startsWith("LOCAL_");
+            if (isLocal.test(consistencyLevelRegular) != isLocal.test(consistencyLevelLightweightTransaction)) {
+                LOGGER.warn("The consistency levels may not be properly configured, one is local and the other not: "
+                    + "regular = '{}' and lightweight transaction = '{}'", consistencyLevelRegular, consistencyLevelLightweightTransaction);
+            }
+
             return new CassandraConfiguration(aclMaxRetry.orElse(DEFAULT_ACL_MAX_RETRY),
                 messageReadChunkSize.orElse(DEFAULT_MESSAGE_CHUNK_SIZE_ON_READ),
                 expungeChunkSize.orElse(DEFAULT_EXPUNGE_BATCH_SIZE),
@@ -205,7 +250,9 @@ public class CassandraConfiguration {
                 fetchNextPageInAdvanceRow.orElse(DEFAULT_FETCH_NEXT_PAGE_ADVANCE_IN_ROW),
                 blobPartSize.orElse(DEFAULT_BLOB_PART_SIZE),
                 attachmentV2MigrationReadTimeout.orElse(DEFAULT_ATTACHMENT_V2_MIGRATION_READ_TIMEOUT),
-                messageAttachmentIdsReadTimeout.orElse(DEFAULT_MESSAGE_ATTACHMENT_ID_MIGRATION_READ_TIMEOUT));
+                messageAttachmentIdsReadTimeout.orElse(DEFAULT_MESSAGE_ATTACHMENT_ID_MIGRATION_READ_TIMEOUT),
+                consistencyLevelRegular,
+                consistencyLevelLightweightTransaction);
         }
     }
 
@@ -237,6 +284,10 @@ public class CassandraConfiguration {
                 propertiesConfiguration.getInteger(ATTACHMENT_V2_MIGRATION_READ_TIMEOUT, null)))
             .messageAttachmentIdsReadTimeout(Optional.ofNullable(
                 propertiesConfiguration.getInteger(MESSAGE_ATTACHMENTID_READ_TIMEOUT, null)))
+            .consistencyLevelRegular(Optional.ofNullable(
+                    propertiesConfiguration.getString(CONSISTENCY_LEVEL_REGULAR)))
+            .consistencyLevelLightweightTransaction(Optional.ofNullable(
+                    propertiesConfiguration.getString(CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION)))
             .build();
     }
 
@@ -251,12 +302,15 @@ public class CassandraConfiguration {
     private final int blobPartSize;
     private final int attachmentV2MigrationReadTimeout;
     private final int messageAttachmentIdsReadTimeout;
+    private final String consistencyLevelRegular;
+    private final String consistencyLevelLightweightTransaction;
 
     @VisibleForTesting
     CassandraConfiguration(int aclMaxRetry, int messageReadChunkSize, int expungeChunkSize,
                            int flagsUpdateMessageIdMaxRetry, int flagsUpdateMessageMaxRetry,
                            int modSeqMaxRetry, int uidMaxRetry, int fetchNextPageInAdvanceRow,
-                           int blobPartSize, final int attachmentV2MigrationReadTimeout, int messageAttachmentIdsReadTimeout) {
+                           int blobPartSize, final int attachmentV2MigrationReadTimeout, int messageAttachmentIdsReadTimeout,
+                           String consistencyLevelRegular, String consistencyLevelLightweightTransaction) {
         this.aclMaxRetry = aclMaxRetry;
         this.messageReadChunkSize = messageReadChunkSize;
         this.expungeChunkSize = expungeChunkSize;
@@ -268,6 +322,8 @@ public class CassandraConfiguration {
         this.blobPartSize = blobPartSize;
         this.attachmentV2MigrationReadTimeout = attachmentV2MigrationReadTimeout;
         this.messageAttachmentIdsReadTimeout = messageAttachmentIdsReadTimeout;
+        this.consistencyLevelRegular = consistencyLevelRegular;
+        this.consistencyLevelLightweightTransaction = consistencyLevelLightweightTransaction;
     }
 
     public int getBlobPartSize() {
@@ -314,6 +370,14 @@ public class CassandraConfiguration {
         return messageAttachmentIdsReadTimeout;
     }
 
+    public String getConsistencyLevelRegular() {
+        return consistencyLevelRegular;
+    }
+
+    public String getConsistencyLevelLightweightTransaction() {
+        return consistencyLevelLightweightTransaction;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof CassandraConfiguration) {
@@ -329,7 +393,9 @@ public class CassandraConfiguration {
                 && Objects.equals(this.fetchNextPageInAdvanceRow, that.fetchNextPageInAdvanceRow)
                 && Objects.equals(this.blobPartSize, that.blobPartSize)
                 && Objects.equals(this.attachmentV2MigrationReadTimeout, that.attachmentV2MigrationReadTimeout)
-                && Objects.equals(this.messageAttachmentIdsReadTimeout, that.messageAttachmentIdsReadTimeout);
+                && Objects.equals(this.messageAttachmentIdsReadTimeout, that.messageAttachmentIdsReadTimeout)
+                && Objects.equals(this.consistencyLevelRegular, that.consistencyLevelRegular)
+                && Objects.equals(this.consistencyLevelLightweightTransaction, that.consistencyLevelLightweightTransaction);
         }
         return false;
     }
@@ -338,7 +404,8 @@ public class CassandraConfiguration {
     public final int hashCode() {
         return Objects.hash(aclMaxRetry, messageReadChunkSize, expungeChunkSize, flagsUpdateMessageIdMaxRetry,
             flagsUpdateMessageMaxRetry, modSeqMaxRetry, uidMaxRetry, fetchNextPageInAdvanceRow,
-            blobPartSize, attachmentV2MigrationReadTimeout, messageAttachmentIdsReadTimeout);
+            blobPartSize, attachmentV2MigrationReadTimeout, messageAttachmentIdsReadTimeout,
+            consistencyLevelRegular, consistencyLevelLightweightTransaction);
     }
 
     @Override
@@ -355,6 +422,8 @@ public class CassandraConfiguration {
             .add("blobPartSize", blobPartSize)
             .add("attachmentV2MigrationReadTimeout", attachmentV2MigrationReadTimeout)
             .add("messageAttachmentIdsReadTimeout", messageAttachmentIdsReadTimeout)
+            .add("consistencyLevelRegular", consistencyLevelRegular)
+            .add("consistencyLevelLightweightTransaction", consistencyLevelLightweightTransaction)
             .toString();
     }
 }

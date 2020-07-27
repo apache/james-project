@@ -37,6 +37,7 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.newAsyncListen
 import static org.apache.james.mailbox.events.EventBusTestFixture.newListener;
 import static org.apache.james.mailbox.events.GroupRegistration.WorkQueueName.MAILBOX_EVENT_WORK_QUEUE_PREFIX;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
+import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_DEAD_LETTER_QUEUE;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -53,6 +54,8 @@ import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
@@ -64,6 +67,7 @@ import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
 import org.apache.james.mailbox.events.EventDispatcher.DispatchingFailureGroup;
+import org.apache.james.mailbox.events.RoutingKeyConverter.RoutingKey;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -71,6 +75,7 @@ import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.data.Percentage;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -82,8 +87,10 @@ import org.mockito.stubbing.Answer;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
+import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
@@ -172,6 +179,102 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     @Test
+    void eventProcessingShouldNotCrashOnInvalidMessage() {
+        EventCollector listener = new EventCollector();
+        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        eventBus.register(listener, registeredGroup);
+
+        String emptyRoutingKey = "";
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                emptyRoutingKey,
+                "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+            .block();
+
+        eventBus.dispatch(EVENT, NO_KEYS).block();
+        await()
+            .timeout(org.awaitility.Duration.TEN_SECONDS).untilAsserted(() ->
+                assertThat(listener.getEvents()).containsOnly(EVENT));
+    }
+
+    @Test
+    void eventProcessingShouldNotCrashOnInvalidMessages() {
+        EventCollector listener = new EventCollector();
+        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        eventBus.register(listener, registeredGroup);
+
+        String emptyRoutingKey = "";
+        IntStream.range(0, 10).forEach(i -> rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                emptyRoutingKey,
+                "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+            .block());
+
+        eventBus.dispatch(EVENT, NO_KEYS).block();
+        await()
+            .timeout(org.awaitility.Duration.TEN_SECONDS).untilAsserted(() ->
+            assertThat(listener.getEvents()).containsOnly(EVENT));
+    }
+
+    @Test
+    void eventProcessingShouldStoreInvalidMessagesInDeadLetterQueue() {
+        EventCollector listener = new EventCollector();
+        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        eventBus.register(listener, registeredGroup);
+
+        String emptyRoutingKey = "";
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                emptyRoutingKey,
+                "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+            .block();
+
+        AtomicInteger deadLetteredCount = new AtomicInteger();
+        rabbitMQExtension.getRabbitChannelPool()
+            .createReceiver()
+            .consumeAutoAck(MAILBOX_EVENT_DEAD_LETTER_QUEUE)
+            .doOnNext(next -> deadLetteredCount.incrementAndGet())
+            .subscribeOn(Schedulers.elastic())
+            .subscribe();
+
+        Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(deadLetteredCount.get()).isEqualTo(1));
+    }
+
+    @Test
+    void registrationShouldNotCrashOnInvalidMessage() {
+        EventCollector listener = new EventCollector();
+        Mono.from(eventBus.register(listener, KEY_1)).block();
+
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                RoutingKey.of(KEY_1).asString(),
+                "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+            .block();
+
+        eventBus.dispatch(EVENT, KEY_1).block();
+        await().timeout(org.awaitility.Duration.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(listener.getEvents()).containsOnly(EVENT));
+    }
+
+    @Test
+    void registrationShouldNotCrashOnInvalidMessages() {
+        EventCollector listener = new EventCollector();
+        Mono.from(eventBus.register(listener, KEY_1)).block();
+
+        IntStream.range(0, 100)
+            .forEach(i -> rabbitMQExtension.getSender()
+                .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                    RoutingKey.of(KEY_1).asString(),
+                    "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+                .block());
+
+        eventBus.dispatch(EVENT, KEY_1).block();
+        await().timeout(org.awaitility.Duration.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(listener.getEvents()).containsOnly(EVENT));
+    }
+
+    @Test
     void deserializeEventCollectorGroup() throws Exception {
         assertThat(Group.deserialize("org.apache.james.mailbox.util.EventCollector$EventCollectorGroup"))
             .isEqualTo(new EventCollector.EventCollectorGroup());
@@ -196,6 +299,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         public EnvironmentSpeedProfile getSpeedProfile() {
             return EnvironmentSpeedProfile.SLOW;
         }
+
         @Test
         void rabbitMQEventBusShouldHandleBulksGracefully() throws Exception {
             EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
@@ -477,6 +581,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 assertThatListenerReceiveOneEvent(listener);
             }
 
+            @Disabled("JAMES-3083 Disable this unstable test")
             @Test
             void dispatchShouldWorkAfterRestartForNewKeyRegistration() throws Exception {
                 eventBus.start();
@@ -686,7 +791,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBusWithKeyHandlerNotStarted.stop();
 
                 assertThat(rabbitManagementAPI.listQueues())
-                    .filteredOn(queue -> !queue.getName().startsWith(MAILBOX_EVENT_WORK_QUEUE_PREFIX))
+                    .filteredOn(queue -> !queue.getName().startsWith(MAILBOX_EVENT_WORK_QUEUE_PREFIX)
+                        && !queue.getName().startsWith(MAILBOX_EVENT_DEAD_LETTER_QUEUE))
                     .isEmpty();
             }
 

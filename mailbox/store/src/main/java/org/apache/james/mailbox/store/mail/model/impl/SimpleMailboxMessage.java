@@ -65,7 +65,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         private Optional<MessageUid> uid = Optional.empty();
         private Optional<ModSeq> modseq = Optional.empty();
         private ImmutableList.Builder<MessageAttachmentMetadata> attachments = ImmutableList.builder();
-        private Optional<Boolean> hasAttachment = Optional.empty();
 
         public Builder messageId(MessageId messageId) {
             this.messageId = messageId;
@@ -104,16 +103,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             return this;
         }
 
-        public Builder hasAttachment() {
-            this.hasAttachment = Optional.of(true);
-            return this;
-        }
-
-        public Builder hasAttachment(boolean hasAttachment) {
-            this.hasAttachment = Optional.of(hasAttachment);
-            return this;
-        }
-
         public Builder flags(Flags flags) {
             this.flags = flags;
             return this;
@@ -145,9 +134,8 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             Preconditions.checkNotNull(mailboxId, "mailboxId is required");
 
             ImmutableList<MessageAttachmentMetadata> attachments = this.attachments.build();
-            boolean hasAttachment = this.hasAttachment.orElse(!attachments.isEmpty());
             SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size,
-                bodyStartOctet, content, flags, propertyBuilder, mailboxId, attachments, hasAttachment);
+                bodyStartOctet, content, flags, propertyBuilder, mailboxId, attachments);
 
             uid.ifPresent(simpleMailboxMessage::setUid);
             modseq.ifPresent(simpleMailboxMessage::setModSeq);
@@ -175,7 +163,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .internalDate(original.getInternalDate())
             .size(original.getFullContentOctets())
             .flags(original.createFlags())
-            .hasAttachment(original.hasAttachment())
             .propertyBuilder(propertyBuilder);
     }
 
@@ -205,8 +192,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     public SimpleMailboxMessage(MessageId messageId, Date internalDate, long size, int bodyStartOctet,
             SharedInputStream content, Flags flags,
-            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments,
-            boolean hasAttachment) {
+            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments) {
         super(new SimpleMessage(
                 messageId,
                 content, size, internalDate, propertyBuilder.getSubType(),
@@ -214,20 +200,11 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
                 bodyStartOctet,
                 propertyBuilder.getTextualLineCount(),
                 propertyBuilder.toProperties(),
-                attachments,
-                hasAttachment));
+                attachments));
 
             setFlags(flags);
             this.mailboxId = mailboxId;
             this.userFlags = flags.getUserFlags();
-    }
-
-    public SimpleMailboxMessage(MessageId messageId, Date internalDate, long size, int bodyStartOctet,
-            SharedInputStream content, Flags flags,
-            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments) {
-        this(messageId, internalDate, size, bodyStartOctet,
-            content, flags,
-            propertyBuilder, mailboxId, attachments, !attachments.isEmpty());
     }
 
     public SimpleMailboxMessage(MessageId messageId, Date internalDate, long size, int bodyStartOctet,

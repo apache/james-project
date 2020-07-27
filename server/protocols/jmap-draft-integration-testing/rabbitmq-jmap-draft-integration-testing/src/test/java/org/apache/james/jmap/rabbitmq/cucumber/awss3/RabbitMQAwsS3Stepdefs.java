@@ -30,6 +30,7 @@ import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.DockerElasticSearchRule;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.jmap.draft.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.draft.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -81,6 +82,7 @@ public class RabbitMQAwsS3Stepdefs {
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build();
 
         mainStepdefs.jmapServer = CassandraRabbitMQJamesServerMain.createServer(configuration)

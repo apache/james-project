@@ -26,6 +26,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -128,7 +129,7 @@ public class IndexableMessage {
                         subjects.serialize(),
                         bodyText.orElse(null),
                         bodyHtml.orElse(null))
-                    .filter(str -> !Strings.isNullOrEmpty(str))
+                    .filter(Predicate.not(Strings::isNullOrEmpty))
                     .collect(Collectors.joining(" "));
 
             long uid = message.getUid().asLong();

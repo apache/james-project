@@ -41,6 +41,7 @@ public class CassandraRabbitMQJamesServerFixture {
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+                .searchConfiguration(SearchConfiguration.elasticSearch())
                 .build())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())

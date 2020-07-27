@@ -40,8 +40,8 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -85,6 +85,7 @@ public class SMIMEDecryptIntegrationTest {
             .withOverrides(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015))
             .withMailetContainer(mailetContainer)
             .build(workingDir);
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

@@ -32,6 +32,7 @@ import java.util.function.Function;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -66,11 +67,14 @@ public class CassandraACLMapper {
     private final PreparedStatement conditionalUpdateStatement;
     private final PreparedStatement readStatement;
     private final PreparedStatement deleteStatement;
+    private final ConsistencyLevel consistencyLevel;
 
     @Inject
-    public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration) {
+    public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO,
+                              CassandraConfiguration cassandraConfiguration, CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.maxAclRetry = cassandraConfiguration.getAclMaxRetry();
+        this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
         this.conditionalInsertStatement = prepareConditionalInsert(session);
         this.conditionalUpdateStatement = prepareConditionalUpdate(session);
         this.readStatement = prepareReadStatement(session);
@@ -150,7 +154,7 @@ public class CassandraACLMapper {
         return executor.executeSingleRow(
             readStatement.bind()
                 .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
-                .setConsistencyLevel(ConsistencyLevel.SERIAL));
+                .setConsistencyLevel(consistencyLevel));
     }
 
     private Mono<MailboxACL> updateStoredACL(CassandraId cassandraId, ACLWithVersion aclWithVersion) {

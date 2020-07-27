@@ -87,9 +87,15 @@ class RecomputeMailboxCountersServiceTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        mailboxDAO = new CassandraMailboxDAO(
+            cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
         imapUidToMessageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), MESSAGE_ID_FACTORY);
-        messageIdToImapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), MESSAGE_ID_FACTORY);
+        messageIdToImapUidDAO = new CassandraMessageIdToImapUidDAO(
+            cassandra.getConf(),
+            cassandraCluster.getCassandraConsistenciesConfiguration(),
+            MESSAGE_ID_FACTORY);
         counterDAO = new CassandraMailboxCounterDAO(cassandra.getConf());
         testee = new RecomputeMailboxCountersService(mailboxDAO, imapUidToMessageIdDAO, messageIdToImapUidDAO, counterDAO);
     }

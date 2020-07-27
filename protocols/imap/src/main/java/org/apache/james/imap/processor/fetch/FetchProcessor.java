@@ -21,6 +21,7 @@ package org.apache.james.imap.processor.fetch;
 
 import java.io.Closeable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -31,6 +32,7 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.FetchRequest;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.processor.AbstractMailboxProcessor;
@@ -41,14 +43,20 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.MemoizedSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Flux;
 
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(FetchProcessor.class);
@@ -82,10 +90,12 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             }
             final MailboxSession mailboxSession = session.getMailboxSession();
 
-            MailboxMetaData metaData = mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT);
+            MemoizedSupplier<MailboxMetaData> metaData = MemoizedSupplier.of(Throwing.supplier(
+                    () -> mailbox.getMetaData(false, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT))
+                .sneakyThrow());
             if (fetch.getChangedSince() != -1 || fetch.contains(Item.MODSEQ)) {
                 // Enable CONDSTORE as this is a CONDSTORE enabling command
-                condstoreEnablingCommand(session, responder,  metaData, true);
+                condstoreEnablingCommand(session, responder,  metaData.get(), true);
             }
             
             List<MessageRange> ranges = new ArrayList<>();
@@ -102,7 +112,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             if (vanished) {
                 // TODO: From the QRESYNC RFC it seems ok to send the VANISHED responses after the FETCH Responses. 
                 //       If we do so we could prolly save one mailbox access which should give use some more speed up
-                respondVanished(mailboxSession, mailbox, ranges, changedSince, metaData, responder);
+                respondVanished(mailboxSession, mailbox, ranges, changedSince, metaData.get(), responder);
             }
             processMessageRanges(session, mailbox, ranges, fetch, useUids, mailboxSession, responder);
 
@@ -140,37 +150,73 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         FetchGroup resultToFetch = FetchDataConverter.getFetchGroup(fetch);
 
         for (MessageRange range : ranges) {
-            MessageResultIterator messages = mailbox.getMessages(range, resultToFetch, mailboxSession);
-            while (messages.hasNext()) {
-                final MessageResult result = messages.next();
-
-                //skip unchanged messages - this should be filtered at the mailbox level to take advantage of indexes
-                if (fetch.contains(Item.MODSEQ) && result.getModSeq().asLong() <= fetch.getChangedSince()) {
-                    continue;
-                }
-
-                try {
-                    final FetchResponse response = builder.build(fetch, result, mailbox, session, useUids);
-                    responder.respond(response);
-                } catch (MessageRangeException e) {
-                    // we can't for whatever reason find the message so
-                    // just skip it and log it to debug
-                    LOGGER.debug("Unable to find message with uid {}", result.getUid(), e);
-                } catch (MailboxException e) {
-                    // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
-                    // So we just skip it 
-                    //
-                    // See IMAP-347
-                    LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e);
-                }
-            }
-
-            // Throw the exception if we received one
-            if (messages.getException() != null) {
-                throw messages.getException();
+            if (fetch.isOnlyFlags()) {
+                processMessageRangeForFlags(session, mailbox, fetch, mailboxSession, responder, builder, range);
+            } else {
+                processMessageRange(session, mailbox, fetch, mailboxSession, responder, builder, resultToFetch, range);
             }
         }
 
+    }
+
+    private void processMessageRangeForFlags(ImapSession session, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, MessageRange range) {
+        SelectedMailbox selected = session.getSelected();
+        Iterator<ComposedMessageIdWithMetaData> results = Flux.from(mailbox.listMessagesMetadata(range, mailboxSession))
+            .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
+            .toStream()
+            .iterator();
+
+        while (results.hasNext()) {
+            ComposedMessageIdWithMetaData result = results.next();
+
+            try {
+                final FetchResponse response = builder.build(fetch, result, mailbox, selected, mailboxSession);
+                responder.respond(response);
+            } catch (MessageRangeException e) {
+                // we can't for whatever reason find the message so
+                // just skip it and log it to debug
+                LOGGER.debug("Unable to find message with uid {}", result.getComposedMessageId().getUid(), e);
+            } catch (MailboxException e) {
+                // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
+                // So we just skip it
+                //
+                // See IMAP-347
+                LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getComposedMessageId().getUid(), e);
+            }
+        }
+    }
+
+    private void processMessageRange(ImapSession session, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, FetchGroup resultToFetch, MessageRange range) throws MailboxException {
+        MessageResultIterator messages = mailbox.getMessages(range, resultToFetch, mailboxSession);
+        SelectedMailbox selected = session.getSelected();
+        while (messages.hasNext()) {
+            final MessageResult result = messages.next();
+
+            //skip unchanged messages - this should be filtered at the mailbox level to take advantage of indexes
+            if (fetch.contains(Item.MODSEQ) && result.getModSeq().asLong() <= fetch.getChangedSince()) {
+                continue;
+            }
+
+            try {
+                final FetchResponse response = builder.build(fetch, result, mailbox, selected, mailboxSession);
+                responder.respond(response);
+            } catch (MessageRangeException e) {
+                // we can't for whatever reason find the message so
+                // just skip it and log it to debug
+                LOGGER.debug("Unable to find message with uid {}", result.getUid(), e);
+            } catch (MailboxException e) {
+                // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
+                // So we just skip it
+                //
+                // See IMAP-347
+                LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e);
+            }
+        }
+
+        // Throw the exception if we received one
+        if (messages.getException() != null) {
+            throw messages.getException();
+        }
     }
 
 

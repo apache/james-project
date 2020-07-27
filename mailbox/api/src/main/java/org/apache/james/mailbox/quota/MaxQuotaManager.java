@@ -169,8 +169,7 @@ public interface MaxQuotaManager {
                 Throwing.supplier(() -> getDomainMaxMessage(domain)).sneakyThrow(),
                 Throwing.supplier(this::getGlobalMaxMessage).sneakyThrow())
             .map(Supplier::get)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
+            .flatMap(Optional::stream)
             .findFirst();
     }
 
@@ -179,8 +178,7 @@ public interface MaxQuotaManager {
                 Throwing.supplier(() -> getDomainMaxStorage(domain)).sneakyThrow(),
                 Throwing.supplier(this::getGlobalMaxStorage).sneakyThrow())
             .map(Supplier::get)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
+            .flatMap(Optional::stream)
             .findFirst();
     }
 }

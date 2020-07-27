@@ -29,7 +29,8 @@ import org.elasticsearch.cluster.node.DiscoveryNodes;
 import org.elasticsearch.cluster.routing.RoutingTable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
+
+import com.google.common.collect.ImmutableSet;
 
 class ElasticSearchHealthCheckTest {
     private ElasticSearchHealthCheck healthCheck;

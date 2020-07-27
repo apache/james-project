@@ -44,8 +44,8 @@ import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.After;
 import org.junit.Before;
@@ -74,7 +74,7 @@ public class SpamAssassinTest {
 
     @Before
     public void setup() throws Exception {
-        MailetContainer.Builder mailets = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(
                 ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.builder()
@@ -87,6 +87,7 @@ public class SpamAssassinTest {
             .withBase(SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailets)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

@@ -18,38 +18,38 @@
  ****************************************************************/
 package org.apache.james.mailbox.tools.jpa.migrator;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-@Ignore("This class needs to be reviewed")
-public class JpaMigratorTest {
+@Disabled("This class needs to be reviewed")
+class JpaMigratorTest {
     @Test
-    public void testImap165() throws Exception {
+    void testImap165() throws Exception {
         JpaMigrator.main(new String[]{"IMAP165"});
     }
 
     @Test
-    public void testImap168() throws Exception {
+    void testImap168() throws Exception {
         JpaMigrator.main(new String[]{"IMAP168"});
     }
 
     @Test
-    public void testImap172() throws Exception {
+    void testImap172() throws Exception {
         JpaMigrator.main(new String[]{"IMAP172"});
     }
 
     @Test
-    public void testImap176() throws Exception {
+    void testImap176() throws Exception {
         JpaMigrator.main(new String[]{"IMAP176"});
     }
 
     @Test
-    public void testImap180() throws Exception {
+    void testImap180() throws Exception {
         JpaMigrator.main(new String[]{"IMAP180"});
     }
 
     @Test
-    public void testImap184() throws Exception {
+    void testImap184() throws Exception {
         JpaMigrator.main(new String[]{"IMAP184"});
     }
 }

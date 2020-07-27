@@ -22,8 +22,10 @@ import java.util.Optional;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.MailboxManagerTest;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -46,6 +48,11 @@ class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
             openJPAMailboxManager = Optional.of(JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER));
         }
         return openJPAMailboxManager.get();
+    }
+
+    @Override
+    protected SubscriptionManager provideSubscriptionManager() {
+        return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory());
     }
 
     @AfterEach

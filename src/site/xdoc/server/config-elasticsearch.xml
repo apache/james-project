@@ -115,6 +115,16 @@
           <dd>Specify the ElasticSearch alias name used for writing quotas</dd>
       </dl>
 
+      <p>
+          ElasticSearch component can be disabled but consider it would make search feature to not work. In particular it will break JMAP protocol and SEARCH IMAP comment in an nondeterministic way.
+          This is controlled in the <code>search.properties</code> file via the <code>implementation</code> property (defaults
+          to <code>ElasticSearch</code>). Setting this configuration parameter to <code>scanning</code> will effectively disable ElasticSearch, no
+          further indexation will be done however searches will rely on the scrolling search, leading to expensive and longer
+          searches. Disabling ElasticSearch requires no extra action, however
+          <a href="https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#reindexing-all-mails">
+              a full re-indexing</a> needs to be carried out when enabling ElasticSearch.
+      </p>
+
       For configuring the metric reporting on ElasticSearch :
 
       <dl>

@@ -20,6 +20,8 @@
 package org.apache.james.backends.cassandra;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -33,11 +35,16 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 public class CassandraClusterExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
     private final DockerCassandraExtension cassandraExtension;
     private final CassandraModule cassandraModule;
+    private final CassandraConfiguration cassandraConfiguration;
+    private final CassandraConsistenciesConfiguration consistencyLevelsConfiguration;
     private CassandraCluster cassandraCluster;
 
     public CassandraClusterExtension(CassandraModule cassandraModule) {
         this.cassandraModule = cassandraModule;
         this.cassandraExtension = new DockerCassandraExtension();
+        this.cassandraConfiguration = CassandraConfiguration.builder().build();
+        this.consistencyLevelsConfiguration = CassandraConsistenciesConfiguration
+            .fromConfiguration(this.cassandraConfiguration);
     }
 
     @Override
@@ -108,5 +115,9 @@ public class CassandraClusterExtension implements BeforeAllCallback, BeforeEachC
 
     public CassandraCluster getCassandraCluster() {
         return cassandraCluster;
+    }
+
+    public CassandraConsistenciesConfiguration getCassandraConsistenciesConfiguration() {
+        return consistencyLevelsConfiguration;
     }
 }

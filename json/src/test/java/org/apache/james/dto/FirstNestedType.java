@@ -21,7 +21,7 @@ package org.apache.james.dto;
 
 import java.util.Objects;
 
-public class FirstNestedType implements NestedType{
+public class FirstNestedType implements NestedType {
     final int foo;
 
     public FirstNestedType(int foo) {
@@ -34,8 +34,12 @@ public class FirstNestedType implements NestedType{
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         FirstNestedType that = (FirstNestedType) o;
         return foo == that.foo;
     }

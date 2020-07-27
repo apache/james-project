@@ -29,7 +29,7 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 public class CassandraRabbitMQLdapJamesServerMain implements JamesServerMain {
-    public static final Module MODULES = Modules
+    private static final Module MODULES = Modules
         .override(CassandraRabbitMQJamesServerMain.MODULES)
         .with(new LdapUsersRepositoryModule());
 
@@ -47,10 +47,12 @@ public class CassandraRabbitMQLdapJamesServerMain implements JamesServerMain {
 
     public static GuiceJamesServer createServer(CassandraRabbitMQJamesConfiguration configuration) {
         BlobStoreConfiguration blobStoreConfiguration = configuration.blobStoreConfiguration();
+        SearchConfiguration searchConfiguration = configuration.searchConfiguration();
 
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MODULES)
             .combineWith(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration))
-            .combineWith(BlobStoreCacheModulesChooser.chooseModules(blobStoreConfiguration));
+            .combineWith(BlobStoreCacheModulesChooser.chooseModules(blobStoreConfiguration))
+            .combineWith(SearchModuleChooser.chooseModules(searchConfiguration));
     }
 }

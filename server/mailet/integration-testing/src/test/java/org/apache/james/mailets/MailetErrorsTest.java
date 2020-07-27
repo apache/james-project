@@ -32,9 +32,9 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.transport.mailets.NoClassDefFoundErrorMailet;
 import org.apache.james.transport.mailets.ErrorMailet;
 import org.apache.james.transport.mailets.ErrorMatcher;
+import org.apache.james.transport.mailets.NoClassDefFoundErrorMailet;
 import org.apache.james.transport.mailets.NoClassDefFoundErrorMatcher;
 import org.apache.james.transport.mailets.NoopMailet;
 import org.apache.james.transport.mailets.Null;
@@ -83,6 +83,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ErrorMailet.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -102,6 +103,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(NoClassDefFoundErrorMailet.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -121,6 +123,7 @@ public class MailetErrorsTest {
                         .matcher(NoClassDefFoundErrorMatcher.class)
                         .mailet(Null.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -140,6 +143,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(RuntimeExceptionMailet.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -163,6 +167,7 @@ public class MailetErrorsTest {
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -186,6 +191,7 @@ public class MailetErrorsTest {
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -205,6 +211,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(RuntimeErrorMailet.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -226,6 +233,7 @@ public class MailetErrorsTest {
                         .mailet(ErrorMailet.class)
                         .addProperty("onMailetException", CUSTOM_PROCESSOR))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -248,6 +256,7 @@ public class MailetErrorsTest {
                         .mailet(RuntimeExceptionMailet.class)
                         .addProperty("onMailetException", CUSTOM_PROCESSOR))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -273,6 +282,7 @@ public class MailetErrorsTest {
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -298,6 +308,7 @@ public class MailetErrorsTest {
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -317,6 +328,7 @@ public class MailetErrorsTest {
                         .matcher(ErrorMatcher.class)
                         .mailet(NoopMailet.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -336,6 +348,7 @@ public class MailetErrorsTest {
                         .matcher(RuntimeExceptionMatcher.class)
                         .mailet(NoopMailet.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -357,6 +370,7 @@ public class MailetErrorsTest {
                         .mailet(NoopMailet.class)
                         .addProperty("onMatchException", CUSTOM_PROCESSOR))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -378,6 +392,7 @@ public class MailetErrorsTest {
                         .mailet(NoopMailet.class)
                         .addProperty("onMatchException", CUSTOM_PROCESSOR))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -403,6 +418,7 @@ public class MailetErrorsTest {
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -428,6 +444,7 @@ public class MailetErrorsTest {
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -453,6 +470,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(Null.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -478,6 +496,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(Null.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -507,6 +526,7 @@ public class MailetErrorsTest {
                         .matcher(ErrorMatcher.class)
                         .mailet(Null.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -536,6 +556,7 @@ public class MailetErrorsTest {
                         .matcher(RuntimeExceptionMatcher.class)
                         .mailet(Null.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -565,6 +586,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ErrorMailet.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
@@ -594,6 +616,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(RuntimeExceptionMailet.class))))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);

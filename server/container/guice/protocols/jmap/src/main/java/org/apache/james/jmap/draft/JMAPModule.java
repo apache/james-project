@@ -190,8 +190,7 @@ public class JMAPModule extends AbstractModule {
                         "Attachment Search support in MailboxManager is required by JMAP Module"),
                     badCheckDescription(searchCapabilities.contains(SearchCapabilities.AttachmentFileName),
                     "Attachment file name Search support in MailboxManager is required by JMAP Module"))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .flatMap(Optional::stream)
                 .collect(Guavate.toImmutableList());
 
             if (!badCheckDescriptions.isEmpty()) {

@@ -417,8 +417,7 @@ public interface Mail extends Serializable, Cloneable {
     default Map<AttributeName, Attribute> attributesMap() {
         return attributeNames()
             .map(name -> getAttribute(name).map(attribute -> Pair.of(name, attribute)))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
+            .flatMap(Optional::stream)
             .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
     }
 }

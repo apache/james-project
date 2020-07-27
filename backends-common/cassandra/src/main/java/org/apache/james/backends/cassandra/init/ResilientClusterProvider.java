@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,21 +51,21 @@ public class ResilientClusterProvider implements Provider<Cluster> {
 
     @VisibleForTesting
     @Inject
-    ResilientClusterProvider(ClusterConfiguration configuration) {
+    ResilientClusterProvider(ClusterConfiguration configuration, CassandraConsistenciesConfiguration consistenciesConfiguration) {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
-        cluster = Mono.fromCallable(getClusterRetryCallable(configuration))
+        cluster = Mono.fromCallable(getClusterRetryCallable(configuration, consistenciesConfiguration))
             .doOnError(e -> LOGGER.warn("Error establishing Cassandra connection. Next retry scheduled in {} ms", waitDelay, e))
             .retryWhen(Retry.backoff(configuration.getMaxRetry(), waitDelay).scheduler(Schedulers.elastic()))
             .publishOn(Schedulers.elastic())
             .block();
     }
 
-    private Callable<Cluster> getClusterRetryCallable(ClusterConfiguration configuration) {
+    private Callable<Cluster> getClusterRetryCallable(ClusterConfiguration configuration, CassandraConsistenciesConfiguration consistenciesConfiguration) {
         LOGGER.info("Trying to connect to Cassandra service at {} (list {})", LocalDateTime.now(),
             ImmutableList.copyOf(configuration.getHosts()).toString());
 
         return () -> {
-            Cluster cluster = ClusterFactory.create(configuration);
+            Cluster cluster = ClusterFactory.create(configuration, consistenciesConfiguration);
             try {
                 keyspaceExist(cluster, "any"); // plays a sample query to ensure we can contact the cluster
                 return cluster;

@@ -50,10 +50,10 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.ldap.api.LdapConstants;
+import org.apache.james.user.ldap.retry.DoublingRetrySchedule;
+import org.apache.james.user.ldap.retry.api.RetrySchedule;
+import org.apache.james.user.ldap.retry.naming.ldap.RetryingLdapContext;
 import org.apache.james.user.lib.UsersDAO;
-import org.apache.james.util.retry.DoublingRetrySchedule;
-import org.apache.james.util.retry.api.RetrySchedule;
-import org.apache.james.util.retry.naming.ldap.RetryingLdapContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

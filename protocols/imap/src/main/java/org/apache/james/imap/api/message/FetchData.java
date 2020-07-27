@@ -142,6 +142,16 @@ public class FetchData {
         return vanished;
     }
 
+    public boolean isOnlyFlags() {
+        return bodyElements.isEmpty()
+            && itemToFetch.stream()
+            .filter(item -> item != Item.FLAGS)
+            .filter(item -> item != Item.UID)
+            .filter(item -> item != Item.MODSEQ)
+            .findAny()
+            .isEmpty();
+    }
+
     @Override
     public final int hashCode() {
         return Objects.hash(itemToFetch, bodyElements, setSeen, changedSince);

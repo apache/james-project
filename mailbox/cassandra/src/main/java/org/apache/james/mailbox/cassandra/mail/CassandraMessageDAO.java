@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.ConsistencyLevel.QUORUM;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -54,6 +53,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -72,6 +72,7 @@ import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
 import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -104,12 +105,15 @@ public class CassandraMessageDAO {
     private final PreparedStatement selectBody;
     private final PreparedStatement selectAllMessagesWithAttachment;
     private final Cid.CidParser cidParser;
+    private final ConsistencyLevel consistencyLevel;
 
     @Inject
     public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-            BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
-            CassandraMessageId.Factory messageIdFactory) {
+                               BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
+                               CassandraConsistenciesConfiguration consistenciesConfiguration,
+                               CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
+        this.consistencyLevel = consistenciesConfiguration.getRegular();
         this.typesProvider = typesProvider;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
@@ -128,8 +132,10 @@ public class CassandraMessageDAO {
 
     @VisibleForTesting
     public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-                               BlobId.Factory blobIdFactory, CassandraMessageId.Factory messageIdFactory) {
-        this(session, typesProvider, blobStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, messageIdFactory);
+                               BlobId.Factory blobIdFactory, CassandraMessageId.Factory messageIdFactory,
+                               CassandraConsistenciesConfiguration consistenciesConfiguration) {
+        this(session, typesProvider, blobStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION,
+            consistenciesConfiguration, messageIdFactory);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
@@ -239,7 +245,7 @@ public class CassandraMessageDAO {
         return cassandraAsyncExecutor.execute(retrieveSelect(fetchType)
             .bind()
             .setUUID(MESSAGE_ID, messageId.get())
-            .setConsistencyLevel(QUORUM));
+            .setConsistencyLevel(consistencyLevel));
     }
 
     private Mono<MessageRepresentation>
@@ -257,7 +263,6 @@ public class CassandraMessageDAO {
                 row.getInt(BODY_START_OCTET),
                 new SharedByteArrayInputStream(content),
                 getPropertyBuilder(row),
-                hasAttachment(row),
                 getAttachments(row).collect(Guavate.toImmutableList())));
     }
 
@@ -277,11 +282,6 @@ public class CassandraMessageDAO {
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row) {
         List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
         return attachmentByIds(udtValues);
-    }
-
-    private boolean hasAttachment(Row row) {
-        List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
-        return !udtValues.isEmpty();
     }
 
     private Stream<MessageAttachmentRepresentation> attachmentByIds(List<UDTValue> udtValues) {

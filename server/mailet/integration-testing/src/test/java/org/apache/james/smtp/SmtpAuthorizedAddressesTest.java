@@ -40,10 +40,10 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.SMTPIsAuthNetwork;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SmtpSendingStep;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -66,7 +66,7 @@ public class SmtpAuthorizedAddressesTest {
     private TemporaryJamesServer jamesServer;
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
@@ -79,6 +79,7 @@ public class SmtpAuthorizedAddressesTest {
             .withSmtpConfiguration(smtpConfiguration)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

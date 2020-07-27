@@ -37,9 +37,9 @@ import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.SenderIsLocal;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.AliasRoutes;
@@ -71,10 +71,11 @@ public class SenderIsLocalIntegrationTest {
     public void setUp() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .withMailetContainer(TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+            .withMailetContainer(TemporaryJamesServer.defaultMailetContainerConfiguration()
                 .postmaster(POSTMASTER)
                 .putProcessor(transport()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
         probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);

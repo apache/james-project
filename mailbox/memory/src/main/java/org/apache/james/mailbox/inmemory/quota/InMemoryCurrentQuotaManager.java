@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.inmemory.quota;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 import javax.inject.Inject;
@@ -97,7 +98,7 @@ public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
     @Override
     public Mono<Void> setCurrentQuotas(QuotaOperation quotaOperation) {
         return getCurrentQuotas(quotaOperation.quotaRoot())
-            .filter(storedQuotas -> !storedQuotas.equals(CurrentQuotas.from(quotaOperation)))
+            .filter(Predicate.not(Predicate.isEqual(CurrentQuotas.from(quotaOperation))))
             .flatMap(storedQuotas -> decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size()))
                 .then(increase(quotaOperation)))
             .subscribeOn(Schedulers.elastic());

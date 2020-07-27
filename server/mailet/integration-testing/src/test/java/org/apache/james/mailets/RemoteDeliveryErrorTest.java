@@ -54,8 +54,8 @@ import org.apache.james.util.Host;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -144,6 +144,7 @@ public class RemoteDeliveryErrorTest {
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
+        jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

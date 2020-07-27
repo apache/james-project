@@ -40,8 +40,9 @@ import org.testcontainers.DockerClientFactory;
 
 class CassandraNodeConfTest {
     private static final int CASSANDRA_PORT = 9042;
+
     private static JamesServerBuilder extensionBuilder() {
-        return new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        return TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)

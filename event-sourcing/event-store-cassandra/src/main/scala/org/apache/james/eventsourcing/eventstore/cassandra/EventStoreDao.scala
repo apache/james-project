@@ -18,19 +18,24 @@
  ****************************************************************/
 package org.apache.james.eventsourcing.eventstore.cassandra
 
-import com.datastax.driver.core.ConsistencyLevel.SERIAL
 import com.datastax.driver.core._
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder.{bindMarker, insertInto}
 import javax.inject.Inject
+
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
 import org.apache.james.eventsourcing.eventstore.History
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreTable.{AGGREGATE_ID, EVENT, EVENTS_TABLE, EVENT_ID}
 import org.apache.james.eventsourcing.{AggregateId, Event}
+
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-class EventStoreDao @Inject() (val session: Session, val jsonEventSerializer: JsonEventSerializer) {
+class EventStoreDao @Inject() (val session: Session,
+                               val jsonEventSerializer: JsonEventSerializer,
+                               val consistenciesConfiguration: CassandraConsistenciesConfiguration) {
   private val cassandraAsyncExecutor = new CassandraAsyncExecutor(session)
+  private val consistencyLevel: ConsistencyLevel = consistenciesConfiguration.getLightweightTransaction
   private val insert = prepareInsert(session)
   private val select = prepareSelect(session)
 
@@ -75,7 +80,7 @@ class EventStoreDao @Inject() (val session: Session, val jsonEventSerializer: Js
 
   private[cassandra] def getEventsOfAggregate(aggregateId: AggregateId): SMono[History] = {
     val preparedStatement = select.bind.setString(AGGREGATE_ID, aggregateId.asAggregateKey)
-      .setConsistencyLevel(SERIAL)
+      .setConsistencyLevel(consistencyLevel)
     val rows: SFlux[Row] = SFlux[Row](cassandraAsyncExecutor.executeRows(preparedStatement))
 
     val events: SFlux[Event] = rows.map(toEvent)

@@ -34,16 +34,15 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
-import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
@@ -87,10 +86,15 @@ class CassandraMessageDAOTest {
     void setUp(CassandraCluster cassandra) {
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
-        CassandraBlobStore blobStore = CassandraBlobStore.forTesting(cassandra.getConf());
+        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf());
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobStore, blobIdFactory,
-            new CassandraMessageId.Factory());
+        testee = new CassandraMessageDAO(
+            cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            blobStore,
+            blobIdFactory,
+            new CassandraMessageId.Factory(),
+            cassandraCluster.getCassandraConsistenciesConfiguration());
 
         messageIdWithMetadata = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))

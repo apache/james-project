@@ -46,6 +46,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -78,10 +79,13 @@ public class CassandraMessageIdToImapUidDAO {
     private final PreparedStatement selectAll;
     private final PreparedStatement select;
     private final PreparedStatement listStatement;
+    private final ConsistencyLevel consistencyLevel;
 
     @Inject
-    public CassandraMessageIdToImapUidDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
+    public CassandraMessageIdToImapUidDAO(Session session, CassandraConsistenciesConfiguration consistenciesConfiguration,
+                                          CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
+        this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
         this.messageIdFactory = messageIdFactory;
         this.delete = prepareDelete(session);
         this.insert = prepareInsert(session);
@@ -195,7 +199,7 @@ public class CassandraMessageIdToImapUidDAO {
     public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return cassandraAsyncExecutor.executeRows(
                     selectStatement(messageId, mailboxId)
-                    .setConsistencyLevel(ConsistencyLevel.SERIAL))
+                    .setConsistencyLevel(consistencyLevel))
                 .map(this::toComposedMessageIdWithMetadata);
     }
 

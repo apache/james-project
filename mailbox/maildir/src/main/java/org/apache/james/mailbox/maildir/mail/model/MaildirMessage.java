@@ -292,9 +292,4 @@ public class MaildirMessage implements Message {
         return AttachmentId.from(messageName.getFullName() + "-" + position);
     }
 
-    @Override
-    public boolean hasAttachment() {
-        return !getAttachments().isEmpty();
-    }
-
 }

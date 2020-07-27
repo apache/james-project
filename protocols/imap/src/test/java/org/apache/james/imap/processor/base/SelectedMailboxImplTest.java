@@ -19,6 +19,10 @@
 
 package org.apache.james.imap.processor.base;
 
+import static javax.mail.Flags.Flag.ANSWERED;
+import static javax.mail.Flags.Flag.FLAGGED;
+import static javax.mail.Flags.Flag.RECENT;
+import static javax.mail.Flags.Flag.SEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -31,12 +35,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.processor.base.SelectedMailboxImpl.ApplicableFlags;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -57,24 +64,28 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Mono;
 
 
-public class SelectedMailboxImplTest {
+class SelectedMailboxImplTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectedMailboxImplTest.class);
     private static final MessageUid EMITTED_EVENT_UID = MessageUid.of(5);
     private static final ModSeq MOD_SEQ = ModSeq.of(12);
     private static final int SIZE = 38;
     private static final String CUSTOM_FLAG = "custom";
+    private static final Username BOB = Username.of("bob");
+    private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(2);
 
     private ExecutorService executorService;
     private MailboxManager mailboxManager;
@@ -86,8 +97,8 @@ public class SelectedMailboxImplTest {
     private EventBus eventBus;
     private MailboxIdRegistrationKey mailboxIdRegistrationKey;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         executorService = Executors.newFixedThreadPool(1, threadFactory);
         mailboxPath = MailboxPath.inbox(Username.of("tellier@linagora.com"));
@@ -113,13 +124,13 @@ public class SelectedMailboxImplTest {
         when(mailbox.getMailboxId()).thenReturn(mailboxId);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         executorService.shutdownNow();
     }
 
     @Test
-    public void concurrentEventShouldNotSkipAddedEventsEmittedDuringInitialisation() throws Exception {
+    void concurrentEventShouldNotSkipAddedEventsEmittedDuringInitialisation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(eventBus)
@@ -133,9 +144,8 @@ public class SelectedMailboxImplTest {
         assertThat(selectedMailbox.getLastUid().get()).isEqualTo(EMITTED_EVENT_UID);
     }
 
-    @Ignore("JAMES-3177 SelectedMailboxImpl is not thread safe")
     @Test
-    public void customFlagsEventShouldNotFailWhenConcurrentWithCreation() throws Exception {
+    void customFlagsEventShouldNotFailWhenConcurrentWithCreation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitCustomFlagEventAnswer(successCount))
             .when(eventBus)
@@ -146,9 +156,8 @@ public class SelectedMailboxImplTest {
         assertThat(successCount.get()).isEqualTo(1);
     }
 
-    @Ignore("JAMES-3177 SelectedMailboxImpl is not thread safe")
     @Test
-    public void applicableFlagsShouldBeWellUpdatedWhenConcurrentWithCreation() throws Exception {
+    void applicableFlagsShouldBeWellUpdatedWhenConcurrentWithCreation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitCustomFlagEventAnswer(successCount))
             .when(eventBus)
@@ -160,7 +169,7 @@ public class SelectedMailboxImplTest {
     }
 
     @Test
-    public void concurrentEventShouldBeProcessedSuccessfullyDuringInitialisation() throws Exception {
+    void concurrentEventShouldBeProcessedSuccessfullyDuringInitialisation() throws Exception {
         AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(eventBus)
@@ -177,22 +186,22 @@ public class SelectedMailboxImplTest {
             .isEqualTo(1);
     }
 
-    private Answer<Stream<MessageUid>> delayedSearchAnswer() {
+    Answer<Stream<MessageUid>> delayedSearchAnswer() {
         return invocation -> {
             Thread.sleep(1000);
             return Stream.of(MessageUid.of(1), MessageUid.of(3));
         };
     }
 
-    private Answer<Mono<Registration>> generateEmitEventAnswer(AtomicInteger success) {
+    Answer<Mono<Registration>> generateEmitEventAnswer(AtomicInteger success) {
         return generateEmitEventAnswer(event(), success);
     }
 
-    private Answer<Mono<Registration>> generateEmitCustomFlagEventAnswer(AtomicInteger success) {
+    Answer<Mono<Registration>> generateEmitCustomFlagEventAnswer(AtomicInteger success) {
         return generateEmitEventAnswer(customFlagEvent(), success);
     }
 
-    private Answer<Mono<Registration>> generateEmitEventAnswer(Event event, AtomicInteger success) {
+    Answer<Mono<Registration>> generateEmitEventAnswer(Event event, AtomicInteger success) {
         return invocation -> {
             Object[] args = invocation.getArguments();
             MailboxListener mailboxListener = (MailboxListener) args[0];
@@ -204,11 +213,11 @@ public class SelectedMailboxImplTest {
                     LOGGER.error("Error while processing event on a concurrent thread", e);
                 }
             });
-            return Mono.just(() -> {});
+            return Mono.just(() -> { });
         };
     }
 
-    private Event event() {
+    Event event() {
         return EventFactory.added()
             .randomEventId()
             .mailboxSession(MailboxSessionUtil.create(Username.of("user")))
@@ -217,7 +226,7 @@ public class SelectedMailboxImplTest {
             .build();
     }
 
-    private Event customFlagEvent() {
+    Event customFlagEvent() {
         return EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(MailboxSessionUtil.create(Username.of("user")))
@@ -229,5 +238,134 @@ public class SelectedMailboxImplTest {
                 .uid(MessageUid.of(12))
                 .build())
             .build();
+    }
+
+    @Nested
+    class ApplicableFlagsTests {
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenEmptyFlagsUpdate() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated = flagsUpdated(updatedFlags().noOldFlag().noNewFlag());
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
+            });
+        }
+
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenNewFlag() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(updatedFlags().noOldFlag().newFlags(flags -> flags.add(ANSWERED)));
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add(ANSWERED).build());
+            });
+        }
+
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenSeveralUpdatedFlagsNewFlag() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(
+                    updatedFlags().noOldFlag().newFlags(flags -> flags.add(ANSWERED)),
+                    updatedFlags().noOldFlag().newFlags(flags -> flags.add(FLAGGED)));
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add(ANSWERED).add(FLAGGED).build());
+            });
+        }
+
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenOldFlagRemoved() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(updatedFlags().oldFlags(flags -> flags.add(SEEN)).noNewFlag());
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
+            });
+        }
+
+        @Test
+        void updateApplicableFlagsShouldNotIncludeRecent() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(updatedFlags().noOldFlag().newFlags(flags -> flags.add(RECENT)));
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
+            });
+        }
+
+        @Test
+        void updateApplicableFlagsShouldUpdateWhenNewUserFlag() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            MailboxListener.FlagsUpdated flagsUpdated =
+                flagsUpdated(updatedFlags().noOldFlag().newFlags(flags -> flags.add("Foo")));
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, flagsUpdated);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isTrue();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add("Foo").build());
+            });
+        }
+    }
+
+    private static FlagsBuilder flagsBuilder() {
+        return FlagsBuilder.builder();
+    }
+
+    private MailboxListener.FlagsUpdated flagsUpdated(UpdatedFlags... updatedFlags) {
+        return new MailboxListener.FlagsUpdated(
+            SESSION_ID,
+            BOB,
+            mailboxPath,
+            mailboxId,
+            ImmutableList.copyOf(updatedFlags),
+            Event.EventId.random());
+    }
+
+    interface RequireOldFlags {
+        RequireNewFlags oldFlags(Flags flags);
+
+        default RequireNewFlags noOldFlag() {
+            return oldFlags(new Flags());
+        }
+
+        default RequireNewFlags oldFlags(Consumer<FlagsBuilder> builder) {
+            FlagsBuilder internalBuilder = FlagsBuilder.builder();
+            builder.accept(internalBuilder);
+            return oldFlags(internalBuilder.build());
+        }
+    }
+
+    interface RequireNewFlags {
+        UpdatedFlags newFlags(Flags flags);
+
+        default UpdatedFlags noNewFlag() {
+            return newFlags(new Flags());
+        }
+
+        default UpdatedFlags newFlags(Consumer<FlagsBuilder> builder) {
+            FlagsBuilder internalBuilder = FlagsBuilder.builder();
+            builder.accept(internalBuilder);
+            return newFlags(internalBuilder.build());
+        }
+    }
+
+    static RequireOldFlags updatedFlags() {
+        return oldFlags -> newFlags ->
+            UpdatedFlags
+                .builder()
+                .modSeq(MOD_SEQ)
+                .uid(EMITTED_EVENT_UID)
+                .oldFlags(oldFlags)
+                .newFlags(newFlags)
+                .build();
     }
 }

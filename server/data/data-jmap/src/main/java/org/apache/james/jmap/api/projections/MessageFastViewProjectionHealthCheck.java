@@ -53,24 +53,25 @@ public class MessageFastViewProjectionHealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        return Mono.fromCallable(() -> retrieveMissCountMetric.getCount())
+        return Mono.fromCallable(retrieveMissCountMetric::movingAverage)
             .flatMap(missCount -> {
                 if (missCount == 0) {
                     return Mono.just(Result.healthy(COMPONENT_NAME));
                 } else {
-                    return Mono.fromCallable(() -> retrieveHitCountMetric.getCount())
+                    return Mono.fromCallable(retrieveHitCountMetric::movingAverage)
                         .map(hitCount -> check(hitCount, missCount));
                 }
             });
     }
 
-    private Result check(long hitCount, long missCount) {
-        long totalCount = hitCount + missCount;
-        double missCountPercentage = missCount * 100.0d / totalCount;
-        if (missCountPercentage > MAXIMUM_MISS_PERCENTAGE_ACCEPTED) {
+    private Result check(double hitAverage, double missAverage) {
+        double total = hitAverage + missAverage;
+        double missPercentage = missAverage * 100.0d / total;
+
+        if (missPercentage > MAXIMUM_MISS_PERCENTAGE_ACCEPTED) {
             return Result.degraded(COMPONENT_NAME,
-                String.format("retrieveMissCount percentage %s%% (%d/%d) is higher than the threshold %s%%",
-                    missCountPercentage, missCount, totalCount, MAXIMUM_MISS_PERCENTAGE_ACCEPTED));
+                String.format("Miss percentage %.2f%% (%.0f/%.0f) is higher than the threshold %.0f%%",
+                    missPercentage, missAverage, total, MAXIMUM_MISS_PERCENTAGE_ACCEPTED));
         }
 
         return Result.healthy(COMPONENT_NAME);

@@ -37,7 +37,6 @@ public class HeaderBodyElement extends MimeBodyElement {
     public HeaderBodyElement(String name, List<Header> headers) throws MailboxException {
         super(name, headers);
     }
-
     
     /**
      * Indicate that there is no text body in the message. In this case we don't need to write a single CRLF in anycase if

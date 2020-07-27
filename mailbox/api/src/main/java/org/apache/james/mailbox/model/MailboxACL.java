@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -823,7 +824,7 @@ public class MailboxACL {
                     .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
         } else {
             return Optional.ofNullable(replacement)
-                .filter(rights -> !rights.isEmpty())
+                .filter(Predicate.not(Rfc4314Rights::isEmpty))
                 .map(replacementValue ->  new MailboxACL(
                     ImmutableMap.<EntryKey, Rfc4314Rights>builder()
                         .putAll(entries)

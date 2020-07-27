@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.ConsistencyLevel.QUORUM;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -36,12 +35,14 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ContentType;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -128,11 +129,14 @@ public class CassandraAttachmentDAOV2 {
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement selectStatement;
+    private final ConsistencyLevel consistencyLevel;
 
     @Inject
-    public CassandraAttachmentDAOV2(BlobId.Factory blobIdFactory, Session session) {
+    public CassandraAttachmentDAOV2(BlobId.Factory blobIdFactory, Session session,
+                                    CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.blobIdFactory = blobIdFactory;
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
+        this.consistencyLevel = consistenciesConfiguration.getRegular();
 
         this.selectStatement = prepareSelect(session);
         this.insertStatement = prepareInsert(session);
@@ -166,7 +170,7 @@ public class CassandraAttachmentDAOV2 {
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
                 .setUUID(ID_AS_UUID, attachmentId.asUUID())
-                .setConsistencyLevel(QUORUM))
+                .setConsistencyLevel(consistencyLevel))
             .map(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory));
     }
 
