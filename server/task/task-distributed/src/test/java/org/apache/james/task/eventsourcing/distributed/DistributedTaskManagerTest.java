@@ -139,7 +139,8 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     static final TaskWithId TASK_WITH_ID = new TaskWithId(TASK_ID, TASK);
 
     @RegisterExtension
-    static final RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
+    static final RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
+        .isolationPolicy(RabbitMQExtension.IsolationPolicy.WEAK);
 
 
     @RegisterExtension

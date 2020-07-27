@@ -33,6 +33,8 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
+import com.github.fge.lambdas.consumers.ThrowingConsumer;
+
 import reactor.rabbitmq.Sender;
 
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
@@ -76,13 +78,33 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         }
     }
 
-    @FunctionalInterface
-    public interface RequireRestartPolicy {
-        RabbitMQExtension restartPolicy(DockerRestartPolicy dockerRestartPolicy);
+    public enum IsolationPolicy {
+        WEAK(any -> {}),
+        STRONG(DockerRabbitMQ::reset);
+
+        private final ThrowingConsumer<DockerRabbitMQ> isolationCall;
+
+        IsolationPolicy(ThrowingConsumer<DockerRabbitMQ> isolationCall) {
+            this.isolationCall = isolationCall;
+        }
+
+        void enforceIsolation(DockerRabbitMQ container) {
+            isolationCall.accept(container);
+        }
     }
 
-    public static RabbitMQExtension singletonRabbitMQ() {
-        return new RabbitMQExtension(DockerRabbitMQSingleton.SINGLETON, DockerRestartPolicy.NEVER);
+    @FunctionalInterface
+    public interface RequireRestartPolicy {
+        RequireIsolationPolicy restartPolicy(DockerRestartPolicy dockerRestartPolicy);
+    }
+
+    @FunctionalInterface
+    public interface RequireIsolationPolicy {
+        RabbitMQExtension isolationPolicy(IsolationPolicy isolationPolicy);
+    }
+
+    public static RequireIsolationPolicy singletonRabbitMQ() {
+        return isolationPolicy -> new RabbitMQExtension(DockerRabbitMQSingleton.SINGLETON, DockerRestartPolicy.NEVER, isolationPolicy);
     }
 
     public static RequireRestartPolicy defaultRabbitMQ() {
@@ -90,19 +112,21 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
     }
 
     public static RequireRestartPolicy dockerRabbitMQ(DockerRabbitMQ dockerRabbitMQ) {
-        return dockerRestartPolicy -> new RabbitMQExtension(dockerRabbitMQ, dockerRestartPolicy);
+        return dockerRestartPolicy -> isolationPolicy -> new RabbitMQExtension(dockerRabbitMQ, dockerRestartPolicy, isolationPolicy);
     }
 
     private final DockerRabbitMQ rabbitMQ;
     private final DockerRestartPolicy dockerRestartPolicy;
+    private final IsolationPolicy isolationPolicy;
 
     private ReactorRabbitMQChannelPool channelPool;
     private SimpleConnectionPool connectionPool;
 
     public RabbitMQExtension(DockerRabbitMQ rabbitMQ,
-                             DockerRestartPolicy dockerRestartPolicy) {
+                             DockerRestartPolicy dockerRestartPolicy, IsolationPolicy isolationPolicy) {
         this.rabbitMQ = rabbitMQ;
         this.dockerRestartPolicy = dockerRestartPolicy;
+        this.isolationPolicy = isolationPolicy;
     }
 
     @Override
@@ -127,7 +151,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
     public void afterEach(ExtensionContext context) throws Exception {
         channelPool.close();
         connectionPool.close();
-        rabbitMQ.reset();
+        isolationPolicy.enforceIsolation(rabbitMQ);
         dockerRestartPolicy.afterEach(rabbitMQ);
     }
 

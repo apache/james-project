@@ -43,7 +43,8 @@ import reactor.rabbitmq.ChannelPool;
 class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
 
     @RegisterExtension
-    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
+        .isolationPolicy(RabbitMQExtension.IsolationPolicy.WEAK);
 
     private List<ReactorRabbitMQChannelPool> channelPools;
 

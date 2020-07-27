@@ -42,7 +42,8 @@ class RabbitMQWorkQueuePersistenceTest {
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.defaultRabbitMQ()
-        .restartPolicy(RabbitMQExtension.DockerRestartPolicy.PER_CLASS);
+        .restartPolicy(RabbitMQExtension.DockerRestartPolicy.PER_CLASS)
+        .isolationPolicy(RabbitMQExtension.IsolationPolicy.WEAK);
 
     private RabbitMQWorkQueue testee;
     private ImmediateWorker worker;

@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.rabbitmq;
 
+import static org.apache.james.backends.rabbitmq.RabbitMQExtension.IsolationPolicy.WEAK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.healthcheck.Result;
@@ -30,7 +31,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class RabbitMQHealthCheckTest {
 
     @RegisterExtension
-    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
+        .isolationPolicy(WEAK);
 
     private RabbitMQHealthCheck healthCheck;
 

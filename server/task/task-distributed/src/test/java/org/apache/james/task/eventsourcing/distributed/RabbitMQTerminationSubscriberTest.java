@@ -21,6 +21,7 @@
 package org.apache.james.task.eventsourcing.distributed;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.james.backends.rabbitmq.RabbitMQExtension.IsolationPolicy.WEAK;
 import static org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber.EXCHANGE_NAME;
 import static org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber.ROUTING_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,7 +59,8 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
     private static final JsonEventSerializer SERIALIZER = JsonEventSerializer.forModules(MODULES).withoutNestedType();
 
     @RegisterExtension
-    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
+        .isolationPolicy(WEAK);
 
     @Override
     public TerminationSubscriber subscriber() {
