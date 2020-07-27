@@ -44,11 +44,6 @@ public class RabbitMQAwsS3SetMessagesMethodTest extends SetMessagesMethodTest {
     }
 
     @Override
-    protected void await() {
-        rule.await();
-    }
-
-    @Override
     protected MessageId randomMessageId() {
         return new CassandraMessageId.Factory().generate();
     }

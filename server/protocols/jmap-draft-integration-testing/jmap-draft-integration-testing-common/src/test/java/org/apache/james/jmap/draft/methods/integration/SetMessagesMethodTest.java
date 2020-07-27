@@ -112,7 +112,6 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
-import org.apache.james.util.Port;
 import org.apache.james.util.io.ZeroedInputStream;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -161,15 +160,12 @@ public abstract class SetMessagesMethodTest {
 
     protected abstract MessageId randomMessageId();
 
-    protected abstract void await();
-
     private AccessToken accessToken;
     private GuiceJamesServer jmapServer;
     private MailboxProbe mailboxProbe;
     private DataProbe dataProbe;
     private MessageIdProbe messageProbe;
     private ACLProbe aclProbe;
-    private Port jmapPort;
 
     @Before
     public void setup() throws Throwable {
@@ -283,7 +279,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         given()
             .header("Authorization", accessToken.asString())
@@ -307,7 +302,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         // When
         given()
@@ -344,7 +338,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message3 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String missingMessageId = randomMessageId().serialize();
         given()
@@ -381,7 +374,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message3 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         // When
         with()
@@ -415,7 +407,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
 
@@ -437,7 +428,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String messageId = message.getMessageId().serialize();
 
@@ -461,7 +451,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
 
@@ -493,7 +482,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
 
@@ -529,7 +517,6 @@ public abstract class SetMessagesMethodTest {
                 .build();
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, flags);
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
 
@@ -560,7 +547,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.ANSWERED));
-        await();
 
         String messageId = message.getMessageId().serialize();
 
@@ -583,7 +569,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.ANSWERED));
-        await();
 
         String messageId = message.getMessageId().serialize();
 
@@ -606,7 +591,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.DELETED));
-        await();
 
         String messageId = message.getMessageId().serialize();
 
@@ -639,7 +623,6 @@ public abstract class SetMessagesMethodTest {
             .build();
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, flags);
-        await();
 
         String messageId = message.getMessageId().serialize();
 
@@ -674,7 +657,6 @@ public abstract class SetMessagesMethodTest {
                 .build();
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, currentFlags);
-        await();
 
         String messageId = message.getMessageId().serialize();
 
@@ -707,7 +689,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
@@ -736,7 +717,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
@@ -758,7 +738,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
@@ -787,7 +766,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
@@ -809,7 +787,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
@@ -835,8 +812,6 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME.asString(), "mailbox");
         mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-
-        await();
 
         String messageId = randomMessageId().serialize();
 
@@ -864,8 +839,6 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
 
-        await();
-
         String messageId = USERNAME.asString() + "|mailbox|1";
 
         given()
@@ -892,7 +865,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
         // When
@@ -914,7 +886,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
@@ -942,7 +913,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
 
@@ -962,7 +932,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
@@ -2376,7 +2345,6 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldRejectMovingMessageToOutboxWhenNotInDraft() throws MailboxException {
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), MailboxPath.inbox(USERNAME),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String messageId = message.getMessageId().serialize();
         String moveMessageToOutBox = "[" +
@@ -3013,7 +2981,6 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
         AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(recipientAddress), password);
-        await();
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME.asString();
@@ -3060,7 +3027,6 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
         HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(recipientAddress), password);
-        await();
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME.asString();
@@ -3105,7 +3071,6 @@ public abstract class SetMessagesMethodTest {
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
-        await();
         AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(recipientAddress), password);
 
         String messageCreationId = "creationId1337";
@@ -3161,7 +3126,6 @@ public abstract class SetMessagesMethodTest {
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
-        await();
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME.asString();
@@ -3218,7 +3182,6 @@ public abstract class SetMessagesMethodTest {
 
         String bccAddress = BOB.asString();
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bccAddress, DefaultMailboxes.INBOX);
-        await();
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME.asString();
@@ -3289,7 +3252,6 @@ public abstract class SetMessagesMethodTest {
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
-        await();
         AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(recipientAddress), password);
 
         String messageCreationId = "creationId1337";
@@ -3330,7 +3292,6 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addUser(recipientAddress, recipientPassword);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
         AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(recipientAddress), recipientPassword);
-        await();
 
         String senderDraftsMailboxId = getMailboxId(accessToken, Role.DRAFTS);
 
@@ -3375,7 +3336,6 @@ public abstract class SetMessagesMethodTest {
         String recipientAddress = "recipient" + "@" + DOMAIN;
         String recipientPassword = "password";
         dataProbe.addUser(recipientAddress, recipientPassword);
-        await();
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME.asString();
@@ -3437,7 +3397,6 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
         AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(recipientAddress), password);
-        await();
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME.asString();
@@ -5632,7 +5591,6 @@ public abstract class SetMessagesMethodTest {
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
-        await();
 
         String messageId = message.getMessageId().serialize();
 
@@ -5768,7 +5726,6 @@ public abstract class SetMessagesMethodTest {
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
-        await();
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME.asString();

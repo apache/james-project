@@ -39,10 +39,6 @@ public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
     }
     
     @Override
-    protected void await() {
-    }
-    
-    @Override
     protected MessageId randomMessageId() {
         return new InMemoryMessageId.Factory().fromString(String.valueOf(ThreadLocalRandom.current().nextInt(100000) + 100));
     }

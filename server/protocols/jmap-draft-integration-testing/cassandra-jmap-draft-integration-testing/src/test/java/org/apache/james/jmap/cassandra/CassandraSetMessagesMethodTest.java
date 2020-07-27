@@ -42,11 +42,6 @@ public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
     protected GuiceJamesServer createJmapServer() throws IOException {
         return rule.jmapServer(cassandra.getModule());
     }
-
-    @Override
-    protected void await() {
-        rule.await();
-    }
     
     @Override
     protected MessageId randomMessageId() {
