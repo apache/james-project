@@ -55,8 +55,8 @@ class RabbitMQWorkQueueTest {
     private static final TaskWithId TASK_WITH_ID_2 = new TaskWithId(TASK_ID_2, TASK2);
 
     @RegisterExtension
-    RabbitMQExtension rabbitMQExtension = RabbitMQExtension.defaultRabbitMQ()
-        .restartPolicy(RabbitMQExtension.DockerRestartPolicy.PER_TEST);
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.defaultRabbitMQ()
+        .restartPolicy(RabbitMQExtension.DockerRestartPolicy.PER_CLASS);
 
 
     private RabbitMQWorkQueue testee;
