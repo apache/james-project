@@ -41,8 +41,8 @@ class RabbitMQWorkQueuePersistenceTest {
     private static final TaskId TASK_ID = TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd");
 
     @RegisterExtension
-    RabbitMQExtension rabbitMQExtension = RabbitMQExtension.defaultRabbitMQ()
-        .restartPolicy(RabbitMQExtension.DockerRestartPolicy.PER_TEST);
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.defaultRabbitMQ()
+        .restartPolicy(RabbitMQExtension.DockerRestartPolicy.PER_CLASS);
 
     private RabbitMQWorkQueue testee;
     private ImmediateWorker worker;
