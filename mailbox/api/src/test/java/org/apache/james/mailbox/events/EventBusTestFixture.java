@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.events;
 
 import static org.apache.james.mailbox.events.RetryBackoffConfiguration.DEFAULT_JITTER_FACTOR;
-import static org.apache.james.mailbox.events.RetryBackoffConfiguration.DEFAULT_MAX_RETRIES;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -115,10 +114,10 @@ public interface EventBusTestFixture {
     GroupC GROUP_C = new GroupC();
     List<Group> ALL_GROUPS = ImmutableList.of(GROUP_A, GROUP_B, GROUP_C);
 
-    java.time.Duration DEFAULT_FIRST_BACKOFF = java.time.Duration.ofMillis(20);
+    java.time.Duration DEFAULT_FIRST_BACKOFF = java.time.Duration.ofMillis(5);
     //Retry backoff configuration for testing with a shorter first backoff to accommodate the shorter retry interval in tests
     RetryBackoffConfiguration RETRY_BACKOFF_CONFIGURATION = RetryBackoffConfiguration.builder()
-        .maxRetries(DEFAULT_MAX_RETRIES)
+        .maxRetries(3)
         .firstBackoff(DEFAULT_FIRST_BACKOFF)
         .jitterFactor(DEFAULT_JITTER_FACTOR)
         .build();

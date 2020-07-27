@@ -65,6 +65,10 @@ interface ErrorHandlingContract extends EventBusContract {
             timeElapsed.add(Instant.now());
             throw new RuntimeException("throw to trigger reactor retry");
         }
+
+        public int executionCount() {
+            return timeElapsed.size();
+        }
     }
 
     EventDeadLetters deadLetter();
@@ -114,11 +118,6 @@ interface ErrorHandlingContract extends EventBusContract {
         doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
             .doThrow(new RuntimeException())
-            .doThrow(new RuntimeException())
-            .doThrow(new RuntimeException())
-            .doThrow(new RuntimeException())
-            .doThrow(new RuntimeException())
-            .doThrow(new RuntimeException())
             .doCallRealMethod()
             .when(eventCollector).event(EVENT);
 
@@ -161,12 +160,12 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(throwingListener, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        Thread.sleep(getSpeedProfile().getLongWaitTime().toMillis());
-        int numberOfCallsAfterExceedMaxRetries = throwingListener.timeElapsed.size();
-        Thread.sleep(getSpeedProfile().getLongWaitTime().toMillis());
+        getSpeedProfile().shortWaitCondition()
+            .untilAsserted(() -> assertThat(throwingListener.executionCount()).isEqualTo(4));
+        Thread.sleep(getSpeedProfile().getShortWaitTime().toMillis());
 
-        assertThat(throwingListener.timeElapsed.size())
-            .isEqualTo(numberOfCallsAfterExceedMaxRetries);
+        assertThat(throwingListener.executionCount())
+            .isEqualTo(4);
     }
 
     @Test
@@ -176,7 +175,7 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(throwingListener, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        Thread.sleep(getSpeedProfile().getLongWaitTime().toMillis());
+        Thread.sleep(getSpeedProfile().getShortWaitTime().toMillis());
         SoftAssertions.assertSoftly(softly -> {
             List<Instant> timeElapsed = throwingListener.timeElapsed;
             softly.assertThat(timeElapsed).hasSize(RETRY_BACKOFF_CONFIGURATION.getMaxRetries() + 1);

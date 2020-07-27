@@ -49,11 +49,15 @@ public interface EventBusContract {
         }
 
         public ConditionFactory shortWaitCondition() {
-            return await().timeout(new org.awaitility.Duration(this.getShortWaitTime().toMillis(), TimeUnit.MILLISECONDS));
+            return await().pollDelay(org.awaitility.Duration.ZERO)
+                .pollInterval(org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS)
+                .timeout(new org.awaitility.Duration(this.getShortWaitTime().toMillis(), TimeUnit.MILLISECONDS));
         }
 
         public ConditionFactory longWaitCondition() {
-            return await().timeout(new org.awaitility.Duration(this.getLongWaitTime().toMillis(), TimeUnit.MILLISECONDS));
+            return await().pollDelay(org.awaitility.Duration.ZERO)
+                .pollInterval(org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS)
+                .timeout(new org.awaitility.Duration(this.getLongWaitTime().toMillis(), TimeUnit.MILLISECONDS));
         }
     }
 
