@@ -24,7 +24,11 @@ import static org.apache.james.util.FunctionalUtils.negate;
 import java.time.Instant;
 
 import javax.inject.Inject;
+import javax.mail.internet.MimeMessage;
 
+import org.apache.james.blob.api.Store;
+import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
@@ -45,40 +49,46 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
         private final CassandraMailQueueMailStore storeHelper;
         private final CassandraMailQueueBrowser cassandraMailQueueBrowser;
         private final CassandraMailQueueMailDelete cassandraMailQueueMailDelete;
+        private final MimeMessageStore.Factory mimeMessageStoreFactory;
 
         @Inject
         public Factory(CassandraMailQueueMailStore storeHelper,
                        CassandraMailQueueBrowser cassandraMailQueueBrowser,
                        CassandraMailQueueMailDelete cassandraMailQueueMailDelete,
                        EventsourcingConfigurationManagement eventsourcingConfigurationManagement,
+                       MimeMessageStore.Factory mimeMessageStoreFactory,
                        CassandraMailQueueViewConfiguration configuration) {
             this.storeHelper = storeHelper;
             this.cassandraMailQueueBrowser = cassandraMailQueueBrowser;
             this.cassandraMailQueueMailDelete = cassandraMailQueueMailDelete;
+            this.mimeMessageStoreFactory = mimeMessageStoreFactory;
 
             eventsourcingConfigurationManagement.registerConfiguration(configuration);
         }
 
         @Override
         public MailQueueView create(MailQueueName mailQueueName) {
-            return new CassandraMailQueueView(storeHelper, mailQueueName, cassandraMailQueueBrowser, cassandraMailQueueMailDelete);
+            return new CassandraMailQueueView(storeHelper, mailQueueName, cassandraMailQueueBrowser, cassandraMailQueueMailDelete,
+                mimeMessageStoreFactory.mimeMessageStore());
         }
     }
 
     private final CassandraMailQueueMailStore storeHelper;
     private final CassandraMailQueueBrowser cassandraMailQueueBrowser;
     private final CassandraMailQueueMailDelete cassandraMailQueueMailDelete;
+    private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
 
     private final MailQueueName mailQueueName;
 
     CassandraMailQueueView(CassandraMailQueueMailStore storeHelper,
                            MailQueueName mailQueueName,
                            CassandraMailQueueBrowser cassandraMailQueueBrowser,
-                           CassandraMailQueueMailDelete cassandraMailQueueMailDelete) {
+                           CassandraMailQueueMailDelete cassandraMailQueueMailDelete, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore) {
         this.mailQueueName = mailQueueName;
         this.storeHelper = storeHelper;
         this.cassandraMailQueueBrowser = cassandraMailQueueBrowser;
         this.cassandraMailQueueMailDelete = cassandraMailQueueMailDelete;
+        this.mimeMessageStore = mimeMessageStore;
     }
 
     @Override
@@ -123,7 +133,7 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
     public long delete(DeleteCondition deleteCondition) {
         if (deleteCondition instanceof DeleteCondition.WithEnqueueId) {
             DeleteCondition.WithEnqueueId enqueueIdCondition = (DeleteCondition.WithEnqueueId) deleteCondition;
-            delete(enqueueIdCondition.getEnqueueId()).block();
+            delete(enqueueIdCondition.getEnqueueId(), enqueueIdCondition.getBlobIds()).block();
             return 1L;
         }
         return browseThenDelete(deleteCondition);
@@ -133,15 +143,18 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
         return cassandraMailQueueBrowser.browseReferences(mailQueueName)
             .map(EnqueuedItemWithSlicingContext::getEnqueuedItem)
             .filter(deleteCondition::shouldBeDeleted)
-            .flatMap(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getEnqueueId(), mailQueueName))
+            .flatMap(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getEnqueueId(), mailQueueName)
+                .then(Mono.from(mimeMessageStore.delete(mailReference.getPartsId()))))
             .count()
             .doOnNext(ignored -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName))
             .subscribeOn(Schedulers.elastic())
             .block();
     }
 
-    private Mono<Void> delete(EnqueueId enqueueId) {
-        return cassandraMailQueueMailDelete.considerDeleted(enqueueId, mailQueueName);
+    private Mono<Void> delete(EnqueueId enqueueId,
+                              MimeMessagePartsId blobIds) {
+        return cassandraMailQueueMailDelete.considerDeleted(enqueueId, mailQueueName)
+            .then(Mono.from(mimeMessageStore.delete(blobIds)));
     }
 
     @Override

@@ -132,7 +132,7 @@ class Dequeuer implements Closeable {
             if (success) {
                 dequeueMetric.increment();
                 response.ack();
-                mailQueueView.delete(DeleteCondition.withEnqueueId(mailWithEnqueueId.getEnqueueId()));
+                mailQueueView.delete(DeleteCondition.withEnqueueId(mailWithEnqueueId.getEnqueueId(), mailWithEnqueueId.getBlobIds()));
             } else {
                 response.nack(REQUEUE);
             }

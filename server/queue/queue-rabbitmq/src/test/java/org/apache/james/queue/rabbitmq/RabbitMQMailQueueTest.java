@@ -19,12 +19,16 @@
 
 package org.apache.james.queue.rabbitmq;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.apache.james.backends.cassandra.Scenario.Builder.returnEmpty;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.queue.api.Mails.defaultMail;
+import static org.apache.james.queue.api.Mails.defaultMailNoRecipient;
+import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
+import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,6 +52,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
@@ -172,6 +177,78 @@ class RabbitMQMailQueueTest {
                 "2-1", "2-2", "2-3", "2-4", "2-5",
                 "3-1", "3-2", "3-3", "3-4", "3-5",
                 "5-1", "5-2", "5-3", "5-4", "5-5");
+        }
+
+        @Test
+        void dequeueShouldDeleteBlobs(CassandraCluster cassandra) throws Exception {
+            String name1 = "myMail1";
+            Flux<MailQueue.MailQueueItem> dequeueFlux = Flux.from(getMailQueue().deQueue());
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            dequeueFlux.take(1)
+                .flatMap(mailQueueItem -> Mono.fromCallable(() -> {
+                    mailQueueItem.done(true);
+                    return mailQueueItem;
+                })).blockLast(Duration.ofSeconds(10));
+
+            assertThat(cassandra.getConf().execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
+                .isEmpty();
+        }
+
+        @Test
+        void clearShouldDeleteBlobs(CassandraCluster cassandra) throws Exception {
+            String name1 = "myMail1";
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            getManageableMailQueue().clear();
+
+            assertThat(cassandra.getConf().execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
+                .isEmpty();
+        }
+
+        @Test
+        void removeByNameShouldDeleteBlobs(CassandraCluster cassandra) throws Exception {
+            String name1 = "myMail1";
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            getManageableMailQueue().remove(ManageableMailQueue.Type.Name, name1);
+
+            assertThat(cassandra.getConf().execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
+                .isEmpty();
+        }
+
+        @Test
+        void removeByRecipientShouldDeleteBlobs(CassandraCluster cassandra) throws Exception {
+            String name1 = "myMail1";
+            getMailQueue().enQueue(defaultMailNoRecipient()
+                .name(name1)
+                .recipient(RECIPIENT1)
+                .build());
+
+            getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, RECIPIENT1.asString());
+
+            assertThat(cassandra.getConf().execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
+                .isEmpty();
+        }
+
+        @Test
+        void removeBySenderShouldDeleteBlobs(CassandraCluster cassandra) throws Exception {
+            String name1 = "myMail1";
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .sender(SENDER)
+                .build());
+
+            getManageableMailQueue().remove(ManageableMailQueue.Type.Sender, SENDER.asString());
+
+            assertThat(cassandra.getConf().execute(select().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)))
+                .isEmpty();
         }
 
         @Test

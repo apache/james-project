@@ -80,7 +80,7 @@ class DeleteConditionTest {
         @Test
         void withSenderShouldThrowOnNullCondition() {
             assertThatThrownBy(() ->
-                DeleteCondition.withEnqueueId(null))
+                DeleteCondition.withEnqueueId(null, null))
                 .isInstanceOf(NullPointerException.class);
         }
 
@@ -97,7 +97,7 @@ class DeleteConditionTest {
                 .mimeMessagePartsId(MESSAGE_PARTS_ID)
                 .build();
 
-            assertThat(DeleteCondition.withEnqueueId(ENQUEUE_ID_1).shouldBeDeleted(enqueuedItem))
+            assertThat(DeleteCondition.withEnqueueId(ENQUEUE_ID_1, MESSAGE_PARTS_ID).shouldBeDeleted(enqueuedItem))
                 .isTrue();
         }
 
@@ -114,7 +114,7 @@ class DeleteConditionTest {
                 .mimeMessagePartsId(MESSAGE_PARTS_ID)
                 .build();
 
-            assertThat(DeleteCondition.withEnqueueId(ENQUEUE_ID_1).shouldBeDeleted(enqueuedItem))
+            assertThat(DeleteCondition.withEnqueueId(ENQUEUE_ID_1, MESSAGE_PARTS_ID).shouldBeDeleted(enqueuedItem))
                 .isFalse();
         }
     }
