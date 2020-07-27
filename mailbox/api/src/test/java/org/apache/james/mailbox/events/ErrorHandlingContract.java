@@ -169,13 +169,14 @@ interface ErrorHandlingContract extends EventBusContract {
     }
 
     @Test
-    default void retriesBackOffShouldDelayByExponentialGrowth() throws Exception {
+    default void retriesBackOffShouldDelayByExponentialGrowth() {
         ThrowingListener throwingListener = throwingListener();
 
         eventBus().register(throwingListener, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        Thread.sleep(getSpeedProfile().getShortWaitTime().toMillis());
+        getSpeedProfile().shortWaitCondition()
+            .untilAsserted(() -> assertThat(throwingListener.executionCount()).isEqualTo(4));
         SoftAssertions.assertSoftly(softly -> {
             List<Instant> timeElapsed = throwingListener.timeElapsed;
             softly.assertThat(timeElapsed).hasSize(RETRY_BACKOFF_CONFIGURATION.getMaxRetries() + 1);
