@@ -27,11 +27,13 @@ import io.restassured.builder.RequestSpecBuilder
 import io.restassured.config.EncoderConfig.encoderConfig
 import io.restassured.config.RestAssuredConfig.newConfig
 import io.restassured.http.ContentType
+import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
 import org.apache.james.core.Username
 import org.apache.james.jmap._
 import org.apache.james.jmap.http.SessionRoutesTest.{BOB, TEST_CONFIGURATION}
 import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.model.JmapRfc8621Configuration
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.TestId
 import org.mockito.ArgumentMatchers.any
@@ -65,7 +67,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
 
     val sessionRoutes = new SessionRoutes(
       serializer = new Serializer(new TestId.Factory),
-      sessionSupplier = new SessionSupplier(),
+      sessionSupplier = new SessionSupplier(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION),
       authenticator = mockedAuthFilter)
     jmapServer = new JMAPServer(
       TEST_CONFIGURATION,
@@ -100,7 +102,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .thenReturn
         .getBody
         .asString()
-    val expectedJson = """{
+    val expectedJson = s"""{
                          |  "capabilities" : {
                          |    "urn:ietf:params:jmap:core" : {
                          |      "maxSizeUpload" : 10000000,
@@ -159,13 +161,13 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |    "urn:apache:james:params:jmap:mail:shares": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401"
                          |  },
                          |  "username" : "bob@james.org",
-                         |  "apiUrl" : "http://this-url-is-hardcoded.org/jmap",
-                         |  "downloadUrl" : "http://this-url-is-hardcoded.org/download",
-                         |  "uploadUrl" : "http://this-url-is-hardcoded.org/upload",
-                         |  "eventSourceUrl" : "http://this-url-is-hardcoded.org/eventSource",
+                         |  "apiUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/jmap",
+                         |  "downloadUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/download",
+                         |  "uploadUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/upload",
+                         |  "eventSourceUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/eventSource",
                          |  "state" : "000001"
                          |}""".stripMargin
 
-    Json.parse(sessionJson) should equal(Json.parse(expectedJson))
+    assertThatJson(sessionJson).isEqualTo(expectedJson)
   }
 }

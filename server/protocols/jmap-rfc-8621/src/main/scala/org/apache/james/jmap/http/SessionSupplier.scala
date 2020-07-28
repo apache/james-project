@@ -19,19 +19,13 @@
 
 package org.apache.james.jmap.http
 
-import java.net.URL
-
+import javax.inject.Inject
 import org.apache.james.core.Username
-import org.apache.james.jmap.http.SessionSupplier.HARD_CODED_URL_PREFIX
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model._
 import reactor.core.scala.publisher.SMono
 
-object SessionSupplier {
-  private val HARD_CODED_URL_PREFIX = "http://this-url-is-hardcoded.org"
-}
-
-class SessionSupplier {
+class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration){
   def generate(username: Username): SMono[Session] = {
     accounts(username)
       .map(account => Session(
@@ -39,10 +33,10 @@ class SessionSupplier {
         List(account),
         primaryAccounts(account.accountId),
         username,
-        apiUrl = new URL(s"$HARD_CODED_URL_PREFIX/jmap"),
-        downloadUrl = new URL(s"$HARD_CODED_URL_PREFIX/download"),
-        uploadUrl = new URL(s"$HARD_CODED_URL_PREFIX/upload"),
-        eventSourceUrl = new URL(s"$HARD_CODED_URL_PREFIX/eventSource")))
+        apiUrl = configuration.apiUrl,
+        downloadUrl = configuration.downloadUrl,
+        uploadUrl = configuration.uploadUrl,
+        eventSourceUrl = configuration.eventSourceUrl))
   }
 
   private def accounts(username: Username): SMono[Account] = SMono.defer(() =>

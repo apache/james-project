@@ -18,21 +18,28 @@
  * ***************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
+import io.restassured.builder.RequestSpecBuilder
+import io.restassured.config.EncoderConfig.encoderConfig
+import io.restassured.config.RestAssuredConfig.newConfig
+import io.restassured.http.ContentType
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
-import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.expected_session_object
+import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.{EXPECTED_BASE_PATH, expected_session_object}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
 object SessionRoutesContract {
-  private val expected_session_object = """{
+  private val expected_session_object: String = """{
                          |  "capabilities" : {
                          |    "urn:ietf:params:jmap:core" : {
                          |      "maxSizeUpload" : 10000000,
@@ -91,12 +98,13 @@ object SessionRoutesContract {
                          |    "urn:apache:james:params:jmap:mail:shares": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
                          |  },
                          |  "username" : "bob@domain.tld",
-                         |  "apiUrl" : "http://this-url-is-hardcoded.org/jmap",
-                         |  "downloadUrl" : "http://this-url-is-hardcoded.org/download",
-                         |  "uploadUrl" : "http://this-url-is-hardcoded.org/upload",
-                         |  "eventSourceUrl" : "http://this-url-is-hardcoded.org/eventSource",
+                         |  "apiUrl" : "http://domain.com/jmap",
+                         |  "downloadUrl" : "http://domain.com/download",
+                         |  "uploadUrl" : "http://domain.com/upload",
+                         |  "eventSourceUrl" : "http://domain.com/eventSource",
                          |  "state" : "000001"
                          |}""".stripMargin
+  private val EXPECTED_BASE_PATH: String = "/jmap"
 }
 
 trait SessionRoutesContract {
@@ -109,7 +117,15 @@ trait SessionRoutesContract {
       .addUser(BOB.asString, BOB_PASSWORD)
       .addUser(ANDRE.asString, ANDRE_PASSWORD)
 
-    requestSpecification = baseRequestSpecBuilder(server)
+    val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
+    requestSpecification = new RequestSpecBuilder()
+    .setContentType(ContentType.JSON)
+    .setAccept(ContentType.JSON)
+    .setConfig(newConfig.encoderConfig(encoderConfig.defaultContentCharset(StandardCharsets.UTF_8)))
+    .setPort(jmapGuiceProbe
+      .getJmapPort
+      .getValue)
+    .setBasePath(EXPECTED_BASE_PATH)
         .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
       .build
   }

@@ -21,6 +21,7 @@ package org.apache.james.jmap.http
 
 import org.apache.james.core.Username
 import org.apache.james.jmap.http.SessionSupplierTest.USERNAME
+import org.apache.james.jmap.model.JmapRfc8621Configuration
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -32,11 +33,11 @@ class SessionSupplierTest extends AnyWordSpec with Matchers {
 
   "generate" should {
     "return correct username" in {
-      new SessionSupplier().generate(USERNAME).block().username should equal(USERNAME)
+      new SessionSupplier(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION).generate(USERNAME).block().username should equal(USERNAME)
     }
 
     "return correct account" which {
-      val accounts = new SessionSupplier().generate(USERNAME).block().accounts
+      val accounts = new SessionSupplier(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION).generate(USERNAME).block().accounts
 
       "has size" in {
         accounts should have size 1
