@@ -36,6 +36,8 @@
         <class>org.apache.james.mailrepository.jpa.JPAUrl</class>
         <class>org.apache.james.user.jpa.model.JPAUser</class>
         <class>org.apache.james.rrt.jpa.model.JPARecipientRewrite</class>
+        <class>org.apache.james.sieve.jpa.model.JPASieveQuota</class>
+        <class>org.apache.james.sieve.jpa.model.JPASieveScript</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxDomainStorage</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxGlobalMessageCount</class>
