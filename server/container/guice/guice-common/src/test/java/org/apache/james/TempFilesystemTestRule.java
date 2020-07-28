@@ -23,8 +23,6 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import com.google.inject.Module;
-
 public class TempFilesystemTestRule implements GuiceModuleTestRule {
 
     private final TemporaryFolder temporaryFolder;
@@ -41,14 +39,4 @@ public class TempFilesystemTestRule implements GuiceModuleTestRule {
     public Statement apply(Statement base, Description description) {
         return temporaryFolder.apply(base, description);
     }
-
-    @Override
-    public Module getModule() {
-        return binder -> { };
-    }
-
-    @Override
-    public void await() {
-    }
-
 }

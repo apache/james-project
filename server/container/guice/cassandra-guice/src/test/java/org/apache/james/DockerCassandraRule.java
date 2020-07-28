@@ -42,10 +42,6 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
     }
 
     @Override
-    public void await() {
-    }
-
-    @Override
     public Module getModule() {
         return Modules.combine(binder -> binder.bind(ClusterConfiguration.class)
             .toInstance(DockerCassandra.configurationBuilder(cassandraContainer.getHost())

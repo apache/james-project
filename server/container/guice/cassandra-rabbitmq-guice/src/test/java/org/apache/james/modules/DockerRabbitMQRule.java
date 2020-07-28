@@ -43,10 +43,6 @@ public class DockerRabbitMQRule implements GuiceModuleTestRule {
     }
 
     @Override
-    public void await() {
-    }
-
-    @Override
     public Module getModule() {
         return Modules.combine((binder) -> {
                 try {
