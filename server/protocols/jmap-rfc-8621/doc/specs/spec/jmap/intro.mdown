@@ -45,6 +45,10 @@ signature. These have the following meanings:
 
 ## The Id Data Type
 
+<aside class="notice">
+  Implemented
+</aside>
+
 All record ids are assigned by the server and are immutable.
 
 Where `Id` is given as a data type, it means a `String` of at least 1 and a maximum of 255 octets in size, and it MUST only contain characters from the "URL and Filename Safe" base64 alphabet, as defined in Section 5 of [@!RFC4648], excluding the pad character (`=`). This means the allowed characters are the ASCII alphanumeric characters (`A-Za-z0-9`), hyphen (`-`), and underscore (`_`).
@@ -66,6 +70,10 @@ A good solution to these issues is to prefix every id with a single
 alphabetical character.
 
 ## The Int and UnsignedInt Data Types
+
+<aside class="notice">
+  Implemented
+</aside>
 
 Where `Int` is given as a data type, it means an integer in the range -2^53+1 <= value <= 2^53-1, the safe range for integers stored in a floating-point double, represented as a JSON `Number`.
 

@@ -1,5 +1,9 @@
 # The JMAP Session Resource
 
+<aside class="notice">
+  Implemented
+</aside>
+
 You need two things to connect to a JMAP server:
 
 1. The URL for the JMAP Session resource. This may be requested directly from
@@ -10,27 +14,54 @@ You need two things to connect to a JMAP server:
 A successful authenticated GET request to the JMAP Session resource MUST return a JSON-encoded **Session** object, giving details about the data and capabilities the server can provide to the client given those credentials. It has the following properties:
 
 - **capabilities**: `String[Object]`
+<aside class="notice">
+  Implemented
+</aside>
   An object specifying the capabilities of this server. Each key is a URI for a capability supported by the server. The value for each of these keys is an object with further information about the server's capabilities in relation to that capability.
 
     The client MUST ignore any properties it does not understand.
 
     The capabilities object MUST include a property called `urn:ietf:params:jmap:core`. The value of this property is an object that MUST contain the following information on server capabilities (suggested minimum values for limits are supplied that allow clients to make efficient use of the network):
+  <aside class="notice">
+    Implemented
+  </aside>
 
     - **maxSizeUpload**: `UnsignedInt`
+    <aside class="warning">
+      Not enforced yet
+    </aside>
       The maximum file size, in octets, that the server will accept for a single file upload (for any purpose). Suggested minimum: 50,000,000.
     - **maxConcurrentUpload**: `UnsignedInt`
+    <aside class="warning">
+      Not enforced yet
+    </aside>
       The maximum number of concurrent requests the server will accept to the upload endpoint.  Suggested minimum: 4.
     - **maxSizeRequest**: `UnsignedInt`
+    <aside class="warning">
+      Not enforced yet
+    </aside>
       The maximum size, in octets, that the server will accept for a single
       request to the API endpoint. Suggested minimum: 10,000,000.
     - **maxConcurrentRequests**: `UnsignedInt`
+    <aside class="warning">
+      Not enforced yet
+    </aside>
       The maximum number of concurrent requests the server will accept to
       the API endpoint. Suggested minimum: 4.
     - **maxCallsInRequest**: `UnsignedInt`
+    <aside class="warning">
+      Not enforced yet
+    </aside>
       The maximum number of method calls the server will accept in a single request to the API endpoint.  Suggested minimum: 16.
     - **maxObjectsInGet**: `UnsignedInt`
+    <aside class="warning">
+      Not enforced yet
+    </aside>
       The maximum number of objects that the client may request in a single `/get` type method call. Suggested minimum: 500.
     - **maxObjectsInSet**: `UnsignedInt`
+    <aside class="warning">
+      Not enforced yet
+    </aside>
       The maximum number of objects the client may send to create, update, or destroy in a single `/set` type method call. This is the combined total, e.g., if the maximum is 10, you could not create 7 objects and destroy 6, as this would be 13 actions, which exceeds the limit. Suggested minimum: 500.
     - **collationAlgorithms**: `String[]`
       A list of identifiers for algorithms registered in the collation registry, as defined in [@!RFC4790], that the server supports for sorting when querying records.
@@ -40,6 +71,9 @@ A successful authenticated GET request to the JMAP Session resource MUST return 
     Servers MAY advertise vendor-specific JMAP extensions, as described in Section 1.8. To avoid conflict, an identifier for a vendor-specific extension MUST be a URL with a domain owned by the vendor. Clients MUST opt in to any capability it wishes to use (see Section 3.3).
 
 - **accounts**: `Id[Account]`
+<aside class="notice">
+  Implemented
+</aside>
   A map of an **account id** to an Account object for each account (see Section 1.6.2) the user has access to. An **Account** object has the following properties:
 
     - **name**: `String`
@@ -74,8 +108,14 @@ A successful authenticated GET request to the JMAP Session resource MUST return 
          Errors", Section 3.6.2).
 
 - **primaryAccounts**: `String[Id]`
+<aside class="notice">
+  Implemented
+</aside>
   A map of capability URIs (as found in *accountCapabilities*) to the account id that is considered to be the user's main or default account for data pertaining to that capability. If no account being returned belongs to the user, or in any other way there is no appropriate way to determine a default account, there MAY be no entry for a particular URI, even though that capability is supported by the server (and in the capabilities object). `urn:ietf:params:jmap:core` SHOULD NOT be present.
 - **username**: `String`
+<aside class="notice">
+  Implemented
+</aside>
   The username associated with the given credentials, or the empty string if none.
 - **apiUrl**: `String`
   The URL to use for JMAP API requests.
