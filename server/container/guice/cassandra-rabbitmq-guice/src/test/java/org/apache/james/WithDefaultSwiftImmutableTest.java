@@ -21,22 +21,27 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.blob.objectstorage.AESPayloadCodec;
+import org.apache.james.blob.objectstorage.DefaultPayloadCodec;
 import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
+import org.apache.james.modules.SwiftBlobStoreExtension;
+import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(WithEncryptedAwsS3Extension.class)
-public class WithEncryptedAwsS3Test implements JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {
+public class WithDefaultSwiftImmutableTest implements JmapJamesServerContract, JamesServerContract {
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
+        .extension(new SwiftBlobStoreExtension())
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+        .build();
 
     @Test
-    void encryptedPayloadShouldBeConfiguredWhenProvidingEncryptedPayloadConfiguration(GuiceJamesServer jamesServer) {
-        PayloadCodec payloadCodec = jamesServer.getProbe(DockerAwsS3TestRule.TestAwsS3BlobStoreProbe.class)
-            .getAwsS3PayloadCodec();
+    void defaultPayloadShouldBeByDefault(GuiceJamesServer jamesServer) {
+        PayloadCodec payloadCodec = jamesServer.getProbe(DockerSwiftTestRule.TestSwiftBlobStoreProbe.class)
+            .getSwiftPayloadCodec();
 
         assertThat(payloadCodec)
-            .isInstanceOf(AESPayloadCodec.class);
+            .isInstanceOf(DefaultPayloadCodec.class);
     }
 }

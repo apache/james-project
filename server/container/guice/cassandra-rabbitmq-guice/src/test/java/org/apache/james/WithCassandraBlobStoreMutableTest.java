@@ -21,7 +21,7 @@ package org.apache.james;
 
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class WithCassandraBlobStoreTest implements MailsShouldBeWellReceived {
+public class WithCassandraBlobStoreMutableTest implements MailsShouldBeWellReceived {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = WithCassandraBlobStoreImmutableTest.baseExtensionBuilder()
         .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)

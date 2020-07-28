@@ -19,9 +19,14 @@
 
 package org.apache.james;
 
-import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.objectstorage.PayloadCodecFactory;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(WithCassandraBlobStore.class)
-public class WithCassandraBlobStoreTest implements JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {
+public class WithEncryptedAwsS3MutableTest implements MailsShouldBeWellReceived {
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
+        .extension(new AwsS3BlobStoreExtension(PayloadCodecFactory.AES256))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .build();
 }

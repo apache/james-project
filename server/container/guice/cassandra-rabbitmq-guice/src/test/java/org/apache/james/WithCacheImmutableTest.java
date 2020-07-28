@@ -24,21 +24,17 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ParameterContext;
-import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class WithCacheExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
-    private final JamesServerExtension jamesServerExtension;
+class WithCacheImmutableTest implements JmapJamesServerContract, JamesServerContract {
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = baseExtensionBuilder()
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+        .build();
 
-    WithCacheExtension() {
-        jamesServerExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+    static JamesServerBuilder<CassandraRabbitMQJamesConfiguration> baseExtensionBuilder() {
+        return new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
             CassandraRabbitMQJamesConfiguration.builder()
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
@@ -54,37 +50,6 @@ public class WithCacheExtension implements BeforeAllCallback, AfterAllCallback, 
             .extension(new AwsS3BlobStoreExtension())
             .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule())
-                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
-            .build();
-    }
-
-    @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
-        jamesServerExtension.beforeAll(context);
-    }
-
-    @Override
-    public void afterAll(ExtensionContext context) throws Exception {
-        jamesServerExtension.afterAll(context);
-    }
-
-    @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
-        jamesServerExtension.beforeEach(context);
-    }
-
-    @Override
-    public void afterEach(ExtensionContext context) throws Exception {
-        jamesServerExtension.afterEach(context);
-    }
-
-    @Override
-    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == GuiceJamesServer.class);
-    }
-
-    @Override
-    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return jamesServerExtension.getGuiceJamesServer();
+                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
     }
 }

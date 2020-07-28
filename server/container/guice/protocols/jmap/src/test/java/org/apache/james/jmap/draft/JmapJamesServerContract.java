@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.inject.Module;
@@ -34,6 +33,7 @@ import com.google.inject.Module;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
 
 public interface JmapJamesServerContract {
     Module DOMAIN_LIST_CONFIGURATION_MODULE = binder -> binder.bind(DomainListConfiguration.class)
@@ -43,24 +43,23 @@ public interface JmapJamesServerContract {
             .build());
     String JAMES_SERVER_HOST = "127.0.0.1";
 
-    @BeforeEach
-    default void setup(GuiceJamesServer server) throws Exception {
-
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
-            .build();
-    }
-
     @Test
-    default void connectJMAPServerShouldRespondBadRequest() {
+    default void connectJMAPServerShouldRespondBadRequest(GuiceJamesServer server) {
+        RestAssured.requestSpecification = requestSpec(server);
         given()
             .body("{\"badAttributeName\": \"value\"}")
         .when()
             .post("/authentication")
         .then()
             .statusCode(400);
+    }
+
+    static RequestSpecification requestSpec(GuiceJamesServer server) {
+        return new RequestSpecBuilder()
+            .setContentType(ContentType.JSON)
+            .setAccept(ContentType.JSON)
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
+            .build();
     }
 }

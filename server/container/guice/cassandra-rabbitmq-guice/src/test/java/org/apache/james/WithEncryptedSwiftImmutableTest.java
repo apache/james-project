@@ -24,12 +24,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.blob.objectstorage.AESPayloadCodec;
 import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
+import org.apache.james.modules.SwiftBlobStoreExtension;
+import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(WithEncryptedSwiftExtension.class)
-public class WithEncryptedSwiftTest implements JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {
+public class WithEncryptedSwiftImmutableTest implements JmapJamesServerContract, JamesServerContract {
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
+        .extension(new SwiftBlobStoreExtension(PayloadCodecFactory.AES256))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+        .build();
 
     @Test
     void encryptedPayloadShouldBeConfiguredWhenProvidingEncryptedPayloadConfiguration(GuiceJamesServer jamesServer) {

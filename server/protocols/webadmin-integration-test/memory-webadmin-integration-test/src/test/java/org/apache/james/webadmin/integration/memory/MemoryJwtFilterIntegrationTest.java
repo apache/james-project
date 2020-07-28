@@ -37,6 +37,5 @@ class MemoryJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
             .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
             .overrideWith(binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration())))
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

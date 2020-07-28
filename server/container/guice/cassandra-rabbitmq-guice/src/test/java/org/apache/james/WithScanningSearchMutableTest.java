@@ -19,9 +19,11 @@
 
 package org.apache.james;
 
-import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(WithScanningSearchExtension.class)
-class WithScanningSearchTest implements JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {
+class WithScanningSearchMutableTest implements MailsShouldBeWellReceived {
+    @RegisterExtension
+    JamesServerExtension jamesServerExtension = WithScanningSearchImmutableTest.baseExtension()
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .build();
 }

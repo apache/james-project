@@ -19,11 +19,14 @@
 
 package org.apache.james;
 
+import org.apache.james.modules.SwiftBlobStoreExtension;
+import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class WithCassandraBlobStoreTest implements MailsShouldBeWellReceived {
+public class WithEncryptedSwiftMutableTest implements MailsShouldBeWellReceived {
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = WithCassandraBlobStoreImmutableTest.baseExtensionBuilder()
+    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
+        .extension(new SwiftBlobStoreExtension(PayloadCodecFactory.AES256))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
         .build();
 }

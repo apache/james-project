@@ -19,11 +19,13 @@
 
 package org.apache.james;
 
+import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class WithCassandraBlobStoreTest implements MailsShouldBeWellReceived {
+public class WithDefaultSwiftMutableTest implements MailsShouldBeWellReceived {
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = WithCassandraBlobStoreImmutableTest.baseExtensionBuilder()
+    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
+        .extension(new SwiftBlobStoreExtension())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
         .build();
 }

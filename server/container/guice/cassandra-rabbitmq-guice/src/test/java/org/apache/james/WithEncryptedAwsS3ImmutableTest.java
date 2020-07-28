@@ -21,22 +21,28 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.blob.objectstorage.DefaultPayloadCodec;
+import org.apache.james.blob.objectstorage.AESPayloadCodec;
 import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(WithDefaultAwsS3Extension.class)
-public class WithDefaultAwsS3Test implements JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {
+public class WithEncryptedAwsS3ImmutableTest implements JmapJamesServerContract, JamesServerContract {
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
+        .extension(new AwsS3BlobStoreExtension(PayloadCodecFactory.AES256))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+        .build();
 
     @Test
-    void defaultPayloadShouldBeByDefault(GuiceJamesServer jamesServer) {
+    void encryptedPayloadShouldBeConfiguredWhenProvidingEncryptedPayloadConfiguration(GuiceJamesServer jamesServer) {
         PayloadCodec payloadCodec = jamesServer.getProbe(DockerAwsS3TestRule.TestAwsS3BlobStoreProbe.class)
             .getAwsS3PayloadCodec();
 
         assertThat(payloadCodec)
-            .isInstanceOf(DefaultPayloadCodec.class);
+            .isInstanceOf(AESPayloadCodec.class);
     }
 }
