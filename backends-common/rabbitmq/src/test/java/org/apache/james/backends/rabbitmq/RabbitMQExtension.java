@@ -144,7 +144,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
             ReactorRabbitMQChannelPool.Configuration.builder()
                 .retries(2)
                 .minBorrowDelay(Duration.ofMillis(5))
-                .maxChannel(3));
+                .maxChannel(10));
         channelPool.start();
     }
 
