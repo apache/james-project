@@ -18,12 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.jwt;
 
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.exceptions.MailboxSessionCreationException;
+import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.jmap.http.AuthenticationStrategy;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
@@ -53,28 +51,24 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
     }
 
     @Override
-    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) throws MailboxSessionCreationException {
-        Stream<Username> userLoginStream = extractTokensFromAuthHeaders(authHeaders(httpRequest))
-            .filter(tokenManager::verify)
-            .map(tokenManager::extractLogin)
-            .map(Username::of)
-            .peek(username -> {
+    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
+        return Mono.fromCallable(() -> authHeaders(httpRequest))
+            .filter(header -> header.startsWith(AUTHORIZATION_HEADER_PREFIX))
+            .map(header -> header.substring(AUTHORIZATION_HEADER_PREFIX.length()))
+            .map(userJWTToken -> {
+                if (!tokenManager.verify(userJWTToken)) {
+                    throw new UnauthorizedException("Failed Jwt verification");
+                }
+
+                Username username = Username.of(tokenManager.extractLogin(userJWTToken));
                 try {
                     usersRepository.assertValid(username);
                 } catch (UsersRepositoryException e) {
-                    throw new MailboxSessionCreationException(e);
+                    throw new UnauthorizedException("Invalid username", e);
                 }
-            });
 
-        Stream<MailboxSession> mailboxSessionStream = userLoginStream
-                .map(mailboxManager::createSystemSession);
-
-        return Mono.justOrEmpty(mailboxSessionStream.findFirst());
-    }
-
-    private Stream<String> extractTokensFromAuthHeaders(Stream<String> authHeaders) {
-        return authHeaders
-                .filter(h -> h.startsWith(AUTHORIZATION_HEADER_PREFIX))
-                .map(h -> h.substring(AUTHORIZATION_HEADER_PREFIX.length()));
+                return username;
+            })
+            .map(mailboxManager::createSystemSession);
     }
 }
