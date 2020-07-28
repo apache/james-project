@@ -1,0 +1,59 @@
+%%%
+    title = "JMAP (JSON Meta Application Protocol) for Mail"
+    abbrev = "JMAP Mail"
+    category = "std"
+    docName = "draft-ietf-jmap-mail-16"
+    updates = [5788]
+    ipr= "trust200902"
+    area = "Applications"
+    workgroup = "JMAP"
+    keyword = ["JMAP", "JSON", "email"]
+
+    date = 2019-03-08T00:00:00Z
+
+    [[author]]
+    initials="N.M."
+    surname="Jenkins"
+    fullname="Neil Jenkins"
+    role="editor"
+    organization = "Fastmail"
+        [author.address]
+        email = "neilj@fastmailteam.com"
+        uri = "https://www.fastmail.com"
+        [author.address.postal]
+            street = "PO Box 234, Collins St West"
+            city = "Melbourne"
+            code = "VIC 8007"
+            country = "Australia"
+
+    [[author]]
+    initials="C."
+    surname="Newman"
+    fullname="Chris Newman"
+    role="editor"
+    organization = "Oracle"
+        [author.address]
+        email = "chris.newman@oracle.com"
+        [author.address.postal]
+            street = "440 E. Huntington Dr., Suite 400"
+            city = "Arcadia"
+            code = "CA 91006"
+            country = "United States of America"
+%%%
+
+.# Abstract
+
+This document specifies a data model for synchronising email data with a server using JMAP (the JSON Meta Application Protocol). Clients can use this to efficiently search, access, organise and send messages, and get pushed notifications for fast resynchronisation when new messages are delivered or a change is made in another client.
+
+{mainmatter}
+
+{{spec/mail/intro.mdown}}
+{{spec/mail/mailbox.mdown}}
+{{spec/mail/thread.mdown}}
+{{spec/mail/message.mdown}}
+{{spec/mail/searchsnippet.mdown}}
+{{spec/mail/identity.mdown}}
+{{spec/mail/messagesubmission.mdown}}
+{{spec/mail/vacationresponse.mdown}}
+{{spec/mail/securityconsiderations.mdown}}
+{{spec/mail/ianaconsiderations.mdown}}

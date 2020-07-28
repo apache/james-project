@@ -1,0 +1,85 @@
+# Identities
+
+An **Identity** object stores information about an email address or domain the user may send from. It has the following properties:
+
+- **id**: `Id` (immutable; server-set)
+  The id of the Identity.
+- **name**: `String` (default: "")
+  The "From" *name* the client SHOULD use when creating a new Email from this Identity.
+- **email**: `String` (immutable)
+  The "From" email address the client MUST use when creating a new Email from this Identity. If the *mailbox* part of the address (the section before the "@") is the single character `*` (e.g., `*@example.com`) then the client may use any valid address ending in that domain (e.g., `foo@example.com`).
+- **replyTo**: `EmailAddress[]|null` (default: null)
+  The Reply-To value the client SHOULD set when creating a new Email from this Identity.
+- **bcc**: `EmailAddress[]|null` (default: null)
+  The Bcc value the client SHOULD set when creating a new Email from this Identity.
+- **textSignature**: `String` (default: "")
+  A signature the client SHOULD insert into new plaintext messages that will be sent from this Identity. Clients MAY ignore this and/or combine this with a client-specific signature preference.
+- **htmlSignature**: `String` (default: "")
+  A signature the client SHOULD insert into new HTML messages that will be sent from this Identity. This text MUST be an HTML snippet to be inserted into the `<body></body>` section of the HTML. Clients MAY ignore this and/or combine this with a client-specific signature preference.
+- **mayDelete**: `Boolean` (server-set)
+  Is the user allowed to delete this Identity? Servers may wish to set this to `false` for the user's username or other default address. Attempts to destroy an Identity with `mayDelete: false` will be rejected with a standard `forbidden` SetError.
+
+See the "Addresses" header form description in the Email object for the definition of *EmailAddress*.
+
+Multiple identities with the same email address MAY exist, to allow for different settings the user wants to pick between (for example, with different names/signatures).
+
+The following JMAP methods are supported.
+
+## Identity/get
+
+This is a standard "/get" method as described in [@!RFC8620], Section 5.1. The *ids* argument may be `null` to fetch all at once.
+
+## Identity/changes
+
+This is a standard "/changes" method as described in [@!RFC8620], Section 5.2.
+
+## Identity/set
+
+This is a standard "/set" method as described in [@!RFC8620], Section 5.3. The following extra *SetError* types are defined:
+
+For **create**:
+
+- `forbiddenFrom`: The user is not allowed to send from the address given as
+  the *email* property of the Identity.
+
+## Example
+
+Request:
+
+    [ "Identity/get", {
+      "accountId": "acme"
+    }, "0" ]
+
+with response:
+
+    [ "Identity/get", {
+      "accountId": "acme",
+      "state": "99401312ae-11-333",
+      "list": [
+        {
+          "id": "XD-3301-222-11_22AAz",
+          "name": "Joe Bloggs",
+          "email": "joe@example.com",
+          "replyTo": null,
+          "bcc": [{
+            "name": null,
+            "email": "joe+archive@example.com"
+          }],
+          "textSignature": "-- \nJoe Bloggs\nMaster of Email",
+          "htmlSignature": "<div><b>Joe Bloggs</b></div>
+            <div>Master of Email</div>",
+          "mayDelete": false
+        },
+        {
+          "id": "XD-9911312-11_22AAz",
+          "name": "Joe B",
+          "email": "*@example.com",
+          "replyTo": null,
+          "bcc": null,
+          "textSignature": "",
+          "htmlSignature": "",
+          "mayDelete": true
+        }
+      ],
+      "notFound": []
+    }, "0" ]
