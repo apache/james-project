@@ -137,32 +137,6 @@
                         </ports>
                     </container>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>docker packaging</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>buildTar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.coderplus.maven.plugins</groupId>
-                <artifactId>copy-rename-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-file</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>rename</goal>
-                        </goals>
-                        <configuration>
-                            <sourceFile>${basedir}/target/jib-image.tar</sourceFile>
-                            <destinationFile>${basedir}/target/jib-mock-smtp-server.tar</destinationFile>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

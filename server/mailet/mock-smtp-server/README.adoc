@@ -6,13 +6,17 @@ This is our custom made Mock SMTP server that we use for some of our tests in Ja
 
 Compile and build the image into a tarball with maven:
 
-    $ mvn package
+    $ mvn compile jib:buildTar
 
 *Note* : You can add the option '-DskipTests' if you want to skip tests
 
 After Jib created the image, you can load it into Docker with:
 
-    $ docker load --input target/jib-mock-smtp-server.tar
+    $ docker load --input target/jib-image.tar
+
+You can alternatively directly build your image directly to a Docker daemon. To to so:
+
+    $ mvn compile jib:dockerBuild
 
 Then run it with:
 
