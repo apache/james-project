@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
-import org.apache.james.jmap.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.mailbox.MailboxSession;
@@ -50,7 +49,7 @@ public class AuthenticatorTest {
     private static final String AUTHORIZATION_HEADERS = "Authorization";
     private static final Username USERNAME = Username.of("user@domain.tld");
 
-    private static final AuthenticationStrategy DENY = httpRequest -> Mono.error(new MailboxSessionCreationException(null));
+    private static final AuthenticationStrategy DENY = httpRequest -> Mono.error(new UnauthorizedException(null));
     private static final AuthenticationStrategy ALLOW = httpRequest -> Mono.just(mock(MailboxSession.class));
 
     private HttpServerRequest mockedRequest;
@@ -148,7 +147,7 @@ public class AuthenticatorTest {
     }
 
     @Test
-    public void filterShouldNotThrowWhenChainingAuthorizationStrategies() {
+    public void filterShouldThrowWhenChainingAuthorizationStrategies() {
         AccessToken token = AccessToken.fromString(TOKEN);
         when(mockedHeaders.get(AUTHORIZATION_HEADERS))
             .thenReturn(TOKEN);
@@ -157,7 +156,7 @@ public class AuthenticatorTest {
 
         Authenticator authFilter = Authenticator.of(new RecordingMetricFactory(), DENY, ALLOW);
 
-        assertThatCode(() -> authFilter.authenticate(mockedRequest).block())
-            .doesNotThrowAnyException();
+        assertThatThrownBy(() -> authFilter.authenticate(mockedRequest).block())
+            .isInstanceOf(UnauthorizedException.class);
     }
 }

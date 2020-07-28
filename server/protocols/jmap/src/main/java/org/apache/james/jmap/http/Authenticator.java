@@ -53,8 +53,7 @@ public class Authenticator {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-authentication-filter",
             Flux.fromIterable(authMethods)
                 .concatMap(auth -> auth.createMailboxSession(request))
-                .onErrorContinue((throwable, nothing) -> LOGGER.error("Error while trying to authenticate with JMAP", throwable))
                 .next()
-                .switchIfEmpty(Mono.error(new UnauthorizedException()))));
+                .switchIfEmpty(Mono.error(new UnauthorizedException("Unexpected error")))));
     }
 }

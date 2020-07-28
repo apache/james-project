@@ -149,6 +149,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
             return authenticator.authenticate(req)
                 .flatMap(session -> returnEndPointsResponse(resp)
                     .subscriberContext(jmapAuthContext(session)))
+                .onErrorResume(IllegalArgumentException.class, e -> handleBadRequest(resp, LOGGER, e))
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(resp, LOGGER, e))
                 .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
                 .onErrorResume(InternalErrorException.class, e -> handleInternalError(resp, e))
