@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,24 +36,19 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class NotifyPostmasterTest {
 
     private static final String MAILET_NAME = "mailetName";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private NotifyPostmaster notifyPostmaster;
     private MailAddress postmaster;
     private FakeMailContext fakeMailContext;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         DNSService dnsService = mock(DNSService.class);
         notifyPostmaster = new NotifyPostmaster(dnsService);
         postmaster = new MailAddress("postmaster@james.org");
@@ -64,29 +60,29 @@ public class NotifyPostmasterTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnValue() {
+    void getMailetInfoShouldReturnValue() {
         assertThat(notifyPostmaster.getMailetInfo()).isEqualTo("NotifyPostmaster Mailet");
     }
 
     @Test
-    public void getAllowedInitParametersShouldReturnTheParameters() {
+    void getAllowedInitParametersShouldReturnTheParameters() {
         assertThat(notifyPostmaster.getAllowedInitParameters()).containsOnly("debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "to");
     }
 
     @Test
-    public void initShouldFailWhenUnknownParameterIsConfigured() throws Exception {
+    void initShouldFailWhenUnknownParameterIsConfigured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
                 .setProperty("unknwon", "value")
                 .build();
-        expectedException.expect(MessagingException.class);
 
-        notifyPostmaster.init(mailetConfig);
+        assertThatThrownBy(() -> notifyPostmaster.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getRecipientsShouldReturnPostmaster() throws Exception {
+    void getRecipientsShouldReturnPostmaster() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -97,7 +93,7 @@ public class NotifyPostmasterTest {
     }
 
     @Test
-    public void getToShouldReturnPostmasterWhenToIsNotconfigured() throws Exception {
+    void getToShouldReturnPostmasterWhenToIsNotconfigured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -108,7 +104,7 @@ public class NotifyPostmasterTest {
     }
 
     @Test
-    public void getToShouldReturnPostmasterWhenToIsEqualToPostmaster() throws Exception {
+    void getToShouldReturnPostmasterWhenToIsEqualToPostmaster() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -120,7 +116,7 @@ public class NotifyPostmasterTest {
     }
 
     @Test
-    public void getToShouldReturnUnalteredWhenToIsEqualToUnaltered() throws Exception {
+    void getToShouldReturnUnalteredWhenToIsEqualToUnaltered() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -132,7 +128,7 @@ public class NotifyPostmasterTest {
     }
 
     @Test
-    public void getToShouldReturnPostmasterWhenToIsNotEqualToPostmasterOrUnaltered() throws Exception {
+    void getToShouldReturnPostmasterWhenToIsNotEqualToPostmasterOrUnaltered() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -144,7 +140,7 @@ public class NotifyPostmasterTest {
     }
 
     @Test
-    public void notifyPostmasterShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
+    void notifyPostmasterShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)

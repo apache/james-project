@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,24 +36,19 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ForwardTest {
 
     private static final String MAILET_NAME = "mailetName";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private Forward forward;
     private FakeMailContext fakeMailContext;
     private MailAddress postmaster;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         DNSService dnsService = mock(DNSService.class);
         forward = new Forward(dnsService);
         postmaster = new MailAddress("postmaster@james.org");
@@ -64,24 +60,24 @@ public class ForwardTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnValue() {
+    void getMailetInfoShouldReturnValue() {
         assertThat(forward.getMailetInfo()).isEqualTo("Forward Mailet");
     }
 
     @Test
-    public void initShouldThrowWhenUnkownParameter() throws Exception {
+    void initShouldThrowWhenUnkownParameter() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
                 .setProperty("unknown", "error")
                 .build();
-        expectedException.expect(MessagingException.class);
 
-        forward.init(mailetConfig);
+        assertThatThrownBy(() -> forward.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldNotThrowWhenEveryParameters() throws Exception {
+    void initShouldNotThrowWhenEveryParameters() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -96,65 +92,65 @@ public class ForwardTest {
     }
 
     @Test
-    public void initShouldThrowWhenNoForwardToParameters() throws Exception {
+    void initShouldThrowWhenNoForwardToParameters() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
                 .setProperty("isStatic", "true")
                 .build();
-        expectedException.expect(MessagingException.class);
 
-        forward.init(mailetConfig);
+        assertThatThrownBy(() -> forward.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowWhenUnparsableForwardToAddress() throws Exception {
+    void initShouldThrowWhenUnparsableForwardToAddress() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
                 .setProperty("isStatic", "true")
                 .setProperty("forwardTo", "user@james@org")
                 .build();
-        expectedException.expect(MessagingException.class);
 
-        forward.init(mailetConfig);
+        assertThatThrownBy(() -> forward.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowWhenForwardToIsEmpty() throws Exception {
+    void initShouldThrowWhenForwardToIsEmpty() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
                 .setProperty("isStatic", "true")
                 .setProperty("forwardTo", "")
                 .build();
-        expectedException.expect(MessagingException.class);
 
-        forward.init(mailetConfig);
+        assertThatThrownBy(() -> forward.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getToShouldReturnEmpty() throws Exception {
+    void getToShouldReturnEmpty() throws Exception {
         assertThat(forward.getTo()).isEmpty();
     }
 
     @Test
-    public void getReplyToShouldReturnNull() throws Exception {
+    void getReplyToShouldReturnNull() throws Exception {
         assertThat(forward.getReplyTo()).isEmpty();
     }
 
     @Test
-    public void getReversePathShouldReturnAbsent() throws Exception {
+    void getReversePathShouldReturnAbsent() throws Exception {
         assertThat(forward.getReversePath()).isEmpty();
     }
 
     @Test
-    public void getSenderShouldReturnAbsent() throws Exception {
+    void getSenderShouldReturnAbsent() throws Exception {
         assertThat(forward.getSender()).isEmpty();
     }
 
     @Test
-    public void getRecipientsShouldReturnRecipientsWhenForwardtoParameters() throws Exception {
+    void getRecipientsShouldReturnRecipientsWhenForwardtoParameters() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -170,7 +166,7 @@ public class ForwardTest {
     }
 
     @Test
-    public void getRecipientsShouldReturnRecipientsWhenForwardToParameters() throws Exception {
+    void getRecipientsShouldReturnRecipientsWhenForwardToParameters() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -186,7 +182,7 @@ public class ForwardTest {
     }
 
     @Test
-    public void getRecipientsShouldReturnSpecialAddressWhenForwardToIsMatchingOne() throws Exception {
+    void getRecipientsShouldReturnSpecialAddressWhenForwardToIsMatchingOne() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -198,7 +194,7 @@ public class ForwardTest {
     }
 
     @Test
-    public void forwardShouldNotModifySubject() throws Exception {
+    void forwardShouldNotModifySubject() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)

@@ -19,6 +19,7 @@
 package org.apache.james.transport.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
@@ -26,25 +27,20 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public class MailAddressUtilsTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void fromShouldThrowWhenInternetAddressesIsNull() throws Exception {
-        expectedException.expect(NullPointerException.class);
-        MailAddressUtils.from(null);
+    void fromShouldThrowWhenInternetAddressesIsNull() {
+        assertThatThrownBy(() -> MailAddressUtils.from(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void fromShouldReturnOneMailAddressWhenOneInternetAddresse() throws Exception {
+    void fromShouldReturnOneMailAddressWhenOneInternetAddresse() throws Exception {
         List<MailAddress> mailAddresses = MailAddressUtils.from(InternetAddress.parse("user@james.org"));
 
         MailAddress expectedMailAddress = new MailAddress("user", "james.org");
@@ -52,7 +48,7 @@ public class MailAddressUtilsTest {
     }
 
     @Test
-    public void fromShouldReturnMailAddressesWhenInternetAddresses() throws Exception {
+    void fromShouldReturnMailAddressesWhenInternetAddresses() throws Exception {
         List<MailAddress> mailAddresses = MailAddressUtils.from(InternetAddress.parse("user@james.org, user2@apache.org"));
 
         MailAddress expectedMailAddress = new MailAddress("user", "james.org");
@@ -61,110 +57,110 @@ public class MailAddressUtilsTest {
     }
 
     @Test
-    public void toInternetAddressArrayShouldThrowWhenMailAddressesIsNull() {
-        expectedException.expect(NullPointerException.class);
-        MailAddressUtils.toInternetAddressArray(null);
+    void toInternetAddressArrayShouldThrowWhenMailAddressesIsNull() {
+        assertThatThrownBy(() -> MailAddressUtils.toInternetAddressArray(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void toInternetAddressArrayShouldReturnOneInternetAddressWhenOneMailAddress() throws Exception {
+    void toInternetAddressArrayShouldReturnOneInternetAddressWhenOneMailAddress() throws Exception {
         InternetAddress[] internetAddresses = MailAddressUtils.toInternetAddressArray(ImmutableList.of(new MailAddress("user", "james.org")));
 
         assertThat(internetAddresses).containsOnly(new InternetAddress("user@james.org"));
     }
 
     @Test
-    public void toInternetAddressArrayShouldReturnInternetAddressesWhenMailAddresses() throws Exception {
+    void toInternetAddressArrayShouldReturnInternetAddressesWhenMailAddresses() throws Exception {
         InternetAddress[] internetAddresses = MailAddressUtils.toInternetAddressArray(ImmutableList.of(new MailAddress("user", "james.org"), new MailAddress("user2", "apache.org")));
 
         assertThat(internetAddresses).containsOnly(new InternetAddress("user@james.org"), new InternetAddress("user2@apache.org"));
     }
 
     @Test
-    public void toInternetAddressesShouldThrowWhenMailAddressesIsNull() {
-        expectedException.expect(NullPointerException.class);
-        MailAddressUtils.toInternetAddresses(null);
+    void toInternetAddressesShouldThrowWhenMailAddressesIsNull() {
+        assertThatThrownBy(() -> MailAddressUtils.toInternetAddresses(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void toInternetAddressesShouldReturnOneInternetAddressWhenOneMailAddress() throws Exception {
+    void toInternetAddressesShouldReturnOneInternetAddressWhenOneMailAddress() throws Exception {
         List<InternetAddress> internetAddresses = MailAddressUtils.toInternetAddresses(ImmutableList.of(new MailAddress("user", "james.org")));
 
         assertThat(internetAddresses).containsOnly(new InternetAddress("user@james.org"));
     }
 
     @Test
-    public void toInternetAddressesShouldReturnInternetAddressesWhenMailAddresses() throws Exception {
+    void toInternetAddressesShouldReturnInternetAddressesWhenMailAddresses() throws Exception {
         List<InternetAddress> internetAddresses = MailAddressUtils.toInternetAddresses(ImmutableList.of(new MailAddress("user", "james.org"), new MailAddress("user2", "apache.org")));
 
         assertThat(internetAddresses).containsOnly(new InternetAddress("user@james.org"), new InternetAddress("user2@apache.org"));
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnTrueWhenMailAddressIsSpecialUnaltered() {
+    void isUnalteredOrReversePathOrSenderShouldReturnTrueWhenMailAddressIsSpecialUnaltered() {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.UNALTERED);
 
         assertThat(unalteredOrReversePathOrSender).isTrue();
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnTrueWhenMailAddressIsSpecialReversePath() {
+    void isUnalteredOrReversePathOrSenderShouldReturnTrueWhenMailAddressIsSpecialReversePath() {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.REVERSE_PATH);
 
         assertThat(unalteredOrReversePathOrSender).isTrue();
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnTrueWhenMailAddressIsSpecialSender() {
+    void isUnalteredOrReversePathOrSenderShouldReturnTrueWhenMailAddressIsSpecialSender() {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.SENDER);
 
         assertThat(unalteredOrReversePathOrSender).isTrue();
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialDelete() {
+    void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialDelete() {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.DELETE);
 
         assertThat(unalteredOrReversePathOrSender).isFalse();
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialFrom() {
+    void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialFrom() {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.FROM);
 
         assertThat(unalteredOrReversePathOrSender).isFalse();
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialNull() {
+    void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialNull() {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.NULL);
 
         assertThat(unalteredOrReversePathOrSender).isFalse();
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialRecipients() {
+    void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialRecipients() {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.RECIPIENTS);
 
         assertThat(unalteredOrReversePathOrSender).isFalse();
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialReplyTo() {
+    void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialReplyTo() {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.REPLY_TO);
 
         assertThat(unalteredOrReversePathOrSender).isFalse();
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialTo() {
+    void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsSpecialTo() {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(SpecialAddress.TO);
 
         assertThat(unalteredOrReversePathOrSender).isFalse();
     }
 
     @Test
-    public void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsNotSpecial() throws Exception {
+    void isUnalteredOrReversePathOrSenderShouldReturnFalseWhenMailAddressIsNotSpecial() throws Exception {
         boolean unalteredOrReversePathOrSender = MailAddressUtils.isUnalteredOrReversePathOrSender(new MailAddress("common", "james.org"));
 
         assertThat(unalteredOrReversePathOrSender).isFalse();

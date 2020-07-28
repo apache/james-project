@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,23 +36,18 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailContext.SentMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ResendTest {
 
     private static final String MAILET_NAME = "mailetName";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private Resend resend;
     private FakeMailContext fakeMailContext;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         DNSService dnsService = mock(DNSService.class);
         resend = new Resend(dnsService);
         fakeMailContext = FakeMailContext.builder()
@@ -62,24 +58,24 @@ public class ResendTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnValue() {
+    void getMailetInfoShouldReturnValue() {
         assertThat(resend.getMailetInfo()).isEqualTo("Redirect Mailet");
     }
 
     @Test
-    public void initShouldThrowWhenUnknownParameter() throws Exception {
+    void initShouldThrowWhenUnknownParameter() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
                 .setProperty("unknown", "error")
                 .build();
-        expectedException.expect(MessagingException.class);
 
-        resend.init(mailetConfig);
+        assertThatThrownBy(() -> resend.init(mailetConfig))
+                .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldNotThrowWhenEveryParameters() throws Exception {
+    void initShouldNotThrowWhenEveryParameters() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -105,7 +101,7 @@ public class ResendTest {
     }
 
     @Test
-    public void resendShouldNotModifyOriginalSubject() throws Exception {
+    void resendShouldNotModifyOriginalSubject() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -130,7 +126,7 @@ public class ResendTest {
     }
 
     @Test
-    public void resendShouldAddPrefixAndSubjectToSentMail() throws Exception {
+    void resendShouldAddPrefixAndSubjectToSentMail() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)

@@ -18,47 +18,43 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.redirect;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.server.core.MailImpl;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 public class MailModifierTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void buildShouldThrowWhenMailetIsNull() {
-        expectedException.expect(NullPointerException.class);
-        expectedException.expectMessage("'mailet' is mandatory");
-        MailModifier.builder().build();
+    void buildShouldThrowWhenMailetIsNull() {
+        assertThatThrownBy(() -> MailModifier.builder().build())
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("'mailet' is mandatory");
     }
 
     @Test
-    public void buildShouldThrowWhenMailIsNull() {
-        expectedException.expect(NullPointerException.class);
-        expectedException.expectMessage("'mail' is mandatory");
-        MailModifier.builder()
-            .mailet(mock(RedirectNotify.class))
-            .build();
+    void buildShouldThrowWhenMailIsNull() {
+        assertThatThrownBy(() -> MailModifier.builder()
+                .mailet(mock(RedirectNotify.class))
+                .build())
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("'mail' is mandatory");
     }
 
     @Test
-    public void buildShouldThrowWhenDNSIsNull() {
-        expectedException.expect(NullPointerException.class);
-        expectedException.expectMessage("'dns' is mandatory");
-        MailModifier.builder()
-            .mailet(mock(RedirectNotify.class))
-            .mail(mock(MailImpl.class))
-            .build();
+    void buildShouldThrowWhenDNSIsNull() {
+        assertThatThrownBy(() -> MailModifier.builder()
+                .mailet(mock(RedirectNotify.class))
+                .mail(mock(MailImpl.class))
+                .build())
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("'dns' is mandatory");
     }
 
     @Test
-    public void buildShouldWorkWhenEverythingProvided() {
+    void buildShouldWorkWhenEverythingProvided() {
         MailModifier.builder()
             .mailet(mock(RedirectNotify.class))
             .mail(mock(MailImpl.class))

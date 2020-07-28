@@ -20,41 +20,36 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.internet.InternetAddress;
 
 import org.apache.mailet.base.MailAddressFixture;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public class InternetAddressConverterTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void convertShouldWorkWithEmptyAddressList() {
+    void convertShouldWorkWithEmptyAddressList() {
         assertThat(InternetAddressConverter.convert(ImmutableList.of())).isEmpty();
     }
 
     @Test
-    public void convertShouldThrowOnNullAddress() {
-        expectedException.expect(NullPointerException.class);
-
-        InternetAddressConverter.convert(null);
+    void convertShouldThrowOnNullAddress() {
+        assertThatThrownBy(() -> InternetAddressConverter.convert(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void convertShouldWorkWithOneAddress() throws Exception {
+    void convertShouldWorkWithOneAddress() throws Exception {
         assertThat(InternetAddressConverter.convert(ImmutableList.of(MailAddressFixture.ANY_AT_JAMES)))
             .containsOnly(new InternetAddress(MailAddressFixture.ANY_AT_JAMES.asString()));
     }
 
     @Test
-    public void convertShouldWorkWithTwoAddress() throws Exception {
+    void convertShouldWorkWithTwoAddress() throws Exception {
         assertThat(InternetAddressConverter.convert(ImmutableList.of(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)))
             .containsOnly(new InternetAddress(MailAddressFixture.ANY_AT_JAMES.asString()), new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString()));
     }

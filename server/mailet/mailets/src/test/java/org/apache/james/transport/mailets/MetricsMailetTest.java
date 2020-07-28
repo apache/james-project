@@ -20,40 +20,38 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import javax.mail.MessagingException;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class MetricsMailetTest {
 
     public static final String MAILET_NAME = "Metric test";
     public static final String METRIC_NAME = "metricName";
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     private RecordingMetricFactory metricFactory;
     private MetricsMailet mailet;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         metricFactory = new RecordingMetricFactory();
         mailet = new MetricsMailet(metricFactory);
     }
 
     @Test
-    public void initShouldThrowWhenMetricNameIsNotGiven() throws Exception {
-        expectedException.expect(NullPointerException.class);
-
-        mailet.init(FakeMailetConfig.builder().mailetName(MAILET_NAME).build());
+    void initShouldThrowWhenMetricNameIsNotGiven() {
+        assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder().mailetName(MAILET_NAME).build()))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void serviceShouldIncrementMetricCounter() throws Exception {
+    void serviceShouldIncrementMetricCounter() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName(MAILET_NAME)
             .setProperty(MetricsMailet.METRIC_NAME, METRIC_NAME)

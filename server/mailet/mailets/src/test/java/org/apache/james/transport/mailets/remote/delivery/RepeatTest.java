@@ -20,36 +20,32 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 public class RepeatTest {
 
     public static final String ELEMENT = "a";
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void repeatShouldThrowOnNegativeTimes() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Repeat.repeat(new Object(), -1);
+    void repeatShouldThrowOnNegativeTimes() {
+        assertThatThrownBy(() -> Repeat.repeat(new Object(), -1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void repeatShouldReturnEmptyListOnZeroTimes() {
+    void repeatShouldReturnEmptyListOnZeroTimes() {
         assertThat(Repeat.repeat(new Object(), 0)).isEmpty();
     }
 
     @Test
-    public void repeatShouldWorkWithOneElement() {
+    void repeatShouldWorkWithOneElement() {
         assertThat(Repeat.repeat(ELEMENT, 1)).containsExactly(ELEMENT);
     }
 
     @Test
-    public void repeatShouldWorkWithTwoElements() {
+    void repeatShouldWorkWithTwoElements() {
         assertThat(Repeat.repeat(ELEMENT, 2)).containsExactly(ELEMENT, ELEMENT);
     }
 

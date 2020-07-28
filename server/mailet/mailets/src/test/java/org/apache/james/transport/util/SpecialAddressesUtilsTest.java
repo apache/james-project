@@ -19,6 +19,7 @@
 package org.apache.james.transport.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,23 +38,18 @@ import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public class SpecialAddressesUtilsTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private MailAddress postmaster;
     private SpecialAddressesUtils testee;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup() throws Exception {
         final MailetContext mailetContext = mock(MailetContext.class);
         postmaster = new MailAddress("postmaster@james.org");
         when(mailetContext.getPostmaster())
@@ -66,7 +62,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnEmptyWhenEmptyList() throws Exception {
+    void replaceMailAddressesShouldReturnEmptyWhenEmptyList() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -77,7 +73,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnSameContentWhenAddressesDoesntMatchAddressMarkerDomain() throws Exception {
+    void replaceMailAddressesShouldReturnSameContentWhenAddressesDoesntMatchAddressMarkerDomain() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -92,7 +88,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnSenderWhenAddressesMatchSender() throws Exception {
+    void replaceMailAddressesShouldReturnSenderWhenAddressesMatchSender() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .name("name")
@@ -105,7 +101,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnSenderWhenAddressesMatchFrom() throws Exception {
+    void replaceMailAddressesShouldReturnSenderWhenAddressesMatchFrom() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .name("name")
@@ -118,7 +114,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchSenderAndSenderIsNull() throws Exception {
+    void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchSenderAndSenderIsNull() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -129,7 +125,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchReplyToAndReplyToIsNull() throws Exception {
+    void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchReplyToAndReplyToIsNull() throws Exception {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder());
 
         Collection<MailAddress> addresses = testee.replaceSpecialAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO));
@@ -138,7 +134,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnReplyToWhenAddressesMatchReplyTo() throws Exception {
+    void replaceMailAddressesShouldReturnReplyToWhenAddressesMatchReplyTo() throws Exception {
         MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         message.setReplyTo(InternetAddress.parse(MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString()));
         FakeMail mail = FakeMail.from(message);
@@ -152,7 +148,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnSenderWhenAddressesMatchReplyToAndNoReplyTo() throws Exception {
+    void replaceMailAddressesShouldReturnSenderWhenAddressesMatchReplyToAndNoReplyTo() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .name("name")
@@ -166,7 +162,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnSenderWhenAddressesMatchReversePath() throws Exception {
+    void replaceMailAddressesShouldReturnSenderWhenAddressesMatchReversePath() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .name("name")
@@ -179,7 +175,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchReversePathAndNoSender() throws Exception {
+    void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchReversePathAndNoSender() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -190,7 +186,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnRecipientsWhenAddressesMatchRecipients() throws Exception {
+    void replaceMailAddressesShouldReturnRecipientsWhenAddressesMatchRecipients() throws Exception {
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         MailAddress recipient2 = MailAddressFixture.OTHER_AT_JAMES;
         FakeMail mail = FakeMail.builder()
@@ -204,7 +200,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnRecipientsWhenAddressesMatchTo() throws Exception {
+    void replaceMailAddressesShouldReturnRecipientsWhenAddressesMatchTo() throws Exception {
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         MailAddress recipient2 = MailAddressFixture.OTHER_AT_JAMES;
         FakeMail mail = FakeMail.builder()
@@ -218,7 +214,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchUnaltered() throws Exception {
+    void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchUnaltered() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -229,7 +225,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchNull() throws Exception {
+    void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchNull() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -240,7 +236,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnSameAddressWhenAddressesDoesntMatch() throws Exception {
+    void replaceMailAddressesShouldReturnSameAddressWhenAddressesDoesntMatch() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -253,7 +249,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceMailAddressesShouldReturnSameListWhenAddressesMatchDelete() throws Exception {
+    void replaceMailAddressesShouldReturnSameListWhenAddressesMatchDelete() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -265,7 +261,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnEmptyWhenEmptyList() throws Exception {
+    void replaceInternetAddressesShouldReturnEmptyWhenEmptyList() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -276,7 +272,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnSameContentWhenAddressesDoesntMatchAddressMarkerDomain() throws Exception {
+    void replaceInternetAddressesShouldReturnSameContentWhenAddressesDoesntMatchAddressMarkerDomain() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -291,7 +287,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchSender() throws Exception {
+    void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchSender() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .name("name")
@@ -304,7 +300,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnFromWhenAddressesMatchFrom() throws Exception {
+    void replaceInternetAddressesShouldReturnFromWhenAddressesMatchFrom() throws Exception {
         MailAddress from = MailAddressFixture.ANY_AT_JAMES;
         MailAddress from2 = MailAddressFixture.OTHER_AT_JAMES;
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
@@ -316,7 +312,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchFromAndNoFrom() throws Exception {
+    void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchFromAndNoFrom() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .name("name")
@@ -330,7 +326,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchSenderAndSenderIsNull() throws Exception {
+    void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchSenderAndSenderIsNull() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -341,7 +337,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchReplyToAndReplyToIsNull() throws Exception {
+    void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchReplyToAndReplyToIsNull() throws Exception {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder());
 
         List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
@@ -350,7 +346,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnReplyToWhenAddressesMatchReplyTo() throws Exception {
+    void replaceInternetAddressesShouldReturnReplyToWhenAddressesMatchReplyTo() throws Exception {
         MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         message.setReplyTo(InternetAddress.parse(MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString()));
         FakeMail mail = FakeMail.from(message);
@@ -364,7 +360,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchReplyToAndNoReplyTo() throws Exception {
+    void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchReplyToAndNoReplyTo() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .name("name")
@@ -378,7 +374,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchReversePath() throws Exception {
+    void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchReversePath() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .name("name")
@@ -391,7 +387,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchReversePathAndNoSender() throws Exception {
+    void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchReversePathAndNoSender() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -402,7 +398,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnToWhenAddressesMatchRecipients() throws Exception {
+    void replaceInternetAddressesShouldReturnToWhenAddressesMatchRecipients() throws Exception {
         MailAddress to = MailAddressFixture.ANY_AT_JAMES;
         MailAddress to2 = MailAddressFixture.OTHER_AT_JAMES;
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
@@ -414,7 +410,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnToWhenAddressesMatchTo() throws Exception {
+    void replaceInternetAddressesShouldReturnToWhenAddressesMatchTo() throws Exception {
         MailAddress to = MailAddressFixture.ANY_AT_JAMES;
         MailAddress to2 = MailAddressFixture.OTHER_AT_JAMES;
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
@@ -426,7 +422,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchUnaltered() throws Exception {
+    void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchUnaltered() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -437,7 +433,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchNull() throws Exception {
+    void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchNull() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -448,7 +444,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnSameAddressWhenAddressesDoesntMatch() throws Exception {
+    void replaceInternetAddressesShouldReturnSameAddressWhenAddressesDoesntMatch() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -461,7 +457,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldReturnSameListWhenAddressesMatchDelete() throws Exception {
+    void replaceInternetAddressesShouldReturnSameListWhenAddressesMatchDelete() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .build();
@@ -473,27 +469,27 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldThrowWhenSenderInitParameterIsNull() throws Exception {
-        expectedException.expect(NullPointerException.class);
-        testee.getFirstSpecialAddressIfMatchingOrGivenAddress(null, ImmutableList.of("postmaster", "sender", "unaltered"));
+    void getFirstSpecialAddressIfMatchingOrGivenAddressShouldThrowWhenSenderInitParameterIsNull() throws Exception {
+        assertThatThrownBy(() -> testee.getFirstSpecialAddressIfMatchingOrGivenAddress(null, ImmutableList.of("postmaster", "sender", "unaltered")))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnAbsentWhenSenderInitParameterIsAbsent() throws Exception {
+    void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnAbsentWhenSenderInitParameterIsAbsent() throws Exception {
         Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.empty(), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         assertThat(sender).isEmpty();
     }
 
     @Test
-    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnAbsentWhenSenderInitParameterIsEmpty() throws Exception {
+    void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnAbsentWhenSenderInitParameterIsEmpty() throws Exception {
         Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of(""), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         assertThat(sender).isEmpty();
     }
 
     @Test
-    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnGivenAddressWhenNoSpecialAddressMatches() throws Exception {
+    void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnGivenAddressWhenNoSpecialAddressMatches() throws Exception {
         Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of("test@james.org"), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         MailAddress expectedMailAddress = new MailAddress("test", "james.org");
@@ -501,14 +497,14 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnFirstSpecialAddressWhenMatching() throws Exception {
+    void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnFirstSpecialAddressWhenMatching() throws Exception {
         Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of("postmaster"), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         assertThat(sender).contains(postmaster);
     }
 
     @Test
-    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnSecondSpecialAddressWhenMatching() throws Exception {
+    void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnSecondSpecialAddressWhenMatching() throws Exception {
         Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of("sender"), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         MailAddress expectedMailAddress = SpecialAddress.SENDER;
@@ -516,7 +512,7 @@ public class SpecialAddressesUtilsTest {
     }
 
     @Test
-    public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnLastSpecialAddressWhenMatching() throws Exception {
+    void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnLastSpecialAddressWhenMatching() throws Exception {
         Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of("unaltered"), ImmutableList.of("postmaster", "sender", "unaltered"));
 
         MailAddress expectedMailAddress = SpecialAddress.UNALTERED;

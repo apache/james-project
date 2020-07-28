@@ -20,24 +20,20 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 
 import javax.mail.MessagingException;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public class DelaysAndMaxRetryTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void fromShouldParseSingleDelay() throws Exception {
+    void fromShouldParseSingleDelay() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(1, "1s");
 
         DelaysAndMaxRetry expected = new DelaysAndMaxRetry(1, ImmutableList.of(new Delay(1, Duration.ofSeconds(1))));
@@ -46,7 +42,7 @@ public class DelaysAndMaxRetryTest {
     }
 
     @Test
-    public void fromShouldParseTwoDelays() throws Exception {
+    void fromShouldParseTwoDelays() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(2, "1s,2s");
 
         DelaysAndMaxRetry expected = new DelaysAndMaxRetry(2, ImmutableList.of(new Delay(1, Duration.ofSeconds(1)), new Delay(1, Duration.ofSeconds(2))));
@@ -55,7 +51,7 @@ public class DelaysAndMaxRetryTest {
     }
 
     @Test
-    public void fromShouldAdaptMaxRetriesWhenUnderAttempts() throws Exception {
+    void fromShouldAdaptMaxRetriesWhenUnderAttempts() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(1, "1s,2*2s");
 
         DelaysAndMaxRetry expected = new DelaysAndMaxRetry(3, ImmutableList.of(new Delay(1, Duration.ofSeconds(1)), new Delay(2, Duration.ofSeconds(2))));
@@ -64,7 +60,7 @@ public class DelaysAndMaxRetryTest {
     }
 
     @Test
-    public void fromShouldAdaptDelaysWhenUnderMaxRetries() throws Exception {
+    void fromShouldAdaptDelaysWhenUnderMaxRetries() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(4, "1s,2*2s");
 
         DelaysAndMaxRetry expected = new DelaysAndMaxRetry(4, ImmutableList.of(new Delay(1, Duration.ofSeconds(1)), new Delay(3, Duration.ofSeconds(2))));
@@ -73,7 +69,7 @@ public class DelaysAndMaxRetryTest {
     }
 
     @Test
-    public void fromShouldHandleNullValuesForDelayAsString() throws Exception {
+    void fromShouldHandleNullValuesForDelayAsString() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(1, null);
 
         DelaysAndMaxRetry expected = new DelaysAndMaxRetry(1, ImmutableList.of(new Delay(Delay.DEFAULT_ATTEMPTS, Delay.DEFAULT_DELAY_TIME)));
@@ -82,7 +78,7 @@ public class DelaysAndMaxRetryTest {
     }
 
     @Test
-    public void fromShouldIgnoreEmptyDelay() throws Exception {
+    void fromShouldIgnoreEmptyDelay() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(1, "1s,,2s");
 
         DelaysAndMaxRetry expected = new DelaysAndMaxRetry(2, ImmutableList.of(new Delay(1, Duration.ofSeconds(1)), new Delay(1, Duration.ofSeconds(2))));
@@ -91,7 +87,7 @@ public class DelaysAndMaxRetryTest {
     }
 
     @Test
-    public void fromShouldHandleParsingFailures() throws Exception {
+    void fromShouldHandleParsingFailures() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(3, "1s,invalid,2s");
 
         DelaysAndMaxRetry expected = new DelaysAndMaxRetry(3, ImmutableList.of(new Delay(3, Duration.ofSeconds(1))));
@@ -100,7 +96,7 @@ public class DelaysAndMaxRetryTest {
     }
 
     @Test
-    public void fromShouldHandleEmptyStringWithZeroMaxRetries() throws Exception {
+    void fromShouldHandleEmptyStringWithZeroMaxRetries() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(0, "");
 
         DelaysAndMaxRetry expected = new DelaysAndMaxRetry(0, ImmutableList.<Delay>of());
@@ -109,36 +105,35 @@ public class DelaysAndMaxRetryTest {
     }
 
     @Test
-    public void fromShouldThrowOnEmptyStringWithNonZeroMaxRetry() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        DelaysAndMaxRetry.from(2, "");
+    void fromShouldThrowOnEmptyStringWithNonZeroMaxRetry() {
+        assertThatThrownBy(() -> DelaysAndMaxRetry.from(2, ""))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getExpandedDelaysShouldReturnEmptyWhenNoDelay() throws Exception {
+    void getExpandedDelaysShouldReturnEmptyWhenNoDelay() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(0, "");
 
         assertThat(testee.getExpandedDelays()).isEmpty();
     }
 
     @Test
-    public void getExpandedDelaysShouldExpandSingleDelays() throws Exception {
+    void getExpandedDelaysShouldExpandSingleDelays() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1*1S,1*2S,1*5S");
 
         assertThat(testee.getExpandedDelays()).containsExactly(Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(5));
     }
 
     @Test
-    public void getExpandedDelaysShouldExpandMultipleDelays() throws Exception {
+    void getExpandedDelaysShouldExpandMultipleDelays() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1*1S,2*2S,2*5S");
 
         assertThat(testee.getExpandedDelays())
             .containsExactly(Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(2), Duration.ofSeconds(5), Duration.ofSeconds(5));
     }
-    
+
     @Test
-    public void getExpandedDelaysShouldExpandMultipleDelaysWithSpaces() throws Exception {
+    void getExpandedDelaysShouldExpandMultipleDelaysWithSpaces() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1 * 1 S, 2 * 2 S , 2 * 5 S");
 
         assertThat(testee.getExpandedDelays())

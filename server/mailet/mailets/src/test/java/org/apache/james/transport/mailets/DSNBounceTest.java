@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,25 +53,20 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailContext.SentMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class DSNBounceTest {
 
     private static final String MAILET_NAME = "mailetName";
     private static final Attribute DELIVERY_ERROR_ATTRIBUTE = Attribute.convertToAttribute("delivery-error", "Delivery error");
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private DSNBounce dsnBounce;
     private FakeMailContext fakeMailContext;
     private MailAddress postmaster;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         postmaster = new MailAddress("postmaster@domain.com");
         
         DNSService dnsService = mock(DNSService.class);
@@ -85,45 +81,45 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnValue() {
+    void getMailetInfoShouldReturnValue() {
         assertThat(dsnBounce.getMailetInfo()).isEqualTo("DSNBounce Mailet");
     }
 
     @Test
-    public void getAllowedInitParametersShouldReturnTheParameters() {
+    void getAllowedInitParametersShouldReturnTheParameters() {
         assertThat(dsnBounce.getAllowedInitParameters()).containsOnly("debug", "passThrough", "messageString", "attachment", "sender", "prefix");
     }
 
     @Test
-    public void initShouldFailWhenUnknownParameterIsConfigured() throws Exception {
+    void initShouldFailWhenUnknownParameterIsConfigured() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
                 .setProperty("unknwon", "value")
                 .build();
-        expectedException.expect(MessagingException.class);
 
-        dsnBounce.init(mailetConfig);
+        assertThatThrownBy(() -> dsnBounce.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getRecipientsShouldReturnReversePathOnly() {
+    void getRecipientsShouldReturnReversePathOnly() {
         assertThat(dsnBounce.getRecipients()).containsOnly(SpecialAddress.REVERSE_PATH);
     }
 
     @Test
-    public void getToShouldReturnReversePathOnly() {
+    void getToShouldReturnReversePathOnly() {
         assertThat(dsnBounce.getTo()).containsOnly(SpecialAddress.REVERSE_PATH.toInternetAddress());
     }
 
     @Test
-    public void getReversePathShouldReturnNullSpecialAddress() {
+    void getReversePathShouldReturnNullSpecialAddress() {
         Mail mail = null;
         assertThat(dsnBounce.getReversePath(mail)).contains(SpecialAddress.NULL);
     }
 
     @Test
-    public void serviceShouldSendMultipartMailToTheSender() throws Exception {
+    void serviceShouldSendMultipartMailToTheSender() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -153,7 +149,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldSendMultipartMailContainingTextPart() throws Exception {
+    void serviceShouldSendMultipartMailContainingTextPart() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -193,7 +189,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldSendMultipartMailContainingTextPartWhenCustomMessageIsConfigured() throws Exception {
+    void serviceShouldSendMultipartMailContainingTextPartWhenCustomMessageIsConfigured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -233,7 +229,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldSendMultipartMailContainingDSNPart() throws Exception {
+    void serviceShouldSendMultipartMailContainingDSNPart() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -273,7 +269,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldUpdateTheMailStateWhenNoSenderAndPassThroughIsFalse() throws Exception {
+    void serviceShouldUpdateTheMailStateWhenNoSenderAndPassThroughIsFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -297,7 +293,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldNotUpdateTheMailStateWhenNoSenderPassThroughHasDefaultValue() throws Exception {
+    void serviceShouldNotUpdateTheMailStateWhenNoSenderPassThroughHasDefaultValue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -320,7 +316,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldNotUpdateTheMailStateWhenNoSenderPassThroughIsTrue() throws Exception {
+    void serviceShouldNotUpdateTheMailStateWhenNoSenderPassThroughIsTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -344,7 +340,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldNotAttachTheOriginalMailWhenAttachmentIsEqualToNone() throws Exception {
+    void serviceShouldNotAttachTheOriginalMailWhenAttachmentIsEqualToNone() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -375,7 +371,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldAttachTheOriginalMailWhenAttachmentIsEqualToAll() throws Exception {
+    void serviceShouldAttachTheOriginalMailWhenAttachmentIsEqualToAll() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -412,7 +408,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldAttachTheOriginalMailHeadersOnlyWhenAttachmentIsEqualToHeads() throws Exception {
+    void serviceShouldAttachTheOriginalMailHeadersOnlyWhenAttachmentIsEqualToHeads() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -450,7 +446,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldSetTheDateHeaderWhenNone() throws Exception {
+    void serviceShouldSetTheDateHeaderWhenNone() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -479,7 +475,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void serviceShouldNotModifyTheDateHeaderWhenAlreadyPresent() throws Exception {
+    void serviceShouldNotModifyTheDateHeaderWhenAlreadyPresent() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -510,7 +506,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void dsnBounceShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
+    void dsnBounceShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -532,7 +528,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void dsnBounceShouldAllowSenderSpecialPostmaster() throws Exception {
+    void dsnBounceShouldAllowSenderSpecialPostmaster() throws Exception {
         
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
@@ -560,7 +556,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void dsnBounceShouldAllowSenderSpecialSender() throws Exception {
+    void dsnBounceShouldAllowSenderSpecialSender() throws Exception {
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
@@ -588,7 +584,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void dsnBounceShouldAllowSenderSpecialUnaltered() throws Exception {
+    void dsnBounceShouldAllowSenderSpecialUnaltered() throws Exception {
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
@@ -615,7 +611,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    public void dsnBounceShouldAllowSenderSpecialAddress() throws Exception {
+    void dsnBounceShouldAllowSenderSpecialAddress() throws Exception {
 
         MailAddress bounceSender = new MailAddress("bounces@domain.com");
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()

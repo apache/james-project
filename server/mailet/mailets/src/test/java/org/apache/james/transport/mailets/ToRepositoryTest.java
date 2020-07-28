@@ -19,6 +19,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -33,29 +34,26 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ToRepositoryTest {
     public static final String REPOSITORY_PATH = "file://var/mail/any";
-    @Rule public ExpectedException expectedException = ExpectedException.none();
-    
+
     private ToRepository mailet;
     private MailRepositoryStore mailRepositoryStore;
     private FakeMail message;
 
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup() throws Exception {
         mailRepositoryStore = mock(MailRepositoryStore.class);
         mailet = new ToRepository(mailRepositoryStore);
         message = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
     }
 
     @Test
-    public void getMailetInfoShouldReturnExpectedContent() {
+    void getMailetInfoShouldReturnExpectedContent() {
         String expected = "ToRepository Mailet";
 
         String actual = mailet.getMailetInfo();
@@ -64,7 +62,7 @@ public class ToRepositoryTest {
     }
 
     @Test
-    public void initShouldNotThrowWhenInvalidPassThrough() throws Exception {
+    void initShouldNotThrowWhenInvalidPassThrough() throws Exception {
         MailetConfig mockedMailetConfig = mock(MailetConfig.class);
         when(mockedMailetConfig.getInitParameter("passThrough")).thenThrow(new RuntimeException());
         when(mockedMailetConfig.getInitParameter("repositoryPath")).thenReturn(REPOSITORY_PATH);
@@ -73,19 +71,19 @@ public class ToRepositoryTest {
     }
 
     @Test
-    public void initShouldThrowWhenMailStoreThrows() throws Exception {
+    void initShouldThrowWhenMailStoreThrows() throws Exception {
         when(mailRepositoryStore.select(any())).thenThrow(new RuntimeException());
-        expectedException.expect(MessagingException.class);
-
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .setProperty("repositoryPath", REPOSITORY_PATH)
             .build();
-        mailet.init(mailetConfig);
+
+        assertThatThrownBy(() -> mailet.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void serviceShouldStoreMailIntoRepository() throws Exception {
+    void serviceShouldStoreMailIntoRepository() throws Exception {
         MailRepository mailRepository = mock(MailRepository.class);
         when(mailRepositoryStore.select(any())).thenReturn(mailRepository);
 
@@ -101,7 +99,7 @@ public class ToRepositoryTest {
     }
 
     @Test
-    public void serviceShouldGhostMailIfPassThroughNotSet() throws Exception {
+    void serviceShouldGhostMailIfPassThroughNotSet() throws Exception {
         MailRepository mailRepository = mock(MailRepository.class);
         when(mailRepositoryStore.select(any())).thenReturn(mailRepository);
 
@@ -117,7 +115,7 @@ public class ToRepositoryTest {
     }
 
     @Test
-    public void serviceShouldGhostMailIfPassThroughSetToFalse() throws Exception {
+    void serviceShouldGhostMailIfPassThroughSetToFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .setProperty("passThrough", "false")
@@ -133,7 +131,7 @@ public class ToRepositoryTest {
     }
 
     @Test
-    public void serviceShouldNotGhostMailIfPassThroughSetToTrue() throws Exception {
+    void serviceShouldNotGhostMailIfPassThroughSetToTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .setProperty("passThrough", "true")

@@ -20,41 +20,36 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.transport.mailets.remote.delivery.HeloNameProvider;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HeloNameProviderTest {
 
     public static final String DOMAIN = "domain";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private DomainList domainList;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         domainList = mock(DomainList.class);
     }
 
     @Test
-    public void getHeloNameShouldReturnNonNullProvidedHeloName() {
+    void getHeloNameShouldReturnNonNullProvidedHeloName() {
         HeloNameProvider heloNameProvider = new HeloNameProvider(DOMAIN, domainList);
 
         assertThat(heloNameProvider.getHeloName()).isEqualTo(DOMAIN);
     }
 
     @Test
-    public void getHeloNameShouldReturnDomainListDefaultDomainOnNullHeloName() throws DomainListException {
+    void getHeloNameShouldReturnDomainListDefaultDomainOnNullHeloName() throws DomainListException {
         when(domainList.getDefaultDomain()).thenReturn(Domain.of(DOMAIN));
         HeloNameProvider heloNameProvider = new HeloNameProvider(null, domainList);
 
@@ -62,7 +57,7 @@ public class HeloNameProviderTest {
     }
 
     @Test
-    public void getHeloNameShouldReturnLocalhostOnDomainListException() throws DomainListException {
+    void getHeloNameShouldReturnLocalhostOnDomainListException() throws DomainListException {
         when(domainList.getDefaultDomain()).thenThrow(new DomainListException("any message"));
         HeloNameProvider heloNameProvider = new HeloNameProvider(null, domainList);
 
@@ -70,12 +65,12 @@ public class HeloNameProviderTest {
     }
 
     @Test
-    public void getHeloNameShouldPropagateRuntimeExceptions() throws DomainListException {
+    void getHeloNameShouldPropagateRuntimeExceptions() throws DomainListException {
         when(domainList.getDefaultDomain()).thenThrow(new RuntimeException());
         HeloNameProvider heloNameProvider = new HeloNameProvider(null, domainList);
 
-        expectedException.expect(RuntimeException.class);
-        heloNameProvider.getHeloName();
+        assertThatThrownBy(heloNameProvider::getHeloName)
+            .isInstanceOf(RuntimeException.class);
     }
 
 }

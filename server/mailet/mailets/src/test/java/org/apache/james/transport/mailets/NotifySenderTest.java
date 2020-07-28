@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,23 +36,18 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class NotifySenderTest {
 
     private static final String MAILET_NAME = "mailetName";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private NotifySender notifySender;
     private FakeMailContext fakeMailContext;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         DNSService dnsService = mock(DNSService.class);
         notifySender = new NotifySender(dnsService);
         fakeMailContext = FakeMailContext.builder()
@@ -62,29 +58,29 @@ public class NotifySenderTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnValue() {
+    void getMailetInfoShouldReturnValue() {
         assertThat(notifySender.getMailetInfo()).isEqualTo("NotifySender Mailet");
     }
 
     @Test
-    public void getAllowedInitParametersShouldReturnTheParameters() {
+    void getAllowedInitParametersShouldReturnTheParameters() {
         assertThat(notifySender.getAllowedInitParameters()).containsOnly("debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "to");
     }
 
     @Test
-    public void initShouldFailWhenUnknownParameterIsConfigured() throws Exception {
+    void initShouldFailWhenUnknownParameterIsConfigured() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
                 .setProperty("unknwon", "value")
                 .build();
-        expectedException.expect(MessagingException.class);
 
-        notifySender.init(mailetConfig);
+        assertThatThrownBy(() -> notifySender.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getRecipientsShouldReturnSender() throws Exception {
+    void getRecipientsShouldReturnSender() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -95,7 +91,7 @@ public class NotifySenderTest {
     }
 
     @Test
-    public void getToShouldReturnSenderWhenToIsNotconfigured() throws Exception {
+    void getToShouldReturnSenderWhenToIsNotconfigured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -106,7 +102,7 @@ public class NotifySenderTest {
     }
 
     @Test
-    public void getToShouldReturnSenderWhenToIsEqualToSender() throws Exception {
+    void getToShouldReturnSenderWhenToIsEqualToSender() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -118,7 +114,7 @@ public class NotifySenderTest {
     }
 
     @Test
-    public void getToShouldReturnUnalteredWhenToIsEqualToUnaltered() throws Exception {
+    void getToShouldReturnUnalteredWhenToIsEqualToUnaltered() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -130,7 +126,7 @@ public class NotifySenderTest {
     }
 
     @Test
-    public void getToShouldReturnFromWhenToIsEqualToFrom() throws Exception {
+    void getToShouldReturnFromWhenToIsEqualToFrom() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -142,7 +138,7 @@ public class NotifySenderTest {
     }
 
     @Test
-    public void getToShouldReturnSenderWhenToIsNotEqualToSenderUnalteredOrFrom() throws Exception {
+    void getToShouldReturnSenderWhenToIsNotEqualToSenderUnalteredOrFrom() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
@@ -154,7 +150,7 @@ public class NotifySenderTest {
     }
 
     @Test
-    public void notifySenderShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
+    void notifySenderShouldAddPrefixToSubjectWhenPrefixIsConfigured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
