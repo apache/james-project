@@ -33,8 +33,7 @@ class CassandraJamesServerTest implements JamesServerContract, JmapJamesServerCo
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule())
-            .overrideWith(JamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
+            .overrideWith(new TestJMAPServerModule()))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 

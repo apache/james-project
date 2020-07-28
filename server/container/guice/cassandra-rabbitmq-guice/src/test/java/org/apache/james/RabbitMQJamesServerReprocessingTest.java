@@ -22,7 +22,6 @@ package org.apache.james;
 import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
@@ -57,8 +56,7 @@ class RabbitMQJamesServerReprocessingTest {
         .extension(new AwsS3BlobStoreExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
-            .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
         .build();
 
     @BeforeEach

@@ -49,7 +49,6 @@ class WithCacheImmutableTest implements JmapJamesServerContract, JamesServerCont
             .extension(new RabbitMQExtension())
             .extension(new AwsS3BlobStoreExtension())
             .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule())
-                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
+                .overrideWith(new TestJMAPServerModule()));
     }
 }

@@ -21,46 +21,19 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.LmtpGuiceProbe;
 import org.apache.james.modules.protocols.Pop3GuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.utils.DataProbeImpl;
 import org.junit.jupiter.api.Test;
 
-import com.google.inject.Module;
-
 public interface JamesServerContract {
-
     String JAMES_SERVER_HOST = "127.0.0.1";
-    Module DOMAIN_LIST_CONFIGURATION_MODULE = binder -> binder.bind(DomainListConfiguration.class)
-        .toInstance(DomainListConfiguration.builder()
-            .autoDetect(true)
-            .autoDetectIp(false)
-            .build());
-
-    @Test
-    default void hostnameShouldBeUsedAsDefaultDomain(GuiceJamesServer jamesServer) throws Exception {
-        String expectedDefaultDomain = InetAddress.getLocalHost().getHostName();
-
-        assertThat(jamesServer.getProbe(DataProbeImpl.class).getDefaultDomain()).isEqualTo(expectedDefaultDomain);
-    }
-
-    @Test
-    default void hostnameShouldBeRetrievedWhenRestarting(GuiceJamesServer jamesServer) throws Exception {
-        jamesServer.stop();
-        jamesServer.start();
-        String expectedDefaultDomain = InetAddress.getLocalHost().getHostName();
-
-        assertThat(jamesServer.getProbe(DataProbeImpl.class).getDefaultDomain()).isEqualTo(expectedDefaultDomain);
-    }
 
     @Test
     default void connectIMAPServerShouldSendShabangOnConnect(GuiceJamesServer jamesServer) throws Exception {

@@ -26,8 +26,7 @@ class MemoryJamesServerTest implements JamesServerContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule())
-            .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+            .overrideWith(new TestJMAPServerModule()))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

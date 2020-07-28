@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import static org.apache.james.jmap.draft.JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -36,8 +35,7 @@ class MemoryJmapJamesServerTest {
     private static JamesServerBuilder extensionBuilder() {
         return new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule())
-                .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE));
+                .overrideWith(new TestJMAPServerModule()));
     }
 
     @Nested

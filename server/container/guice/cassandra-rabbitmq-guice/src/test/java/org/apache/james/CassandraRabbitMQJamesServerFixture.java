@@ -19,18 +19,11 @@
 
 package org.apache.james;
 
-import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 
 public class CassandraRabbitMQJamesServerFixture {
-
-    private static final JamesServerBuilder.ServerProvider<CassandraRabbitMQJamesConfiguration> SERVER_PROVIDER =
-        configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule())
-            .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
-
     public static JamesServerBuilder<CassandraRabbitMQJamesConfiguration> baseExtensionBuilder() {
         return baseExtensionBuilder(new RabbitMQExtension());
     }
@@ -49,6 +42,7 @@ public class CassandraRabbitMQJamesServerFixture {
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(rabbitMQExtension)
-            .server(SERVER_PROVIDER);
+            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+                .overrideWith(new TestJMAPServerModule()));
     }
 }

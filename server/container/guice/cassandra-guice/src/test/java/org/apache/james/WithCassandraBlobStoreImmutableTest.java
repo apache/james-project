@@ -36,7 +36,6 @@ class WithCassandraBlobStoreImmutableTest implements JmapJamesServerContract, Ja
             .extension(new CassandraExtension())
             .extension(new SpamAssassinModuleExtension())
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule())
-                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
+                .overrideWith(new TestJMAPServerModule()));
     }
 }

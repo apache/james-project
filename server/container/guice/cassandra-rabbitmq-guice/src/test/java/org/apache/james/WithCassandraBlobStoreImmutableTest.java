@@ -39,11 +39,10 @@ public class WithCassandraBlobStoreImmutableTest implements JmapJamesServerContr
                 .blobStore(BlobStoreConfiguration.cassandra())
                 .searchConfiguration(SearchConfiguration.elasticSearch())
                 .build())
+            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+                .overrideWith(new TestJMAPServerModule()))
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
-            .extension(new RabbitMQExtension())
-            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule())
-                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
+            .extension(new RabbitMQExtension());
     }
 }

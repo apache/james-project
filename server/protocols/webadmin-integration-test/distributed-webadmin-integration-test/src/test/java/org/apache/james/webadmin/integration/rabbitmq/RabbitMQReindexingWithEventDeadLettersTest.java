@@ -43,7 +43,6 @@ import org.apache.james.SearchConfiguration;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.LocalHostURIBuilder;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
-import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -100,7 +99,6 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         .extension(new AwsS3BlobStoreExtension(PayloadCodecFactory.AES256))
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE)
             .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(binder -> binder.bind(RetryBackoffConfiguration.class)
                 .toInstance(RetryBackoffConfiguration.builder()

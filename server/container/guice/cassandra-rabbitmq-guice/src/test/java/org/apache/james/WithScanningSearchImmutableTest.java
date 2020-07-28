@@ -38,12 +38,11 @@ class WithScanningSearchImmutableTest implements JmapJamesServerContract, JamesS
                     .deduplication())
                 .searchConfiguration(SearchConfiguration.scanning())
                 .build())
+            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+                .overrideWith(new TestJMAPServerModule()))
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
-            .extension(new AwsS3BlobStoreExtension())
-            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule())
-                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
+            .extension(new AwsS3BlobStoreExtension());
     }
 
     @RegisterExtension

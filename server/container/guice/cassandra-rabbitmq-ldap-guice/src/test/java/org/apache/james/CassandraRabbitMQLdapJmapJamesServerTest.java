@@ -104,7 +104,6 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
             .extension(new RabbitMQExtension())
             .extension(new LdapTestExtension())
             .server(configuration -> CassandraRabbitMQLdapJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule())
-                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
+                .overrideWith(new TestJMAPServerModule()));
     }
 }

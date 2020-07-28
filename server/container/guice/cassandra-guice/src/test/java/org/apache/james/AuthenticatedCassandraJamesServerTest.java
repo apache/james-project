@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import static org.apache.james.JamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.DockerCassandra;
@@ -44,8 +43,7 @@ class AuthenticatedCassandraJamesServerTest {
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
-            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+            .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandra.configurationBuilder(cassandraExtension.getCassandra().getHost())
                     .username(CASSANDRA_USER)
@@ -61,8 +59,7 @@ class AuthenticatedCassandraJamesServerTest {
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .disableAutoStart()
-            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+            .server(CassandraJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandra.configurationBuilder(cassandraExtension.getCassandra().getHost())
                     .username(CASSANDRA_USER)
@@ -87,8 +84,7 @@ class AuthenticatedCassandraJamesServerTest {
             .extension(cassandraExtension)
             .disableAutoStart()
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJMAPServerModule())
-                .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+                .overrideWith(new TestJMAPServerModule()))
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandra.configurationBuilder(cassandraExtension.getCassandra().getHost())
                     .username(CASSANDRA_USER)

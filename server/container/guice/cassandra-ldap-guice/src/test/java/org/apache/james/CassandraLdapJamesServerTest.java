@@ -58,8 +58,7 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
         .extension(new CassandraExtension())
         .extension(new LdapTestExtension())
         .server(configuration -> CassandraLdapJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule())
-            .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+            .overrideWith(new TestJMAPServerModule()))
         .build();
 
     @Test

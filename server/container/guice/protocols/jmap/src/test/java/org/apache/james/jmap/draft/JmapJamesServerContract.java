@@ -25,10 +25,7 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.junit.jupiter.api.Test;
-
-import com.google.inject.Module;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -36,11 +33,6 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
 public interface JmapJamesServerContract {
-    Module DOMAIN_LIST_CONFIGURATION_MODULE = binder -> binder.bind(DomainListConfiguration.class)
-        .toInstance(DomainListConfiguration.builder()
-            .autoDetect(true)
-            .autoDetectIp(false)
-            .build());
     String JAMES_SERVER_HOST = "127.0.0.1";
 
     @Test
