@@ -165,7 +165,7 @@ public abstract class JMAPAuthenticationTest {
     }
 
     @Test
-    public void mustPositionCorsHeaders() throws Exception {
+    public void mustPositionCorsHeaders() {
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
@@ -179,7 +179,7 @@ public abstract class JMAPAuthenticationTest {
     }
 
     @Test
-    public void mustReturnJsonResponse() throws Exception {
+    public void mustReturnJsonResponse() {
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
@@ -357,11 +357,11 @@ public abstract class JMAPAuthenticationTest {
             "6vRqdEqx_F9OF3eWTe1giMp_JhQ7_l1OXXtbd4TndVvTeuVy4irPbsRc-M8x_-qTDpFp6saRRsyOcFspxPp5n3yIhEK7B3UZiseXw";
 
         given()
-                .header("Authorization", "Bearer " + token)
-                .when()
-                .get("/authentication")
-                .then()
-                .statusCode(200);
+            .header("Authorization", "Bearer " + token)
+        .when()
+            .get("/authentication")
+        .then()
+            .statusCode(200);
     }
 
     @Test
@@ -388,20 +388,20 @@ public abstract class JMAPAuthenticationTest {
                 "qNOR8Q31ydinyqzXvCSzVJOf6T60-w";
 
         given()
-                .header("Authorization", "Bearer " + token)
-                .when()
-                .get("/authentication")
-                .then()
-                .statusCode(401);
+            .header("Authorization", "Bearer " + token)
+        .when()
+            .get("/authentication")
+        .then()
+            .statusCode(401);
     }
 
     @Test
     public void optionsRequestsShouldNeverRequireAuthentication() {
         given()
-                .when()
-                .options("/authentication")
-                .then()
-                .statusCode(200);
+        .when()
+            .options("/authentication")
+        .then()
+            .statusCode(200);
     }
 
     @Test
@@ -419,7 +419,27 @@ public abstract class JMAPAuthenticationTest {
             .statusCode(200)
             .body("api", isA(String.class));
     }
-    
+
+    @Category(BasicFeature.class)
+    @Test
+    public void getShouldReturn400WhenMultipleCredentials() {
+        String jwtToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGRvbWFpbi50bGQifQ.U-dUPv6OU6KO5N7CooHUfMkCd" +
+            "FJHx2F3H4fm7Q79g1BPfBSkifPj5xyVlZ0JwEGXypC4zBw9ay3l4DxzX7D_6p1Hx_ihXsoLx1Ca-WUo44x-XRSpPfgxiZjHCJkGBLMV3RZlA" +
+            "jip-d18mxkcX3JGplX_sCQkFisduAOAHuKSUg9wI6VBgUQi_0B35FYv6tP_bD6eFtvaAUN9QyXXh8UQjEp8CO12lRz6enfLx_V6BG_fEMkee" +
+            "6vRqdEqx_F9OF3eWTe1giMp_JhQ7_l1OXXtbd4TndVvTeuVy4irPbsRc-M8x_-qTDpFp6saRRsyOcFspxPp5n3yIhEK7B3UZiseXw";
+
+        String continuationToken = fromGoodContinuationTokenRequest();
+        String accessToken = fromGoodAccessTokenRequest(continuationToken);
+
+        given()
+            .header("Authorization", "Bearer " + jwtToken)
+            .header("Authorization", accessToken)
+        .when()
+            .get("/authentication")
+        .then()
+            .statusCode(400);
+    }
+
     @Test
     public void deleteMustReturnUnauthenticatedWithoutAuthorizationHeader() {
         given()

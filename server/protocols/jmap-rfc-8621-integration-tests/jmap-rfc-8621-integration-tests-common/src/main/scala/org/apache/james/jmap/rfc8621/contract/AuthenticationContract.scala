@@ -23,7 +23,7 @@ import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.authentication.NoAuthScheme
 import io.restassured.http.Header
-import org.apache.http.HttpStatus.{SC_OK, SC_UNAUTHORIZED}
+import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_OK, SC_UNAUTHORIZED}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ALICE_PASSWORD, AUTHORIZATION_HEADER, BOB, BOB_BASIC_AUTH_HEADER, BOB_PASSWORD, DOMAIN, DOMAIN_WITH_SPACE, ECHO_REQUEST_OBJECT, INVALID_JWT_TOKEN, UNKNOWN_USER_TOKEN, USER_TOKEN, getHeadersWith, toBase64, _}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
@@ -52,33 +52,7 @@ trait AuthenticationContract {
   class BothAuthenticationMechanisms {
     @Tag(CategoryTags.BASIC_FEATURE)
     @Test
-    def shouldRespond200WhenBasicAuthValidAndJWTInvalid(): Unit = {
-      `given`
-        .headers(getHeadersWith(BOB_BASIC_AUTH_HEADER))
-        .header(new Header(AUTHORIZATION_HEADER, s"Bearer $UNKNOWN_USER_TOKEN"))
-        .body(ECHO_REQUEST_OBJECT)
-      .when
-        .post
-      .`then`
-        .statusCode(SC_OK)
-    }
-
-    @Tag(CategoryTags.BASIC_FEATURE)
-    @Test
-    def shouldRespond200WhenJWTAuthValidAndBasicAuthInvalid(): Unit = {
-      `given`
-        .headers(getHeadersWith(new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"this-thing-wrong")}")))
-        .header(new Header(AUTHORIZATION_HEADER, s"Bearer $USER_TOKEN"))
-        .body(ECHO_REQUEST_OBJECT)
-      .when
-        .post
-      .`then`
-        .statusCode(SC_OK)
-    }
-
-    @Tag(CategoryTags.BASIC_FEATURE)
-    @Test
-    def shouldRespond200WhenBothAuthenticationValid(): Unit = {
+    def shouldRespond400WhenBothAuthentication(): Unit = {
       `given`
         .headers(getHeadersWith(BOB_BASIC_AUTH_HEADER))
         .header(new Header(AUTHORIZATION_HEADER, s"Bearer $USER_TOKEN"))
@@ -86,20 +60,7 @@ trait AuthenticationContract {
       .when
         .post
       .`then`
-        .statusCode(SC_OK)
-    }
-
-    @Tag(CategoryTags.BASIC_FEATURE)
-    @Test
-    def shouldRespond401WhenNoneAuthenticationValid(): Unit = {
-      `given`
-        .headers(getHeadersWith(new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"this-one-wrong")}")))
-        .header(new Header(AUTHORIZATION_HEADER, s"Bearer $UNKNOWN_USER_TOKEN"))
-        .body(ECHO_REQUEST_OBJECT)
-      .when
-        .post
-      .`then`
-        .statusCode(SC_UNAUTHORIZED)
+        .statusCode(SC_BAD_REQUEST)
     }
   }
 
