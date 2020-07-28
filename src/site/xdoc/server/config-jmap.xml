@@ -59,10 +59,31 @@
                 </dl>
 
             </subsection>
+
             <subsection name="Wire tapping">
-                <p>Enabling <b>TRACE</b> on <b>org.apache.james.jmap.wire</b>enables reactor-netty wiretap, logging of
+                <p>Enabling <b>TRACE</b> on <b>org.apache.james.jmap.wire</b> enables reactor-netty wiretap, logging of
                 all incoming and outgoing requests, outgoing requests. This will log also potentially sensible information
                 like authentication credentials.</p>
+            </subsection>
+
+            <subsection name="JMAP-draft vs JMAP-RFC-8621">
+                <p>James had been supporting an implementation based on an early specification of JMAP, what we call here
+                <em>JMAP-draft</em> version. But the protocol went under a lot of changes until its finalization as an
+                official RFC.</p>
+
+                <p>The finalized version of JMAP regarding the core specifications [<a href="https://tools.ietf.org/html/rfc8620">RFC-8620</a>]
+                and the mail specifications [<a href="https://tools.ietf.org/html/rfc8621">RFC-8621</a>] are being
+                currently implemented in James (<em>JMAP-RFC-8621</em> version). It's supposed to replace at term the
+                <em>JMAP-draft</em> version.</p>
+
+                <p>Meanwhile, both versions will be available. The version by default will be <em>JMAP-draft</em> during
+                the time it takes to implement the new version. If you want to use a specific version for a request,
+                you will need to add an extra <em>jmapVersion</em> field in your <b>Accept</b> header of your JMAP request:</p>
+
+                <ul>
+                    <li><b>JMAP-draft</b>: <em>Accept: application/json; jmapVersion=draft</em></li>
+                    <li><b>JMAP-RFC-8621</b>: <em>Accept: application/json; jmapVersion=rfc-8621</em></li>
+                </ul>
             </subsection>
         </section>
 
