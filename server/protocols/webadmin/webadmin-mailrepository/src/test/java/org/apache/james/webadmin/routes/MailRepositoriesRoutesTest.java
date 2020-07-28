@@ -28,10 +28,10 @@ import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -846,9 +846,9 @@ public class MailRepositoriesRoutesTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("name", is(NAME_1))
-            .body("sender", isEmptyOrNullString())
-            .body("state", isEmptyOrNullString())
-            .body("error", isEmptyOrNullString())
+            .body("sender", is(emptyOrNullString()))
+            .body("state", is(emptyOrNullString()))
+            .body("error", is(emptyOrNullString()))
             .body("recipients", hasSize(0));
     }
 
@@ -1126,7 +1126,7 @@ public class MailRepositoriesRoutesTest {
             .body("additionalInformation.repositoryPath", is(PATH_MY_REPO.asString()))
             .body("additionalInformation.initialCount", is(2))
             .body("additionalInformation.remainingCount", is(0))
-            .body("additionalInformation.targetProcessor", isEmptyOrNullString())
+            .body("additionalInformation.targetProcessor", is(emptyOrNullString()))
             .body("additionalInformation.targetQueue", is(MailQueueFactory.SPOOL.asString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
@@ -1492,7 +1492,7 @@ public class MailRepositoriesRoutesTest {
             .body("type", is(ReprocessingOneMailTask.TYPE.asString()))
             .body("additionalInformation.repositoryPath", is(PATH_MY_REPO.asString()))
             .body("additionalInformation.mailKey", is(NAME_1))
-            .body("additionalInformation.targetProcessor", isEmptyOrNullString())
+            .body("additionalInformation.targetProcessor", is(emptyOrNullString()))
             .body("additionalInformation.targetQueue", is(MailQueueFactory.SPOOL.asString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))

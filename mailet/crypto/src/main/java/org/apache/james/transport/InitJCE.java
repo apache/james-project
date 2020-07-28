@@ -21,6 +21,7 @@
 
 package org.apache.james.transport;
 
+import java.lang.reflect.InvocationTargetException;
 import java.security.Provider;
 import java.security.Security;
 
@@ -49,10 +50,10 @@ public class InitJCE {
      * distribution. It can be downloaded and installed by the user if she needs
      * it.
      */        
-    public static void init() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+    public static void init() throws InstantiationException, IllegalAccessException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException {
         if (!initialized) {
             String bouncyCastleProviderClassName = "org.bouncycastle.jce.provider.BouncyCastleProvider";
-            Security.addProvider((Provider)Class.forName(bouncyCastleProviderClassName).newInstance());
+            Security.addProvider((Provider)Class.forName(bouncyCastleProviderClassName).getDeclaredConstructor().newInstance());
             
             MailcapCommandMap mailcap = (MailcapCommandMap) CommandMap.getDefaultCommandMap();
 

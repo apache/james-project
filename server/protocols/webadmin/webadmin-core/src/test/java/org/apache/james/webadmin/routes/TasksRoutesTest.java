@@ -26,9 +26,9 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.oneOf;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -344,7 +344,7 @@ class TasksRoutesTest {
             .get("/" + taskId.getValue())
         .then()
             .statusCode(HttpStatus.OK_200)
-            .body("status", isOneOf("canceledRequested", "canceled"));
+            .body("status", is(oneOf("canceledRequested", "canceled")));
 
         inProgressLatch.countDown();
         when()

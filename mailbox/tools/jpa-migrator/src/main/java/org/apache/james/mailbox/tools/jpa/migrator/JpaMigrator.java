@@ -59,7 +59,7 @@ public class JpaMigrator {
             EntityManager em = factory.createEntityManager();
 
             for (String jira: jiras) {
-                JpaMigrateCommand jiraJpaMigratable = (JpaMigrateCommand) Class.forName(JPA_MIGRATION_COMMAND_PACKAGE + "." + jira.toUpperCase(Locale.US) + JpaMigrateCommand.class.getSimpleName()).newInstance();
+                JpaMigrateCommand jiraJpaMigratable = (JpaMigrateCommand) Class.forName(JPA_MIGRATION_COMMAND_PACKAGE + "." + jira.toUpperCase(Locale.US) + JpaMigrateCommand.class.getSimpleName()).getDeclaredConstructor().newInstance();
                 LOGGER.info("Now executing {} migration", jira);
                 em.getTransaction().begin();
                 jiraJpaMigratable.migrate(em);

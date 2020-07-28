@@ -171,7 +171,7 @@ public class DefaultDescriptorsExtractor {
 
     private Optional<String> fetchInfo(Log log, String nameOfClass, Class<?> klass, String infoMethodName, Type type) {
         try {
-            final Object instance = klass.newInstance();
+            final Object instance = klass.getDeclaredConstructor().newInstance();
             final String info = (String) klass.getMethod(infoMethodName).invoke(instance);
             if (info != null && info.length() > 0) {
                 return Optional.of(info);

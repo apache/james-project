@@ -327,7 +327,7 @@ public interface Serializer<T> {
             try {
                 Class<?> deserializerClass = Class.forName(serializer);
                 if (ArbitrarySerializable.Deserializer.class.isAssignableFrom(deserializerClass)) {
-                    ArbitrarySerializable.Deserializer<T> deserializer = (ArbitrarySerializable.Deserializer<T>) deserializerClass.newInstance();
+                    ArbitrarySerializable.Deserializer<T> deserializer = (ArbitrarySerializable.Deserializer<T>) deserializerClass.getDeclaredConstructor().newInstance();
                     return deserializer.deserialize(new ArbitrarySerializable.Serializable<>(value, (Class<ArbitrarySerializable.Deserializer<T>>) deserializerClass));
                 }
             } catch (Exception e) {

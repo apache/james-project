@@ -97,6 +97,7 @@ public interface MessageManager {
      * @deprecated use
      *             {@link #getMetaData(boolean, MailboxSession, MailboxMetaData.FetchGroup)}
      */
+    @Deprecated
     boolean isModSeqPermanent(MailboxSession session);
 
     /**

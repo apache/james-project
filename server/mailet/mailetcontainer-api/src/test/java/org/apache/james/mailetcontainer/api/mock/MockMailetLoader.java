@@ -32,7 +32,7 @@ public class MockMailetLoader implements MailetLoader {
         try {
             Class<Mailet> clazz = (Class<Mailet>) Thread.currentThread().getContextClassLoader().loadClass(
                     config.getMailetName());
-            Mailet m = clazz.newInstance();
+            Mailet m = clazz.getDeclaredConstructor().newInstance();
             m.init(config);
             return m;
         } catch (Exception e) {

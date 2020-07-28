@@ -158,7 +158,7 @@ public class InetNetworkBuilder {
             netspec += "/32768";
         }
 
-        return new Inet6Network(dnsService.getByName(netspec.substring(0, netspec.indexOf('/'))), new Integer(netspec.substring(netspec.indexOf('/') + 1)));
+        return new Inet6Network(dnsService.getByName(netspec.substring(0, netspec.indexOf('/'))), Integer.valueOf(netspec.substring(netspec.indexOf('/') + 1)));
     }
 
     /**

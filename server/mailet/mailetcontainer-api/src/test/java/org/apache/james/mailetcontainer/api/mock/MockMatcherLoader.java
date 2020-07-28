@@ -33,7 +33,7 @@ public class MockMatcherLoader implements MatcherLoader {
         try {
             Class<Matcher> clazz = (Class<Matcher>) Thread.currentThread().getContextClassLoader().loadClass(
                     config.getMatcherName());
-            Matcher m = clazz.newInstance();
+            Matcher m = clazz.getDeclaredConstructor().newInstance();
             m.init(config);
             return m;
         } catch (Exception e) {

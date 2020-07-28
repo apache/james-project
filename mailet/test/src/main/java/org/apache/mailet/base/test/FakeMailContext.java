@@ -403,6 +403,7 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use the generic dnsLookup method
      */
+    @Deprecated
     @Override
     public Collection<String> getMailServers(Domain host) {
         return null;  // trivial implementation
@@ -450,6 +451,7 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use {@link #isLocalEmail(MailAddress)} instead 
      */
+    @Deprecated
     @Override
     public boolean isLocalUser(String userAccount) {
         return false;  // trivial implementation
@@ -463,6 +465,7 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use {@link #log(LogLevel level, String message)}
      */
+    @Deprecated
     @Override
     public void log(String message) {
         System.out.println(message);
@@ -471,6 +474,7 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use {@link #log(LogLevel level, String message, Throwable t)}
      */
+    @Deprecated
     @Override
     public void log(String message, Throwable t) {
         System.out.println(message);
@@ -548,6 +552,7 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use the generic dnsLookup method
      */
+    @Deprecated
     @Override
     public Iterator<HostAddress> getSMTPHostAddresses(Domain domainName) {
         return null;  // trivial implementation

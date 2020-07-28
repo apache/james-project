@@ -470,19 +470,10 @@ class IndexableMessageTest {
                 .build();
 
         // Then
+        String NO_TEXTUAL_BODY = "The textual body is not present";
         assertThat(indexableMessage.getAttachments())
-            .extracting(new TextualBodyExtractor())
-            .contains("first attachment content", TextualBodyExtractor.NO_TEXTUAL_BODY, "third attachment content");
-    }
-
-    static class TextualBodyExtractor implements Extractor<MimePart, String> {
-
-        static final String NO_TEXTUAL_BODY = "The textual body is not present";
-
-        @Override
-        public String extract(MimePart input) {
-            return input.getTextualBody().orElse(NO_TEXTUAL_BODY);
-        }
+            .extracting(input -> input.getTextualBody().orElse(NO_TEXTUAL_BODY))
+            .contains("first attachment content", NO_TEXTUAL_BODY, "third attachment content");
     }
 
     @Test

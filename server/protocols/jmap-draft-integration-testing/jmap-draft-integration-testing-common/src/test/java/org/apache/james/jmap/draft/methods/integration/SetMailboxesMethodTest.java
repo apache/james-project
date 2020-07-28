@@ -34,12 +34,12 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
@@ -892,10 +892,10 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", aMapWithSize(2))
             .body(ARGUMENTS + ".created", hasEntry(equalTo("create-id00"), Matchers.allOf(
-                    hasEntry(equalTo("parentId"), isEmptyOrNullString()),
+                    hasEntry(equalTo("parentId"), is(emptyOrNullString())),
                     hasEntry(equalTo("name"), equalTo("parent")))))
             .body(ARGUMENTS + ".created", hasEntry(equalTo("create-id01"), Matchers.allOf(
-                    hasEntry(equalTo("parentId"), not(isEmptyOrNullString())),
+                    hasEntry(equalTo("parentId"), not(is(emptyOrNullString()))),
                     hasEntry(equalTo("name"), equalTo("child")))));
     }
 
@@ -929,10 +929,10 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", aMapWithSize(2))
             .body(ARGUMENTS + ".created", hasEntry(equalTo("create-id00"), Matchers.allOf(
-                    hasEntry(equalTo("parentId"), isEmptyOrNullString()),
+                    hasEntry(equalTo("parentId"), is(emptyOrNullString())),
                     hasEntry(equalTo("name"), equalTo("parent")))))
             .body(ARGUMENTS + ".created", hasEntry(equalTo("create-id01"), Matchers.allOf(
-                    hasEntry(equalTo("parentId"), not(isEmptyOrNullString())),
+                    hasEntry(equalTo("parentId"), not(is(emptyOrNullString()))),
                     hasEntry(equalTo("name"), equalTo("child")))));
     }
 

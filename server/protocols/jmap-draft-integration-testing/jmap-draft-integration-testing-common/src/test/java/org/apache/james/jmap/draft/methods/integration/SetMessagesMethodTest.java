@@ -49,12 +49,13 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
@@ -246,7 +247,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(unknownMailboxMessageId), Matchers.allOf(
                 hasEntry("type", "notFound"),
                 hasEntry("description", "The message " + unknownMailboxMessageId + " can't be found"),
-                hasEntry(equalTo("properties"), isEmptyOrNullString())))
+                hasEntry(equalTo("properties"), is(emptyOrNullString()))))
             );
     }
 
@@ -268,7 +269,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(messageId), Matchers.allOf(
                 hasEntry("type", "notFound"),
                 hasEntry("description", "The message " + messageId + " can't be found"),
-                hasEntry(equalTo("properties"), isEmptyOrNullString())))
+                hasEntry(equalTo("properties"), is(emptyOrNullString()))))
             );
     }
 
@@ -1009,10 +1010,10 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             // assert server-set attributes are returned
             .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
-                hasEntry(equalTo("id"), not(isEmptyOrNullString())),
-                hasEntry(equalTo("blobId"), not(isEmptyOrNullString())),
-                hasEntry(equalTo("threadId"), not(isEmptyOrNullString())),
-                hasEntry(equalTo("size"), not(isEmptyOrNullString()))
+                hasEntry(equalTo("id"), not(is(emptyOrNullString()))),
+                hasEntry(equalTo("blobId"), not(is(emptyOrNullString()))),
+                hasEntry(equalTo("threadId"), not(is(emptyOrNullString()))),
+                hasEntry(equalTo("size"), not(is(emptyOrNullString())))
             )))
             // assert that message FLAGS are all unset
             .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
@@ -4574,7 +4575,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(firstMessage + ".textBody", equalTo("Test body, plain text version"))
-            .body(firstMessage + ".htmlBody", isEmptyOrNullString())
+            .body(firstMessage + ".htmlBody", is(emptyOrNullString()))
             .body(firstMessage + ".attachments", hasSize(1))
             .body(firstAttachment + ".type", equalTo("text/html; charset=UTF-8"))
             .body(firstAttachment + ".size", equalTo((int) uploadedAttachment.getSize()))
@@ -4658,8 +4659,8 @@ public abstract class SetMessagesMethodTest {
             .log().ifValidationFails()
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
-            .body(firstMessage + ".textBody", isEmptyOrNullString())
-            .body(firstMessage + ".htmlBody", isEmptyOrNullString())
+            .body(firstMessage + ".textBody", is(emptyOrNullString()))
+            .body(firstMessage + ".htmlBody", is(emptyOrNullString()))
             .body(firstMessage + ".attachments", hasSize(1))
             .body(firstAttachment + ".type", equalTo("text/plain; charset=UTF-8"))
             .body(firstAttachment + ".size", equalTo((int) uploadedAttachment.getSize()))
@@ -4784,7 +4785,7 @@ public abstract class SetMessagesMethodTest {
 
     private Matcher<Map<? extends String, ? extends String>> allHeadersMatcher(ImmutableList<String> expectedHeaders) {
         return Matchers.allOf(expectedHeaders.stream()
-                .map((String header) -> hasEntry(equalTo(header), not(isEmptyOrNullString())))
+                .map((String header) -> hasEntry(equalTo(header), not(is(emptyOrNullString()))))
                 .collect(Collectors.toList()));
     }
 
@@ -5713,7 +5714,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(message + ".attachments", hasSize(1))
             .body(firstAttachment + ".type", equalTo("text/calendar; method=REPLY; charset=UTF-8"))
-            .body(firstAttachment + ".blobId", not(isEmptyOrNullString()));
+            .body(firstAttachment + ".blobId", not(is(emptyOrNullString())));
     }
 
     @Test

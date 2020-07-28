@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.events;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
@@ -47,9 +48,9 @@ public class Group {
         }
     }
 
-    private static Group instantiateGroup(Class<?> aClass) throws InstantiationException, IllegalAccessException {
+    private static Group instantiateGroup(Class<?> aClass) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Preconditions.checkArgument(Group.class.isAssignableFrom(aClass), "The supplied class is not a group: %s", aClass.getName());
-        return (Group) aClass.newInstance();
+        return (Group) aClass.getDeclaredConstructor().newInstance();
     }
 
     public String asString() {
