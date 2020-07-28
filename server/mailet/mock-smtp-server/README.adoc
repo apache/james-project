@@ -1,5 +1,4 @@
-James Mock SMTP server
-====================
+= James Mock SMTP server
 
 This is our custom made Mock SMTP server that we use for some of our tests in James.
 
