@@ -21,13 +21,15 @@ package org.apache.james.jmap.http;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
+import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
+import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -44,11 +46,13 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
 
     @Override
     public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
-        return Flux.fromStream(authHeaders(httpRequest))
+        return Mono.fromCallable(() -> authHeaders(httpRequest))
+            .filter(tokenString -> !tokenString.startsWith("Bearer"))
             .map(AccessToken::fromString)
             .filterWhen(accessTokenManager::isValid)
-            .flatMap(accessTokenManager::getUsernameFromToken)
+            .flatMap(item -> Mono.from(accessTokenManager.getUsernameFromToken(item)))
             .map(mailboxManager::createSystemSession)
-            .singleOrEmpty();
+            .onErrorResume(InvalidAccessToken.class, error -> Mono.error(new UnauthorizedException("Invalid access token", error)))
+            .onErrorResume(NotAnAccessTokenException.class, error -> Mono.error(new UnauthorizedException("Not an access token", error)));
     }
 }

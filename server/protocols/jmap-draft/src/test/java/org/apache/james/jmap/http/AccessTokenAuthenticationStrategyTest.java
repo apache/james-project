@@ -28,8 +28,8 @@ import java.util.UUID;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
 import org.apache.james.jmap.draft.crypto.AccessTokenManagerImpl;
+import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.junit.Before;
@@ -65,20 +65,17 @@ public class AccessTokenAuthenticationStrategyTest {
 
     @Test
     public void createMailboxSessionShouldReturnEmptyWhenNoAuthProvided() {
-        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
-            .thenReturn(ImmutableList.of());
-
         assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
             .isEmpty();
     }
 
     @Test
     public void createMailboxSessionShouldThrowWhenAuthHeaderIsNotAnUUID() {
-        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
-            .thenReturn(ImmutableList.of("bad"));
+        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+            .thenReturn("bad");
 
         assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
-                .isExactlyInstanceOf(NotAnAccessTokenException.class);
+                .isExactlyInstanceOf(UnauthorizedException.class);
     }
 
     @Test
@@ -93,13 +90,25 @@ public class AccessTokenAuthenticationStrategyTest {
         AccessToken accessToken = AccessToken.fromString(authHeader.toString());
         when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
                 .thenReturn(Mono.just(username));
-        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
-            .thenReturn(ImmutableList.of(authHeader.toString()));
+        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+            .thenReturn(authHeader.toString());
         when(mockedAccessTokenManager.isValid(accessToken))
             .thenReturn(Mono.just(false));
 
         assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
             .isEmpty();
+    }
+
+    @Test
+    public void createMailboxSessionShouldThrowWhenMultipleAuthHeaders() {
+        UUID authHeader1 = UUID.randomUUID();
+        UUID authHeader2 = UUID.randomUUID();
+
+        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
+            .thenReturn(ImmutableList.of(authHeader1.toString(), authHeader2.toString()));
+
+        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
+            .isExactlyInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -114,8 +123,8 @@ public class AccessTokenAuthenticationStrategyTest {
         AccessToken accessToken = AccessToken.fromString(authHeader.toString());
         when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
             .thenReturn(Mono.just(username));
-        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
-            .thenReturn(ImmutableList.of(authHeader.toString()));
+        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+            .thenReturn(authHeader.toString());
         when(mockedAccessTokenManager.isValid(accessToken))
             .thenReturn(Mono.just(true));
 
