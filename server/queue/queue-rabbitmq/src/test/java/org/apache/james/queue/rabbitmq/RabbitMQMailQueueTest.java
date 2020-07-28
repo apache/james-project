@@ -56,6 +56,7 @@ import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.metrics.api.Gauge;
 import org.apache.james.queue.api.MailQueue;
@@ -131,7 +132,9 @@ class RabbitMQMailQueueTest {
                 metricTestSystem,
                 RabbitMQMailQueueConfiguration.builder()
                     .sizeMetricsEnabled(true)
-                    .build());
+                    .build(),
+                CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+                    .passthrough());
         }
 
         @Override
@@ -766,7 +769,9 @@ class RabbitMQMailQueueTest {
                 metricTestSystem,
                 RabbitMQMailQueueConfiguration.builder()
                     .sizeMetricsEnabled(false)
-                    .build());
+                    .build(),
+                CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+                    .passthrough());
         }
 
         @Test
@@ -776,11 +781,56 @@ class RabbitMQMailQueueTest {
         }
     }
 
-    private void setUp(CassandraCluster cassandra,
-                       MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem,
-                       RabbitMQMailQueueConfiguration configuration) throws Exception {
-        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf())
-            .passthrough();
+    @Nested
+    class DeDuplicationTest {
+        @RegisterExtension
+        MailQueueMetricExtension mailQueueMetricExtension = new MailQueueMetricExtension();
+
+        @BeforeEach
+        void setup(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
+            setUp(cassandra,
+                metricTestSystem,
+                RabbitMQMailQueueConfiguration.builder()
+                    .sizeMetricsEnabled(true)
+                    .build(),
+                CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+                    .deduplication());
+        }
+
+        @Test
+        void dequeueShouldStillRetrieveAllBlobsWhenIdenticalContentAndDeduplication() throws Exception {
+            Flux<MailQueue.MailQueueItem> dequeueFlux = Flux.from(mailQueue.deQueue());
+            String identicalContent = "identical content";
+            String identicalSubject = "identical subject";
+
+            mailQueue.enQueue(defaultMail()
+                .name("myMail1")
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject(identicalSubject)
+                    .setText(identicalContent))
+                .build());
+            mailQueue.enQueue(defaultMail()
+                .name("myMail2")
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject(identicalSubject)
+                    .setText(identicalContent))
+                .build());
+
+            List<MailQueue.MailQueueItem> items = dequeueFlux.take(2)
+                .concatMap(mailQueueItem -> Mono.fromCallable(() -> {
+                    mailQueueItem.done(true);
+                    return mailQueueItem;
+                }))
+                .collectList()
+                .block(Duration.ofSeconds(10));
+
+            assertThat(items)
+                .allSatisfy(Throwing.consumer(item -> assertThat(item.getMail().getMessage().getContent())
+                    .isEqualTo(identicalContent)));
+        }
+    }
+
+    private void setUp(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem, RabbitMQMailQueueConfiguration configuration, BlobStore blobStore) throws Exception {
         MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
         clock = new UpdatableTickingClock(IN_SLICE_1);
 
