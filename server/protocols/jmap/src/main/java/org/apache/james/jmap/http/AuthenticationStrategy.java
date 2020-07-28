@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.jmap.http;
 
-import java.util.stream.Stream;
-
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.base.Preconditions;
@@ -32,9 +30,10 @@ public interface AuthenticationStrategy {
 
     String AUTHORIZATION_HEADERS = "Authorization";
 
-    default Stream<String> authHeaders(HttpServerRequest httpRequest) {
+    default String authHeaders(HttpServerRequest httpRequest) {
         Preconditions.checkArgument(httpRequest != null, "'httpRequest' is mandatory");
+        Preconditions.checkArgument(httpRequest.requestHeaders().getAll(AUTHORIZATION_HEADERS).size() <= 1, "Only one set of credential is allowed");
 
-        return httpRequest.requestHeaders().getAll(AUTHORIZATION_HEADERS).stream();
+        return httpRequest.requestHeaders().get(AUTHORIZATION_HEADERS);
     }
 }
