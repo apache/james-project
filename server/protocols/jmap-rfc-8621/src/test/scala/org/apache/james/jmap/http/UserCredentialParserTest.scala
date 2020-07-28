@@ -23,8 +23,10 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 import org.apache.james.core.Username
+import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Test;
 
 class UserCredentialParserTest {
   @Test
@@ -90,11 +92,10 @@ class UserCredentialParserTest {
   }
 
   @Test
-  def shouldReturnNoneWhenWrongFormatCredential(): Unit = {
+  def shouldThrowWhenWrongFormatCredential(): Unit = {
     val token: String = "Basic " + toBase64("user1@password")
 
-    assertThat(UserCredential.parseUserCredentials(token))
-       .isEqualTo(None)
+    assertThrows(classOf[UnauthorizedException], () => UserCredential.parseUserCredentials(token))
   }
 
   @Test
@@ -122,11 +123,10 @@ class UserCredentialParserTest {
   }
 
   @Test
-  def shouldReturnEmptyWhenCredentialWithNoUsername(): Unit = {
+  def shouldThrowWhenCredentialWithNoUsername(): Unit = {
     val token: String = "Basic " + toBase64(":pass")
 
-    assertThat(UserCredential.parseUserCredentials(token))
-      .isEqualTo(None)
+    assertThrows(classOf[UnauthorizedException], () => UserCredential.parseUserCredentials(token))
   }
 
   private def toBase64(stringValue: String): String = {

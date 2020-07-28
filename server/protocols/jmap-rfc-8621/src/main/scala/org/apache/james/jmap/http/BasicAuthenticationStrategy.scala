@@ -26,18 +26,16 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
 import javax.inject.Inject
-
 import org.apache.james.core.Username
+import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.UserCredential._
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.user.api.UsersRepository
 import org.slf4j.LoggerFactory
-
 import reactor.core.publisher.Mono
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.HttpServerRequest
 
-import scala.compat.java8.StreamConverters._
 import scala.util.{Failure, Success, Try}
 
 object UserCredential {
@@ -64,8 +62,7 @@ object UserCredential {
 
     refinedValue match {
       case Left(errorMessage: String) =>
-        logger.info(s"Supplied basic authentication credentials do not match expected format. $errorMessage")
-        None
+        throw new UnauthorizedException(s"Supplied basic authentication credentials do not match expected format. $errorMessage")
       case Right(value) => toCredential(value)
     }
   }
@@ -78,11 +75,10 @@ object UserCredential {
     Try(UserCredential(Username.of(usernameString), passwordString)) match {
       case Success(credential) => Some(credential)
       case Failure(throwable:IllegalArgumentException) =>
-        logger.info("Username is not valid", throwable)
-        None
+        throw new UnauthorizedException("Username is not valid", throwable)
       case Failure(unexpectedException) =>
         logger.error("Unexpected Exception", unexpectedException)
-        None
+        throw unexpectedException
     }
   }
 }
@@ -93,13 +89,12 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
                                             val mailboxManager: MailboxManager) extends AuthenticationStrategy {
 
   override def createMailboxSession(httpRequest: HttpServerRequest): Mono[MailboxSession] = {
-    SMono.defer(() => SFlux.fromIterable(authHeaders(httpRequest).toScala[Iterable])
+    SMono.fromCallable(() => authHeaders(httpRequest))
       .map(parseUserCredentials)
       .handle(publishNext)
       .filter(isValid)
       .map(_.username)
       .map(mailboxManager.createSystemSession)
-      .singleOrEmpty())
       .asJava()
   }
 
