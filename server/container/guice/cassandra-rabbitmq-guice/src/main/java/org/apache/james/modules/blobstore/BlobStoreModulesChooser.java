@@ -93,7 +93,7 @@ public class BlobStoreModulesChooser {
     public static List<Module> chooseModules(BlobStoreConfiguration choosingConfiguration) {
         ImmutableList.Builder<Module> moduleBuilder = ImmutableList.<Module>builder()
             .add(chooseDumBlobStoreModule(choosingConfiguration.getImplementation()))
-            .add( new StoragePolicyConfigurationSanityEnforcementModule(choosingConfiguration));
+            .add(new StoragePolicyConfigurationSanityEnforcementModule(choosingConfiguration));
 
         //TODO JAMES-3028 add the storage policy module for all implementation and unbind the ObjectStorageBlobStore
         if (choosingConfiguration.getImplementation() == BlobStoreConfiguration.BlobStoreImplName.CASSANDRA) {

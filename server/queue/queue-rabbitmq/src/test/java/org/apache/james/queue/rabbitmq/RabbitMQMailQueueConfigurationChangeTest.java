@@ -23,7 +23,6 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -41,7 +40,11 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
+import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.api.MailQueue;
@@ -51,8 +54,11 @@ import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewStartUpCheck;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewTestFactory;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
+import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfigurationModule;
+import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.mailet.Mail;
@@ -61,6 +67,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.datastax.driver.core.Session;
 import com.github.fge.lambdas.Throwing;
 
 class RabbitMQMailQueueConfigurationChangeTest {
@@ -107,18 +114,15 @@ class RabbitMQMailQueueConfigurationChangeTest {
         mqManagementApi.deleteAllQueues();
     }
 
-    private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) throws Exception {
+    private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) {
         CassandraMailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock,
             cassandra.getConf(),
-            cassandraCluster.getCassandraConsistenciesConfiguration(),
             mailQueueViewConfiguration,
             mimeMessageStoreFactory);
-
 
         RabbitMQMailQueueConfiguration mailQueueSizeConfiguration = RabbitMQMailQueueConfiguration.builder()
             .sizeMetricsEnabled(true)
             .build();
-
 
         RabbitMQMailQueueFactory.PrivateFactory privateFactory = new RabbitMQMailQueueFactory.PrivateFactory(
             new RecordingMetricFactory(),
@@ -132,11 +136,23 @@ class RabbitMQMailQueueConfigurationChangeTest {
             new RawMailQueueItemDecoratorFactory(),
             mailQueueSizeConfiguration);
         RabbitMQMailQueueFactory mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, privateFactory);
+        assertThat(performStartUpCheck(cassandra.getConf(), mailQueueViewConfiguration)).isEqualTo(StartUpCheck.ResultType.GOOD);
         return mailQueueFactory.createQueue(SPOOL);
     }
 
+    private StartUpCheck.ResultType performStartUpCheck(Session session, CassandraMailQueueViewConfiguration configuration) {
+        EventStoreDao eventStoreDao = new EventStoreDao(
+                session,
+                JsonEventSerializer.forModules(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION).withoutNestedType(),
+                cassandraCluster.getCassandraConsistenciesConfiguration());
+        EventsourcingConfigurationManagement eventsourcingConfigurationManagement = new EventsourcingConfigurationManagement(new CassandraEventStore(eventStoreDao));
+
+        StartUpCheck check = new CassandraMailQueueViewStartUpCheck(eventsourcingConfigurationManagement, configuration);
+        return check.check().getResultType();
+    }
+
     @Test
-    void increasingBucketCountShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) throws Exception {
+    void increasingBucketCountShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) {
         RabbitMQMailQueue mailQueue = getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
 
         enqueueSomeMails(mailQueue, namePatternForSlice(1), 10);
@@ -163,20 +179,20 @@ class RabbitMQMailQueueConfigurationChangeTest {
     }
 
     @Test
-    void decreasingBucketCountShouldBeRejected(CassandraCluster cassandra) throws Exception {
-        getRabbitMQMailQueue(cassandra,
-            CassandraMailQueueViewConfiguration.builder()
-                    .bucketCount(THREE_BUCKET_COUNT + 2)
-                    .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
-                    .sliceWindow(ONE_HOUR_SLICE_WINDOW)
-                    .build());
+    void decreasingBucketCountShouldBeRejected(CassandraCluster cassandra) {
+        assertThat(performStartUpCheck(cassandra.getConf(), CassandraMailQueueViewConfiguration.builder()
+                .bucketCount(THREE_BUCKET_COUNT + 2)
+                .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
+                .sliceWindow(ONE_HOUR_SLICE_WINDOW)
+                .build()))
+            .isEqualTo(StartUpCheck.ResultType.GOOD);
 
-        assertThatThrownBy(() -> getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION))
-            .isInstanceOf(IllegalArgumentException.class);
+        assertThat(performStartUpCheck(cassandra.getConf(), DEFAULT_CONFIGURATION))
+            .isEqualTo(StartUpCheck.ResultType.BAD);
     }
 
     @Test
-    void divideSliceWindowShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) throws Exception {
+    void divideSliceWindowShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) {
         RabbitMQMailQueue mailQueue = getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
 
         clock.setInstant(IN_SLICE_1);
@@ -209,29 +225,29 @@ class RabbitMQMailQueueConfigurationChangeTest {
     }
 
     @Test
-    void decreaseArbitrarilySliceWindowShouldBeRejected(CassandraCluster cassandra) throws Exception {
-        getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
+    void decreaseArbitrarilySliceWindowShouldBeRejected(CassandraCluster cassandra) {
+        assertThat(performStartUpCheck(cassandra.getConf(), DEFAULT_CONFIGURATION))
+                .isEqualTo(StartUpCheck.ResultType.GOOD);
 
-        assertThatThrownBy(() -> getRabbitMQMailQueue(cassandra,
-            CassandraMailQueueViewConfiguration.builder()
+        assertThat(performStartUpCheck(cassandra.getConf(), CassandraMailQueueViewConfiguration.builder()
                 .bucketCount(THREE_BUCKET_COUNT)
                 .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
                 .sliceWindow(Duration.ofMinutes(25))
                 .build()))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isEqualTo(StartUpCheck.ResultType.BAD);
     }
 
     @Test
-    void increaseSliceWindowShouldBeRejected(CassandraCluster cassandra) throws Exception {
-        getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
+    void increaseSliceWindowShouldBeRejected(CassandraCluster cassandra) {
+        assertThat(performStartUpCheck(cassandra.getConf(), DEFAULT_CONFIGURATION))
+                .isEqualTo(StartUpCheck.ResultType.GOOD);
 
-        assertThatThrownBy(() -> getRabbitMQMailQueue(cassandra,
-            CassandraMailQueueViewConfiguration.builder()
+        assertThat(performStartUpCheck(cassandra.getConf(), CassandraMailQueueViewConfiguration.builder()
                 .bucketCount(THREE_BUCKET_COUNT)
                 .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
                 .sliceWindow(Duration.ofHours(2))
                 .build()))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isEqualTo(StartUpCheck.ResultType.BAD);
     }
 
     private Function<Integer, String> namePatternForSlice(int sliceId) {

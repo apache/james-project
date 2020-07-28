@@ -22,23 +22,16 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 import java.time.Clock;
 import java.util.Optional;
 
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
-import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
-import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfigurationModule;
-import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 
 import com.datastax.driver.core.Session;
 
 public class CassandraMailQueueViewTestFactory {
 
     public static CassandraMailQueueView.Factory factory(Clock clock, Session session,
-                                                         CassandraConsistenciesConfiguration cassandraConsistenciesConfiguration,
                                                          CassandraMailQueueViewConfiguration configuration,
                                                          MimeMessageStore.Factory mimeMessageStoreFactory) {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
@@ -51,20 +44,11 @@ public class CassandraMailQueueViewTestFactory {
         CassandraMailQueueMailStore cassandraMailQueueMailStore = new CassandraMailQueueMailStore(enqueuedMailsDao, browseStartDao, configuration, clock);
         CassandraMailQueueMailDelete cassandraMailQueueMailDelete = new CassandraMailQueueMailDelete(deletedMailsDao, browseStartDao, cassandraMailQueueBrowser, configuration);
 
-
-        EventStoreDao eventStoreDao = new EventStoreDao(
-            session,
-            JsonEventSerializer.forModules(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION).withoutNestedType(),
-            cassandraConsistenciesConfiguration);
-        EventsourcingConfigurationManagement eventsourcingConfigurationManagement = new EventsourcingConfigurationManagement(new CassandraEventStore(eventStoreDao));
-
         return new CassandraMailQueueView.Factory(
             cassandraMailQueueMailStore,
             cassandraMailQueueBrowser,
             cassandraMailQueueMailDelete,
-            eventsourcingConfigurationManagement,
-            mimeMessageStoreFactory,
-            configuration);
+            mimeMessageStoreFactory);
     }
 
     public static boolean isInitialized(Session session, MailQueueName mailQueueName) {

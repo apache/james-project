@@ -838,7 +838,6 @@ class RabbitMQMailQueueTest {
         MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(
                 clock,
                 cassandra.getConf(),
-                cassandraCluster.getCassandraConsistenciesConfiguration(),
                 CassandraMailQueueViewConfiguration.builder()
                     .bucketCount(THREE_BUCKET_COUNT)
                     .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)

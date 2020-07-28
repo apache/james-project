@@ -35,8 +35,6 @@ import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
-import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
-import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 
 import reactor.core.publisher.Flux;
@@ -55,15 +53,11 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
         public Factory(CassandraMailQueueMailStore storeHelper,
                        CassandraMailQueueBrowser cassandraMailQueueBrowser,
                        CassandraMailQueueMailDelete cassandraMailQueueMailDelete,
-                       EventsourcingConfigurationManagement eventsourcingConfigurationManagement,
-                       MimeMessageStore.Factory mimeMessageStoreFactory,
-                       CassandraMailQueueViewConfiguration configuration) {
+                       MimeMessageStore.Factory mimeMessageStoreFactory) {
             this.storeHelper = storeHelper;
             this.cassandraMailQueueBrowser = cassandraMailQueueBrowser;
             this.cassandraMailQueueMailDelete = cassandraMailQueueMailDelete;
             this.mimeMessageStoreFactory = mimeMessageStoreFactory;
-
-            eventsourcingConfigurationManagement.registerConfiguration(configuration);
         }
 
         @Override

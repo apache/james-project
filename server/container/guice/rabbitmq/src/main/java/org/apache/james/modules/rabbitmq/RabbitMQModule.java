@@ -34,6 +34,7 @@ import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
@@ -46,6 +47,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueMailDele
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueMailStore;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewStartUpCheck;
 import org.apache.james.queue.rabbitmq.view.cassandra.DeletedMailsDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
@@ -87,6 +89,7 @@ public class RabbitMQModule extends AbstractModule {
         Multibinder<EventDTOModule<? extends Event, ? extends EventDTO>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {});
         eventDTOModuleBinder.addBinding().toInstance(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION);
 
+        Multibinder.newSetBinder(binder(), StartUpCheck.class).addBinding().to(CassandraMailQueueViewStartUpCheck.class);
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(RabbitMQHealthCheck.class);
 
         bind(ReactorRabbitMQChannelPool.Configuration.class).toInstance(ReactorRabbitMQChannelPool.Configuration.DEFAULT);
