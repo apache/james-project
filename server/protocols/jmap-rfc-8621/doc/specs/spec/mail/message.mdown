@@ -1,5 +1,9 @@
 # Emails
 
+<aside class="warning">
+  Not implemented yet
+</aside>
+
 An **Email** object is a representation of a message [@!RFC5322], which allows clients to avoid the complexities of MIME parsing, transfer encoding, and character encoding.
 
 ## Properties of the Email Object

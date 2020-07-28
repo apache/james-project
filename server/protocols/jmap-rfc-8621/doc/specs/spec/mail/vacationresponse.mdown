@@ -1,5 +1,9 @@
 # Vacation Response
 
+<aside class="warning">
+  Not implemented yet
+</aside>
+
 A vacation response sends an automatic reply when a message is delivered to the mail store, informing the original sender that their message may not be read for some time.
 
 Automated message sending can produce undesirable behaviour. To avoid this, implementors MUST follow the recommendations set forth in [@!RFC3834].

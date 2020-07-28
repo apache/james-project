@@ -5,6 +5,9 @@ A Mailbox represents a named set of Emails. This is the primary mechanism for or
 For compatibility with IMAP, an Email MUST belong to one or more Mailboxes. The Email id does not change if the Email changes Mailboxes.
 
 A **Mailbox** object has the following properties:
+<aside class="notice">
+  Implemented
+</aside>
 
 - **id**: `Id` (immutable; server-set)
   The id of the Mailbox.
@@ -13,6 +16,10 @@ A **Mailbox** object has the following properties:
 - **parentId**: `Id|null` (default: null)
   The Mailbox id for the parent of this Mailbox, or `null` if this Mailbox is at the top level. Mailboxes form acyclic graphs (forests) directed by the child-to-parent relationship. There MUST NOT be a loop.
 - **role**: `String|null` (default: null)
+  <aside class="warning">
+    Partially implemented. Role are based on the name of the mailbox. An evolution would be to use a mailbox annotation to hold its
+    value, removing the link with the name, and allow the user to define locale based system mailboxes. This value cannot be updated.
+  </aside>
   Identifies Mailboxes that have a particular common purpose (e.g., the "inbox"), regardless of the *name* property (which may be localised).
 
     This value is shared with IMAP (exposed in IMAP via the SPECIAL-USE extension [@!RFC6154]). However, unlike in IMAP, a Mailbox MUST only have a single role, and there MUST NOT be two Mailboxes in the same account with the same role. Servers providing IMAP access to the same data are encouraged to enforce these extra restrictions in IMAP as well. Otherwise, modifying the IMAP attributes to ensure compliance when exposing the data over JMAP is implementation dependent.
@@ -22,6 +29,9 @@ A **Mailbox** object has the following properties:
     An account is not required to have Mailboxes with any particular roles.
 
 - **sortOrder**: `UnsignedInt` (default: 0)
+  <aside class="warning">
+    Partially implemented. Based on the role. This value cannot be updated.
+  </aside>
   Defines the sort order of Mailboxes when presented in the client's UI, so it
   is consistent between devices. The number MUST be an integer in the range
   0 <= sortOrder < 2^31.
@@ -33,8 +43,14 @@ A **Mailbox** object has the following properties:
 - **unreadEmails**: `UnsignedInt` (server-set)
   The number of Emails in this Mailbox that have neither the `$seen` keyword nor the `$draft` keyword.
 - **totalThreads**: `UnsignedInt` (server-set)
+  <aside class="warning">
+    Threads are not implemented. So far, each email is its own thread, so totalThreads will have the same value than totalEmails
+  </aside>
   The number of Threads where at least one Email in the Thread is in this Mailbox.
 - **unreadThreads**: `UnsignedInt` (server-set)
+  <aside class="warning">
+    Threads are not implemented. So far, each email is its own thread, so unreadThreads will have the same value than unreadEmails
+  </aside>
   An indication of the number of "unread" Threads in the Mailbox.
 
     For compatibility with existing implementations, the way "unread Threads" is
@@ -83,6 +99,10 @@ For IMAP compatibility, an Email in both the trash and another Mailbox SHOULD be
 The following JMAP methods are supported.
 
 ## Mailbox/get
+
+<aside class="notice">
+  Implemented
+</aside>
 
 This is a standard "/get" method as described in [@!RFC8620], Section 5.1. The *ids* argument may be `null` to fetch all at once.
 

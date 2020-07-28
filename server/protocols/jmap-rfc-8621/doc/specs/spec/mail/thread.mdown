@@ -1,5 +1,9 @@
 # Threads
 
+<aside class="warning">
+  Not implemented yet
+</aside>
+
 Replies are grouped together with the original message to form a Thread. In JMAP, a Thread is simply a flat list of Emails, ordered by date. Every Email MUST belong to a Thread, even if it is the only Email in the Thread.
 
 The exact algorithm for determining whether two Emails belong to the same Thread is not mandated in this spec to allow for compatibility with different existing systems. For new implementations, it is suggested that two messages belong in the same Thread if both of the following conditions apply:

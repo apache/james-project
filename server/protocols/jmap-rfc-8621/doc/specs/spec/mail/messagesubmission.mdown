@@ -1,5 +1,9 @@
 # Email Submission
 
+<aside class="warning">
+  Not implemented yet
+</aside>
+
 An **EmailSubmission** object represents the submission of an Email for delivery to one or more recipients. It has the following properties:
 
 - **id**: `Id` (immutable; server-set)

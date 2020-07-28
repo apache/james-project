@@ -50,17 +50,33 @@ This document defines three additional capability URIs.
 
 ### urn:ietf:params:jmap:mail
 
+<aside class="notice">
+  Implemented
+</aside>
+
 This represents support for the Mailbox, Thread, Email, and SearchSnippet data types and associated API methods. The value of this property in the JMAP session *capabilities* property is an empty object.
 
 The value of this property in an account's *accountCapabilities* property is an object that MUST contain the following information on server capabilities and permissions for that account:
 
 - **maxMailboxesPerEmail**: `UnsignedInt|null`
+<aside class="warning">
+  Not enforced yet
+</aside>
   The maximum number of Mailboxes (see Section 2) that can be can assigned to a single Email object (see Section 4). This MUST be an integer >= 1, or `null` for no limit (or rather, the limit is always the number of Mailboxes in the account).
 - **maxMailboxDepth**: `UnsignedInt|null`
+<aside class="warning">
+  Not enforced yet
+</aside>
   The maximum depth of the Mailbox hierarchy (i.e., one more than the maximum number of ancestors a Mailbox may have), or `null` for no limit.
 - **maxSizeMailboxName**: `UnsignedInt`
+<aside class="warning">
+  Not enforced yet
+</aside>
   The maximum length, in (UTF-8) octets, allowed for the name of a Mailbox. This MUST be at least 100, although it is recommended servers allow more.
 - **maxSizeAttachmentsPerEmail**: `UnsignedInt`
+<aside class="warning">
+  Not enforced yet
+</aside>
   The maximum total size of attachments, in octets, allowed for a single Email object. A server MAY still reject the import or creation of an Email with a lower attachment size total (for example, if the body includes several megabytes of text, causing the size of the encoded MIME structure to be over some server-defined limit).
 
     Note that this limit is for the sum of unencoded attachment sizes. Users are generally not knowledgeable about encoding overhead, etc., nor should they need to be, so marketing and help materials normally tell them the "max size attachments". This is the unencoded size they see on their hard drive, so this capability matches that and allows the client to consistently enforce what the user understands as the limit.
@@ -74,6 +90,10 @@ The value of this property in an account's *accountCapabilities* property is an 
   a `null` parentId. (Permission for creating a child of an existing Mailbox is given by the myRights property on that Mailbox.)
 
 ### urn:ietf:params:jmap:submission
+
+<aside class="warning">
+  Not implemented yet
+</aside>
 
 This represents support for the Identity and EmailSubmission data types and associated API methods. The value of this property in the JMAP session *capabilities* property is an empty object.
 
@@ -103,6 +123,10 @@ The value of this property in an account's *accountCapabilities* property is an 
 
 ### urn:ietf:params:jmap:vacationresponse
 
+<aside class="warning">
+  Not implemented yet
+</aside>
+
 This represents support for the VacationResponse data type and associated API methods. The value of this property is an empty object in both the JMAP session *capabilities* property and an account's *accountCapabilities* property.
 
 ## Data Type Support in Different Accounts
@@ -110,6 +134,10 @@ This represents support for the VacationResponse data type and associated API me
 The server MUST include the appropriate capability strings as keys in the *accountCapabilities* property of any account with which the user may use the data types represented by that URI. Supported data types may differ between accounts the user has access to. For example, in the user's personal account, they may have access to all three sets of data, but in a shared account, they may only have data for `urn:ietf:params:jmap:mail`. This means they can access Mailbox/Thread/Email data in the shared account but are not allowed to send as that account (and so do not have access to Identity/EmailSubmission objects) or view/set its VacationResponse.
 
 ## Push
+
+<aside class="warning">
+  Not implemented yet
+</aside>
 
 Servers MUST support the JMAP push mechanisms, as specified in [@!RFC8620] Section 7, to receive notifications when the state changes for any of the types defined in this specification.
 

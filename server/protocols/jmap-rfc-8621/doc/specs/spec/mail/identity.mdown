@@ -1,5 +1,9 @@
 # Identities
 
+<aside class="warning">
+  Not implemented yet
+</aside>
+
 An **Identity** object stores information about an email address or domain the user may send from. It has the following properties:
 
 - **id**: `Id` (immutable; server-set)
