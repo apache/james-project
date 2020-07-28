@@ -74,7 +74,7 @@ private object DTO {
       user,
       path.toJava,
       mailboxId,
-      new JavaTreeMap[MessageUid, JavaMessageMetaData](added.mapValues(_.toJava).toMap.asJava),
+      new JavaTreeMap[MessageUid, JavaMessageMetaData](added.view.mapValues(_.toJava).toMap.asJava),
       eventId)
   }
 
@@ -85,7 +85,7 @@ private object DTO {
       user,
       path.toJava,
       mailboxId,
-      expunged.mapValues(_.toJava).toMap.asJava,
+      expunged.view.mapValues(_.toJava).toMap.asJava,
       eventId)
   }
 

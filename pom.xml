@@ -2777,7 +2777,13 @@
                         </execution>
                     </executions>
                     <configuration>
-                        <addArgs>-Xlog-implicits</addArgs>
+                        <args>
+                            <arg>-Xlog-implicits</arg>
+                            <arg>-feature</arg>
+                            <arg>-unchecked</arg>
+                            <arg>-deprecation</arg>
+                            <arg>-explaintypes</arg>
+                        </args>
                     </configuration>
                 </plugin>
                 <plugin>

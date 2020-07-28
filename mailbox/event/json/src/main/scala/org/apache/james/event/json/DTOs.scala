@@ -116,8 +116,8 @@ object DTOs {
 
     def fromJavaFlags(flags: JavaMailFlags): Flags = {
       Flags(
-        flags.getSystemFlags.map(javaFlagToSystemFlag),
-        flags.getUserFlags.map(UserFlag))
+        flags.getSystemFlags.toIndexedSeq.map(javaFlagToSystemFlag),
+        flags.getUserFlags.toIndexedSeq.map(UserFlag))
     }
 
     private def javaFlagToSystemFlag(flag: JavaMailFlags.Flag): SystemFlag = flag match {

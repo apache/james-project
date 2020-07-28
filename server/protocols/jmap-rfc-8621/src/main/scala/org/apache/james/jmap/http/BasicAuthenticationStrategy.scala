@@ -26,13 +26,15 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
 import javax.inject.Inject
+
 import org.apache.james.core.Username
 import org.apache.james.jmap.http.UserCredential._
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.user.api.UsersRepository
 import org.slf4j.LoggerFactory
+
 import reactor.core.publisher.Mono
-import reactor.core.scala.publisher.SFlux
+import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.netty.http.server.HttpServerRequest
 
 import scala.compat.java8.StreamConverters._
@@ -91,13 +93,13 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
                                             val mailboxManager: MailboxManager) extends AuthenticationStrategy {
 
   override def createMailboxSession(httpRequest: HttpServerRequest): Mono[MailboxSession] = {
-    SFlux.fromStream(() => authHeaders(httpRequest).toScala[Stream])
+    SMono.defer(() => SFlux.fromIterable(authHeaders(httpRequest).toScala[Iterable])
       .map(parseUserCredentials)
       .handle(publishNext)
       .filter(isValid)
       .map(_.username)
       .map(mailboxManager.createSystemSession)
-      .singleOrEmpty()
+      .singleOrEmpty())
       .asJava()
   }
 

@@ -34,7 +34,7 @@ object Generators {
   // 1% of the time, the generation id is incremented by 2
   // i.e. (0, 0, 0, 2, 3, 3, 4, 5, 5, 5, 5)
   def nextGenerationsGen(previousGeneration: Generation): Gen[Generation] =
-    Gen.frequency((80, Gen.const(0l)), (19, Gen.const(1l)), (1, Gen.const(2l))).map(previousGeneration.next)
+    Gen.frequency((80, Gen.const(0L)), (19, Gen.const(1L)), (1, Gen.const(2L))).map(previousGeneration.next)
 
   val externalIDGen: Gen[ExternalID] = Gen.uuid.map(uuid => ExternalID(uuid.toString))
 

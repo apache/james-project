@@ -112,7 +112,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
           case _ => false
         }
         .next()
-        .then(details)
+        .`then`(details)
 
       Flux.merge(findEvent, details)
         .subscribeOn(Schedulers.elastic)

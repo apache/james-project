@@ -23,6 +23,7 @@ import java.io.InputStream
 import java.net.URL
 
 import javax.inject.Inject
+
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxRights, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.jmap.model
@@ -31,10 +32,12 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodNa
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 import scala.collection.{Seq => LegacySeq}
+import scala.language.implicitConversions
 import scala.util.Try
 
 class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {

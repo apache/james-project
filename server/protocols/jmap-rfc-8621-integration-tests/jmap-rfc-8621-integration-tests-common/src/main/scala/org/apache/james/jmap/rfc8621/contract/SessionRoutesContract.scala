@@ -116,7 +116,7 @@ trait SessionRoutesContract {
 
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
-  def getShouldReturnCorrectSession() {
+  def getShouldReturnCorrectSession(): Unit = {
     val sessionJson: String = `given`()
       .when()
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)

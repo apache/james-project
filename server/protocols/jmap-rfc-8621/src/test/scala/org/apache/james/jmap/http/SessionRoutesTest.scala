@@ -89,7 +89,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   "get" should "return OK status" in {
     RestAssured.when()
       .get
-    .then
+    .`then`
       .statusCode(HttpStatus.SC_OK)
       .contentType(ContentType.JSON)
   }
