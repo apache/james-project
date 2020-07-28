@@ -73,6 +73,8 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
         }
     }
 
+    private static final int DELETION_CONCURRENCY = 8;
+
     private final CassandraMailQueueMailStore storeHelper;
     private final CassandraMailQueueBrowser cassandraMailQueueBrowser;
     private final CassandraMailQueueMailDelete cassandraMailQueueMailDelete;
@@ -144,7 +146,7 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
             .map(EnqueuedItemWithSlicingContext::getEnqueuedItem)
             .filter(deleteCondition::shouldBeDeleted)
             .flatMap(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getEnqueueId(), mailQueueName)
-                .then(Mono.from(mimeMessageStore.delete(mailReference.getPartsId()))))
+                .then(Mono.from(mimeMessageStore.delete(mailReference.getPartsId()))), DELETION_CONCURRENCY)
             .count()
             .doOnNext(ignored -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName))
             .subscribeOn(Schedulers.elastic())
