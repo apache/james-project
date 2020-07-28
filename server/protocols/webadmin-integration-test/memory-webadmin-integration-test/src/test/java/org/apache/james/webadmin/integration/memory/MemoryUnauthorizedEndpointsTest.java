@@ -33,5 +33,6 @@ class MemoryUnauthorizedEndpointsTest extends UnauthorizedEndpointsTest {
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new UnauthorizedModule())
             .overrideWith(new WebadminIntegrationTestModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

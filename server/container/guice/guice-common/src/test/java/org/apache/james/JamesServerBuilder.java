@@ -57,14 +57,17 @@ public class JamesServerBuilder<T extends Configuration> {
     private ServerProvider server;
     private ConfigurationProvider configuration;
     private Optional<Boolean> autoStart;
+    private JamesServerExtension.Lifecycle lifecycle;
 
     public JamesServerBuilder(ConfigurationProvider configurationProvider) {
         configuration = configurationProvider;
         extensions = ImmutableList.builder();
         folderRegistrableExtension = new TemporaryFolderRegistrableExtension();
         autoStart = Optional.empty();
+        lifecycle = JamesServerExtension.Lifecycle.PER_TEST;
         overrideModules = ImmutableList.builder();
     }
+
 
     public JamesServerBuilder<T> extensions(GuiceModuleTestExtension... extensions) {
         this.extensions.add(extensions);
@@ -90,12 +93,17 @@ public class JamesServerBuilder<T extends Configuration> {
         return this;
     }
 
+    public JamesServerBuilder<T> lifeCycle(JamesServerExtension.Lifecycle lifecycle) {
+        this.lifecycle = lifecycle;
+        return this;
+    }
+
     public JamesServerExtension build() {
         Preconditions.checkNotNull(server);
         JamesServerExtension.AwaitCondition awaitCondition = () -> extensions.build().forEach(GuiceModuleTestExtension::await);
 
         return new JamesServerExtension(buildAggregateJunitExtension(), file -> overrideServerWithExtensionsModules(file, configuration),
-            awaitCondition, autoStart.orElse(DEFAULT_AUTO_START));
+            awaitCondition, autoStart.orElse(DEFAULT_AUTO_START), lifecycle);
     }
 
     private AggregateJunitExtension buildAggregateJunitExtension() {

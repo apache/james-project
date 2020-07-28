@@ -21,19 +21,21 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.ConfigurationProbe;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraJamesServerTest implements JamesServerContract {
+class CassandraJamesServerTest implements JamesServerContract, JmapJamesServerContract {
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+            .overrideWith(JamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Test

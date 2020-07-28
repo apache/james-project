@@ -21,8 +21,23 @@ package org.apache.james.webadmin.integration.rabbitmq;
 
 import static io.restassured.RestAssured.when;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesConfiguration;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.CleanupTasksPerformer;
+import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.junit.categories.BasicFeature;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestRabbitMQModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.webadmin.integration.UnauthorizedEndpointsTest;
+import org.apache.james.webadmin.integration.UnauthorizedModule;
+import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
@@ -50,9 +65,28 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @Tag(BasicFeature.TAG)
 class RabbitMQUnauthorizedEndpointsTest extends UnauthorizedEndpointsTest {
-
     @RegisterExtension
-    static RabbitMQJmapExtension rabbitMQJmapExtension = new RabbitMQJmapExtension(RabbitMQJmapExtension.JamesLifeCyclePolicy.COMMON_TO_ALL_TESTS);
+    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+        CassandraRabbitMQJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .blobStore(BlobStoreConfiguration.builder()
+                .objectStorage()
+                .disableCache()
+                .deduplication())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .build())
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(new RabbitMQExtension())
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+            .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
+            .overrideWith(new WebadminIntegrationTestModule())
+            .overrideWith(new UnauthorizedModule())
+            .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton())))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+        .build();
 
     @ParameterizedTest
     @ValueSource(strings = {

@@ -27,5 +27,6 @@ class JPAJamesServerWithAuthenticatedDatabaseSqlValidationTest extends JPAJamesS
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> JPAJamesServerMain.createServer(configuration)
             .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.WithDatabaseAuthentication(), DOMAIN_LIST_CONFIGURATION_MODULE))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

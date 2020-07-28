@@ -62,6 +62,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
                     .disableCache()
                     .deduplication())
             .extension(new SwiftBlobStoreExtension())
+            .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
             .build();
     }
 
@@ -74,6 +75,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
                     .disableCache()
                     .deduplication())
             .extension(new AwsS3BlobStoreExtension())
+            .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
             .build();
     }
 
@@ -85,6 +87,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
                 .cassandra()
                 .disableCache()
                 .passthrough())
+            .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
             .build();
     }
 

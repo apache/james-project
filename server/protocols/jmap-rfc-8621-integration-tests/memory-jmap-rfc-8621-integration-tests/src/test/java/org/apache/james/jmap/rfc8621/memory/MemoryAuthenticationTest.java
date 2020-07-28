@@ -34,5 +34,6 @@ class MemoryAuthenticationTest implements AuthenticationContract {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_ENCLOSING_CLASS)
         .build();
 }

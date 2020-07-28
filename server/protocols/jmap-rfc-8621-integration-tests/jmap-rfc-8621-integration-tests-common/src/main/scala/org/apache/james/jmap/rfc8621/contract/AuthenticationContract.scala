@@ -28,11 +28,10 @@ import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ALICE_PASSWORD, AUTHORIZATION_HEADER, BOB, BOB_BASIC_AUTH_HEADER, BOB_PASSWORD, DOMAIN, DOMAIN_WITH_SPACE, ECHO_REQUEST_OBJECT, INVALID_JWT_TOKEN, UNKNOWN_USER_TOKEN, USER_TOKEN, getHeadersWith, toBase64, _}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
-import org.junit.jupiter.api.{BeforeEach, Nested, Tag, Test}
+import org.junit.jupiter.api.{BeforeAll, Nested, Tag, Test}
 
-
-trait AuthenticationContract {
-  @BeforeEach
+object AuthenticationContract {
+  @BeforeAll
   def setup(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
       .fluent
@@ -43,10 +42,12 @@ trait AuthenticationContract {
       .addUser(BOB.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-        .setAuth(new NoAuthScheme)
+      .setAuth(new NoAuthScheme)
       .build
   }
+}
 
+trait AuthenticationContract {
   @Nested
   class BothAuthenticationMechanisms {
     @Tag(CategoryTags.BASIC_FEATURE)

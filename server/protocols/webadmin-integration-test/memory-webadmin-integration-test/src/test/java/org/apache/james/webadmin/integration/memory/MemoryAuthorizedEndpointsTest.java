@@ -33,5 +33,6 @@ class MemoryAuthorizedEndpointsTest extends AuthorizedEndpointsTest {
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(new UnauthorizedModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
