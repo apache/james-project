@@ -46,6 +46,7 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.core.Username;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -221,9 +222,14 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .overrideWith(binder -> binder.bind(RetryBackoffConfiguration.class)
                 .toInstance(RetryBackoffConfiguration.builder()
                     .maxRetries(MAX_RETRIES)
-                    .firstBackoff(java.time.Duration.ofMillis(100))
-                    .jitterFactor(0.5)
-                    .build())))
+                    .firstBackoff(java.time.Duration.ofMillis(10))
+                    .jitterFactor(0.2)
+                    .build()))
+            .overrideWith(binder -> binder.bind(ReactorRabbitMQChannelPool.Configuration.class)
+                .toInstance(ReactorRabbitMQChannelPool.Configuration.builder()
+                    .retries(2)
+                    .minBorrowDelay(java.time.Duration.ofMillis(5))
+                    .maxChannel(3))))
         .build();
 
     private static final String DOMAIN = "domain.tld";

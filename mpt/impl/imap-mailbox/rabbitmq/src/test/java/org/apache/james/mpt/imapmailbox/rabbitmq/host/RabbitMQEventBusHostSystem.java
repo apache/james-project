@@ -74,7 +74,8 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         super.beforeTest();
 
         connectionPool = new SimpleConnectionPool(dockerRabbitMQ.createRabbitConnectionFactory());
-        reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool);
+        reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
+            ReactorRabbitMQChannelPool.Configuration.DEFAULT);
         reactorRabbitMQChannelPool.start();
         eventBus = createEventBus();
         eventBus.start();

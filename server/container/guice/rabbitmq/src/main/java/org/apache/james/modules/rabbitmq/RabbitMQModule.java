@@ -23,7 +23,6 @@ import java.io.FileNotFoundException;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
@@ -89,6 +88,8 @@ public class RabbitMQModule extends AbstractModule {
         eventDTOModuleBinder.addBinding().toInstance(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(RabbitMQHealthCheck.class);
+
+        bind(ReactorRabbitMQChannelPool.Configuration.class).toInstance(ReactorRabbitMQChannelPool.Configuration.DEFAULT);
     }
 
     @Provides
@@ -118,7 +119,7 @@ public class RabbitMQModule extends AbstractModule {
     @Provides
     @Named(RABBITMQ_CONFIGURATION_NAME)
     @Singleton
-    private Configuration getConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    private org.apache.commons.configuration2.Configuration getConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             return propertiesProvider.getConfiguration(RABBITMQ_CONFIGURATION_NAME);
         } catch (FileNotFoundException e) {
@@ -129,26 +130,28 @@ public class RabbitMQModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private RabbitMQConfiguration getMailQueueConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) Configuration configuration) {
+    private RabbitMQConfiguration getMailQueueConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) org.apache.commons.configuration2.Configuration configuration) {
         return RabbitMQConfiguration.from(configuration);
     }
 
     @Provides
     @Singleton
-    private CassandraMailQueueViewConfiguration getMailQueueViewConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) Configuration configuration) {
+    private CassandraMailQueueViewConfiguration getMailQueueViewConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) org.apache.commons.configuration2.Configuration configuration) {
         return CassandraMailQueueViewConfiguration.from(configuration);
     }
 
     @Provides
     @Singleton
-    private RabbitMQMailQueueConfiguration getMailQueueSizeConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) Configuration configuration) {
+    private RabbitMQMailQueueConfiguration getMailQueueSizeConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) org.apache.commons.configuration2.Configuration configuration) {
         return RabbitMQMailQueueConfiguration.from(configuration);
     }
 
     @Provides
     @Singleton
-    ReactorRabbitMQChannelPool provideReactorRabbitMQChannelPool(SimpleConnectionPool simpleConnectionPool) {
-        ReactorRabbitMQChannelPool channelPool = new ReactorRabbitMQChannelPool(simpleConnectionPool);
+    ReactorRabbitMQChannelPool provideReactorRabbitMQChannelPool(SimpleConnectionPool simpleConnectionPool, ReactorRabbitMQChannelPool.Configuration configuration) {
+        ReactorRabbitMQChannelPool channelPool = new ReactorRabbitMQChannelPool(
+            simpleConnectionPool.getResilientConnection(),
+            configuration);
         channelPool.start();
         return channelPool;
     }

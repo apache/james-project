@@ -140,10 +140,11 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
         RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
         connectionPool = new SimpleConnectionPool(connectionFactory);
-        Duration minBorrowDelay = Duration.ofMillis(5);
-        int retries = 2;
-        channelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(2, Duration.ofMillis(5)), 5,
-            minBorrowDelay, retries);
+        channelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(2, Duration.ofMillis(5)),
+            ReactorRabbitMQChannelPool.Configuration.builder()
+                .retries(2)
+                .minBorrowDelay(Duration.ofMillis(5))
+                .maxChannel(3));
         channelPool.start();
     }
 
