@@ -22,13 +22,13 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
-import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
+import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
 import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, Properties, SetErrorDescription, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{Invocation, State}
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
-import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
+import org.apache.james.mailbox.model.{FetchGroup, Mailbox, MailboxId, MailboxPath, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
@@ -38,12 +38,13 @@ import reactor.core.scheduler.Schedulers
 
 import scala.collection.immutable
 
+case class MailboxHasMailException(mailboxId: MailboxId) extends Exception
+case class MailboxHasChildException(mailboxId: MailboxId) extends Exception
+
 sealed trait CreationResult {
   def mailboxCreationId: MailboxCreationId
 }
-
 case class CreationSuccess(mailboxCreationId: MailboxCreationId, mailboxId: MailboxId) extends CreationResult
-
 case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exception) extends CreationResult {
   def asMailboxSetError: MailboxSetError = exception match {
     case e: MailboxNotFoundException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("parentId"))))
@@ -53,7 +54,6 @@ case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exce
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
 }
-
 case class CreationResults(created: Seq[CreationResult]) {
   def retrieveCreated: Map[MailboxCreationId, MailboxId] = created
     .flatMap(result => result match {
@@ -70,8 +70,35 @@ case class CreationResults(created: Seq[CreationResult]) {
     .toMap
 }
 
+sealed trait DeletionResult
+case class DeletionSuccess(mailboxId: MailboxId) extends DeletionResult
+case class DeletionFailure(mailboxId: UnparsedMailboxId, exception: Throwable) extends DeletionResult {
+  def asMailboxSetError: MailboxSetError = exception match {
+    case e: MailboxNotFoundException => MailboxSetError.notFound(Some(SetErrorDescription(e.getMessage)))
+    case e: MailboxHasMailException => MailboxSetError.mailboxHasEmail(Some(SetErrorDescription(s"${e.mailboxId.serialize} is not empty")))
+    case e: MailboxHasChildException => MailboxSetError.mailboxHasChild(Some(SetErrorDescription(s"${e.mailboxId.serialize} has child mailboxes")))
+    case e: IllegalArgumentException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${mailboxId} is not a mailboxId")), None)
+    case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
+  }
+}
+case class DeletionResults(results: Seq[DeletionResult]) {
+  def destroyed: Seq[DeletionSuccess] =
+    results.flatMap(result => result match {
+      case success: DeletionSuccess => Some(success)
+      case _ => None
+    })
+
+  def retrieveErrors: Map[UnparsedMailboxId, MailboxSetError] =
+    results.flatMap(result => result match {
+      case failure: DeletionFailure => Some(failure.mailboxId, failure.asMailboxSetError)
+      case _ => None
+    })
+    .toMap
+}
+
 class MailboxSetMethod @Inject()(serializer: Serializer,
                                  mailboxManager: MailboxManager,
+                                 mailboxIdFactory: MailboxId.Factory,
                                  metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("Mailbox/set")
 
@@ -83,7 +110,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
           val (unparsableCreateRequests, createRequests) = parseCreateRequests(mailboxSetRequest)
           for {
             creationResults <- createMailboxes(mailboxSession, createRequests)
-          } yield createResponse(invocation, mailboxSetRequest, unparsableCreateRequests, creationResults)
+            deletionResults <- deleteMailboxes(mailboxSession, mailboxSetRequest.destroy.getOrElse(Seq()))
+          } yield createResponse(invocation, mailboxSetRequest, unparsableCreateRequests, creationResults, deletionResults)
         }))
   }
 
@@ -107,6 +135,29 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => MailboxSetError("invalidArguments", Some(SetErrorDescription(s"Missing '$path' property in mailbox object")), None)
       case (path, _) => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"Unknown error on property '$path'")), None)
     }
+
+  private def deleteMailboxes(mailboxSession: MailboxSession, deleteRequests: immutable.Iterable[UnparsedMailboxId]): SMono[DeletionResults] = {
+    SFlux.fromIterable(deleteRequests)
+      .flatMap(id => SMono.just(id)
+        .map(id => mailboxIdFactory.fromString(id))
+        .flatMap(mailboxId => SMono.fromCallable(() => delete(mailboxSession, mailboxId))
+          .subscribeOn(Schedulers.elastic())
+          .`then`(SMono.just[DeletionResult](DeletionSuccess(mailboxId))))
+        .onErrorRecover(e => DeletionFailure(id, e)))
+      .collectSeq()
+      .map(DeletionResults)
+  }
+
+  private def delete(mailboxSession: MailboxSession, id: MailboxId): Mailbox = {
+    val mailbox = mailboxManager.getMailbox(id, mailboxSession)
+    if (mailbox.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession).hasNext) {
+      throw MailboxHasMailException(id)
+    }
+    if (mailboxManager.hasChildren(mailbox.getMailboxPath, mailboxSession)) {
+      throw MailboxHasChildException(id)
+    }
+    mailboxManager.deleteMailbox(id, mailboxSession)
+  }
 
   private def createMailboxes(mailboxSession: MailboxSession, createRequests: immutable.Iterable[(MailboxCreationId, MailboxCreationRequest)]): SMono[CreationResults] = {
     SFlux.fromIterable(createRequests).flatMap {
@@ -136,13 +187,16 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     }
   }
 
-  private def createResponse(invocation: Invocation, mailboxSetRequest: MailboxSetRequest, unparsableCreateRequests: immutable.Iterable[(MailboxCreationId, MailboxSetError)], creationResults: CreationResults): Invocation = {
+  private def createResponse(invocation: Invocation, mailboxSetRequest: MailboxSetRequest,
+                             unparsableCreateRequests: immutable.Iterable[(MailboxCreationId, MailboxSetError)],
+                             creationResults: CreationResults, deletionResults: DeletionResults): Invocation = {
     val created: Map[MailboxCreationId, MailboxId] = creationResults.retrieveCreated
 
     Invocation(methodName, Arguments(serializer.serialize(MailboxSetResponse(
       mailboxSetRequest.accountId,
       oldState = None,
       newState = State.INSTANCE,
+      destroyed = Some(deletionResults.destroyed.map(_.mailboxId)).filter(_.nonEmpty),
       created = Some(created.map(creation => (creation._1, MailboxCreationResponse(
         id = creation._2,
         role = None,
@@ -155,13 +209,11 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
         namespace = None,
         quotas = None,
         isSubscribed = IsSubscribed(true)
-
       )))).filter(_.nonEmpty),
       notCreated = Some(unparsableCreateRequests.toMap ++ creationResults.retrieveErrors).filter(_.nonEmpty),
       updated = None,
       notUpdated = None,
-      destroyed = None,
-      notDestroyed = None
+      notDestroyed = Some(deletionResults.retrieveErrors).filter(_.nonEmpty)
     )).as[JsObject]), invocation.methodCallId)
   }
 

@@ -23,7 +23,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.mail.MailboxName.MailboxName
-import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
+import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
 import org.apache.james.jmap.model.AccountId
 import org.apache.james.jmap.model.State.State
 import org.apache.james.mailbox.Role
@@ -34,11 +34,12 @@ case class MailboxSetRequest(accountId: AccountId,
                              ifInState: Option[State],
                              create: Option[Map[MailboxCreationId, JsObject]],
                              update: Option[Map[MailboxId, MailboxPatchObject]],
-                             destroy: Option[Seq[MailboxId]],
+                             destroy: Option[Seq[UnparsedMailboxId]],
                              onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy])
 
 object MailboxSetRequest {
   type MailboxCreationId = String Refined NonEmpty
+  type UnparsedMailboxId = String Refined NonEmpty
 }
 
 case class RemoveEmailsOnDestroy(value: Boolean) extends AnyVal
@@ -54,15 +55,21 @@ case class MailboxSetResponse(accountId: AccountId,
                               destroyed: Option[Seq[MailboxId]],
                               notCreated: Option[Map[MailboxCreationId, MailboxSetError]],
                               notUpdated: Option[Map[MailboxId, MailboxSetError]],
-                              notDestroyed: Option[Map[MailboxId, MailboxSetError]])
+                              notDestroyed: Option[Map[UnparsedMailboxId, MailboxSetError]])
 
 object MailboxSetError {
   val invalidArgumentValue: SetErrorType = "invalidArguments"
   val serverFailValue: SetErrorType = "serverFail"
+  val notFoundValue: SetErrorType = "notFound"
+  val mailboxHasEmailValue: SetErrorType = "mailboxHasEmail"
+  val mailboxHasChildValue: SetErrorType = "mailboxHasChild"
   val forbiddenValue: SetErrorType = "forbidden"
 
   def invalidArgument(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(invalidArgumentValue, description, properties)
   def serverFail(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(serverFailValue, description, properties)
+  def notFound(description: Option[SetErrorDescription]) = MailboxSetError(notFoundValue, description, None)
+  def mailboxHasEmail(description: Option[SetErrorDescription]) = MailboxSetError(mailboxHasEmailValue, description, None)
+  def mailboxHasChild(description: Option[SetErrorDescription]) = MailboxSetError(mailboxHasChildValue, description, None)
   def forbidden(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(forbiddenValue, description, properties)
 }
 

@@ -24,7 +24,6 @@ import java.util.stream
 import java.util.stream.Stream
 
 import com.fasterxml.jackson.core.JsonParseException
-import eu.timepit.refined.auto._
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.OK

@@ -34,7 +34,6 @@ object Invocation {
   case class Arguments(value: JsObject) extends AnyVal
   case class MethodCallId(value: NonEmptyString)
 
-
   def error(errorCode: ErrorCode, description: String, methodCallId: MethodCallId): Invocation =
     Invocation(MethodName("error"),
       Arguments(JsObject(Seq("type" -> JsString(errorCode.code), "description" -> JsString(description)))),
