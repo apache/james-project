@@ -37,6 +37,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAOImpl;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -53,6 +54,8 @@ class MailboxPathV2MigrationTest {
     private static final MailboxPath MAILBOX_PATH_1 = MailboxPath.forUser(Username.of("bob"), "Important");
     private static final UidValidity UID_VALIDITY_1 = UidValidity.of(452);
     private static final CassandraId MAILBOX_ID_1 = CassandraId.timeBased();
+    private static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH_1, UID_VALIDITY_1, MAILBOX_ID_1);
+
 
     public static final CassandraModule MODULES = CassandraModule.aggregateModules(
             CassandraMailboxModule.MODULE,
@@ -64,6 +67,7 @@ class MailboxPathV2MigrationTest {
 
     private CassandraMailboxPathDAOImpl daoV1;
     private CassandraMailboxPathV2DAO daoV2;
+    private CassandraMailboxPathV3DAO daoV3;
     private CassandraMailboxMapper mailboxMapper;
     private CassandraMailboxDAO mailboxDAO;
 
@@ -78,6 +82,10 @@ class MailboxPathV2MigrationTest {
             cassandra.getConf(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             cassandraCluster.getCassandraConsistenciesConfiguration());
+        daoV3 = new CassandraMailboxPathV3DAO(
+            cassandra.getConf(),
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            cassandraCluster.getCassandraConsistenciesConfiguration());
 
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         mailboxDAO = new CassandraMailboxDAO(
@@ -88,6 +96,7 @@ class MailboxPathV2MigrationTest {
             mailboxDAO,
             daoV1,
             daoV2,
+            daoV3,
             userMailboxRightsDAO,
             new CassandraACLMapper(
                 cassandra.getConf(),
@@ -99,15 +108,16 @@ class MailboxPathV2MigrationTest {
 
     @Test
     void newValuesShouldBeSavedInMostRecentDAO() {
-        Mailbox mailbox = createMailbox();
-        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+        createMailbox();
 
-        assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional())
-            .contains(new CassandraIdAndPath(mailboxId, MAILBOX_PATH_1));
+        assertThat(daoV3.retrieve(MAILBOX_PATH_1)
+                .map(Mailbox::generateAssociatedPath)
+                .blockOptional())
+            .contains(MAILBOX_PATH_1);
     }
 
     @Test
-    void newValuesShouldNotBeSavedInOldDAO() {
+    void newValuesShouldNotBeSavedInV1DAO() {
         createMailbox();
 
         assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional())
@@ -115,7 +125,16 @@ class MailboxPathV2MigrationTest {
     }
 
     @Test
-    void readingOldValuesShouldMigrateThem() {
+    void newValuesShouldNotBeSavedInV2DAO() {
+        createMailbox();
+
+        assertThat(daoV2.retrieveId(MAILBOX_PATH_1)
+            .blockOptional())
+            .isEmpty();
+    }
+
+    @Test
+    void readingOldValuesShouldMigrateThemWhenV1() {
         Mailbox mailbox = new Mailbox(MAILBOX_PATH_1, UID_VALIDITY_1, MAILBOX_ID_1);
 
         daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).block();
@@ -125,8 +144,24 @@ class MailboxPathV2MigrationTest {
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional()).isEmpty();
-        softly.assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional())
-            .contains(new CassandraIdAndPath(MAILBOX_ID_1, MAILBOX_PATH_1));
+        softly.assertThat(daoV3.retrieve(MAILBOX_PATH_1).blockOptional())
+            .contains(MAILBOX);
+        softly.assertAll();
+    }
+
+    @Test
+    void readingOldValuesShouldMigrateThemWhenV2() {
+        Mailbox mailbox = new Mailbox(MAILBOX_PATH_1, UID_VALIDITY_1, MAILBOX_ID_1);
+
+        daoV2.save(MAILBOX_PATH_1, MAILBOX_ID_1).block();
+        mailboxDAO.save(mailbox).block();
+
+        mailboxMapper.findMailboxByPath(MAILBOX_PATH_1).block();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional()).isEmpty();
+        softly.assertThat(daoV3.retrieve(MAILBOX_PATH_1).blockOptional())
+            .contains(MAILBOX);
         softly.assertAll();
     }
 
