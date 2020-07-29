@@ -22,10 +22,13 @@ package org.apache.james.jmap.json
 import java.io.InputStream
 import java.net.URL
 
+import eu.timepit.refined._
+import eu.timepit.refined.auto._
 import javax.inject.Inject
 
 import org.apache.james.core.{Domain, Username}
-import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxRights, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
+import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
+import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Right, Rights, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
@@ -150,7 +153,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
     case _ => JsError()
   }
 
-  private implicit val roleWrites: Writes[Role] = role => JsString(role.serialize)
+  private implicit val roleWrites: Writes[Role] = Writes(role => JsString(role.serialize))
   private implicit val sortOrderWrites: Writes[SortOrder] = Json.valueWrites[SortOrder]
   private implicit val totalEmailsWrites: Writes[TotalEmails] = Json.valueWrites[TotalEmails]
   private implicit val unreadEmailsWrites: Writes[UnreadEmails] = Json.valueWrites[UnreadEmails]
@@ -219,10 +222,83 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val propertiesRead: Reads[Properties] = Json.valueReads[Properties]
   private implicit val mailboxGetRequest: Reads[MailboxGetRequest] = Json.reads[MailboxGetRequest]
 
+
+  private implicit val mailboxRemoveEmailsOnDestroy: Reads[RemoveEmailsOnDestroy] = Json.reads[RemoveEmailsOnDestroy]
+  implicit val mailboxCreationRequest: Reads[MailboxCreationRequest] = Json.reads[MailboxCreationRequest]
+  private implicit val mailboxPatchObject: Reads[MailboxPatchObject] = Json.valueReads[MailboxPatchObject]
+
+  private implicit val mapPatchObjectByMailboxIdReads: Reads[Map[MailboxId, MailboxPatchObject]] = _.validate[Map[String, MailboxPatchObject]]
+    .map(mapWithStringKey => mapWithStringKey
+      .map(keyValue => (mailboxIdFactory.fromString(keyValue._1), keyValue._2)))
+
+  private implicit val mapCreationRequestByMailBoxCreationId: Reads[Map[MailboxCreationId, JsObject]] = _.validate[Map[String, JsObject]]
+    .flatMap(mapWithStringKey => {
+      mapWithStringKey
+        .foldLeft[Either[JsError, Map[MailboxCreationId, JsObject]]](scala.util.Right[JsError, Map[MailboxCreationId, JsObject]](Map.empty))((acc: Either[JsError, Map[MailboxCreationId, JsObject]], keyValue) => {
+          acc match {
+            case error@Left(_) => error
+            case scala.util.Right(validatedAcc) =>
+              val refinedKey: Either[String, MailboxCreationId] = refineV(keyValue._1)
+              refinedKey match {
+                case Left(error) => Left(JsError(error))
+                case scala.util.Right(mailboxCreationId) => scala.util.Right(validatedAcc + (mailboxCreationId -> keyValue._2))
+              }
+          }
+        }) match {
+        case Left(jsError) => jsError
+        case scala.util.Right(value) => JsSuccess(value)
+      }
+    })
+
+  private implicit val mailboxSetRequestReads: Reads[MailboxSetRequest] = Json.reads[MailboxSetRequest]
+
   private implicit def notFoundWrites(implicit mailboxIdWrites: Writes[MailboxId]): Writes[NotFound] =
     notFound => JsArray(notFound.value.toList.map(mailboxIdWrites.writes))
 
   private implicit def mailboxGetResponseWrites(implicit mailboxWrites: Writes[Mailbox]): Writes[MailboxGetResponse] = Json.writes[MailboxGetResponse]
+
+  private implicit val mailboxSetResponseWrites: Writes[MailboxSetResponse] = Json.writes[MailboxSetResponse]
+
+
+  private implicit val mailboxSetCreationResponseWrites: Writes[MailboxCreationResponse] = Json.writes[MailboxCreationResponse]
+
+  private implicit val mailboxSetUpdateResponseWrites: Writes[MailboxUpdateResponse] = Json.writes[MailboxUpdateResponse]
+
+  private implicit val propertiesWrites: Writes[Properties] = Json.writes[Properties]
+
+  private implicit val setErrorDescriptionWrites: Writes[SetErrorDescription] = Json.valueWrites[SetErrorDescription]
+
+  private implicit val mailboxSetErrorWrites: Writes[MailboxSetError] = Json.writes[MailboxSetError]
+
+  private implicit def mailboxMapSetErrorForCreationWrites: Writes[Map[MailboxCreationId, MailboxSetError]] =
+    (m: Map[MailboxCreationId, MailboxSetError]) => {
+      m.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (mailboxCreationId: MailboxCreationId, mailboxSetError: MailboxSetError) = kv
+        jsObject.+(mailboxCreationId, mailboxSetErrorWrites.writes(mailboxSetError))
+      })
+    }
+  private implicit def mailboxMapSetErrorWrites: Writes[Map[MailboxId, MailboxSetError]] =
+    (m: Map[MailboxId, MailboxSetError]) => {
+      m.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (mailboxId: MailboxId, mailboxSetError: MailboxSetError) = kv
+        jsObject.+(mailboxId.serialize(), mailboxSetErrorWrites.writes(mailboxSetError))
+      })
+    }
+
+  private implicit def mailboxMapCreationResponseWrites: Writes[Map[MailboxCreationId, MailboxCreationResponse]] =
+    (m: Map[MailboxCreationId, MailboxCreationResponse]) => {
+      m.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (mailboxCreationId: MailboxCreationId, mailboxCreationResponse: MailboxCreationResponse) = kv
+        jsObject.+(mailboxCreationId, mailboxSetCreationResponseWrites.writes(mailboxCreationResponse))
+      })
+    }
+  private implicit def mailboxMapUpdateResponseWrites: Writes[Map[MailboxId, MailboxUpdateResponse]] =
+    (m: Map[MailboxId, MailboxUpdateResponse]) => {
+      m.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (mailboxId: MailboxId, mailboxUpdateResponse: MailboxUpdateResponse) = kv
+        jsObject.+(mailboxId.serialize(), mailboxSetUpdateResponseWrites.writes(mailboxUpdateResponse))
+      })
+    }
 
   private implicit val jsonValidationErrorWrites: Writes[JsonValidationError] = error => JsString(error.message)
 
@@ -261,9 +337,10 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   def serialize(mailboxGetResponse: MailboxGetResponse)(implicit mailboxWrites: Writes[Mailbox]): JsValue = Json.toJson(mailboxGetResponse)
 
-  def serialize(mailboxGetResponse: MailboxGetResponse, properties: Option[Properties], capabilities: Set[CapabilityIdentifier]): JsValue = {
+  def serialize(mailboxGetResponse: MailboxGetResponse, properties: Option[Properties], capabilities: Set[CapabilityIdentifier]): JsValue =
     serialize(mailboxGetResponse)(mailboxWritesWithFilteredProperties(properties, capabilities))
-  }
+
+  def serialize(mailboxSetResponse: MailboxSetResponse): JsValue = Json.toJson(mailboxSetResponse)(mailboxSetResponseWrites)
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 
@@ -276,4 +353,6 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   def deserializeMailboxGetRequest(input: String): JsResult[MailboxGetRequest] = Json.parse(input).validate[MailboxGetRequest]
 
   def deserializeMailboxGetRequest(input: JsValue): JsResult[MailboxGetRequest] = Json.fromJson[MailboxGetRequest](input)
+
+  def deserializeMailboxSetRequest(input: JsValue): JsResult[MailboxSetRequest] = Json.fromJson[MailboxSetRequest](input)
 }

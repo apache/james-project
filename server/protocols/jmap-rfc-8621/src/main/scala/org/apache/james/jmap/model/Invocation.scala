@@ -35,8 +35,9 @@ object Invocation {
   case class MethodCallId(value: NonEmptyString)
 
 
-  def error(errorCode: ErrorCode, description: String, methodCallId: MethodCallId): Invocation = Invocation(MethodName("error"),
-      Arguments(JsObject(Map("type" -> JsString(errorCode.code), "description" -> JsString(description)))),
+  def error(errorCode: ErrorCode, description: Option[String], methodCallId: MethodCallId): Invocation = {
+    Invocation(MethodName("error"),
+      Arguments(JsObject(Seq("type" -> JsString(errorCode.code), "description" -> JsString(description.getOrElse(""))))),
       methodCallId)
 
   def error(errorCode: ErrorCode, methodCallId: MethodCallId): Invocation = Invocation(MethodName("error"),
