@@ -79,6 +79,6 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
   def errorHandling(throwable: Throwable, response: HttpServerResponse): Mono[Void] =
     throwable match {
       case _: UnauthorizedException => handleAuthenticationFailure(response, LOGGER, throwable)
-      case _ => handleInternalError(response, throwable)
+      case _ => handleInternalError(response, LOGGER, throwable)
     }
 }

@@ -144,7 +144,7 @@ public class DownloadRoutes implements JMAPRoutes {
                 .subscriberContext(jmapAuthContext(session)))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
-            .onErrorResume(e -> handleInternalError(response, e))
+            .onErrorResume(e -> handleInternalError(response, LOGGER, e))
             .subscriberContext(jmapContext(request))
             .subscriberContext(jmapAction("download-post"))
             .subscribeOn(Schedulers.elastic());
@@ -174,7 +174,7 @@ public class DownloadRoutes implements JMAPRoutes {
                 .subscriberContext(jmapAuthContext(session)))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
-            .onErrorResume(e -> handleInternalError(response, e))
+            .onErrorResume(e -> handleInternalError(response, LOGGER, e))
             .subscriberContext(jmapContext(request))
             .subscriberContext(jmapAction("download-get"))
             .subscribeOn(Schedulers.elastic());

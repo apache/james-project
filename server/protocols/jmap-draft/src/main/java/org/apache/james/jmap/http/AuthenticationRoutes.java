@@ -139,7 +139,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
                 })))
             .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
-            .onErrorResume(e -> handleInternalError(response, e))
+            .onErrorResume(e -> handleInternalError(response, LOGGER, e))
             .subscriberContext(jmapContext(request))
             .subscriberContext(jmapAction("auth-post"))
             .subscribeOn(Schedulers.elastic());
@@ -152,7 +152,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
                 .onErrorResume(IllegalArgumentException.class, e -> handleBadRequest(resp, LOGGER, e))
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(resp, LOGGER, e))
                 .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
-                .onErrorResume(InternalErrorException.class, e -> handleInternalError(resp, e))
+                .onErrorResume(InternalErrorException.class, e -> handleInternalError(resp, LOGGER, e))
                 .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(resp, LOGGER, e))
                 .subscriberContext(jmapContext(req))
                 .subscriberContext(jmapAction("returnEndPoints"))

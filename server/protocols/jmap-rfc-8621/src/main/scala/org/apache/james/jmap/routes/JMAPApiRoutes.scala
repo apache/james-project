@@ -151,7 +151,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
         s"The content type of the request was not application/json or the request did not parse as I-JSON: ${exception.getMessage}"))
     case exception: UnsupportedCapabilitiesException => respondDetails(httpServerResponse,
       unknownCapabilityProblem(s"The request used unsupported capabilities: ${exception.capabilities}"))
-    case _ => SMono.fromPublisher(handleInternalError(httpServerResponse, throwable))
+    case _ => SMono.fromPublisher(handleInternalError(httpServerResponse, JMAPApiRoutes.LOGGER, throwable))
   }
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Void] =

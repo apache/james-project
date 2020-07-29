@@ -106,7 +106,7 @@ public class UploadRoutes implements JMAPRoutes {
                 .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, e))
                 .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
                 .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
-                .onErrorResume(e -> handleInternalError(response, e))
+                .onErrorResume(e -> handleInternalError(response, LOGGER, e))
                 .subscriberContext(jmapContext(request))
                 .subscriberContext(jmapAction("upload-get"))
                 .subscribeOn(Schedulers.elastic());

@@ -42,7 +42,8 @@ public interface JMAPRoutes {
             .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept"));
     }
 
-    default Mono<Void> handleInternalError(HttpServerResponse response, Throwable e) {
+    default Mono<Void> handleInternalError(HttpServerResponse response, Logger logger, Throwable e) {
+        logger.error("Internal server error", e);
         return response.status(INTERNAL_SERVER_ERROR).send();
     }
 
