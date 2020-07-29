@@ -227,8 +227,6 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomDateHeader.eml")),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
-
         ComposedMessageId customStringHeaderMessageId = messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomStringHeader.eml")),
@@ -250,8 +248,6 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             MessageManager.AppendCommand.builder()
                 .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomDateHeader.eml")),
             session);
-
-        elasticSearch.awaitForElasticSearch();
 
         ComposedMessageId customStringHeaderMessageId = messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
