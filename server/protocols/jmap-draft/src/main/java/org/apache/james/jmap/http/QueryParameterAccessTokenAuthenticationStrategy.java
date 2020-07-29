@@ -20,6 +20,7 @@ package org.apache.james.jmap.http;
 
 import static org.apache.james.jmap.http.DownloadRoutes.BLOB_ID_PATH_PARAM;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -74,10 +75,11 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
     }
 
     private Optional<String> queryParam(String parameterName, String uri) {
-        return new QueryStringDecoder(uri)
-            .parameters()
-            .get(parameterName)
+        return Optional.ofNullable(new QueryStringDecoder(uri)
+                .parameters()
+                .get(parameterName))
             .stream()
+            .flatMap(List::stream)
             .findFirst();
     }
 }

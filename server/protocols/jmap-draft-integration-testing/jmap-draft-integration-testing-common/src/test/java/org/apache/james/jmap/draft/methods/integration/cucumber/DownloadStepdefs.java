@@ -234,12 +234,14 @@ public class DownloadStepdefs {
         AttachmentAccessTokenKey key = new AttachmentAccessTokenKey(username, blobId);
         if (attachmentAccessTokens.containsKey(key)) {
             uriBuilder.addParameter("access_token", attachmentAccessTokens.get(key).serialize());
+            return Request.Get(uriBuilder.build());
+        } else {
+            Request request = Request.Get(uriBuilder.build());
+            if (accessToken != null) {
+                request.addHeader("Authorization", accessToken.asString());
+            }
+            return request;
         }
-        Request request = Request.Get(uriBuilder.build());
-        if (accessToken != null) {
-            request.addHeader("Authorization", accessToken.asString());
-        }
-        return request;
     }
 
     private Request queryParameterDownloadRequest(URIBuilder uriBuilder, String blobId, String username) throws URISyntaxException {
