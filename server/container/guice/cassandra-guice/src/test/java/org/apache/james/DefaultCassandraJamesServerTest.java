@@ -22,8 +22,6 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.FailingPropertiesProvider;
@@ -37,7 +35,6 @@ class DefaultCassandraJamesServerTest {
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(PropertiesProvider.class).to(FailingPropertiesProvider.class))
             .overrideWith(binder -> binder.bind(ConfigurationProvider.class).toInstance((s, l) -> new BaseHierarchicalConfiguration())))
