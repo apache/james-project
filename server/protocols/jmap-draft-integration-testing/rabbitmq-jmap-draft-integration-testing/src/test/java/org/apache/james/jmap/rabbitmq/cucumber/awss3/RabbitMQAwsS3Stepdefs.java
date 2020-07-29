@@ -23,8 +23,6 @@ import java.util.Arrays;
 
 import javax.inject.Inject;
 
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.CleanupTasksPerformer;
@@ -34,8 +32,6 @@ import org.apache.james.SearchConfiguration;
 import org.apache.james.jmap.draft.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.draft.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.modules.DockerRabbitMQRule;
 import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -95,8 +91,6 @@ public class RabbitMQAwsS3Stepdefs {
                 .overrideWith(swiftServer.getModule())
                 .overrideWith(elasticSearch.getModule())
                 .overrideWith(cassandraServer.getModule())
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))
-                .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
                 .overrideWith(binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class).addBinding().to(CassandraTruncateTableTask.class))
                 .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
         mainStepdefs.awaitMethod = () -> elasticSearch.getDockerEs().flushIndices();
