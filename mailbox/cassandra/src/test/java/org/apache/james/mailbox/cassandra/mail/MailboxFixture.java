@@ -21,7 +21,9 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 
 public interface MailboxFixture {
     Username USER = Username.of("user");
@@ -34,4 +36,8 @@ public interface MailboxFixture {
     MailboxPath USER_OUTBOX_MAILBOXPATH = MailboxPath.forUser(USER, "OUTBOX");
     MailboxPath OTHER_USER_MAILBOXPATH = MailboxPath.forUser(OTHER_USER, "INBOX");
     CassandraIdAndPath INBOX_ID_AND_PATH = new CassandraIdAndPath(INBOX_ID, USER_INBOX_MAILBOXPATH);
+
+    Mailbox MAILBOX_1 = new Mailbox(USER_INBOX_MAILBOXPATH, UidValidity.of(42), INBOX_ID);
+    Mailbox MAILBOX_2 = new Mailbox(USER_OUTBOX_MAILBOXPATH, UidValidity.of(43), OUTBOX_ID);
+    Mailbox MAILBOX_3 = new Mailbox(OTHER_USER_MAILBOXPATH, UidValidity.of(44), otherMailboxId);
 }

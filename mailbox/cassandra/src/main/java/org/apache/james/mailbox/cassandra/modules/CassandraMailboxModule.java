@@ -27,6 +27,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Table;
+import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV3Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -68,5 +69,17 @@ public interface CassandraMailboxModule {
             .addPartitionKey(CassandraMailboxPathV2Table.USER, text())
             .addClusteringColumn(CassandraMailboxPathV2Table.MAILBOX_NAME, text())
             .addColumn(CassandraMailboxPathV2Table.MAILBOX_ID, timeuuid()))
+        .table(CassandraMailboxPathV3Table.TABLE_NAME)
+        .comment("Denormalisation table. Allow to retrieve mailboxes belonging to a certain user. This is a " +
+            "LIST optimisation.")
+        .options(options -> options
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> statement
+            .addPartitionKey(CassandraMailboxPathV3Table.NAMESPACE, text())
+            .addPartitionKey(CassandraMailboxPathV3Table.USER, text())
+            .addClusteringColumn(CassandraMailboxPathV3Table.MAILBOX_NAME, text())
+            .addColumn(CassandraMailboxPathV3Table.MAILBOX_ID, timeuuid())
+            .addColumn(CassandraMailboxPathV3Table.UIDVALIDITY, bigint()))
         .build();
 }
