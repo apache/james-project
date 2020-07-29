@@ -29,11 +29,15 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
+import org.apache.james.blob.objectstorage.aws.S3DumbBlobStore;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class S3BlobStoreModule extends AbstractModule {
 
@@ -66,4 +70,10 @@ public class S3BlobStoreModule extends AbstractModule {
         return s3BlobStoreConfiguration.getRegion();
     }
 
+    @ProvidesIntoSet
+    InitializationOperation startS3DumbBlobStore(S3DumbBlobStore s3DumbBlobStore) {
+        return InitilizationOperationBuilder
+            .forClass(S3DumbBlobStore.class)
+            .init(s3DumbBlobStore::start);
+    }
 }
