@@ -130,6 +130,19 @@ The value of this property in an account's *accountCapabilities* property is an 
 
 This represents support for the VacationResponse data type and associated API methods. The value of this property is an empty object in both the JMAP session *capabilities* property and an account's *accountCapabilities* property.
 
+### urn:apache:james:params:jmap:mail:shares extension
+
+<aside class="notice">
+  Implemented
+</aside>
+
+This extension is specific to the Apache James server as it relies on a common shared storage allowing arbitrary cross-account entity access.
+
+This extension to the JMAP specification enables to:
+
+ - Grant access on mailboxes, and the emails they contain to other users.
+ - Enable display of shared mailboxes, and shared messages as part of the main user account, making effectively account sharing transparent from a client perspective.
+
 ## Data Type Support in Different Accounts
 
 The server MUST include the appropriate capability strings as keys in the *accountCapabilities* property of any account with which the user may use the data types represented by that URI. Supported data types may differ between accounts the user has access to. For example, in the user's personal account, they may have access to all three sets of data, but in a shared account, they may only have data for `urn:ietf:params:jmap:mail`. This means they can access Mailbox/Thread/Email data in the shared account but are not allowed to send as that account (and so do not have access to Identity/EmailSubmission objects) or view/set its VacationResponse.

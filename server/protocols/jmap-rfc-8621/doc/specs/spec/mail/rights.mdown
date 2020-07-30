@@ -1,0 +1,136 @@
+# urn:apache:james:params:jmap:mail:shares extension
+
+<aside class="notice">
+  Implemented
+</aside>
+
+This extension is specific to the Apache James server as it relies on a common shared storage allowing arbitrary cross-account entity access.
+
+This extension to the JMAP specification enables to:
+
+ - Grant access on mailboxes, and the email they contain to other users.
+ - Enable display of shared mailboxes, and shared messages as part of the main user account, making effectively account sharing transparent from a client perspective.
+
+## Defined capability
+
+The new capability `urn:apache:james:params:jmap:mail:shares` is defined.
+
+This extension defines both behavioral changes and additional fields for the Mailbox object.
+
+If specified, behavioral changes and additional fields defined hereafter MUST apply.
+
+If unspecified no additional fields to the Mailbox object are returned, and the behaviour needs to be exactly the one of `urn:ietf:params:jmap:mail`.
+
+## Addition to existing data types
+
+The following data types are defined:
+
+`Username` of type `String` corresponds to a username.
+
+`Right` of type `String` defines an action that can be carried out on a mailbox or its content.
+
+The following `Right`s are defined:
+
+ - `"a"` Administer: the user can view and modify the rights of this mailbox
+ - `"i"` Insert: the user can use the id of this mailbox in `mailboxId` fields of Emails.
+ - `"l"` Lookup: the user can see the name of this mailbox but information about the content of this mailbox MUST not be disclosed.
+ - `"r"` Read: the user can read the content of this mailbox, and see the assiociated Email and Thread counts.
+ - `"t"` DeleteMessages: the user can delete Email in this Mailbox
+ - `"w"` Write: the user can alter the Keywords of messages contained in this Mailbox, except the `$Seen` keyword
+ - `"s"` Seen: the user can alter the `$Seen` keyword of messages contained in this Mailbox
+ - `"e"` Expunge: the user can mark Email as Expunged in this Mailbox. This action is not achievable using JMAP.
+
+`UserRights` is an array of `Right`, representing the actions a user can perform on a mailbox.
+
+`Rights` indicates which user can perform which operation on the Mailbox and the related entities.
+
+Of type `Username[UserRights]` this map associate to each `Username` the associated `UserRights` actions that can be performed.
+
+## Additional fields for Mailbox object
+
+The following additional properties are defined for the `Mailbox` object :
+
+ - `namespace` of type `String` (server set) provides information about mailbox ownership.
+   - `"Personal"` value indicates that the Mailbox belongs to the current user.
+   - `"Delegated[.*]"` indicates that the Mailbox has been delegated to the owner of this account. The user owning the delegated account is held as a value of the `"Delegated"` property, enclosed with `[]` characters.
+ - `rights` of type `Rights`. The owner can see the full rights, but sharee MUST only see their rights if they do not have the administer right on the mailbox. Sharee without administer right MUST NOT be able to see another SHAREE rights.
+
+## Behavioral changes
+
+When `urn:apache:james:params:jmap:mail:shares` is specified, access to delegated resources is enabled as part of standard JMAP `urn:ietf:params:jmap:mail` API calls.
+
+Namely:
+
+ - `Mailbox/get`, `Mailbox/query`, `Mailbox/queryChanges`, `Mailbox/changes` need to accept or return delegated.
+ - `Thread/get`, `Thread/changes` need to accept of return Threads in mailboxes the account user can access.
+ - `Email/get`, `Email/set`, `Email/query`, `Email/changes`, `Email/queryChanges`, `Email/copy`, `Email/import`, `Email/import` need to accept or return matching Emails in delegated mailboxes the account user can access.
+ - `SearchSnippet/get` needs to accept delegated Emails as a valid input.
+
+Sharee MUST not be able to modify a shared mailbox via `Mailbox/set`.
+
+## Examples
+
+Here is a `Mailbox` object as accessed by the owner:
+
+```
+{
+  "id":"2",
+  "name":"inbox",
+  "parentId":"1",
+  "role":"inbox",
+  "sortOrder":10,
+  "totalEmails":1234,
+  "unreadEmails":123,
+  "totalThreads":58,
+  "unreadThreads":22,
+  "myRights":{
+    "mayReadItems":false,
+    "mayAddItems":true,
+    "mayRemoveItems":false,
+    "maySetSeen":true,
+    "maySetKeywords":false,
+    "mayCreateChild":true,
+    "mayRename":true,
+    "mayDelete":false,
+    "maySubmit":false
+  },
+  "isSubscribed":true,
+  "namespace":"Personal",
+  "rights":{
+    "bob":["e","l"],
+    "alice":["r","w"]
+  }
+}
+```
+
+Here is a `Mailbox` object as accessed by the sharee alice, when it belongs to the owner bob:
+
+```
+{
+  "id":"2",
+  "name":"inbox",
+  "parentId":"1",
+  "role":"inbox",
+  "sortOrder":10,
+  "totalEmails":1234,
+  "unreadEmails":123,
+  "totalThreads":58,
+  "unreadThreads":22,
+  "myRights":{
+    "mayReadItems":false,
+    "mayAddItems":true,
+    "mayRemoveItems":false,
+    "maySetSeen":true,
+    "maySetKeywords":false,
+    "mayCreateChild":true,
+    "mayRename":true,
+    "mayDelete":false,
+    "maySubmit":false
+  },
+  "isSubscribed":true,
+  "namespace":{"Delegated": "bob"},
+  "rights":{
+    "alice":["r","w"]
+  }
+}
+```
