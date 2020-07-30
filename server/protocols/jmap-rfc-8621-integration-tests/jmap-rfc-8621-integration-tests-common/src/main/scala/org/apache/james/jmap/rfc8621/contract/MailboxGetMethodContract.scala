@@ -718,6 +718,71 @@ trait MailboxGetMethodContract {
 
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
+  def getMailboxesShouldReturnNotFoundWhenSharedMailboxAndNoExtension(server: GuiceJamesServer): Unit = {
+    val sharedMailboxName = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.notFound", hasSize(1))
+      .body(s"$ARGUMENTS.notFound[0]", equalTo(mailboxId))
+  }
+
+  @Test
+  def getMailboxesShouldNotIncludeDelegatedMailboxesWhenExtensionNotPresent(server: GuiceJamesServer): Unit = {
+    val sharedMailboxName = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      // Only system mailboxes are included
+      .body(s"$ARGUMENTS.list", hasSize(6))
+  }
+
+  @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def getMailboxesShouldNotReturnOtherPeopleRightsAsSharee(server: GuiceJamesServer): Unit = {
     val toUser1: String = "touser1@" + DOMAIN.asString
     val sharedMailboxName: String = "AndreShared"
@@ -775,7 +840,8 @@ trait MailboxGetMethodContract {
       .body(s"""{
                |  "using": [
                |    "urn:ietf:params:jmap:core",
-               |    "urn:ietf:params:jmap:mail"],
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
@@ -817,7 +883,8 @@ trait MailboxGetMethodContract {
       .body(s"""{
                |  "using": [
                |    "urn:ietf:params:jmap:core",
-               |    "urn:ietf:params:jmap:mail"],
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
@@ -847,7 +914,8 @@ trait MailboxGetMethodContract {
       .body(s"""{
                |  "using": [
                |    "urn:ietf:params:jmap:core",
-               |    "urn:ietf:params:jmap:mail"],
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
