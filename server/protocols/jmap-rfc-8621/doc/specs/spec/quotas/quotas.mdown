@@ -1,0 +1,103 @@
+# Introduction
+
+<aside class="notice">
+  Implemented
+</aside>
+
+This specification defines a data model for handling mail quotas over JMAP, allowing you to read quota information.
+
+This specification does not address quota administration, which should be handled by other means.
+
+This specification is not official and proper to the James project usage at the moment.
+
+## Terminology
+
+### Quota
+
+A quota is a numeric upper limit that the server is enforcing. Quotas are applied to JMAP Mailbox objects.
+
+## Addition to the capabilities object
+
+The capabilities object is returned as part of the JMAP Session object; see [@!RFC8620], section 2.
+
+This document defines one additional capability URI.
+
+### urn:apache:james:params:jmap:mail:quota
+
+This represents support for the Quota data type and associated API methods.
+Servers supporting this specification MUST add this property to the capabilities object.
+
+This extension is specific to the Apache James server and is a temporary solution while waiting for the main work on
+quotas as part of the IETF group to be finalized as a proper RFC document.
+
+This extension enables to:
+
+* read quotas usage and limits on mailboxes.
+
+If specified, behavioral changes and additional fields defined hereafter MUST apply.
+
+If unspecified no additional fields to the Mailbox object are returned, and the behaviour needs to be exactly the one of `urn:ietf:params:jmap:mail`.
+
+# Quotas definition
+
+The quota is an addition to the Mailbox object that displays the limit set to a mailbox usage as well as the current usage in regard to that limit.
+
+## The QuotaId Data Type
+
+The **QuotaId** is a `String` defined with the name of the **QuotaRoot** (as defined in [RFC2087](https://tools.ietf.org/html/rfc2087.html)) it represents.
+It usually represents the ID attached to one or more **Quota** objects defined for that Mailbox.
+
+## The Quotas.Type Data Type
+
+The **Quotas.Type** is a `String` that represents the type of quota. It should either be "Storage" (amount of bytes) or "Message" (number of emails).
+
+## The Value Object
+
+The **Value** object represents the usage and limit of a type of quota. It MUST contain the folowing field:
+
+* **used**: `UnsignedInt` The current usage of that type of quota on the current mailbox. Computation of this value is handled by the server.
+
+The **Value** object MAY contain the following field:
+
+* **max**: `UnsignedInt` The limit set on this type of quota on the current mailbox.
+
+## The Quota Object
+
+The **Quota** object is a `Map[Quotas.Type, Value]` representing the quotas depending from a **QuotaId**. A quota can have more than one **Quotas.Type** associated to it.
+
+## The Quotas Object
+
+The **quotas** is a `Map[QuotaId, Quota]` of all quotas applying to the Mailbox object, with each Quota associated to its QuotaId.
+This object is returned as an extra field of the Mailbox object.
+
+## Example
+
+    {
+      "id": "2",
+      "name": "inbox",
+      "parentId":"1",
+      "role":"inbox",
+      "sortOrder":10,
+      "totalEmails": 42,
+      "unreadEmails": 10,
+      "totalThreads": 42,
+      "unreadThreads": 10,
+      "myRights": {
+        "mayReadItems": true,
+        "mayAddItems": true,
+        "mayRemoveItems": true,
+        "maySetSeen": true,
+        "maySetKeywords": true,
+        "mayCreateChild": true,
+        "mayRename": true,
+        "mayDelete": true,
+        "maySubmit": true
+      },
+      "isSubscribed": false,
+      "quotas": {
+        "#private&bob@domain.tld": {
+          "Storage": { "used": 1024, "max": 4098},
+          "Message": {"used": 42, "max": 64}
+        }
+      }
+    }
