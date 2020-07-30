@@ -21,8 +21,9 @@ package org.apache.james.jmap.cassandra;
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
-import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
+import org.apache.james.TestingDistributedJamesServerBuilder;
 import org.apache.james.jmap.draft.methods.integration.SpamAssassinContract;
 import org.apache.james.jmap.draft.methods.integration.SpamAssassinModuleExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -33,7 +34,7 @@ class CassandraSpamAssassinContractTest implements SpamAssassinContract {
     private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(spamAssassinExtension)

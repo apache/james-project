@@ -22,6 +22,7 @@ package org.apache.james.jmap.api.projections;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
@@ -90,7 +91,7 @@ public class MessageFastViewPrecomputedProperties {
 
         private boolean hasAttachment(List<MessageAttachmentMetadata> attachments) {
             return attachments.stream()
-                .anyMatch(attachment -> !attachment.isInlinedWithCid());
+                .anyMatch(Predicate.not(MessageAttachmentMetadata::isInlinedWithCid));
         }
     }
 

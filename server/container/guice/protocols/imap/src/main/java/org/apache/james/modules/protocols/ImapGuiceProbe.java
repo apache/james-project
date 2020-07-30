@@ -39,20 +39,20 @@ public class ImapGuiceProbe implements GuiceProbe {
     }
 
     public int getImapPort() {
-        return getPort(server -> !server.getStartTLSSupported())
-                .orElseThrow(() -> new IllegalStateException("IMAP server not defined"));
+        return getPort(Predicate.not(AbstractConfigurableAsyncServer::getStartTLSSupported))
+            .orElseThrow(() -> new IllegalStateException("IMAP server not defined"));
     }
 
     public int getImapsPort() {
-        return getPort(server -> server.getStartTLSSupported())
-                .orElseThrow(() -> new IllegalStateException("IMAPS server not defined"));
+        return getPort(AbstractConfigurableAsyncServer::getStartTLSSupported)
+            .orElseThrow(() -> new IllegalStateException("IMAPS server not defined"));
     }
 
     private Optional<Integer> getPort(Predicate<? super AbstractConfigurableAsyncServer> filter) {
         return imapServerFactory.getServers().stream()
-                .filter(filter)
-                .findFirst()
-                .flatMap(server -> server.getListenAddresses().stream().findFirst())
-                .map(InetSocketAddress::getPort);
+            .filter(filter)
+            .findFirst()
+            .flatMap(server -> server.getListenAddresses().stream().findFirst())
+            .map(InetSocketAddress::getPort);
     }
 }

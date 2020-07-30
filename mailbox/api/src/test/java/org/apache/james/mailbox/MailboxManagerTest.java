@@ -64,7 +64,6 @@ import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.mock.DataProvisioner;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -76,7 +75,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -93,7 +91,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -2720,34 +2717,6 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assertThat(Flux.from(inboxManager.listMessagesMetadata(MessageRange.all(), session))
                     .collectList().block())
                 .isEmpty();
-        }
-
-        @Test
-        void getMessagesShouldIncludeHasAttachmentInformation() throws Exception {
-            ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
-                .withFlags(new Flags(Flags.Flag.DELETED))
-                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachmentsApi.eml")), session).getId();
-
-            MessageResultIterator messages = inboxManager.getMessages(MessageRange.one(composeId.getUid()), FetchGroup.MINIMAL, session);
-
-            assertThat(messages).toIterable()
-                .hasSize(1)
-                .first()
-                .satisfies(Throwing.consumer(messageResult -> assertThat(messageResult.hasAttachments()).isTrue()));
-        }
-
-        @Test
-        void getMessagesShouldNotIncludeAttachmentInformationWhenNone() throws Exception {
-            ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
-                .withFlags(new Flags(Flags.Flag.DELETED))
-                .build(message), session).getId();
-
-            MessageResultIterator messages = inboxManager.getMessages(MessageRange.one(composeId.getUid()), FetchGroup.MINIMAL, session);
-
-            assertThat(messages).toIterable()
-                .hasSize(1)
-                .first()
-                .satisfies(Throwing.consumer(messageResult -> assertThat(messageResult.hasAttachments()).isFalse()));
         }
     }
 

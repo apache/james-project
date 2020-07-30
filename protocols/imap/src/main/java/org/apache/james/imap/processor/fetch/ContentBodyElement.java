@@ -31,11 +31,9 @@ import org.apache.james.mailbox.model.Content;
 
 class ContentBodyElement implements BodyElement {
     private final String name;
-
     protected final Content content;
 
     public ContentBodyElement(String name, Content content) {
-        super();
         this.name = name;
         this.content = content;
     }

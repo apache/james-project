@@ -25,6 +25,7 @@ import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.TestTask;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.FailedTask;
+import org.apache.james.task.FailsDeserializationTask;
 import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.MemoryReferenceWithCounterTask;
 import org.apache.james.task.ThrowingTask;
@@ -55,6 +56,14 @@ public interface TestTaskDTOModules {
         .toDomainObjectConverter(dto -> new CompletedTask())
         .toDTOConverter((task, typeName) -> new CompletedTaskDTO(typeName))
         .typeName("completed-task")
+        .withFactory(TaskDTOModule::new);
+
+    TaskDTOModule<FailsDeserializationTask, FailsDeserializationTaskDTO> FAILS_DESERIALIZATION_TASK_MODULE = DTOModule
+        .forDomainObject(FailsDeserializationTask.class)
+        .convertToDTO(FailsDeserializationTaskDTO.class)
+        .toDomainObjectConverter(dto -> {throw new RuntimeException("fail to deserialize"); })
+        .toDTOConverter((task, typeName) -> new FailsDeserializationTaskDTO(typeName))
+        .typeName(FailsDeserializationTask.TASK_TYPE)
         .withFactory(TaskDTOModule::new);
 
     TaskDTOModule<ThrowingTask, ThrowingTaskDTO> THROWING_TASK_MODULE = DTOModule

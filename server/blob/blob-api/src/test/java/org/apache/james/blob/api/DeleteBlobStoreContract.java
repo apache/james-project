@@ -139,12 +139,12 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        Mono.from(store.save(CUSTOM, SHORT_BYTEARRAY, LOW_COST)).block();
-        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST)).block();
+        BlobId blobIdInCustomBucket = Mono.from(store.save(CUSTOM, SHORT_BYTEARRAY, LOW_COST)).block();
+        BlobId blobIdInDefaultBucket = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST)).block();
 
-        Mono.from(store.delete(defaultBucketName, blobId)).block();
+        Mono.from(store.delete(defaultBucketName, blobIdInDefaultBucket)).block();
 
-        InputStream read = store.read(CUSTOM, blobId);
+        InputStream read = store.read(CUSTOM, blobIdInCustomBucket);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(SHORT_BYTEARRAY));
     }

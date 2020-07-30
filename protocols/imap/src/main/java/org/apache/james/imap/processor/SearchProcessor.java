@@ -23,6 +23,7 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -55,9 +56,8 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
-import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
@@ -70,6 +70,8 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
 
 public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchProcessor.class);
@@ -248,7 +250,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         // Reverse loop over the ranges as its more likely that we find a match at the end
         int size = ranges.size();
         for (int i = size - 1; i > 0; i--) {
-            MessageResultIterator results = mailbox.getMessages(ranges.get(i), FetchGroup.MINIMAL, session);
+            Iterator<ComposedMessageIdWithMetaData> results = Flux.from(
+                mailbox.listMessagesMetadata(ranges.get(i), session))
+                .toStream()
+                .iterator();
             while (results.hasNext()) {
                 ModSeq modSeq = results.next().getModSeq();
                 if (highestModSeq == null || modSeq.asLong() > highestModSeq.asLong()) {

@@ -63,104 +63,77 @@ public final class EnvelopeBuilder {
 
     private String headerValue(Headers message, String headerName) throws MailboxException {
         final Header header = MessageResultUtils.getMatching(headerName, message.headers());
-        final String result;
         if (header == null) {
-            result = null;
-        } else {
-            final String value = header.getValue();
-            if (value == null || "".equals(value)) {
-                result = null;
-            } else {
-
-                // ENVELOPE header values must be unfolded
-                // See IMAP-269
-                //
-                //
-                // IMAP-Servers are advised to also replace tabs with single spaces while doing the unfolding. This is what javamails
-                // unfold does. mime4j's unfold does strictly follow the rfc and so preserve them
-                //
-                // See IMAP-327 and https://mailman2.u.washington.edu/mailman/htdig/imap-protocol/2010-July/001271.html
-                result = MimeUtility.unfold(value);
-
-            }
+            return null;
         }
-        return result;
+        final String value = header.getValue();
+        if (value == null || "".equals(value)) {
+            return null;
+        }
+        // ENVELOPE header values must be unfolded
+        // See IMAP-269
+        //
+        //
+        // IMAP-Servers are advised to also replace tabs with single spaces while doing the unfolding. This is what javamails
+        // unfold does. mime4j's unfold does strictly follow the rfc and so preserve them
+        //
+        // See IMAP-327 and https://mailman2.u.washington.edu/mailman/htdig/imap-protocol/2010-July/001271.html
+        return MimeUtility.unfold(value);
     }
 
     private FetchResponse.Envelope.Address[] buildAddresses(Headers message, String headerName, FetchResponse.Envelope.Address[] defaults) throws MailboxException {
-        final FetchResponse.Envelope.Address[] results;
         final FetchResponse.Envelope.Address[] addresses = buildAddresses(message, headerName);
         if (addresses == null) {
-            results = defaults;
-        } else {
-            results = addresses;
+            return defaults;
         }
-        return results;
+        return addresses;
     }
 
     /**
      * Try to parse the addresses out of the header. If its not possible because
      * of a {@link ParseException} a null value is returned
-     * 
-     * @param message
-     * @param headerName
+     *
      * @return addresses
-     * @throws MailboxException
      */
     private FetchResponse.Envelope.Address[] buildAddresses(Headers message, String headerName) throws MailboxException {
         final Header header = MessageResultUtils.getMatching(headerName, message.headers());
-        FetchResponse.Envelope.Address[] results;
         if (header == null) {
-            results = null;
-        } else {
+            return null;
+        }
+        // We need to unfold the header line.
+        // See https://issues.apache.org/jira/browse/IMAP-154
+        //
+        // IMAP-Servers are advised to also replace tabs with single spaces while doing the unfolding. This is what javamails
+        // unfold does. mime4j's unfold does strictly follow the rfc and so preserve them
+        //
+        // See IMAP-327 and https://mailman2.u.washington.edu/mailman/htdig/imap-protocol/2010-July/001271.html
+        String value = MimeUtility.unfold(header.getValue());
+        if ("".equals(value.trim())) {
+            return null;
+        }
+        AddressList addressList = LenientAddressParser.DEFAULT.parseAddressList(value);
+        final int size = addressList.size();
+        final List<FetchResponse.Envelope.Address> addresses = new ArrayList<>(size);
+        for (Address address : addressList) {
+            if (address instanceof Group) {
+                final Group group = (Group) address;
+                addAddresses(group, addresses);
 
-            // We need to unfold the header line.
-            // See https://issues.apache.org/jira/browse/IMAP-154
-            //
-            // IMAP-Servers are advised to also replace tabs with single spaces while doing the unfolding. This is what javamails
-            // unfold does. mime4j's unfold does strictly follow the rfc and so preserve them
-            //
-            // See IMAP-327 and https://mailman2.u.washington.edu/mailman/htdig/imap-protocol/2010-July/001271.html
-            String value = MimeUtility.unfold(header.getValue());
+            } else if (address instanceof Mailbox) {
+                final Mailbox mailbox = (Mailbox) address;
+                final FetchResponse.Envelope.Address mailboxAddress = buildMailboxAddress(mailbox);
+                addresses.add(mailboxAddress);
 
-            if ("".equals(value.trim())) {
-                results = null;
             } else {
-
-                AddressList addressList = LenientAddressParser.DEFAULT.parseAddressList(value);
-                final int size = addressList.size();
-                final List<FetchResponse.Envelope.Address> addresses = new ArrayList<>(size);
-                for (Address address : addressList) {
-                    if (address instanceof Group) {
-                        final Group group = (Group) address;
-                        addAddresses(group, addresses);
-
-                    } else if (address instanceof Mailbox) {
-                        final Mailbox mailbox = (Mailbox) address;
-                        final FetchResponse.Envelope.Address mailboxAddress = buildMailboxAddress(mailbox);
-                        addresses.add(mailboxAddress);
-
-                    } else {
-                        LOGGER.warn("Unknown address type {}", address.getClass());
-                    }
-                }
-
-                results = addresses.toArray(FetchResponse.Envelope.Address[]::new);
-                
-
+                LOGGER.warn("Unknown address type {}", address.getClass());
             }
         }
-        return results;
+        return addresses.toArray(FetchResponse.Envelope.Address[]::new);
+
     }
 
     private FetchResponse.Envelope.Address buildMailboxAddress(org.apache.james.mime4j.dom.address.Mailbox mailbox) {
-        // Encode the mailbox name
-        // See IMAP-266
-        String name = mailbox.getName();
-        if (name != null) {
-            name = EncoderUtil.encodeAddressDisplayName(name);
-        }
-
+        final String name = encodedMailboxName(mailbox);
         final String domain = mailbox.getDomain();
         final DomainList route = mailbox.getRoute();
         final String atDomainList;
@@ -171,6 +144,16 @@ public final class EnvelopeBuilder {
         }
         final String localPart = mailbox.getLocalPart();
         return buildMailboxAddress(name, atDomainList, localPart, domain);
+    }
+
+    private String encodedMailboxName(Mailbox mailbox) {
+        // Encode the mailbox name
+        // See IMAP-266
+        String name = mailbox.getName();
+        if (name != null) {
+            return EncoderUtil.encodeAddressDisplayName(name);
+        }
+        return null;
     }
 
     private void addAddresses(Group group, List<FetchResponse.Envelope.Address> addresses) {

@@ -32,6 +32,7 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.FetchRequest;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.processor.AbstractMailboxProcessor;
@@ -152,13 +153,14 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             if (fetch.isOnlyFlags()) {
                 processMessageRangeForFlags(session, mailbox, fetch, mailboxSession, responder, builder, range);
             } else {
-                processMessageRange(session, mailbox, fetch, useUids, mailboxSession, responder, builder, resultToFetch, range);
+                processMessageRange(session, mailbox, fetch, mailboxSession, responder, builder, resultToFetch, range);
             }
         }
 
     }
 
     private void processMessageRangeForFlags(ImapSession session, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, MessageRange range) {
+        SelectedMailbox selected = session.getSelected();
         Iterator<ComposedMessageIdWithMetaData> results = Flux.from(mailbox.listMessagesMetadata(range, mailboxSession))
             .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
             .toStream()
@@ -168,7 +170,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             ComposedMessageIdWithMetaData result = results.next();
 
             try {
-                final FetchResponse response = builder.build(fetch, result, mailbox, session);
+                final FetchResponse response = builder.build(fetch, result, mailbox, selected, mailboxSession);
                 responder.respond(response);
             } catch (MessageRangeException e) {
                 // we can't for whatever reason find the message so
@@ -184,8 +186,9 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         }
     }
 
-    private void processMessageRange(ImapSession session, MessageManager mailbox, FetchData fetch, boolean useUids, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, FetchGroup resultToFetch, MessageRange range) throws MailboxException {
+    private void processMessageRange(ImapSession session, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, FetchGroup resultToFetch, MessageRange range) throws MailboxException {
         MessageResultIterator messages = mailbox.getMessages(range, resultToFetch, mailboxSession);
+        SelectedMailbox selected = session.getSelected();
         while (messages.hasNext()) {
             final MessageResult result = messages.next();
 
@@ -195,7 +198,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             }
 
             try {
-                final FetchResponse response = builder.build(fetch, result, mailbox, session, useUids);
+                final FetchResponse response = builder.build(fetch, result, mailbox, selected, mailboxSession);
                 responder.respond(response);
             } catch (MessageRangeException e) {
                 // we can't for whatever reason find the message so

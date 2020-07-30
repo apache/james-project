@@ -109,6 +109,4 @@ public interface Message {
      */
     List<MessageAttachmentMetadata> getAttachments();
 
-    boolean hasAttachment();
-
 }

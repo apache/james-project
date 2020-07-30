@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -422,7 +423,7 @@ public class JamesMailetContext implements MailetContext, Configurable, Disposab
             // doesn't work, use the hostname, even if it is localhost.
             if (postMasterAddress.indexOf('@') < 0) {
                 Domain domainName = domains.getDomains().stream()
-                    .filter(domain -> !Domain.LOCALHOST.equals(domain))
+                    .filter(Predicate.not(Predicate.isEqual(Domain.LOCALHOST)))
                     .findFirst()
                     .orElse(domains.getDefaultDomain());
 

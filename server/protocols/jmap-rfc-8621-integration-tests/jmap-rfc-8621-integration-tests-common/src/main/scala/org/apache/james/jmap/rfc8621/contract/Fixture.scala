@@ -134,4 +134,18 @@ object Fixture {
       "-yDYktd4WT8MYhqY7MgS-wR0vO9jZFv8ZCgd_MkKCvCO0HmMjP5iQPZ0kqGkgWUH7X123tfR38MfbCVAdPDba-K3MfkogV1xvDhlkPScFr_6MxE" +
       "xtedOK2JnQZn7t9sUzSrcyjWverm7gZkPptkIVoS8TsEeMMME5vFXe_nqkEG69q3kuBUm_33tbR5oNS0ZGZKlG9r41lHBjyf9J1xN4UYV8n866d" +
       "a7RPPCzshIWUtO0q9T2umWTnp-6OnOdBCkndrZmRR6pPxsD5YL0_77Wq8KT_5__fGA"
+
+  val GET_ALL_MAILBOXES_REQUEST: String =
+    """{
+      |  "using": [
+      |    "urn:ietf:params:jmap:core",
+      |    "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [[
+      |      "Mailbox/get",
+      |      {
+      |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |        "ids": null
+      |      },
+      |      "c1"]]
+      |}""".stripMargin
 }

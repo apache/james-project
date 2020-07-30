@@ -24,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -43,7 +41,7 @@ class AuthenticatedCassandraJamesServerTest {
     @Nested
     class AuthenticationTest implements JamesServerContract {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
@@ -59,7 +57,7 @@ class AuthenticatedCassandraJamesServerTest {
     @Nested
     class SslTest {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .disableAutoStart()
@@ -84,12 +82,11 @@ class AuthenticatedCassandraJamesServerTest {
     @Nested
     class AuthenticationFailureTest {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(cassandraExtension)
             .disableAutoStart()
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(new TestJMAPServerModule())
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)

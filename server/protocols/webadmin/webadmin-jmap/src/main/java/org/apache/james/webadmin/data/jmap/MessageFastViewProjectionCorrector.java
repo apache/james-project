@@ -34,6 +34,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MessageId;
@@ -190,7 +191,7 @@ public class MessageFastViewProjectionCorrector {
         return listUsersMailboxes(session)
             .flatMap(mailboxMetadata -> retrieveMailbox(session, mailboxMetadata), MAILBOX_CONCURRENCY)
             .flatMap(Throwing.function(messageManager -> listAllMailboxMessages(messageManager, session)
-                .map(message -> new ProjectionEntry(messageManager, message.getUid(), session))), MAILBOX_CONCURRENCY)
+                .map(message -> new ProjectionEntry(messageManager, message.getComposedMessageId().getUid(), session))), MAILBOX_CONCURRENCY)
             .onErrorResume(MailboxException.class, e -> {
                 LOGGER.error("JMAP fastview re-computation aborted for {} as we failed listing user mailboxes", session.getUser(), e);
                 progress.incrementFailedUserCount();
@@ -231,8 +232,8 @@ public class MessageFastViewProjectionCorrector {
         return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxMetadata.getId(), session));
     }
 
-    private Flux<MessageResult> listAllMailboxMessages(MessageManager messageManager, MailboxSession session) throws MailboxException {
-        return Iterators.toFlux(messageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, session));
+    private Flux<ComposedMessageIdWithMetaData> listAllMailboxMessages(MessageManager messageManager, MailboxSession session) {
+        return Flux.from(messageManager.listMessagesMetadata(MessageRange.all(), session));
     }
 
     private Mono<MessageResult> retrieveContent(MessageManager messageManager, MailboxSession session, MessageUid uid) {

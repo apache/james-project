@@ -20,6 +20,8 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
@@ -31,7 +33,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraAnnotationMapperTest extends AnnotationMapperTest {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAnnotationModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
+        CassandraBlobModule.MODULE,
+        CassandraAnnotationModule.MODULE));
 
     @Override
     protected AnnotationMapper createAnnotationMapper() {

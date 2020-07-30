@@ -30,7 +30,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.blob.memory.MemoryDumbBlobStore;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -51,6 +50,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BucketNameGenerator;
 import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
@@ -109,8 +109,13 @@ class DeletedMessageVaultHookTest {
     @BeforeEach
     void setUp() throws Exception {
         clock = Clock.fixed(DELETION_DATE.toInstant(), ZoneOffset.UTC);
+        MemoryDumbBlobStore dumbBlobStore = new MemoryDumbBlobStore();
         messageVault = new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
-            new MemoryBlobStore(new HashBlobId.Factory(), new MemoryDumbBlobStore()), new BucketNameGenerator(clock), clock,
+            BlobStoreFactory.builder()
+                .dumbBlobStore(dumbBlobStore)
+                .blobIdFactory(new HashBlobId.Factory())
+                .defaultBucketName()
+                .passthrough(), dumbBlobStore, new BucketNameGenerator(clock), clock,
             RetentionConfiguration.DEFAULT);
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();

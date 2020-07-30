@@ -206,11 +206,6 @@ class ExportServiceTest {
 
         Task.Result result = testee.export(progress, BOB).block();
 
-        String fileName = Files.getNameWithoutExtension(getFileUrl());
-        String blobId = fileName.substring(fileName.lastIndexOf("-") + 1);
-
-        testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.from(blobId));
-
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
     }
 

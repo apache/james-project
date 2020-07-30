@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import static org.apache.james.transport.mailets.remote.delivery.Bouncer.IS_DELIVERY_PERMANENT_ERROR;
 import static org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable.OUTGOING_MAILS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,6 +36,8 @@ import java.util.function.Supplier;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -141,6 +144,7 @@ public class DeliveryRunnableTest {
         verify(mailQueue).enQueue(FakeMail.builder()
                 .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(1))
+                .attribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
@@ -163,6 +167,7 @@ public class DeliveryRunnableTest {
         verify(mailQueue).enQueue(FakeMail.builder()
                 .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(3))
+                .attribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
@@ -185,6 +190,7 @@ public class DeliveryRunnableTest {
         verify(mailQueue).enQueue(FakeMail.builder()
                 .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(5))
+                .attribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
@@ -238,6 +244,7 @@ public class DeliveryRunnableTest {
         verify(mailQueue).enQueue(FakeMail.builder()
                 .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(1))
+                .attribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),

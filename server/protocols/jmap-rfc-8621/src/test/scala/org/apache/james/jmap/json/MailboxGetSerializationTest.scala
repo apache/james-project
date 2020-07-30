@@ -42,8 +42,6 @@ object MailboxGetSerializationTest {
   private val MAILBOX_ID_2: MailboxId = FACTORY.fromString("2")
 
   private val PROPERTIES: Properties = Properties(List("name", "role"))
-
-  private val NO_PROPERTY_FILTERING: Set[String] = Set.empty
 }
 
 class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
@@ -207,7 +205,7 @@ class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin
 
-      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue)(SERIALIZER.mailboxWrites(NO_PROPERTY_FILTERING)))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue)(SERIALIZER.mailboxWrites(Mailbox.allProperties)))).isEqualTo(expectedJson)
     }
   }
 }

@@ -129,7 +129,7 @@
                                 <version>v1</version>
                             </info>
                             <swaggerDirectory>${project.build.directory}</swaggerDirectory>
-                            <swaggerFileName>webadmin-mailbox</swaggerFileName>
+                            <swaggerFileName>webadmin-mailqueue</swaggerFileName>
                         </apiSource>
                     </apiSources>
                 </configuration>

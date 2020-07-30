@@ -44,6 +44,7 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
@@ -102,7 +103,11 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .blobStore(BlobStoreConfiguration.builder()
+                    .objectStorage()
+                    .disableCache()
+                    .deduplication())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
@@ -794,5 +799,26 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .mailboxId(InMemoryId.of(453))
             .mailboxPath(MailboxPath.forUser(Username.of(USERNAME), "Important-mailbox"))
             .build();
+    }
+
+    @Test
+    void republishNotProcessedMailsOnSpoolShouldComplete() {
+        String taskId = with()
+            .basePath("/mailQueues/spool")
+            .queryParam("action", "RepublishNotProcessedMails")
+            .queryParam("olderThan", "2d")
+        .post()
+            .jsonPath()
+        .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(taskId))
+            .body("type", is("republish-not-processed-mails"))
+            .body("additionalInformation.nbRequeuedMails", is(0));
     }
 }

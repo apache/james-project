@@ -27,16 +27,12 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.ATTACHMENTS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BODY;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BODY_CONTENT;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BODY_OCTECTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BODY_START_OCTET;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.FULL_CONTENT_OCTETS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.HEADERS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.HEADER_CONTENT;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.INTERNAL_DATE;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.METADATA;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.PROPERTIES;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TEXTUAL_LINE_COUNT;
@@ -99,10 +95,7 @@ public class CassandraMessageDAO {
     private final CassandraMessageId.Factory messageIdFactory;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
-    private final PreparedStatement selectMetadata;
-    private final PreparedStatement selectHeaders;
-    private final PreparedStatement selectFields;
-    private final PreparedStatement selectBody;
+    private final PreparedStatement select;
     private final PreparedStatement selectAllMessagesWithAttachment;
     private final Cid.CidParser cidParser;
     private final ConsistencyLevel consistencyLevel;
@@ -122,10 +115,7 @@ public class CassandraMessageDAO {
 
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
-        this.selectMetadata = prepareSelect(session, METADATA);
-        this.selectHeaders = prepareSelect(session, HEADERS);
-        this.selectFields = prepareSelect(session, FIELDS);
-        this.selectBody = prepareSelect(session, BODY);
+        this.select = prepareSelect(session);
         this.selectAllMessagesWithAttachment = prepareSelectAllMessagesWithAttachment(session);
         this.cidParser = Cid.parser().relaxed();
     }
@@ -138,8 +128,8 @@ public class CassandraMessageDAO {
             consistenciesConfiguration, messageIdFactory);
     }
 
-    private PreparedStatement prepareSelect(Session session, String[] fields) {
-        return session.prepare(select(fields)
+    private PreparedStatement prepareSelect(Session session) {
+        return session.prepare(select()
             .from(TABLE_NAME)
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
     }
@@ -242,7 +232,7 @@ public class CassandraMessageDAO {
     }
 
     private Mono<ResultSet> retrieveRow(CassandraMessageId messageId, FetchType fetchType) {
-        return cassandraAsyncExecutor.execute(retrieveSelect(fetchType)
+        return cassandraAsyncExecutor.execute(select
             .bind()
             .setUUID(MESSAGE_ID, messageId.get())
             .setConsistencyLevel(consistencyLevel));
@@ -255,7 +245,11 @@ public class CassandraMessageDAO {
         }
 
         Row row = rows.one();
-        return buildContentRetriever(fetchType, row).map(content ->
+        BlobId headerId = retrieveBlobId(HEADER_CONTENT, row);
+        BlobId bodyId = retrieveBlobId(BODY_CONTENT, row);
+        int bodyStartOctet = row.getInt(BODY_START_OCTET);
+
+        return buildContentRetriever(fetchType, headerId, bodyId, bodyStartOctet).map(content ->
             new MessageRepresentation(
                 cassandraMessageId,
                 row.getTimestamp(INTERNAL_DATE),
@@ -263,8 +257,9 @@ public class CassandraMessageDAO {
                 row.getInt(BODY_START_OCTET),
                 new SharedByteArrayInputStream(content),
                 getPropertyBuilder(row),
-                hasAttachment(row),
-                getAttachments(row).collect(Guavate.toImmutableList())));
+                getAttachments(row).collect(Guavate.toImmutableList()),
+                headerId,
+                bodyId));
     }
 
     private PropertyBuilder getPropertyBuilder(Row row) {
@@ -285,11 +280,6 @@ public class CassandraMessageDAO {
         return attachmentByIds(udtValues);
     }
 
-    private boolean hasAttachment(Row row) {
-        List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
-        return !udtValues.isEmpty();
-    }
-
     private Stream<MessageAttachmentRepresentation> attachmentByIds(List<UDTValue> udtValues) {
         return udtValues.stream()
             .map(this::messageAttachmentByIdFrom);
@@ -304,35 +294,20 @@ public class CassandraMessageDAO {
             .build();
     }
 
-    private PreparedStatement retrieveSelect(FetchType fetchType) {
-        switch (fetchType) {
-            case Body:
-                return selectBody;
-            case Full:
-                return selectFields;
-            case Headers:
-                return selectHeaders;
-            case Metadata:
-                return selectMetadata;
-            default:
-                throw new RuntimeException("Unknown FetchType " + fetchType);
-        }
-    }
-
     public Mono<Void> delete(CassandraMessageId messageId) {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
             .setUUID(MESSAGE_ID, messageId.get()));
     }
 
-    private Mono<byte[]> buildContentRetriever(FetchType fetchType, Row row) {
+    private Mono<byte[]> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId, int bodyStartOctet) {
         switch (fetchType) {
             case Full:
-                return getFullContent(row);
+                return getFullContent(headerId, bodyId);
             case Headers:
-                return getHeaderContent(row);
+                return getContent(headerId);
             case Body:
-                return getBodyContent(row)
-                    .map(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
+                return getContent(bodyId)
+                    .map(data -> Bytes.concat(new byte[bodyStartOctet], data));
             case Metadata:
                 return Mono.just(EMPTY_BYTE_ARRAY);
             default:
@@ -340,20 +315,16 @@ public class CassandraMessageDAO {
         }
     }
 
-    private Mono<byte[]> getFullContent(Row row) {
-        return getHeaderContent(row)
-            .zipWith(getBodyContent(row), Bytes::concat);
+    private Mono<byte[]> getFullContent(BlobId headerId, BlobId bodyId) {
+        return getContent(headerId)
+            .zipWith(getContent(bodyId), Bytes::concat);
     }
 
-    private Mono<byte[]> getBodyContent(Row row) {
-        return getFieldContent(BODY_CONTENT, row);
+    private Mono<byte[]> getContent(BlobId blobId) {
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobId));
     }
 
-    private Mono<byte[]> getHeaderContent(Row row) {
-        return getFieldContent(HEADER_CONTENT, row);
-    }
-
-    private Mono<byte[]> getFieldContent(String field, Row row) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.from(row.getString(field))));
+    private BlobId retrieveBlobId(String field, Row row) {
+        return blobIdFactory.from(row.getString(field));
     }
 }

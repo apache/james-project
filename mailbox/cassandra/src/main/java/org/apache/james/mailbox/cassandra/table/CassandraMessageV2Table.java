@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
-
 public interface CassandraMessageV2Table {
 
     String TABLE_NAME = "messageV2";
@@ -33,11 +31,6 @@ public interface CassandraMessageV2Table {
     String HEADER_CONTENT = "headerContent";
     String PROPERTIES = "properties";
     String ATTACHMENTS = "attachments";
-
-    String[] FIELDS = { MESSAGE_ID, INTERNAL_DATE, BODY_START_OCTET, FULL_CONTENT_OCTETS, BODY_OCTECTS, BODY_CONTENT, HEADER_CONTENT, TEXTUAL_LINE_COUNT, PROPERTIES, ATTACHMENTS };
-    String[] METADATA = { MESSAGE_ID, INTERNAL_DATE, BODY_START_OCTET, FULL_CONTENT_OCTETS, BODY_OCTECTS, TEXTUAL_LINE_COUNT, PROPERTIES, ATTACHMENTS };
-    String[] HEADERS = { MESSAGE_ID, INTERNAL_DATE, BODY_START_OCTET, FULL_CONTENT_OCTETS, BODY_OCTECTS, HEADER_CONTENT, TEXTUAL_LINE_COUNT, PROPERTIES, ATTACHMENTS };
-    String[] BODY = { MESSAGE_ID, INTERNAL_DATE, BODY_START_OCTET, FULL_CONTENT_OCTETS, BODY_OCTECTS, BODY_CONTENT, TEXTUAL_LINE_COUNT, PROPERTIES, ATTACHMENTS };
 
     interface Properties {
         String NAMESPACE = "namespace";

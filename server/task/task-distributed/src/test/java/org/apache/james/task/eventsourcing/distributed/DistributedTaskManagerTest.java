@@ -19,17 +19,28 @@
 
 package org.apache.james.task.eventsourcing.distributed;
 
+import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue.EXCHANGE_NAME;
+import static org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue.ROUTING_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.FIVE_SECONDS;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
@@ -56,6 +67,8 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.CountDownLatchExtension;
+import org.apache.james.task.FailedTask;
+import org.apache.james.task.FailsDeserializationTask;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.Task;
@@ -63,6 +76,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerContract;
+import org.apache.james.task.TaskWithId;
 import org.apache.james.task.WorkQueue;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
@@ -78,12 +92,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.rabbitmq.client.AMQP;
 
+import reactor.core.publisher.Mono;
+import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
 
 class DistributedTaskManagerTest implements TaskManagerContract {
+
+    private static final byte[] BAD_PAYLOAD = "BAD_PAYLOAD!".getBytes(UTF_8);
 
     static class TrackedRabbitMQWorkQueueSupplier implements WorkQueueSupplier {
         private final List<RabbitMQWorkQueue> workQueues;
@@ -114,6 +134,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     static final DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> TASK_ADDITIONAL_INFORMATION_DTO_CONVERTER = DTOConverter.of(ADDITIONAL_INFORMATION_MODULE);
     static final Hostname HOSTNAME = new Hostname("foo");
     static final Hostname HOSTNAME_2 = new Hostname("bar");
+    static final TaskId TASK_ID = TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd");
+    static final Task TASK = new CompletedTask();
+    static final TaskWithId TASK_WITH_ID = new TaskWithId(TASK_ID, TASK);
 
     @RegisterExtension
     static final RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
@@ -132,6 +155,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
     ImmutableSet<TaskDTOModule<?, ?>> taskDTOModules =
         ImmutableSet.of(
+            TestTaskDTOModules.FAILS_DESERIALIZATION_TASK_MODULE,
             TestTaskDTOModules.COMPLETED_TASK_MODULE,
             TestTaskDTOModules.FAILED_TASK_MODULE,
             TestTaskDTOModules.THROWING_TASK_MODULE,
@@ -194,6 +218,78 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         terminationSubscribers.add(terminationSubscriber);
         terminationSubscriber.start();
         return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, terminationSubscriber);
+    }
+
+    @Test
+    void badPayloadShouldNotAffectTaskManagerOnCancelTask() throws TaskManager.ReachedTimeoutException {
+        TaskManager taskManager = taskManager(HOSTNAME);
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
+            Thread.sleep(250);
+            return Task.Result.COMPLETED;
+        }));
+
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
+            .block();
+
+        taskManager.cancel(id);
+        taskManager.await(id, TIMEOUT);
+        assertThat(taskManager.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.CANCELLED);
+    }
+
+    @Test
+    void badPayloadsShouldNotAffectTaskManagerOnCancelTask() throws TaskManager.ReachedTimeoutException {
+        TaskManager taskManager = taskManager(HOSTNAME);
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
+            Thread.sleep(250);
+            return Task.Result.COMPLETED;
+        }));
+
+        IntStream.range(0, 100)
+            .forEach(i -> rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
+            .block());
+
+        taskManager.cancel(id);
+        taskManager.await(id, TIMEOUT);
+        assertThat(taskManager.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.CANCELLED);
+    }
+
+    @Test
+    void badPayloadShouldNotAffectTaskManagerOnCompleteTask() throws TaskManager.ReachedTimeoutException {
+        TaskManager taskManager = taskManager(HOSTNAME);
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
+            Thread.sleep(250);
+            return Task.Result.COMPLETED;
+        }));
+
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
+            .block();
+
+        taskManager.await(id, TIMEOUT);
+        assertThat(taskManager.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.COMPLETED);
+    }
+
+    @Test
+    void badPayloadsShouldNotAffectTaskManagerOnCompleteTask() throws TaskManager.ReachedTimeoutException {
+        TaskManager taskManager = taskManager(HOSTNAME);
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
+            Thread.sleep(250);
+            return Task.Result.COMPLETED;
+        }));
+
+        IntStream.range(0, 100)
+            .forEach(i -> rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
+            .block());
+
+        taskManager.await(id, TIMEOUT);
+        assertThat(taskManager.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.COMPLETED);
     }
 
     @Test
@@ -337,7 +433,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void givenTwoTaskManagerIfTheFirstOneIsDownTheSecondOneShouldBeAbleToRunTheRemainingTasks(CountDownLatch countDownLatch) throws Exception {
+    void givenTwoTaskManagerIfTheFirstOneIsDownTheSecondOneShouldBeAbleToRunTheRemainingTasks(CountDownLatch countDownLatch) {
         try (EventSourcingTaskManager taskManager1 = taskManager();
              EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
             ImmutableBiMap<EventSourcingTaskManager, Hostname> hostNameByTaskManager = ImmutableBiMap.of(taskManager1, HOSTNAME, taskManager2, HOSTNAME_2);
@@ -362,6 +458,105 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             TaskExecutionDetails detailsSecondTask = otherTaskManager.getExecutionDetails(taskToExecuteAfterFirstNodeIsDown);
             assertThat(detailsSecondTask.getRanNode()).contains(otherNode);
         }
+    }
+
+    @Test
+    void shouldNotCrashWhenBadMessage() {
+        TaskManager taskManager = taskManager(HOSTNAME);
+
+        taskManager.submit(new FailsDeserializationTask());
+
+        TaskId id = taskManager.submit(TASK);
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.COMPLETED, taskManager);
+    }
+
+    @Test
+    void shouldNotCrashWhenBadMessages() {
+        TaskManager taskManager = taskManager(HOSTNAME);
+
+        IntStream.range(0, 100).forEach(i -> taskManager.submit(new FailsDeserializationTask()));
+
+        TaskId id = taskManager.submit(TASK);
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.COMPLETED, taskManager);
+    }
+
+    @Test
+    void shouldNotCrashWhenInvalidHeader() throws Exception {
+        TaskManager taskManager = taskManager(HOSTNAME);
+
+        AMQP.BasicProperties badProperties = new AMQP.BasicProperties.Builder()
+            .deliveryMode(PERSISTENT_TEXT_PLAIN.getDeliveryMode())
+            .priority(PERSISTENT_TEXT_PLAIN.getPriority())
+            .contentType(PERSISTENT_TEXT_PLAIN.getContentType())
+            .headers(ImmutableMap.of("abc", TASK_WITH_ID.getId().asString()))
+            .build();
+
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME,
+                ROUTING_KEY, badProperties, taskSerializer.serialize(TASK_WITH_ID.getTask()).getBytes(StandardCharsets.UTF_8))))
+            .block();
+
+        TaskId taskId = taskManager.submit(TASK);
+
+        await().atMost(FIVE_SECONDS).until(() -> taskManager.list(TaskManager.Status.COMPLETED).size() == 1);
+
+        assertThat(taskManager.getExecutionDetails(taskId).getStatus())
+            .isEqualTo(TaskManager.Status.COMPLETED);
+    }
+
+    @Test
+    void shouldNotCrashWhenInvalidTaskId() throws Exception {
+        TaskManager taskManager = taskManager(HOSTNAME);
+
+        AMQP.BasicProperties badProperties = new AMQP.BasicProperties.Builder()
+            .deliveryMode(PERSISTENT_TEXT_PLAIN.getDeliveryMode())
+            .priority(PERSISTENT_TEXT_PLAIN.getPriority())
+            .contentType(PERSISTENT_TEXT_PLAIN.getContentType())
+            .headers(ImmutableMap.of("taskId", "BAD_ID"))
+            .build();
+
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME,
+                ROUTING_KEY, badProperties, taskSerializer.serialize(TASK_WITH_ID.getTask()).getBytes(StandardCharsets.UTF_8))))
+            .block();
+
+        TaskId taskId = taskManager.submit(TASK);
+
+        await().atMost(FIVE_SECONDS).until(() -> taskManager.list(TaskManager.Status.COMPLETED).size() == 1);
+
+        assertThat(taskManager.getExecutionDetails(taskId).getStatus())
+            .isEqualTo(TaskManager.Status.COMPLETED);
+    }
+
+    @Test
+    void shouldNotCrashWhenErrorHandlingFails(CassandraCluster cassandra) throws Exception {
+        TaskManager taskManager = taskManager(HOSTNAME);
+
+        cassandra.getConf().printStatements();
+        cassandra.getConf().registerScenario(Scenario.combine(
+            executeNormally()
+                .times(2) // submit + inProgress
+                .whenQueryStartsWith("INSERT INTO eventStore"),
+            executeNormally()
+                .times(2) // submit + inProgress
+                .whenQueryStartsWith("INSERT INTO taskExecutionDetailsProjection"),
+            fail()
+                .forever()
+                .whenQueryStartsWith("INSERT INTO eventStore"),
+            fail()
+                .forever()
+                .whenQueryStartsWith("INSERT INTO taskExecutionDetailsProjection")));
+        taskManager.submit(new FailedTask());
+
+        Thread.sleep(1000);
+
+        cassandra.getConf().registerScenario(Scenario.NOTHING);
+
+        TaskId id2 = taskManager.submit(new CompletedTask());
+
+        awaitUntilTaskHasStatus(id2, TaskManager.Status.COMPLETED, taskManager);
     }
 
     private Hostname getOtherNode(ImmutableBiMap<EventSourcingTaskManager, Hostname> hostNameByTaskManager, Hostname node) {

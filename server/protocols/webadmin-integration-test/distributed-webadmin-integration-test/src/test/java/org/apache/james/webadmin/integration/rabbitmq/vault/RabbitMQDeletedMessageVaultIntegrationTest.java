@@ -23,8 +23,11 @@ import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -32,6 +35,9 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.integration.vault.DeletedMessageVaultIntegrationTest;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
@@ -43,7 +49,11 @@ class RabbitMQDeletedMessageVaultIntegrationTest extends DeletedMessageVaultInte
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .blobStore(BlobStoreConfiguration.builder()
+                    .objectStorage()
+                    .disableCache()
+                    .deduplication())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
         .extension(ES_EXTENSION)
         .extension(new CassandraExtension())
@@ -59,5 +69,13 @@ class RabbitMQDeletedMessageVaultIntegrationTest extends DeletedMessageVaultInte
     @Override
     protected void awaitSearchUpToDate() {
         ES_EXTENSION.await();
+    }
+
+    @Disabled("JAMES-2688 Unstable test")
+    @Test
+    @Tag(BasicFeature.TAG)
+    @Override
+    public void vaultExportShouldExportZipContainsVaultMessagesToShareeWhenImapDeletedMailbox(GuiceJamesServer jmapServer) {
+
     }
 }

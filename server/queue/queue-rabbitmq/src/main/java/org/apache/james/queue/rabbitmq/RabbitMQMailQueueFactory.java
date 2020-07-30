@@ -24,6 +24,7 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
+import static org.apache.james.backends.rabbitmq.Constants.deadLetterQueue;
 import static org.apache.james.queue.api.MailQueue.QUEUE_SIZE_METRIC_NAME_PREFIX;
 
 import java.time.Clock;
@@ -46,7 +47,6 @@ import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
@@ -164,7 +164,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(ImmutableMap.of("x-dead-letter-exchange", mailQueueName.toDeadLetterExchangeName()))),
+                .arguments(deadLetterQueue(mailQueueName.toDeadLetterExchangeName()))),
             sender.declareQueue(QueueSpecification.queue(mailQueueName.toDeadLetterQueueName())
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)

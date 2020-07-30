@@ -21,6 +21,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -85,7 +86,7 @@ public class MessageAttachmentMetadata {
 
     public static boolean hasNonInlinedAttachment(List<MessageAttachmentMetadata> attachments) {
         return attachments.stream()
-            .anyMatch(messageAttachment -> !messageAttachment.isInlinedWithCid());
+            .anyMatch(Predicate.not(MessageAttachmentMetadata::isInlinedWithCid));
     }
 
     private final AttachmentMetadata attachment;

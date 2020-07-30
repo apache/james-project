@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.FakePropertiesProvider;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
+import org.apache.james.server.blob.deduplication.StorageStrategy;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -34,7 +35,6 @@ class BlobStoreConfigurationTest {
 
     private static final String OBJECT_STORAGE = "objectstorage";
     private static final String CASSANDRA = "cassandra";
-    private static final String HYBRID = "hybrid";
 
     @Test
     void shouldMatchBeanContract() {
@@ -85,45 +85,43 @@ class BlobStoreConfigurationTest {
             .build();
 
         assertThat(parse(propertyProvider))
-            .isEqualTo(BlobStoreConfiguration.cassandra());
+            .isEqualTo(BlobStoreConfiguration.builder()
+                    .cassandra()
+                    .disableCache()
+                    .passthrough());
     }
 
     @Test
     void provideChoosingConfigurationShouldReturnObjectStorageFactoryWhenConfigurationImplIsObjectStorage() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("deduplication.enable", "true");
         FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
             .register(ConfigurationComponent.NAME, configuration)
             .build();
 
         assertThat(parse(propertyProvider))
-            .isEqualTo(BlobStoreConfiguration.objectStorage().disableCache());
-    }
-
-    @Test
-    void provideChoosingConfigurationShouldReturnHybridConfigurationWhenConfigurationImplIsHybrid() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.HYBRID.getName());
-        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
-            .register(ConfigurationComponent.NAME, configuration)
-            .build();
-
-        assertThat(parse(propertyProvider))
-            .isEqualTo(BlobStoreConfiguration.hybrid());
+            .isEqualTo(BlobStoreConfiguration.builder()
+                    .objectStorage()
+                    .disableCache()
+                    .deduplication());
     }
 
     @Test
     void provideChoosingConfigurationShouldReturnCassandraFactoryWhenConfigurationImplIsCassandra() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.CASSANDRA.getName());
+        configuration.addProperty("deduplication.enable", "false");
         FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
             .register(ConfigurationComponent.NAME, configuration)
             .build();
 
         assertThat(parse(propertyProvider))
-            .isEqualTo(BlobStoreConfiguration.cassandra());
+            .isEqualTo(BlobStoreConfiguration.builder()
+                    .cassandra()
+                    .disableCache()
+                    .passthrough());
     }
-
 
     @Test
     void fromShouldThrowWhenBlobStoreImplIsMissing() {
@@ -131,7 +129,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage, hybrid");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
     }
 
     @Test
@@ -141,7 +139,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage, hybrid");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
     }
 
     @Test
@@ -151,7 +149,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage, hybrid");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
     }
 
     @Test
@@ -161,13 +159,14 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, objectstorage, hybrid");
+            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, objectstorage");
     }
 
     @Test
     void fromShouldReturnConfigurationWhenBlobStoreImplIsCassandra() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", CASSANDRA);
+        configuration.addProperty("deduplication.enable", "false");
 
         assertThat(
             BlobStoreConfiguration.from(configuration)
@@ -177,22 +176,10 @@ class BlobStoreConfigurationTest {
     }
 
     @Test
-    void fromShouldReturnConfigurationWhenBlobStoreImplIsUnion() {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", HYBRID);
-
-        assertThat(
-            BlobStoreConfiguration.from(configuration)
-                .getImplementation()
-                .getName())
-            .isEqualTo(HYBRID);
-    }
-
-    @Test
     void fromShouldReturnConfigurationWhenBlobStoreImplIsObjectStorage() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", OBJECT_STORAGE);
-
+        configuration.addProperty("deduplication.enable", "true");
         assertThat(
             BlobStoreConfiguration.from(configuration)
                 .getImplementation()
@@ -204,6 +191,7 @@ class BlobStoreConfigurationTest {
     void fromShouldReturnConfigurationWhenBlobStoreImplIsSupportedAndCaseInsensitive() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", "OBjecTStorAGE");
+        configuration.addProperty("deduplication.enable", "true");
 
         assertThat(
             BlobStoreConfiguration.from(configuration)
@@ -216,6 +204,7 @@ class BlobStoreConfigurationTest {
     void fromShouldReturnConfigurationWhenBlobStoreImplIsSupportedAndHasExtraSpaces() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", " cassandra ");
+        configuration.addProperty("deduplication.enable", "false");
 
         assertThat(
             BlobStoreConfiguration.from(configuration)
@@ -229,6 +218,7 @@ class BlobStoreConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
         configuration.addProperty("cache.enable", true);
+        configuration.addProperty("deduplication.enable", "true");
 
         assertThat(BlobStoreConfiguration.from(configuration).cacheEnabled())
             .isTrue();
@@ -239,6 +229,7 @@ class BlobStoreConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
         configuration.addProperty("cache.enable", false);
+        configuration.addProperty("deduplication.enable", "true");
 
         assertThat(BlobStoreConfiguration.from(configuration).cacheEnabled())
             .isFalse();
@@ -248,8 +239,43 @@ class BlobStoreConfigurationTest {
     void cacheEnabledShouldDefaultToFalse() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("deduplication.enable", "true");
 
         assertThat(BlobStoreConfiguration.from(configuration).cacheEnabled())
             .isFalse();
     }
+
+    @Test
+    void storageStrategyShouldBePassthroughWhenDeduplicationDisabled() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("deduplication.enable", "false");
+
+        assertThat(BlobStoreConfiguration.from(configuration).storageStrategy())
+            .isEqualTo(StorageStrategy.PASSTHROUGH);
+    }
+
+    @Test
+    void storageStrategyShouldBeDeduplicationWhenDeduplicationEnabled() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("deduplication.enable", "true");
+
+        assertThat(BlobStoreConfiguration.from(configuration).storageStrategy())
+                .isEqualTo(StorageStrategy.DEDUPLICATION);
+    }
+
+    @Test
+    void buildingConfigurationShouldThrowWhenDeduplicationPropertieIsOmitted() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+
+        assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration)).isInstanceOf(IllegalStateException.class)
+                .hasMessage("deduplication.enable property is missing please use one of the supported values in: true, false\n" +
+         "If you choose to enable deduplication, the mails with the same content will be stored only once.\n" +
+         "Warning: Once this feature is enabled, there is no turning back as turning it off will lead to the deletion of all\n" +
+         "the mails sharing the same content once one is deleted.\n" +
+        "Upgrade note: If you are upgrading from James 3.5 or older, the deduplication was enabled.");
+    }
+
 }

@@ -26,7 +26,7 @@ import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{Invocation, MailboxFactory}
+import org.apache.james.jmap.model.{ErrorCode, Invocation, MailboxFactory}
 import org.apache.james.jmap.utils.quotas.{QuotaLoader, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.search.MailboxQuery
@@ -57,17 +57,27 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
   override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession): Publisher[Invocation] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asMailboxGetRequest(invocation.arguments)
-        .flatMap(mailboxGetRequest => getMailboxes(mailboxGetRequest, mailboxSession)
-          .reduce(MailboxGetResults(Set.empty, NotFound(Set.empty)), (result1: MailboxGetResults, result2: MailboxGetResults) => result1.merge(result2))
-          .map(mailboxes => MailboxGetResponse(
-            accountId = mailboxGetRequest.accountId,
-            state = INSTANCE,
-            list = mailboxes.mailboxes.toList.sortBy(_.sortOrder),
-            notFound = mailboxes.notFound))
-          .map(mailboxGetResponse => Invocation(
-            methodName = methodName,
-            arguments = Arguments(serializer.serialize(mailboxGetResponse, capabilities).as[JsObject]),
-            methodCallId = invocation.methodCallId))))
+        .flatMap(mailboxGetRequest => {
+          mailboxGetRequest.properties match {
+            case Some(properties) if !properties.asSetOfString.subsetOf(Mailbox.allProperties) =>
+              SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
+                description = Some(s"The following properties [${properties.asSetOfString.diff(Mailbox.allProperties).mkString(", ")}] do not exist."),
+                methodCallId = invocation.methodCallId))
+            case _ => getMailboxes(mailboxGetRequest, mailboxSession)
+              .reduce(MailboxGetResults(Set.empty, NotFound(Set.empty)), (result1: MailboxGetResults, result2: MailboxGetResults) => result1.merge(result2))
+              .map(mailboxes => MailboxGetResponse(
+                accountId = mailboxGetRequest.accountId,
+                state = INSTANCE,
+                list = mailboxes.mailboxes.toList.sortBy(_.sortOrder),
+                notFound = mailboxes.notFound))
+              .map(mailboxGetResponse => Invocation(
+                methodName = methodName,
+                arguments = Arguments(serializer.serialize(mailboxGetResponse, mailboxGetRequest.properties, capabilities).as[JsObject]),
+                methodCallId = invocation.methodCallId))
+
+          }
+        }
+        ))
   }
 
   private def asMailboxGetRequest(arguments: Arguments): SMono[MailboxGetRequest] = {

@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.Cid;
@@ -48,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class MessageParser {
@@ -124,7 +126,7 @@ public class MessageParser {
         Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
         Optional<ContentDispositionField> contentDispositionField = getContentDispositionField(entity);
         Optional<ContentType> contentType = contentTypeField.map(ContentTypeField::getBody)
-            .filter(string -> !string.isEmpty())
+            .filter(Predicate.not(Strings::isNullOrEmpty))
             .map(ContentType::of);
         Optional<String> name = name(contentTypeField, contentDispositionField);
         Optional<Cid> cid = cid(readHeader(entity, CONTENT_ID, ContentIdField.class));
@@ -160,9 +162,8 @@ public class MessageParser {
 
     private Optional<String> name(Optional<ContentTypeField> contentTypeField, Optional<ContentDispositionField> contentDispositionField) {
         return contentTypeField
-            .map(field -> Optional.ofNullable(field.getParameter("name")))
-            .filter(Optional::isPresent)
-            .orElseGet(() -> contentDispositionField.map(ContentDispositionField::getFilename))
+            .flatMap(field -> Optional.ofNullable(field.getParameter("name")))
+            .or(() -> contentDispositionField.map(ContentDispositionField::getFilename))
             .map(MimeUtil::unscrambleHeaderValue);
     }
 

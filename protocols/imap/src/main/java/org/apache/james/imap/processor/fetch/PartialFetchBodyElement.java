@@ -29,21 +29,16 @@ import org.apache.james.imap.message.response.FetchResponse.BodyElement;
  * Wraps full content to implement a partial fetch.
  */
 final class PartialFetchBodyElement implements BodyElement {
-
     private final BodyElement delegate;
-
     private final long firstOctet;
-
     private final long numberOfOctets;
-
     private final String name;
 
     public PartialFetchBodyElement(BodyElement delegate, long firstOctet, long numberOfOctets) {
-        super();
         this.delegate = delegate;
         this.firstOctet = firstOctet;
         this.numberOfOctets = numberOfOctets;
-        name = delegate.getName() + "<" + firstOctet + ">";
+        this.name = delegate.getName() + "<" + firstOctet + ">";
     }
 
     @Override
@@ -55,15 +50,13 @@ final class PartialFetchBodyElement implements BodyElement {
     public long size() throws IOException {
         final long size = delegate.size();
         final long lastOctet = this.numberOfOctets + firstOctet;
-        final long result;
         if (firstOctet > size) {
-            result = 0;
+            return  0;
         } else if (size > lastOctet) {
-            result = numberOfOctets;
+            return numberOfOctets;
         } else {
-            result = size - firstOctet;
+            return size - firstOctet;
         }
-        return result;
     }
 
     @Override

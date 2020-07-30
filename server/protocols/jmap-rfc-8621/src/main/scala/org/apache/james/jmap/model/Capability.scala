@@ -23,7 +23,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.string.Uri
-import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JAMES_QUOTA, JAMES_SHARES}
 import org.apache.james.jmap.model.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.model.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
@@ -87,5 +87,19 @@ final case class MailCapabilityProperties(maxMailboxesPerEmail: MaxMailboxesPerE
                                           maxSizeAttachmentsPerEmail: MaxSizeAttachmentsPerEmail,
                                           emailQuerySortOptions: List[EmailQuerySortOption],
                                           mayCreateTopLevelMailbox: MayCreateTopLevelMailbox) extends CapabilityProperties {
+}
+
+final case class QuotaCapabilityProperties() extends CapabilityProperties {
+}
+
+final case class QuotaCapability(properties: QuotaCapabilityProperties = QuotaCapabilityProperties(),
+                                 identifier: CapabilityIdentifier = JAMES_QUOTA) extends Capability {
+}
+
+final case class SharesCapabilityProperties() extends CapabilityProperties {
+}
+
+final case class SharesCapability(properties: SharesCapabilityProperties = SharesCapabilityProperties(),
+                                  identifier: CapabilityIdentifier = JAMES_SHARES) extends Capability {
 }
 

@@ -1,0 +1,244 @@
+= Architecture
+
+This sections presents the Distributed Server architecture.
+
+== Storage
+
+In order to deliver its promises, the Distributed Server leverages the following storage strategies:
+
+(TODO picture)
+
+ * *Cassandra* is used for metadata storage
+ * The *blob store* storage interface is responsible of storing potentially large binary data. For instance
+ email bodies, headers or attachments. Different technologies can be used: *Cassandra*, or *Object Storage*
+(S3 or Swift)
+ * *ElasticSearch* component empowers full text search on emails.
+ * *RabbitMQ* enables James nodes of a same cluster to collaborate together.
+ * *Tika* (optional) enables text extraction from attachments, thus improving full text search results.
+ * *SpamAssassin* (optional) can be used for Spam detection and user feedback is supported.
+
+== Protocols
+
+The following protocols are supported and can be used to interact with the Distributed Server:
+
+* *SMTP*
+* *IMAP*
+* xref:distributed/operate/webadmin.adoc[WebAdmin] REST Administration API
+* *LMTP*
+
+The following protocols should be considered experimental
+
+* *JMAP* (draft specification as defined link:https://github.com/apache/james-project/tree/master/server/protocols/jmap-draft/doc[here])
+* *POP3*
+
+== Components
+
+This section presents the various components of the Distributed server, providing context about
+their interactions, and about their implementations.
+
+=== Mail processing
+
+Mail processing allows to take asynchronously business decisions on
+received emails.
+
+Here are its components:
+
+* The `spooler` takes mail out of the mailQueue and executes mail
+processing within the `mailet container`.
+* The `mailet container` synchronously executes the user defined logic.
+This `logic' is written through the use of `mailet`, `matcher` and
+`processor`.
+* A `mailet` represents an action: mail modification, envelop
+modification, a side effect, or stop processing.
+* A `matcher` represents a condition to execute a mailet.
+* A `processor` is a flow of pair of `matcher` and `mailet` executed
+sequentially. The `ToProcessor` mailet is a `goto` instruction to start
+executing another `processor`
+* A `mail repository` allows storage of a mail as part of its
+processing. Standard configuration relies on the following mail
+repository:
+** `cassandra://var/mail/error/` : unexpected errors that occurred
+during mail processing. Emails impacted by performance related
+exceptions, or logical bug within James code are typically stored here.
+These mails could be reprocessed once the cause of the error is fixed.
+The `Mail.error` field can help diagnose the issue. Correlation with
+logs can be achieved via the use of the `Mail.name` field.
+** `cassandra://var/mail/address-error/` : mail addressed to a
+non-existing recipient of a handled local domain. These mails could be
+reprocessed once the user is created, for instance.
+** `cassandra://var/mail/relay-denied/` : mail for whom relay was
+denied: missing authentication can, for instance, be a cause. In
+addition to prevent disasters upon miss configuration, an email review
+of this mail repository can help refine a host spammer blacklist.
+** `cassandra://var/mail/rrt-error/` : runtime error upon Recipient
+Rewritting occurred. This is typically due to a loop.
+
+=== Mail Queue
+
+An email queue is a mandatory component of SMTP servers. It is a system
+that creates a queue of emails that are waiting to be processed for
+delivery. Email queuing is a form of Message Queuing – an asynchronous
+service-to-service communication. A message queue is meant to decouple a
+producing process from a consuming one. An email queue decouples email
+reception from email processing. It allows them to communicate without
+being connected. As such, the queued emails wait for processing until
+the recipient is available to receive them. As James is an Email Server,
+it also supports mail queue as well.
+
+==== Why Mail Queue is necessary
+
+You might often need to check mail queue to make sure all emails are
+delivered properly. At first, you need to know why email queues get
+clogged. Here are the two core reasons for that:
+
+* Exceeded volume of emails
+
+Some mailbox providers enforce email rate limits on IP addresses. The
+limits are based on the sender reputation. If you exceeded this rate and
+queued too many emails, the delivery speed will decrease.
+
+* Spam-related issues
+
+Another common reason is that your email has been busted by spam
+filters. The filters will let the emails gradually pass to analyze how
+the rest of the recipients react to the message. If there is slow
+progress, it’s okay. Your email campaign is being observed and assessed.
+If it’s stuck, there could be different reasons including the blockage
+of your IP address.
+
+==== Why combining Cassandra, RabbitMQ and Object storage for MailQueue
+
+* RabbitMQ ensures the messaging function, and avoids polling.
+* Cassandra enables administrative operations such as browsing, deleting
+using a time series which might require fine performance tuning (see
+http://cassandra.apache.org/doc/latest/operating/index.html[Operating
+Casandra documentation]).
+* Object Storage stores potentially large binary payload.
+
+However the current design do not implement delays. Delays allow to
+define the time a mail have to be living in the mailqueue before being
+dequeued and is used for example for exponential wait delays upon remote
+delivery retries, or
+
+=== Mailbox
+
+Storage for emails belonging for users.
+
+Metadata are stored in Cassandra while headers, bodies and attachments are stored
+within the xref:#_blobstore[BlobStore].
+
+==== Search index
+
+Emails are indexed asynchronously in ElasticSearch via the xref:#_event_bus[EventBus]
+in order to enpower advanced and fast email full text search.
+
+Text extraction can be set up using link:https://tika.apache.org/[Tika], allowing
+to extract the text from attachment, allowing to search your emails based on the attachment
+textual content. In such case, the ElasticSearch indexer will call a Tika server prior
+indexing.
+
+==== Quotas
+
+Current Quotas of users are hold in a Cassandra projection. Limitations can be defined via
+user, domain or globally.
+
+==== Event Bus
+
+Distributed James relies on an event bus system to enrich mailbox capabilities. Each
+operation performed on the mailbox will trigger related events, that can
+be processed asynchronously by potentially any James node on a
+distributed system.
+
+Many different kind of events can be triggered during a mailbox
+operation, such as:
+
+* `MailboxEvent`: event related to an operation regarding a mailbox:
+** `MailboxDeletion`: a mailbox has been deleted
+** `MailboxAdded`: a mailbox has been added
+** `MailboxRenamed`: a mailbox has been renamed
+** `MailboxACLUpdated`: a mailbox got its rights and permissions updated
+* `MessageEvent`: event related to an operation regarding a message:
+** `Added`: messages have been added to a mailbox
+** `Expunged`: messages have been expunged from a mailbox
+** `FlagsUpdated`: messages had their flags updated
+** `MessageMoveEvent`: messages have been moved from a mailbox to an
+other
+* `QuotaUsageUpdatedEvent`: event related to quota update
+
+Mailbox listeners can register themselves on this event bus system to be
+called when an event is fired, allowing to do different kind of extra
+operations on the system, like:
+
+* Current quota calculation
+* Message indexation with ElasticSearch
+* Mailbox annotations cleanup
+* Ham/spam reporting to SpamAssassin
+* …
+
+==== Deleted Messages Vault
+
+Deleted Messages Vault is an interesting feature that will help James
+users have a chance to:
+
+* retain users deleted messages for some time.
+* restore & export deleted messages by various criteria.
+* permanently delete some retained messages.
+
+If the Deleted Messages Vault is enabled when users delete their mails,
+and by that we mean when they try to definitely delete them by emptying
+the trash, James will retain these mails into the Deleted Messages
+Vault, before an email or a mailbox is going to be deleted. And only
+administrators can interact with this component via
+wref:webadmin.adoc#_deleted-messages-vault[WebAdmin REST APIs].
+
+However, mails are not retained forever as you have to configure a
+retention period before using it (with one-year retention by default if
+not defined). It’s also possible to permanently delete a mail if needed.
+
+=== Data
+
+(TODO)
+
+=== Recipient rewrite tables
+
+(TODO)
+
+=== BlobStore
+
+Stores potentially large binary data.
+
+Mailbox component, Mail Queue component, Deleted Message Vault
+component relies on it.
+
+Supported backends includes ObjectStorage (link:https://wiki.openstack.org/wiki/Swift[Swift], S3 API).
+
+Encryption can be configured on top of ObjectStorage.
+
+Blobs are currently deduplicated in order to reduce storage space. This means that two blobs with
+the same content will be stored one once.
+
+The downside is that deletion is more complicated, and a garbage collection needs to be run. This is a work
+in progress. See link:https://issues.apache.org/jira/browse/JAMES-3150[JAMES-3150].
+
+=== Task Manager
+
+Allows to control and schedule long running tasks run by other
+components. Among other it enables scheduling, progress monitoring,
+cancelation of long running tasks.
+
+Distributed James leverage a task manager using Event Sourcing and RabbitMQ for messaging.
+
+=== Event sourcing
+
+link:https://martinfowler.com/eaaDev/EventSourcing.html[Event sourcing] implementation
+for the Distributed server stores events in Cassandra. It enables components
+to rely on event sourcing technics for taking decisions.
+
+A short list of usage are:
+
+* Data leak prevention storage
+* JMAP filtering rules storage
+* Validation of the MailQueue configuration
+* Sending email warnings to user close to their quota
+* Implementation of the TaskManager
+

@@ -25,6 +25,7 @@ import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.jmap.rfc8621.contract.EchoMethodContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
@@ -39,7 +40,11 @@ public class DistributedEchoMethodTest implements EchoMethodContract {
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .blobStore(BlobStoreConfiguration.builder()
+                    .objectStorage()
+                    .disableCache()
+                    .deduplication())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())

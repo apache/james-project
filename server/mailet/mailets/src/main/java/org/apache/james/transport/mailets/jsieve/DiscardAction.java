@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
+import java.util.function.Predicate;
+
 import javax.mail.MessagingException;
 
 import org.apache.jsieve.mail.Action;
@@ -40,7 +42,7 @@ public class DiscardAction extends FileIntoAction implements MailAction {
     public static void removeRecipient(Mail mail, ActionContext context) {
         mail.setRecipients(mail.getRecipients()
             .stream()
-            .filter(mailAddress -> !mailAddress.equals(context.getRecipient()))
+            .filter(Predicate.not(Predicate.isEqual(context.getRecipient())))
             .collect(Guavate.toImmutableList()));
     }
 }

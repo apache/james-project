@@ -1,0 +1,421 @@
+# IANA Considerations
+
+## JMAP Capability Registration for "mail"
+
+IANA has registered the "mail" JMAP Capability as follows:
+
+Capability Name: `urn:ietf:params:jmap:mail`
+
+Specification document: this document
+
+Intended use: common
+
+Change Controller: IETF
+
+Security and privacy considerations: this document, Section 9
+
+## JMAP Capability Registration for "submission"
+
+IANA has registered the "submission" JMAP Capability as follows:
+
+Capability Name: `urn:ietf:params:jmap:submission`
+
+Specification document: this document
+
+Intended use: common
+
+Change Controller: IETF
+
+Security and privacy considerations: this document, Section 9
+
+## JMAP Capability Registration for "vacationresponse"
+
+IANA has registered the "vacationresponse" JMAP Capability as follows:
+
+Capability Name: `urn:ietf:params:jmap:vacationresponse`
+
+Specification document: this document
+
+Intended use: common
+
+Change Controller: IETF
+
+Security and privacy considerations: this document, Section 9
+
+## IMAP and JMAP Keywords Registry
+
+This document makes two changes to the IMAP keywords registry as defined in [@!RFC5788].
+
+First, the name of the registry is changed to the "IMAP and JMAP Keywords" registry.
+
+Second, a scope column is added to the template and registry indicating
+whether a keyword applies to "IMAP-only", "JMAP-only", "both", or "reserved".
+All keywords already in the IMAP keyword registry have been marked with a
+scope of "both". The "reserved" status can be used to prevent future
+registration of a name that would be confusing if registered.
+Registration of keywords with scope "reserved" omit most fields in the
+registration template (see registration of `$recent` below for an example); such registrations are intended to be infrequent.
+
+IMAP clients MAY silently ignore any keywords marked "JMAP-only" or
+"reserved" in the event they appear in protocol. JMAP clients MAY silently
+ignore any keywords marked "IMAP-only" or "reserved" in the event they appear
+in protocol.
+
+New "JMAP-only" keywords are registered in the following subsections.
+These keywords correspond to IMAP system keywords and are thus not
+appropriate for use in IMAP. These keywords cannot be subsequently
+registered for use in IMAP except via standards action.
+
+### Registration of JMAP Keyword '$draft'
+
+This registers the "JMAP-only" keyword `$draft` in the "IMAP and JMAP Keywords" registry.
+
+Keyword name: `$draft`
+
+Scope: JMAP-only
+
+Purpose (description): This is set when the user wants to treat the
+message as a draft the user is composing. This is the JMAP equivalent of the IMAP \Draft flag.
+
+Private or Shared on a server: BOTH
+
+Is it an advisory keyword or may it cause an automatic action:
+Automatic. If the account has an IMAP mailbox marked with the \Drafts special
+use attribute [RFC6154], setting this flag MAY cause the message to appear in
+that mailbox automatically. Certain JMAP computed values such as
+*unreadEmails* will change as a result of changing this flag. In
+addition, mail clients will typically present draft messages in a
+composer window rather than a viewer window.
+
+When/by whom the keyword is set/cleared:
+This is typically set by a JMAP client when referring to a draft
+message. One model for draft Emails would result in clearing this flag
+in an EmailSubmission/set operation with an onSuccessUpdateEmail
+argument. In a mail store shared by JMAP and IMAP, this is also set and
+cleared as necessary so it matches the IMAP \Draft flag.
+
+Related keywords: None
+
+Related IMAP/JMAP Capabilities: SPECIAL-USE [RFC6154]
+
+Security Considerations:
+A server implementing this keyword as a shared keyword may disclose that
+a user considers the message a draft message. This information would be
+exposed to other users with read permission for the Mailbox keywords.
+
+Published specification: this document
+
+Person & email address to contact for further information:
+JMAP mailing list <jmap@ietf.org>
+
+Intended usage: COMMON
+
+Owner/Change controller: IESG
+
+### Registration of JMAP Keyword '$seen'
+
+This registers the "JMAP-only" keyword `$seen` in the "IMAP and JMAP
+Keywords" registry.
+
+Keyword name: `$seen`
+
+Scope: JMAP-only
+
+Purpose (description): This is set when the user wants to treat the
+message as read. This is the JMAP equivalent of the IMAP \Seen flag.
+
+Private or Shared on a server: BOTH
+
+Is it an advisory keyword or may it cause an automatic action:
+Advisory. However, certain JMAP computed values such as *unreadEmails*
+will change as a result of changing this flag.
+
+When/by whom the keyword is set/cleared:
+This is set by a JMAP client when it presents the message content to the
+user; clients often offer an option to clear this flag. In a mail store
+shared by JMAP and IMAP, this is also set and cleared as necessary so it
+matches the IMAP \Seen flag.
+
+Related keywords: None
+
+Related IMAP/JMAP Capabilities: None
+
+Security Considerations:
+A server implementing this keyword as a shared keyword may disclose that
+a user considers the message to have been read. This information would be
+exposed to other users with read permission for the Mailbox keywords.
+
+Published specification: this document
+
+Person & email address to contact for further information:
+JMAP mailing list <jmap@ietf.org>
+
+Intended usage: COMMON
+
+Owner/Change controller: IESG
+
+### Registration of JMAP Keyword '$flagged'
+
+This registers the "JMAP-only" keyword `$flagged` in the "IMAP and JMAP
+Keywords" registry.
+
+Keyword name: `$flagged`
+
+Scope: JMAP-only
+
+Purpose (description): This is set when the user wants to treat the
+message as flagged for urgent/special attention. This is the JMAP
+equivalent of the IMAP \Flagged flag.
+
+Private or Shared on a server: BOTH
+
+Is it an advisory keyword or may it cause an automatic action:
+Automatic. If the account has an IMAP mailbox marked with the \Flagged special
+use attribute [RFC6154], setting this flag MAY cause the message to appear in
+that mailbox automatically.
+
+When/by whom the keyword is set/cleared:
+JMAP clients typically allow a user to set/clear this flag as desired.
+In a mail store shared by JMAP and IMAP, this is also set and cleared as
+necessary so it matches the IMAP \Flagged flag.
+
+Related keywords: None
+
+Related IMAP/JMAP Capabilities: SPECIAL-USE [RFC6154]
+
+Security Considerations:
+A server implementing this keyword as a shared keyword may disclose that
+a user considers the message as flagged for urgent/special attention.
+This information would be exposed to other users with read permission
+for the Mailbox keywords.
+
+Published specification: this document
+
+Person & email address to contact for further information:
+JMAP mailing list <jmap@ietf.org>
+
+Intended usage: COMMON
+
+Owner/Change controller: IESG
+
+### Registration of JMAP Keyword '$answered'
+
+This registers the "JMAP-only" keyword `$answered` in the "IMAP and JMAP
+Keywords" registry.
+
+Keyword name: `$answered`
+
+Scope: JMAP-only
+
+Purpose (description): This is set when the message has been answered.
+
+Private or Shared on a server: BOTH
+
+Is it an advisory keyword or may it cause an automatic action:
+Advisory.
+
+When/by whom the keyword is set/cleared:
+JMAP clients typically set this when submitting a reply or answer to the
+message. It may be set by the EmailSubmission/set operation with an
+onSuccessUpdateEmail argument. In a mail store shared by JMAP and IMAP,
+this is also set and cleared as necessary so it matches the IMAP
+\Answered flag.
+
+Related keywords: None
+
+Related IMAP/JMAP Capabilities: None
+
+Security Considerations:
+A server implementing this keyword as a shared keyword may disclose that
+a user has replied to a message.
+This information would be exposed to other users with read permission
+for the Mailbox keywords.
+
+Published specification: this document
+
+Person & email address to contact for further information:
+JMAP mailing list <jmap@ietf.org>
+
+Intended usage: COMMON
+
+Owner/Change controller: IESG
+
+### Registration of '$recent' Keyword
+
+This registers the keyword `$recent` in the "IMAP and JMAP Keywords" registry.
+
+Keyword name: `$recent`
+
+Scope: reserved
+
+Purpose (description): This keyword is not used to avoid confusion with
+the IMAP \Recent system flag.
+
+Published specification: this document
+
+Person & email address to contact for further information:
+JMAP mailing list <jmap@ietf.org>
+
+Owner/Change controller: IESG
+
+## IMAP Mailbox Name Attributes Registry
+
+### Registration of "inbox" Role
+
+This registers the "JMAP-only" `inbox` attribute in the "IMAP Mailbox Name Attributes" registry, as established in [@!RFC8457].
+
+Attribute Name: Inbox
+
+Description: New mail is delivered here by default.
+
+Reference: This document, Section 10.5.
+
+Usage Notes: JMAP only
+
+## JMAP Error Codes Registry
+
+The following subsections register several new error codes in the "JMAP Error Codes" registry, as defined in [@!RFC8620].
+
+### mailboxHasChild
+
+JMAP Error Code: mailboxHasChild
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 2.5
+
+Description: The Mailbox still has at least one child Mailbox. The client MUST remove these before it can delete the parent Mailbox.
+
+### mailboxHasEmail
+
+JMAP Error Code: mailboxHasEmail
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 2.5
+
+Description: The Mailbox has at least one message assigned to it and the onDestroyRemoveEmails argument was false.
+
+### blobNotFound
+
+JMAP Error Code: blobNotFound
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 4.6
+
+Description: At least one blob id referenced in the object doesn’t exist.
+
+### tooManyKeywords
+
+JMAP Error Code: tooManyKeywords
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 4.6
+
+Description: The change to the Email’s keywords would exceed a server-defined maximum.
+
+### tooManyMailboxes
+
+JMAP Error Code: tooManyMailboxes
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 4.6
+
+Description: The change to the set of Mailboxes that this Email is in would exceed a server-defined maximum.
+
+### invalidEmail
+
+JMAP Error Code: invalidEmail
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 7.5
+
+Description: The Email to be sent is invalid in some way.
+
+### tooManyRecipients
+
+JMAP Error Code: tooManyRecipients
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 7.5
+
+Description: The envelope [@!RFC5321]  (supplied or generated) has more recipients than the server allows.
+
+### noRecipients
+
+JMAP Error Code: noRecipients
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 7.5
+
+Description: The envelope [@!RFC5321]  (supplied or generated) does not have any rcptTo email addresses.
+
+### invalidRecipients
+
+JMAP Error Code: invalidRecipients
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 7.5
+
+Description:  The rcptTo property of the envelope [@!RFC5321]  (supplied or generated) contains at least one rcptTo value that is not a valid email address for sending to.
+
+### forbiddenMailFrom
+
+JMAP Error Code: forbiddenMailFrom
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 7.5
+
+Description: – The server does not permit the user to send a message with this envelope From address [@!RFC5321].
+
+### forbiddenFrom
+
+JMAP Error Code: forbiddenFrom
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, sections 6.3 and 7.5
+
+Description: The server does not permit the user to send a message with the From header field [@!RFC5322] of the message to be sent.
+
+### forbiddenToSend
+
+JMAP Error Code: forbiddenToSend
+
+Intended use: common
+
+Change controller: IETF
+
+Reference: This document, Section 7.5
+
+Description: The user does not have permission to send at all right now.

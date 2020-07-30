@@ -21,8 +21,6 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.ConfigurationProbe;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.Test;
@@ -30,11 +28,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraJamesServerTest implements JamesServerContract {
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();

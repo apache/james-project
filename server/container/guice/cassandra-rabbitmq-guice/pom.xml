@@ -75,12 +75,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-scanning-search</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-tika</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -125,10 +119,6 @@
                     <artifactId>guice-multibindings</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>blob-union</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -178,6 +168,10 @@
             <artifactId>james-server-webadmin-core</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-webadmin-rabbitmq</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

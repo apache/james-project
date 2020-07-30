@@ -82,10 +82,6 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
     }
 
     @Override
-    public void await() {
-    }
-
-    @Override
     public Module getModule() {
         BucketName defaultBucketName = BucketName.of(UUID.randomUUID().toString());
         AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()

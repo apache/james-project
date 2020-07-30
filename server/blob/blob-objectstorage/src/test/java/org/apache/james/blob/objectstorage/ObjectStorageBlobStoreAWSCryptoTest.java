@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.DeduplicationBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -34,11 +35,10 @@ import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class ObjectStorageBlobStoreAWSCryptoTest implements MetricableBlobStoreContract {
+public class ObjectStorageBlobStoreAWSCryptoTest implements MetricableBlobStoreContract, DeduplicationBlobStoreContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private static final Credentials PASSWORD = Credentials.of("testing");
     private static final String SAMPLE_SALT = "c603a7327ee3dcbc031d8d34b1096c605feca5e1";
@@ -85,17 +85,5 @@ public class ObjectStorageBlobStoreAWSCryptoTest implements MetricableBlobStoreC
     @Override
     public BlobId.Factory blobIdFactory() {
         return BLOB_ID_FACTORY;
-    }
-
-    @Override
-    @Disabled("JAMES-2829 Unstable with scality/S3 impl")
-    public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
-
-    }
-
-    @Override
-    @Disabled("JAMES-2838 Unstable with scality/S3 impl")
-    public void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
-
     }
 }

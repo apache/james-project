@@ -34,6 +34,7 @@ import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueBrowser;
 import org.apache.mailet.Mail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -74,6 +75,13 @@ class Enqueuer {
             .flatMap(mailQueueView::storeMail)
             .thenEmpty(Mono.fromRunnable(enqueueMetric::increment))
             .block();
+    }
+
+    Mono<Void> reQueue(CassandraMailQueueBrowser.CassandraMailQueueItemView item) {
+        Mail mail = item.getMail();
+        return Mono.fromCallable(() -> new MailReference(item.getEnqueuedId(), mail, item.getEnqueuedPartsId()))
+            .flatMap(Throwing.function(this::publishReferenceToRabbit).sneakyThrow())
+            .then();
     }
 
     private Mono<MimeMessagePartsId> saveMail(Mail mail) throws MailQueue.MailQueueException {

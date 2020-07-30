@@ -20,20 +20,24 @@
 package org.apache.james.queue.rabbitmq;
 
 import java.time.Duration;
+import java.time.Instant;
 
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueBrowser;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class RabbitMQMailQueue implements ManageableMailQueue {
 
@@ -43,12 +47,12 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     private final MetricFactory metricFactory;
     private final Enqueuer enqueuer;
     private final Dequeuer dequeuer;
-    private final MailQueueView mailQueueView;
+    private final MailQueueView<CassandraMailQueueBrowser.CassandraMailQueueItemView> mailQueueView;
     private final MailQueueItemDecoratorFactory decoratorFactory;
 
     RabbitMQMailQueue(MetricFactory metricFactory, MailQueueName name,
                       Enqueuer enqueuer, Dequeuer dequeuer,
-                      MailQueueView mailQueueView, MailQueueItemDecoratorFactory decoratorFactory) {
+                      MailQueueView<CassandraMailQueueBrowser.CassandraMailQueueItemView> mailQueueView, MailQueueItemDecoratorFactory decoratorFactory) {
         this.metricFactory = metricFactory;
         this.name = name;
         this.enqueuer = enqueuer;
@@ -118,5 +122,14 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
         return MoreObjects.toStringHelper(this)
             .add("name", name)
             .toString();
+    }
+
+    public Flux<String> republishNotProcessedMails(Instant olderThan) {
+        Function<CassandraMailQueueBrowser.CassandraMailQueueItemView, Mono<String>> requeue = item ->
+            enqueuer.reQueue(item)
+                .thenReturn(item.getMail().getName());
+
+        return mailQueueView.browseOlderThanReactive(olderThan)
+            .flatMap(requeue);
     }
 }

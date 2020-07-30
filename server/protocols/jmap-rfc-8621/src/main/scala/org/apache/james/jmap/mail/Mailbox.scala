@@ -25,6 +25,8 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.core.Username
 import org.apache.james.jmap.mail.MailboxName.MailboxName
+import org.apache.james.jmap.model.CapabilityIdentifier
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
@@ -142,4 +144,25 @@ case class Mailbox(id: MailboxId,
   def hasRole(role: Role): Boolean = this.role.contains(role)
 
   val hasSystemRole: Boolean = role.exists(_.isSystemRole)
+}
+
+object Mailbox {
+  def allProperties: Set[String] = Set("id", "name", "parentId", "role", "sortOrder", "totalEmails", "unreadEmails",
+    "totalThreads", "unreadThreads", "myRights", "isSubscribed", "namespace", "rights", "quotas")
+
+  def propertiesFiltered(requestedProperties: Option[Properties], allowedCapabilities : Set[CapabilityIdentifier]) : Set[String] = {
+    val propertiesForCapabilities: Map[CapabilityIdentifier, Set[String]] = Map(
+      CapabilityIdentifier.JAMES_QUOTA -> Set("quotas"),
+      CapabilityIdentifier.JAMES_SHARES -> Set("namespace", "rights")
+    )
+
+    val propertiesToHide = propertiesForCapabilities.filterNot(entry => allowedCapabilities.contains(entry._1))
+      .flatMap(_._2)
+      .toSet
+
+    requestedProperties match {
+      case None => allProperties -- propertiesToHide
+      case Some(requested) => (Set("id") ++ requested.value.map(_.toString()).toSet) -- propertiesToHide
+    }
+  }
 }

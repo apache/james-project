@@ -24,6 +24,7 @@ import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
 import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.BasicAuthenticationStrategy;
+import org.apache.james.jmap.http.SessionRoutes;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.json.Serializer;
 import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
@@ -53,8 +54,8 @@ public class RFC8621MethodsModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    JMAPRoutesHandler routesHandler(JMAPApiRoutes jmapApiRoutes) {
-        return new JMAPRoutesHandler(Version.RFC8621, jmapApiRoutes);
+    JMAPRoutesHandler routesHandler(SessionRoutes sessionRoutes, JMAPApiRoutes jmapApiRoutes) {
+        return new JMAPRoutesHandler(Version.RFC8621, jmapApiRoutes, sessionRoutes);
     }
 
     @Provides

@@ -57,7 +57,10 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class WithSwift implements ContractSuite {
         @RegisterExtension
-        JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.objectStorage().disableCache())
+        JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.builder()
+                    .objectStorage()
+                    .disableCache()
+                    .deduplication())
             .extension(new SwiftBlobStoreExtension())
             .build();
     }
@@ -66,7 +69,10 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class WithAwsS3 implements ContractSuite {
         @RegisterExtension
-        JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.objectStorage().disableCache())
+        JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.builder()
+                    .objectStorage()
+                    .disableCache()
+                    .deduplication())
             .extension(new AwsS3BlobStoreExtension())
             .build();
     }
@@ -75,7 +81,10 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class WithoutSwiftOrAwsS3 implements ContractSuite {
         @RegisterExtension
-        JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.cassandra())
+        JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.builder()
+                .cassandra()
+                .disableCache()
+                .passthrough())
             .build();
     }
 
@@ -85,6 +94,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .blobStore(blobStoreConfiguration)
+                .searchConfiguration(SearchConfiguration.elasticSearch())
                 .build())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())

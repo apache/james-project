@@ -20,12 +20,19 @@
 
 package org.apache.james.task.eventsourcing.distributed;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber.EXCHANGE_NAME;
+import static org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber.ROUTING_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.ONE_MINUTE;
+import static org.awaitility.Duration.TEN_SECONDS;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.eventsourcing.Event;
@@ -36,11 +43,14 @@ import org.apache.james.json.DTOConverter;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.eventsourcing.TerminationSubscriber;
 import org.apache.james.task.eventsourcing.TerminationSubscriberContract;
+import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.rabbitmq.OutboundMessage;
 
 class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract {
     private static final JsonTaskSerializer TASK_SERIALIZER = JsonTaskSerializer.of();
@@ -52,7 +62,8 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
 
     @Override
     public TerminationSubscriber subscriber() {
-        RabbitMQTerminationSubscriber subscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), SERIALIZER);
+        RabbitMQTerminationSubscriber subscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getSender(),
+            rabbitMQExtension.getReceiverProvider(), SERIALIZER);
         subscriber.start();
         return subscriber;
     }
@@ -76,5 +87,46 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
 
         assertThat(receivedEventsFirst).containsExactly(COMPLETED_EVENT);
         assertThat(receivedEventsSecond).containsExactly(COMPLETED_EVENT);
+    }
+
+    @Test
+    void eventProcessingShouldNotCrashOnInvalidMessage() {
+        TerminationSubscriber subscriber1 = subscriber();
+        Flux<Event> firstListener = Flux.from(subscriber1.listenEvents());
+
+        rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME,
+                ROUTING_KEY,
+                "BAD_PAYLOAD!".getBytes(UTF_8))))
+            .block();
+
+        sendEvents(subscriber1, COMPLETED_EVENT);
+
+        List<Event> receivedEventsFirst = new ArrayList<>();
+        firstListener.subscribe(receivedEventsFirst::add);
+
+        await().timeout(TEN_SECONDS).untilAsserted(() -> assertThat(receivedEventsFirst).hasSize(1));
+    }
+
+    @Test
+    void eventProcessingShouldNotCrashOnInvalidMessages() {
+        TerminationSubscriber subscriber1 = subscriber();
+        Flux<Event> firstListener = Flux.from(subscriber1.listenEvents());
+
+        IntStream.range(0, 10).forEach(i -> rabbitMQExtension.getSender()
+            .send(Mono.just(new OutboundMessage(EXCHANGE_NAME,
+                ROUTING_KEY,
+                "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
+            .block());
+
+        sendEvents(subscriber1, COMPLETED_EVENT);
+
+        List<Event> receivedEventsFirst = new ArrayList<>();
+        firstListener.subscribe(receivedEventsFirst::add);
+
+        await().atMost(ONE_MINUTE).untilAsserted(() ->
+            SoftAssertions.assertSoftly(soft -> {
+                assertThat(receivedEventsFirst).containsExactly(COMPLETED_EVENT);
+            }));
     }
 }

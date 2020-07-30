@@ -36,10 +36,6 @@ public class DockerLdapRule implements GuiceModuleTestRule {
     }
 
     @Override
-    public void await() {
-    }
-
-    @Override
     public Statement apply(Statement statement, Description description) {
         return statement;
     }

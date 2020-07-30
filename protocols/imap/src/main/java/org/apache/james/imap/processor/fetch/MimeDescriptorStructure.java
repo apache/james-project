@@ -34,34 +34,23 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MimeDescriptor;
 
 final class MimeDescriptorStructure implements FetchResponse.Structure {
-
     private final MimeDescriptor descriptor;
-
     private final List<String> parameters;
-
     private final List<Structure> parts;
-
     private final String disposition;
-
     private final Map<String, String> dispositionParams;
-
     private final String location;
-
     private final String md5;
-
     private final List<String> languages;
-
     private final Structure embeddedMessageStructure;
-
     private final Envelope envelope;
 
     public MimeDescriptorStructure(boolean allowExtensions, MimeDescriptor descriptor, EnvelopeBuilder builder) throws MailboxException {
-        super();
         this.descriptor = descriptor;
-        parameters = createParameters(descriptor);
-        parts = createParts(allowExtensions, descriptor, builder);
+        this.parameters = createParameters(descriptor);
+        this.parts = createParts(allowExtensions, descriptor, builder);
 
-        languages = descriptor.getLanguages();
+        this.languages = descriptor.getLanguages();
         this.dispositionParams = descriptor.getDispositionParams();
         this.disposition = descriptor.getDisposition();
 
@@ -70,11 +59,11 @@ final class MimeDescriptorStructure implements FetchResponse.Structure {
 
         final MimeDescriptor embeddedMessage = descriptor.embeddedMessage();
         if (embeddedMessage == null) {
-            embeddedMessageStructure = null;
-            envelope = null;
+            this.embeddedMessageStructure = null;
+            this.envelope = null;
         } else {
-            embeddedMessageStructure = new MimeDescriptorStructure(allowExtensions, embeddedMessage, builder);
-            envelope = builder.buildEnvelope(embeddedMessage);
+            this.embeddedMessageStructure = new MimeDescriptorStructure(allowExtensions, embeddedMessage, builder);
+            this.envelope = builder.buildEnvelope(embeddedMessage);
         }
     }
 

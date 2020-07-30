@@ -1,0 +1,98 @@
+# Search Snippets
+
+<aside class="warning">
+  Not implemented
+</aside>
+
+When doing a search on a `String` property, the client may wish to show the relevant section of the body that matches the search as a preview and to highlight any matching terms in both this and the subject of the Email. Search snippets represent this data.
+
+A **SearchSnippet** object has the following properties:
+
+- **emailId**: `Id`
+  The Email id the snippet applies to.
+- **subject**: `String|null`
+  If text from the filter matches the subject, this is the subject of the Email with the following transformations:
+
+    1. Any instance of the following three characters MUST be replaced by an appropriate HTML entity: & (ampersand), < (less-than sign), and > (greater-than sign) [HTML](https://www.w3.org/TR/html52/). Other characters MAY also be replaced with an HTML entity form.
+
+    2. The matching words/phrases from the filter are wrapped in HTML `<mark></mark>` tags.
+
+    If the subject does not match text from the filter, this property is `null`.
+- **preview**: `String|null`
+  If text from the filter matches the plaintext or HTML body, this is the relevant section of the body (converted to plaintext if originally HTML), with the same transformations as the *subject* property. It MUST NOT be bigger than 255 octets in size. If the body does not contain a match for the text from the filter, this property is `null`.
+
+What is a relevant section of the body for preview is server defined. If the server is unable to determine search snippets, it MUST return `null` for both the *subject* and *preview* properties.
+
+Note that unlike most data types, a SearchSnippet DOES NOT have a property called `id`.
+
+The following JMAP method is supported.
+
+## SearchSnippet/get
+
+To fetch search snippets, make a call to `SearchSnippet/get`. It takes the following arguments:
+
+- **accountId**: `Id`
+  The id of the account to use.
+- **filter**: `FilterOperator|FilterCondition|null`
+  The same filter as passed to Email/query; see the description of this method in Section 4.4 for details.
+- **emailIds**: `Id[]`
+  The ids of the Emails to fetch snippets for.
+
+The response has the following arguments:
+
+- **accountId**: `Id`
+  The id of the account used for the call.
+- **list**: `SearchSnippet[]`
+  An array of SearchSnippet objects for the requested Email ids. This may not be in the same order as the ids that were in the request.
+- **notFound**: `Id[]|null`
+  An array of Email ids requested that could not be found, or `null` if all
+  ids were found.
+
+As the search snippets are derived from the message content and the algorithm for doing so could change over time, fetching the same snippets a second time MAY return a different result. However, the previous value is not considered incorrect, so there is no state string or update mechanism needed.
+
+The following additional errors may be returned instead of the *SearchSnippet/get* response:
+
+`requestTooLarge`: The number of *emailIds* requested by the client exceeds the maximum number the server is willing to process in a single method call.
+
+`unsupportedFilter`: The server is unable to process the given *filter* for any reason.
+
+## Example
+
+Here, we did an Email/query to search for any Email in the account containing the word "foo"; now, we are fetching the search snippets for some of the ids that were returned in the results:
+
+    [[ "SearchSnippet/get", {
+      "accountId": "ue150411c",
+      "filter": {
+        "text": "foo"
+      },
+      "emailIds": [
+        "M44200ec123de277c0c1ce69c",
+        "M7bcbcb0b58d7729686e83d99",
+        "M28d12783a0969584b6deaac0",
+        ...
+      ]
+    }, "0" ]]
+
+Example response:
+
+    [[ "SearchSnippet/get", {
+      "accountId": "ue150411c",
+      "list": [{
+          "emailId": "M44200ec123de277c0c1ce69c",
+          "subject": null,
+          "preview": null
+      }, {
+          "emailId": "M7bcbcb0b58d7729686e83d99",
+          "subject": "The <mark>Foo</mark>sball competition",
+          "preview": "...year the <mark>foo</mark>sball competition will
+            be held in the Stadium de ..."
+      }, {
+          "emailId": "M28d12783a0969584b6deaac0",
+          "subject": null,
+          "preview": "...the <mark>Foo</mark>/bar method results often
+            returns &lt;1 widget rather than the complete..."
+      },
+      ...
+      ],
+      "notFound": null
+    }, "0" ]]

@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.function.Predicate;
+
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
@@ -30,7 +32,7 @@ public class SetErrorMessage extends GenericMailet {
     @Override
     public void init() throws MessagingException {
         errorMessage = getInitParameterAsOptional("errorMessage")
-            .filter(string -> !string.isEmpty())
+            .filter(Predicate.not(String::isEmpty))
             .orElseThrow(() -> new IllegalStateException("'errorMessage' needs to be specified and cannot be empty"));
     }
 

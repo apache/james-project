@@ -76,10 +76,6 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
     }
 
     @Override
-    public void await() {
-    }
-
-    @Override
     public Module getModule() {
         SwiftKeystone2ObjectStorage.Configuration authConfiguration = SwiftKeystone2ObjectStorage.configBuilder()
             .credentials(Credentials.of("demo"))

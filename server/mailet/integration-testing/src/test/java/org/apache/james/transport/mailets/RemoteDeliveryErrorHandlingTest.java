@@ -46,6 +46,10 @@ import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension.DockerM
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.AtMost;
+import org.apache.james.transport.matchers.IsRemoteDeliveryPermanentError;
+import org.apache.james.transport.matchers.IsRemoteDeliveryTemporaryError;
+import org.apache.james.transport.matchers.RecipientIs;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -54,7 +58,6 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -67,9 +70,12 @@ public class RemoteDeliveryErrorHandlingTest {
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT_DOMAIN = "test.com";
     private static final String RECIPIENT = "touser@" + RECIPIENT_DOMAIN;
+    private static final String RECIPIENT2 = "accident@" + RECIPIENT_DOMAIN;
     private static final String LOCALHOST = "localhost";
     private static final MailRepositoryUrl REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/error/remote-delivery/temporary");
     private static final MailRepositoryUrl REMOTE_DELIVERY_PERMANENT_ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/error/remote-delivery/permanent");
+    private static final MailRepositoryUrl ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/error/");
+    private static final Integer MAX_EXECUTIONS = 2;
 
     @RegisterExtension
     static MockSmtpServerExtension mockSmtpServerExtension = new MockSmtpServerExtension();
@@ -95,17 +101,35 @@ public class RemoteDeliveryErrorHandlingTest {
                 .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(BCC_STRIPPER)
                     .addMailet(MailetConfiguration.builder()
+                        .mailet(ToProcessor.class)
+                        .addProperty("processor", "remote-delivery-error")
+                        .matcher(RecipientIs.class)
+                        .matcherCondition(RECIPIENT2))
+                    .addMailet(MailetConfiguration.builder()
                         .mailet(RemoteDelivery.class)
                         .addProperty("maxRetries", "1")
                         .addProperty("delayTime", "0")
                         .addProperty("bounceProcessor", "remote-delivery-error")
-                        .matcher(All.class)))
-                .putProcessor(ProcessorConfiguration.builder()
-                    .state("remote-delivery-error")
+                        .matcher(AtMost.class)
+                        .matcherCondition(MAX_EXECUTIONS.toString()))
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.asString()))))
+                        .addProperty("repositoryPath", REMOTE_DELIVERY_PERMANENT_ERROR_REPOSITORY.asString())))
+                .putProcessor(ProcessorConfiguration.builder()
+                    .state("remote-delivery-error")
+                    .addMailet(MailetConfiguration.builder()
+                        .mailet(ToRepository.class)
+                        .matcher(IsRemoteDeliveryPermanentError.class)
+                        .addProperty("repositoryPath", REMOTE_DELIVERY_PERMANENT_ERROR_REPOSITORY.asString()))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(IsRemoteDeliveryTemporaryError.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.asString()))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", ERROR_REPOSITORY.asString()))))
             .build(tempDir);
 
         jamesServer.start();
@@ -181,7 +205,6 @@ public class RemoteDeliveryErrorHandlingTest {
     }
 
     @Test
-    @Disabled("Remote delivery should attach failures information to the mail, and we should provide a Matcher for it")
     void remoteDeliveryShouldStorePermanentFailuresSeparately(SMTPMessageSender smtpMessageSender, DockerMockSmtp dockerMockSmtp) throws Exception {
         // Given a permanent failing remote server
         dockerMockSmtp.getConfigurationClient()
@@ -205,7 +228,6 @@ public class RemoteDeliveryErrorHandlingTest {
     }
 
     @Test
-    @Disabled("We need to count retries")
     void remoteDeliveryShouldStoreTemporaryFailureAsPermanentWhenExceedsMaximumRetries(SMTPMessageSender smtpMessageSender, DockerMockSmtp dockerMockSmtp) throws Exception {
         // Given a failed remote delivery
         dockerMockSmtp.getConfigurationClient()
@@ -230,11 +252,35 @@ public class RemoteDeliveryErrorHandlingTest {
             .param("queue", MailQueueFactory.SPOOL.asString())
             .param("processor", TRANSPORT_PROCESSOR)
             .patch("/mailRepositories/" + REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.getPath().urlEncoded() + "/mails");
+        awaitAtMostOneMinute
+            .untilAsserted(() -> assertThat(jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY))
+                .isEqualTo(1));
+        given()
+            .spec(webAdminApi)
+            .param("action", "reprocess")
+            .param("queue", MailQueueFactory.SPOOL.asString())
+            .param("processor", TRANSPORT_PROCESSOR)
+            .patch("/mailRepositories/" + REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.getPath().urlEncoded() + "/mails");
 
         // Then mail should be stored in permanent error repository
         awaitAtMostOneMinute
             .untilAsserted(() -> assertThat(jamesServer.getProbe(MailRepositoryProbeImpl.class)
                 .getRepositoryMailCount(REMOTE_DELIVERY_PERMANENT_ERROR_REPOSITORY))
+                .isEqualTo(1));
+    }
+
+    @Test
+    void remoteDeliveryErrorHandlingShouldIgnoreMailsNotTransitingByRemoteDelivery(SMTPMessageSender smtpMessageSender) throws Exception {
+        // When we relay a mail where some unexpected accident happens
+        smtpMessageSender.connect(LOCALHOST, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, RECIPIENT2);
+
+        // Then mail should be stored in error repository
+        awaitAtMostOneMinute
+            .untilAsserted(() -> assertThat(jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(ERROR_REPOSITORY))
                 .isEqualTo(1));
     }
 }

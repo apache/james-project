@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.james.jmap.draft.model.Keywords;
@@ -132,7 +133,7 @@ public interface MessageViewFactory<T extends MessageView> {
             return messageResults
                 .groupBy(MessageResult::getMessageId)
                 .flatMap(Flux::collectList)
-                .filter(list -> !list.isEmpty())
+                .filter(Predicate.not(List::isEmpty))
                 .flatMap(toMessageViews(converter));
         }
 

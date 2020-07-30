@@ -39,7 +39,7 @@ import com.google.common.base.Strings;
 
 import reactor.core.publisher.Mono;
 
-public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobStoreContract {
+public interface BlobStoreContract extends BucketBlobStoreContract {
 
     static Stream<Arguments> storagePolicies() {
         return Stream.of(
@@ -125,39 +125,6 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
-    }
-
-    @ParameterizedTest
-    @MethodSource("storagePolicies")
-    default void saveShouldReturnBlobId(BlobStore.StoragePolicy storagePolicy) {
-        BlobStore store = testee();
-        BucketName defaultBucketName = store.getDefaultBucketName();
-
-        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy)).block();
-
-        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
-    }
-
-    @ParameterizedTest
-    @MethodSource("storagePolicies")
-    default void saveShouldReturnBlobIdOfString(BlobStore.StoragePolicy storagePolicy) {
-        BlobStore store = testee();
-        BucketName defaultBucketName = store.getDefaultBucketName();
-
-        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_STRING, storagePolicy)).block();
-
-        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
-    }
-
-    @ParameterizedTest
-    @MethodSource("storagePolicies")
-    default void saveShouldReturnBlobIdOfInputStream(BlobStore.StoragePolicy storagePolicy) {
-        BlobStore store = testee();
-        BucketName defaultBucketName = store.getDefaultBucketName();
-
-        BlobId blobId = Mono.from(store.save(defaultBucketName, new ByteArrayInputStream(SHORT_BYTEARRAY), storagePolicy)).block();
-
-        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
 
     @Test

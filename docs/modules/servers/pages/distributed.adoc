@@ -1,5 +1,21 @@
 = James Distributed Mail Server
 :navtitle: Distributed
 
-(TODO)
+The Distributed server offers an easy way to scale email server. Based on
+noSQL solutions, it is intended to be easy to operate for large
+deployments, without needing sharding and protocol aware load balancing.
 
+This server is:
+
+* Intended for use by experts only
+* Used for large-scale distributed deployments
+* Is designed for Mail Delivery use cases but can also carry out mail processing
+* The most feature-rich server, but also by far the most complex
+
+You will find information about its
+xref:distributed/architecture.adoc[architecture], how to
+xref:distributed/run.adoc[run it], how to
+xref:distributed/run-docker.adoc[run it with Docker], how to
+xref:distributed/configure/index.adoc[configure it], how to
+xref:distributed/operate/index.adoc[operate it], how to
+xref:distributed/extend/index.adoc[extend it].

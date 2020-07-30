@@ -1,0 +1,120 @@
+= Run with docker
+
+== Running via docker-compose
+
+
+Requirements: docker & docker-compose installed.
+
+When you try James this way, you will use the most current state of James.
+It will be configured to run with Cassandra & ElasticSearch.
+All those three components will be started with a single command.
+
+You can retrieve the docker-compose file :
+
+    $ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
+
+Then, you just have to start the services:
+
+    $ docker-compose up
+
+Wait a few seconds in order to have all those services start up. You will see the following log when James is available:
+james           | Started : true
+
+A default domain, james.local, has been created. You can see this by running:
+
+    $ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 listdomains
+
+James will respond to IMAP port 143 and SMTP port 25.
+You have to create users before playing with james. You may also want to create other domains.
+Follow the 'Useful commands' section for more information about James CLI.
+
+== Run with docker
+
+=== Requirements
+
+Built artifacts should be in ./dockerfiles/run/guice/cassandra-rabbitmq/destination folder for cassandra.
+If you haven't already:
+
+    $ docker build -t james/project dockerfiles/compilation/java-11
+    $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
+  -v $PWD/dockerfiles/run/guice/cassandra-rabbitmq/destination:/cassandra-rabbitmq/destination \
+  -t james/project -s HEAD
+
+=== Running
+
+You need a running *cassandra* in docker. To achieve this run:
+
+    $ docker run -d --name=cassandra cassandra:3.11.3
+
+You need a running *rabbitmq* in docker. To achieve this run:
+
+    $ docker run -d --name=rabbitmq rabbitmq:3.8.1-management
+
+You need a running *swift* objectstorage in docker. To achieve this run:
+
+    $ docker run -d --name=swift linagora/openstack-keystone-swift:pike
+
+You need a running *ElasticSearch* in docker. To achieve this run:
+
+    $ docker run -d --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+
+If you want to use all the JMAP search capabilities, you may also need to start Tika:
+
+    $ docker run -d --name=tika apache/tika:1.24
+
+You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
+
+We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
+
+Copy your TLS keys to `run/guice/cassandra-rabbitmq/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
+
+    $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/keystore
+
+Then we need to build james container :
+
+    $ docker build -t james_run dockerfiles/run/guice/cassandra-rabbitmq
+
+To run this container :
+
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --link cassandra:cassandra --link rabbitmq:rabbitmq
+   --link elasticsearch:elasticsearch --link tika:tika --link swift:swift --name james_run -t james_run
+
+Where :
+
+- HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
+
+Webadmin port binding is restricted to loopback as users are not authenticated by default on webadmin server. Thus you should avoid exposing it in production.
+Note that the above example assumes `127.0.0.1` is your loopback interface for convenience but you should change it if this is not the case on your machine.
+
+If you want to pass additional options to the underlying java command, you can configure a _JVM_OPTIONS_ env variable, for example add:
+
+    --env JVM_OPTIONS="-Xms256m -Xmx2048m"
+
+To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
+
+=== Instrumentation
+You can use Glowroot to instrumentalize James. The provided guice docker files allow a simple way to do it.
+In order to activate Glowroot you need to run the container with the environment variable _GLOWROOT_ACTIVATED_ set to _true_
+and to expose the glowroot instrumentation ui port.
+
+    --env GLOWROOT_ACTIVATED=true -p "4000:4000"
+
+By default, the Glowroot UI is accessible from every machines in the network as defined in the _destination/admin.json_.
+Which you could configure before building the image, if you want to restrict its accessibility to localhost for example.
+See the https://github.com/glowroot/glowroot/wiki/Agent-Installation-(with-Embedded-Collector)#user-content-optional-post-installation-steps[Glowroot post installation steps]  for more details.
+
+Or by mapping the 4000 port to the IP of the desired network interface, for example `-p 127.0.0.1:4000:4000`.
+
+
+=== Handling attachment indexing
+
+You can handle attachment text extraction before indexing in ElasticSearch. This makes attachments searchable. To enable this:
+
+Run tika:
+
+    $ docker run --name tika apache/tika:1.24
+
+Add a link for the tika container in the above command line:
+
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link rabbitmq:rabbitmq
+    --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run

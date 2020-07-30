@@ -24,7 +24,11 @@ import org.junit.rules.TestRule;
 import com.google.inject.Module;
 
 public interface GuiceModuleTestRule extends TestRule {
-    Module getModule();
+    default Module getModule() {
+        return binder -> { };
+    }
 
-    void await();
+    default void await() {
+
+    }
 }

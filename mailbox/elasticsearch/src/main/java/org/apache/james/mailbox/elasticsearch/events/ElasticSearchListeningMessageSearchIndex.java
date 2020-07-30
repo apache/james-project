@@ -77,6 +77,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
+    private static final int FLAGS_UPDATE_PROCESSING_WINDOW_SIZE = 32;
+
     public static class ElasticSearchListeningMessageSearchIndexGroup extends Group {
 
     }
@@ -203,8 +205,9 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             .map(Throwing.<UpdatedFlags, UpdatedRepresentation>function(
                 updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailboxId, updatedFlags))
                 .sneakyThrow())
-            .collect(toImmutableList())
-            .flatMap(updates -> elasticSearchIndexer.update(updates, routingKey))
+            .window(FLAGS_UPDATE_PROCESSING_WINDOW_SIZE)
+            .concatMap(flux -> flux.collect(toImmutableList())
+                .flatMap(updates -> elasticSearchIndexer.update(updates, routingKey)))
             .then();
     }
 

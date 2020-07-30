@@ -23,6 +23,7 @@ import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -51,17 +52,11 @@ public class CassandraMailRepository implements MailRepository {
     CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
                             CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDaoAPI mailDAO,
                             MimeMessageStore.Factory mimeMessageStoreFactory) {
-        this(url, keysDAO, countDAO, mailDAO, mimeMessageStoreFactory.mimeMessageStore());
-    }
-
-    CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
-                            CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDaoAPI mailDAO,
-                            Store<MimeMessage, MimeMessagePartsId> mimeMessageStore) {
         this.url = url;
         this.keysDAO = keysDAO;
         this.countDAO = countDAO;
         this.mailDAO = mailDAO;
-        this.mimeMessageStore = mimeMessageStore;
+        this.mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
     }
 
     @Override
@@ -102,15 +97,19 @@ public class CassandraMailRepository implements MailRepository {
     }
 
     private Mono<Mail> toMail(MailDTO mailDTO) {
-        MimeMessagePartsId parts = MimeMessagePartsId.builder()
-            .headerBlobId(mailDTO.getHeaderBlobId())
-            .bodyBlobId(mailDTO.getBodyBlobId())
-            .build();
+        MimeMessagePartsId parts = blobIds(mailDTO);
 
         return mimeMessageStore.read(parts)
             .map(mimeMessage -> mailDTO.getMailBuilder()
                 .mimeMessage(mimeMessage)
                 .build());
+    }
+
+    private MimeMessagePartsId blobIds(MailDTO mailDTO) {
+        return MimeMessagePartsId.builder()
+                .headerBlobId(mailDTO.getHeaderBlobId())
+                .bodyBlobId(mailDTO.getBodyBlobId())
+                .build();
     }
 
     @Override
@@ -133,9 +132,17 @@ public class CassandraMailRepository implements MailRepository {
     }
 
     private Mono<Void> removeAsync(MailKey key) {
-        return keysDAO.remove(url, key)
-            .flatMap(this::decreaseSizeIfDeleted)
-            .then(mailDAO.remove(url, key));
+        return mailDAO.read(url, key)
+            .flatMap(maybeMailDTO ->
+                keysDAO.remove(url, key)
+                    .flatMap(this::decreaseSizeIfDeleted)
+                    .then(mailDAO.remove(url, key))
+                    .then(deleteBlobs(maybeMailDTO)));
+    }
+
+    private Mono<Void> deleteBlobs(Optional<MailDTO> maybeMailDTO) {
+        return Mono.justOrEmpty(maybeMailDTO)
+            .flatMap(mailDTO -> Mono.from(mimeMessageStore.delete(blobIds(mailDTO))));
     }
 
     private Mono<Void> decreaseSizeIfDeleted(Boolean isDeleted) {

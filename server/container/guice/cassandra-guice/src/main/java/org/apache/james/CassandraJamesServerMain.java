@@ -42,8 +42,6 @@ import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraQuotaMailingModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
-import org.apache.james.modules.mailbox.ElasticSearchClientModule;
-import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.metrics.CassandraMetricsModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
@@ -65,7 +63,6 @@ import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MailboxesExportRoutesModule;
 import org.apache.james.modules.server.MessagesRoutesModule;
-import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
@@ -75,7 +72,6 @@ import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
-import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -97,7 +93,6 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
-        new ReIndexingModule(),
         new SieveRoutesModule(),
         new SwaggerRoutesModule(),
         new WebAdminServerModule(),
@@ -138,6 +133,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
         new CassandraUsersRepositoryModule(),
+        new ElasticSearchMetricReporterModule(),
         BLOB_MODULE,
         CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);
 
@@ -145,9 +141,6 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new CassandraConsistencyTaskSerializationModule(),
         new CassandraMailboxModule(),
         new CassandraDeletedMessageVaultModule(),
-        new ElasticSearchClientModule(),
-        new ElasticSearchMailboxModule(),
-        new ElasticSearchMetricReporterModule(),
         new MailboxModule(),
         new TikaMailboxModule(),
         new SpamAssassinListenerModule());
@@ -167,7 +160,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
     );
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
+        CassandraJamesServerConfiguration configuration = CassandraJamesServerConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();
 
@@ -178,8 +171,9 @@ public class CassandraJamesServerMain implements JamesServerMain {
         JamesServerMain.main(server);
     }
 
-    public static GuiceJamesServer createServer(Configuration configuration) {
+    public static GuiceJamesServer createServer(CassandraJamesServerConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE);
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .combineWith(SearchModuleChooser.chooseModules(configuration.searchConfiguration()));
     }
 }

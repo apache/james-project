@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class GenericMailetTest {
+class GenericMailetTest {
 
     private static class TestingMailet extends GenericMailet {
 
@@ -36,64 +36,64 @@ public class GenericMailetTest {
         }
     }
 
-    private TestingMailet testee;
+    TestingMailet testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         testee = new TestingMailet();
     }
 
     @Test
-    public void getBooleanParameterShouldReturnFalseWhenValueNullAndDefaultFalse() throws Exception {
+    void getBooleanParameterShouldReturnFalseWhenValueNullAndDefaultFalse() throws Exception {
         String value = null;
         boolean actual = testee.getBooleanParameter(value, false);
         assertThat(actual).isFalse();
     }
     
     @Test
-    public void getBooleanParameterShouldReturnTrueWhenValueTrueAndDefaultFalse() throws Exception {
+    void getBooleanParameterShouldReturnTrueWhenValueTrueAndDefaultFalse() throws Exception {
         String value = "true";
         boolean actual = testee.getBooleanParameter(value, false);
         assertThat(actual).isTrue();
     }
     
     @Test
-    public void getBooleanParameterShouldReturnTrueWhenValueYesAndDefaultFalse() throws Exception {
+    void getBooleanParameterShouldReturnTrueWhenValueYesAndDefaultFalse() throws Exception {
         String value = "yes";
         boolean actual = testee.getBooleanParameter(value, false);
         assertThat(actual).isTrue();
     }
 
     @Test
-    public void getBooleanParameterShouldReturnFalseWhenValueOtherAndDefaultFalse() throws Exception {
+    void getBooleanParameterShouldReturnFalseWhenValueOtherAndDefaultFalse() throws Exception {
         String value = "other";
         boolean actual = testee.getBooleanParameter(value, false);
         assertThat(actual).isFalse();
     }
 
     @Test
-    public void getBooleanParameterShouldReturnTrueWhenValueNullAndDefaultTrue() throws Exception {
+    void getBooleanParameterShouldReturnTrueWhenValueNullAndDefaultTrue() throws Exception {
         String value = null;
         boolean actual = testee.getBooleanParameter(value, true);
         assertThat(actual).isTrue();
     }
 
     @Test
-    public void getBooleanParameterShouldReturnFalseWhenValueNoAndDefaultTrue() throws Exception {
+    void getBooleanParameterShouldReturnFalseWhenValueNoAndDefaultTrue() throws Exception {
         String value = "no";
         boolean actual = testee.getBooleanParameter(value, true);
         assertThat(actual).isFalse();
     }
 
     @Test
-    public void getBooleanParameterShouldReturnFalseWhenValueFalseAndDefaultTrue() throws Exception {
+    void getBooleanParameterShouldReturnFalseWhenValueFalseAndDefaultTrue() throws Exception {
         String value = "false";
         boolean actual = testee.getBooleanParameter(value, true);
         assertThat(actual).isFalse();
     }
 
     @Test
-    public void getBooleanParameterShouldReturnTrueWhenValueOtherAndDefaultTrue() throws Exception {
+    void getBooleanParameterShouldReturnTrueWhenValueOtherAndDefaultTrue() throws Exception {
         String value = "other";
         boolean actual = testee.getBooleanParameter(value, true);
         assertThat(actual).isTrue();

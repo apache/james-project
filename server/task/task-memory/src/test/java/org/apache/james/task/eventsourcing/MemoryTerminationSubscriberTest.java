@@ -20,8 +20,18 @@
 
 package org.apache.james.task.eventsourcing;
 
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
 class MemoryTerminationSubscriberTest implements TerminationSubscriberContract {
     public TerminationSubscriber subscriber() {
         return new MemoryTerminationSubscriber();
+    }
+
+    @Disabled("JAMES-2813 This test is unstable")
+    @Override
+    @Test
+    public void dynamicListeningEventsShouldGetOnlyNewEvents() {
+
     }
 }

@@ -25,9 +25,8 @@ import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.LinshareGuiceExtension;
 import org.apache.james.modules.RabbitMQExtension;
@@ -45,7 +44,11 @@ class RabbitMQLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExp
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.objectStorage().disableCache())
+            .blobStore(BlobStoreConfiguration.builder()
+                    .objectStorage()
+                    .disableCache()
+                    .deduplication())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
@@ -53,7 +56,6 @@ class RabbitMQLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExp
         .extension(new AwsS3BlobStoreExtension())
         .extension(new LinshareGuiceExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
             .overrideWith(new WebadminIntegrationTestModule())

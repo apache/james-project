@@ -19,45 +19,44 @@
 package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class StringUtilsTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class StringUtilsTest {
 
     @Test
-    public void listToStringShouldThrowWhenListIsNull() {
-        expectedException.expect(NullPointerException.class);
-        StringUtils.listToString(null);
+    void listToStringShouldThrowWhenListIsNull() {
+        assertThatThrownBy(() -> StringUtils.listToString(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void listToStringShouldReturnOnlyBracketsWhenListIsEmpty() {
+    void listToStringShouldReturnOnlyBracketsWhenListIsEmpty() {
         String listToString = StringUtils.listToString(ImmutableList.<String>of());
+
         assertThat(listToString).isEqualTo("[]");
     }
 
     @Test
-    public void listToStringShouldReturnOneElementWhenListContainsOneElement() {
+    void listToStringShouldReturnOneElementWhenListContainsOneElement() {
         String listToString = StringUtils.listToString(ImmutableList.of("first"));
+
         assertThat(listToString).isEqualTo("[first]");
     }
 
     @Test
-    public void listToStringShouldReturnSeparatedElementsWhenListContainsMultipleElements() {
+    void listToStringShouldReturnSeparatedElementsWhenListContainsMultipleElements() {
         String listToString = StringUtils.listToString(ImmutableList.of("first", "second", "fourth"));
+
         assertThat(listToString).isEqualTo("[first, second, fourth]");
     }
 
     @Test
-    public void listToStringShouldThrowWhenListContainsANullElement() {
-        expectedException.expect(NullPointerException.class);
-        StringUtils.listToString(ImmutableList.of("first", null, "fourth"));
+    void listToStringShouldThrowWhenListContainsANullElement() {
+        assertThatThrownBy(() -> StringUtils.listToString(ImmutableList.of("first", null, "fourth")))
+            .isInstanceOf(NullPointerException.class);
     }
 }

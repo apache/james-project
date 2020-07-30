@@ -25,6 +25,7 @@ import org.apache.james.backends.cassandra.init.CassandraTableManager;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.util.Host;
@@ -59,7 +60,7 @@ public final class CassandraCluster implements AutoCloseable {
         this.module = module;
 
         this.clusterConfiguration = DockerCassandra.configurationBuilder(host).build();
-        this.nonPrivilegedCluster = ClusterFactory.create(clusterConfiguration);
+        this.nonPrivilegedCluster = ClusterFactory.create(clusterConfiguration, CassandraConsistenciesConfiguration.DEFAULT);
         KeyspaceConfiguration keyspaceConfiguration = KeyspaceConfiguration.builder()
             .keyspace(KEYSPACE)
             .replicationFactor(1)

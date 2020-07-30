@@ -37,7 +37,6 @@ import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.FetchData.Item;
 import org.apache.james.imap.api.message.SectionType;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MailboxSession;
@@ -55,31 +54,20 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimePath;
 
 public final class FetchResponseBuilder {
-
     private final EnvelopeBuilder envelopeBuilder;
 
     private MessageSequenceNumber msn;
-
     private MessageUid uid;
-
     private Flags flags;
-
     private Date internalDate;
-
     private Long size;
-    
     private ModSeq modSeq;
-
     private List<FetchResponse.BodyElement> elements;
-
     private FetchResponse.Envelope envelope;
-
     private FetchResponse.Structure body;
-
     private FetchResponse.Structure bodystructure;
 
     public FetchResponseBuilder(EnvelopeBuilder envelopeBuilder) {
-        super();
         this.envelopeBuilder = envelopeBuilder;
     }
 
@@ -112,23 +100,20 @@ public final class FetchResponseBuilder {
         return new FetchResponse(msn, flags, uid, modSeq, internalDate, size, envelope, body, bodystructure, elements);
     }
 
-    public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, ImapSession session, boolean useUids) throws MessageRangeException, MailboxException {
-        final SelectedMailbox selected = session.getSelected();
+    public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
         final MessageUid resultUid = result.getUid();
-        return selected.msn(resultUid).fold(() -> {
+        return selectedMailbox.msn(resultUid).fold(() -> {
             throw new MessageRangeException("No such message found with uid " + resultUid);
         }, msn -> {
 
             reset(msn);
             // setMsn(resultMsn);
 
+            // FLAGS response
             // Check if this fetch will cause the "SEEN" flag to be set on this
             // message. If so, update the flags, and ensure that a flags response is
             // included in the response.
-            final MailboxSession mailboxSession = session.getMailboxSession();
-
-            // FLAGS response
-            addFlags(fetch, mailbox, selected, resultUid, mailboxSession, result.getFlags());
+            addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags());
 
             // INTERNALDATE response
             if (fetch.contains(Item.INTERNAL_DATE)) {
@@ -219,22 +204,20 @@ public final class FetchResponseBuilder {
         }
     }
 
-    public FetchResponse build(FetchData fetch, ComposedMessageIdWithMetaData result, MessageManager mailbox, ImapSession session) throws MessageRangeException, MailboxException {
-        final SelectedMailbox selected = session.getSelected();
+    public FetchResponse build(FetchData fetch, ComposedMessageIdWithMetaData result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
         final MessageUid resultUid = result.getComposedMessageId().getUid();
-        return selected.msn(resultUid).fold(() -> {
+        return selectedMailbox.msn(resultUid).fold(() -> {
             throw new MessageRangeException("No such message found with uid " + resultUid);
         }, msn -> {
 
             reset(msn);
             // setMsn(resultMsn);
 
+            // FLAGS response
             // Check if this fetch will cause the "SEEN" flag to be set on this
             // message. If so, update the flags, and ensure that a flags response is
             // included in the response.
-            final MailboxSession mailboxSession = session.getMailboxSession();
-            // FLAGS response
-            addFlags(fetch, mailbox, selected, resultUid, mailboxSession, result.getFlags());
+            addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags());
             // UID response
             addUid(fetch, resultUid);
 
@@ -257,7 +240,6 @@ public final class FetchResponseBuilder {
     }
 
     private FetchResponse.BodyElement bodyFetch(MessageResult messageResult, BodyFetchElement fetchElement) throws MailboxException {
-
         final Long firstOctet = fetchElement.getFirstOctet();
         final Long numberOfOctets = fetchElement.getNumberOfOctets();
         final String name = fetchElement.getResponseName();
@@ -268,7 +250,6 @@ public final class FetchResponseBuilder {
         final Collection<String> names = fetchElement.getFieldNames();
         final FetchResponse.BodyElement fullResult = bodyContent(messageResult, name, specifier, path, names);
         return wrapIfPartialFetch(firstOctet, numberOfOctets, fullResult);
-
     }
 
     private FetchResponse.BodyElement bodyContent(MessageResult messageResult, String name, SectionType specifier, Optional<MimePath> path, Collection<String> names) throws MailboxException {
@@ -291,45 +272,35 @@ public final class FetchResponseBuilder {
     }
 
     private FetchResponse.BodyElement wrapIfPartialFetch(Long firstOctet, Long numberOfOctets, FetchResponse.BodyElement fullResult) {
-        final FetchResponse.BodyElement result;
         if (firstOctet == null) {
-            result = fullResult;
-        } else {
-            final long numberOfOctetsAsLong = Objects.requireNonNullElse(numberOfOctets, Long.MAX_VALUE);
-            final long firstOctetAsLong = firstOctet;
-
-            result = new PartialFetchBodyElement(fullResult, firstOctetAsLong, numberOfOctetsAsLong);
-            
-           
+            return fullResult;
         }
-        return result;
+        final long numberOfOctetsAsLong = Objects.requireNonNullElse(numberOfOctets, Long.MAX_VALUE);
+        final long firstOctetAsLong = firstOctet;
+        return new PartialFetchBodyElement(fullResult, firstOctetAsLong, numberOfOctetsAsLong);
     }
 
     private FetchResponse.BodyElement text(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
-        final FetchResponse.BodyElement result;
-        Content body;
-        if (!path.isPresent()) {
+        Content body = Optional.ofNullable(getTextContent(messageResult, path))
+            .orElseGet(EmptyContent::new);
+        return new ContentBodyElement(name, body);
+    }
+
+    private Content getTextContent(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
+        if (path.isEmpty()) {
             try {
-                body = messageResult.getBody();
+                return messageResult.getBody();
             } catch (IOException e) {
                 throw new MailboxException("Unable to get TEXT of body", e);
             }
-        } else {
-            body = messageResult.getBody(path.get());
         }
-        if (body == null) {
-            body = new EmptyContent();
-        }
-        result = new ContentBodyElement(name, body);
-        return result;
+        return messageResult.getBody(path.get());
     }
 
     private FetchResponse.BodyElement mimeHeaders(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
-        final FetchResponse.BodyElement result;
         final Iterator<Header> headers = getMimeHeaders(messageResult, path);
         List<Header> lines = MessageResultUtils.getAll(headers);
-        result = new MimeBodyElement(name, lines);
-        return result;
+        return new MimeBodyElement(name, lines);
     }
 
     private HeaderBodyElement headerBodyElement(MessageResult messageResult, String name, List<Header> lines, Optional<MimePath> path) throws MailboxException {
@@ -341,7 +312,7 @@ public final class FetchResponseBuilder {
             // Check if its base as this can give use a more  correctly working check
             // to see if we need to write the newline out to the client. 
             // This is related to IMAP-298
-            if (!path.isPresent()) {
+            if (path.isEmpty()) {
                 if (messageResult.getSize() - result.size() <= 0) {
                     // Seems like this mail has no body 
                     result.noBody();
@@ -361,7 +332,7 @@ public final class FetchResponseBuilder {
     }
     
     private FetchResponse.BodyElement headers(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
-        if (!path.isPresent()) {
+        if (path.isEmpty()) {
             // if its base we can just return the raw headers without parsing
             // them. See MAILBOX-311 and IMAP-?
             HeadersBodyElement element = new HeadersBodyElement(name, messageResult.getHeaders());
@@ -369,18 +340,15 @@ public final class FetchResponseBuilder {
                 if (messageResult.getSize() - element.size() <= 0) {
                     // Seems like this mail has no body
                     element.noBody();
-
                 }
             } catch (IOException e) {
                 throw new MailboxException("Unable to get size of header body element", e);
-
             }
             return element;
-        } else {
-            final Iterator<Header> headers = getHeaders(messageResult, path);
-            List<Header> lines = MessageResultUtils.getAll(headers);
-            return headerBodyElement(messageResult, name, lines, path);
         }
+        final Iterator<Header> headers = getHeaders(messageResult, path);
+        List<Header> lines = MessageResultUtils.getAll(headers);
+        return headerBodyElement(messageResult, name, lines, path);
     }
 
     private FetchResponse.BodyElement fieldsNot(MessageResult messageResult, String name, Optional<MimePath> path, Collection<String> names) throws MailboxException {
@@ -397,13 +365,10 @@ public final class FetchResponseBuilder {
     }
 
     private Iterator<Header> getHeaders(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
-        final Iterator<Header> headers;
-        if (!path.isPresent()) {
-            headers = messageResult.getHeaders().headers();
-        } else {
-            headers = messageResult.iterateHeaders(path.get());
+        if (path.isEmpty()) {
+            return messageResult.getHeaders().headers();
         }
-        return headers;
+        return messageResult.iterateHeaders(path.get());
     }
 
     private Iterator<Header> getMimeHeaders(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
@@ -411,23 +376,20 @@ public final class FetchResponseBuilder {
     }
 
     private FetchResponse.BodyElement content(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
-        final FetchResponse.BodyElement result;
-        Content full;
-        if (!path.isPresent()) {
+        Content full =  Optional.ofNullable(getContent(messageResult, path))
+            .orElseGet(EmptyContent::new);;
+        return new ContentBodyElement(name, full);
+    }
+
+    private Content getContent(MessageResult messageResult, Optional<MimePath> path) throws MailboxException {
+        if (path.isEmpty()) {
             try {
-                full = messageResult.getFullContent();
+                return messageResult.getFullContent();
 
             } catch (IOException e) {
                 throw new MailboxException("Unable to get content", e);
             }
-        } else {
-            full = messageResult.getMimeBody(path.get());
         }
-
-        if (full == null) {
-            full = new EmptyContent();
-        }
-        result = new ContentBodyElement(name, full);
-        return result;
+        return messageResult.getMimeBody(path.get());
     }
 }

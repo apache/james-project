@@ -43,6 +43,8 @@ public class Bouncer {
 
     public static final AttributeName DELIVERY_ERROR = AttributeName.of("delivery-error");
     public static final AttributeName DELIVERY_ERROR_CODE = AttributeName.of("delivery-error-code");
+    public static final AttributeName IS_DELIVERY_PERMANENT_ERROR = AttributeName.of("is-delivery-permanent-error");
+
     private final RemoteDeliveryConfiguration configuration;
     private final MailetContext mailetContext;
 

@@ -29,19 +29,19 @@ import javax.mail.MessagingException;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MatcherInverterTest {
+class MatcherInverterTest {
 
     @Test
-    public void testAllMatch() throws MessagingException {
+    void testAllMatch() throws MessagingException {
         MatcherInverter inverter = new MatcherInverter(new GenericMatcher() {
-
             @Override
             public Collection<MailAddress> match(Mail mail) throws MessagingException {
                 return null;
             }
         });
+
         FakeMail mail = FakeMail.builder()
                 .name("mail")
                 .recipient(new MailAddress("user", "domain"))
@@ -51,7 +51,7 @@ public class MatcherInverterTest {
     }
 
     @Test
-    public void testNonMatch() throws MessagingException {
+    void testNonMatch() throws MessagingException {
         final MailAddress address1 = new MailAddress("user", "domain");
         final MailAddress address2 = new MailAddress("user", "domain2");
 
@@ -62,6 +62,7 @@ public class MatcherInverterTest {
                 return mail.getRecipients();
             }
         });
+
         FakeMail mail = FakeMail.builder()
                 .name("mail")
                 .recipients(address1, address2)
@@ -71,17 +72,17 @@ public class MatcherInverterTest {
     }
 
     @Test
-    public void testOneMatch() throws MessagingException {
+    void testOneMatch() throws MessagingException {
         final MailAddress address1 = new MailAddress("user", "domain");
         final MailAddress address2 = new MailAddress("user", "domain2");
 
         MatcherInverter inverter = new MatcherInverter(new GenericMatcher() {
-
             @Override
             public Collection<MailAddress> match(Mail mail) throws MessagingException {
                 return Arrays.asList(address1);
             }
         });
+
         FakeMail mail = FakeMail.builder()
                 .name("mail")
                 .recipients(address1, address2)

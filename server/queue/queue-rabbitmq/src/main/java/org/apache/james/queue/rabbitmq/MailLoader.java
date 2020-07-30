@@ -47,7 +47,10 @@ class MailLoader {
     Mono<MailWithEnqueueId> load(MailReferenceDTO dto) {
         return Mono.fromCallable(() -> dto.toMailReference(blobIdFactory))
             .flatMap(mailReference -> buildMail(mailReference)
-                .map(mail -> new MailWithEnqueueId(mailReference.getEnqueueId(), mail)));
+                .map(mail -> new MailWithEnqueueId(
+                    mailReference.getEnqueueId(),
+                    mail,
+                    mailReference.getPartsId())));
     }
 
     private Mono<Mail> buildMail(MailReference mailReference) {

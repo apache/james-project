@@ -22,6 +22,7 @@ package org.apache.james.queue.rabbitmq.view.api;
 import java.util.Objects;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
@@ -114,13 +115,19 @@ public interface DeleteCondition {
 
     class WithEnqueueId implements DeleteCondition {
         private final EnqueueId enqueueId;
+        private final MimeMessagePartsId blobIds;
 
-        WithEnqueueId(EnqueueId enqueueId) {
+        WithEnqueueId(EnqueueId enqueueId, MimeMessagePartsId blobIds) {
             this.enqueueId = enqueueId;
+            this.blobIds = blobIds;
         }
 
         public EnqueueId getEnqueueId() {
             return enqueueId;
+        }
+
+        public MimeMessagePartsId getBlobIds() {
+            return blobIds;
         }
 
         @Override
@@ -191,9 +198,9 @@ public interface DeleteCondition {
         return new WithName(value);
     }
 
-    static WithEnqueueId withEnqueueId(EnqueueId value) {
+    static WithEnqueueId withEnqueueId(EnqueueId value, MimeMessagePartsId blobIds) {
         Preconditions.checkNotNull(value);
-        return new WithEnqueueId(value);
+        return new WithEnqueueId(value, blobIds);
     }
 
     static DeleteCondition all() {

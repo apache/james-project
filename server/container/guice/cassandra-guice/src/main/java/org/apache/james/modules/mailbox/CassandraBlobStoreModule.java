@@ -20,17 +20,24 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.MetricableBlobStore;
-import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.blob.cassandra.CassandraDumbBlobStore;
+import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
 public class CassandraBlobStoreModule extends AbstractModule {
     @Override
     protected void configure() {
+        bind(CassandraDumbBlobStore.class).in(Scopes.SINGLETON);
+        bind(DeDuplicationBlobStore.class).in(Scopes.SINGLETON);
+
+        bind(DumbBlobStore.class).to(CassandraDumbBlobStore.class);
         bind(BlobStore.class)
             .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
-            .to(CassandraBlobStore.class);
+            .to(DeDuplicationBlobStore.class);
     }
 }

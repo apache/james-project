@@ -20,23 +20,21 @@ package org.apache.james.mailbox.spring;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-
 import org.apache.james.mailbox.tools.copier.MailboxCopierImpl;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-public class SpringMailboxTest {
+class SpringMailboxTest {
     
-    private static SpringMailbox springMailbox;
+    static SpringMailbox springMailbox;
     
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         springMailbox = new SpringMailbox();
     }
     
     @Test
-    public void testGetBean() throws IOException {
+    void testGetBean() {
         assertThat(springMailbox.getBean("authenticator").getClass().getName()).isEqualTo(AnonymousAuthenticator.class.getName());
         assertThat(springMailbox.getBean("mailboxcopier").getClass().getName()).isEqualTo(MailboxCopierImpl.class.getName());
     }

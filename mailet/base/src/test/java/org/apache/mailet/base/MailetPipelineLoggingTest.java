@@ -22,18 +22,10 @@ package org.apache.mailet.base;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.mailet.Mail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MailetPipelineLoggingTest {
-
-    @Test
-    public void getMailetInfoShouldReturnMailetInfoWhenGiven() {
-        assertThat(MailetPipelineLogging.getMailetInfo(new MailetWithMailetInfo()))
-            .isEqualTo("this is my info");
-    }
-
+class MailetPipelineLoggingTest {
     private static class MailetWithMailetInfo extends GenericMailet {
-
         @Override
         public String getMailetInfo() {
             return "this is my info";
@@ -44,16 +36,21 @@ public class MailetPipelineLoggingTest {
         }
     }
 
-    @Test
-    public void getMailetInfoShouldReturnSimpleClassNameWhenMailetInfoIsEmpty() {
-        assertThat(MailetPipelineLogging.getMailetInfo(new MailetWithoutMailetInfo()))
-            .isEqualTo("MailetWithoutMailetInfo");
-    }
-
     private static class MailetWithoutMailetInfo extends GenericMailet {
-
         @Override
         public void service(Mail mail) {
         }
+    }
+
+    @Test
+    void getMailetInfoShouldReturnMailetInfoWhenGiven() {
+        assertThat(MailetPipelineLogging.getMailetInfo(new MailetWithMailetInfo()))
+            .isEqualTo("this is my info");
+    }
+
+    @Test
+    void getMailetInfoShouldReturnSimpleClassNameWhenMailetInfoIsEmpty() {
+        assertThat(MailetPipelineLogging.getMailetInfo(new MailetWithoutMailetInfo()))
+            .isEqualTo("MailetWithoutMailetInfo");
     }
 }

@@ -68,6 +68,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
+import org.apache.james.util.FunctionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -447,7 +448,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private Mono<Void> assertRightsOnMailboxIds(Collection<MailboxId> mailboxIds, MailboxSession mailboxSession, Right... rights) {
         return Flux.fromIterable(mailboxIds)
-            .filterWhen(hasRightsOnMailboxReactive(mailboxSession, rights).andThen(result -> result.map(b -> !b)))
+            .filterWhen(hasRightsOnMailboxReactive(mailboxSession, rights).andThen(result -> result.map(FunctionalUtils.negate())))
             .next()
             .flatMap(mailboxForbidden -> {
                 LOGGER.info("Mailbox with Id {} does not belong to {}", mailboxForbidden, mailboxSession.getUser().asString());

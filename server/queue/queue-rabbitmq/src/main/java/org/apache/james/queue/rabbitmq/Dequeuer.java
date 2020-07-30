@@ -32,6 +32,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueBrowser;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,13 +82,13 @@ class Dequeuer implements Closeable {
     private final MailLoader mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
-    private final MailQueueView mailQueueView;
+    private final MailQueueView<CassandraMailQueueBrowser.CassandraMailQueueItemView> mailQueueView;
     private final Receiver receiver;
     private final Flux<AcknowledgableDelivery> flux;
 
     Dequeuer(MailQueueName name, ReceiverProvider receiverProvider, MailLoader mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
-             MailQueueView mailQueueView, MailQueueFactory.PrefetchCount prefetchCount) {
+             MailQueueView<CassandraMailQueueBrowser.CassandraMailQueueItemView> mailQueueView, MailQueueFactory.PrefetchCount prefetchCount) {
         this.mailLoader = mailLoader;
         this.mailReferenceSerializer = serializer;
         this.mailQueueView = mailQueueView;
@@ -131,7 +132,7 @@ class Dequeuer implements Closeable {
             if (success) {
                 dequeueMetric.increment();
                 response.ack();
-                mailQueueView.delete(DeleteCondition.withEnqueueId(mailWithEnqueueId.getEnqueueId()));
+                mailQueueView.delete(DeleteCondition.withEnqueueId(mailWithEnqueueId.getEnqueueId(), mailWithEnqueueId.getBlobIds()));
             } else {
                 response.nack(REQUEUE);
             }
@@ -162,5 +163,4 @@ class Dequeuer implements Closeable {
                 return Mono.empty();
             });
     }
-
 }
