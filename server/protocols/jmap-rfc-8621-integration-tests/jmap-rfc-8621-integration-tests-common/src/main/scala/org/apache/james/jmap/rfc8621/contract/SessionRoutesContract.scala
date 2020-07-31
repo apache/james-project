@@ -26,11 +26,10 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
-import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.session_object_json_expected
+import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.expected_session_object
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
-import play.api.libs.json.{JsValue, Json}
 
 object SessionRoutesContract {
   private val expected_session_object = """{
@@ -52,11 +51,13 @@ object SessionRoutesContract {
                          |      "maxSizeAttachmentsPerEmail" : 20000000,
                          |      "emailQuerySortOptions" : [ "receivedAt", "cc", "from", "to", "subject", "size", "sentAt", "hasKeyword", "uid", "Id" ],
                          |      "mayCreateTopLevelMailbox" : true
-                         |    }
+                         |    },
+                         |    "urn:apache:james:params:jmap:mail:quota": {},
+                         |    "urn:apache:james:params:jmap:mail:shares": {}
                          |  },
                          |  "accounts" : {
-                         |    "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401" : {
-                         |      "name" : "bob@james.org",
+                         |    "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6" : {
+                         |      "name" : "bob@domain.tld",
                          |      "isPersonal" : true,
                          |      "isReadOnly" : false,
                          |      "accountCapabilities" : {
@@ -77,22 +78,25 @@ object SessionRoutesContract {
                          |          "maxSizeAttachmentsPerEmail" : 20000000,
                          |          "emailQuerySortOptions" : [ "receivedAt", "cc", "from", "to", "subject", "size", "sentAt", "hasKeyword", "uid", "Id" ],
                          |          "mayCreateTopLevelMailbox" : true
-                         |        }
+                         |        },
+                         |        "urn:apache:james:params:jmap:mail:quota": {},
+                         |        "urn:apache:james:params:jmap:mail:shares": {}
                          |      }
                          |    }
                          |  },
                          |  "primaryAccounts" : {
-                         |    "urn:ietf:params:jmap:core" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
-                         |    "urn:ietf:params:jmap:mail" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401"
+                         |    "urn:ietf:params:jmap:core" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                         |    "urn:ietf:params:jmap:mail" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                         |    "urn:apache:james:params:jmap:mail:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                         |    "urn:apache:james:params:jmap:mail:shares": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
                          |  },
-                         |  "username" : "bob@james.org",
+                         |  "username" : "bob@domain.tld",
                          |  "apiUrl" : "http://this-url-is-hardcoded.org/jmap",
                          |  "downloadUrl" : "http://this-url-is-hardcoded.org/download",
                          |  "uploadUrl" : "http://this-url-is-hardcoded.org/upload",
                          |  "eventSourceUrl" : "http://this-url-is-hardcoded.org/eventSource",
                          |  "state" : "000001"
                          |}""".stripMargin
-  private val session_object_json_expected: JsValue = Json.parse(expected_session_object)
 }
 
 trait SessionRoutesContract {
@@ -124,6 +128,6 @@ trait SessionRoutesContract {
         .body()
         .asString()
 
-    assertThatJson(Json.parse(sessionJson)).isEqualTo(session_object_json_expected)
+    assertThatJson(sessionJson).isEqualTo(expected_session_object)
   }
 }
