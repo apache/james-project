@@ -20,75 +20,68 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class TextTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
+class TextTest {
     @Test
-    public void shouldMatchBeanContact() {
+    void shouldMatchBeanContact() {
         EqualsVerifier.forClass(Text.class)
             .verify();
     }
 
     @Test
-    public void fromRawTextShouldThrowOnNull() {
-        expectedException.expect(NullPointerException.class);
-
-        Text.fromRawText(null);
+    void fromRawTextShouldThrowOnNull() {
+        assertThatThrownBy(() -> Text.fromRawText(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void fromRawTextShouldThrowOnEmptyStrings() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Text.fromRawText("");
+    void fromRawTextShouldThrowOnEmptyStrings() {
+        assertThatThrownBy(() -> Text.fromRawText(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void formattedShouldKeepSpaces() {
+    void formattedShouldKeepSpaces() {
         Text text = Text.fromRawText("text with spaces");
 
         assertThat(text.formatted()).isEqualTo("text with spaces");
     }
 
     @Test
-    public void formattedShouldWrapLines() {
+    void formattedShouldWrapLines() {
         Text text = Text.fromRawText("text with spaces\r\non several lines");
 
         assertThat(text.formatted()).isEqualTo("text with spaces\r\n on several lines");
     }
 
     @Test
-    public void formattedShouldPreserveLineWrapping() {
+    void formattedShouldPreserveLineWrapping() {
         Text text = Text.fromRawText("text with spaces\r\n on several lines");
 
         assertThat(text.formatted()).isEqualTo("text with spaces\r\n on several lines");
     }
 
     @Test
-    public void formattedShouldTrimExtraSpacesAfterWrapping() {
+    void formattedShouldTrimExtraSpacesAfterWrapping() {
         Text text = Text.fromRawText("text with spaces\r\n  on several lines");
 
         assertThat(text.formatted()).isEqualTo("text with spaces\r\n on several lines");
     }
 
     @Test
-    public void formattedShouldTrimExtraSpacesBeforeWrapping() {
+    void formattedShouldTrimExtraSpacesBeforeWrapping() {
         Text text = Text.fromRawText("text with spaces  \r\non several lines");
 
         assertThat(text.formatted()).isEqualTo("text with spaces\r\n on several lines");
     }
 
     @Test
-    public void formattedShouldPreserveFoldingSpaces() {
+    void formattedShouldPreserveFoldingSpaces() {
         Text text = Text.fromRawText("text with folding    spaces");
 
         assertThat(text.formatted()).isEqualTo("text with folding    spaces");
