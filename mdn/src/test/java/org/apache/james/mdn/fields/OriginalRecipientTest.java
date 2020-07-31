@@ -20,77 +20,83 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class OriginalRecipientTest {
-    public static final Text ADDRESS = Text.fromRawText("address");
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class OriginalRecipientTest {
+    static final Text ADDRESS = Text.fromRawText("address");
 
     @Test
-    public void shouldMatchBeanContract() throws Exception {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(OriginalRecipient.class)
             .verify();
     }
 
     @Test
-    public void shouldThrowOnNullAddress() {
-        expectedException.expect(NullPointerException.class);
-
-        OriginalRecipient.builder().originalRecipient(null).build();
+    void shouldThrowOnNullAddress() {
+        assertThatThrownBy(() -> OriginalRecipient.builder()
+                .originalRecipient(null)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnNullAddressWhenCustomType() {
-        expectedException.expect(NullPointerException.class);
-
-        OriginalRecipient.builder()
-            .addressType(new AddressType("customType"))
-            .originalRecipient(null)
-            .build();
+    void shouldThrowOnNullAddressWhenCustomType() {
+        assertThatThrownBy(() -> OriginalRecipient.builder()
+                .addressType(new AddressType("customType"))
+                .originalRecipient(null)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnNullAddressType() {
-        expectedException.expect(NullPointerException.class);
-
-        OriginalRecipient.builder()
-            .addressType(null)
-            .originalRecipient(ADDRESS)
-            .build();
+    void shouldThrowOnNullAddressType() {
+        assertThatThrownBy(() -> OriginalRecipient.builder()
+                .addressType(null)
+                .originalRecipient(ADDRESS)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void addressTypeShouldDefaultToRfc822() {
-        assertThat(OriginalRecipient.builder().originalRecipient(ADDRESS).build())
-            .isEqualTo(OriginalRecipient.builder().addressType(AddressType.RFC_822).originalRecipient(ADDRESS).build());
+    void addressTypeShouldDefaultToRfc822() {
+        assertThat(OriginalRecipient.builder()
+                .originalRecipient(ADDRESS)
+                .build())
+            .isEqualTo(OriginalRecipient.builder()
+                .addressType(AddressType.RFC_822)
+                .originalRecipient(ADDRESS)
+                .build());
     }
 
     @Test
-    public void formattedValueShouldDisplayAddress() {
-        assertThat(OriginalRecipient.builder().originalRecipient(ADDRESS).build()
-            .formattedValue())
+    void formattedValueShouldDisplayAddress() {
+        assertThat(OriginalRecipient.builder()
+                .originalRecipient(ADDRESS)
+                .build()
+                .formattedValue())
             .isEqualTo("Original-Recipient: rfc822; address");
     }
 
     @Test
-    public void formattedValueShouldDisplayCustomType() {
-        assertThat(OriginalRecipient.builder().addressType(new AddressType("custom")).originalRecipient(ADDRESS).build()
-            .formattedValue())
+    void formattedValueShouldDisplayCustomType() {
+        assertThat(OriginalRecipient.builder()
+                .addressType(new AddressType("custom"))
+                .originalRecipient(ADDRESS)
+                .build()
+                .formattedValue())
             .isEqualTo("Original-Recipient: custom; address");
     }
 
     @Test
-    public void formattedValueShouldDisplayMultilineAddress() {
-        assertThat(OriginalRecipient.builder().originalRecipient(Text.fromRawText("multiline\naddress")).build()
-            .formattedValue())
-            .isEqualTo("Original-Recipient: rfc822; multiline\r\n" +
-                " address");
+    void formattedValueShouldDisplayMultilineAddress() {
+        assertThat(OriginalRecipient.builder()
+                .originalRecipient(Text.fromRawText("multiline\naddress"))
+                .build()
+                .formattedValue())
+            .isEqualTo("Original-Recipient: rfc822; multiline\r\n address");
     }
 }
