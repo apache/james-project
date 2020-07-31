@@ -20,40 +20,35 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ErrorTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class ErrorTest {
 
     @Test
-    public void shouldMatchBeanContract() throws Exception {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Error.class)
             .verify();
     }
 
     @Test
-    public void shouldThrowOnNullText() {
-        expectedException.expect(NullPointerException.class);
-
-        new Error(null);
+    void shouldThrowOnNullText() {
+        assertThatThrownBy(() -> new Error(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void formattedValueShouldDisplayMessage() {
+    void formattedValueShouldDisplayMessage() {
         assertThat(new Error(Text.fromRawText("Message"))
             .formattedValue())
             .isEqualTo("Error: Message");
     }
 
     @Test
-    public void formattedValueShouldDisplayMultiLineMessage() {
+    void formattedValueShouldDisplayMultiLineMessage() {
         assertThat(new Error(Text.fromRawText("Multi\nline\nMessage"))
             .formattedValue())
             .isEqualTo("Error: Multi\r\n line\r\n Message");
