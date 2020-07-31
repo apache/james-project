@@ -20,77 +20,68 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class GatewayTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
+class GatewayTest {
     @Test
-    public void shouldMatchBeanContract() throws Exception {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Gateway.class)
             .verify();
     }
 
     @Test
-    public void shouldThrowOnNullName() {
-        expectedException.expect(NullPointerException.class);
-
-        Gateway.builder()
-            .name(null)
-            .build();
+    void shouldThrowOnNullName() {
+        assertThatThrownBy(() -> Gateway.builder()
+                .name(null)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnNullNameWhenType() {
-        expectedException.expect(NullPointerException.class);
-
-        Gateway.builder()
-            .nameType(new AddressType("type"))
-            .name(null)
-            .build();
+    void shouldThrowOnNullNameWhenType() {
+        assertThatThrownBy(() -> Gateway.builder()
+                .nameType(new AddressType("type"))
+                .name(null)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnNullType() {
-        expectedException.expect(NullPointerException.class);
-
-        Gateway.builder()
-            .nameType(null)
-            .name(Text.fromRawText("name"))
-            .build();
+    void shouldThrowOnNullType() {
+        assertThatThrownBy(() -> Gateway.builder()
+                .nameType(null)
+                .name(Text.fromRawText("name"))
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void addressTypeShouldDefaultToDNS() {
+    void addressTypeShouldDefaultToDNS() {
         Text address = Text.fromRawText("address");
         assertThat(Gateway.builder().name(Text.fromRawText("address")).build())
             .isEqualTo(Gateway.builder().nameType(AddressType.DNS).name(address).build());
     }
 
     @Test
-    public void formattedValueShouldDisplayAddress() {
+    void formattedValueShouldDisplayAddress() {
         assertThat(Gateway.builder().name(Text.fromRawText("address")).build()
             .formattedValue())
             .isEqualTo("MDN-Gateway: dns;address");
     }
 
     @Test
-    public void formattedValueShouldDisplayMultilineAddress() {
+    void formattedValueShouldDisplayMultilineAddress() {
         assertThat(Gateway.builder().name(Text.fromRawText("address\nmultiline")).build()
             .formattedValue())
-            .isEqualTo("MDN-Gateway: dns;address\r\n" +
-                " multiline");
+            .isEqualTo("MDN-Gateway: dns;address\r\n multiline");
     }
 
     @Test
-    public void formattedValueShouldDisplayCustomAddress() {
+    void formattedValueShouldDisplayCustomAddress() {
         assertThat(Gateway.builder().nameType(new AddressType("custom")).name(Text.fromRawText("address")).build()
             .formattedValue())
             .isEqualTo("MDN-Gateway: custom;address");
