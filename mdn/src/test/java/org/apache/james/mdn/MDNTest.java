@@ -20,6 +20,7 @@
 package org.apache.james.mdn;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -33,15 +34,13 @@ import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class MDNTest {
+class MDNTest {
 
-    public static final MDNReport MINIMAL_REPORT = MDNReport.builder()
+    static final MDNReport MINIMAL_REPORT = MDNReport.builder()
         .finalRecipientField("final@domain.com")
         .dispositionField(Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
@@ -49,17 +48,15 @@ public class MDNTest {
             .type(DispositionType.Deleted)
             .build())
         .build();
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MDN.class)
             .verify();
     }
 
     @Test
-    public void asMimeMessageShouldGenerateExpectedContentType() throws Exception {
+    void asMimeMessageShouldGenerateExpectedContentType() throws Exception {
         MimeMessage mimeMessage = MDN.builder()
             .humanReadableText("Explanation")
             .report(MINIMAL_REPORT)
@@ -75,7 +72,7 @@ public class MDNTest {
     }
 
     @Test
-    public void asMimeMessageShouldComportExplanationPartAndReportPart() throws Exception {
+    void asMimeMessageShouldComportExplanationPartAndReportPart() throws Exception {
         MimeMessage mimeMessage = MDN.builder()
             .humanReadableText("Explanation")
             .report(MINIMAL_REPORT)
@@ -100,7 +97,7 @@ public class MDNTest {
     }
 
     @Test
-    public void asMimeMessageShouldDisplayEmptyExplanation() throws Exception {
+    void asMimeMessageShouldDisplayEmptyExplanation() throws Exception {
         MimeMessage mimeMessage = MDN.builder()
             .humanReadableText("Explanation")
             .report(MINIMAL_REPORT)
@@ -125,43 +122,39 @@ public class MDNTest {
     }
 
     @Test
-    public void reportShouldThrowOnNullValue() {
-        expectedException.expect(NullPointerException.class);
-
-        MDN.builder()
-            .report(null);
+    void reportShouldThrowOnNullValue() {
+        assertThatThrownBy(() -> MDN.builder()
+                .report(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void humanReadableTextShouldThrowOnNullValue() {
-        expectedException.expect(NullPointerException.class);
-
-        MDN.builder()
-            .humanReadableText(null);
+    void humanReadableTextShouldThrowOnNullValue() {
+        assertThatThrownBy(() -> MDN.builder()
+                .humanReadableText(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void buildShouldThrowOnEmptyHumanReadableText() {
-        expectedException.expect(IllegalStateException.class);
-
-        MDN.builder()
-            .humanReadableText("")
-            .report(MINIMAL_REPORT)
-            .build();
+    void buildShouldThrowOnEmptyHumanReadableText() {
+        assertThatThrownBy(() -> MDN.builder()
+                .humanReadableText("")
+                .report(MINIMAL_REPORT)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldThrowOnFoldingWhiteHumanReadableText() {
-        expectedException.expect(IllegalStateException.class);
-
-        MDN.builder()
-            .humanReadableText("  ")
-            .report(MINIMAL_REPORT)
-            .build();
+    void buildShouldThrowOnFoldingWhiteHumanReadableText() {
+        assertThatThrownBy(() -> MDN.builder()
+                .humanReadableText("  ")
+                .report(MINIMAL_REPORT)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void humanReadableTextShouldNotBeTrimmed() throws Exception {
+    void humanReadableTextShouldNotBeTrimmed() throws Exception {
         MimeMessage mimeMessage = MDN.builder()
             .humanReadableText("Explanation:\n" +
                 " - We should always write detailed unit tests\n" +
@@ -184,7 +177,7 @@ public class MDNTest {
     }
 
     @Test
-    public void mdnShouldBeConvertibleToMime4JMessage() throws Exception {
+    void mdnShouldBeConvertibleToMime4JMessage() throws Exception {
         Message message = MDN.builder()
             .humanReadableText("Explanation:\n" +
                 " - We should always write detailed unit tests\n" +
@@ -210,7 +203,7 @@ public class MDNTest {
 
 
     @Test
-    public void mime4JMessageExportShouldGenerateExpectedContentType() throws Exception {
+    void mime4JMessageExportShouldGenerateExpectedContentType() throws Exception {
         Message message = MDN.builder()
             .humanReadableText("RFCs are not funny")
             .report(MINIMAL_REPORT)
