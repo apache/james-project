@@ -59,7 +59,7 @@ import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
-import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Table;
+import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV3Table;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -182,10 +182,10 @@ class FixingGhostMailboxTest {
         testExtension.await();
 
         // Simulate ghost mailbox bug
-        session.execute(delete().from(CassandraMailboxPathV2Table.TABLE_NAME)
-            .where(eq(CassandraMailboxPathV2Table.NAMESPACE, MailboxConstants.USER_NAMESPACE))
-            .and(eq(CassandraMailboxPathV2Table.USER, ALICE))
-            .and(eq(CassandraMailboxPathV2Table.MAILBOX_NAME, MailboxConstants.INBOX)));
+        session.execute(delete().from(CassandraMailboxPathV3Table.TABLE_NAME)
+            .where(eq(CassandraMailboxPathV3Table.NAMESPACE, MailboxConstants.USER_NAMESPACE))
+            .and(eq(CassandraMailboxPathV3Table.USER, ALICE))
+            .and(eq(CassandraMailboxPathV3Table.MAILBOX_NAME, MailboxConstants.INBOX)));
 
         // trigger provisioning
         given()
