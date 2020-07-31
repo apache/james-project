@@ -21,29 +21,29 @@ package org.apache.james.mdn.sending.mode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DispositionSendingModeTest {
+class DispositionSendingModeTest {
     @Test
-    public void fromStringShouldReturnEmptyWhenUnknown() {
+    void fromStringShouldReturnEmptyWhenUnknown() {
         assertThat(DispositionSendingMode.fromString("unknown"))
             .isEmpty();
     }
 
     @Test
-    public void fromStringShouldRetrieveAutomatic() {
+    void fromStringShouldRetrieveAutomatic() {
         assertThat(DispositionSendingMode.fromString(DispositionSendingMode.Automatic.getValue()))
             .contains(DispositionSendingMode.Automatic);
     }
 
     @Test
-    public void fromStringShouldRetrieveManual() {
+    void fromStringShouldRetrieveManual() {
         assertThat(DispositionSendingMode.fromString(DispositionSendingMode.Manual.getValue()))
             .contains(DispositionSendingMode.Manual);
     }
     
     @Test
-    public void fromStringShouldNotBeCaseSensitive() {
+    void fromStringShouldNotBeCaseSensitive() {
         assertThat(DispositionSendingMode.fromString("mdn-sent-automatically"))
             .contains(DispositionSendingMode.Automatic);
     }
