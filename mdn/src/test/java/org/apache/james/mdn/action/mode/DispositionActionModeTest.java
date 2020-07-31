@@ -21,29 +21,29 @@ package org.apache.james.mdn.action.mode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DispositionActionModeTest {
+class DispositionActionModeTest {
     @Test
-    public void fromStringShouldReturnEmptyWhenUnknown() {
+    void fromStringShouldReturnEmptyWhenUnknown() {
         assertThat(DispositionActionMode.fromString("unknown"))
             .isEmpty();
     }
 
     @Test
-    public void fromStringShouldRetrieveAutomatic() {
+    void fromStringShouldRetrieveAutomatic() {
         assertThat(DispositionActionMode.fromString(DispositionActionMode.Automatic.getValue()))
             .contains(DispositionActionMode.Automatic);
     }
 
     @Test
-    public void fromStringShouldRetrieveManual() {
+    void fromStringShouldRetrieveManual() {
         assertThat(DispositionActionMode.fromString(DispositionActionMode.Manual.getValue()))
             .contains(DispositionActionMode.Manual);
     }
     
     @Test
-    public void fromStringShouldNotBeCaseSensitive() {
+    void fromStringShouldNotBeCaseSensitive() {
         assertThat(DispositionActionMode.fromString("autoMatic-action"))
             .contains(DispositionActionMode.Automatic);
     }
