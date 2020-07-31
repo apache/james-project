@@ -19,62 +19,53 @@
 
 package org.apache.james.mdn.modifier;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class DispositionModifierTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class DispositionModifierTest {
 
     @Test
-    public void shouldMatchBeanContract() throws Exception {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(DispositionModifier.class)
             .verify();
     }
 
     @Test
-    public void shouldThrowOnNull() {
-        expectedException.expect(NullPointerException.class);
-
-        new DispositionModifier(null);
+    void shouldThrowOnNull() {
+        assertThatThrownBy(() -> new DispositionModifier(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnMultiLine() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new DispositionModifier("multi\nline");
+    void shouldThrowOnMultiLine() {
+        assertThatThrownBy(() -> new DispositionModifier("multi\nline"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowOnEndBreakLine() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new DispositionModifier("multi\n");
+    void shouldThrowOnEndBreakLine() {
+        assertThatThrownBy(() -> new DispositionModifier("multi\n"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowOnBeginningBreakLine() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new DispositionModifier("\nline");
+    void shouldThrowOnBeginningBreakLine() {
+        assertThatThrownBy(() -> new DispositionModifier("\nline"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowOnEmptyValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new DispositionModifier("");
+    void shouldThrowOnEmptyValue() {
+        assertThatThrownBy(() -> new DispositionModifier(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowOnFoldingWhiteSpaceValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new DispositionModifier("    ");
+    void shouldThrowOnFoldingWhiteSpaceValue() {
+        assertThatThrownBy(() -> new DispositionModifier("    "))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }
