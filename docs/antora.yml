@@ -1,7 +1,7 @@
-name: main
-title: Apache James Reference Book
+name: james-project
+title: Apache James Server
 version: '3.5'
-prerelease: Alpha
+prerelease: true
 nav:
 - modules/concepts/nav.adoc
 - modules/servers/nav.adoc
