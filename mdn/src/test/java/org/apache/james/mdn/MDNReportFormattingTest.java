@@ -35,12 +35,12 @@ import org.apache.james.mdn.fields.Text;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MDNReportFormattingTest {
+class MDNReportFormattingTest {
 
     @Test
-    public void generateMDNReportShouldFormatAutomaticActions() {
+    void generateMDNReportShouldFormatAutomaticActions() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -67,7 +67,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatManualActions() {
+    void generateMDNReportShouldFormatManualActions() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Manual)
@@ -94,7 +94,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatTypeDispatcher() {
+    void generateMDNReportShouldFormatTypeDispatcher() {
         Disposition disposition = Disposition.builder()
         .actionMode(DispositionActionMode.Manual)
         .sendingMode(DispositionSendingMode.Manual)
@@ -121,7 +121,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatTypeDisplayed() {
+    void generateMDNReportShouldFormatTypeDisplayed() {
         Disposition disposition = Disposition.builder()
         .actionMode(DispositionActionMode.Manual)
         .sendingMode(DispositionSendingMode.Manual)
@@ -148,7 +148,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatTypeDeleted() {
+    void generateMDNReportShouldFormatTypeDeleted() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Manual)
@@ -175,7 +175,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatAllModifier() {
+    void generateMDNReportShouldFormatAllModifier() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Manual)
@@ -202,7 +202,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatOneModifier() {
+    void generateMDNReportShouldFormatOneModifier() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Manual)
@@ -228,7 +228,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatUnknownModifier() {
+    void generateMDNReportShouldFormatUnknownModifier() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Manual)
@@ -254,7 +254,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatNoModifier() {
+    void generateMDNReportShouldFormatNoModifier() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Manual)
@@ -279,7 +279,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatNullUserAgentProduct() {
+    void generateMDNReportShouldFormatNullUserAgentProduct() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -306,7 +306,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatNullOriginalRecipient() {
+    void generateMDNReportShouldFormatNullOriginalRecipient() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -331,7 +331,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatWhenMissingOriginalMessageId() {
+    void generateMDNReportShouldFormatWhenMissingOriginalMessageId() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -356,7 +356,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatGateway() {
+    void generateMDNReportShouldFormatGateway() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -385,7 +385,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatGatewayWithExoticNameType() {
+    void generateMDNReportShouldFormatGatewayWithExoticNameType() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -414,7 +414,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatExoticAddressTypeForOriginalRecipient() {
+    void generateMDNReportShouldFormatExoticAddressTypeForOriginalRecipient() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -441,7 +441,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatMultilineAddresses() {
+    void generateMDNReportShouldFormatMultilineAddresses() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -476,7 +476,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatUnknownAddressTypeForOriginalRecipient() {
+    void generateMDNReportShouldFormatUnknownAddressTypeForOriginalRecipient() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -503,7 +503,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatExoticFinalRecipientAddressType() {
+    void generateMDNReportShouldFormatExoticFinalRecipientAddressType() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -530,7 +530,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatErrorField() {
+    void generateMDNReportShouldFormatErrorField() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -559,7 +559,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatErrorFields() {
+    void generateMDNReportShouldFormatErrorFields() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -591,7 +591,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatErrorFieldsOnSeveralLines() {
+    void generateMDNReportShouldFormatErrorFieldsOnSeveralLines() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -621,7 +621,7 @@ public class MDNReportFormattingTest {
     }
 
     @Test
-    public void generateMDNReportShouldFormatOneExtension() {
+    void generateMDNReportShouldFormatOneExtension() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -651,7 +651,7 @@ public class MDNReportFormattingTest {
 
 
     @Test
-    public void generateMDNReportShouldFormatManyExtensions() {
+    void generateMDNReportShouldFormatManyExtensions() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
