@@ -20,32 +20,28 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class DispositionTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class DispositionTest {
 
     @Test
-    public void shouldMatchBeanContract() throws Exception {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Disposition.class)
             .verify();
     }
 
     @Test
-    public void shouldBuildMinimalSubSet() {
+    void shouldBuildMinimalSubSet() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -62,37 +58,34 @@ public class DispositionTest {
     }
 
     @Test
-    public void buildShouldThrowOnMissingActionMode() {
-        expectedException.expect(IllegalStateException.class);
-
-        Disposition.builder()
-            .sendingMode(DispositionSendingMode.Automatic)
-            .type(DispositionType.Processed)
-            .build();
+    void buildShouldThrowOnMissingActionMode() {
+        assertThatThrownBy(() -> Disposition.builder()
+                .sendingMode(DispositionSendingMode.Automatic)
+                .type(DispositionType.Processed)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldThrowOnMissingSendingMode() {
-        expectedException.expect(IllegalStateException.class);
-
-        Disposition.builder()
-            .actionMode(DispositionActionMode.Automatic)
-            .type(DispositionType.Processed)
-            .build();
+    void buildShouldThrowOnMissingSendingMode() {
+        assertThatThrownBy(() -> Disposition.builder()
+                .actionMode(DispositionActionMode.Automatic)
+                .type(DispositionType.Processed)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldThrowOnMissingType() {
-        expectedException.expect(IllegalStateException.class);
-
-        Disposition.builder()
-            .actionMode(DispositionActionMode.Automatic)
-            .sendingMode(DispositionSendingMode.Automatic)
-            .build();
+    void buildShouldThrowOnMissingType() {
+        assertThatThrownBy(() -> Disposition.builder()
+                .actionMode(DispositionActionMode.Automatic)
+                .sendingMode(DispositionSendingMode.Automatic)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void shouldBuildWithAllOptions() {
+    void shouldBuildWithAllOptions() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -110,7 +103,7 @@ public class DispositionTest {
     }
 
     @Test
-    public void formattedValueShouldDisplayAllOptions() {
+    void formattedValueShouldDisplayAllOptions() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -123,7 +116,7 @@ public class DispositionTest {
     }
 
     @Test
-    public void formattedValueShouldDisplaySingleModifier() {
+    void formattedValueShouldDisplaySingleModifier() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -137,7 +130,7 @@ public class DispositionTest {
 
 
     @Test
-    public void formattedValueShouldDisplayNoModifier() {
+    void formattedValueShouldDisplayNoModifier() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -149,7 +142,7 @@ public class DispositionTest {
     }
 
     @Test
-    public void formattedValueShouldDisplayManualActionMode() {
+    void formattedValueShouldDisplayManualActionMode() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Manual)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -162,7 +155,7 @@ public class DispositionTest {
     }
 
     @Test
-    public void formattedValueShouldDisplayManualSendingMode() {
+    void formattedValueShouldDisplayManualSendingMode() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Manual)
