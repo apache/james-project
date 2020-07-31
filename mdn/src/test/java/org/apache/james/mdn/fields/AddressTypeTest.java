@@ -20,67 +20,58 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class AddressTypeTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class AddressTypeTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(AddressType.class)
             .verify();
     }
 
     @Test
-    public void constructorShouldThrowOnNull() {
-        expectedException.expect(NullPointerException.class);
-
-        new AddressType(null);
+    void constructorShouldThrowOnNull() {
+        assertThatThrownBy(() -> new AddressType(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnEmpty() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new AddressType("");
+    void constructorShouldThrowOnEmpty() {
+        assertThatThrownBy(() -> new AddressType(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnFoldingWhiteSpaces() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new AddressType("   ");
+    void constructorShouldThrowOnFoldingWhiteSpaces() {
+        assertThatThrownBy(() -> new AddressType("   "))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnLineBreaks() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new AddressType("a\nb");
+    void constructorShouldThrowOnLineBreaks() {
+        assertThatThrownBy(() -> new AddressType("a\nb"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnLineBreakAtTheEnd() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new AddressType("a\n");
+    void constructorShouldThrowOnLineBreakAtTheEnd() {
+        assertThatThrownBy(() -> new AddressType("a\n"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnLineBreakAtTheBeginning() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new AddressType("\na");
+    void constructorShouldThrowOnLineBreakAtTheBeginning() {
+        assertThatThrownBy(() -> new AddressType("\na"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldAcceptValidValue() {
+    void constructorShouldAcceptValidValue() {
         String type = "ab";
         AddressType addressType = new AddressType(type);
 
@@ -89,7 +80,7 @@ public class AddressTypeTest {
     }
 
     @Test
-    public void typeShouldBeTrimmed() {
+    void typeShouldBeTrimmed() {
         AddressType addressType = new AddressType("  ab  ");
 
         assertThat(addressType.getType())
