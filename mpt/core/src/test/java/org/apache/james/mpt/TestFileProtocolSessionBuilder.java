@@ -28,26 +28,26 @@ import java.io.StringReader;
 
 import org.apache.james.mpt.api.ProtocolInteractor;
 import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class TestFileProtocolSessionBuilder {
+class TestFileProtocolSessionBuilder {
 
-    private static final String SCRIPT_WITH_VARIABLES = "HELLO ${not} ${foo} WORLD ${bar}";
-    private static final String SCRIPT_WITH_FOO_REPLACED_BY_WHATEVER = "HELLO ${not} whatever WORLD ${bar}";
-    private static final String SCRIPT_WITH_VARIABLES_INLINED = "HELLO not foo WORLD bar";
+    static final String SCRIPT_WITH_VARIABLES = "HELLO ${not} ${foo} WORLD ${bar}";
+    static final String SCRIPT_WITH_FOO_REPLACED_BY_WHATEVER = "HELLO ${not} whatever WORLD ${bar}";
+    static final String SCRIPT_WITH_VARIABLES_INLINED = "HELLO not foo WORLD bar";
     
     ProtocolSessionBuilder builder;
     ProtocolInteractor session;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         builder = new ProtocolSessionBuilder();
         session = mock(ProtocolInteractor.class);
     }
 
     @Test
-    public void testShouldPreserveContentsWhenNoVariablesSet() throws Exception {
+    void testShouldPreserveContentsWhenNoVariablesSet() throws Exception {
         builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + SCRIPT_WITH_VARIABLES), session);
 
         verify(session, times(1)).cl(-1, SCRIPT_WITH_VARIABLES);
@@ -55,7 +55,7 @@ public class TestFileProtocolSessionBuilder {
     }
 
     @Test
-    public void testShouldReplaceVariableWhenSet() throws Exception {
+    void testShouldReplaceVariableWhenSet() throws Exception {
         builder.setVariable("foo", "whatever");
         builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + SCRIPT_WITH_VARIABLES), session);
 
@@ -64,7 +64,7 @@ public class TestFileProtocolSessionBuilder {
     }
 
     @Test
-    public void testShouldReplaceAllVariablesWhenSet() throws Exception {
+    void testShouldReplaceAllVariablesWhenSet() throws Exception {
         builder.setVariable("bar", "bar");
         builder.setVariable("foo", "foo");
         builder.setVariable("not", "not");
@@ -75,7 +75,7 @@ public class TestFileProtocolSessionBuilder {
     }
 
     @Test
-    public void testShouldReplaceVariableAtBeginningAndEnd() throws Exception {
+    void testShouldReplaceVariableAtBeginningAndEnd() throws Exception {
         builder.setVariable("foo", "whatever");
         builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + "${foo} Some Other Script${foo}${foo}"), session);
 
@@ -84,7 +84,7 @@ public class TestFileProtocolSessionBuilder {
     }
 
     @Test
-    public void testShouldIgnoreNotQuiteVariables() throws Exception {
+    void testShouldIgnoreNotQuiteVariables() throws Exception {
         final String NEARLY = "{foo}${}${foo Some Other Script${foo}";
         builder.setVariable("foo", "whatever");
         builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + NEARLY), session);
