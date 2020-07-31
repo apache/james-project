@@ -21,41 +21,41 @@ package org.apache.james.mdn.type;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DispositionTypeTest {
+class DispositionTypeTest {
     @Test
-    public void fromStringShouldReturnEmptyWhenUnknown() {
+    void fromStringShouldReturnEmptyWhenUnknown() {
         assertThat(DispositionType.fromString("unknown"))
             .isEmpty();
     }
 
     @Test
-    public void fromStringShouldRetrieveDeleted() {
+    void fromStringShouldRetrieveDeleted() {
         assertThat(DispositionType.fromString(DispositionType.Deleted.getValue()))
             .contains(DispositionType.Deleted);
     }
 
     @Test
-    public void fromStringShouldRetrieveDispatched() {
+    void fromStringShouldRetrieveDispatched() {
         assertThat(DispositionType.fromString(DispositionType.Dispatched.getValue()))
             .contains(DispositionType.Dispatched);
     }
 
     @Test
-    public void fromStringShouldRetrieveDisplayed() {
+    void fromStringShouldRetrieveDisplayed() {
         assertThat(DispositionType.fromString(DispositionType.Displayed.getValue()))
             .contains(DispositionType.Displayed);
     }
 
     @Test
-    public void fromStringShouldRetrieveProcessed() {
+    void fromStringShouldRetrieveProcessed() {
         assertThat(DispositionType.fromString(DispositionType.Processed.getValue()))
             .contains(DispositionType.Processed);
     }
 
     @Test
-    public void fromStringShouldNotBeCaseSensitive() {
+    void fromStringShouldNotBeCaseSensitive() {
         assertThat(DispositionType.fromString("Deleted"))
             .contains(DispositionType.Deleted);
     }
