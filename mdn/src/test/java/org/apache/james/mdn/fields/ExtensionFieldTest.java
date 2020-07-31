@@ -20,49 +20,53 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ExtensionFieldTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
+class ExtensionFieldTest {
     @Test
-    public void shouldMatchBeanContract() throws Exception {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(ExtensionField.class)
             .verify();
     }
 
     @Test
-    public void shouldThrowOnNullFieldName() {
-        expectedException.expect(NullPointerException.class);
-
-        ExtensionField.builder().fieldName(null).rawValue("rawValue").build();
+    void shouldThrowOnNullFieldName() {
+        assertThatThrownBy(() -> ExtensionField.builder()
+                .fieldName(null)
+                .rawValue("rawValue")
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnNullRawValue() {
-        expectedException.expect(NullPointerException.class);
-
-        ExtensionField.builder().fieldName("name").rawValue(null).build();
+    void shouldThrowOnNullRawValue() {
+        assertThatThrownBy(() -> ExtensionField.builder()
+                .fieldName("name")
+                .rawValue(null)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnMultilineName() {
-        expectedException.expect(IllegalStateException.class);
-
-        ExtensionField.builder().fieldName("name\nmultiline").rawValue("rawValue").build();
+    void shouldThrowOnMultilineName() {
+        assertThatThrownBy(() -> ExtensionField.builder()
+                .fieldName("name\nmultiline")
+                .rawValue("rawValue")
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void formattedValueShouldDisplayNameAndRawValue() {
-        assertThat(ExtensionField.builder().fieldName("name").rawValue("rawValue").build()
-            .formattedValue())
+    void formattedValueShouldDisplayNameAndRawValue() {
+        assertThat(ExtensionField.builder()
+                .fieldName("name")
+                .rawValue("rawValue")
+                .build()
+                .formattedValue())
             .isEqualTo("name: rawValue");
     }
 }
