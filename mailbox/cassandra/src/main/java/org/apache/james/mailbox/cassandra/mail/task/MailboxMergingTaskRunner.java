@@ -28,7 +28,6 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -51,17 +50,15 @@ public class MailboxMergingTaskRunner {
     private final StoreMessageIdManager messageIdManager;
     private final CassandraMessageIdDAO cassandraMessageIdDAO;
     private final CassandraMailboxDAO mailboxDAO;
-    private final CassandraUserMailboxRightsDAO rightsDAO;
     private final CassandraACLMapper cassandraACLMapper;
     private final MailboxSession mailboxSession;
 
     @Inject
-    public MailboxMergingTaskRunner(MailboxManager mailboxManager, StoreMessageIdManager messageIdManager, CassandraMessageIdDAO cassandraMessageIdDAO, CassandraMailboxDAO mailboxDAO, CassandraUserMailboxRightsDAO rightsDAO, CassandraACLMapper cassandraACLMapper) throws MailboxException {
+    public MailboxMergingTaskRunner(MailboxManager mailboxManager, StoreMessageIdManager messageIdManager, CassandraMessageIdDAO cassandraMessageIdDAO, CassandraMailboxDAO mailboxDAO, CassandraACLMapper cassandraACLMapper) {
         this.mailboxSession = mailboxManager.createSystemSession(Username.of("task"));
         this.messageIdManager = messageIdManager;
         this.cassandraMessageIdDAO = cassandraMessageIdDAO;
         this.mailboxDAO = mailboxDAO;
-        this.rightsDAO = rightsDAO;
         this.cassandraACLMapper = cassandraACLMapper;
     }
 
