@@ -20,6 +20,7 @@
 package org.apache.james.mdn;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
@@ -36,38 +37,32 @@ import org.apache.james.mdn.fields.Text;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class MDNReportTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class MDNReportTest {
 
     @Test
-    public void shouldMatchBeanContact() {
+    void shouldMatchBeanContact() {
         EqualsVerifier.forClass(MDNReport.class)
             .verify();
     }
 
     @Test
-    public void generateMDNReportThrowOnNullDisposition() {
-        expectedException.expect(IllegalStateException.class);
-
-        MDNReport.builder()
-            .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
-            .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
-            .build();
+    void generateMDNReportThrowOnNullDisposition() {
+        assertThatThrownBy(() -> MDNReport.builder()
+                .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
+                .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
+                .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void generateMDNReportShouldThrowWhenMissingFinalField() {
+    void generateMDNReportShouldThrowWhenMissingFinalField() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -76,18 +71,17 @@ public class MDNReportTest {
             .addModifier(DispositionModifier.Failed)
             .build();
 
-        expectedException.expect(IllegalStateException.class);
-
-        MDNReport.builder()
-            .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
-            .originalMessageIdField(new OriginalMessageId("original_message_id"))
-            .dispositionField(disposition)
-            .build();
+        assertThatThrownBy(() -> MDNReport.builder()
+                .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
+                .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
+                .originalMessageIdField(new OriginalMessageId("original_message_id"))
+                .dispositionField(disposition)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void shouldBuildWithMinimalSubset() {
+    void shouldBuildWithMinimalSubset() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
@@ -107,7 +101,7 @@ public class MDNReportTest {
     }
 
     @Test
-    public void shouldBuildWithMaximalSubset() {
+    void shouldBuildWithMaximalSubset() {
         Disposition disposition = Disposition.builder()
             .actionMode(DispositionActionMode.Automatic)
             .sendingMode(DispositionSendingMode.Automatic)
