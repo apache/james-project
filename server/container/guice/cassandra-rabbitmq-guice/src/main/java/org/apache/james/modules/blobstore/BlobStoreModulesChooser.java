@@ -25,7 +25,6 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.cassandra.CassandraDumbBlobStore;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
-import org.apache.james.blob.objectstorage.aws.S3BlobStore;
 import org.apache.james.blob.objectstorage.aws.S3DumbBlobStore;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
@@ -64,10 +63,6 @@ public class BlobStoreModulesChooser {
             install(new S3BlobStoreModule());
 
             bind(DumbBlobStore.class).to(S3DumbBlobStore.class);
-
-            bind(BlobStore.class)
-                .annotatedWith(Names.named(CachedBlobStore.BACKEND))
-                .to(S3BlobStore.class);
         }
     }
 
@@ -94,16 +89,11 @@ public class BlobStoreModulesChooser {
 
     @VisibleForTesting
     public static List<Module> chooseModules(BlobStoreConfiguration choosingConfiguration) {
-        ImmutableList.Builder<Module> moduleBuilder = ImmutableList.<Module>builder()
+        return ImmutableList.<Module>builder()
             .add(chooseDumBlobStoreModule(choosingConfiguration.getImplementation()))
-            .add(new StoragePolicyConfigurationSanityEnforcementModule(choosingConfiguration));
-
-        //TODO JAMES-3028 add the storage policy module for all implementation and unbind the ObjectStorageBlobStore
-        if (choosingConfiguration.getImplementation() == BlobStoreConfiguration.BlobStoreImplName.CASSANDRA) {
-            moduleBuilder.add(
-                chooseStoragePolicyModule(choosingConfiguration.storageStrategy()));
-        }
-        return moduleBuilder.build();
+            .add(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
+            .add(new StoragePolicyConfigurationSanityEnforcementModule(choosingConfiguration))
+            .build();
     }
 
     public static Module chooseDumBlobStoreModule(BlobStoreConfiguration.BlobStoreImplName implementation) {
