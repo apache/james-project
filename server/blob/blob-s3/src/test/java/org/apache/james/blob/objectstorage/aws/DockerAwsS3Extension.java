@@ -19,28 +19,12 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class DockerAwsS3Extension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
-
-    private DockerAwsS3Container awsS3Container;
-
-    @Override
-    public void beforeAll(ExtensionContext context) {
-        awsS3Container = new DockerAwsS3Container();
-        awsS3Container.start();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext context) {
-        awsS3Container.stop();
-    }
-
+public class DockerAwsS3Extension implements ParameterResolver {
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return (parameterContext.getParameter().getType() == DockerAwsS3Container.class);
@@ -48,6 +32,6 @@ public class DockerAwsS3Extension implements ParameterResolver, BeforeAllCallbac
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return awsS3Container;
+        return DockerAwsS3Singleton.singleton;
     }
 }

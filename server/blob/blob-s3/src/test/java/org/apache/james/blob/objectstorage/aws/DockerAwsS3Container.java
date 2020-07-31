@@ -28,7 +28,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 public class DockerAwsS3Container {
 
 
-    private static final String AWS_S3_DOCKER_IMAGE = "zenko/cloudserver:8.2.3";
+    private static final String AWS_S3_DOCKER_IMAGE = "zenko/cloudserver:8.2.6";
     private static final int AWS_S3_PORT = 8000;
     private static final int ONE_TIME = 1;
 
@@ -43,7 +43,7 @@ public class DockerAwsS3Container {
         this.awsS3Container = new GenericContainer<>(AWS_S3_DOCKER_IMAGE);
         this.awsS3Container
             .withExposedPorts(AWS_S3_PORT)
-            .withEnv("S3BACKEND", "file")
+            .withEnv("S3BACKEND", "mem")
             .withEnv("SCALITY_ACCESS_KEY_ID", ACCESS_KEY_ID)
             .withEnv("SCALITY_SECRET_ACCESS_KEY", SECRET_ACCESS_KEY)
             .withEnv("LOG_LEVEL", "trace")

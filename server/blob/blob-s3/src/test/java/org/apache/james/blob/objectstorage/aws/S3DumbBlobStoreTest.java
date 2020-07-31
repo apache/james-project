@@ -20,18 +20,17 @@ package org.apache.james.blob.objectstorage.aws;
 
 import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.DumbBlobStoreContract;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
 public class S3DumbBlobStoreTest implements DumbBlobStoreContract {
+    private static S3DumbBlobStore testee;
 
-    private S3DumbBlobStore testee;
-
-    @BeforeEach
-    void setUp(DockerAwsS3Container dockerAwsS3) {
-
+    @BeforeAll
+    static void setUp(DockerAwsS3Container dockerAwsS3) {
         AwsS3AuthConfiguration configuration = AwsS3AuthConfiguration.builder()
             .endpoint(dockerAwsS3.getEndpoint())
             .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
@@ -44,6 +43,10 @@ public class S3DumbBlobStoreTest implements DumbBlobStoreContract {
     @AfterEach
     void tearDown() {
         testee.deleteAllBuckets().block();
+    }
+
+    @AfterAll
+    static void tearDownClass() {
         testee.close();
     }
 
@@ -51,5 +54,4 @@ public class S3DumbBlobStoreTest implements DumbBlobStoreContract {
     public DumbBlobStore testee() {
         return testee;
     }
-
 }
