@@ -34,27 +34,27 @@ import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.monitor.NullMonitor;
 import org.apache.james.mpt.session.ExternalSessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class TestExternalHostSystem {
+class TestExternalHostSystem {
     
-    private static final Username USER = Username.of("USERNAME");
+    static final Username USER = Username.of("USERNAME");
 
-    private static final String PASSWORD = "SOME PASSWORD";
+    static final String PASSWORD = "SOME PASSWORD";
 
-    private static final String SHABANG = "This Is The Shabang";
+    static final String SHABANG = "This Is The Shabang";
 
-    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
-    private DiscardProtocol protocol;
-    private DiscardProtocol.Record record;
-    private Continuation continuation;
-    private UserAdder userAdder;
+    DiscardProtocol protocol;
+    DiscardProtocol.Record record;
+    Continuation continuation;
+    UserAdder userAdder;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         protocol = new DiscardProtocol();
         protocol.start();
         record = protocol.recordNext();
@@ -62,13 +62,13 @@ public class TestExternalHostSystem {
         userAdder = mock(UserAdder.class);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         protocol.stop();
     }
 
     @Test
-    public void testWrite() throws Exception {
+    void testWrite() throws Exception {
         Session session = newSession(SHABANG);
         final String in = "Hello, World";
         session.writeLine(in);
@@ -78,7 +78,7 @@ public class TestExternalHostSystem {
     }
 
     @Test
-    public void testAddUser() throws Exception {
+    void testAddUser() throws Exception {
         ExternalHostSystem system = buildSystem(SHABANG);
         system.addUser(USER, PASSWORD);
         verify(userAdder, times(1)).addUser(USER, PASSWORD);
