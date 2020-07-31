@@ -45,9 +45,9 @@ public class CassandraAsyncExecutor {
     }
 
     public Mono<ResultSet> execute(Statement statement) {
-        return Mono.defer(() -> Mono.fromFuture(FutureConverter
+        return Mono.fromFuture(() -> FutureConverter
                 .toCompletableFuture(session.executeAsync(statement)))
-                .publishOn(Schedulers.elastic()));
+                .publishOn(Schedulers.elastic());
     }
 
     public Mono<Boolean> executeReturnApplied(Statement statement) {
