@@ -23,32 +23,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.Username;
 import org.apache.james.mpt.user.ScriptedUserAdder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class TestScriptedUserAdder {
+class TestScriptedUserAdder {
     
-    private DiscardProtocol protocol;
+    DiscardProtocol protocol;
     
-    private DiscardProtocol.Record record;
+    DiscardProtocol.Record record;
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         protocol = new DiscardProtocol();
         protocol.start();
         record = protocol.recordNext();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() {
         protocol.stop();
     }
 
     @Test
-    public void testShouldExecuteScriptAgainstPort() throws Exception {
+    void testShouldExecuteScriptAgainstPort() throws Exception {
         ScriptedUserAdder adder = new ScriptedUserAdder("localhost", protocol.getPort(), "C: USER='${user}' password='${password}'");
         adder.addUser(Username.of("user"), "Some Password");
+
         assertThat(record.complete()).isEqualTo("USER='user' password='Some Password'\r\n");
     }
 }
