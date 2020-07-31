@@ -19,29 +19,27 @@
 
 package org.apache.james;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.apache.james.blob.objectstorage.DefaultPayloadCodec;
-import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
-import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
-import org.junit.jupiter.api.Test;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class WithDefaultAwsS3ImmutableTest implements JmapJamesServerContract, JamesServerContract {
+public class WithCassandraDeduplicationBlobStoreImmutableTest implements JmapJamesServerContract, JamesServerContract {
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
-        .extension(new AwsS3BlobStoreExtension())
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+        CassandraRabbitMQJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .blobStore(BlobStoreConfiguration.cassandra()
+                .deduplication())
+            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .build())
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule()))
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new RabbitMQExtension())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
-
-    @Test
-    void defaultPayloadShouldBeByDefault(GuiceJamesServer jamesServer) {
-        PayloadCodec payloadCodec = jamesServer.getProbe(DockerAwsS3TestRule.TestAwsS3BlobStoreProbe.class)
-            .getAwsS3PayloadCodec();
-
-        assertThat(payloadCodec)
-            .isInstanceOf(DefaultPayloadCodec.class);
-    }
 }

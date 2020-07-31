@@ -164,10 +164,11 @@ public class BlobStoreConfiguration {
     }
 
     @VisibleForTesting
-    public static BlobStoreConfiguration cassandra() {
-        return new BlobStoreConfiguration(BlobStoreImplName.CASSANDRA, !CACHE_ENABLED, StorageStrategy.PASSTHROUGH);
+    public static RequireStoringStrategy cassandra() {
+        return builder()
+            .cassandra()
+            .disableCache();
     }
-
 
     private final BlobStoreImplName implementation;
     private final boolean cacheEnabled;
