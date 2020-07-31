@@ -20,79 +20,69 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class OriginalMessageIdTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class OriginalMessageIdTest {
 
     @Test
-    public void shouldMatchBeanContract() throws Exception {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(OriginalMessageId.class)
             .verify();
     }
 
     @Test
-    public void shouldThrowOnNullMessageId() {
-        expectedException.expect(NullPointerException.class);
-
-        new OriginalMessageId(null);
+    void shouldThrowOnNullMessageId() {
+        assertThatThrownBy(() -> new OriginalMessageId(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnMultiLineMessageId() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new OriginalMessageId("message\nid");
+    void shouldThrowOnMultiLineMessageId() {
+        assertThatThrownBy(() -> new OriginalMessageId("message\nid"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnEmpty() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new OriginalMessageId("");
+    void constructorShouldThrowOnEmpty() {
+        assertThatThrownBy(() -> new OriginalMessageId(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnFoldingWhiteSpaces() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new OriginalMessageId("   ");
+    void constructorShouldThrowOnFoldingWhiteSpaces() {
+        assertThatThrownBy(() -> new OriginalMessageId("   "))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowOnNameWithLineBreakAtTheEnd() {
-        expectedException.expect(IllegalArgumentException.class);
-
+    void shouldThrowOnNameWithLineBreakAtTheEnd() {
         String userAgentName = "a\n";
-        new OriginalMessageId(userAgentName);
+
+        assertThatThrownBy(() -> new OriginalMessageId(userAgentName))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowOnNameWithLineBreakAtTheBeginning() {
-        expectedException.expect(IllegalArgumentException.class);
-
+    void shouldThrowOnNameWithLineBreakAtTheBeginning() {
         String userAgentName = "\nb";
-        new OriginalMessageId(userAgentName);
+
+        assertThatThrownBy(() -> new OriginalMessageId(userAgentName))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void formattedValueShouldDisplayMessageId() {
-        assertThat(new OriginalMessageId("msgId")
-            .formattedValue())
+    void formattedValueShouldDisplayMessageId() {
+        assertThat(new OriginalMessageId("msgId").formattedValue())
             .isEqualTo("Original-Message-ID: msgId");
     }
 
     @Test
-    public void messageIdShouldBeTrimmed() {
-        assertThat(new OriginalMessageId(" msgId ")
-            .getOriginalMessageId())
+    void messageIdShouldBeTrimmed() {
+        assertThat(new OriginalMessageId(" msgId ").getOriginalMessageId())
             .isEqualTo("msgId");
     }
 }
