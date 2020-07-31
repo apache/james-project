@@ -20,130 +20,170 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ReportingUserAgentTest {
-    public static final String USER_AGENT_NAME = "name";
-    public static final String USER_AGENT_PRODUCT = "product";
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class ReportingUserAgentTest {
+    static final String USER_AGENT_NAME = "name";
+    static final String USER_AGENT_PRODUCT = "product";
 
     @Test
-    public void shouldMatchBeanContact() {
+    void shouldMatchBeanContact() {
         EqualsVerifier.forClass(ReportingUserAgent.class)
             .verify();
     }
 
     @Test
-    public void productShouldBeOptional() {
-        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).build())
-            .isEqualTo(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).build());
+    void productShouldBeOptional() {
+        assertThat(ReportingUserAgent.builder()
+                .userAgentName(USER_AGENT_NAME)
+                .build())
+            .isEqualTo(ReportingUserAgent.builder()
+                .userAgentName(USER_AGENT_NAME)
+                .build());
     }
 
 
     @Test
-    public void shouldThrowOnNullName() {
-        expectedException.expect(NullPointerException.class);
-
+    void shouldThrowOnNullName() {
         String userAgentName = null;
-        ReportingUserAgent.builder().userAgentName(userAgentName).build();
+
+        assertThatThrownBy(() -> ReportingUserAgent.builder()
+                .userAgentName(userAgentName)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnNullNameWhenSpecifyingProduct() {
-        expectedException.expect(NullPointerException.class);
-
+    void shouldThrowOnNullNameWhenSpecifyingProduct() {
         String userAgentName = null;
-        ReportingUserAgent.builder().userAgentName(userAgentName).userAgentProduct(USER_AGENT_PRODUCT).build();
+
+        assertThatThrownBy(() -> ReportingUserAgent.builder()
+                .userAgentName(userAgentName)
+                .userAgentProduct(USER_AGENT_PRODUCT)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnNullProduct() {
-        expectedException.expect(NullPointerException.class);
-
+    void shouldThrowOnNullProduct() {
         String userAgentProduct = null;
-        ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct(userAgentProduct).build();
+
+        assertThatThrownBy(() -> ReportingUserAgent.builder()
+                .userAgentName(USER_AGENT_NAME)
+                .userAgentProduct(userAgentProduct)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnEmptyName() {
-        expectedException.expect(IllegalStateException.class);
-
+    void shouldThrowOnEmptyName() {
         String userAgentName = "";
-        ReportingUserAgent.builder().userAgentName(userAgentName).build();
+
+        assertThatThrownBy(() -> ReportingUserAgent.builder()
+                .userAgentName(userAgentName)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void shouldThrowOnFoldingWhiteSpaceName() {
-        expectedException.expect(IllegalStateException.class);
-
+    void shouldThrowOnFoldingWhiteSpaceName() {
         String userAgentName = "   ";
-        ReportingUserAgent.builder().userAgentName(userAgentName).build();
+
+        assertThatThrownBy(() -> ReportingUserAgent.builder()
+                .userAgentName(userAgentName)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void shouldThrowOnNameWithLineBreak() {
-        expectedException.expect(IllegalStateException.class);
-
+    void shouldThrowOnNameWithLineBreak() {
         String userAgentName = "a\nb";
-        ReportingUserAgent.builder().userAgentName(userAgentName).build();
+
+        assertThatThrownBy(() -> ReportingUserAgent.builder()
+                .userAgentName(userAgentName)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void shouldThrowOnNameWithLineBreakAtTheEnd() {
-        expectedException.expect(IllegalStateException.class);
-
+    void shouldThrowOnNameWithLineBreakAtTheEnd() {
         String userAgentName = "a\n";
-        ReportingUserAgent.builder().userAgentName(userAgentName).build();
+
+        assertThatThrownBy(() -> ReportingUserAgent.builder()
+                .userAgentName(userAgentName)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void shouldThrowOnNameWithLineBreakAtTheBeginning() {
-        expectedException.expect(IllegalStateException.class);
-
+    void shouldThrowOnNameWithLineBreakAtTheBeginning() {
         String userAgentName = "\nb";
-        ReportingUserAgent.builder().userAgentName(userAgentName).build();
+
+        assertThatThrownBy(() -> ReportingUserAgent.builder()
+                .userAgentName(userAgentName)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void nameShouldBeTrimmed() {
-        assertThat(ReportingUserAgent.builder().userAgentName(" name ").build().getUserAgentName())
+    void nameShouldBeTrimmed() {
+        assertThat(ReportingUserAgent.builder()
+                .userAgentName(" name ")
+                .build()
+                .getUserAgentName())
             .isEqualTo(USER_AGENT_NAME);
     }
 
     @Test
-    public void productShouldBeTrimmed() {
-        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct(" product ").build().getUserAgentProduct())
+    void productShouldBeTrimmed() {
+        assertThat(ReportingUserAgent.builder()
+                .userAgentName(USER_AGENT_NAME)
+                .userAgentProduct(" product ")
+                .build()
+                .getUserAgentProduct())
             .contains(USER_AGENT_PRODUCT);
     }
 
     @Test
-    public void formattedValueShouldDisplayNameWhenProductMissing() {
-        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).build().formattedValue())
+    void formattedValueShouldDisplayNameWhenProductMissing() {
+        assertThat(ReportingUserAgent.builder()
+                .userAgentName(USER_AGENT_NAME)
+                .build()
+                .formattedValue())
             .isEqualTo("Reporting-UA: name; ");
     }
 
     @Test
-    public void emptyProductShouldBeFilteredOut() {
-        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct("").build().getUserAgentProduct())
+    void emptyProductShouldBeFilteredOut() {
+        assertThat(ReportingUserAgent.builder()
+                .userAgentName(USER_AGENT_NAME)
+                .userAgentProduct("")
+                .build()
+                .getUserAgentProduct())
             .isEmpty();
     }
 
     @Test
-    public void foldingWhiteSpaceProductShouldBeFilteredOut() {
-        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct("  ").build().getUserAgentProduct())
+    void foldingWhiteSpaceProductShouldBeFilteredOut() {
+        assertThat(ReportingUserAgent.builder()
+                .userAgentName(USER_AGENT_NAME)
+                .userAgentProduct("  ")
+                .build()
+                .getUserAgentProduct())
             .isEmpty();
     }
 
     @Test
-    public void formattedValueShouldDisplayProduct() {
-        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct(USER_AGENT_PRODUCT).build().formattedValue())
+    void formattedValueShouldDisplayProduct() {
+        assertThat(ReportingUserAgent.builder()
+                .userAgentName(USER_AGENT_NAME)
+                .userAgentProduct(USER_AGENT_PRODUCT)
+                .build()
+                .formattedValue())
             .isEqualTo("Reporting-UA: name; product");
     }
 }
