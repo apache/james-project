@@ -20,71 +20,83 @@
 package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class FinalRecipientTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
+class FinalRecipientTest {
     @Test
-    public void shouldMatchBeanContract() throws Exception {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(FinalRecipient.class)
             .verify();
     }
 
     @Test
-    public void shouldThrowOnNullAddress() {
-        expectedException.expect(NullPointerException.class);
-
-        FinalRecipient.builder().finalRecipient(null).build();
+    void shouldThrowOnNullAddress() {
+        assertThatThrownBy(() -> FinalRecipient.builder()
+                .finalRecipient(null)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnNullAddressWithType() {
-        expectedException.expect(NullPointerException.class);
-
-        FinalRecipient.builder().addressType(new AddressType("customType")).finalRecipient(null).build();
+    void shouldThrowOnNullAddressWithType() {
+        assertThatThrownBy(() -> FinalRecipient.builder()
+                .addressType(new AddressType("customType"))
+                .finalRecipient(null)
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldThrowOnNullType() {
-        expectedException.expect(NullPointerException.class);
-
-        FinalRecipient.builder().addressType(null).finalRecipient(Text.fromRawText("address")).build();
+    void shouldThrowOnNullType() {
+        assertThatThrownBy(() -> FinalRecipient.builder()
+                .addressType(null)
+                .finalRecipient(Text.fromRawText("address"))
+                .build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void typeShouldDefaultToRfc822() {
+    void typeShouldDefaultToRfc822() {
         Text address = Text.fromRawText("address");
-        assertThat(FinalRecipient.builder().finalRecipient(address).build())
-            .isEqualTo(FinalRecipient.builder().addressType(AddressType.RFC_822).finalRecipient(address).build());
+
+        assertThat(FinalRecipient.builder()
+                .finalRecipient(address)
+                .build())
+            .isEqualTo(FinalRecipient.builder()
+                .addressType(AddressType.RFC_822)
+                .finalRecipient(address)
+                .build());
     }
 
     @Test
-    public void formattedValueShouldDisplayAddress() {
-        assertThat(FinalRecipient.builder().finalRecipient(Text.fromRawText("Plop")).build()
-            .formattedValue())
+    void formattedValueShouldDisplayAddress() {
+        assertThat(FinalRecipient.builder()
+                .finalRecipient(Text.fromRawText("Plop"))
+                .build()
+                .formattedValue())
             .isEqualTo("Final-Recipient: rfc822; Plop");
     }
 
     @Test
-    public void formattedValueShouldDisplayCustomType() {
-        assertThat(FinalRecipient.builder().addressType(new AddressType("postal")).finalRecipient(Text.fromRawText("Plop")).build()
-            .formattedValue())
+    void formattedValueShouldDisplayCustomType() {
+        assertThat(FinalRecipient.builder()
+                .addressType(new AddressType("postal"))
+                .finalRecipient(Text.fromRawText("Plop"))
+                .build()
+                .formattedValue())
             .isEqualTo("Final-Recipient: postal; Plop");
     }
 
     @Test
-    public void formattedValueShouldDisplayMultilineAddress() {
-        assertThat(FinalRecipient.builder().finalRecipient(Text.fromRawText("Plop\nGlark")).build()
-            .formattedValue())
-            .isEqualTo("Final-Recipient: rfc822; Plop\r\n" +
-                " Glark");
+    void formattedValueShouldDisplayMultilineAddress() {
+        assertThat(FinalRecipient.builder()
+                .finalRecipient(Text.fromRawText("Plop\nGlark"))
+                .build()
+                .formattedValue())
+            .isEqualTo("Final-Recipient: rfc822; Plop\r\n Glark");
     }
 }
