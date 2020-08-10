@@ -1,6 +1,8 @@
 = Distributed James Server &mdash; Extending server behavior
 :navtitle: Extending server behavior
 
+== Available extension mechanisms
+
 The Distributed Server exposes several interfaces allowing the user to write custom extensions in
 order to extend the Distributed Server behavior.
 
@@ -20,9 +22,108 @@ add features to the WebAdmin REST API.
 
 == Handling injections for your extensions
 
-(TODO)
+=== Injecting core components
 
- - Using injections defined by the Distributing Server
- - Adding custom injections to one of the Distributed Server for injections in your extensions.
+You can very easily inject core components into your custom extensions.
+
+All you need is to pass them via a constructor annotated via *@Inject*.
+
+For instance:
+
+....
+public class MyMailet extends GenericMailet {
+    private final UsersRepository usersRepository;
+
+    @Inject
+    public MyMailet(UsersRepository usersRepository) {
+        this.usersRepository = usersRepository;
+    }
+
+    @Override
+    public void service(Mail mail) throws MessagingException {
+        // Do something
+    }
+}
+....
+
+=== Injecting simple extension components
+
+Furthermore, concrete implementation, that are part of your extension, can be injected as well.
+
+Consider the following example:
+
+....
+
+public class MyService {
+
+}
+
+public class MyMailet extends GenericMailet {
+    private final MyService myService;
+
+    @Inject
+    public MyMailet(MyService myService) {
+        this.usersRepository = myService;
+    }
+
+    @Override
+    public void service(Mail mail) throws MessagingException {
+        // Do something
+    }
+}
+....
+
+=== Defining custom injections for your extensions
+
+However, to inject an interface into your extension, you will need additional injection definitions.
+
+To to so:
+
+ * 1. Given an interface defined in a additional JAR:
+
+....
+public interface MyService {}
+....
+
+ * 2. And an implementation of that interface, in another additional JAR:
+
+....
+public class MyServiceImpl extends MyService {}
+....
+
+ * 3. We need to define a binding for MyService to be bound to MyServiceImpl
+
+....
+public class MyServiceModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(MyServiceImpl.class).in(Scopes.SINGLETON);
+        bind(MyService.class).to(MyServiceImpl.class);
+    }
+}
+....
+
+Both *MyService*, *MyServiceImpl* and *MyServiceModule* needs to be in the *extensions-jars*
+folder (potentially different jars).
+
+ * 4. *MyServiceModule* needs to be registered in xref:distributed/configure/extensions.adoc[*extensions.properties*]
+
+ * 5. *MyService* can then be used as part of your extensions
+
+....
+public class MyMailet extends GenericMailet {
+    private final MyService myService;
+
+    @Inject
+    public MyMailet(MyService myService) {
+        this.usersRepository = myService;
+    }
+
+    @Override
+    public void service(Mail mail) throws MessagingException {
+        // Do something
+    }
+}
+....
 
 Note that overriding injection definitions of the Distributed Server for your injections is not supported.
