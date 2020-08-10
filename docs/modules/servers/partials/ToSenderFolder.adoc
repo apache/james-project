@@ -1,0 +1,17 @@
+=== ToSenderFolder
+
+ Receives a Mail from the Queue and takes care to deliver the message
+  to a defined folder of the sender.
+
+You have to define the folder name of the sender.
+
+The flag 'consume' will tell is the mail will be further
+
+processed by the upcoming processor mailets, or not.
+
+....
+<mailet match="RecipientIsLocal" class="ToSenderFolder">
+  <folder> *Sent Items* </folder>
+  <consume> *false* </consume>
+</mailet>
+....

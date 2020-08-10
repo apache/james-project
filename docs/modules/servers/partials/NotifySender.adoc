@@ -1,0 +1,63 @@
+=== NotifySender
+
+Sends a notification message to the sender of a message.
+
+A sender of the notification message can optionally be specified. If one is
+not specified, the postmaster's address will be used.
+
+The "To:" header of the notification message can be set to "unaltered"; if
+missing will be set to the sender of the notified message.
+
+A notice text can be specified, and in such case will be inserted into the
+notification inline text.
+
+If the notified message has an "error message" set, it will be inserted into
+the notification inline text. If the *attachError* init
+parameter is set to true, such error message will be attached to the
+notification message.
+
+The notified messages are attached in their entirety (headers and content)
+and the resulting MIME part type is "message/rfc822".
+
+Supports the *passThrough* init parameter (true if missing).
+
+Sample configuration:
+
+....
+<mailet match="All" class="NotifySender">
+  <sender>*an address or postmaster or sender or unaltered, default=postmaster*</sender>
+  <attachError>*true or false, default=false*</attachError>
+  <prefix>*optional subject prefix prepended to the original message*</prefix>
+  <inline>default=none*</inline>
+  <attachment>default=message*</attachment>
+  <passThrough>*true or false, default=true*</passThrough>
+  <fakeDomainCheck>*true or false, default=true*</fakeDomainCheck>
+  <to>*unaltered or sender or from(optional, defaults to sender)*</to>
+  <debug>*true or false, default=false*</debug>
+</mailet>
+....
+
+The behaviour of this mailet is equivalent to using Resend with the following
+configuration:
+
+....
+<mailet match="All" class="Resend">
+  <sender>*an address or postmaster or sender or unaltered*</sender>
+  <attachError>*true or false*</attachError>
+  <message>*<b>dynamically built</b>*</message>
+  <prefix>*a string*</prefix>
+  <passThrough>true</passThrough>
+  <fakeDomainCheck>*true or false*</fakeDomainCheck>
+  <to>*unaltered or sender or from&lt*;/to>
+  <recipients><b>sender</b></recipients>
+  <inline>none</inline>
+  <attachment>message</attachment>
+  <isReply>true</isReply>
+  <debug>*true or false*</debug>
+</mailet>
+....
+
+*notice*, *sendingAddress* and *attachError* can be used
+instead of *message*, *sender* and *attachError*; such names
+are kept for backward compatibility.
+

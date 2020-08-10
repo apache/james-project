@@ -1,0 +1,83 @@
+=== RemoteDelivery
+
+The RemoteDelivery mailet delivers messages to a remote SMTP server able to deliver or forward messages to their final
+destination.
+
+The remote SMTP server through which each mail is delivered is resolved using MX lookup for each message destination
+unless the *<gateway/>* parameter is set. The *<gateway/>* parameter enables the
+definition of one or more gateway servers through which all messages are sent.
+
+If an attempt to deliver a message fails, a redelivery attempt is scheduled according to the scheme defined
+by the *<delayTime/>* parameter, retrying up to the limit defined
+by the *<maxRetries/>* parameter. When the retry limit is exceeded, delivery failure is processed
+according to the setting of the *<bounceProcessor/>* parameter.
+
+These are the parameters that control the operation of the RemoteDelivery mailet:
+
+* *outgoing* (required) - a String containing the name of the queue that will hold messages being processed by this mailet.
+* *bind* (optional) - a String describing the local IP address to which the mailet should be bound while delivering
+emails. This tag is useful for multihomed machines. Default is to bind to the default local address of the machine.<br>
+Note: The same IP address must be used for all of those RemoteDelivery instances where you explicitly supply a bind address.
+* *delayTime* (optional) a String containing a comma separated list of patterns defining the number of and delays between delivery
+attempts. The pattern is *[attempts\*]delay [unit]* where:
+
+** *attempts* (optional) - an Integer for the number of delivery attempts. Default is 1.
+** *delay* (required) - a Long for the delay between attempts.
+** *unit* (optional) - a String with the value of one of 'msec', 'sec', 'minute', 'hour', or 'day'. Default is msec.
+
+Default is one attempt after 6 hours, which if explicitly declared would be written as *<delayTime>1 6 hour</delayTime>*
+
+* *maxRetries* (optional) an Integer for the number of times an attempt is made to deliver a particular mail.
+Default is the greater of five and the sum of the attempts for each *<delayTime/>* specified.
+* *maxDnsProblemRetries* (optional) - an Integer for the number of times to retry if DNS problems for a domain occur.
+Default is 0.
+* *timeout* (optional) - an Integer for the Socket I/O timeout in milliseconds. Default is 180000
+* *connectionTimeout* (optional) - an Integer for the Socket connection timeout in milliseconds. Default is 60000
+* *bounceProcessor* (optional) - a String containing the name of the mailet processor to pass messages that cannot
+be delivered to for DSN bounce processing. Default is to send a traditional message containing the bounce details.
+* *startTLS* (optional) - a Boolean (true/false) indicating whether the STARTTLS command (if supported by the server)
+to switch the connection to a TLS-protected connection before issuing any login commands. Default is false.
+* *sslEnable* (optional) - a Boolean (true/false) indicating whether to use SSL to connect and use the SSL port unless
+explicitly overridden. Default is false.
+* *gateway* (optional) - a String containing a comma separated list of patterns defining the gateway servers to be used to
+deliver mail regardless of the recipient address. If multiple gateway servers are defined, each will be tried in definition order
+until delivery is successful. If none are successful, the mail is bounced. The pattern is *host[:port]* where:
+
+* *host* (required) - the FQN of the gateway server.
+* *port* (optional) - the port of the gateway server. Default is the value defined in the *<gatewayPort/>*
+parameter if set, else the default port for the specified connection type.
+Default is to resolve the destination SMTP server for each mail using MX lookup.
+
+* *gatewayPort* (optional) - an Integer for the gateway port to be used for each defined gateway server for which a
+port is not explicitly defined in the *<gateway/>* parameter. Default is the default port for the specified connection type.
+* *gatewayUsername* (optional) - a String containing the user name to be used to authenticate the user using the
+AUTH command. Default is not to issue the AUTH command.
+* *gatewayPassword* (required if *gatewayUsername*) is set - a String representing the password to be used
+to authenticate the user using the AUTH command.
+* *heloName* (optional) - a String containing the name used in the SMTP HELO and EHLO commands. Default is the default domain,
+which is typically *localhost*.
+* *mail.** (optional) - Any property beginning with *mail.* described in the Javadoc for package
+<a href="https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html">*com.sun.mail.smtp*</a>
+can be set with a parameter of the corresponding name. For example the parameter
+*<mail.smtp.ssl.enable>true</mail.smtp.ssl.enable>* is equivalent to the Java code
+*props.put("mail.smtp.ssl.enable", "true");*. Properties set by this facility override settings made
+within the mailet code.<br>
+Note: This facility should be used with extreme care by expert users with a thorough knowledge of the relevant RFCs and
+the ability to perform their own problem resolutions.
+* *debug* (optional) - a Boolean (true/false) indicating whether debugging is on. Default is false.
+
+==== Security
+
+You can use the *mail.smtp.ssl.enable* javax property described above to force SMTP outgoing delivery to default to SSL
+encrypted traffic.
+
+When enabling SSL, you might need to specify *mail.smtp.ssl.checkserveridentity* and *mail.smtp.ssl.trust*
+properties. You can also control ciphersuites and protocols via *mail.smtp.ssl.ciphersuites* and
+*mail.smtp.ssl.protocols* properties.
+
+*startTls* can alternatively be enabled upon sending a mail. For this, use the *startTls* configuration property, serving as a shortcut for
+javax *mail.smtp.starttls.enable* property. Depending on how strict your security policy is, you might consider
+*mail.smtp.starttls.required* as well. Be aware that configuring trust will then be required.
+
+Read https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html[*com.sun.mail.smtp*]
+for full information.

@@ -1,0 +1,4 @@
+=== LocalDelivery
+
+Receives a Mail from the Queue and takes care of delivery of the
+message to local inboxes.
