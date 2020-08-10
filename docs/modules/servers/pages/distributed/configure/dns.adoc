@@ -1,4 +1,5 @@
-= dnsservice.xml
+= Distributed James Server &mdash; dnsservice.xml
+:navtitle: dnsservice.xml
 
 Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/dnsservice.xml[example]
 to get some examples and hints.

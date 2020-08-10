@@ -1,4 +1,5 @@
-= batchsizes.properties
+= Distributed James Server &mdash; batchsizes.properties
+:navtitle: batchsizes.properties
 
 This files allow to define the amount of data that should be fetched 'at once' when interacting with the mailbox. This is
 needed as IMAP can generate some potentially large requests.

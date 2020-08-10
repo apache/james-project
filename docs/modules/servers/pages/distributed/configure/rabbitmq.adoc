@@ -1,4 +1,5 @@
-= rabbitmq.properties
+= Distributed James Server &mdash; rabbitmq.properties
+:navtitle: rabbitmq.properties
 
 This configuration helps you configure components using RabbitMQ.
 

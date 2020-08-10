@@ -1,3 +1,4 @@
-= Custom Mailbox Listeners
+= Distributed James Server &mdash; Custom Mailbox Listeners
+:navtitle: Custom Mailbox Listeners
 
 (TODO can http://james.apache.org/howTo/custom-listeners.html be used ?)

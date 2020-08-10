@@ -1,3 +1,4 @@
-= Custom SMTP hooks
+= Distributed James Server &mdash; Custom SMTP hooks
+:navtitle: Custom SMTP hooks
 
 (TODO)

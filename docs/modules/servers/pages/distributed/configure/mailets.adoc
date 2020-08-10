@@ -1,4 +1,5 @@
-= Mailets
+= Distributed James Server &mdash; Mailets
+:navtitle: Mailets
 
 This documentation page lists and documents Mailet that can be used within the
 Distributed Server MailetContainer in order to write your own mail processing logic with out-of-the-box components.

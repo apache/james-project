@@ -1,4 +1,5 @@
-= Anti-Spam configuration
+= Distributed James Server &mdash; Anti-Spam configuration
+:navtitle: Anti-Spam configuration
 
 Anti-Spam system can be configured via two main different mechanisms:
 

@@ -1,4 +1,5 @@
-= About RemoteDelivery error handling
+= Distributed James Server &mdash; About RemoteDelivery error handling
+:navtitle: About RemoteDelivery error handling
 
 The advanced server mailQueue implemented by combining RabbitMQ for messaging and Cassandra for administrative operation
 does not support delays.

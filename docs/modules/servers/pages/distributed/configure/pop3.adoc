@@ -1,4 +1,5 @@
-= pop3server.xml
+= Distributed James Server &mdash; pop3server.xml
+:navtitle: pop3server.xml
 
 Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/pop3server.xml[example]
 to get some examples and hints.

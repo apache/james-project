@@ -1,4 +1,5 @@
-= elasticsearch.properties
+= Distributed James Server &mdash; elasticsearch.properties
+:navtitle: elasticsearch.properties
 
 Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/cassandra.properties[example]
 to get some examples and hints.

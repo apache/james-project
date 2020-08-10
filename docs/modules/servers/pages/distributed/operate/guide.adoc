@@ -1,4 +1,5 @@
-= Operator guide
+= Distributed James Server &mdash; Operator guide
+:navtitle: Operator guide
 
 This guide aims to be an entry-point to the James documentation for user
 managing a distributed Guice James server.

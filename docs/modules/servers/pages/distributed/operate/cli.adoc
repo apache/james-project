@@ -1,4 +1,5 @@
-= Command Line Interface
+= Distributed James Server &mdash; Command Line Interface
+:navtitle: Command Line Interface
 
 The distributed server is packed with a command line client.
 

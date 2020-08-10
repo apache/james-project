@@ -1,4 +1,5 @@
-= Run with docker
+= Distributed James Server &mdash; Run with docker
+:navtitle: Run with docker
 
 == Running via docker-compose
 

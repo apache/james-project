@@ -1,4 +1,5 @@
-= Operate the Distributed server
+= Distributed James Server &mdash; Operate the Distributed server
+:navtitle: Operate the Distributed server
 
 The following pages detail how to operate the Distributed server.
 

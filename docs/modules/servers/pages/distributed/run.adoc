@@ -1,4 +1,5 @@
-= Run
+= Distributed James Server &mdash; Run
+:navtitle: Run
 
 == Building
 

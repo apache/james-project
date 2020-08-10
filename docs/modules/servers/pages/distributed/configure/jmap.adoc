@@ -1,4 +1,5 @@
-= jmap.properties
+= Distributed James Server &mdash; jmap.properties
+:navtitle: jmap.properties
 
 https://jmap.io/[JMAP]  is intended to be a new standard for email clients to connect to mail
 stores. It therefore intends to primarily replace IMAP + SMTP submission. It is also designed to be more

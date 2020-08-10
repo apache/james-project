@@ -1,3 +1,4 @@
-= Custom WebAdmin routes
+= Distributed James Server &mdash; Custom WebAdmin routes
+:navtitle: Custom WebAdmin routes
 
 (TODO)

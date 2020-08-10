@@ -1,4 +1,5 @@
-= Architecture
+= Distributed James Server &mdash; Architecture
+:navtitle: Architecture
 
 This sections presents the Distributed Server architecture.
 
