@@ -1,0 +1,4 @@
+=== ConvertTo7Bit
+
+Make sure the message stream is 7bit. Every 8bit part is encoded to
+quoted-printable or base64 and the message is saved.

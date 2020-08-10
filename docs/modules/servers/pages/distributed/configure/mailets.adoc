@@ -10,7 +10,6 @@ Distributed Server MailetContainer in order to write your own mail processing lo
 - mailet/crypto
 - mailet/icalendar
 - server/protocols/jmap-draft ?
-- server/mailet/dkim
 - server/mailet/mailets
 
 == Supported mailets
@@ -24,6 +23,12 @@ include::partial$AddSubjectPrefix.adoc[]
 include::partial$AmqpForwardAttribute.adoc[]
 
 include::partial$ContactExtractor.adoc[]
+
+include::partial$ConvertTo7Bit.adoc[]
+
+include::partial$DKIMSign.adoc[]
+
+include::partial$DKIMVerify.adoc[]
 
 include::partial$LogMessage.adoc[]
 
