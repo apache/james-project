@@ -6,7 +6,6 @@ Distributed Server MailetContainer in order to write your own mail processing lo
 
 (TODO)
 
-- mailet/icalendar
 - server/protocols/jmap-draft ?
 - server/mailet/mailets
 
@@ -27,6 +26,14 @@ include::partial$ConvertTo7Bit.adoc[]
 include::partial$DKIMSign.adoc[]
 
 include::partial$DKIMVerify.adoc[]
+
+include::partial$ICalendarParser.adoc[]
+
+include::partial$ICALToHeader.adoc[]
+
+include::partial$ICALToJsonAttribute.adoc[]
+
+include::partial$ICSSanitizer.adoc[]
 
 include::partial$LogMessage.adoc[]
 
