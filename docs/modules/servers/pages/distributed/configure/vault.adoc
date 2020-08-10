@@ -1,4 +1,5 @@
-= deletedMessageVault.properties
+= Distributed James Server &mdash; deletedMessageVault.properties
+:navtitle: deletedMessageVault.properties
 
 Deleted Messages Vault is the component in charge of retaining messages before they are going to be deleted.
 Messages stored in the Deleted Messages Vault could be deleted after exceeding their retentionPeriod (explained below).

@@ -1,4 +1,5 @@
-= tika.properties
+= Distributed James Server &mdash; tika.properties
+:navtitle: tika.properties
 
 When using ElasticSearch, you can configure an external Tika server for extracting and indexing text from attachments.
 Thus you can significantly improve user experience upon text searches.

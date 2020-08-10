@@ -1,4 +1,5 @@
-= Extending the server behavior
+= Distributed James Server &mdash; Extending server behavior
+:navtitle: Extending server behavior
 
 The Distributed Server exposes several interfaces allowing the user to write custom extensions in
 order to extend the Distributed Server behavior.

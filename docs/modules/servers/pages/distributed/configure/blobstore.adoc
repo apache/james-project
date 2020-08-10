@@ -1,4 +1,5 @@
-= blobstore.properties
+= Distributed James Server &mdash; blobstore.properties
+:navtitle: blobstore.properties
 
 This file is optional. If omitted, the *cassandra* blob store will be used.
 

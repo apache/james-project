@@ -1,4 +1,4 @@
-= mailrepositorystore.xml
+= Distributed James Server &mdash; mailrepositorystore.xml
 
 A `mail repository` allows storage of a mail as part of its
 processing. Standard configuration relies on the following mail

@@ -1,4 +1,5 @@
-= usersrepository.xml
+= Distributed James Server &mdash; usersrepository.xml
+:navtitle: usersrepository.xml
 
 User repositories are required to store James user information and authentication data.
 

@@ -1,4 +1,5 @@
-= Migrating existing data
+= Distributed James Server &mdash; Migrating existing data
+:navtitle: Migrating existing data
 
 This page presents how operators can migrate your user mailbox and mails into the Distributed Server in order to adopt it.
 

@@ -1,4 +1,5 @@
-= imapserver.xml
+= Distributed James Server &mdash; imapserver.xml
+:navtitle: imapserver.xml
 
 Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/imapserver.xml[example]
 to get some examples and hints.

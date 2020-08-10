@@ -1,4 +1,5 @@
-= listeners.xml
+= Distributed James Server &mdash; listeners.xml
+:navtitle: listeners.xml
 
 Distributed James relies on an event bus system to enrich mailbox capabilities. Each
 operation performed on the mailbox will trigger related events, that can

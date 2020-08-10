@@ -1,4 +1,5 @@
-= SMTP Hooks
+= Distributed James Server &mdash; SMTP Hooks
+:navtitle: SMTP Hooks
 
 This documentation page lists and documents SMTP hooks that can be used within the
 Distributed Server SMTP protocol stack in order to customize the way your SMTP server

@@ -1,4 +1,5 @@
-= Logging
+= Distributed James Server &mdash; Logging
+:navtitle: Logging
 
 We recommend to closely monitoring *ERROR* and *WARNING* logs. Those
 logs should be considered not normal.

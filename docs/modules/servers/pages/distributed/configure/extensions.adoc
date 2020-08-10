@@ -1,3 +1,4 @@
-= extensions.properties
+= Distributed James Server &mdash; extensions.properties
+:navtitle: extensions.properties
 
 (TODO)

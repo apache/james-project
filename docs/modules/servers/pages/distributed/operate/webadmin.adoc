@@ -1,4 +1,5 @@
-= WebAdmin REST administration API
+= Distributed James Server &mdash; WebAdmin REST administration API
+:navtitle: WebAdmin REST administration API
 
 The web administration supports for now the CRUD operations on the domains, the users, their mailboxes and their quotas,
  managing mail repositories, performing cassandra migrations, and much more, as described in the following sections.

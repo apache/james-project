@@ -1,4 +1,5 @@
-= mailetcontainer.xml
+= Distributed James Server &mdash; mailetcontainer.xml
+:navtitle: mailetcontainer.xml
 
 This documents explains how to configure Mail processing. Mails pass through the MailetContainer. The
 MailetContainer is a Matchers (condition for executing a mailet) and Mailets (execution units that perform

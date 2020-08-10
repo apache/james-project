@@ -1,4 +1,5 @@
-= SSL & TLS configuration
+= Distributed James Server &mdash; SSL & TLS configuration
+:navtitle: SSL & TLS configuration
 
 This document explains how to enable James 3.0 servers to use Transport Layer Security (TLS)
 for encrypted client-server communication.

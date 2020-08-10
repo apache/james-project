@@ -1,4 +1,5 @@
-= smtpserver.xml
+= Distributed James Server &mdash; smtpserver.xml
+:navtitle: smtpserver.xml
 
 == Incoming SMTP
 

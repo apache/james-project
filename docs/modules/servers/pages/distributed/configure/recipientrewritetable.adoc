@@ -1,4 +1,5 @@
-= recipientrewritetable.xml
+= Distributed James Server &mdash; recipientrewritetable.xml
+:navtitle: recipientrewritetable.xml
 
 Here are explanations on the different kinds about xref:distributed/architecture.adoc#_recipient_rewrite_tables[recipient rewritting].
 

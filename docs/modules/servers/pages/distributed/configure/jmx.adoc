@@ -1,4 +1,5 @@
-= jmx.properties
+= Distributed James Server &mdash; jmx.properties
+:navtitle: jmx.properties
 
 This is used to configure the JMX MBean server via which all management is achieved.
 

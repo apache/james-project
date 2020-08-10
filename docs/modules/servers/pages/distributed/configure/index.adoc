@@ -1,4 +1,5 @@
-= Configuration
+= Distributed James Server &mdash; Configuration
+:navtitle: Configuration
 
 This section presents how to configure the Distributed server.
 
