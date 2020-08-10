@@ -1,4 +1,28 @@
 = Distributed James Server &mdash; extensions.properties
 :navtitle: extensions.properties
 
-(TODO)
+This files enables an operator to define additional bindings used to instanciate others extensions
+
+*guice.extension.module*:  come separated list of fully qualified class name. These classes needs to implement Guice modules.
+
+Here is an exemple of such a class :
+
+....
+public class MyServiceModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(MyServiceImpl.class).in(Scopes.SINGLETON);
+        bind(MyService.class).to(MyServiceImpl.class);
+    }
+}
+....
+
+Recording it in extensions.properties :
+
+....
+guice.extension.module=com.project.MyServiceModule
+....
+
+Enables to inject MyService into your extensions.
+
+Read xref:distributed/extending/index.adoc#_defining_custom_injections_for_your_extensions[this page] for more details.
