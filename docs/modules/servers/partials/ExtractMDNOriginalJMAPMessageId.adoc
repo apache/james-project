@@ -1,0 +1,4 @@
+=== ExtractMDNOriginalJMAPMessageId
+
+This mailet handles MDN messages and define a header X-JAMES-MDN-JMAP-MESSAGE-ID referencing
+the original message (by its Jmap Id) asking for the recipient to send an MDN.

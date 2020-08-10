@@ -6,7 +6,6 @@ Distributed Server MailetContainer in order to write your own mail processing lo
 
 (TODO)
 
-- server/protocols/jmap-draft ?
 - server/mailet/mailets
 
 == Supported mailets
@@ -26,6 +25,8 @@ include::partial$ConvertTo7Bit.adoc[]
 include::partial$DKIMSign.adoc[]
 
 include::partial$DKIMVerify.adoc[]
+
+include::partial$ExtractMDNOriginalJMAPMessageId.adoc[]
 
 include::partial$ICalendarParser.adoc[]
 
@@ -73,7 +74,11 @@ include::partial$SMIMESign.adoc[]
 
 include::partial$StripAttachment.adoc[]
 
+include::partial$TextCalendarBodyToAttachment.adoc[]
+
 include::partial$ToProcessor.adoc[]
+
+include::partial$VacationMailet.adoc[]
 
 == Experimental mailets
 
