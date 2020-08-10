@@ -46,6 +46,7 @@
 **** xref:distributed/operate/logging.adoc[]
 **** xref:distributed/operate/webadmin.adoc[]
 **** xref:distributed/operate/metrics.adoc[]
+**** xref:distributed/operate/migrating.adoc[]
 **** xref:distributed/operate/cli.adoc[]
 **** xref:distributed/operate/cassandra-migration.adoc[]
 *** xref:distributed/extend/index.adoc[]

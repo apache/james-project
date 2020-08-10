@@ -1,0 +1,33 @@
+= Migrating existing data
+
+This page presents how operators can migrate your user mailbox and mails into the Distributed Server in order to adopt it.
+
+We assume you have a xref:distributed/configure/index.adoc[well configured] running Distributed server
+at hand. We also assume existing mails are hosted on a tier mail server which can be accessed via IMAP and supports
+impersonation.
+
+First, you want to create the domains handled by your server, as  well as the users you will be hosting. This operation
+can be performed via WebAdmin or the CLI.
+
+ * Using webadmin :
+ ** Read xref:distributed/operate/webadmin.adoc#_create_a_domain[this section] for creating domains
+ ** Read xref:distributed/operate/webadmin.adoc#_create_a_user[this section] for creating users
+ * Using the CLI :
+ ** Read xref:distributed/operate/cli.adoc#_manage_domains[this section] for creating domains
+ ** Read xref:distributed/operate/cli.adoc#_manage_users[this section] for creating users
+
+Second, you want to allow an administrator account of your Distributed Server to have write access on other user mailboxes.
+This can be setted up this the *administratorId* configuration option of the xref:distributed/configure/usersrepository.adoc[usersrepository.xml] configuration file.
+
+Then, it is time to run https://github.com/imapsync/imapsync[imapsync] script to copy the emails from the previous mail server
+into the Distributed Server. Here is an example migrating a single user, relying on impersonation:
+
+....
+imapsync --host1 previous.server.domain.tld \
+    --user1 user@domain.tld --authuser1 adminOldServer@domain.tld \
+    --proxyauth1 --password1  passwordOfTheOldAdmin \
+    --host2 distributed.james.domain.tld \
+    --user2 use1@domain.tld  \
+    --authuser2 adminNewServer@domain.tld --proxyauth2 \
+    --password2  passwordOfTheNewAdmin
+....
