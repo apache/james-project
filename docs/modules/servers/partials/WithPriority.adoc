@@ -1,0 +1,11 @@
+=== WithPriority
+
+This mailet sets the priority of the incoming mail.
+
+Example configuration:
+
+....
+<mailet match="All" class="WithPriority">
+ <priority>7</priority>
+</mailet>
+....

@@ -4,10 +4,6 @@
 This documentation page lists and documents Mailet that can be used within the
 Distributed Server MailetContainer in order to write your own mail processing logic with out-of-the-box components.
 
-(TODO)
-
-- server/mailet/mailets
-
 == Supported mailets
 
 include::partial$AddDeliveredToHeader.adoc[]
@@ -18,6 +14,8 @@ include::partial$AddSubjectPrefix.adoc[]
 
 include::partial$AmqpForwardAttribute.adoc[]
 
+include::partial$Bounce.adoc[]
+
 include::partial$ContactExtractor.adoc[]
 
 include::partial$ConvertTo7Bit.adoc[]
@@ -26,7 +24,11 @@ include::partial$DKIMSign.adoc[]
 
 include::partial$DKIMVerify.adoc[]
 
+include::partial$DSNBounce.adoc[]
+
 include::partial$ExtractMDNOriginalJMAPMessageId.adoc[]
+
+include::partial$Forward.adoc[]
 
 include::partial$ICalendarParser.adoc[]
 
@@ -36,19 +38,35 @@ include::partial$ICALToJsonAttribute.adoc[]
 
 include::partial$ICSSanitizer.adoc[]
 
+include::partial$LocalDelivery.adoc[]
+
 include::partial$LogMessage.adoc[]
 
 include::partial$MailAttributesListToMimeHeaders.adoc[]
 
 include::partial$MailAttributesToMimeHeaders.adoc[]
 
+include::partial$MetricsMailet.adoc[]
+
 include::partial$MimeDecodingMailet.adoc[]
+
+include::partial$NotifyPostmaster.adoc[]
+
+include::partial$NotifySender.adoc[]
 
 include::partial$Null.adoc[]
 
 include::partial$PostmasterAlias.adoc[]
 
+include::partial$RandomStoring.adoc[]
+
+include::partial$RecipientRewriteTable.adoc[]
+
 include::partial$RecipientToLowerCase.adoc[]
+
+include::partial$Redirect.adoc[]
+
+include::partial$RemoteDelivery.adoc[]
 
 include::partial$RemoveAllMailAttributes.adoc[]
 
@@ -60,9 +78,13 @@ include::partial$RemoveMimeHeaderByPrefix.adoc[]
 
 include::partial$ReplaceContent.adoc[]
 
+include::partial$Resend.adoc[]
+
 include::partial$SetMailAttribute.adoc[]
 
 include::partial$SetMimeHeader.adoc[]
+
+include::partial$Sieve.adoc[]
 
 include::partial$Sign.adoc[]
 
@@ -72,13 +94,23 @@ include::partial$SMIMEDecrypt.adoc[]
 
 include::partial$SMIMESign.adoc[]
 
+include::partial$SpamAssassin.adoc[]
+
 include::partial$StripAttachment.adoc[]
 
 include::partial$TextCalendarBodyToAttachment.adoc[]
 
 include::partial$ToProcessor.adoc[]
 
+include::partial$ToRepository.adoc[]
+
+include::partial$ToSenderDomainRepository.adoc[]
+
 include::partial$VacationMailet.adoc[]
+
+include::partial$WithPriority.adoc[]
+
+include::partial$WithStorageDirective.adoc[]
 
 == Experimental mailets
 
@@ -87,6 +119,8 @@ include::partial$AddHabeasWarrantMark.adoc[]
 include::partial$ClamAVScan.adoc[]
 
 include::partial$ClassifyBounce.adoc[]
+
+include::partial$FromRepository.adoc[]
 
 include::partial$HeadersToHTTP.adoc[]
 
@@ -97,6 +131,10 @@ include::partial$RecoverAttachment.adoc[]
 include::partial$SerialiseToHTTP.adoc[]
 
 include::partial$ServerTime.adoc[]
+
+include::partial$SPF.adoc[]
+
+include::partial$ToSenderFolder.adoc[]
 
 include::partial$UnwrapText.adoc[]
 

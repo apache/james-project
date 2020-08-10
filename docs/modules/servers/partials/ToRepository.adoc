@@ -1,0 +1,6 @@
+=== ToRepository
+
+Stores incoming Mail in the specified Repository.
+
+If the "passThrough" in conf is true the mail will be returned untouched in
+the pipe and may be processed by additional mailets. If false will be destroyed.

@@ -1,0 +1,14 @@
+=== RecipientRewriteTable
+
+Mailet which should get used when using RecipientRewriteTable-Store to
+implementations for mappings of forwards and aliases.
+
+By specifying an 'errorProcessor' you can specify your logic upon RecipientRewriteTable failures.
+
+Exemple:
+
+....
+ <mailet match="All" class="RecipientRewriteTable">
+   <errorProcessor>rrt-errors</errorProcessor>
+ </mailet>
+....

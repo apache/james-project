@@ -1,0 +1,63 @@
+=== Bounce
+
+Generates a response to the reverse-path address. Note that this is different
+than a mail-client's reply, which would use the Reply-To or From header.
+
+Bounced messages are attached in their entirety (headers and content) and the
+resulting MIME part type is "message/rfc822".
+
+The reverse-path and the Return-Path header of the response is set to "null"
+("<>"), meaning that no reply should be sent.
+
+A sender of the notification message can optionally be specified. If one is
+not specified, the postmaster's address will be used.
+
+A notice text can be specified, and in such case will be inserted into the
+notification inline text.
+
+If the notified message has an "error message" set, it will be inserted into
+the notification inline text. If the *attachError* init
+parameter is set to true, such error message will be attached to the
+notification message.
+
+Supports the *passThrough* init parameter (true if missing).
+
+
+Sample configuration:
+
+....
+<mailet match="All" class="Bounce">
+  <sender>*an address or postmaster or sender or unaltered, default=postmaster*</sender>
+  <attachError>*true or false, default=false*</attachError>
+  <message>*notice attached to the original message text (optional)*</message>
+  <prefix>*optional subject prefix prepended to the original message*</prefix>
+  <inline>*default=none*</inline>
+  <attachment>*default=message*</attachment>
+  <passThrough>*true or false, default=true*</passThrough>
+  <fakeDomainCheck>*true or false, default=true*</fakeDomainCheck>
+  <debug>*true or false, default=false*</debug>
+</mailet>
+....
+
+The behaviour of this mailet is equivalent to using Resend with the following
+configuration:
+
+....
+<mailet match="All" class="Resend">
+  <sender>*an address or postmaster or sender or unaltered*</sender>
+  <attachError>*true or false*</attachError>
+  <message>**dynamically built**</message>
+  <prefix>*a string*</prefix>
+  <passThrough>true or false</passThrough>
+  <fakeDomainCheck>*true or false*</fakeDomainCheck>
+  <recipients>*sender*</recipients>
+  <reversePath>null</reversePath>
+  <inline>see Resend</inline>
+  <attachment>see Resend</attachment>
+  <isReply>true</isReply>
+  <debug>*true or false*</debug>
+</mailet>
+....
+
+*notice* and *sendingAddress* can be used instead of *message*
+and *sender*; such names are kept for backward compatibility.

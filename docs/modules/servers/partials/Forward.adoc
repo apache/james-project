@@ -1,0 +1,33 @@
+=== Forward
+
+Replaces incoming recipients with those specified, and resends the message
+unaltered.
+
+Can be totally replaced by an equivalent usage of {@link Resend} (see below),
+simply replacing *<forwardto>* with *<recipients>*.
+
+Sample configuration:
+
+....
+<mailet match="All" class="Forward">
+  <forwardTo>*comma delimited list of email addresses*</forwardTo>
+  <passThrough>*true or false, default=false*</passThrough>
+  <fakeDomainCheck>*true or false, default=true*</fakeDomainCheck>
+  <debug>*true or false, default=false*</debug>
+</mailet>
+....
+
+The behaviour of this mailet is equivalent to using Resend with the following
+configuration:
+
+....
+<mailet match="All" class="Resend">
+  <forwardTo>comma delimited list of email addresses</recipients>
+  <passThrough>true or false</passThrough>
+  <fakeDomainCheck>*true or false*</fakeDomainCheck>
+  <debug>*true or false*</debug>
+</mailet>
+....
+
+*forwardto* can be used instead of *forwardTo*; such name is kept
+for backward compatibility.

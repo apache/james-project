@@ -1,0 +1,15 @@
+=== MetricsMailet
+
+This Metrics mailet increments a counter on every incoming emails.
+
+This counter is accessible via JMX, or grafana. Read xref:distributed/operate/metrics.adoc[more about metrics].
+
+Example :
+
+....
+<mailet match="all" class="MetricsMailet">
+    <metricName>relayDenied</metricName>
+</mailet>
+....
+
+Will increment a counter relayDenied

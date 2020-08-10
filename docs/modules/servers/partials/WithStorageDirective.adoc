@@ -1,0 +1,17 @@
+=== WithStorageDirective
+
+WithStorageDirective position storage directive for the recipients of this email.
+
+These directives are used by <strong>LocalDelivery</strong> mailet when adding the email to the recipients mailboxes.
+
+The following storage directives can be set:
+
+* targetFolderName: the folder to append the email in. (compulsory)
+
+Example:
+
+....
+<mailet match="IsMarkedAsSpam" class="WithStorageDirective">
+  <targetFolderName>Spam</targetFolderName>
+</mailet>
+....
