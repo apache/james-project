@@ -11,6 +11,7 @@
 *** xref:basic/help.adoc[]
 ** xref:extendable.adoc[]
 ** xref:distributed.adoc[]
+*** xref:distributed/objectives.adoc[]
 *** xref:distributed/architecture.adoc[]
 *** xref:distributed/run.adoc[]
 *** xref:distributed/run-docker.adoc[]
