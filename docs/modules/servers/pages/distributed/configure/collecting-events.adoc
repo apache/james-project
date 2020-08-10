@@ -1,0 +1,63 @@
+= Event collection
+
+== Motivation
+
+Many calendar application do add events invitation received by email directly in ones calendar.
+
+Such behaviours requires the calendar application to be aware of the ICalendar related emails a user received.
+
+== Design
+
+The idea is to write a portion of mailet pipeline extracting Icalendar attachments and to hold them as attachments that
+can later be sent to other applications over AMQP to be treated in an asynchronous, decoupled fashion.
+
+== Configuration
+
+We can achieve this goal by combining simple mailets building blocks.
+
+Here is a sample pipeline achieving aforementioned objectives :
+
+....
+<!-- ICAL pipeline -->
+<mailet match="All" class="StripAttachment">
+    <mimeType>text/calendar</mimeType>
+    <attribute>rawIcalendar</attribute>
+</mailet>
+<mailet match="All" class="MimeDecodingMailet">
+    <attribute>rawIcalendar</attribute>
+</mailet>
+<mailet match="All" class="ICalendarParser">
+    <sourceAttribute>rawIcalendar</sourceAttribute>
+    <destinationAttribute>icalendar</destinationAttribute>
+</mailet>
+<mailet match="All" class="ICALToHeader">
+    <attribute>icalendar</attribute>
+</mailet>
+<mailet match="All" class="ICALToJsonAttribute">
+    <source>icalendar</source>
+    <destination>icalendarAsJson</destination>
+    <rawSource>rawIcalendar</rawSource>
+</mailet>
+<mailet match="All" class="AmqpForwardAttribute">
+    <uri>amqp://${env:JAMES_AMQP_USERNAME}:${env:JAMES_AMQP_PASSWORD}@${env:JAMES_AMQP_HOST}:${env:JAMES_AMQP_PORT}</uri>
+    <exchange>james:events</exchange>
+    <attribute>icalendarAsJson</attribute>
+</mailet>
+<!-- End of ICAL pipeline -->
+....
+
+A sample message looks like:
+
+....
+{
+	"ical": "RAW_DATA_AS_TEXT_FOLLOWING_ICS_FORMAT",
+	"sender": "other@james.apache.org",
+	"recipient": "any@james2.apache.org",
+	"replyTo": "other@james.apache.org",
+	"uid": "f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc",
+	"dtstamp": "20170106T115036Z",
+	"method": "REQUEST",
+	"sequence": "0",
+	"recurrence-id": null
+}
+....

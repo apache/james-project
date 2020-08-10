@@ -58,3 +58,5 @@ By omitting these files, no extra behaviour is added.
 ** xref:distributed/configure/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading your extensions in it link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/extensions.properties[example]
 ** xref:distributed/configure/spam.adoc[This page] documents Anti-Spam setup with SpamAssassin.
 ** xref:distributed/configure/remote-delivery-error-handling.adoc[This page] proposes a simple strategy for RemoteDelivery error handling.
+** xref:distributed/configure/collecting-contacts.adoc[This page] documents contact collection
+** xref:distributed/configure/collecting-events.adoc[This page] documents event collection
