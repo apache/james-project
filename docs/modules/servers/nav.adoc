@@ -48,6 +48,8 @@
 ***** xref:distributed/configure/listeners.adoc[listeners.xml]
 ***** xref:distributed/configure/spam.adoc[Anti-Spam setup]
 ***** xref:distributed/configure/remote-delivery-error-handling.adoc[About RemoteDelivery error handling]
+***** xref:distributed/configure/collecting-contacts.adoc[Contact collection]
+***** xref:distributed/configure/collecting-events.adoc[Event collection]
 *** xref:distributed/operate/index.adoc[Operate]
 **** xref:distributed/operate/guide.adoc[]
 **** xref:distributed/operate/logging.adoc[]
