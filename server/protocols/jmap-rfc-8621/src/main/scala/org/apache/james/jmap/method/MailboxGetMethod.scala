@@ -74,7 +74,6 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
                 methodName = methodName,
                 arguments = Arguments(serializer.serialize(mailboxGetResponse, mailboxGetRequest.properties, capabilities).as[JsObject]),
                 methodCallId = invocation.methodCallId))
-
           }
         }
         ))

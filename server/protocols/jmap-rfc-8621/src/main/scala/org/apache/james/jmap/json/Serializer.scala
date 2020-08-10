@@ -106,14 +106,14 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
     (set: Set[_ <: Capability]) => {
       set.foldLeft(JsObject.empty)((jsObject, capability) => {
         capability match {
-          case capability: CoreCapability => (
-            jsObject.+(capability.identifier.value, corePropertiesWriter.writes(capability.properties)))
-          case capability: MailCapability => (
-            jsObject.+(capability.identifier.value, mailCapabilityWrites.writes(capability.properties)))
-          case capability: QuotaCapability => (
-            jsObject.+(capability.identifier.value, quotaCapabilityWrites.writes(capability.properties)))
-          case capability: SharesCapability => (
-            jsObject.+(capability.identifier.value, sharesCapabilityWrites.writes(capability.properties)))
+          case capability: CoreCapability =>
+            jsObject.+(capability.identifier.value, corePropertiesWriter.writes(capability.properties))
+          case capability: MailCapability =>
+            jsObject.+(capability.identifier.value, mailCapabilityWrites.writes(capability.properties))
+          case capability: QuotaCapability =>
+            jsObject.+(capability.identifier.value, quotaCapabilityWrites.writes(capability.properties))
+          case capability: SharesCapability =>
+            jsObject.+(capability.identifier.value, sharesCapabilityWrites.writes(capability.properties))
           case _ => jsObject
         }
       })

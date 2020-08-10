@@ -38,12 +38,12 @@ import org.apache.james.jmap.http.{Authenticator, MailboxesProvisioner, UserProv
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.Method
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.model._
+import org.apache.james.jmap.model.Invocation.MethodName
+import org.apache.james.jmap.model.{DefaultCapabilities, ErrorCode, Invocation, ProblemDetails, RequestLevelErrorType, RequestObject, ResponseObject}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
-import play.api.libs.json.{JsError, JsSuccess, Json}
+import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
@@ -137,10 +137,8 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     SMono.justOrEmpty(methodsByName.get(invocation.methodName))
       .flatMap(method => SMono.fromPublisher(method.process(capabilities, invocation, mailboxSession)))
-      .switchIfEmpty(SMono.just(new Invocation(
-        MethodName("error"),
-        Arguments(Json.obj("type" -> "Not implemented")),
-        invocation.methodCallId)))
+      .onErrorResume(throwable => SMono.just(Invocation.error(ErrorCode.ServerFail, Option(throwable.getMessage), invocation.methodCallId)))
+      .switchIfEmpty(SMono.just(Invocation.error(ErrorCode.UnknownMethod, invocation.methodCallId)))
 
   private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = throwable match {
     case exception: IllegalArgumentException => respondDetails(httpServerResponse,

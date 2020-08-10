@@ -151,7 +151,7 @@ object JMAPApiRoutesTest {
       |    [
       |      "error",
       |      {
-      |        "type": "Not implemented"
+      |        "type": "unknownMethod"
       |      },
       |      "notsupport"
       |    ]

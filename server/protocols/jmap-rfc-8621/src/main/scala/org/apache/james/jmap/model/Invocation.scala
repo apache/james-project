@@ -37,7 +37,12 @@ object Invocation {
 
   def error(errorCode: ErrorCode, description: Option[String], methodCallId: MethodCallId): Invocation = {
     Invocation(MethodName("error"),
-      Arguments(JsObject(Seq("type" -> JsString(errorCode.code), "description" -> JsString(description.getOrElse(errorCode.defaultDescription))))),
+      Arguments(JsObject(Map("type" -> JsString(errorCode.code), "description" -> JsString(description.getOrElse(errorCode.defaultDescription))))),
+      methodCallId)
+  }
+  def error(errorCode: ErrorCode, methodCallId: MethodCallId): Invocation = {
+    Invocation(MethodName("error"),
+      Arguments(JsObject(Map("type" -> JsString(errorCode.code)))),
       methodCallId)
   }
 }
@@ -49,8 +54,26 @@ sealed trait ErrorCode {
 
 object ErrorCode {
   case object InvalidArguments extends ErrorCode {
-    override def code: String = "invalidArguments"
+    override def code: String = "error"
 
     override def defaultDescription: String = "One of the arguments is of the wrong type or otherwise invalid, or a required argument is missing."
+  }
+
+  case object ServerFail extends ErrorCode {
+    override def code: String = "serverFail"
+
+    override def defaultDescription: String = null
+  }
+
+  case object UnknownMethod extends ErrorCode {
+    override def code: String = "unknownMethod"
+
+    override def defaultDescription: String = null
+  }
+
+  case object AccountNotFound extends ErrorCode {
+    override def code: String = "accountNotFound"
+
+    override def defaultDescription: String = null
   }
 }
