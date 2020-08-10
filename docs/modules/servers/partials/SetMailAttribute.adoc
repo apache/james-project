@@ -1,0 +1,12 @@
+=== SetMailAttribute
+
+This mailet sets attributes on the Mail.
+
+Sample configuration:
+
+....
+<mailet match="All" class="SetMailAttribute">
+  <name1>value1</name1>
+  <name2>value2</name2>
+</mailet>
+....

@@ -1,0 +1,11 @@
+=== AddDeliveredToHeader
+
+This mailet adds the de-facto standard QMail Delivered-To header.
+
+Upon processing by LocalDelivery, a Delivered-To header matching the recipient mail address will be added before storage.
+
+Example
+
+....
+<mailet match="All" class="AddDeliveredToHeader">
+....
