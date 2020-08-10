@@ -1,4 +1,159 @@
 = Distributed James Server &mdash; Custom mail processing components
 :navtitle: Custom mail processing components
 
-(TODO)
+When none of the matchers and mailets available in James allows us to implement what we want, extension
+developers will have to write our own mailet and matcher in a separated maven project depending on James
+Mailet API.
+
+== Writing custom mailets/matchers
+
+We will write a *IsDelayedForMoreThan* matcher with a configurable delay. If the Sent Date of incoming
+emails is older than specified delay, then the emails should be matched (return all mail recipients). Otherwise,
+we just return an empty list of recipients.
+
+To ease our Job, we can rely on the *org.apache.james.apache-mailet-base* maven project, which provides us
+a *GenericMatcher* that we can extend.
+
+Here is the dependency:
+
+....
+<dependency>
+  <groupId>org.apache.james</groupId>
+  <artifactId>apache-mailet-base</artifactId>
+</dependency>
+....
+
+The main method of a matcher is the *match* method:
+
+....
+Collection<MailAddress> match(Mail mail) throws MessagingException;
+....
+
+For us, it becomes, with *maxDelay* being previously configured:
+
+....
+private final Clock clock;
+private Duration maxDelay;
+
+@Override
+public Collection<MailAddress> match(Mail mail) throws MessagingException {
+Date sentDate = mail.getMessage().getSentDate();
+
+    if (clock.instant().isAfter(sentDate.toInstant().plusMillis(maxDelay.toMillis()))) {
+        return ImmutableList.copyOf(mail.getRecipients());
+    }
+    return ImmutableList.of();
+}
+....
+
+*GenericMatcher* exposes us the condition that had been configured. We will use it to compute *maxDelay*.
+We can do it in the *init()* method exposed by the generic matcher:
+
+....
+public static final TimeConverter.Unit DEFAULT_UNIT = TimeConverter.Unit.HOURS;
+
+@Override
+public void init() {
+    String condition = getCondition();
+    maxDelay = Duration.ofMillis(TimeConverter.getMilliSeconds(condition, DEFAULT_UNIT));
+}
+....
+
+Now, let's take a look at the *SendPromotionCode* mailet. Of course, we want to write a generic mailet
+with a configurable reason (why are we sending the promotion code). To keep things simple, only one promotion
+code will be used, and will be written in the configuration. We can here also simply extend the
+*GenericMailet* helper class.
+
+The main method of a mailet is the *service* method:
+
+....
+void service(Mail mail) throws MessagingException;
+....
+
+For us, it becomes, with *reason* and *promotionCode* being previously configured:
+
+....
+public static final boolean REPLY_TO_SENDER_ONLY = false;
+
+private String reason;
+private String promotionCode;
+
+@Override
+public void service(Mail mail) throws MessagingException {
+MimeMessage response = (MimeMessage) mail.getMessage()
+.reply(REPLY_TO_SENDER_ONLY);
+
+    response.setText(reason + "\n\n" +
+        "Here is the following promotion code that you can use on your next order: " + promotionCode);
+
+    MailAddress sender = getMailetContext().getPostmaster();
+    ImmutableList<MailAddress> recipients = ImmutableList.of(mail.getSender());
+
+    getMailetContext()
+        .sendMail(sender, recipients, response);
+}
+....
+
+Note that we can interact with the mail server through the mailet context for sending mails, knowing postmaster, etc...
+
+*GenericMailet* exposes us the 'init parameters' that had been configured for this mailet. We will
+use it to retrieve *reason* and *promotionCode*.
+We can do it in the *init()* method exposed by the generic mailet:
+
+....
+@Override
+public void init() throws MessagingException {
+    reason = getInitParameter("reason");
+    promotionCode = getInitParameter("promotionCode");
+
+    if (Strings.isNullOrEmpty(reason)) {
+        throw new MessagingException("'reason' is compulsory");
+    }
+    if (Strings.isNullOrEmpty(promotionCode)) {
+        throw new MessagingException("'promotionCode' is compulsory");
+    }
+}
+....
+
+You can retrieve the sources of this mini-project on https://github.com/apache/james-project/tree/master/examples/custom-mailets[GitHub]
+
+== Loading custom mailets with James
+
+
+Now is the time we will run James with our awesome matcher and mailet configured.
+
+First, we will need to compile our project with *mvn clean install*. A jar will be outputted in the target directory.
+
+Then, we will write the *mailetcontainer.xml* file expressing the logic we want:
+
+....
+<mailetcontainer enableJmx="true">
+
+<context>
+  <postmaster>postmaster@localhost</postmaster>
+</context>
+
+<spooler>
+  <threads>20</threads>
+</spooler>
+
+<processors>
+  <processor state="root" enableJmx="true">
+  <mailet match="All" class="PostmasterAlias"/>
+  <mailet match="org.apache.james.examples.custom.mailets.IsDelayedForMoreThan=1 day"
+    class="org.apache.james.examples.custom.mailets.SendPromotionCode">
+    <reason>Your email had been delayed for a long time. Because we are sorry about it, please find the
+      following promotion code.</reason>
+    <promotionCode>1542-2563-5469</promotionCode>
+  </mailet>
+  <!-- Rest of the configuration -->
+</processor>
+
+<!--  Other processors -->
+</processors>
+</mailetcontainer>
+....
+
+Finally, we will start a James server using that. We will rely on docker default image for simplicity.
+We need to be using the *mailetcontainer.xml* configuration that we had been writing and position
+the jar in the *extensions-jars* folder (specific to guice).
