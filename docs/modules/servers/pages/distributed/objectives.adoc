@@ -1,0 +1,31 @@
+= Distributed James Server &mdash; Objectives and motivation
+:navtitle: Objectives and motivation
+
+The objective of the Distributed Server is to provided facilities to execute
+an advanced, extendable, and distributed email system. It is intended for
+organization with serious requirements, such as high-throughput or very large
+data sets.
+
+Scaling emails infrastructure is a notoriously hard problem. The intent of the Distributed server is
+to implement a mail server using modern NoSQL technologies. It relies on:
+
+* Object Storage enables scalable yet cheap storage of large amount of data
+* The use of NoSQL for metadata storage enables vertical scalability
+* Finally a Distributed search engine enables quick and efficient search
+
+Replication, data availability are thus handled by battle tested technologies.
+
+Such a data storage strategy enables:
+
+* A centralized management of all server components, as each Distributed James server hold the same view on data.
+* A better load and data repartition between email servers, as each James servers can cary out any tasks.
+* Easy scaling. Handling more users or more data is as easy as adding James instances and scaling the underlying
+databases.
+* Easier load-balancing, as any email server can handle requests from any user. No sharding is involved.
+* Rich feature, especially regarding *sharing*. Every user can delegate access to any over users.
+
+Furthermore, this server is intended to be easily customisable so that it can easily be adapted to ones needs.
+
+* Several packaged extensions can be xref:distributed/configure/index.adoc#_for_extensions[configured]
+* It is easy to write and load xref:distributed/extending/index.adoc[your own extensions]
+
