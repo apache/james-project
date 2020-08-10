@@ -43,7 +43,7 @@ class AccessTokenManagerImplTest {
     
     @BeforeEach
     void setUp() {
-        accessTokenRepository = new MemoryAccessTokenRepository(100);
+        accessTokenRepository = new MemoryAccessTokenRepository(500);
         accessTokenManager = new AccessTokenManagerImpl(accessTokenRepository);
     }
 
