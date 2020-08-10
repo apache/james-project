@@ -2,3 +2,58 @@
 :navtitle: Custom Mailbox Listeners
 
 (TODO can http://james.apache.org/howTo/custom-listeners.html be used ?)
+
+== Writing additional listener
+
+An extension writer can write new additional mailbox listeners.
+
+To do so, extend the *GroupMailboxListener* defined in the *mailbox-api*.
+
+Here is the dependency:
+
+....
+<dependency>
+    <groupId>org.apache.james</groupId>
+    <artifactId>apache-james-mailbox-api</artifactId>
+</dependency>
+....
+
+Here are the methods you can implement:
+
+....
+    void event(Event event) throws Exception;
+....
+
+allows you to specify the business logic you want to execute upon new events generation.
+
+....
+    boolean isHandling(Event event);
+....
+
+Allows to know if this event is worth execution, and should be sent on the EventBus. This avoids execution of non
+handled events and can save some IOs.
+
+== Registration of custom additional listeners
+
+Your custom additional listener needs to be in the *extensions-jars* folder.
+
+You need to register its fully qualified class name in xref:distributed/configure/listeners.adoc[listeners.xml]
+
+== Events
+
+Your listener will be called for the following events:
+
+ - *MailboxAdded*: A new mailbox had been created
+ - *MailboxDeletion*: A new mailbox had been deleted
+ - *MailboxRenamed*: A mailbox was renamed
+ - *MailboxACLUpdated*: The rights of a mailbox had been changed
+ - *Expunged*: Some messages had been deleted
+ - *FlagsUpdated*: Some message flags had been updated
+ - *Added*: New messages had been added to a mailbox
+ - *QuotaUsageUpdatedEvent*: The quota of a given account had changed
+ - *MessageMoveEvent*: A message was moved between mailboxes. This carries an account wide information. Spoecific
+mailboxes event (Added & Expunged) will be emitted as well.
+
+== Example
+
+http://james.apache.org/howTo/custom-listeners.html[This page] provides a working example for writing additional custom mailbox listeners.
