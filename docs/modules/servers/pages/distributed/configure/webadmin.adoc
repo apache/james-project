@@ -56,6 +56,6 @@ to get some examples and hints.
 | extensions.routes
 | List of Routes specified as fully qualified class name that should be loaded in addition to your product routes list. Routes
 needs to be on the classpath or in the ./extensions-jars folder. Read mode about
-xref:distributed/extend/webadmin-routes.adoc[creating you own webadmin routes].
+xref:distributed/extending/webadmin-routes.adoc[creating you own webadmin routes].
 
 |===

@@ -10,7 +10,7 @@ For instance in the url `cassandra://var/mail/error/` `cassandra` is the protoco
 
 The *mailrepositorystore.xml* file allows registration of available protocols, and their binding to actual MailRepository
 implementation. Note that extension developers can write their own MailRepository implementations, load them via the
-`extensions-jars` mechanism as documented in xref:distributed/extend/index.adoc['writing your own extensions'], and finally
+`extensions-jars` mechanism as documented in xref:distributed/extending/index.adoc['writing your own extensions'], and finally
 associated to a protocol in *mailrepositorystore.xml* for a usage in *mailetcontainer.xml*.
 
 == Configuration

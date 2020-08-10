@@ -18,4 +18,4 @@ xref:distributed/run.adoc[run it], how to
 xref:distributed/run-docker.adoc[run it with Docker], how to
 xref:distributed/configure/index.adoc[configure it], how to
 xref:distributed/operate/index.adoc[operate it], how to
-xref:distributed/extend/index.adoc[extend it].
+xref:distributed/extending/index.adoc[extend it].
