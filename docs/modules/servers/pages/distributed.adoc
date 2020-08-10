@@ -5,6 +5,9 @@ The Distributed server offers an easy way to scale email server. Based on
 noSQL solutions, it is intended to be easy to operate for large
 deployments, without needing sharding and protocol aware load balancing.
 
+The Distributed Server does assume that you have advanced
+technical knowledge and is the most complex and feature-rich option.
+
 This server is:
 
 * Intended for use by experts only
@@ -12,10 +15,12 @@ This server is:
 * Is designed for Mail Delivery use cases but can also carry out mail processing
 * The most feature-rich server, but also by far the most complex
 
-You will find information about its
-xref:distributed/architecture.adoc[architecture], how to
-xref:distributed/run.adoc[run it], how to
-xref:distributed/run-docker.adoc[run it with Docker], how to
-xref:distributed/configure/index.adoc[configure it], how to
-xref:distributed/operate/index.adoc[operate it], how to
-xref:distributed/extending/index.adoc[extend it].
+In this section of the documentation, we will introduce you to:
+
+* xref:distributed/architecture.adoc[Overview of architecture]
+* xref:distributed/run.adoc[Running the Distributed Server]
+* xref:distributed/run-docker.adoc[Run the Distributed Server with Docker]
+* xref:distributed/configure/index.adoc[Configure the Distributed Server]
+* xref:distributed/operate/index.adoc[Operation of the Distributed Server]
+* xref:distributed/extending/index.adoc[How to extend the server]
+
