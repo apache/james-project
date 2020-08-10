@@ -1,0 +1,5 @@
+=== LogMessage
+
+Logs Message Headers and/or Body.
+If the "passThrough" in confs is true the mail will be left untouched in
+the pipe. If false will be destroyed.  Default is true.

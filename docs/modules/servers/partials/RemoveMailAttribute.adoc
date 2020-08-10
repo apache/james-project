@@ -1,0 +1,12 @@
+=== RemoveMailAttribute
+
+This mailet sets attributes on the Mail.
+
+Sample configuration:
+
+....
+<mailet match="All" class="RemoveMailAttribute">
+  <name>attribute_name1</name>
+  <name>attribute_name2</name>
+</mailet>
+....

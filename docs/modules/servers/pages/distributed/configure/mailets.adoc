@@ -5,3 +5,78 @@ This documentation page lists and documents Mailet that can be used within the
 Distributed Server MailetContainer in order to write your own mail processing logic with out-of-the-box components.
 
 (TODO)
+
+- mailet/ai
+- mailet/crypto
+- mailet/icalendar
+- server/protocols/jmap-draft ?
+- server/mailet/dkim
+- server/mailet/mailets
+
+== Supported mailets
+
+include::partial$AddDeliveredToHeader.adoc[]
+
+include::partial$AddFooter.adoc[]
+
+include::partial$AddSubjectPrefix.adoc[]
+
+include::partial$AmqpForwardAttribute.adoc[]
+
+include::partial$ContactExtractor.adoc[]
+
+include::partial$LogMessage.adoc[]
+
+include::partial$MailAttributesListToMimeHeaders.adoc[]
+
+include::partial$MailAttributesToMimeHeaders.adoc[]
+
+include::partial$MimeDecodingMailet.adoc[]
+
+include::partial$Null.adoc[]
+
+include::partial$PostmasterAlias.adoc[]
+
+include::partial$RecipientToLowerCase.adoc[]
+
+include::partial$RemoveAllMailAttributes.adoc[]
+
+include::partial$RemoveMailAttribute.adoc[]
+
+include::partial$RemoveMimeHeader.adoc[]
+
+include::partial$RemoveMimeHeaderByPrefix.adoc[]
+
+include::partial$ReplaceContent.adoc[]
+
+include::partial$SetMailAttribute.adoc[]
+
+include::partial$SetMimeHeader.adoc[]
+
+include::partial$StripAttachment.adoc[]
+
+include::partial$ToProcessor.adoc[]
+
+== Experimental mailets
+
+include::partial$AddHabeasWarrantMark.adoc[]
+
+include::partial$ClamAVScan.adoc[]
+
+include::partial$ClassifyBounce.adoc[]
+
+include::partial$HeadersToHTTP.adoc[]
+
+include::partial$OnlyText.adoc[]
+
+include::partial$RecoverAttachment.adoc[]
+
+include::partial$SerialiseToHTTP.adoc[]
+
+include::partial$ServerTime.adoc[]
+
+include::partial$UnwrapText.adoc[]
+
+include::partial$UseHeaderRecipients.adoc[]
+
+include::partial$WrapText.adoc[]

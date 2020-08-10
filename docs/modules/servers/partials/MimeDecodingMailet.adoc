@@ -1,0 +1,10 @@
+=== MailAttributesToMimeHeaders
+
+This mailet replace the mail attribute map of key to MimePart
+by a map of key to the MimePart content (as bytes).
+
+It takes only one parameter:
+
+* attribute (mandatory): mime content to be decoded, expected to be a Map<String, byte[]>
+
+Then all this map attribute values will be replaced by their content.

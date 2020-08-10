@@ -1,0 +1,11 @@
+=== RemoveMimeHeader
+
+Remove mime headers from the message (global) and per recipient (specific).
+
+Sample configuration:
+
+....
+<mailet match="All" class="RemoveMimeHeader">
+  <name>header1,header2</name>
+</mailet>
+....

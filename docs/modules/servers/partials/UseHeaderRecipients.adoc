@@ -1,0 +1,23 @@
+=== UseHeaderRecipients
+
+Mailet designed to process the recipients from the mail headers rather
+than the recipients specified in the SMTP message header.  This can be
+useful if your mail is redirected on-route by a mail server that
+substitutes a fixed recipient address for the original.
+
+
+To use this, match against the redirection address using the
+*RecipientIs* matcher and set the mailet 'class' to
+*UseHeaderRecipients*.  This will cause the email to be
+re-injected into the root process with the recipient substituted
+by all the recipients in the Mail-For, To and Cc headers
+of the message.
+
+e.g.
+
+....
+<mailet match="RecipientIs=forwarded@myhost" class="UseHeaderRecipients">
+</mailet>
+....
+
+

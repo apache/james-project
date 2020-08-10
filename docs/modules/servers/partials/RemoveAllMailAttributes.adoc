@@ -1,0 +1,9 @@
+=== RemoveAllMailAttributes
+
+This mailet sets removes all attributes set on the Mail instance
+
+Sample configuration:
+
+....
+<mailet match="All" class="RemoveAllMailAttributes"/>
+....

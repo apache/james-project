@@ -1,0 +1,119 @@
+=== ClamAVScan
+
+Does an antivirus scan check using a ClamAV daemon (CLAMD)
+
+Interacts directly with the daemon using the "stream" method,
+which should have the lowest possible overhead.
+
+The CLAMD daemon will typically reside on *localhost*, but could reside on a
+different host.
+It may also consist on a set of multiple daemons, each residing on a different
+server and on different IP number.
+In such case a DNS host name with multiple IP addresses (round-robin load sharing)
+is supported by the mailet (but on the same port number).
+
+Handles the following init parameters:
+
+* *<debug>*
+* *<host>*: the host name of the server where CLAMD runs. It can either be
+a machine name, such as
+"*java.sun.com*", or a textual representation of its
+IP address. If a literal IP address is supplied, only the
+validity of the address format is checked.
+If the machine name resolves to multiple IP addresses, *round-robin load sharing* will
+be used.
+The default is *localhost*.
+* *<port>*: the port on which CLAMD listens. The default is *3310*.
+* *<maxPings>*: the maximum number of connection retries during startup.
+If the value is *0* no startup test will be done.
+The default is *6*.
+* *<pingIntervalMilli>*: the interval (in milliseconds)
+between each connection retry during startup.
+The default is *30000* (30 seconds).
+* *<streamBufferSize>*: the BufferedOutputStream buffer size to use
+writing to the *stream connection*. The default is *8192*.
+
+The actions performed are as follows:
+
+* During initialization:
+
+* Gets all *config.xml* parameters, handling the defaults;
+* resolves the *<host>* parameter, creating the round-robin IP list;
+* connects to CLAMD at the first IP in the round-robin list, on
+the specified *<port>*;
+* if unsuccessful, retries every *<pingIntervalMilli>* milliseconds up to
+*<maxPings>* times;
+* sends a *PING* request;
+* waits for a *PONG* answer;
+* repeats steps 3-6 for every other IP resolved.
+
+* For every mail
+
+* connects to CLAMD at the "next" IP in the round-robin list, on
+the specified *<port>*, and increments the "next" index;
+if the connection request is not accepted tries with the next one
+in the list unless all of them have failed;
+* sends a "*STREAM*" request;
+* parses the "*PORT *streamPort**" answer obtaining the port number;
+* makes a second connection (the *stream connection*) to CLAMD at the same host (or IP)
+on the *streamPort* just obtained;
+* sends the mime message to CLAMD (using {@link MimeMessage#writeTo(java.io.OutputStream)})
+through the *stream connection*;
+* closes the *stream connection*;
+* gets the "*OK*" or "*... FOUND*" answer from the main connection;
+* closes the main connection;
+* sets the "*org.apache.james.infected*" *mail attribute* to either
+"*true*" or "*false*";
+* adds the "*X-MessageIsInfected*" *header* to either
+"*true*" or "*false*";
+
+Some notes regarding http://www.clamav.net/[clamav.conf] :
+
+* *LocalSocket* must be commented out
+* *TCPSocket* must be set to a port# (typically 3310)
+* *StreamMaxLength* must be >= the James config.xml parameter
+<*maxmessagesize*> in SMTP <*handler*>
+* *MaxThreads* should? be >= the James config.xml parameter
+<*threads*> in <*spoolmanager*>
+* *ScanMail* must be uncommented
+
+Here follows an example of config.xml definitions deploying CLAMD on localhost,
+and handling the infected messages:
+
+....
+<!-- Do an antivirus scan -->
+<mailet match="All" class="ClamAVScan" onMailetException="ignore"/>
+
+<!-- If infected go to virus processor -->
+<mailet match="HasMailAttributeWithValue=org.apache.james.infected, true" class="ToProcessor">
+    <processor> virus </processor>
+</mailet>
+
+<!-- Check attachment extensions for possible viruses -->
+<mailet match="AttachmentFileNameIs=-d -z *.exe *.com *.bat *.cmd *.pif *.scr *.vbs *.avi *.mp3 *.mpeg *.shs" class="ToProcessor">
+    <processor> bad-extensions </processor>
+</mailet>
+....
+
+....
+<!-- Messages containing viruses -->
+<processor name="virus">
+  <!-- To avoid a loop while bouncing -->
+  <mailet match="All" class="SetMailAttribute">
+     <org.apache.james.infected>true, bouncing</org.apache.james.infected>
+  </mailet>
+
+  <mailet match="SMTPAuthSuccessful" class="Bounce">
+    <sender>bounce-admin@xxx.com</sender>
+    <inline>heads</inline>
+    <attachment>none</attachment>
+    <notice> Warning: We were unable to deliver the message below because it was found infected by virus(es). </notice>
+  </mailet>
+
+  <mailet match="All" class="ToRepository">
+    <repositoryPath>file://var/mail/infected/</repositoryPath>
+  </mailet>
+
+  <mailet match="All" class="Null" />
+</processor>
+....
