@@ -21,4 +21,6 @@ graphs, that can be visualized, for instance in *Grafana*.
 We did put together a xref:distributed/operate/guide.adoc[detailed guide] for
 distributed James operators.
 
+We also included a guide for xref:distributed/operate/migrating.adoc[migrating existing data] into the distributed server.
+
 Read more about xref:distributed/operate/cassandra-migration.adoc[Cassandra data migration].
