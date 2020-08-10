@@ -1,4 +1,39 @@
 = Distributed James Server &mdash; Custom WebAdmin routes
 :navtitle: Custom WebAdmin routes
 
-(TODO)
+== Writing custom WebAdmin routes
+
+An extension writer can write additional WebAdmin routes, effectively exposed over the WebAdmin API.
+
+To do so, extend the *Routes* defined in the *james-server-webadmin-core*.
+
+Here is the dependency:
+
+....
+<dependency>
+    <groupId>org.apache.james</groupId>
+    <artifactId>james-server-webadmin-core</artifactId>
+</dependency>
+....
+
+Here is the interface:
+
+....
+public interface Routes {
+    String getBasePath();
+
+    void define(Service service);
+}
+....
+
+* *getBasePath* enables to know the prefix of your route
+
+* *define* enables you to register endpoint is the http://sparkjava.com/[sparkjava] Service instance. HTTP *GET*, *POST*,
+*PUT*, *PATCH*, etc.. verbs are supported.
+
+== Registration
+
+Your custom WebAdmin routes needs to be in the *extensions-jars* folder.
+
+You need to register its fully qualified class name in xref:distributed/configure/webadmin.adoc[webadmin.properties]
+using the *extensions.routes* property.
