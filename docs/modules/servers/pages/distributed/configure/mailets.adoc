@@ -6,8 +6,6 @@ Distributed Server MailetContainer in order to write your own mail processing lo
 
 (TODO)
 
-- mailet/ai
-- mailet/crypto
 - mailet/icalendar
 - server/protocols/jmap-draft ?
 - server/mailet/mailets
@@ -57,6 +55,14 @@ include::partial$ReplaceContent.adoc[]
 include::partial$SetMailAttribute.adoc[]
 
 include::partial$SetMimeHeader.adoc[]
+
+include::partial$Sign.adoc[]
+
+include::partial$SMIMECheckSignature.adoc[]
+
+include::partial$SMIMEDecrypt.adoc[]
+
+include::partial$SMIMESign.adoc[]
 
 include::partial$StripAttachment.adoc[]
 

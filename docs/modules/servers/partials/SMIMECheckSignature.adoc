@@ -1,0 +1,51 @@
+=== SMIMECheckSignature
+
+Verifies the s/mime signature of a message. The s/mime signing ensure that
+the private key owner is the real sender of the message. To be checked by
+this mailet the s/mime signature must contain the actual signature, the
+signer's certificate and optionally a set of certificate that can be used to
+create a chain of trust that starts from the signer's certificate and leads
+to a known trusted certificate.
+
+This check is composed by two steps: firstly it's ensured that the signature
+is valid, then it's checked if a chain of trust starting from the signer
+certificate and that leads to a trusted certificate can be created. The first
+check verifies that the the message has not been modified after the signature
+was put and that the signer's certificate was valid at the time of the
+signing. The latter should ensure that the signer is who he declare to be.
+
+The results of the checks perfomed by this mailet are wrote as a mail
+attribute which default name is org.apache.james.SMIMECheckSignature (it can
+be changed using the mailet parameter *mailAttribute*). After
+the check this attribute will contain a list of SMIMESignerInfo object, one
+for each message's signer. These objects contain the signer's certificate and
+the trust path.
+
+Optionally, specifying the parameter *strip*, the signature of
+the message can be stripped after the check. The message will become a
+standard message without an attached s/mime signature.
+
+The configuration parameter of this mailet are summerized below. The firsts
+defines the location, the format and the password of the keystore containing
+the certificates that are considered trusted. Note: only the trusted certificate
+entries are read, the key ones are not.
+
+
+* keyStoreType (default: jks): Certificate store format . "jks" is the
+standard java certificate store format, but pkcs12 is also quite common and
+compatible with standard email clients like Outlook Express and Thunderbird.
+* keyStoreFileName (default: JAVA_HOME/jre/lib/security/cacert): Certificate
+store path.
+* keyStorePassword (default: ""): Certificate store password.
+
+Other parameters configure the behavior of the mailet:
+
+* strip (default: false): Defines if the s/mime signature of the message
+have to be stripped after the check or not. Possible values are true and
+false.
+* mailAttribute (default: org.apache.james.SMIMECheckSignature):
+specifies in which attribute the check results will be written.
+* onlyTrusted (default: true): Usually a message signature to be
+considered by this mailet as authentic must be valid and trusted. Setting
+this mailet parameter to "false" the last condition is relaxed and also
+"untrusted" signature are considered will be considered as authentic.

@@ -1,0 +1,24 @@
+=== SMIMEDecrypt
+
+This mailet decrypts a s/mime encrypted message. It takes as input an
+encrypted message and it tries to dechiper it using the key specified in its
+configuration. If the decryption is successful the mail will be changed and
+it will contain the decrypted message. The mail attribute
+*org.apache.james.SMIMEDecrypt* will contain the public
+certificate of the key used in the process.
+
+The configuration parameters of this mailet are summarized below. The firsts
+define the keystore where the key that will be used to decrypt messages is
+saved.
+
+* keyStoreType (default: system dependent): defines the type of the store.
+Usually jks, pkcs12 or pkcs7
+* keyStoreFileName (mandatory): private key store path.
+* keyStorePassword (default: ""): private key store password
+
+The other parameters define which private key have to be used. (if the store
+contains more than one key).
+
+* keyAlias: private key alias.
+* keyPass: private key password
+
