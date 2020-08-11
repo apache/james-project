@@ -130,4 +130,37 @@ include::partial$SenderInFakeDomain.adoc[]
 
 == Composite matchers
 
-(TODO)
+It is possible to combine together matchers in order to create a composite matcher, thus simplifying your
+Mailet Container logic.
+
+Here are the available logical operations:
+
+* *And* : This matcher performs And conjunction between the two matchers: recipients needs to match both matcher in order to
+match the composite matcher.
+* *Or* : This matcher performs Or conjunction between the two matchers: consider it to be a union of the results.
+It returns recipients from the Or composition results of the child matchers.
+* *Not* : It returns recipients from the negated composition of the child Matcher(s). Consider what wasn't
+in the result set of each child matcher. Of course it is easier to understand if it only
+includes one matcher in the composition, the normal recommended use.
+* *Xor* :  It returns Recipients from the Xor composition of the child matchers. Consider it to be the inequality
+operator for recipients. If any recipients match other matcher results
+then the result does not include that recipient.
+
+Here is the syntax to adopt in *mailetcontainer.xml*:
+
+....
+<processor state="transport" enableJmx="true">
+    <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
+        <matcher match="SMTPAuthSuccessful"/>
+        <matcher match="SentByMailet"/>
+        <matcher match="org.apache.james.jmap.mailet.SentByJmap"/>
+        <matcher match="RemoteAddrInNetwork=127.0.0.1, 10.2.*, 193.50.151.*"/>
+    </matcher>
+
+    <!-- ... -->
+
+    <mailet match="relay-allowed" class="ToProcessor">
+        <processor>relay</processor>
+    </mailet>
+</processor>
+....
