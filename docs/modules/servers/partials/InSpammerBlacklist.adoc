@@ -1,0 +1,16 @@
+=== InSpammerBlacklist
+
+Checks the network IP address of the sending server against a blacklist of
+spammers. There are 3 lists that support this...
+
+* *blackholes.mail-abuse.org*: Rejected - see http://www.mail-abuse.org/rbl/
+* *dialups.mail-abuse.org*: Dialup - see http://www.mail-abuse.org/dul/
+* *relays.mail-abuse.org*: Open spam relay - see http://www.mail-abuse.org/rss/
+
+Example:
+
+....
+<mailet match="InSpammerBlacklist=blackholes.mail-abuse.org." class="ToProcessor">
+  <processor>spam</processor>
+</mailet>
+....

@@ -4,15 +4,15 @@
 This documentation page lists and documents Matchers that can be used within the
 Distributed Server MailetContainer in order to write your own mail processing logic with out-of-the-box components.
 
-(TODO)
-
-* server/mailet/mailets
-
 == Supported matchers
 
 include::partial$All.adoc[]
 
+include::partial$AtLeastPriority.adoc[]
+
 include::partial$AtMost.adoc[]
+
+include::partial$AtMostPriority.adoc[]
 
 include::partial$FetchedFrom.adoc[]
 
@@ -34,9 +34,21 @@ include::partial$HasMimeType.adoc[]
 
 include::partial$HasMimeTypeParameter.adoc[]
 
+include::partial$HasPriority.adoc[]
+
 include::partial$HostIs.adoc[]
 
 include::partial$HostIsLocal.adoc[]
+
+include::partial$IsMarkedAsSpam.adoc[]
+
+include::partial$IsOverQuota.adoc[]
+
+include::partial$IsRemoteDeliveryPermanentError.adoc[]
+
+include::partial$IsRemoteDeliveryTemporaryError.adoc[]
+
+include::partial$IsSenderInRRTLoop.adoc[]
 
 include::partial$IsSingleRecipient.adoc[]
 
@@ -55,6 +67,12 @@ include::partial$RecipientIsLocal.adoc[]
 include::partial$RecipientIsRegex.adoc[]
 
 include::partial$RelayLimit.adoc[]
+
+include::partial$RemoteAddrInNetwork.adoc[]
+
+include::partial$RemoteAddrNotInNetwork.adoc[]
+
+include::partial$RemoteDeliveryFailedWithSMTPCode.adoc[]
 
 include::partial$SenderDomainIs.adoc[]
 
@@ -88,6 +106,8 @@ include::partial$TooManyRecipients.adoc[]
 
 include::partial$UserIs.adoc[]
 
+include::partial$XOriginatingIpInNetwork.adoc[]
+
 == Experimental matchers
 
 include::partial$AttachmentFileNameIs.adoc[]
@@ -102,7 +122,11 @@ include::partial$FileRegexMatcher.adoc[]
 
 include::partial$HasHabeasWarrantMark.adoc[]
 
+include::partial$InSpammerBlacklist.adoc[]
+
 include::partial$NESSpamCheck.adoc[]
+
+include::partial$SenderInFakeDomain.adoc[]
 
 == Composite matchers
 
