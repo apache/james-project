@@ -1,8 +1,178 @@
 = Distributed James Server &mdash; blobstore.properties
 :navtitle: blobstore.properties
 
+== BlobStore
+
 This file is optional. If omitted, the *cassandra* blob store will be used.
 
-(TODO) https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-blobstore.xml
+BlobStore is the dedicated component to store blobs, non-indexable content.
+James uses the BlobStore for storing blobs which are usually mail contents, attachments, deleted mails...
 
-& https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-blob-export.xml
+You can choose the underlying implementation of BlobStore to fit with your James setup.
+
+It could be the implementation on top of Cassandra or file storage service like Openstack Swift, AWS S3.
+
+Consult https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties[blob.properties]
+in GIT to get some examples and hints.
+
+=== Implementation choice
+
+*implementation* :
+
+* cassandra: use cassandra based BlobStore
+* objectstorage: use Swift/AWS S3 based BlobStore
+
+*deduplication.enable*: Mandatory. Supported value: true and false.
+
+If you choose to enable deduplication, the mails with the same content will be stored only once.
+
+WARNING: Once this feature is enabled, there is no turning back as turning it off will lead to the deletion of all
+the mails sharing the same content once one is deleted.
+
+This feature also requires a garbage collector mechanism to effectively drop blobs, which is not implemented yet.
+
+Consequently, all the requested deletions will not be performed, meaning that blobstore will only grow.
+
+NOTE: If you are upgrading from James 3.5 or older, the deduplication was enabled.
+
+=== Cassandra BlobStore Cache
+
+A Cassandra cache can be enabled to reduce latency when reading small blobs frequently.
+A dedicated keyspace with a replication factor of one is then used.
+Cache eviction policy is TTL based.
+Only blobs below a given threshold will be stored.
+To be noted that blobs are stored within a single Cassandra row, hence a low threshold should be used.
+
+.blobstore.properties cache related content
+|===
+| Property name | explanation
+
+| cache.enable
+| DEFAULT: false, optional, must be a boolean. Whether the cache should be enabled.
+
+| cache.cassandra.ttl
+| DEFAULT: 7 days, optional, must be a duration. Cache eviction policy is TTL based.
+
+| cache.cassandra.timeout
+| DEFAULT: 100ms, optional, must be a duration, cannot exceed 1 hour.
+Timeout after which this cache should be bypassed.
+
+| cache.sizeThresholdInBytes
+| DEFAULT: 8192, optional, must be a positive integer. Unit: bytes.
+Supported units: bytes, Kib, MiB, GiB, TiB
+Maximum size of stored objects expressed in bytes.
+|===
+
+=== Object storage configuration
+
+==== Underlying Service Configuration
+
+*objectstorage.provider* :
+
+* swift: Openstack Swift
+* aws-s3: Amazon AWS S3
+
+==== Swift Configuration
+
+(TODO)
+
+==== AWS S3 Configuration
+
+.blobstore.properties S3 related properties
+|===
+| Property name | explanation
+
+| objectstorage.s3.endPoint
+| S3 service endpoint
+
+| objectstorage.s3.accessKeyId
+| https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys[S3 access key id]
+
+| objectstorage.s3.secretKey
+| https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys[S3 access key secret]
+|===
+
+==== Buckets Configuration
+
+.Bucket configuration
+|===
+| Property name | explanation
+
+| objectstorage.bucketPrefix
+| Bucket is an concept in James and similar to Containers in Swift or Buckets in AWS S3.
+BucketPrefix is the prefix of bucket names in James BlobStore
+
+| objectstorage.namespace
+| BlobStore default bucket name. Most of blobs storing in BlobStore are inside the default bucket.
+Unless a special case like storing blobs of deleted messages.
+|===
+
+==== Codec Configuration
+
+.objectstorage.payload.codec
+|===
+| objectstorage.payload.codec
+
+| DEFAULT: no encryption
+
+| AES-256: AES-256 encryption
+|===
+
+If an AES-256 payload is used:
+
+.AES-256 configuration
+|===
+| Property name | explanation
+
+| objectstorage.aes256.hexsalt
+| salt string required by AES 256 encryption
+
+| objectstorage.aes256.password
+| password string required by AES 256 encryption
+|===
+
+== Blob Export
+
+Blob Exporting is the mechanism to help James to export a blob from an user to another user.
+It is commonly used to export deleted messages (consult <a href="/server/config-vault">configuring deleted messages vault</a>).
+The deleted messages are transformed into a blob and James will export that blob to the target user.
+
+This configuration helps you choose the blob exporting mechanism fit with your James setup and it is only applicable with Guice products.
+
+Consult https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties[blob.properties]
+in GIT to get some examples and hints.
+
+Configuration for exporting blob content:
+
+.blobstore.properties content
+|===
+| blob.export.implementation
+
+| localFile: Local File Exporting Mechanism (explained below). Default: localFile
+
+| linshare: LinShare Exporting Mechanism (explained below)
+|===
+
+=== Local File Blob Export Configuration
+
+For each request, this mechanism retrieves the content of a blob and save it to a distinct local file, then send an email containing the absolute path of that file to the target mail address.
+
+Note: that absolute file path is the file location on James server. Therefore, if there are two or more James servers connected, it should not be considered an option.
+
+*blob.export.localFile.directory*: The directory URL to store exported blob data in files, and the URL following
+http://james.apache.org/server/3/apidocs/org/apache/james/filesystem/api/FileSystem.html[James File System scheme].
+Default: file://var/blobExporting
+
+=== LinShare Blob Export Configuration
+
+Instead of exporting blobs in local file system, using https://www.linshare.org/en/index.html[LinShare]
+helps you upload your blobs and people you have been shared to can access those blobs by accessing to
+LinShare server and download them.
+
+This way helps you to share via whole network as long as they can access to LinShare server.
+
+To get an example or details explained, visit https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties[blob.properties]
+
+*blob.export.linshare.url*: The URL to connect to LinShare
+
+*blob.export.linshare.token*: The authentication token to connect to LinShare
