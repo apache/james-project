@@ -1,0 +1,21 @@
+=== CompareNumericHeaderValue
+
+Matches mails containing a header with a numeric value whose comparison with the specified value is true.
+
+If the header is missing in the message, there will be *no match*
+
+Configuration string: The headerName, a comparison operator and the numeric headerValue
+to compare with, *space or tab delimited*.
+
+The comparison operators are: *<, <=, ==, >=, >*;
+another set of operators is: *LT, LE, EQ, GE, GT*.
+
+Also the following operators are accepted: *=<, =, =>*.
+
+Example:
+
+....
+<mailet match="CompareNumericHeaderValue=X-MessageIsSpamProbability > 0.9" class="ToProcessor">
+    <processor> spam </processor>
+</mailet>
+....

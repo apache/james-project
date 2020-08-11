@@ -1,0 +1,19 @@
+=== AtMost
+
+Checks that a mail did at most X executions on a specific operation.
+
+ If no executions have been performed previously for Y attribute, it will be set up.
+ In the mail, every time the check succeeds, its counter will be incremented by one.
+The check fails when the defined X limit is reached.
+
+* X - count of how many times a specific operation is performed
+* Y - name of attribute represented for specific operation executions, default value is: *AT_MOST_EXECUTIONS*
+
+
+The example below will match a mail with at most 3 executions on the mailet
+with attribute name *AT_MOST_EXECUTIONS*
+
+....
+<mailet match="AtMost=AT_MOST_EXECUTIONS:3" class="<any-class>">
+</mailet>
+....

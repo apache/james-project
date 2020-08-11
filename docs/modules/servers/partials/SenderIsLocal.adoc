@@ -1,0 +1,3 @@
+=== SenderIsLocal
+
+Matches mail where the sender is local.

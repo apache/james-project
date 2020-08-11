@@ -1,0 +1,14 @@
+=== HasHeaderWithPrefix
+
+Matches emails with headers having a given prefix.
+
+If a header with the given prefix is found in the message (global) all recipients will be matched.
+If a header with the given prefix is found per recipient (specific), only these will be matched.
+
+Otherwise, no recipient in returned.
+
+use:
+
+....
+<mailet match="HasHeaderWithPrefix=PREFIX" class="..." />
+....

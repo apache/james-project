@@ -1,0 +1,12 @@
+=== CommandListservMatcher
+
+CommandListservMatcher is the matcher that pairs with the CommandListservManager
+It checks to see if the request is intended for the ListservManager, but doesn't guarantee that it is a valid command.
+
+To configure, insert this into the config.xml inside of the root processor block.
+
+....
+<mailet match="CommandListservMatcher=announce@localhost" class="CommandListservManager">
+...
+</mailet>
+....

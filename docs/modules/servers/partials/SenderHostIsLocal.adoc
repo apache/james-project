@@ -1,0 +1,10 @@
+=== SenderHostIsLocal
+
+Checks the sender's displayed domain name against a the hosts serviced by
+this mail context.
+
+Sample Configuration:
+
+....
+<mailet match="SenderHostIsLocal" class="SpamAssassin"> </mailet>
+....

@@ -1,0 +1,9 @@
+=== SMTPAuthSuccessful
+
+Matches mails that are sent by an SMTP authenticated user.
+
+If the sender was not authenticated it will not match.
+
+....
+<mailet match="SMTPAuthSuccessful" class="<any-class>">
+....

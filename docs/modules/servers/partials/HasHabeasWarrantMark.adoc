@@ -1,0 +1,40 @@
+=== HasHabeasWarrantMark
+
+This matcher tests for the Hebeas Warrant Mark.
+For details see: http://www.hebeas.com
+
+Usage: Place this matcher
+
+....
+<mailet match="HasHabeasWarrantMark" class="ToProcessor">
+    <processor> transport </processor>
+</mailet>
+....
+
+in the root processs before the DNSRBL block lists (the InSpammerBlacklist matcher).
+
+Because the Habeas Warrant Mark is copyright material, I have asked for and
+received the following explicit statement from Habeas:
+
+....
+-----------------------------------
+From: Lindsey Pettit [mailto:support@habeas.com]
+Sent: Sunday, September 29, 2002 5:51
+To: Noel J. Bergman
+Subject: RE: Habeas and Apache James
+
+Dear Noel,
+
+> I guess that since your Warrant Mark is copyright, I should ask for
+> something from you to explicitly authorize that Hebeas will permit
+> this code to be included and distributed as part of Apache James
+> under the Apache Software License.  As we have established, the use
+> of the Habeas Warrant Mark for filtering is not restricted, but I
+> would like something to confirm that, so that Apache will be happy.
+
+I can hereby confirm to you that there is no license necessary in
+order to use the Habeas mark for filtering.  That said, however, we
+do insist that it not ever be used as a basis for rejecting email which
+bears the Habeas mark.
+-----------------------------------
+....

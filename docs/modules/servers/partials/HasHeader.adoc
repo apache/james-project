@@ -1,0 +1,10 @@
+=== HasHeader
+
+use:
+
+....
+<mailet match="HasHeader={<header>[=value]}+" class="..." />
+....
+
+This matcher checks if the header is present in the message (global) and per recipient (specific). It complements the AddHeader mailet.
+

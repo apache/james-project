@@ -1,0 +1,9 @@
+=== RecipientDomainIs
+
+This will return recipients matching a configured domain.
+
+Sample configuration:
+
+....
+<mailet match="RecipientDomainIs=<domain.com>" class="<any-class>"/>
+....

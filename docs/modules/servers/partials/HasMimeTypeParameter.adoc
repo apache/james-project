@@ -1,0 +1,9 @@
+=== HasMimeTypeParameter
+
+This matcher checks if the content type parameters matches.
+
+use:
+
+....
+<mailet match="HasMimeTypeParameter=report-type=disposition-notification,report-type=other" class="..." />
+....

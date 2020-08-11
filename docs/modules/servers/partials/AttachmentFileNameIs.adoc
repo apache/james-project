@@ -1,0 +1,17 @@
+=== AttachmentFileNameIs
+
+Checks if at least one attachment has a file name which matches any
+element of a comma-separated or space-separated list of file name masks.
+
+Syntax: *match="AttachmentFileNameIs=[-d] [-z] masks"*
+
+The match is case insensitive.
+
+File name masks may start with a wildcard '\*'.
+
+Multiple file name masks can be specified, e.g.: '\*.scr,\*.bat'.
+
+If '*-d*' is coded, some debug info will be logged.
+
+If '*-z*' is coded, the check will be non-recursively applied
+to the contents of any attached '*.zip' file.
