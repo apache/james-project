@@ -138,7 +138,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     SMono.justOrEmpty(methodsByName.get(invocation.methodName))
       .flatMap(method => SMono.fromPublisher(method.process(capabilities, invocation, mailboxSession)))
-      .onErrorResume(throwable => SMono.just(Invocation.error(ErrorCode.ServerFail, Option(throwable.getMessage), invocation.methodCallId)))
+      .onErrorResume(throwable => SMono.just(Invocation.error(ErrorCode.ServerFail, throwable.getMessage, invocation.methodCallId)))
       .switchIfEmpty(SMono.just(Invocation.error(ErrorCode.UnknownMethod, invocation.methodCallId)))
 
   private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = throwable match {

@@ -61,7 +61,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
           mailboxGetRequest.properties match {
             case Some(properties) if !properties.asSetOfString.subsetOf(Mailbox.allProperties) =>
               SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
-                description = Some(s"The following properties [${properties.asSetOfString.diff(Mailbox.allProperties).mkString(", ")}] do not exist."),
+                description = s"The following properties [${properties.asSetOfString.diff(Mailbox.allProperties).mkString(", ")}] do not exist.",
                 methodCallId = invocation.methodCallId))
             case _ => getMailboxes(capabilities, mailboxGetRequest, mailboxSession)
               .reduce(MailboxGetResults(Set.empty, NotFound(Set.empty)), (result1: MailboxGetResults, result2: MailboxGetResults) => result1.merge(result2))
