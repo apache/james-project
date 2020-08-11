@@ -4,3 +4,11 @@
 ** xref:guidelines.adoc[]
 ** xref:download.adoc[]
 ** xref:support.adoc[]
+** Apache Software Foundation
+*** https://www.apache.org/[ASF]
+*** https://www.apache.org/foundation/getinvolved.html[Get involved]
+*** https://www.apache.org/foundation/faq.html[FAQ]
+*** https://www.apache.org/licenses/[Licenses]
+*** https://www.apache.org/security/[Security]
+*** https://www.apache.org/foundation/sponsorship.html[Sponsorship]
+*** https://www.apache.org/foundation/thanks.html[Thanks]
