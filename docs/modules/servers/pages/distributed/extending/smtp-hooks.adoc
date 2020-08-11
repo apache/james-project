@@ -54,3 +54,13 @@ The following interfaces allows interacting with the following commands:
 == Custom hook registration
 
 Register you hooks using xref:distributed/configure/smtp.adoc[*smtpserver.xml*] handlerchain property.
+
+== Writing additional SMTP commands
+
+What to do if the Hook API is not enough for you ?
+
+You want for example to write a code which handles a new command like "YOURCOOLCOMMAND: whatever@example".
+
+For this kind of needs you should implement the CommandHandler interface. This gives you a lower-level API
+to handle this kind of tasks. If you want to support a custom Hook in your CommandHandler its the best to
+just extend AbstractHookableCmdHandler.
