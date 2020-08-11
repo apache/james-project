@@ -1,0 +1,4 @@
+= Apache James Project guidelines
+:navtitle: Guidelines
+
+(TODO)
