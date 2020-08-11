@@ -1,1 +1,6 @@
 * xref:index.adoc[]
+** xref:mailing-lists.adoc[]
+** xref:contributing.adoc[]
+** xref:guidelines.adoc[]
+** xref:download.adoc[]
+** xref:support.adoc[]

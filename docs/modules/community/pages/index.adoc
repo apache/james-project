@@ -1,5 +1,42 @@
 = Apache James Community
 :navtitle: Community
 
-(TODO)
+Apache James Project is an Open Source all-volunteer project obtaining its strength from its Community made of
+developers and users. All are welcome to the Community!
 
+== Join the community
+
+There are many ways for Users, Developers, Curious and Fans to join and be part of the James Community:
+
+ * https://james.apache.org/[Apache James Website]
+ * xref:mailing-lists.adoc[Mailing lists]: Subscribe to the appropriate Mailing Lists according to your interests and profile.
+ * https://gitter.im/apache/james-project[Gitter chat room]: Chat in live with the community on Gitter.
+ * https://twitter.com/ApacheJames[Twitter]: Express yourself and follow us @ApacheJames.
+ * https://github.com/apache/james-project[Github]: Read and contribute to the source code of the project.
+ * https://issues.apache.org/jira/projects/JAMES[JIRA]: Report issues or make suggestions for the project on our bug tracker.
+ * https://builds.apache.org/job/ApacheJames/[CI]: Check the status of James builds on our Jenkins CI.
+ * xref:download.adoc[Download releases]: Download artifacts and sources your need for the James Server and James libraries.
+ * xref:support.adoc[Professional support]: Find a list of companies which can provide you some support on James.
+
+== Contribute
+
+James is a project that lives from the contributions of its community. *Anyone can contribute!*
+
+That's right, we always want to hear from people with contributions to the code, the documentation, the website,
+and bug reports. We more than welcome non-coding contributions.
+
+You can find more information on how to contribute to the James project on the xref:contributing.adoc[contributing] section.
+
+== The Apache Software Foundation
+
+James is a project belonging to the https://www.apache.org/[Apache Software Foundation [ASF\]]. Thus, the Apache Jame project
+is governed by a number of xref:guidelines.adoc[guidelines] directly depending on the *ASF*.
+
+If you wish to get more involved with the *ASF* community in general, those links might interest you as well:
+
+ * https://www.apache.org/foundation/getinvolved.html[Get involved with the ASF]
+ * https://www.apache.org/foundation/faq.html[Apache FAQ]
+ * https://www.apache.org/licenses/[Apache Licenses]
+ * https://www.apache.org/security/[The Apache security team]
+ * https://www.apache.org/foundation/sponsorship.html[Sponsorship program]
+ * https://www.apache.org/foundation/thanks.html[Sponsors list]
