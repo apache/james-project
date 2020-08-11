@@ -31,8 +31,10 @@ import static org.awaitility.Duration.TEN_SECONDS;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
@@ -123,12 +125,11 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
 
         sendEvents(subscriber1, COMPLETED_EVENT);
 
-        List<Event> receivedEventsFirst = new ArrayList<>();
+        Collection<Event> receivedEventsFirst = new ConcurrentLinkedQueue<>();
         firstListener.subscribe(receivedEventsFirst::add);
 
         await().atMost(ONE_MINUTE).untilAsserted(() ->
-            SoftAssertions.assertSoftly(soft -> {
-                assertThat(receivedEventsFirst).containsExactly(COMPLETED_EVENT);
-            }));
+            SoftAssertions.assertSoftly(soft ->
+                assertThat(receivedEventsFirst).containsExactly(COMPLETED_EVENT)));
     }
 }
