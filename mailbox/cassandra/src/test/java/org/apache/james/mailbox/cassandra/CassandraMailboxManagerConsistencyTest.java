@@ -424,7 +424,7 @@ class CassandraMailboxManagerConsistencyTest {
 
                 cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV3"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
@@ -448,7 +448,7 @@ class CassandraMailboxManagerConsistencyTest {
 
                 cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV3"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
 
