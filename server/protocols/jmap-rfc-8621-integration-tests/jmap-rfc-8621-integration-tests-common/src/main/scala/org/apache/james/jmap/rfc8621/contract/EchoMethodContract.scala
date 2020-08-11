@@ -49,7 +49,7 @@ object EchoMethodContract {
       |    [
       |      "error",
       |      {
-      |        "type": "Not implemented"
+      |        "type": "unknownMethod"
       |      },
       |      "notsupport"
       |    ]
@@ -71,7 +71,7 @@ object EchoMethodContract {
       |    [
       |      "error",
       |      {
-      |        "type": "Not implemented"
+      |        "type": "unknownMethod"
       |      },
       |      "notsupport"
       |    ]

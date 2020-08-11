@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 import com.google.common.collect.ImmutableSet
+import eu.timepit.refined.auto._
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
@@ -38,6 +39,8 @@ import org.apache.james.jmap._
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, MailboxesProvisioner, UserProvisioning}
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.model.Invocation.MethodName
 import org.apache.james.jmap.model.RequestLevelErrorType
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
 import org.apache.james.mailbox.extension.PreDeletionHook
@@ -47,7 +50,8 @@ import org.apache.james.mailbox.store.StoreSubscriptionManager
 import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.apache.james.user.memory.MemoryUsersRepository
 import org.hamcrest.Matchers.equalTo
-import org.mockito.Mockito.mock
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{doThrow, mock, when}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -98,6 +102,32 @@ object JMAPApiRoutesTest {
       |    ]
       |  ]
       |}""".stripMargin
+
+  private val REQUEST_OBJECT_WITH_2_ECHO_METHOD_CALL: String =
+    """{
+      |  "using": [
+      |    "urn:ietf:params:jmap:core"
+      |  ],
+      |  "methodCalls": [
+      |    [
+      |      "Core/echo",
+      |      {
+      |        "arg1": "arg1data",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c1"
+      |    ],
+      |    [
+      |    "Core/echo",
+      |      {
+      |        "arg1": "arg1data",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c2"
+      |     ]
+      |  ]
+      |}""".stripMargin
+
   private val REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD: String =
     """{
       |  "using": [
@@ -136,6 +166,30 @@ object JMAPApiRoutesTest {
       |    ]
       |  ]
       |}""".stripMargin
+
+  private val SERVER_FAIL_RESPONSE_OBJECT: String =
+    """{
+      |  "sessionState": "75128aab4b1b",
+      |  "methodResponses": [
+      |    [
+      |      "error",
+      |      {
+      |        "type": "serverFail",
+      |        "description": "Unexpected Exception occur, the others method may proceed normally"
+      |      },
+      |      "c1"
+      |    ],
+      |    [
+      |      "Core/echo",
+      |      {
+      |        "arg1": "arg1data",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c2"
+      |    ]
+      |  ]
+      |}""".stripMargin
+
   private val RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD: String =
     """{
       |  "sessionState": "75128aab4b1b",
@@ -377,5 +431,52 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .body("status", equalTo(400))
         .body("type", equalTo(RequestLevelErrorType.UNKNOWN_CAPABILITY.value))
         .body("detail", equalTo("The request used unsupported capabilities: Set(urn:ietf:params:jmap:core1)"))
+  }
+
+  "RFC-8621 with random error when processing request " should "return 200, with serverFail error, others method call proceed normally" in {
+    val mockCoreEchoMethod = mock(classOf[CoreEchoMethod])
+
+    doThrow(new RuntimeException("Unexpected Exception occur, the others method may proceed normally"))
+      .doCallRealMethod()
+      .when(mockCoreEchoMethod)
+      .process(any[Set[CapabilityIdentifier]], any(), any())
+
+    when(mockCoreEchoMethod.methodName).thenReturn(MethodName("Core/echo"))
+
+    val methods: Set[Method] = Set(mockCoreEchoMethod)
+    val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, SERIALIZER, userProvisionner, mailboxesProvisioner, methods)
+    val routesHandler: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, apiRoute))
+
+    val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS)
+    jmapServer = new JMAPServer(TEST_CONFIGURATION, routesHandler, versionParser)
+    jmapServer.start()
+
+    RestAssured.requestSpecification = new RequestSpecBuilder()
+      .setContentType(ContentType.JSON)
+      .setAccept(ContentType.JSON)
+      .setConfig(newConfig.encoderConfig(encoderConfig.defaultContentCharset(StandardCharsets.UTF_8)))
+      .setPort(jmapServer.getPort.getValue)
+      .setBasePath(JMAP)
+      .build
+
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
+
+    val response = RestAssured
+      .`given`()
+        .headers(headers)
+        .body(REQUEST_OBJECT_WITH_2_ECHO_METHOD_CALL)
+      .when()
+        .post()
+      .`then`
+        .statusCode(HttpStatus.SC_OK)
+        .contentType(ContentType.JSON)
+      .extract()
+        .body()
+        .asString()
+
+    assertThatJson(response).isEqualTo(SERVER_FAIL_RESPONSE_OBJECT)
   }
 }
