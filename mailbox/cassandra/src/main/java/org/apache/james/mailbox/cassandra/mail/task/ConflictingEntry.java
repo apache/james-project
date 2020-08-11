@@ -21,7 +21,6 @@ package org.apache.james.mailbox.cassandra.mail.task;
 
 import java.util.Objects;
 
-import org.apache.james.mailbox.cassandra.mail.CassandraIdAndPath;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -96,8 +95,8 @@ public class ConflictingEntry {
         interface RequireMailboxPathDaoEntry {
             ConflictingEntry mailboxPathDaoEntry(DaoEntry daoEntry);
 
-            default ConflictingEntry mailboxPathDaoEntry(CassandraIdAndPath mailbox) {
-                return mailboxPathDaoEntry(mailbox.getMailboxPath(), mailbox.getCassandraId());
+            default ConflictingEntry mailboxPathDaoEntry(Mailbox mailbox) {
+                return mailboxPathDaoEntry(mailbox.generateAssociatedPath(), mailbox.getMailboxId());
             }
 
             default ConflictingEntry mailboxPathDaoEntry(MailboxPath path, MailboxId id) {

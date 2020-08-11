@@ -30,9 +30,8 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.mail.CassandraIdAndPath;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
@@ -52,7 +51,7 @@ public class SolveMailboxInconsistenciesService {
 
     @FunctionalInterface
     interface Inconsistency {
-        Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV2DAO pathV2DAO);
+        Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO);
     }
 
     private static Inconsistency NO_INCONSISTENCY = (context, mailboxDAO1, pathV2DAO) -> Mono.just(Result.COMPLETED);
@@ -71,8 +70,8 @@ public class SolveMailboxInconsistenciesService {
         }
 
         @Override
-        public Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV2DAO pathV2DAO) {
-            return pathV2DAO.save(mailbox.generateAssociatedPath(), (CassandraId) mailbox.getMailboxId())
+        public Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO) {
+            return pathV3DAO.save(mailbox)
                 .map(success -> {
                     if (success) {
                         notifySuccess(context);
@@ -112,27 +111,27 @@ public class SolveMailboxInconsistenciesService {
      * In order to solve this inconsistency, we can simply re-reference the mailboxPath.
      */
     private static class OrphanMailboxPathDAOEntry implements Inconsistency {
-        private final CassandraIdAndPath pathRegistration;
+        private final Mailbox mailbox;
 
-        private OrphanMailboxPathDAOEntry(CassandraIdAndPath pathRegistration) {
-            this.pathRegistration = pathRegistration;
+        private OrphanMailboxPathDAOEntry(Mailbox mailbox) {
+            this.mailbox = mailbox;
         }
 
         @Override
-        public Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV2DAO pathV2DAO) {
-            return pathV2DAO.delete(pathRegistration.getMailboxPath())
+        public Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO) {
+            return pathV3DAO.delete(mailbox.generateAssociatedPath())
                 .doOnSuccess(any -> {
                     LOGGER.info("Inconsistency fixed for orphan mailboxPath {} - {}",
-                        pathRegistration.getCassandraId().serialize(),
-                        pathRegistration.getMailboxPath().asString());
-                    context.addFixedInconsistency(pathRegistration.getCassandraId());
+                        mailbox.getMailboxId().serialize(),
+                        mailbox.generateAssociatedPath().asString());
+                    context.addFixedInconsistency(mailbox.getMailboxId());
                 })
                 .map(any -> Result.COMPLETED)
                 .defaultIfEmpty(Result.COMPLETED)
                 .onErrorResume(e -> {
                     LOGGER.error("Failed fixing inconsistency for orphan mailboxPath {} - {}",
-                        pathRegistration.getCassandraId().serialize(),
-                        pathRegistration.getMailboxPath().asString(),
+                        mailbox.getMailboxId().serialize(),
+                        mailbox.generateAssociatedPath().asString(),
                         e);
                     context.incrementErrors();
                     return Mono.just(Result.PARTIAL);
@@ -152,19 +151,12 @@ public class SolveMailboxInconsistenciesService {
     private static class ConflictingEntryInconsistency implements Inconsistency {
         private final ConflictingEntry conflictingEntry;
 
-        private ConflictingEntryInconsistency(Mailbox mailbox, CassandraIdAndPath pathRegistration) {
-            boolean samePath = mailbox.generateAssociatedPath().equals(pathRegistration.getMailboxPath());
-            boolean sameId = mailbox.getMailboxId().equals(pathRegistration.getCassandraId());
-
-            Preconditions.checkState(samePath != sameId);
-
-            this.conflictingEntry = ConflictingEntry.builder()
-                .mailboxDaoEntry(mailbox)
-                .mailboxPathDaoEntry(pathRegistration);
+        private ConflictingEntryInconsistency(ConflictingEntry conflictingEntry) {
+            this.conflictingEntry = conflictingEntry;
         }
 
         @Override
-        public Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV2DAO pathV2DAO) {
+        public Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO) {
             LOGGER.error("MailboxDAO contains mailbox {} {} which conflict with corresponding registration {} {}. " +
                 "We recommend merging these mailboxes together to prevent mail data loss.",
                 conflictingEntry.getMailboxDaoEntry().getMailboxId(), conflictingEntry.getMailboxDaoEntry().getMailboxPath(),
@@ -353,16 +345,16 @@ public class SolveMailboxInconsistenciesService {
         }
     }
 
-    private static final SchemaVersion MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION = new SchemaVersion(6);
+    private static final SchemaVersion MAILBOX_PATH_V_3_MIGRATION_PERFORMED_VERSION = new SchemaVersion(8);
 
     private final CassandraMailboxDAO mailboxDAO;
-    private final CassandraMailboxPathV2DAO mailboxPathV2DAO;
+    private final CassandraMailboxPathV3DAO mailboxPathV3DAO;
     private final CassandraSchemaVersionManager versionManager;
 
     @Inject
-    SolveMailboxInconsistenciesService(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV2DAO mailboxPathV2DAO, CassandraSchemaVersionManager versionManager) {
+    SolveMailboxInconsistenciesService(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO mailboxPathV3DAO, CassandraSchemaVersionManager versionManager) {
         this.mailboxDAO = mailboxDAO;
-        this.mailboxPathV2DAO = mailboxPathV2DAO;
+        this.mailboxPathV3DAO = mailboxPathV3DAO;
         this.versionManager = versionManager;
     }
 
@@ -377,49 +369,55 @@ public class SolveMailboxInconsistenciesService {
     private void assertValidVersion() {
         SchemaVersion version = versionManager.computeVersion().block();
 
-        boolean isVersionValid = version.isAfterOrEquals(MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION);
+        boolean isVersionValid = version.isAfterOrEquals(MAILBOX_PATH_V_3_MIGRATION_PERFORMED_VERSION);
 
         Preconditions.checkState(isVersionValid,
-            "Schema version %s is required in order to ensure mailboxPathV2DAO to be correctly populated, got %s",
-            MAILBOX_PATH_V_2_MIGRATION_PERFORMED_VERSION.getValue(),
+            "Schema version %s is required in order to ensure mailboxPathV3DAO to be correctly populated, got %s",
+            MAILBOX_PATH_V_3_MIGRATION_PERFORMED_VERSION.getValue(),
             version.getValue());
     }
 
     private Flux<Result> processMailboxPathDaoInconsistencies(Context context) {
-        return mailboxPathV2DAO.listAll()
-            .flatMap(this::detectInconsistency)
-            .flatMap(inconsistency -> inconsistency.fix(context, mailboxDAO, mailboxPathV2DAO))
+        return mailboxPathV3DAO.listAll()
+            .flatMap(this::detectMailboxPathDaoInconsistency)
+            .flatMap(inconsistency -> inconsistency.fix(context, mailboxDAO, mailboxPathV3DAO))
             .doOnNext(any -> context.incrementProcessedMailboxPathEntries());
     }
 
     private Flux<Result> processMailboxDaoInconsistencies(Context context) {
         return mailboxDAO.retrieveAllMailboxes()
-            .flatMap(this::detectInconsistency)
-            .flatMap(inconsistency -> inconsistency.fix(context, mailboxDAO, mailboxPathV2DAO))
+            .flatMap(this::detectMailboxDaoInconsistency)
+            .flatMap(inconsistency -> inconsistency.fix(context, mailboxDAO, mailboxPathV3DAO))
             .doOnNext(any -> context.incrementProcessedMailboxEntries());
     }
 
-    private Mono<Inconsistency> detectInconsistency(Mailbox mailbox) {
-        return mailboxPathV2DAO.retrieveId(mailbox.generateAssociatedPath())
-            .map(pathRegistration -> {
-                if (pathRegistration.getCassandraId().equals(mailbox.getMailboxId())) {
+    private Mono<Inconsistency> detectMailboxDaoInconsistency(Mailbox mailbox) {
+        return mailboxPathV3DAO.retrieve(mailbox.generateAssociatedPath())
+            .map(mailboxByPath -> {
+                if (mailboxByPath.getMailboxId().equals(mailbox.getMailboxId())) {
                     return NO_INCONSISTENCY;
                 }
                 // Path entry references another mailbox.
-                return new ConflictingEntryInconsistency(mailbox, pathRegistration);
+                return new ConflictingEntryInconsistency(ConflictingEntry.builder()
+                    .mailboxDaoEntry(mailbox)
+                    .mailboxPathDaoEntry(mailboxByPath));
             })
             .defaultIfEmpty(new OrphanMailboxDAOEntry(mailbox));
     }
 
-    private Mono<Inconsistency> detectInconsistency(CassandraIdAndPath pathRegistration) {
-        return mailboxDAO.retrieveMailbox(pathRegistration.getCassandraId())
-            .map(mailbox -> {
-                if (mailbox.generateAssociatedPath().equals(pathRegistration.getMailboxPath())) {
+    private Mono<Inconsistency> detectMailboxPathDaoInconsistency(Mailbox mailboxByPath) {
+        CassandraId cassandraId = (CassandraId) mailboxByPath.getMailboxId();
+
+        return mailboxDAO.retrieveMailbox(cassandraId)
+            .map(mailboxById -> {
+                if (mailboxByPath.generateAssociatedPath().equals(mailboxById.generateAssociatedPath())) {
                     return NO_INCONSISTENCY;
                 }
                 // Mailbox references another path
-                return new ConflictingEntryInconsistency(mailbox, pathRegistration);
+                return new ConflictingEntryInconsistency(ConflictingEntry.builder()
+                    .mailboxDaoEntry(mailboxById)
+                    .mailboxPathDaoEntry(mailboxByPath));
             })
-            .defaultIfEmpty(new OrphanMailboxPathDAOEntry(pathRegistration));
+            .defaultIfEmpty(new OrphanMailboxPathDAOEntry(mailboxByPath));
     }
 }

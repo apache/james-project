@@ -33,9 +33,8 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.mail.CassandraIdAndPath;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService.Context;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -54,9 +53,11 @@ class SolveMailboxInconsistenciesServiceTest {
     private static final Username USER = Username.of("user");
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(USER, "abc");
     private static final MailboxPath NEW_MAILBOX_PATH = MailboxPath.forUser(USER, "xyz");
-    private static CassandraId CASSANDRA_ID_1 = CassandraId.timeBased();
+    private static final CassandraId CASSANDRA_ID_1 = CassandraId.timeBased();
     private static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, UID_VALIDITY_1, CASSANDRA_ID_1);
-    private static CassandraId CASSANDRA_ID_2 = CassandraId.timeBased();
+    private static final Mailbox MAILBOX_NEW_PATH = new Mailbox(NEW_MAILBOX_PATH, UID_VALIDITY_1, CASSANDRA_ID_1);
+    private static final CassandraId CASSANDRA_ID_2 = CassandraId.timeBased();
+    private static final Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH, UID_VALIDITY_1, CASSANDRA_ID_2);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
@@ -67,7 +68,7 @@ class SolveMailboxInconsistenciesServiceTest {
 
 
     CassandraMailboxDAO mailboxDAO;
-    CassandraMailboxPathV2DAO mailboxPathV2DAO;
+    CassandraMailboxPathV3DAO mailboxPathV3DAO;
     CassandraSchemaVersionDAO versionDAO;
     SolveMailboxInconsistenciesService testee;
 
@@ -77,14 +78,14 @@ class SolveMailboxInconsistenciesServiceTest {
             cassandra.getConf(),
             cassandra.getTypesProvider(),
             cassandraCluster.getCassandraConsistenciesConfiguration());
-        mailboxPathV2DAO = new CassandraMailboxPathV2DAO(
+        mailboxPathV3DAO = new CassandraMailboxPathV3DAO(
             cassandra.getConf(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             cassandraCluster.getCassandraConsistenciesConfiguration());
         versionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
-        testee = new SolveMailboxInconsistenciesService(mailboxDAO, mailboxPathV2DAO, new CassandraSchemaVersionManager(versionDAO));
+        testee = new SolveMailboxInconsistenciesService(mailboxDAO, mailboxPathV3DAO, new CassandraSchemaVersionManager(versionDAO));
 
-        versionDAO.updateVersion(new SchemaVersion(7)).block();
+        versionDAO.updateVersion(new SchemaVersion(8)).block();
     }
 
     @Test
@@ -94,7 +95,7 @@ class SolveMailboxInconsistenciesServiceTest {
 
         assertThatThrownBy(() -> testee.fixMailboxInconsistencies(new Context()).block())
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Schema version 6 is required in order to ensure mailboxPathV2DAO to be correctly populated, got 5");
+            .hasMessage("Schema version 8 is required in order to ensure mailboxPathV3DAO to be correctly populated, got 5");
     }
 
     @Test
@@ -103,13 +104,13 @@ class SolveMailboxInconsistenciesServiceTest {
 
         assertThatThrownBy(() -> testee.fixMailboxInconsistencies(new Context()).block())
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Schema version 6 is required in order to ensure mailboxPathV2DAO to be correctly populated, got 5");
+            .hasMessage("Schema version 8 is required in order to ensure mailboxPathV3DAO to be correctly populated, got 5");
     }
 
     @Test
     void fixMailboxInconsistenciesShouldNotFailWhenIsEqualToMailboxPathV2Migration() {
         versionDAO.truncateVersion().block();
-        versionDAO.updateVersion(new SchemaVersion(6)).block();
+        versionDAO.updateVersion(new SchemaVersion(8)).block();
 
         assertThatCode(() -> testee.fixMailboxInconsistencies(new Context()).block())
             .doesNotThrowAnyException();
@@ -118,7 +119,7 @@ class SolveMailboxInconsistenciesServiceTest {
     @Test
     void fixMailboxInconsistenciesShouldNotFailWhenIsAboveMailboxPathV2Migration() {
         versionDAO.truncateVersion().block();
-        versionDAO.updateVersion(new SchemaVersion(7)).block();
+        versionDAO.updateVersion(new SchemaVersion(8)).block();
 
         assertThatCode(() -> testee.fixMailboxInconsistencies(new Context()).block())
             .doesNotThrowAnyException();
@@ -133,7 +134,7 @@ class SolveMailboxInconsistenciesServiceTest {
     @Test
     void fixMailboxInconsistenciesShouldReturnCompletedWhenConsistentData() {
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX).block();
 
         assertThat(testee.fixMailboxInconsistencies(new Context()).block())
             .isEqualTo(Result.COMPLETED);
@@ -149,7 +150,7 @@ class SolveMailboxInconsistenciesServiceTest {
 
     @Test
     void fixMailboxInconsistenciesShouldReturnCompletedWhenOrphanPathData() {
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX).block();
 
         assertThat(testee.fixMailboxInconsistencies(new Context()).block())
             .isEqualTo(Result.COMPLETED);
@@ -158,7 +159,7 @@ class SolveMailboxInconsistenciesServiceTest {
     @Test
     void fixMailboxInconsistenciesShouldReturnPartialWhenDAOMisMatchOnId() {
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_2).block();
+        mailboxPathV3DAO.save(MAILBOX_2).block();
 
         assertThat(testee.fixMailboxInconsistencies(new Context()).block())
             .isEqualTo(Result.PARTIAL);
@@ -167,7 +168,7 @@ class SolveMailboxInconsistenciesServiceTest {
     @Test
     void fixMailboxInconsistenciesShouldReturnPartialWhenDAOMisMatchOnPath() {
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(NEW_MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX_NEW_PATH).block();
 
         assertThat(testee.fixMailboxInconsistencies(new Context()).block())
             .isEqualTo(Result.PARTIAL);
@@ -186,7 +187,7 @@ class SolveMailboxInconsistenciesServiceTest {
     void fixMailboxInconsistenciesShouldUpdateContextWhenConsistentData() {
         Context context = new Context();
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX).block();
 
         testee.fixMailboxInconsistencies(context).block();
 
@@ -217,7 +218,7 @@ class SolveMailboxInconsistenciesServiceTest {
     @Test
     void fixMailboxInconsistenciesShouldUpdateContextWhenOrphanPathData() {
         Context context = new Context();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX).block();
 
         testee.fixMailboxInconsistencies(context).block();
 
@@ -233,7 +234,7 @@ class SolveMailboxInconsistenciesServiceTest {
     void fixMailboxInconsistenciesShouldUpdateContextWhenDAOMisMatchOnId() {
         Context context = new Context();
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_2).block();
+        mailboxPathV3DAO.save(MAILBOX_2).block();
         mailboxDAO.save(new Mailbox(MAILBOX_PATH, UID_VALIDITY_2, CASSANDRA_ID_2)).block();
 
         testee.fixMailboxInconsistencies(context).block();
@@ -253,7 +254,7 @@ class SolveMailboxInconsistenciesServiceTest {
     void fixMailboxInconsistenciesShouldUpdateContextWhenDAOMisMatchOnPath() {
         Context context = new Context();
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(NEW_MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX_NEW_PATH).block();
 
         testee.fixMailboxInconsistencies(context).block();
 
@@ -264,7 +265,7 @@ class SolveMailboxInconsistenciesServiceTest {
                 .addFixedInconsistencies(CASSANDRA_ID_1)
                 .addConflictingEntry(ConflictingEntry.builder()
                     .mailboxDaoEntry(MAILBOX)
-                    .mailboxPathDaoEntry(NEW_MAILBOX_PATH, CASSANDRA_ID_1))
+                    .mailboxPathDaoEntry(MAILBOX_NEW_PATH))
                 .build()
                 .snapshot());
     }
@@ -275,22 +276,22 @@ class SolveMailboxInconsistenciesServiceTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block()).isEmpty();
-            softly.assertThat(mailboxPathV2DAO.listAll().collectList().block()).isEmpty();
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block()).isEmpty();
         });
     }
 
     @Test
     void fixMailboxInconsistenciesShouldNotAlterStateWhenConsistent() {
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX).block();
 
         testee.fixMailboxInconsistencies(new Context()).block();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
                 .containsExactlyInAnyOrder(MAILBOX);
-            softly.assertThat(mailboxPathV2DAO.listAll().collectList().block())
-                .containsExactlyInAnyOrder(new CassandraIdAndPath(CASSANDRA_ID_1, MAILBOX_PATH));
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
+                .containsExactlyInAnyOrder(MAILBOX);
         });
     }
 
@@ -303,21 +304,21 @@ class SolveMailboxInconsistenciesServiceTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
                 .containsExactlyInAnyOrder(MAILBOX);
-            softly.assertThat(mailboxPathV2DAO.listAll().collectList().block())
-                .containsExactlyInAnyOrder(new CassandraIdAndPath(CASSANDRA_ID_1, MAILBOX_PATH));
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
+                .containsExactlyInAnyOrder(MAILBOX);
         });
     }
 
     @Test
     void fixMailboxInconsistenciesShouldAlterStateWhenOrphanMailboxPath() {
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX).block();
 
         testee.fixMailboxInconsistencies(new Context()).block();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
                 .isEmpty();
-            softly.assertThat(mailboxPathV2DAO.listAll().collectList().block())
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
                 .isEmpty();
         });
     }
@@ -327,18 +328,18 @@ class SolveMailboxInconsistenciesServiceTest {
         mailboxDAO.save(MAILBOX).block();
         Mailbox mailbox2 = new Mailbox(NEW_MAILBOX_PATH, UID_VALIDITY_2, CASSANDRA_ID_2);
         mailboxDAO.save(mailbox2).block();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_2).block();
-        mailboxPathV2DAO.save(NEW_MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX_2).block();
+        mailboxPathV3DAO.save(MAILBOX_NEW_PATH).block();
 
         testee.fixMailboxInconsistencies(new Context()).block();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
                 .containsExactlyInAnyOrder(MAILBOX, mailbox2);
-            softly.assertThat(mailboxPathV2DAO.listAll().collectList().block())
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
                 .containsExactlyInAnyOrder(
-                    new CassandraIdAndPath(CASSANDRA_ID_1, NEW_MAILBOX_PATH),
-                    new CassandraIdAndPath(CASSANDRA_ID_2, MAILBOX_PATH));
+                    MAILBOX_NEW_PATH,
+                    MAILBOX_2);
         });
     }
 
@@ -347,31 +348,31 @@ class SolveMailboxInconsistenciesServiceTest {
         // Note that CASSANDRA_ID_1 becomes usable
         // However in order to avoid data loss, merging CASSANDRA_ID_1 and CASSANDRA_ID_2 is still required
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(NEW_MAILBOX_PATH, CASSANDRA_ID_1).block();
+        mailboxPathV3DAO.save(MAILBOX_NEW_PATH).block();
 
         testee.fixMailboxInconsistencies(new Context()).block();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
                 .containsExactlyInAnyOrder(MAILBOX);
-            softly.assertThat(mailboxPathV2DAO.listAll().collectList().block())
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
                 .containsExactlyInAnyOrder(
-                    new CassandraIdAndPath(CASSANDRA_ID_1, NEW_MAILBOX_PATH),
-                    new CassandraIdAndPath(CASSANDRA_ID_1, MAILBOX_PATH));
+                    MAILBOX_NEW_PATH,
+                    MAILBOX);
         });
     }
 
     @Test
     void fixMailboxInconsistenciesShouldAlterStateWhenDaoMisMatchOnId() {
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_2).block();
+        mailboxPathV3DAO.save(MAILBOX_2).block();
 
         testee.fixMailboxInconsistencies(new Context()).block();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
                 .containsExactlyInAnyOrder(MAILBOX);
-            softly.assertThat(mailboxPathV2DAO.listAll().collectList().block())
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
                 .isEmpty();
         });
     }
@@ -379,7 +380,7 @@ class SolveMailboxInconsistenciesServiceTest {
     @Test
     void multipleRunShouldDaoMisMatchOnId() {
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_2).block();
+        mailboxPathV3DAO.save(MAILBOX_2).block();
 
         testee.fixMailboxInconsistencies(new Context()).block();
         testee.fixMailboxInconsistencies(new Context()).block();
@@ -387,8 +388,8 @@ class SolveMailboxInconsistenciesServiceTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
                 .containsExactlyInAnyOrder(MAILBOX);
-            softly.assertThat(mailboxPathV2DAO.listAll().collectList().block())
-                .containsExactlyInAnyOrder(new CassandraIdAndPath(CASSANDRA_ID_1, MAILBOX_PATH));
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
+                .containsExactlyInAnyOrder(MAILBOX);
         });
     }
 
@@ -398,7 +399,7 @@ class SolveMailboxInconsistenciesServiceTest {
         Mailbox mailbox2 = new Mailbox(MAILBOX_PATH, UID_VALIDITY_2, CASSANDRA_ID_2);
 
         mailboxDAO.save(MAILBOX).block();
-        mailboxPathV2DAO.save(MAILBOX_PATH, CASSANDRA_ID_2).block();
+        mailboxPathV3DAO.save(MAILBOX_2).block();
         mailboxDAO.save(mailbox2).block();
 
         testee.fixMailboxInconsistencies(new Context()).block();
@@ -406,9 +407,8 @@ class SolveMailboxInconsistenciesServiceTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
                 .containsExactlyInAnyOrder(MAILBOX, mailbox2);
-            softly.assertThat(mailboxPathV2DAO.listAll().collectList().block())
-                .containsExactlyInAnyOrder(
-                    new CassandraIdAndPath(CASSANDRA_ID_2, MAILBOX_PATH));
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
+                .containsExactlyInAnyOrder(MAILBOX_2);
         });
     }
 }
