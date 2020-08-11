@@ -6,9 +6,7 @@ Distributed Server MailetContainer in order to write your own mail processing lo
 
 (TODO)
 
-* server/mailet/dkim
 * server/mailet/mailets
-* server/protocols/jmap-draft
 
 == Supported matchers
 
@@ -69,6 +67,8 @@ include::partial$SenderIsLocal.adoc[]
 include::partial$SenderIsNull.adoc[]
 
 include::partial$SenderIsRegex.adoc[]
+
+include::partial$SentByJmap.adoc[]
 
 include::partial$SentByMailet.adoc[]
 
