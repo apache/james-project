@@ -1,0 +1,9 @@
+=== IsOverQuota
+
+This matcher will check if the incoming email will make recipients exceed their quotas.
+
+Here is a configuration example:
+
+....
+<mailet match="IsOverQuota" class="<any-class>"/>
+....

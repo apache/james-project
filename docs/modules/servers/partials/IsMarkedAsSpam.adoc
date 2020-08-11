@@ -1,0 +1,17 @@
+=== IsMarkedAsSpam
+
+Matches mails having a *org.apache.james.spamassassin.status* per recipient header with a *Yes* value.
+
+As an example, here is a part of a mailet pipeline which can be used in your LocalDelivery processor:
+
+....
+<!-- SpamAssassing mailets pipeline -->
+    <mailet match="RecipientIsLocal" class="SpamAssassin">
+        <spamdHost>spamassassin</spamdHost>
+        <spamdPort>783</spamdPort>
+    </mailet>
+    <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
+        <targetFolderName>Spam</targetFolderName>
+    </mailet>
+<!-- End of SpamAssassing mailets pipeline -->
+....
