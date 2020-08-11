@@ -1,0 +1,3 @@
+=== IsSMIMESigned
+
+Checks if a mail is smime encrypted.

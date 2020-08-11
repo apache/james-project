@@ -5,3 +5,23 @@ This documentation page lists and documents Matchers that can be used within the
 Distributed Server MailetContainer in order to write your own mail processing logic with out-of-the-box components.
 
 (TODO)
+
+* mailet/standard
+* mailet/crypto
+* server/mailet/dkim
+* server/mailet/mailets
+* server/protocols/jmap-draft
+
+== Supported matchers
+
+include::partial$IsSMIMEEncrypted.adoc[]
+
+include::partial$IsSMIMESigned.adoc[]
+
+include::partial$IsX509CertificateSubject.adoc[]
+
+== Experimental matchers
+
+== Composite matchers
+
+(TODO)
