@@ -1,3 +1,16 @@
 = Professional support
 
-(TODO)
+Here is a list of companies which can provide you some support on James.
+
+== Linagora
+
+image::linagora.png[link=https://linagora.com]
+
+*Linagora* is an Open Source Software Company.
+
+Their mission is to bring digital independency to their customers.
+
+They are focused on large organizations both from private and public sector. They have set themselves the goal of
+helping Governments to achieve their digital sovereignty.
+
+*Linagora* can offer professional services related to James: support, feature development or project integration.
