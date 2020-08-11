@@ -1,0 +1,10 @@
+=== HasMailAttribute
+
+This Matcher determines if the mail contains the attribute specified in the
+condition, and returns all recipients if it is the case.
+
+Sample configuration:
+
+....
+<mailet match="HasMailAttribute=whatever" class="<any-class>">
+....

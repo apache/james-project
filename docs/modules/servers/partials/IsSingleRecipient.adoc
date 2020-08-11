@@ -1,0 +1,3 @@
+=== IsSingleRecipient
+
+Matches mail where the number of recipients is exactly one.

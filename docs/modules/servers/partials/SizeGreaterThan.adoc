@@ -1,0 +1,7 @@
+=== SizeGreaterThan
+
+Checks whether the message (entire message, not just content) is greater
+than a certain number of bytes.  You can use 'k' and 'm' as optional postfixes.
+
+In other words, "1m" is the same as writing "1024k", which is the same as
+"1048576".

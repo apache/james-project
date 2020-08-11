@@ -1,0 +1,11 @@
+=== SMTPAuthUserIs
+
+Matches mails that are sent by an SMTP authenticated user present in a supplied list.
+
+If the sender was not authenticated it will not match.
+
+Configuration string: a comma, tab or space separated list of James users.
+
+....
+<mailet match="SMTPAuthUserIs=<list-of-user-names>" class="<any-class>">
+....

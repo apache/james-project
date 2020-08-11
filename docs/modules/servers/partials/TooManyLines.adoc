@@ -1,0 +1,10 @@
+=== TooManyLines
+
+This matcher matches emails that have too many lines. This allows better rejection of emails when, for instance, MIME4J
+is configured with a limited number of lines.
+
+<p>The example below will match mail with more than 10000 lines</p>
+
+....
+<mailet match="TooManyLines=10000" class="<any-class>"/>
+....

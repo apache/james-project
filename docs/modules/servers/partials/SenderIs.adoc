@@ -1,0 +1,10 @@
+=== SenderIs
+
+This matcher matches a specific sender, passed as a condition to this matcher.
+
+The example below will match mail with a sender being user@domain
+
+....
+<mailet match="SenderIs=user@domain" class="<any-class>">
+</mailet>
+....

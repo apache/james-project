@@ -1,0 +1,11 @@
+=== SenderHostIs
+
+Checks the sender's displayed domain name against a supplied list.
+
+Sample configuration:
+
+....
+<mailet match="SenderHostIs=domain.com" class="ToProcessor">
+  <processor> spam </processor>
+</mailet>
+....

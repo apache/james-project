@@ -1,0 +1,11 @@
+=== RecipientIs
+
+This matcher matches a specific recipient (in the envelope of the mail), passed as a condition to
+this matcher.
+
+The example below will match only the recipient user@domain
+
+....
+<mailet match=&quot;RecipientIs=user@domain&quot; class=&quot;<any-class>&quot;>
+</mailet>
+....

@@ -1,0 +1,18 @@
+=== RecipientIsRegex
+
+Matches recipients whose address matches a regular expression.
+
+Is equivalent to the SenderIsRegex matcher but matching on the recipient.
+
+Configuration string: a regular expression.
+
+....
+<mailet match="RecipientIsRegex=<regular-expression>" class="<any-class>">
+....
+
+The example below will match any recipient in the format user@log.anything
+
+....
+<mailet match="RecipientIsRegex=(.*)@log\.(.*)" class="<any-class>">
+</mailet>
+....

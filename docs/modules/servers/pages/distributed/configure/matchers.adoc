@@ -6,13 +6,41 @@ Distributed Server MailetContainer in order to write your own mail processing lo
 
 (TODO)
 
-* mailet/standard
-* mailet/crypto
 * server/mailet/dkim
 * server/mailet/mailets
 * server/protocols/jmap-draft
 
 == Supported matchers
+
+include::partial$All.adoc[]
+
+include::partial$AtMost.adoc[]
+
+include::partial$FetchedFrom.adoc[]
+
+include::partial$HasAttachment.adoc[]
+
+include::partial$HasException.adoc[]
+
+include::partial$HasHeader.adoc[]
+
+include::partial$HasHeaderWithPrefix.adoc[]
+
+include::partial$HasMailAttribute.adoc[]
+
+include::partial$HasMailAttributeWithValue.adoc[]
+
+include::partial$HasMailAttributeWithValueRegex.adoc[]
+
+include::partial$HasMimeType.adoc[]
+
+include::partial$HasMimeTypeParameter.adoc[]
+
+include::partial$HostIs.adoc[]
+
+include::partial$HostIsLocal.adoc[]
+
+include::partial$IsSingleRecipient.adoc[]
 
 include::partial$IsSMIMEEncrypted.adoc[]
 
@@ -20,7 +48,61 @@ include::partial$IsSMIMESigned.adoc[]
 
 include::partial$IsX509CertificateSubject.adoc[]
 
+include::partial$RecipientDomainIs.adoc[]
+
+include::partial$RecipientIs.adoc[]
+
+include::partial$RecipientIsLocal.adoc[]
+
+include::partial$RecipientIsRegex.adoc[]
+
+include::partial$RelayLimit.adoc[]
+
+include::partial$SenderDomainIs.adoc[]
+
+include::partial$SenderHostIs.adoc[]
+
+include::partial$SenderIs.adoc[]
+
+include::partial$SenderIsLocal.adoc[]
+
+include::partial$SenderIsNull.adoc[]
+
+include::partial$SenderIsRegex.adoc[]
+
+include::partial$SentByMailet.adoc[]
+
+include::partial$SizeGreaterThan.adoc[]
+
+include::partial$SMTPAuthSuccessful.adoc[]
+
+include::partial$SMTPAuthUserIs.adoc[]
+
+include::partial$SMTPIsAuthNetwork.adoc[]
+
+include::partial$SubjectIs.adoc[]
+
+include::partial$SubjectStartsWith.adoc[]
+
+include::partial$TooManyRecipients.adoc[]
+
+include::partial$UserIs.adoc[]
+
 == Experimental matchers
+
+include::partial$AttachmentFileNameIs.adoc[]
+
+include::partial$CommandForListserv.adoc[]
+
+include::partial$CommandListservMatcher.adoc[]
+
+include::partial$CompareNumericHeaderValue.adoc[]
+
+include::partial$FileRegexMatcher.adoc[]
+
+include::partial$HasHabeasWarrantMark.adoc[]
+
+include::partial$NESSpamCheck.adoc[]
 
 == Composite matchers
 
