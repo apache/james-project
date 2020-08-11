@@ -39,7 +39,8 @@ import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.Method
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.MethodName
-import org.apache.james.jmap.model.{DefaultCapabilities, ErrorCode, Invocation, ProblemDetails, RequestLevelErrorType, RequestObject, ResponseObject}
+import org.apache.james.jmap.model.ProblemDetails.{notJSONProblem, notRequestProblem, unknownCapabilityProblem}
+import org.apache.james.jmap.model._
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
@@ -142,16 +143,14 @@ class JMAPApiRoutes (val authenticator: Authenticator,
 
   private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = throwable match {
     case exception: IllegalArgumentException => respondDetails(httpServerResponse,
-      ProblemDetails(RequestLevelErrorType.NOT_REQUEST, SC_BAD_REQUEST, None,
+      notRequestProblem(
         s"The request was successfully parsed as JSON but did not match the type signature of the Request object: ${exception.getMessage}"))
     case exception: UnauthorizedException => SMono(handleAuthenticationFailure(httpServerResponse, JMAPApiRoutes.LOGGER, exception))
     case exception: JsonParseException => respondDetails(httpServerResponse,
-      ProblemDetails(RequestLevelErrorType.NOT_JSON, SC_BAD_REQUEST, None,
+      notJSONProblem(
         s"The content type of the request was not application/json or the request did not parse as I-JSON: ${exception.getMessage}"))
     case exception: UnsupportedCapabilitiesException => respondDetails(httpServerResponse,
-      ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY,
-        SC_BAD_REQUEST, None,
-        s"The request used unsupported capabilities: ${exception.capabilities}"))
+      unknownCapabilityProblem(s"The request used unsupported capabilities: ${exception.capabilities}"))
     case _ => SMono.fromPublisher(handleInternalError(httpServerResponse, throwable))
   }
 
