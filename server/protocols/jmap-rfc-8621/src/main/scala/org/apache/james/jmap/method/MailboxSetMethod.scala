@@ -31,7 +31,7 @@ import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
-import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, Json, JsonValidationError}
+import play.api.libs.json._
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
@@ -79,12 +79,22 @@ class MailboxSetMethod @Inject() (serializer: Serializer,
     SFlux.fromIterable(createRequests).flatMap {
       case (mailboxCreationId: MailboxCreationId, mailboxCreationRequest: MailboxCreationRequest) => {
         SMono.fromCallable(() => {
-          val path = MailboxPath.forUser(mailboxSession.getUser, mailboxCreationRequest.name)
-          //can safely do a get as the Optional is empty only if the mailbox name is empty which is forbidden by the type constraint on MailboxName
-          (mailboxCreationId, mailboxManager.createMailbox(path, mailboxSession).get())
+          createMailbox(mailboxSession, mailboxCreationId, mailboxCreationRequest)
         }).subscribeOn(Schedulers.elastic())
       }
     }.collectMap(_._1, _._2)
+  }
+
+  private def createMailbox(mailboxSession: MailboxSession, mailboxCreationId: MailboxCreationId, mailboxCreationRequest: MailboxCreationRequest) = {
+    val path:MailboxPath = if (mailboxCreationRequest.parentId.isEmpty) {
+      MailboxPath.forUser(mailboxSession.getUser, mailboxCreationRequest.name)
+    } else {
+      val parentId: MailboxId = mailboxCreationRequest.parentId.get
+      val parentPath: MailboxPath = mailboxManager.getMailbox(parentId, mailboxSession).getMailboxPath
+       parentPath.child(mailboxCreationRequest.name, mailboxSession.getPathDelimiter)
+    }
+    //can safely do a get as the Optional is empty only if the mailbox name is empty which is forbidden by the type constraint on MailboxName
+    (mailboxCreationId, mailboxManager.createMailbox(path, mailboxSession).get())
   }
 
   private def createResponse(invocation: Invocation, mailboxSetRequest: MailboxSetRequest, createErrors: immutable.Iterable[(MailboxCreationId, MailboxSetError)], created: Map[MailboxCreationId, MailboxId]): Invocation = {

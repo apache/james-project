@@ -393,4 +393,46 @@ trait MailboxSetMethodContract {
          |    "c1"]]
          |}""".stripMargin)
   }
+
+  @Test
+  def mailboxSetShouldCreateMailboxWhenNameAndParentId(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId  = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "parentMailbox"))
+    val request=
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "childMailbox",
+        |                      "parentId":"${mailboxId.serialize}"
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+      `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .log().ifValidationFails()
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+    Assertions.assertThatCode(() => server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", BOB.asString(), "parentMailbox.childMailbox")).doesNotThrowAnyException()
+  }
 }
