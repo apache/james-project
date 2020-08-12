@@ -20,60 +20,53 @@
 package org.apache.james.sieve.cassandra.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ScriptTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class ScriptTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Script.class).verify();
     }
 
     @Test
-    public void buildShouldThrowOnMissingContent() {
-        expectedException.expect(IllegalStateException.class);
-
-        Script.builder()
-            .name("name")
-            .isActive(false)
-            .build();
+    void buildShouldThrowOnMissingContent() {
+        assertThatThrownBy(() -> Script.builder()
+                .name("name")
+                .isActive(false)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldThrowOnMissingActivation() {
-        expectedException.expect(IllegalStateException.class);
-
-        Script.builder()
-            .name("name")
-            .content("content")
-            .build();
+    void buildShouldThrowOnMissingActivation() {
+        assertThatThrownBy(() -> Script.builder()
+                .name("name")
+                .content("content")
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldThrowOnMissingName() {
-        expectedException.expect(IllegalStateException.class);
-
-        Script.builder()
-            .content("content")
-            .isActive(false)
-            .build();
+    void buildShouldThrowOnMissingName() {
+        assertThatThrownBy(() -> Script.builder()
+                .content("content")
+                .isActive(false)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldPreserveName() {
+    void buildShouldPreserveName() {
         ScriptName name = new ScriptName("name");
         assertThat(
             Script.builder()
@@ -86,7 +79,7 @@ public class ScriptTest {
     }
 
     @Test
-    public void buildShouldPreserveContent() {
+    void buildShouldPreserveContent() {
         ScriptContent content = new ScriptContent("content");
         assertThat(
             Script.builder()
@@ -99,7 +92,7 @@ public class ScriptTest {
     }
 
     @Test
-    public void buildShouldPreserveActiveWhenFalse() {
+    void buildShouldPreserveActiveWhenFalse() {
         assertThat(
             Script.builder()
                 .name("name")
@@ -111,7 +104,7 @@ public class ScriptTest {
     }
 
     @Test
-    public void buildShouldPreserveActiveWhenTrue() {
+    void buildShouldPreserveActiveWhenTrue() {
         assertThat(
             Script.builder()
                 .name("name")
@@ -123,7 +116,7 @@ public class ScriptTest {
     }
 
     @Test
-    public void buildShouldComputeSizeWhenAbsent() {
+    void buildShouldComputeSizeWhenAbsent() {
         String content = "content";
         assertThat(
             Script.builder()
@@ -136,7 +129,7 @@ public class ScriptTest {
     }
 
     @Test
-    public void buildShouldPreserveSize() {
+    void buildShouldPreserveSize() {
         long size = 48L;
         assertThat(
             Script.builder()
@@ -150,7 +143,7 @@ public class ScriptTest {
     }
 
     @Test
-    public void toSummaryShouldWork() {
+    void toSummaryShouldWork() {
         String name = "name";
         boolean isActive = true;
         assertThat(
@@ -165,7 +158,7 @@ public class ScriptTest {
     }
 
     @Test
-    public void copyOfShouldAllowModifyingName() {
+    void copyOfShouldAllowModifyingName() {
         String content = "content";
         String newName = "newName";
 
@@ -188,7 +181,7 @@ public class ScriptTest {
     }
 
     @Test
-    public void copyOfShouldAllowModifyingActivation() {
+    void copyOfShouldAllowModifyingActivation() {
         String content = "content";
         String name = "name";
 
@@ -211,7 +204,7 @@ public class ScriptTest {
     }
 
     @Test
-    public void copyOfShouldAllowModifyingContent() {
+    void copyOfShouldAllowModifyingContent() {
         String name = "name";
         String content = "content";
 
