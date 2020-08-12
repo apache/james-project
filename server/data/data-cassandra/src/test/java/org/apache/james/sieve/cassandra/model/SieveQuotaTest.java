@@ -19,42 +19,46 @@
 
 package org.apache.james.sieve.cassandra.model;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.util.Optional;
 
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SieveQuotaTest {
+class SieveQuotaTest {
+    static final long INVALID_VALUE = -1L;
+    static final QuotaSizeLimit LIMIT_LOW_VALUE = QuotaSizeLimit.size(10L);
+    static final long SIZE_DIFFERENCE = 20L;
+    static final int CURRENT_USAGE = 0;
+    static final QuotaSizeLimit LIMIT_HIGH_VALUE = QuotaSizeLimit.size(100L);
 
-    public static final long INVALID_VALUE = -1L;
-    public static final QuotaSizeLimit LIMIT_LOW_VALUE = QuotaSizeLimit.size(10L);
-    public static final long SIZE_DIFFERENCE = 20L;
-    public static final int CURRENT_USAGE = 0;
-    public static final QuotaSizeLimit LIMIT_HIGH_VALUE = QuotaSizeLimit.size(100L);
-
-    @Test(expected = IllegalArgumentException.class)
-    public void sieveQuotaShouldThrowOnNegativeCurrentValue() {
-        new SieveQuota(INVALID_VALUE, Optional.empty());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void sieveQuotaShouldThrowOnNegativeLimitValue() {
-        new SieveQuota(0, Optional.of(QuotaSizeLimit.size(INVALID_VALUE)));
-    }
-
-    @Test(expected = QuotaExceededException.class)
-    public void checkOverQuotaUponModificationShouldThrowIfLimitExceeded() throws Exception {
-        new SieveQuota(CURRENT_USAGE, Optional.of(LIMIT_LOW_VALUE)).checkOverQuotaUponModification(SIZE_DIFFERENCE);
+    @Test
+    void sieveQuotaShouldThrowOnNegativeCurrentValue() {
+        assertThatThrownBy(() -> new SieveQuota(INVALID_VALUE, Optional.empty()))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void checkOverQuotaShouldNotThrowWhenNoLimit() throws Exception {
+    void sieveQuotaShouldThrowOnNegativeLimitValue() {
+        assertThatThrownBy(() -> new SieveQuota(0, Optional.of(QuotaSizeLimit.size(INVALID_VALUE))))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void checkOverQuotaUponModificationShouldThrowIfLimitExceeded() {
+        assertThatThrownBy(() -> new SieveQuota(CURRENT_USAGE, Optional.of(LIMIT_LOW_VALUE)).checkOverQuotaUponModification(SIZE_DIFFERENCE))
+            .isInstanceOf(QuotaExceededException.class);
+    }
+
+    @Test
+    void checkOverQuotaShouldNotThrowWhenNoLimit() throws Exception {
         new SieveQuota(CURRENT_USAGE, Optional.empty()).checkOverQuotaUponModification(SIZE_DIFFERENCE);
     }
 
     @Test
-    public void checkOverQuotaUponModificationShouldNotThrowIfLimitNotExceeded() throws Exception {
+    void checkOverQuotaUponModificationShouldNotThrowIfLimitNotExceeded() throws Exception {
         new SieveQuota(CURRENT_USAGE, Optional.of(LIMIT_HIGH_VALUE)).checkOverQuotaUponModification(SIZE_DIFFERENCE);
     }
 }
