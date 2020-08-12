@@ -19,6 +19,7 @@
 package org.apache.james.domainlist.xml;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -29,19 +30,13 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class XMLDomainListTest {
-
-    public static final Domain DEFAULT_DOMAIN = Domain.of("default.domain");
-    public static final Domain DOMAIN_1 = Domain.of("domain1");
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class XMLDomainListTest {
+    static final Domain DEFAULT_DOMAIN = Domain.of("default.domain");
+    static final Domain DOMAIN_1 = Domain.of("domain1");
 
     private DNSService setUpDNSServer(final String hostName) {
         return new MockDNSService() {
@@ -65,7 +60,7 @@ public class XMLDomainListTest {
 
     // See https://issues.apache.org/jira/browse/JAMES-998
     @Test
-    public void testNoConfiguredDomains() throws Exception {
+    void testNoConfiguredDomains() throws Exception {
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
 
         dom.configure(DomainListConfiguration.builder()
@@ -78,7 +73,7 @@ public class XMLDomainListTest {
     }
 
     @Test
-    public void testGetDomains() throws Exception {
+    void testGetDomains() throws Exception {
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
         dom.configure(DomainListConfiguration.builder()
             .autoDetect(false)
@@ -90,7 +85,7 @@ public class XMLDomainListTest {
     }
 
     @Test
-    public void testGetDomainsAutoDetectNotLocalHost() throws Exception {
+    void testGetDomainsAutoDetectNotLocalHost() throws Exception {
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("local"));
         dom.configure(DomainListConfiguration.builder()
             .autoDetect(true)
@@ -102,7 +97,7 @@ public class XMLDomainListTest {
     }
 
     @Test
-    public void testGetDomainsAutoDetectLocalHost() throws Exception {
+    void testGetDomainsAutoDetectLocalHost() throws Exception {
         XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
         dom.configure(DomainListConfiguration.builder()
             .autoDetect(false)
@@ -114,9 +109,7 @@ public class XMLDomainListTest {
     }
 
     @Test
-    public void addDomainShouldFailWhenAlreadyConfigured() throws Exception {
-        expectedException.expect(DomainListException.class);
-
+    void addDomainShouldFailWhenAlreadyConfigured() throws Exception {
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("hostname"));
         testee.configure(DomainListConfiguration.builder()
             .autoDetect(true)
@@ -124,24 +117,24 @@ public class XMLDomainListTest {
             .addConfiguredDomain(DOMAIN_1)
             .defaultDomain(DEFAULT_DOMAIN));
 
-        testee.addDomain(Domain.of("newDomain"));
+        assertThatThrownBy(() -> testee.addDomain(Domain.of("newDomain")))
+            .isInstanceOf(DomainListException.class);
     }
 
     @Test
-    public void removeDomainShouldFailWhenAlreadyConfigured() throws Exception {
-        expectedException.expect(DomainListException.class);
-
+    void removeDomainShouldFailWhenAlreadyConfigured() throws Exception {
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("localhost"));
         testee.configure(DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(false)
             .addConfiguredDomain(DOMAIN_1));
 
-        testee.removeDomain(Domain.of("newDomain"));
+        assertThatThrownBy(() -> testee.removeDomain(Domain.of("newDomain")))
+            .isInstanceOf(DomainListException.class);
     }
 
     @Test
-    public void configureShouldNotFailWhenConfiguringDefaultDomain() throws Exception {
+    void configureShouldNotFailWhenConfiguringDefaultDomain() throws Exception {
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("localhost"));
         testee.configure(DomainListConfiguration.builder()
             .autoDetect(false)
