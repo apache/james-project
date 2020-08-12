@@ -27,7 +27,7 @@ import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationRequest, Mailbox
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{Invocation, State}
-import org.apache.james.mailbox.exception.MailboxNotFoundException
+import org.apache.james.mailbox.exception.{MailboxExistsException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
@@ -46,6 +46,7 @@ case class CreationSuccess(mailboxCreationId: MailboxCreationId, mailboxId: Mail
 case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exception) extends CreationResult {
   def asMailboxSetError: MailboxSetError = exception match {
     case e: MailboxNotFoundException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("parentId"))))
+    case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("name"))))
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
 }
