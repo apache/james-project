@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 
 import eu.timepit.refined.api.Refined
+import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
@@ -54,6 +55,14 @@ case class MailboxSetResponse(accountId: AccountId,
                               notCreated: Option[Map[MailboxCreationId, MailboxSetError]],
                               notUpdated: Option[Map[MailboxId, MailboxSetError]],
                               notDestroyed: Option[Map[MailboxId, MailboxSetError]])
+
+object MailboxSetError {
+  val invalidArgumentValue: SetErrorType = "invalidArguments"
+  val serverFailValue: SetErrorType = "serverFail"
+
+  def invalidArgument(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(invalidArgumentValue, description, properties)
+  def serverFail(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(serverFailValue, description, properties)
+}
 
 case class MailboxSetError(`type`: SetErrorType, description: Option[SetErrorDescription], properties: Option[Properties])
 

@@ -26,11 +26,15 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.rfc8621.contract.MailboxSetMethodContract;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.datastax.driver.core.utils.UUIDs;
 
 public class DistributedMailboxSetMethodTest implements MailboxSetMethodContract {
     @RegisterExtension
@@ -51,4 +55,8 @@ public class DistributedMailboxSetMethodTest implements MailboxSetMethodContract
             .overrideWith(new TestJMAPServerModule()))
         .build();
 
+    @Override
+    public MailboxId randomMailboxId() {
+        return CassandraId.of(UUIDs.timeBased());
+    }
 }

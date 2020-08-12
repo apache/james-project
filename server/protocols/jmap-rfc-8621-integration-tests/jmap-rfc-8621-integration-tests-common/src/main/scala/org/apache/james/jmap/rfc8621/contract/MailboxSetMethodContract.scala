@@ -26,7 +26,8 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture._
+import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions
@@ -45,6 +46,8 @@ trait MailboxSetMethodContract {
       .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
       .build
   }
+
+  def randomMailboxId: MailboxId
 
   @Test
   def mailboxSetShouldReturnNotCreatedWhenNameIsMissing(): Unit = {
@@ -428,11 +431,66 @@ trait MailboxSetMethodContract {
         .log().ifValidationFails()
         .statusCode(SC_OK)
         .contentType(JSON)
+
+    Assertions.assertThatCode(() => server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", BOB.asString(), "parentMailbox.childMailbox")).doesNotThrowAnyException()
+  }
+
+  @Test
+  def mailboxSetShouldNotCreateMailboxWhenParentIdNotFound(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId  = randomMailboxId
+    val request=
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "childMailbox",
+        |                      "parentId":"${mailboxId.serialize}"
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+     val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .log().ifValidationFails()
+        .statusCode(SC_OK)
+        .contentType(JSON)
         .extract
         .body
         .asString
 
-    Assertions.assertThatCode(() => server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "parentMailbox.childMailbox")).doesNotThrowAnyException()
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/set",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notCreated": {
+         |        "C42": {
+         |          "type": "invalidArguments",
+         |          "description": "${mailboxId.serialize()} can not be found",
+         |          "properties":{"value":["parentId"]}
+         |        }
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
   }
 }

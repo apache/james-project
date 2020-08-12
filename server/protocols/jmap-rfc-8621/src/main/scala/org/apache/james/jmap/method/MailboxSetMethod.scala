@@ -23,10 +23,11 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
-import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, SetErrorDescription, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads}
+import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, Properties, SetErrorDescription, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{Invocation, State}
+import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
@@ -36,6 +37,36 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
 import scala.collection.immutable
+
+sealed trait CreationResult {
+  def mailboxCreationId: MailboxCreationId
+}
+
+case class CreationSuccess(mailboxCreationId: MailboxCreationId, mailboxId: MailboxId) extends CreationResult
+case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exception) extends CreationResult {
+  def asMailboxSetError: MailboxSetError = exception match {
+    case e: MailboxNotFoundException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("parentId"))))
+    case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
+  }
+}
+
+case class CreationResults(created: Seq[CreationResult]) {
+  def retrieveCreated: Map[MailboxCreationId, MailboxId] = created
+      .flatMap(result => result match {
+        case success: CreationSuccess => Some((success.mailboxCreationId, success.mailboxId))
+        case _ => None
+      })
+      .toSet
+      .toMap
+
+  def retrieveErrors: Map[MailboxCreationId, MailboxSetError] = created
+      .flatMap(result => result match {
+        case failure: CreationFailure => Some((failure.mailboxCreationId, failure.asMailboxSetError))
+        case _ => None
+      })
+      .toSet
+      .toMap
+}
 
 class MailboxSetMethod @Inject() (serializer: Serializer,
                                   mailboxManager: MailboxManager,
@@ -49,8 +80,8 @@ class MailboxSetMethod @Inject() (serializer: Serializer,
         .flatMap(mailboxSetRequest => {
           val (unparsableCreateRequests, createRequests) =  parseCreateRequests(mailboxSetRequest)
           for {
-            created <- createMailboxes(mailboxSession, createRequests)
-          } yield createResponse(invocation, mailboxSetRequest, unparsableCreateRequests, created)
+            creationResults <- createMailboxes(mailboxSession, createRequests)
+          } yield createResponse(invocation, mailboxSetRequest, unparsableCreateRequests, creationResults)
         }))
   }
 
@@ -70,34 +101,42 @@ class MailboxSetMethod @Inject() (serializer: Serializer,
 
   private def mailboxSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): MailboxSetError =
     errors.head match {
-      case (path, Seq()) => MailboxSetError("invalidArguments", Some(SetErrorDescription(s"'$path' property in mailbox object is not valid")), None)
+      case (path, Seq()) => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"'$path' property in mailbox object is not valid")), None)
       case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => MailboxSetError("invalidArguments", Some(SetErrorDescription(s"Missing '$path' property in mailbox object")), None)
-      case (path, _) => MailboxSetError("invalidArguments", Some(SetErrorDescription(s"Unknown error on property '$path'")), None)
+      case (path, _) => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"Unknown error on property '$path'")), None)
     }
 
-  private def createMailboxes(mailboxSession: MailboxSession, createRequests: immutable.Iterable[(MailboxCreationId, MailboxCreationRequest)]): SMono[Map[MailboxCreationId, MailboxId]] = {
+  private def createMailboxes(mailboxSession: MailboxSession, createRequests: immutable.Iterable[(MailboxCreationId, MailboxCreationRequest)]): SMono[CreationResults] = {
     SFlux.fromIterable(createRequests).flatMap {
       case (mailboxCreationId: MailboxCreationId, mailboxCreationRequest: MailboxCreationRequest) => {
         SMono.fromCallable(() => {
           createMailbox(mailboxSession, mailboxCreationId, mailboxCreationRequest)
         }).subscribeOn(Schedulers.elastic())
       }
-    }.collectMap(_._1, _._2)
-  }
-
-  private def createMailbox(mailboxSession: MailboxSession, mailboxCreationId: MailboxCreationId, mailboxCreationRequest: MailboxCreationRequest) = {
-    val path:MailboxPath = if (mailboxCreationRequest.parentId.isEmpty) {
-      MailboxPath.forUser(mailboxSession.getUser, mailboxCreationRequest.name)
-    } else {
-      val parentId: MailboxId = mailboxCreationRequest.parentId.get
-      val parentPath: MailboxPath = mailboxManager.getMailbox(parentId, mailboxSession).getMailboxPath
-       parentPath.child(mailboxCreationRequest.name, mailboxSession.getPathDelimiter)
     }
-    //can safely do a get as the Optional is empty only if the mailbox name is empty which is forbidden by the type constraint on MailboxName
-    (mailboxCreationId, mailboxManager.createMailbox(path, mailboxSession).get())
+      .collectSeq()
+      .map(CreationResults)
   }
 
-  private def createResponse(invocation: Invocation, mailboxSetRequest: MailboxSetRequest, createErrors: immutable.Iterable[(MailboxCreationId, MailboxSetError)], created: Map[MailboxCreationId, MailboxId]): Invocation = {
+  private def createMailbox(mailboxSession: MailboxSession, mailboxCreationId: MailboxCreationId, mailboxCreationRequest: MailboxCreationRequest): CreationResult = {
+    try {
+      val path: MailboxPath = if (mailboxCreationRequest.parentId.isEmpty) {
+        MailboxPath.forUser(mailboxSession.getUser, mailboxCreationRequest.name)
+      } else {
+        val parentId: MailboxId = mailboxCreationRequest.parentId.get
+        val parentPath: MailboxPath = mailboxManager.getMailbox(parentId, mailboxSession).getMailboxPath
+        parentPath.child(mailboxCreationRequest.name, mailboxSession.getPathDelimiter)
+      }
+      //can safely do a get as the Optional is empty only if the mailbox name is empty which is forbidden by the type constraint on MailboxName
+      CreationSuccess(mailboxCreationId, mailboxManager.createMailbox(path, mailboxSession).get())
+    } catch {
+      case error: Exception => CreationFailure(mailboxCreationId, error)
+    }
+  }
+
+  private def createResponse(invocation: Invocation, mailboxSetRequest: MailboxSetRequest, unparsableCreateRequests: immutable.Iterable[(MailboxCreationId, MailboxSetError)], creationResults: CreationResults): Invocation = {
+    val created: Map[MailboxCreationId, MailboxId] = creationResults.retrieveCreated
+
     Invocation(methodName, Arguments(serializer.serialize(MailboxSetResponse(
       mailboxSetRequest.accountId,
       oldState = None,
@@ -116,7 +155,7 @@ class MailboxSetMethod @Inject() (serializer: Serializer,
         isSubscribed = IsSubscribed(true)
 
       )))).filter(_.nonEmpty),
-      notCreated = Some(createErrors.toMap).filter(_.nonEmpty),
+      notCreated = Some(unparsableCreateRequests.toMap ++ creationResults.retrieveErrors).filter(_.nonEmpty),
       updated = None,
       notUpdated = None,
       destroyed = None,
