@@ -20,38 +20,27 @@
 package org.apache.james.domainlist.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.lib.AbstractDomainListTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.apache.james.domainlist.lib.DomainListContract;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraDomainListTest extends AbstractDomainListTest {
+class CassandraDomainListTest implements DomainListContract {
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDomainListModule.MODULE);
 
-    @Rule
-    public DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    CassandraDomainList domainList;
 
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(CassandraDomainListModule.MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
-
-    @After
-    public void tearDown() {
-        cassandra.close();
+    @BeforeEach
+    public void setUp(CassandraCluster cassandra) throws Exception {
+        domainList = new CassandraDomainList(getDNSServer("localhost"), cassandra.getConf());
+        domainList.setAutoDetect(false);
+        domainList.setAutoDetectIP(false);
     }
 
     @Override
-    protected DomainList createDomainList() throws Exception {
-        CassandraDomainList testee = new CassandraDomainList(getDNSServer("localhost"), cassandra.getConf());
-        testee.setAutoDetect(false);
-        testee.setAutoDetectIP(false);
-        return testee;
+    public DomainList domainList() {
+        return domainList;
     }
-
 }

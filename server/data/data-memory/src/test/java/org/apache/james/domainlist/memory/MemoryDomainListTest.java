@@ -20,23 +20,21 @@
 package org.apache.james.domainlist.memory;
 
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.lib.AbstractDomainListTest;
-import org.junit.Before;
+import org.apache.james.domainlist.lib.DomainListContract;
+import org.junit.jupiter.api.BeforeEach;
 
-public class MemoryDomainListTest extends AbstractDomainListTest {
+class MemoryDomainListTest implements DomainListContract {
+    MemoryDomainList domainList;
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
+    @BeforeEach
+    void setUp() throws Exception {
+        domainList = new MemoryDomainList(getDNSServer("localhost"));
+        domainList.setAutoDetect(false);
+        domainList.setAutoDetectIP(false);
     }
 
     @Override
-    protected DomainList createDomainList() throws Exception {
-        MemoryDomainList testee = new MemoryDomainList(getDNSServer("localhost"));
-        testee.setAutoDetect(false);
-        testee.setAutoDetectIP(false);
-        return testee;
+    public DomainList domainList() {
+        return domainList;
     }
-
 }

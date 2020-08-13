@@ -22,24 +22,25 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
-import org.apache.james.domainlist.lib.AbstractDomainListTest;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.james.domainlist.lib.DomainListContract;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * Test the JPA implementation of the DomainList.
  */
-public class JPADomainListTest extends AbstractDomainListTest {
+class JPADomainListTest implements DomainListContract {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
 
-    @Override
-    @Before
+    JPADomainList jpaDomainList;
+
+    @BeforeEach
     public void setUp() throws Exception {
-        super.setUp();
+        jpaDomainList = createDomainList();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         DomainList domainList = createDomainList();
         for (Domain domain: domainList.getDomains()) {
@@ -48,13 +49,16 @@ public class JPADomainListTest extends AbstractDomainListTest {
     }
 
     @Override
-    protected DomainList createDomainList() throws Exception {
+    public DomainList domainList() {
+        return jpaDomainList;
+    }
+
+    private JPADomainList createDomainList() throws Exception {
         JPADomainList jpaDomainList = new JPADomainList(getDNSServer("localhost"),
             JPA_TEST_CLUSTER.getEntityManagerFactory());
         jpaDomainList.setAutoDetect(false);
         jpaDomainList.setAutoDetectIP(false);
-        
+
         return jpaDomainList;
     }
-
 }
