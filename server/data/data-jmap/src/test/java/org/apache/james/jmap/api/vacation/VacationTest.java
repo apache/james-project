@@ -20,23 +20,23 @@
 package org.apache.james.jmap.api.vacation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class VacationTest {
-
-    public static final ZonedDateTime DATE_TIME_2016 = ZonedDateTime.parse("2016-10-09T08:07:06+07:00[Asia/Vientiane]");
-    public static final ZonedDateTime DATE_TIME_2017 = ZonedDateTime.parse("2017-10-09T08:07:06+07:00[Asia/Vientiane]");
-    public static final ZonedDateTime DATE_TIME_2017_1MS = ZonedDateTime.parse("2017-10-09T08:07:06.001+07:00[Asia/Vientiane]");
-    public static final ZonedDateTime DATE_TIME_2018 = ZonedDateTime.parse("2018-10-09T08:07:06+07:00[Asia/Vientiane]");
-    public static final String TEXT_BODY = "text is required when enabled";
-    public static final String HTML_BODY = "<b>HTML body</b>";
+class VacationTest {
+    static final ZonedDateTime DATE_TIME_2016 = ZonedDateTime.parse("2016-10-09T08:07:06+07:00[Asia/Vientiane]");
+    static final ZonedDateTime DATE_TIME_2017 = ZonedDateTime.parse("2017-10-09T08:07:06+07:00[Asia/Vientiane]");
+    static final ZonedDateTime DATE_TIME_2017_1MS = ZonedDateTime.parse("2017-10-09T08:07:06.001+07:00[Asia/Vientiane]");
+    static final ZonedDateTime DATE_TIME_2018 = ZonedDateTime.parse("2018-10-09T08:07:06+07:00[Asia/Vientiane]");
+    static final String TEXT_BODY = "text is required when enabled";
+    static final String HTML_BODY = "<b>HTML body</b>";
 
     @Test
-    public void disabledVacationsAreNotActive() {
+    void disabledVacationsAreNotActive() {
         assertThat(
             Vacation.builder()
                 .enabled(false)
@@ -46,7 +46,7 @@ public class VacationTest {
     }
 
     @Test
-    public void enabledVacationWithoutDatesIsActive() {
+    void enabledVacationWithoutDatesIsActive() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -57,7 +57,7 @@ public class VacationTest {
     }
 
     @Test
-    public void rangeShouldBeInclusiveOnFromDate() {
+    void rangeShouldBeInclusiveOnFromDate() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -69,7 +69,7 @@ public class VacationTest {
     }
 
     @Test
-    public void rangeShouldBeInclusiveOnToDate() {
+    void rangeShouldBeInclusiveOnToDate() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -81,7 +81,7 @@ public class VacationTest {
     }
 
     @Test
-    public void vacationShouldBeActiveDuringRange() {
+    void vacationShouldBeActiveDuringRange() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -94,7 +94,7 @@ public class VacationTest {
     }
 
     @Test
-    public void vacationShouldNotBeActiveAfterRange() {
+    void vacationShouldNotBeActiveAfterRange() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -107,7 +107,7 @@ public class VacationTest {
     }
 
     @Test
-    public void vacationShouldNotBeActiveBeforeRange() {
+    void vacationShouldNotBeActiveBeforeRange() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -119,19 +119,20 @@ public class VacationTest {
             .isFalse();
     }
 
-    @Test(expected = NullPointerException.class)
-    public void isActiveAtDateShouldThrowOnNullValue() {
-        Vacation.builder()
-            .enabled(true)
-            .textBody(TEXT_BODY)
-            .fromDate(Optional.of(DATE_TIME_2016))
-            .toDate(Optional.of(DATE_TIME_2016))
-            .build()
-            .isActiveAtDate(null);
+    @Test
+    void isActiveAtDateShouldThrowOnNullValue() {
+        assertThatThrownBy(() -> Vacation.builder()
+                .enabled(true)
+                .textBody(TEXT_BODY)
+                .fromDate(Optional.of(DATE_TIME_2016))
+                .toDate(Optional.of(DATE_TIME_2016))
+                .build()
+                .isActiveAtDate(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void vacationShouldBeActiveAfterFromDate() {
+    void vacationShouldBeActiveAfterFromDate() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -143,7 +144,7 @@ public class VacationTest {
     }
 
     @Test
-    public void vacationShouldNotBeActiveBeforeFromDate() {
+    void vacationShouldNotBeActiveBeforeFromDate() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -155,7 +156,7 @@ public class VacationTest {
     }
 
     @Test
-    public void vacationShouldNotBeActiveAfterToDate() {
+    void vacationShouldNotBeActiveAfterToDate() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -167,7 +168,7 @@ public class VacationTest {
     }
 
     @Test
-    public void vacationShouldBeActiveBeforeToDate() {
+    void vacationShouldBeActiveBeforeToDate() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -179,7 +180,7 @@ public class VacationTest {
     }
 
     @Test
-    public void isActiveAtDateShouldHaveMillisecondPrecision() {
+    void isActiveAtDateShouldHaveMillisecondPrecision() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -191,7 +192,7 @@ public class VacationTest {
     }
 
     @Test
-    public void textBodyShouldBeEnoughToBuildAnActivatedVacation() {
+    void textBodyShouldBeEnoughToBuildAnActivatedVacation() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -202,7 +203,7 @@ public class VacationTest {
     }
 
     @Test
-    public void htmlBodyShouldBeEnoughToBuildAnActivatedVacation() {
+    void htmlBodyShouldBeEnoughToBuildAnActivatedVacation() {
         assertThat(
             Vacation.builder()
                 .enabled(true)
@@ -213,7 +214,7 @@ public class VacationTest {
     }
 
     @Test
-    public void textOrHtmlBodyShouldNotBeRequiredOnUnactivatedVacation() {
+    void textOrHtmlBodyShouldNotBeRequiredOnUnactivatedVacation() {
         assertThat(
             Vacation.builder()
                 .enabled(false)
