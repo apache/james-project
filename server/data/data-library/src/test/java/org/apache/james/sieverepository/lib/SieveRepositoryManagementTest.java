@@ -29,28 +29,26 @@ import org.apache.james.core.Username;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class SieveRepositoryManagementTest {
-
+class SieveRepositoryManagementTest {
     @Mock
-    private SieveRepository sieveRepository;
+    SieveRepository sieveRepository;
 
-    private SieveRepositoryManagement sieveRepositoryManagement;
+    SieveRepositoryManagement sieveRepositoryManagement;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         sieveRepositoryManagement = new SieveRepositoryManagement();
         sieveRepositoryManagement.setSieveRepository(sieveRepository);
     }
 
-
     @Test
-    public void importSieveScriptFileToRepositoryShouldStoreContentAndActivateScript() throws Exception {
+    void importSieveScriptFileToRepositoryShouldStoreContentAndActivateScript() throws Exception {
         String userName = "user@domain";
         String script = "user_script";
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");
@@ -67,7 +65,7 @@ public class SieveRepositoryManagementTest {
     }
 
     @Test
-    public void importSieveScriptFileToRepositoryShouldNotImportFileWithWrongPathToRepistory() throws Exception {
+    void importSieveScriptFileToRepositoryShouldNotImportFileWithWrongPathToRepistory() throws Exception {
         String userName = "user@domain";
         String script = "user_script";
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");
