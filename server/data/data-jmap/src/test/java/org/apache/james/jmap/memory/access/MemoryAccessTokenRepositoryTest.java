@@ -20,19 +20,19 @@
 package org.apache.james.jmap.memory.access;
 
 import org.apache.james.jmap.api.access.AccessTokenRepository;
-import org.apache.james.jmap.api.access.AccessTokenRepositoryTest;
-import org.junit.Before;
+import org.apache.james.jmap.api.access.AccessTokenRepositoryContract;
+import org.junit.jupiter.api.BeforeEach;
 
-public class MemoryAccessTokenRepositoryTest extends AccessTokenRepositoryTest {
-    
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
+class MemoryAccessTokenRepositoryTest implements AccessTokenRepositoryContract {
+    AccessTokenRepository accessTokenRepository;
+
+    @BeforeEach
+    void setUp() {
+        accessTokenRepository = new MemoryAccessTokenRepository(AccessTokenRepositoryContract.TTL_IN_MS);
     }
     
     @Override
-    protected AccessTokenRepository provideAccessTokenRepository() {
-        return new MemoryAccessTokenRepository(AccessTokenRepositoryTest.TTL_IN_MS);
+    public AccessTokenRepository accessTokenRepository() {
+        return accessTokenRepository;
     }
 }
