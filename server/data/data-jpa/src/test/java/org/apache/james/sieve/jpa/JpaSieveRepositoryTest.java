@@ -23,27 +23,28 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.sieve.jpa.model.JPASieveQuota;
 import org.apache.james.sieve.jpa.model.JPASieveScript;
 import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.lib.AbstractSieveRepositoryTest;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.james.sieverepository.lib.SieveRepositoryContract;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-public class JpaSieveRepositoryTest extends AbstractSieveRepositoryTest {
+class JpaSieveRepositoryTest implements SieveRepositoryContract {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPASieveScript.class, JPASieveQuota.class);
+    final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPASieveScript.class, JPASieveQuota.class);
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
+    SieveRepository sieveRepository;
+
+    @BeforeEach
+    void setUp() {
+        sieveRepository = new JPASieveRepository(JPA_TEST_CLUSTER.getEntityManagerFactory());
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() {
         JPA_TEST_CLUSTER.clear("JAMES_SIEVE_SCRIPT", "JAMES_SIEVE_QUOTA");
     }
 
     @Override
-    protected SieveRepository createSieveRepository() throws Exception {
-        return new JPASieveRepository(JPA_TEST_CLUSTER.getEntityManagerFactory());
+    public SieveRepository sieveRepository() {
+        return sieveRepository;
     }
 }

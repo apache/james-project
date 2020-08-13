@@ -20,37 +20,28 @@
 package org.apache.james.sieve.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.lib.AbstractSieveRepositoryTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.apache.james.sieverepository.lib.SieveRepositoryContract;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraSieveRepositoryTest extends AbstractSieveRepositoryTest {
+class CassandraSieveRepositoryTest implements SieveRepositoryContract {
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);
 
-    @Rule
-    public DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    SieveRepository sieveRepository;
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(CassandraSieveRepositoryModule.MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
-    
-    @After
-    public void tearDown() {
-        cassandra.close();
-    }
-
-    @Override
-    protected SieveRepository createSieveRepository() {
-        return new CassandraSieveRepository(
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
+        sieveRepository = new CassandraSieveRepository(
             new CassandraSieveDAO(cassandra.getConf()),
             new CassandraSieveQuotaDAO(cassandra.getConf()),
             new CassandraActiveScriptDAO(cassandra.getConf()));
+    }
+
+    @Override
+    public SieveRepository sieveRepository() {
+        return sieveRepository;
     }
 }
