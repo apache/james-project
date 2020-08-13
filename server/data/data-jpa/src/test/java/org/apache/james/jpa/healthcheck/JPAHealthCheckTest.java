@@ -25,18 +25,12 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.core.healthcheck.ResultStatus;
 import org.apache.james.mailrepository.jpa.JPAUrl;
-import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 
 class JPAHealthCheckTest {
-
-    private JPAHealthCheck jpaHealthCheck;
-    private JpaTestCluster jpaTestCluster;
-
-    @Rule
-    ExpectedException expectedException = ExpectedException.none();
+    JPAHealthCheck jpaHealthCheck;
+    JpaTestCluster jpaTestCluster;
 
     @BeforeEach
     void setUp() {
