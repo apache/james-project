@@ -20,7 +20,7 @@
 package org.apache.james.rrt.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
@@ -28,47 +28,50 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManage
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
-import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.apache.james.rrt.lib.RecipientRewriteTableContract;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraRecipientRewriteTableV7BeforeStartTest extends AbstractRecipientRewriteTableTest {
-    private static final SchemaVersion SCHEMA_VERSION_V7 = new SchemaVersion(7);
+class CassandraRecipientRewriteTableV7BeforeStartTest implements RecipientRewriteTableContract {
+    static final SchemaVersion SCHEMA_VERSION_V7 = new SchemaVersion(7);
 
-    private static final CassandraModule MODULE = CassandraModule.aggregateModules(
+    static final CassandraModule MODULE = CassandraModule.aggregateModules(
         CassandraRRTModule.MODULE,
         CassandraSchemaVersionModule.MODULE);
 
-    @Rule
-    public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);
 
-    protected CassandraCluster cassandra;
+    AbstractRecipientRewriteTable recipientRewriteTable;
+    CassandraRecipientRewriteTableDAO recipientRewriteTableDAO;
+    CassandraMappingsSourcesDAO mappingsSourcesDAO;
+    CassandraSchemaVersionManager schemaVersionManager;
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
-
-    @Override
-    @After
-    public void tearDown() throws Exception {
-        super.tearDown();
-        cassandra.close();
-    }
-
-    @Override
-    protected AbstractRecipientRewriteTable getRecipientRewriteTable() {
-        CassandraSchemaVersionDAO cassandraSchemaVersionDAO = new CassandraSchemaVersionDAO(
-            cassandra.getConf());
-
+    @BeforeEach
+    void setup(CassandraCluster cassandra) throws Exception {
+        CassandraSchemaVersionDAO cassandraSchemaVersionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
         cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V7).block();
 
-        return new CassandraRecipientRewriteTable(
-            new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            new CassandraMappingsSourcesDAO(cassandra.getConf()),
-            new CassandraSchemaVersionManager(cassandraSchemaVersionDAO));
+        recipientRewriteTableDAO = new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        mappingsSourcesDAO = new CassandraMappingsSourcesDAO(cassandra.getConf());
+        schemaVersionManager = new CassandraSchemaVersionManager(cassandraSchemaVersionDAO);
+
+        setUp();
+    }
+
+    @AfterEach
+    void teardown() throws Exception {
+        tearDown();
+    }
+
+    @Override
+    public void createRecipientRewriteTable() {
+        recipientRewriteTable = new CassandraRecipientRewriteTable(recipientRewriteTableDAO, mappingsSourcesDAO, schemaVersionManager);
+    }
+
+    @Override
+    public AbstractRecipientRewriteTable virtualUserTable() {
+        return recipientRewriteTable;
     }
 }

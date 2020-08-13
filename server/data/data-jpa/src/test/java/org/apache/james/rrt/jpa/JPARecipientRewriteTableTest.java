@@ -21,30 +21,35 @@ package org.apache.james.rrt.jpa;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
-import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.james.rrt.lib.RecipientRewriteTableContract;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-public class JPARecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
+class JPARecipientRewriteTableTest implements RecipientRewriteTableContract {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPARecipientRewrite.class);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPARecipientRewrite.class);
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
+    AbstractRecipientRewriteTable recipientRewriteTable;
+
+    @BeforeEach
+    void setup() throws Exception {
+        setUp();
+    }
+
+    @AfterEach
+    void teardown() throws Exception {
+        tearDown();
     }
 
     @Override
-    @After
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    @Override
-    protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
+    public void createRecipientRewriteTable() {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        return localVirtualUserTable;
+        recipientRewriteTable = localVirtualUserTable;
+    }
+
+    @Override
+    public AbstractRecipientRewriteTable virtualUserTable() {
+        return recipientRewriteTable;
     }
 }

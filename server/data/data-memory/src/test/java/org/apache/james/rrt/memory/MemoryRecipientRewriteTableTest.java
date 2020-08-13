@@ -20,26 +20,31 @@
 package org.apache.james.rrt.memory;
 
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
-import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.james.rrt.lib.RecipientRewriteTableContract;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-public class MemoryRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
+class MemoryRecipientRewriteTableTest implements RecipientRewriteTableContract {
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
+    AbstractRecipientRewriteTable recipientRewriteTable;
+
+    @BeforeEach
+    void setup() throws Exception {
+        setUp();
+    }
+
+    @AfterEach
+    void teardown() throws Exception {
+        tearDown();
     }
 
     @Override
-    @After
-    public void tearDown() throws Exception {
-        super.tearDown();
+    public void createRecipientRewriteTable() {
+        recipientRewriteTable = new MemoryRecipientRewriteTable();
     }
 
     @Override
-    protected AbstractRecipientRewriteTable getRecipientRewriteTable() {
-        return new MemoryRecipientRewriteTable();
+    public AbstractRecipientRewriteTable virtualUserTable() {
+        return recipientRewriteTable;
     }
 }
