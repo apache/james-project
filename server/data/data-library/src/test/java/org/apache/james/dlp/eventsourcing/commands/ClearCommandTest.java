@@ -21,22 +21,20 @@ package org.apache.james.dlp.eventsourcing.commands;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ClearCommandTest {
-
+class ClearCommandTest {
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(ClearCommand.class)
             .verify();
     }
 
     @Test
-    public void constructorShouldThrowWhenNullDomain() {
+    void constructorShouldThrowWhenNullDomain() {
         assertThatThrownBy(() -> new ClearCommand(null))
             .isInstanceOf(NullPointerException.class);
     }
-
 }
