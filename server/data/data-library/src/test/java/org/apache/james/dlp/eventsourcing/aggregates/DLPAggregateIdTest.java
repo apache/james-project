@@ -23,26 +23,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Domain;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class DLPAggregateIdTest {
-
+class DLPAggregateIdTest {
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(DLPAggregateId.class)
             .verify();
     }
 
     @Test
-    public void constructorShouldThrowWhenNullDomain() {
+    void constructorShouldThrowWhenNullDomain() {
         assertThatThrownBy(() -> new DLPAggregateId(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void asAggregateKeyShouldReturnAStringContainingThePrefixAndTheDomain() {
+    void asAggregateKeyShouldReturnAStringContainingThePrefixAndTheDomain() {
         assertThat(new DLPAggregateId(Domain.LOCALHOST).asAggregateKey())
             .isEqualTo("DLPRule/localhost");
     }
