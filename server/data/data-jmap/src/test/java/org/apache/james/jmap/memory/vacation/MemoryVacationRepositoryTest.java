@@ -19,13 +19,20 @@
 
 package org.apache.james.jmap.memory.vacation;
 
-import org.apache.james.jmap.api.vacation.AbstractVacationRepositoryTest;
 import org.apache.james.jmap.api.vacation.VacationRepository;
+import org.apache.james.jmap.api.vacation.VacationRepositoryContract;
+import org.junit.jupiter.api.BeforeEach;
 
-public class MemoryVacationRepositoryTest extends AbstractVacationRepositoryTest {
+class MemoryVacationRepositoryTest implements VacationRepositoryContract {
+    VacationRepository vacationRepository;
+
+    @BeforeEach
+    void setup() {
+        vacationRepository = new MemoryVacationRepository();
+    }
 
     @Override
-    protected VacationRepository createVacationRepository() {
-        return new MemoryVacationRepository();
+    public VacationRepository vacationRepository() {
+        return vacationRepository;
     }
 }

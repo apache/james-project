@@ -20,43 +20,33 @@
 package org.apache.james.jmap.cassandra.vacation;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.jmap.api.vacation.AbstractVacationRepositoryTest;
 import org.apache.james.jmap.api.vacation.VacationRepository;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.apache.james.jmap.api.vacation.VacationRepositoryContract;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraVacationRepositoryTest extends AbstractVacationRepositoryTest {
+class CassandraVacationRepositoryTest implements VacationRepositoryContract {
+    static final CassandraModule MODULE = CassandraModule.aggregateModules(
+        CassandraSchemaVersionModule.MODULE,
+        CassandraVacationModule.MODULE,
+        CassandraZonedDateTimeModule.MODULE);
 
-    @Rule
-    public DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);
 
+    VacationRepository vacationRepository;
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        CassandraModule module = CassandraModule.aggregateModules(
-            CassandraSchemaVersionModule.MODULE,
-            CassandraVacationModule.MODULE,
-            CassandraZonedDateTimeModule.MODULE);
-        cassandra = CassandraCluster.create(module, cassandraServer.getHost());
-        super.setUp();
-    }
-
-    @After
-    public void tearDown() {
-        cassandra.close();
+    @BeforeEach
+    public void setUp(CassandraCluster cassandra) throws Exception {
+        vacationRepository = new CassandraVacationRepository(new CassandraVacationDAO(cassandra.getConf(), cassandra.getTypesProvider()));
     }
 
     @Override
-    protected VacationRepository createVacationRepository() {
-        return new CassandraVacationRepository(new CassandraVacationDAO(cassandra.getConf(), cassandra.getTypesProvider()));
+    public VacationRepository vacationRepository() {
+        return vacationRepository;
     }
-
 }
