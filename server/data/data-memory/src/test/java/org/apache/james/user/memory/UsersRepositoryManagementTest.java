@@ -28,17 +28,17 @@ import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.UsersRepositoryManagement;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class UsersRepositoryManagementTest {
-    private static final DomainList NO_DOMAIN_LIST = null;
+class UsersRepositoryManagementTest {
+    static final DomainList NO_DOMAIN_LIST = null;
 
-    private UsersRepository usersRepository;
-    private UsersRepositoryManagement userManagement;
+    UsersRepository usersRepository;
+    UsersRepositoryManagement userManagement;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
 
         userManagement = new UsersRepositoryManagement();
@@ -46,7 +46,7 @@ public class UsersRepositoryManagementTest {
     }
 
     @Test
-    public void testUserCount() throws Exception {
+    void testUserCount() throws Exception {
         assertThat(userManagement.countUsers()).describedAs("no user yet").isEqualTo(0);
         usersRepository.addUser(Username.of("testcount1"), "testCount");
         assertThat(userManagement.countUsers()).describedAs("1 user").isEqualTo(1);
@@ -57,7 +57,7 @@ public class UsersRepositoryManagementTest {
     }
 
     @Test
-    public void testAddUserAndVerify() throws Exception {
+    void testAddUserAndVerify() throws Exception {
         usersRepository.addUser(Username.of("testcount1"), "testCount");
         assertThat(userManagement.verifyExists("testNotAdded")).describedAs("user not there").isFalse();
         assertThat(userManagement.verifyExists("testCount1")).describedAs("user is there").isTrue();
@@ -66,7 +66,7 @@ public class UsersRepositoryManagementTest {
     }
 
     @Test
-    public void testDelUser() throws Exception {
+    void testDelUser() throws Exception {
         usersRepository.addUser(Username.of("testdel"), "test");
         assertThat(userManagement.verifyExists("testNotDeletable")).describedAs("user not there").isFalse();
         assertThat(userManagement.verifyExists("testdel")).describedAs("user is there").isTrue();
@@ -75,7 +75,7 @@ public class UsersRepositoryManagementTest {
     }
 
     @Test
-    public void testListUsers() throws Exception {
+    void testListUsers() throws Exception {
         Username[] usersArray = new Username[]{Username.of("ccc"), Username.of("aaa"), Username.of("dddd"), Username.of("bbbbb")};
         List<Username> users = Arrays.asList(usersArray);
 
@@ -94,7 +94,7 @@ public class UsersRepositoryManagementTest {
     }
 
     @Test
-    public void testSetPassword() throws Exception {
+    void testSetPassword() throws Exception {
         userManagement.addUser("testpwduser", "pwd1");
 
         assertThat(usersRepository.test(Username.of("testpwduser"), "pwd1")).describedAs("initial password").isTrue();
