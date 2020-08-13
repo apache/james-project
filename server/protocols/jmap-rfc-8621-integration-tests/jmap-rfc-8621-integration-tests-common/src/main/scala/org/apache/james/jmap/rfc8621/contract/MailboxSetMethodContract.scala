@@ -38,6 +38,7 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions
+import org.hamcrest.Matchers.{equalTo, hasSize}
 import org.junit.jupiter.api.{BeforeEach, Disabled, Test}
 
 trait MailboxSetMethodContract {
@@ -1132,6 +1133,7 @@ trait MailboxSetMethodContract {
         .body
         .asString
 
+    val message: String = "invalid is not a mailboxId: For input string: \\\"invalid\\\""
     assertThatJson(response).isEqualTo(
       s"""{
          |  "sessionState": "75128aab4b1b",
@@ -1143,11 +1145,236 @@ trait MailboxSetMethodContract {
          |      "notDestroyed": {
          |        "invalid": {
          |          "type": "invalidArguments",
-         |          "description": "invalid is not a mailboxId"
+         |          "description": "$message"
          |        }
          |      }
          |    },
          |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def deleteShouldAcceptCreationIdsWithinTheSameRequest(): Unit = {
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "myMailbox"
+        |                    }
+        |                }
+        |           },
+        |    "c1"],
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "destroy": ["#C42"]
+        |           },
+        |    "c2"]
+        |   ]
+        |}
+        |""".stripMargin
+
+     `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .log().ifValidationFails()
+        .statusCode(SC_OK)
+        .contentType(JSON)
+       // We need to limit ourself to simple body assertions in order not to infer id allocation
+       .body("methodResponses[0][1].created.C42.totalThreads", equalTo(0))
+       .body("methodResponses[1][1].destroyed", hasSize(1))
+  }
+
+  @Test
+  def creationIdReferencesShouldFailWhenWrongOrder(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |      ["Mailbox/set",
+        |          {
+        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "destroy": ["#C42"]
+        |          },
+        |   "c2"],
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "myMailbox"
+        |                    }
+        |                }
+        |           },
+        |    "c1"]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .serialize()
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notDestroyed": {
+         |				"#C42": {
+         |					"type": "invalidArguments",
+         |					"description": "#C42 is not a mailboxId: ClientId(#C42) was not used in previously defined creationIds"
+         |				}
+         |			}
+         |		}, "c2"],
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"created": {
+         |				"C42": {
+         |					"id": "$mailboxId",
+         |					"totalEmails": 0,
+         |					"unreadEmails": 0,
+         |					"totalThreads": 0,
+         |					"unreadThreads": 0,
+         |					"myRights": {
+         |						"mayReadItems": true,
+         |						"mayAddItems": true,
+         |						"mayRemoveItems": true,
+         |						"maySetSeen": true,
+         |						"maySetKeywords": true,
+         |						"mayCreateChild": true,
+         |						"mayRename": true,
+         |						"mayDelete": true,
+         |						"maySubmit": true
+         |					},
+         |					"isSubscribed": true
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def creationIdReferencesShouldFailWhenNone(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |      ["Mailbox/set",
+        |          {
+        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "destroy": ["#C42"]
+        |          },
+        |   "c2"]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notDestroyed": {
+         |				"#C42": {
+         |					"type": "invalidArguments",
+         |					"description": "#C42 is not a mailboxId: ClientId(#C42) was not used in previously defined creationIds"
+         |				}
+         |			}
+         |		}, "c2"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def emptyCreationIdReferencesShouldFail(): Unit = {
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |      ["Mailbox/set",
+        |          {
+        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "destroy": ["#"]
+        |          },
+        |   "c2"]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val message = "# is not a mailboxId: Left predicate of ((!(0 < 1) && !(0 > 255)) && \\\"\\\".matches(\\\"^[#a-zA-Z0-9-_]*$\\\")) failed: Predicate taking size() = 0 failed: Left predicate of (!(0 < 1) && !(0 > 255)) failed: Predicate (0 < 1) did not fail."
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notDestroyed": {
+         |				"#": {
+         |					"type": "invalidArguments",
+         |					"description": "$message"
+         |				}
+         |			}
+         |		}, "c2"]
+         |	]
          |}""".stripMargin)
   }
 }

@@ -439,7 +439,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     doThrow(new RuntimeException("Unexpected Exception occur, the others method may proceed normally"))
       .doCallRealMethod()
       .when(mockCoreEchoMethod)
-      .process(any[Set[CapabilityIdentifier]], any(), any())
+      .process(any[Set[CapabilityIdentifier]], any(), any(), any())
 
     when(mockCoreEchoMethod.methodName).thenReturn(MethodName("Core/echo"))
 

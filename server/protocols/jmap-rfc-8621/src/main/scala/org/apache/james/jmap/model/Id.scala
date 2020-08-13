@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.model
 
+import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.boolean.And
 import eu.timepit.refined.collection.Size
@@ -26,7 +27,13 @@ import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.string.MatchesRegex
 
 object Id {
-  type Id = String Refined And[
+  type IdConstraint = And[
     Size[Interval.Closed[1, 255]],
-    MatchesRegex["^[a-zA-Z0-9-_]*$"]]
+    MatchesRegex["^[#a-zA-Z0-9-_]*$"]]
+  type Id = String Refined IdConstraint
+
+  def validate(string: String): Either[IllegalArgumentException, Id] =
+    refined.refineV[IdConstraint](string)
+      .left
+      .map(new IllegalArgumentException(_))
 }

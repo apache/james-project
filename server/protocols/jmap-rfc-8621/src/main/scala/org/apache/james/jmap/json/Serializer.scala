@@ -284,6 +284,13 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
         jsObject.+(mailboxId.serialize(), mailboxSetErrorWrites.writes(mailboxSetError))
       })
     }
+  private implicit def mailboxMapSetErrorWritesByClientId: Writes[Map[ClientId, MailboxSetError]] =
+    (m: Map[ClientId, MailboxSetError]) => {
+      m.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (clientId: ClientId, mailboxSetError: MailboxSetError) = kv
+        jsObject.+(clientId.value, mailboxSetErrorWrites.writes(mailboxSetError))
+      })
+    }
 
   private implicit def mailboxMapCreationResponseWrites: Writes[Map[MailboxCreationId, MailboxCreationResponse]] =
     (m: Map[MailboxCreationId, MailboxCreationResponse]) => {

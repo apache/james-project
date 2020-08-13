@@ -112,6 +112,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   private def process(requestObject: RequestObject,
                       httpServerResponse: HttpServerResponse,
                       mailboxSession: MailboxSession): SMono[Void] = {
+    val processingContext: ProcessingContext = new ProcessingContext
     val unsupportedCapabilities = requestObject.using.toSet -- DefaultCapabilities.SUPPORTED.ids
 
     if (unsupportedCapabilities.nonEmpty) {
@@ -119,8 +120,8 @@ class JMAPApiRoutes (val authenticator: Authenticator,
     } else {
       requestObject
         .methodCalls
-        .map(invocation => this.processMethodWithMatchName(requestObject.using.toSet, invocation, mailboxSession))
-        .foldLeft(SFlux.empty[Invocation]) { (flux: SFlux[Invocation], mono: SMono[Invocation]) => flux.mergeWith(mono) }
+        .map(invocation => this.processMethodWithMatchName(requestObject.using.toSet, invocation, mailboxSession, processingContext))
+        .foldLeft(SFlux.empty[Invocation]) { (flux: SFlux[Invocation], mono: SMono[Invocation]) => flux.concatWith(mono) }
         .collectSeq()
         .flatMap((invocations: Seq[Invocation]) =>
           SMono.fromPublisher(httpServerResponse.status(OK)
@@ -134,9 +135,9 @@ class JMAPApiRoutes (val authenticator: Authenticator,
     }
   }
 
-  private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
+  private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): SMono[Invocation] =
     SMono.justOrEmpty(methodsByName.get(invocation.methodName))
-      .flatMap(method => SMono.fromPublisher(method.process(capabilities, invocation, mailboxSession)))
+      .flatMap(method => SMono.fromPublisher(method.process(capabilities, invocation, mailboxSession, processingContext)))
       .onErrorResume(throwable => SMono.just(Invocation.error(ErrorCode.ServerFail, throwable.getMessage, invocation.methodCallId)))
       .switchIfEmpty(SMono.just(Invocation.error(ErrorCode.UnknownMethod, invocation.methodCallId)))
 

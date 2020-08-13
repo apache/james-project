@@ -21,6 +21,7 @@ package org.apache.james.jmap.method
 import org.apache.james.jmap.json.Fixture.{invocation1, invocation2}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.{CapabilityIdentifier, Invocation}
+import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.mockito.Mockito.mock
 import org.scalatest.matchers.should.Matchers
@@ -36,14 +37,14 @@ class CoreEchoMethodTest extends AnyWordSpec with Matchers {
     "Process" should {
       "success and return the same with parameters as the invocation request" in {
         val expectedResponse: Invocation = invocation1
-        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession)).block()
+        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession, new ProcessingContext)).block()
 
         dataResponse shouldBe expectedResponse
       }
 
       "success and not return anything else different than the original invocation" in {
         val wrongExpected: Invocation = invocation2
-        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession)).block()
+        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession, new ProcessingContext)).block()
         
         dataResponse should not be(wrongExpected)
       }

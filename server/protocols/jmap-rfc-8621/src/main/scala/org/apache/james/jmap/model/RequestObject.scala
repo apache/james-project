@@ -22,7 +22,16 @@ package org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Id.Id
 
-final case class ClientId(value: Id)
+final case class ClientId(value: Id) {
+  def referencesPreviousCreationId: Boolean = value.value.startsWith("#")
+  def retrieveOriginalClientId: Option[Either[IllegalArgumentException, ClientId]] =
+    if (referencesPreviousCreationId) {
+      Some(Id.validate(value.value.substring(1, value.value.length))
+        .map(ClientId))
+    } else {
+      None
+    }
+}
 
 final case class ServerId(value: Id)
 
