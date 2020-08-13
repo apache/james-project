@@ -26,14 +26,14 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import org.apache.james.util.ValuePatch;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class VacationPatchTest {
+class VacationPatchTest {
 
-    public static final ZonedDateTime DATE_2014 = ZonedDateTime.parse("2014-04-03T02:01+07:00[Asia/Vientiane]");
-    public static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-04-03T02:01+07:00[Asia/Vientiane]");
-    public static final ZonedDateTime DATE_2017 = ZonedDateTime.parse("2017-04-03T02:01+07:00[Asia/Vientiane]");
-    public static final Vacation VACATION = Vacation.builder()
+    static final ZonedDateTime DATE_2014 = ZonedDateTime.parse("2014-04-03T02:01+07:00[Asia/Vientiane]");
+    static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-04-03T02:01+07:00[Asia/Vientiane]");
+    static final ZonedDateTime DATE_2017 = ZonedDateTime.parse("2017-04-03T02:01+07:00[Asia/Vientiane]");
+    static final Vacation VACATION = Vacation.builder()
         .fromDate(Optional.of(DATE_2014))
         .toDate(Optional.of(DATE_2015))
         .enabled(true)
@@ -43,37 +43,37 @@ public class VacationPatchTest {
         .build();
 
     @Test
-    public void fromDateShouldThrowNPEOnNullInput() {
+    void fromDateShouldThrowNPEOnNullInput() {
         assertThatThrownBy(() -> VacationPatch.builder().fromDate((ValuePatch<ZonedDateTime>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void toDateShouldThrowNPEOnNullInput() {
+    void toDateShouldThrowNPEOnNullInput() {
         assertThatThrownBy(() -> VacationPatch.builder().toDate((ValuePatch<ZonedDateTime>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void textBodyShouldThrowNPEOnNullInput() {
+    void textBodyShouldThrowNPEOnNullInput() {
         assertThatThrownBy(() -> VacationPatch.builder().textBody((ValuePatch<String>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void htmlBodyShouldThrowNPEOnNullInput() {
+    void htmlBodyShouldThrowNPEOnNullInput() {
         assertThatThrownBy(() -> VacationPatch.builder().htmlBody((ValuePatch<String>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void subjectShouldThrowNPEOnNullInput() {
+    void subjectShouldThrowNPEOnNullInput() {
         assertThatThrownBy(() -> VacationPatch.builder().subject((ValuePatch<String>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void isEnabledShouldThrowNPEOnNullInput() {
+    void isEnabledShouldThrowNPEOnNullInput() {
         assertThatThrownBy(() -> VacationPatch.builder().isEnabled((ValuePatch<Boolean>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void isIdentityShouldBeTrueWhenUpdateIsEmpty() {
+    void isIdentityShouldBeTrueWhenUpdateIsEmpty() {
         assertThat(
             VacationPatch.builder()
                 .build()
@@ -82,7 +82,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void isIdentityShouldBeFalseWhenUpdateIsNotEmpty() {
+    void isIdentityShouldBeFalseWhenUpdateIsNotEmpty() {
         assertThat(
             VacationPatch.builder()
                 .subject(ValuePatch.modifyTo("any subject"))
@@ -92,7 +92,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void builderShouldWellSetFields() {
+    void builderShouldWellSetFields() {
         ValuePatch<String> subject = ValuePatch.modifyTo("subject");
         ValuePatch<String> htmlBody = ValuePatch.modifyTo("html text");
         ValuePatch<String> textBody = ValuePatch.modifyTo("simple text");
@@ -116,7 +116,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void patchVacationShouldUpdateEnabled() {
+    void patchVacationShouldUpdateEnabled() {
         VacationPatch vacationPatch = VacationPatch.builder()
             .isEnabled(ValuePatch.modifyTo(true))
             .build();
@@ -128,7 +128,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void patchVacationShouldUpdateFromDate() {
+    void patchVacationShouldUpdateFromDate() {
         VacationPatch vacationPatch = VacationPatch.builder()
             .fromDate(ValuePatch.modifyTo(DATE_2014))
             .build();
@@ -141,7 +141,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void patchVacationShouldUpdateToDate() {
+    void patchVacationShouldUpdateToDate() {
         VacationPatch vacationPatch = VacationPatch.builder()
             .toDate(ValuePatch.modifyTo(DATE_2017))
             .build();
@@ -154,7 +154,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void patchVacationShouldUpdateSubject() {
+    void patchVacationShouldUpdateSubject() {
         String newSubject = "new subject";
         VacationPatch vacationPatch = VacationPatch.builder()
             .subject(ValuePatch.modifyTo(newSubject))
@@ -168,7 +168,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void patchVacationShouldUpdateTextBody() {
+    void patchVacationShouldUpdateTextBody() {
         String newTextBody = "new text body";
         VacationPatch vacationPatch = VacationPatch.builder()
             .textBody(ValuePatch.modifyTo(newTextBody))
@@ -182,7 +182,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void patchVacationShouldUpdateHtmlBody() {
+    void patchVacationShouldUpdateHtmlBody() {
         String newHtmlBody = "new <b>html</b> body";
         VacationPatch vacationPatch = VacationPatch.builder()
             .htmlBody(ValuePatch.modifyTo(newHtmlBody))
@@ -196,7 +196,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void patchVacationShouldAllowToUpdateAllFieldsAtOnce() {
+    void patchVacationShouldAllowToUpdateAllFieldsAtOnce() {
         VacationPatch vacationPatch = VacationPatch.builder()
             .subject(ValuePatch.ofOptional(VACATION.getSubject()))
             .textBody(ValuePatch.ofOptional(VACATION.getTextBody()))
@@ -211,7 +211,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void emptyPatchesShouldNotChangeExistingVacations() {
+    void emptyPatchesShouldNotChangeExistingVacations() {
         assertThat(VacationPatch.builder()
             .build()
             .patch(VACATION))
@@ -219,7 +219,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void nullUpdateShouldResetSubject() {
+    void nullUpdateShouldResetSubject() {
         Vacation vacation = VacationPatch.builderFrom(VACATION)
             .subject(ValuePatch.remove())
             .build()
@@ -237,7 +237,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void nullUpdateShouldResetText() {
+    void nullUpdateShouldResetText() {
         Vacation vacation = VacationPatch.builderFrom(VACATION)
             .textBody(ValuePatch.remove())
             .build()
@@ -255,7 +255,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void nullUpdateShouldResetHtml() {
+    void nullUpdateShouldResetHtml() {
         Vacation vacation = VacationPatch.builderFrom(VACATION)
             .htmlBody(ValuePatch.remove())
             .build()
@@ -273,7 +273,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void nullUpdateShouldResetToDate() {
+    void nullUpdateShouldResetToDate() {
         Vacation vacation = VacationPatch.builderFrom(VACATION)
             .toDate(ValuePatch.remove())
             .build()
@@ -291,7 +291,7 @@ public class VacationPatchTest {
     }
 
     @Test
-    public void nullUpdateShouldResetFromDate() {
+    void nullUpdateShouldResetFromDate() {
         Vacation vacation = VacationPatch.builderFrom(VACATION)
             .fromDate(ValuePatch.remove())
             .build()
