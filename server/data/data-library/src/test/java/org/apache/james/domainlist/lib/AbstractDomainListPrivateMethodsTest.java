@@ -32,19 +32,19 @@ import java.util.List;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class AbstractDomainListPrivateMethodsTest {
-    private MyDomainList domainList;
-    private DNSService dnsService;
-    private EnvDetector envDetector;
+class AbstractDomainListPrivateMethodsTest {
+    MyDomainList domainList;
+    DNSService dnsService;
+    EnvDetector envDetector;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         dnsService = mock(DNSService.class);
         envDetector = mock(EnvDetector.class);
         domainList = new MyDomainList(dnsService, envDetector);
@@ -81,7 +81,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void setDefaultDomainShouldSetFromConfigurationWhenDifferentFromLocalhost() throws Exception {
+    void setDefaultDomainShouldSetFromConfigurationWhenDifferentFromLocalhost() throws Exception {
         String expectedDefaultDomain = "myDomain.org";
 
         domainList.configureDefaultDomain(Domain.of(expectedDefaultDomain));
@@ -90,7 +90,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void setDefaultDomainShouldSetFromHostnameWhenEqualsToLocalhost() throws Exception {
+    void setDefaultDomainShouldSetFromHostnameWhenEqualsToLocalhost() throws Exception {
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(Domain.LOCALHOST);
 
@@ -98,7 +98,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void setDefaultDomainShouldCreateFromHostnameWhenEqualsToLocalhost() throws Exception {
+    void setDefaultDomainShouldCreateFromHostnameWhenEqualsToLocalhost() throws Exception {
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(expectedDefaultDomain);
 
@@ -106,7 +106,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void setDefaultDomainShouldNotCreateTwiceWhenCallingTwoTimes() throws Exception {
+    void setDefaultDomainShouldNotCreateTwiceWhenCallingTwoTimes() throws Exception {
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(expectedDefaultDomain);
         domainList.configureDefaultDomain(expectedDefaultDomain);
@@ -115,7 +115,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void setDefaultDomainShouldAddDomainWhenNotContained() throws Exception {
+    void setDefaultDomainShouldAddDomainWhenNotContained() throws Exception {
         Domain expectedDefaultDomain = Domain.of("myDomain.org");
 
         domainList.configureDefaultDomain(expectedDefaultDomain);
@@ -124,7 +124,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void setDefaultDomainShouldNotFailWhenDomainContained() throws Exception {
+    void setDefaultDomainShouldNotFailWhenDomainContained() throws Exception {
         Domain expectedDefaultDomain = Domain.of("myDomain.org");
 
         domainList.addDomain(expectedDefaultDomain);
@@ -134,7 +134,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void getDomainsShouldNotDetectDomainsWhenDisabled() throws Exception {
+    void getDomainsShouldNotDetectDomainsWhenDisabled() throws Exception {
         Domain domain = Domain.of("domain.tld");
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(false)
@@ -145,7 +145,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void getDomainsShouldNotInteractWithDNSWhenDisabled() throws Exception {
+    void getDomainsShouldNotInteractWithDNSWhenDisabled() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false));
@@ -155,7 +155,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void getDomainsShouldContainDetectedDomains() throws Exception {
+    void getDomainsShouldContainDetectedDomains() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(false));
@@ -168,7 +168,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void getDomainsShouldContainDetectedDomainsAndIps() throws Exception {
+    void getDomainsShouldContainDetectedDomainsAndIps() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(true));
@@ -185,7 +185,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void getDomainsShouldContainDetectedDomainsAndIpsOfAddedDomains() throws Exception {
+    void getDomainsShouldContainDetectedDomainsAndIpsOfAddedDomains() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(true));
@@ -210,7 +210,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void getDomainsShouldNotReturnDuplicates() throws Exception {
+    void getDomainsShouldNotReturnDuplicates() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(true));
@@ -234,7 +234,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void getDomainsShouldListAddedDomain() throws Exception {
+    void getDomainsShouldListAddedDomain() throws Exception {
         Domain defaultDomain = Domain.of("default.tld");
         Domain domain = Domain.of("added.tld");
 
@@ -249,7 +249,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void containsDomainShouldReturnDetectedIp() throws Exception {
+    void containsDomainShouldReturnDetectedIp() throws Exception {
         String detected = "detected.tld";
         String detectedIp = "148.25.32.1";
         when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
@@ -262,7 +262,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void containsDomainShouldReturnTrueWhenDomainIsContained() throws Exception {
+    void containsDomainShouldReturnTrueWhenDomainIsContained() throws Exception {
         Domain domain = Domain.of("added.tld");
         domainList.addDomain(domain);
         domainList.configure(DomainListConfiguration.builder()
@@ -273,7 +273,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void containsDomainShouldReturnFalseWhenDomainIsNotContained() throws Exception {
+    void containsDomainShouldReturnFalseWhenDomainIsNotContained() throws Exception {
         Domain domain = Domain.of("added.tld");
 
         domainList.configure(DomainListConfiguration.builder()
@@ -284,7 +284,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void containsDomainShouldNotInteractWithDNSWhenDisabled() throws Exception {
+    void containsDomainShouldNotInteractWithDNSWhenDisabled() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false));
@@ -294,7 +294,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void containsDomainShouldReturnDetectedDomains() throws Exception {
+    void containsDomainShouldReturnDetectedDomains() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(false));
@@ -307,7 +307,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void envDomainShouldBeAddedUponConfiguration() throws Exception {
+    void envDomainShouldBeAddedUponConfiguration() throws Exception {
         String envDomain = "env.tld";
         when(envDetector.getEnv(AbstractDomainList.ENV_DOMAIN)).thenReturn(envDomain);
 
@@ -320,7 +320,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void removeDomainShouldThrowWhenRemovingAutoDetectedDomains() throws Exception {
+    void removeDomainShouldThrowWhenRemovingAutoDetectedDomains() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(false));
@@ -334,7 +334,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void removeDomainShouldThrowWhenRemovingAutoDetectedIps() throws Exception {
+    void removeDomainShouldThrowWhenRemovingAutoDetectedIps() throws Exception {
         String detected = "detected.tld";
         String detectedIp = "148.25.32.1";
         when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
@@ -348,7 +348,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void removeDomainShouldThrowWhenRemovingDefaultDomain() throws Exception {
+    void removeDomainShouldThrowWhenRemovingDefaultDomain() throws Exception {
         Domain defaultDomain = Domain.of("default.tld");
         domainList.configureDefaultDomain(defaultDomain);
 
@@ -357,7 +357,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void configuredDomainShouldBeAddedUponConfiguration() throws Exception {
+    void configuredDomainShouldBeAddedUponConfiguration() throws Exception {
         Domain domain1 = Domain.of("conf1.tld");
         Domain domain2 = Domain.of("conf2.tld");
 
@@ -370,7 +370,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void configureShouldNotAttemptToChangeLocalHostDefaultDomainWhenNoAutoDetect() throws Exception {
+    void configureShouldNotAttemptToChangeLocalHostDefaultDomainWhenNoAutoDetect() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
