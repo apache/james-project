@@ -25,40 +25,40 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.james.core.Domain;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPAggregateId;
 import org.apache.james.eventsourcing.EventId;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ConfigurationItemsAddedTest {
+class ConfigurationItemsAddedTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(ConfigurationItemsAdded.class)
             .verify();
     }
 
     @Test
-    public void constructorShouldThrowWhenNullAggregateId() {
+    void constructorShouldThrowWhenNullAggregateId() {
         assertThatThrownBy(() -> new ConfigurationItemsAdded(null, EventId.first(), ImmutableList.of(RULE)))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void constructorShouldThrowWhenNullEventId() {
+    void constructorShouldThrowWhenNullEventId() {
         assertThatThrownBy(() -> new ConfigurationItemsAdded(new DLPAggregateId(Domain.LOCALHOST), null, ImmutableList.of(RULE)))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void constructorShouldThrowWhenNullRules() {
+    void constructorShouldThrowWhenNullRules() {
         assertThatThrownBy(() -> new ConfigurationItemsAdded(new DLPAggregateId(Domain.LOCALHOST), EventId.first(), null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void constructorShouldThrowWhenEmptyRulesList() {
+    void constructorShouldThrowWhenEmptyRulesList() {
         assertThatThrownBy(() -> new ConfigurationItemsAdded(new DLPAggregateId(Domain.LOCALHOST), EventId.first(), ImmutableList.of()))
             .isInstanceOf(IllegalArgumentException.class);
     }
