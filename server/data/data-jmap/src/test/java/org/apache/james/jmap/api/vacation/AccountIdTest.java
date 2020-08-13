@@ -20,25 +20,27 @@
 package org.apache.james.jmap.api.vacation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class AccountIdTest {
+class AccountIdTest {
+    static final String IDENTIFIER = "id";
 
-    public static final String IDENTIFIER = "id";
-
-    @Test(expected = IllegalArgumentException.class)
-    public void createShouldThrowOnNullIdentifier() {
-        AccountId.fromString(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void createShouldThrowOnEmptyIdentifier() {
-        AccountId.fromString("");
+    @Test
+    void createShouldThrowOnNullIdentifier() {
+        assertThatThrownBy(() -> AccountId.fromString(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void createShouldWork() {
+    void createShouldThrowOnEmptyIdentifier() {
+        assertThatThrownBy(() -> AccountId.fromString(""))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void createShouldWork() {
         assertThat(AccountId.fromString(IDENTIFIER).getIdentifier()).isEqualTo(IDENTIFIER);
     }
 
