@@ -24,28 +24,28 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dlp.api.DLPRules;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class StoreCommandTest {
+class StoreCommandTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(StoreCommand.class)
             .verify();
     }
 
     @Test
-    public void constructorShouldThrowWhenNullDomain() {
+    void constructorShouldThrowWhenNullDomain() {
         assertThatThrownBy(() -> new StoreCommand(null, new DLPRules(ImmutableList.of(RULE))))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void constructorShouldThrowWhenNullRules() {
+    void constructorShouldThrowWhenNullRules() {
         assertThatThrownBy(() -> new StoreCommand(Domain.LOCALHOST, null))
             .isInstanceOf(NullPointerException.class);
     }
