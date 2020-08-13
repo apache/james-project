@@ -19,14 +19,29 @@
 
 package org.apache.james.jmap.memory.vacation;
 
-import org.apache.james.jmap.api.vacation.AbstractNotificationRegistryTest;
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
-import org.apache.james.util.date.ZonedDateTimeProvider;
+import org.apache.james.jmap.api.vacation.NotificationRegistryContract;
+import org.apache.james.jmap.api.vacation.RecipientId;
+import org.junit.jupiter.api.BeforeEach;
 
-public class MemoryNotificationRegistryTest extends AbstractNotificationRegistryTest {
+class MemoryNotificationRegistryTest implements NotificationRegistryContract {
+    NotificationRegistry notificationRegistry;
+    RecipientId recipientId;
+
+    @BeforeEach
+    void setup() throws Exception {
+        notificationRegistry = new MemoryNotificationRegistry(zonedDateTimeProvider);
+        recipientId = RecipientId.fromMailAddress(new MailAddress("benwa@apache.org"));
+    }
 
     @Override
-    protected NotificationRegistry createNotificationRegistry(ZonedDateTimeProvider zonedDateTimeProvider) {
-        return new MemoryNotificationRegistry(zonedDateTimeProvider);
+    public NotificationRegistry notificationRegistry() {
+        return notificationRegistry;
+    }
+
+    @Override
+    public RecipientId recipientId() {
+        return recipientId;
     }
 }

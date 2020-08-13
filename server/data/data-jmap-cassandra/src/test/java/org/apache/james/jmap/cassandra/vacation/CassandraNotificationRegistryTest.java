@@ -20,36 +20,33 @@
 package org.apache.james.jmap.cassandra.vacation;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.jmap.api.vacation.AbstractNotificationRegistryTest;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
-import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.apache.james.jmap.api.vacation.NotificationRegistryContract;
+import org.apache.james.jmap.api.vacation.RecipientId;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraNotificationRegistryTest extends AbstractNotificationRegistryTest {
+class CassandraNotificationRegistryTest implements NotificationRegistryContract {
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraNotificationRegistryModule.MODULE);
 
-    @Rule
-    public DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    NotificationRegistry notificationRegistry;
+    RecipientId recipientId;
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(CassandraNotificationRegistryModule.MODULE, cassandraServer.getHost());
-        super.setUp();
+    @BeforeEach
+    public void setUp(CassandraCluster cassandra) throws Exception {
+        notificationRegistry = new CassandraNotificationRegistry(zonedDateTimeProvider, new CassandraNotificationRegistryDAO(cassandra.getConf()));;
+        recipientId = RecipientId.fromMailAddress(new MailAddress("benwa@apache.org"));
     }
-
-    @After
-    public void tearDown() {
-        cassandra.close();
+    @Override
+    public NotificationRegistry notificationRegistry() {
+        return notificationRegistry;
     }
 
     @Override
-    protected NotificationRegistry createNotificationRegistry(ZonedDateTimeProvider zonedDateTimeProvider) {
-        return new CassandraNotificationRegistry(zonedDateTimeProvider, new CassandraNotificationRegistryDAO(cassandra.getConf()));
+    public RecipientId recipientId() {
+        return recipientId;
     }
-
 }
