@@ -29,7 +29,7 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
-import org.apache.james.mailbox.model.{FetchGroup, Mailbox, MailboxId, MailboxPath, MessageRange}
+import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MailboxPath, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
@@ -146,7 +146,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     }
   }
 
-  private def delete(mailboxSession: MailboxSession, id: MailboxId): Mailbox = {
+  private def delete(mailboxSession: MailboxSession, id: MailboxId): Unit = {
     val mailbox = mailboxManager.getMailbox(id, mailboxSession)
     if (mailbox.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession).hasNext) {
       throw MailboxHasMailException(id)
@@ -154,7 +154,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     if (mailboxManager.hasChildren(mailbox.getMailboxPath, mailboxSession)) {
       throw MailboxHasChildException(id)
     }
-    mailboxManager.deleteMailbox(id, mailboxSession)
+    val deletedMailbox = mailboxManager.deleteMailbox(id, mailboxSession)
+    subscriptionManager.unsubscribe(mailboxSession, deletedMailbox.getName)
   }
 
   private def createMailboxes(mailboxSession: MailboxSession,
