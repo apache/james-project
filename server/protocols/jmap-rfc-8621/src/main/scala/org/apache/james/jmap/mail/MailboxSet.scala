@@ -59,9 +59,11 @@ case class MailboxSetResponse(accountId: AccountId,
 object MailboxSetError {
   val invalidArgumentValue: SetErrorType = "invalidArguments"
   val serverFailValue: SetErrorType = "serverFail"
+  val forbiddenValue: SetErrorType = "forbidden"
 
   def invalidArgument(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(invalidArgumentValue, description, properties)
   def serverFail(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(serverFailValue, description, properties)
+  def forbidden(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(forbiddenValue, description, properties)
 }
 
 case class MailboxSetError(`type`: SetErrorType, description: Option[SetErrorDescription], properties: Option[Properties])

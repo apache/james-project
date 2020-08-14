@@ -49,7 +49,7 @@ case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exce
     case e: MailboxNotFoundException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("parentId"))))
     case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("name"))))
     case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("name"))))
-    case _: InsufficientRightsException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Insufficient rights")), Some(Properties(List("parentId"))))
+    case _: InsufficientRightsException => MailboxSetError.forbidden(Some(SetErrorDescription("Insufficient rights")), Some(Properties(List("parentId"))))
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
 }
@@ -60,7 +60,6 @@ case class CreationResults(created: Seq[CreationResult]) {
       case success: CreationSuccess => Some(success.mailboxCreationId, success.mailboxId)
       case _ => None
     })
-    .toSet
     .toMap
 
   def retrieveErrors: Map[MailboxCreationId, MailboxSetError] = created
@@ -68,7 +67,6 @@ case class CreationResults(created: Seq[CreationResult]) {
       case failure: CreationFailure => Some(failure.mailboxCreationId, failure.asMailboxSetError)
       case _ => None
     })
-    .toSet
     .toMap
 }
 

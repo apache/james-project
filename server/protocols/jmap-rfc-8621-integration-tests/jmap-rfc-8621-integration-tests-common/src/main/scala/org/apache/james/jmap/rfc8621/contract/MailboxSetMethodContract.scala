@@ -609,7 +609,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  def mailboxSetShouldNotCreateMailboxWhenMailboxItShared(server: GuiceJamesServer): Unit = {
+  def mailboxSetShouldNotCreateChildMailboxWhenSharedParentMailbox(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(ANDRE, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
@@ -660,7 +660,7 @@ trait MailboxSetMethodContract {
          |      "newState": "000001",
          |      "notCreated": {
          |        "C42": {
-         |          "type": "invalidArguments",
+         |          "type": "forbidden",
          |          "description": "Insufficient rights",
          |          "properties":{"value":["parentId"]}
          |        }
