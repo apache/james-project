@@ -122,7 +122,7 @@ case object Applicable extends RightsApplicability
 case object NotApplicable extends RightsApplicability
 case object Unsupported extends RightsApplicability
 
-case class Rights private(rights: Map[Username, Seq[Right]]) {
+case class Rights(rights: Map[Username, Seq[Right]]) {
   def removeEntriesFor(username: Username) = copy(rights = rights - username)
 
   def toMailboxAcl: MailboxACL = {

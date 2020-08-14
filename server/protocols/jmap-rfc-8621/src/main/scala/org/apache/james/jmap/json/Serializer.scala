@@ -178,7 +178,23 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val mailboxACLWrites: Writes[MailboxACL.Right] = right => JsString(right.asCharacter.toString)
 
   private implicit val rightWrites: Writes[Right] = Json.valueWrites[Right]
+  private implicit val rightRead: Reads[Right] = {
+    case jsString: JsString =>
+      if (jsString.value.length != 1) {
+        JsError("Rights must have size 1")
+      } else {
+        Right.forChar(jsString.value.charAt(0))
+          .map(right => JsSuccess(right))
+          .getOrElse(JsError(s"Unknown right '${jsString.value}'"))
+      }
+    case _ => JsError("Right must be represented as a String")
+  }
   private implicit val rightsWrites: Writes[Rights] = Json.valueWrites[Rights]
+
+  private implicit val mapRightsReads: Reads[Map[Username, Seq[Right]]] = _.validate[Map[String, Seq[Right]]]
+    .map(rawMap =>
+      rawMap.map(entry => (Username.of(entry._1), entry._2)))
+  private implicit val rightsReads: Reads[Rights] = json => mapRightsReads.reads(json).map(rawMap => Rights(rawMap))
 
   private implicit def rightsMapWrites(implicit rightWriter: Writes[Seq[Right]]): Writes[Map[Username, Seq[Right]]] =
     (m: Map[Username, Seq[Right]]) => {

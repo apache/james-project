@@ -182,7 +182,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest, processingContext)
         .flatMap(path => createMailbox(mailboxSession = mailboxSession,
           path = path,
-          isSubscribed = mailboxCreationRequest.isSubscribed.getOrElse(IsSubscribed(true)))))
+          mailboxCreationRequest = mailboxCreationRequest)))
       .fold(e => CreationFailure(mailboxCreationId, e),
         mailboxId => {
           recordCreationIdInProcessingContext(mailboxCreationId, processingContext, mailboxId)
@@ -206,13 +206,18 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def createMailbox(mailboxSession: MailboxSession,
                             path: MailboxPath,
-                            isSubscribed: IsSubscribed): Either[Exception, MailboxId] = {
+                            mailboxCreationRequest: MailboxCreationRequest): Either[Exception, MailboxId] = {
     try {
       //can safely do a get as the Optional is empty only if the mailbox name is empty which is forbidden by the type constraint on MailboxName
       val mailboxId = mailboxManager.createMailbox(path, mailboxSession).get()
-      if (isSubscribed.value) {
+
+      if (mailboxCreationRequest.isSubscribed.getOrElse(IsSubscribed(true)).value) {
         subscriptionManager.subscribe(mailboxSession, path.getName)
       }
+
+      mailboxCreationRequest.rights
+          .foreach(rights => mailboxManager.setRights(mailboxId, rights.toMailboxAcl.asJava, mailboxSession))
+
       Right(mailboxId)
     } catch {
       case error: Exception => Left(error)

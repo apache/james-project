@@ -390,6 +390,232 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  def mailboxSetCreationShouldHandleRights(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "myMailbox",
+        |                      "rights": {
+        |                        "${ANDRE.asString()}": ["l", "r"]
+        |                      }
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ],
+        |       ["Mailbox/get",
+        |         {
+        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "ids": ["#C42"]
+        |          },
+        |       "c2"]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .serialize()
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"created": {
+         |				"C42": {
+         |					"id": "$mailboxId",
+         |					"totalEmails": 0,
+         |					"unreadEmails": 0,
+         |					"totalThreads": 0,
+         |					"unreadThreads": 0,
+         |					"myRights": {
+         |						"mayReadItems": true,
+         |						"mayAddItems": true,
+         |						"mayRemoveItems": true,
+         |						"maySetSeen": true,
+         |						"maySetKeywords": true,
+         |						"mayCreateChild": true,
+         |						"mayRename": true,
+         |						"mayDelete": true,
+         |						"maySubmit": true
+         |					},
+         |					"isSubscribed": true
+         |				}
+         |			}
+         |		}, "c1"],
+         |		["Mailbox/get", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"state": "000001",
+         |			"list": [{
+         |				"id": "$mailboxId",
+         |				"name": "myMailbox",
+         |				"sortOrder": 1000,
+         |				"totalEmails": 0,
+         |				"unreadEmails": 0,
+         |				"totalThreads": 0,
+         |				"unreadThreads": 0,
+         |				"myRights": {
+         |					"mayReadItems": true,
+         |					"mayAddItems": true,
+         |					"mayRemoveItems": true,
+         |					"maySetSeen": true,
+         |					"maySetKeywords": true,
+         |					"mayCreateChild": true,
+         |					"mayRename": true,
+         |					"mayDelete": true,
+         |					"maySubmit": true
+         |				},
+         |				"isSubscribed": true,
+         |        "namespace":"Personal",
+         |				"rights": {
+         |					"andre@domain.tld": ["l", "r"]
+         |				}
+         |			}],
+         |      "notFound":[]
+         |		}, "c2"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def mailboxSetCreationShouldValidateRights(): Unit = {
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "myMailbox",
+        |                      "rights": {
+        |                        "${ANDRE.asString()}": ["invalid"]
+        |                      }
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notCreated": {
+         |				"C42": {
+         |					"type": "invalidArguments",
+         |					"description": "'/rights/andre@domain.tld(0)' property in mailbox object is not valid: Rights must have size 1"
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def mailboxSetCreationShouldValidateRightsWhenWrongValue(): Unit = {
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "myMailbox",
+        |                      "rights": {
+        |                        "${ANDRE.asString()}": ["z"]
+        |                      }
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notCreated": {
+         |				"C42": {
+         |					"type": "invalidArguments",
+         |					"description": "'/rights/andre@domain.tld(0)' property in mailbox object is not valid: Unknown right 'z'"
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
   def mailboxGetShouldAllowTheUseOfCreationIds(server: GuiceJamesServer): Unit = {
     val request =
       """
