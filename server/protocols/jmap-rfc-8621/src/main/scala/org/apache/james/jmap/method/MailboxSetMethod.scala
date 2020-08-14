@@ -56,12 +56,26 @@ case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exce
   }
 }
 case class CreationResults(created: Seq[CreationResult]) {
-  def retrieveCreated: Map[MailboxCreationId, MailboxId] = created
+  def retrieveCreated: Map[MailboxCreationId, MailboxCreationResponse] = created
     .flatMap(result => result match {
       case success: CreationSuccess => Some(success.mailboxCreationId, success.mailboxId)
       case _ => None
     })
     .toMap
+    .map(creation => (creation._1, toCreationResponse(creation._2)))
+
+  private def toCreationResponse(mailboxId: MailboxId): MailboxCreationResponse = MailboxCreationResponse(
+    id = mailboxId,
+    role = None,
+    totalEmails = TotalEmails(0L),
+    unreadEmails = UnreadEmails(0L),
+    totalThreads = TotalThreads(0L),
+    unreadThreads = UnreadThreads(0L),
+    myRights = MailboxRights.FULL,
+    rights = None,
+    namespace = None,
+    quotas = None,
+    isSubscribed = IsSubscribed(true))
 
   def retrieveErrors: Map[MailboxCreationId, MailboxSetError] = created
     .flatMap(result => result match {
@@ -83,11 +97,11 @@ case class DeletionFailure(mailboxId: UnparsedMailboxId, exception: Throwable) e
   }
 }
 case class DeletionResults(results: Seq[DeletionResult]) {
-  def destroyed: Seq[DeletionSuccess] =
+  def destroyed: Seq[MailboxId] =
     results.flatMap(result => result match {
       case success: DeletionSuccess => Some(success)
       case _ => None
-    })
+    }).map(_.mailboxId)
 
   def retrieveErrors: Map[UnparsedMailboxId, MailboxSetError] =
     results.flatMap(result => result match {
@@ -226,34 +240,24 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       case e: Exception => Left(e)
     }
 
-  private def createResponse(invocation: Invocation, mailboxSetRequest: MailboxSetRequest,
+  private def createResponse(invocation: Invocation,
+                             mailboxSetRequest: MailboxSetRequest,
                              creationResults: CreationResults,
                              deletionResults: DeletionResults): Invocation = {
-    val created: Map[MailboxCreationId, MailboxId] = creationResults.retrieveCreated
-
-    Invocation(methodName, Arguments(serializer.serialize(MailboxSetResponse(
+    val response = MailboxSetResponse(
       mailboxSetRequest.accountId,
       oldState = None,
       newState = State.INSTANCE,
-      destroyed = Some(deletionResults.destroyed.map(_.mailboxId)).filter(_.nonEmpty),
-      created = Some(created.map(creation => (creation._1, MailboxCreationResponse(
-        id = creation._2,
-        role = None,
-        totalEmails = TotalEmails(0L),
-        unreadEmails = UnreadEmails(0L),
-        totalThreads = TotalThreads(0L),
-        unreadThreads = UnreadThreads(0L),
-        myRights = MailboxRights.FULL,
-        rights = None,
-        namespace = None,
-        quotas = None,
-        isSubscribed = IsSubscribed(true)
-      )))).filter(_.nonEmpty),
+      destroyed = Some(deletionResults.destroyed).filter(_.nonEmpty),
+      created = Some(creationResults.retrieveCreated).filter(_.nonEmpty),
       notCreated = Some(creationResults.retrieveErrors).filter(_.nonEmpty),
       updated = None,
       notUpdated = None,
-      notDestroyed = Some(deletionResults.retrieveErrors).filter(_.nonEmpty)
-    )).as[JsObject]), invocation.methodCallId)
+      notDestroyed = Some(deletionResults.retrieveErrors).filter(_.nonEmpty))
+    
+    Invocation(methodName,
+      Arguments(serializer.serialize(response).as[JsObject]),
+      invocation.methodCallId)
   }
 
   private def asMailboxSetRequest(arguments: Arguments): SMono[MailboxSetRequest] = {
