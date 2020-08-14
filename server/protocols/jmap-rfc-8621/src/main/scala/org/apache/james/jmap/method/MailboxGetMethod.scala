@@ -22,6 +22,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
@@ -42,20 +43,25 @@ import reactor.core.scheduler.Schedulers
 class MailboxGetMethod @Inject() (serializer: Serializer,
                                   mailboxManager: MailboxManager,
                                   quotaFactory : QuotaLoaderWithPreloadedDefaultFactory,
+                                  mailboxIdFactory: MailboxId.Factory,
                                   mailboxFactory: MailboxFactory,
                                   metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("Mailbox/get")
 
   object MailboxGetResults {
     def found(mailbox: Mailbox): MailboxGetResults = MailboxGetResults(Set(mailbox), NotFound(Set.empty))
-    def notFound(mailboxId: MailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(mailboxId)))
+    def notFound(mailboxId: UnparsedMailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(mailboxId)))
+    def notFound(mailboxId: MailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(MailboxSetRequest.asUnparsed(mailboxId))))
   }
 
   case class MailboxGetResults(mailboxes: Set[Mailbox], notFound: NotFound) {
     def merge(other: MailboxGetResults): MailboxGetResults = MailboxGetResults(this.mailboxes ++ other.mailboxes, this.notFound.merge(other.notFound))
   }
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[Invocation] = {
+  override def process(capabilities: Set[CapabilityIdentifier],
+                       invocation: Invocation,
+                       mailboxSession: MailboxSession,
+                       processingContext: ProcessingContext): Publisher[Invocation] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asMailboxGetRequest(invocation.arguments)
         .flatMap(mailboxGetRequest => {
@@ -64,7 +70,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
               SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
                 description = s"The following properties [${properties.asSetOfString.diff(Mailbox.allProperties).mkString(", ")}] do not exist.",
                 methodCallId = invocation.methodCallId))
-            case _ => getMailboxes(capabilities, mailboxGetRequest, mailboxSession)
+            case _ => getMailboxes(capabilities, mailboxGetRequest, processingContext, mailboxSession)
               .reduce(MailboxGetResults(Set.empty, NotFound(Set.empty)), (result1: MailboxGetResults, result2: MailboxGetResults) => result1.merge(result2))
               .map(mailboxes => MailboxGetResponse(
                 accountId = mailboxGetRequest.accountId,
@@ -89,12 +95,16 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
 
   private def getMailboxes(capabilities: Set[CapabilityIdentifier],
                            mailboxGetRequest: MailboxGetRequest,
+                           processingContext: ProcessingContext,
                            mailboxSession: MailboxSession): SFlux[MailboxGetResults] =
+
     mailboxGetRequest.ids match {
       case None => getAllMailboxes(capabilities, mailboxSession)
         .map(MailboxGetResults.found)
       case Some(ids) => SFlux.fromIterable(ids.value)
-        .flatMap(id => getMailboxResultById(capabilities, id, mailboxSession))
+          .flatMap(id => processingContext.resolveMailboxId(id, mailboxIdFactory)
+            .fold(e => SMono.just(MailboxGetResults.notFound(id)),
+              mailboxId => getMailboxResultById(capabilities, mailboxId, mailboxSession)))
     }
 
   private def getMailboxResultById(capabilities: Set[CapabilityIdentifier],

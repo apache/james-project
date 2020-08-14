@@ -24,12 +24,13 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.json.MailboxGetSerializationTest._
 import org.apache.james.jmap.json.MailboxSerializationTest.MAILBOX
+import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.AccountId
 import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsError, JsSuccess, Json}
+import play.api.libs.json.{JsSuccess, Json}
 
 object MailboxGetSerializationTest {
   private val FACTORY: MailboxId.Factory = new TestId.Factory
@@ -38,22 +39,28 @@ object MailboxGetSerializationTest {
 
   private val ACCOUNT_ID: AccountId = AccountId(id)
 
-  private val MAILBOX_ID_1: MailboxId = FACTORY.fromString("1")
-  private val MAILBOX_ID_2: MailboxId = FACTORY.fromString("2")
+  private val MAILBOX_ID_1: UnparsedMailboxId = "1"
+  private val MAILBOX_ID_2: UnparsedMailboxId = "2"
 
   private val PROPERTIES: Properties = Properties(List("name", "role"))
 }
 
 class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
   "Deserialize MailboxGetRequest" should {
-    "fail when MailboxId.Factory can't deserialize MailboxId" in {
+    "succeed on invalid mailboxId" in {
+      // as they are unparsed
+      val expectedRequestObject = MailboxGetRequest(
+        accountId = ACCOUNT_ID,
+        ids = Some(Ids(List("ab#?"))),
+        properties = None)
+
       SERIALIZER.deserializeMailboxGetRequest(
         """
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
           |  "ids": ["ab#?"]
           |}
-          |""".stripMargin) shouldBe a [JsError]
+          |""".stripMargin) should equal(JsSuccess(expectedRequestObject))
     }
 
     "succeed when properties are missing" in {

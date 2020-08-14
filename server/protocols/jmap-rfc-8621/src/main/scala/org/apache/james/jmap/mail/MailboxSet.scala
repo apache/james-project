@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.mail
 
+import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
@@ -38,8 +39,14 @@ case class MailboxSetRequest(accountId: AccountId,
                              onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy])
 
 object MailboxSetRequest {
+  type UnparsedMailboxIdConstraint = NonEmpty
   type MailboxCreationId = String Refined NonEmpty
-  type UnparsedMailboxId = String Refined NonEmpty
+  type UnparsedMailboxId = String Refined UnparsedMailboxIdConstraint
+
+  def asUnparsed(mailboxId: MailboxId): UnparsedMailboxId = refined.refineV[UnparsedMailboxIdConstraint](mailboxId.serialize()) match {
+    case Left(e) => throw new IllegalArgumentException(e)
+    case scala.Right(value) => value
+  }
 }
 
 case class RemoveEmailsOnDestroy(value: Boolean) extends AnyVal

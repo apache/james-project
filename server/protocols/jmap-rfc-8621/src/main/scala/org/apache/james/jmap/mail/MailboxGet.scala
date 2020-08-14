@@ -20,11 +20,11 @@
 package org.apache.james.jmap.mail
 
 import eu.timepit.refined.types.string.NonEmptyString
+import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.model.AccountId
 import org.apache.james.jmap.model.State.State
-import org.apache.james.mailbox.model.MailboxId
 
-case class Ids(value: List[MailboxId])
+case class Ids(value: List[UnparsedMailboxId])
 
 case class Properties(value: List[NonEmptyString]) {
   def asSetOfString: Set[String] = value.map(_.toString()).toSet
@@ -35,7 +35,7 @@ case class MailboxGetRequest(accountId: AccountId,
                              ids: Option[Ids],
                              properties: Option[Properties])
 
-case class NotFound(value: Set[MailboxId]) {
+case class NotFound(value: Set[UnparsedMailboxId]) {
   def merge(other: NotFound): NotFound = NotFound(this.value ++ other.value)
 }
 
