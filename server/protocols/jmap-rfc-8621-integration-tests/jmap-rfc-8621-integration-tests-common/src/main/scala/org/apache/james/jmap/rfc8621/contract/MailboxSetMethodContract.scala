@@ -219,7 +219,7 @@ trait MailboxSetMethodContract {
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
-         |          "description": "'/parentId' property in mailbox object is not valid"
+         |          "description": "'/parentId' property in mailbox object is not valid: Predicate isEmpty() did not fail."
          |        }
          |      }
          |    },
@@ -1192,6 +1192,124 @@ trait MailboxSetMethodContract {
        // We need to limit ourself to simple body assertions in order not to infer id allocation
        .body("methodResponses[0][1].created.C42.totalThreads", equalTo(0))
        .body("methodResponses[1][1].destroyed", hasSize(1))
+  }
+
+  @Test
+  def createParentIdShouldAcceptCreationIdsWithinTheSameRequest(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "parent"
+        |                    }
+        |                }
+        |           },
+        |    "c1"],
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C43": {
+        |                      "name": "child",
+        |                      "parentId": "#C42"
+        |                    }
+        |                }
+        |           },
+        |    "c2"]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val parentId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", BOB.asString(), "parent")
+      .serialize()
+    val childId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", BOB.asString(), "parent.child")
+      .serialize()
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [
+         |        [
+         |            "Mailbox/set",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "newState": "000001",
+         |                "created": {
+         |                    "C42": {
+         |                        "id": "$parentId",
+         |                        "totalEmails": 0,
+         |                        "unreadEmails": 0,
+         |                        "totalThreads": 0,
+         |                        "unreadThreads": 0,
+         |                        "myRights": {
+         |                            "mayReadItems": true,
+         |                            "mayAddItems": true,
+         |                            "mayRemoveItems": true,
+         |                            "maySetSeen": true,
+         |                            "maySetKeywords": true,
+         |                            "mayCreateChild": true,
+         |                            "mayRename": true,
+         |                            "mayDelete": true,
+         |                            "maySubmit": true
+         |                        },
+         |                        "isSubscribed": true
+         |                    }
+         |                }
+         |            },
+         |            "c1"
+         |        ],
+         |        [
+         |            "Mailbox/set",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "newState": "000001",
+         |                "created": {
+         |                    "C43": {
+         |                        "id": "$childId",
+         |                        "totalEmails": 0,
+         |                        "unreadEmails": 0,
+         |                        "totalThreads": 0,
+         |                        "unreadThreads": 0,
+         |                        "myRights": {
+         |                            "mayReadItems": true,
+         |                            "mayAddItems": true,
+         |                            "mayRemoveItems": true,
+         |                            "maySetSeen": true,
+         |                            "maySetKeywords": true,
+         |                            "mayCreateChild": true,
+         |                            "mayRename": true,
+         |                            "mayDelete": true,
+         |                            "maySubmit": true
+         |                        },
+         |                        "isSubscribed": true
+         |                    }
+         |                }
+         |            },
+         |            "c2"
+         |        ]
+         |    ]
+         |}""".stripMargin)
   }
 
   @Test

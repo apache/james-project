@@ -114,19 +114,6 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
         }))
   }
 
-  def parseCreate(jsObject: JsObject): Either[MailboxCreationParseException, MailboxCreationRequest] =
-    Json.fromJson(jsObject)(serializer.mailboxCreationRequest) match {
-      case JsSuccess(creationRequest, _) => Right(creationRequest)
-      case JsError(errors) => Left(MailboxCreationParseException(mailboxSetError(errors)))
-    }
-
-  private def mailboxSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): MailboxSetError =
-    errors.head match {
-      case (path, Seq()) => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"'$path' property in mailbox object is not valid")), None)
-      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => MailboxSetError("invalidArguments", Some(SetErrorDescription(s"Missing '$path' property in mailbox object")), None)
-      case (path, _) => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"Unknown error on property '$path'")), None)
-    }
-
   private def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest, processingContext: ProcessingContext): SMono[DeletionResults] = {
     SFlux.fromIterable(mailboxSetRequest.destroy.getOrElse(Seq()))
       .flatMap(id => delete(mailboxSession, processingContext, id)
@@ -176,10 +163,24 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
                             jsObject: JsObject,
                             processingContext: ProcessingContext): CreationResult = {
     parseCreate(jsObject)
-        .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest))
+      .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest, processingContext))
       .map(path => createMailbox(mailboxSession, mailboxCreationId, processingContext, path))
       .fold(e => CreationFailure(mailboxCreationId, e), r => r)
   }
+
+  private def parseCreate(jsObject: JsObject): Either[MailboxCreationParseException, MailboxCreationRequest] =
+    Json.fromJson(jsObject)(serializer.mailboxCreationRequest) match {
+      case JsSuccess(creationRequest, _) => Right(creationRequest)
+      case JsError(errors) => Left(MailboxCreationParseException(mailboxSetError(errors)))
+    }
+
+  private def mailboxSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): MailboxSetError =
+    errors.head match {
+      case (path, Seq()) => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"'$path' property in mailbox object is not valid")), None)
+      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => MailboxSetError("invalidArguments", Some(SetErrorDescription(s"Missing '$path' property in mailbox object")), None)
+      case (path, Seq(JsonValidationError(Seq(message)))) => MailboxSetError("invalidArguments", Some(SetErrorDescription(s"'$path' property in mailbox object is not valid: $message")), None)
+      case (path, _) => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"Unknown error on property '$path'")), None)
+    }
 
   private def createMailbox(mailboxSession: MailboxSession,
                             mailboxCreationId: MailboxCreationId,
@@ -207,9 +208,11 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   }
 
   private def resolvePath(mailboxSession: MailboxSession,
-                          mailboxCreationRequest: MailboxCreationRequest): Either[Exception, MailboxPath] = {
+                          mailboxCreationRequest: MailboxCreationRequest,
+                          processingContext: ProcessingContext): Either[Exception, MailboxPath] = {
     mailboxCreationRequest.parentId
-      .map(parentId => for {
+      .map(maybeParentId => for {
+        parentId <- processingContext.resolveMailboxId(maybeParentId, mailboxIdFactory)
         parentPath <- retrievePath(parentId, mailboxSession)
       } yield {
         parentPath.child(mailboxCreationRequest.name, mailboxSession.getPathDelimiter)
