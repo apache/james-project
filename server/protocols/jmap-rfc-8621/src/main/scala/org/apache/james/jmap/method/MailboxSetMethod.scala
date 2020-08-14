@@ -30,7 +30,7 @@ import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.{FetchGroup, Mailbox, MailboxId, MailboxPath, MessageRange}
-import org.apache.james.mailbox.{MailboxManager, MailboxSession}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json._
@@ -113,6 +113,7 @@ case class DeletionResults(results: Seq[DeletionResult]) {
 
 class MailboxSetMethod @Inject()(serializer: Serializer,
                                  mailboxManager: MailboxManager,
+                                 subscriptionManager: SubscriptionManager,
                                  mailboxIdFactory: MailboxId.Factory,
                                  metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("Mailbox/set")
@@ -177,9 +178,15 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
                             jsObject: JsObject,
                             processingContext: ProcessingContext): CreationResult = {
     parseCreate(jsObject)
-      .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest, processingContext))
-      .map(path => createMailbox(mailboxSession, mailboxCreationId, processingContext, path))
-      .fold(e => CreationFailure(mailboxCreationId, e), r => r)
+      .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest, processingContext)
+        .flatMap(path => createMailbox(mailboxSession = mailboxSession,
+          path = path,
+          isSubscribed = mailboxCreationRequest.isSubscribed.getOrElse(IsSubscribed(true)))))
+      .fold(e => CreationFailure(mailboxCreationId, e),
+        mailboxId => {
+          recordCreationIdInProcessingContext(mailboxCreationId, processingContext, mailboxId)
+          CreationSuccess(mailboxCreationId, mailboxId)
+        })
   }
 
   private def parseCreate(jsObject: JsObject): Either[MailboxCreationParseException, MailboxCreationRequest] =
@@ -197,16 +204,17 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     }
 
   private def createMailbox(mailboxSession: MailboxSession,
-                            mailboxCreationId: MailboxCreationId,
-                            processingContext: ProcessingContext,
-                            path: MailboxPath): CreationResult = {
+                            path: MailboxPath,
+                            isSubscribed: IsSubscribed): Either[Exception, MailboxId] = {
     try {
       //can safely do a get as the Optional is empty only if the mailbox name is empty which is forbidden by the type constraint on MailboxName
       val mailboxId = mailboxManager.createMailbox(path, mailboxSession).get()
-      recordCreationIdInProcessingContext(mailboxCreationId, processingContext, mailboxId)
-      CreationSuccess(mailboxCreationId, mailboxId)
+      if (isSubscribed.value) {
+        subscriptionManager.subscribe(mailboxSession, path.getName)
+      }
+      Right(mailboxId)
     } catch {
-      case error: Exception => CreationFailure(mailboxCreationId, error)
+      case error: Exception => Left(error)
     }
   }
 

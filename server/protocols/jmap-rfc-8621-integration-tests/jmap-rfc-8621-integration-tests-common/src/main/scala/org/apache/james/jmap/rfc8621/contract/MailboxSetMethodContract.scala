@@ -268,6 +268,128 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  def mailboxSetShouldSubscribeMailboxWhenRequired(server: GuiceJamesServer): Unit = {
+    val request =
+      """
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "myMailbox",
+        |                      "isSubscribed": true
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    Assertions.assertThat(server.getProbe(classOf[MailboxProbeImpl])
+      .listSubscriptions(BOB.asString())).contains("myMailbox")
+  }
+
+  @Test
+  def mailboxSetShouldNotSubscribeMailboxWhenRequired(server: GuiceJamesServer): Unit = {
+    val request=
+      """
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "myMailbox",
+        |                      "isSubscribed": false
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    Assertions.assertThat(server.getProbe(classOf[MailboxProbeImpl])
+      .listSubscriptions(BOB.asString())).doesNotContain("myMailbox")
+  }
+
+  @Test
+  def mailboxSetShouldSubscribeMailboxByDefault(server: GuiceJamesServer): Unit = {
+    val request=
+      """
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "myMailbox"
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    Assertions.assertThat(server.getProbe(classOf[MailboxProbeImpl])
+      .listSubscriptions(BOB.asString())).contains("myMailbox")
+  }
+
+  @Test
   def mailboxGetShouldAllowTheUseOfCreationIds(server: GuiceJamesServer): Unit = {
     val request =
       """
@@ -364,7 +486,7 @@ trait MailboxSetMethodContract {
          |					"mayDelete": true,
          |					"maySubmit": true
          |				},
-         |				"isSubscribed": false
+         |				"isSubscribed": true
          |			}],
          |      "notFound":[]
          |		}, "c2"]

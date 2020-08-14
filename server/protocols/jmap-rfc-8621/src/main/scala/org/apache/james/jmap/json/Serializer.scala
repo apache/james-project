@@ -25,7 +25,6 @@ import java.net.URL
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
 import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Right, Rights, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
@@ -35,7 +34,6 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodNa
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -159,7 +157,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val unreadEmailsWrites: Writes[UnreadEmails] = Json.valueWrites[UnreadEmails]
   private implicit val totalThreadsWrites: Writes[TotalThreads] = Json.valueWrites[TotalThreads]
   private implicit val unreadThreadsWrites: Writes[UnreadThreads] = Json.valueWrites[UnreadThreads]
-  private implicit val isSubscribedWrites: Writes[IsSubscribed] = Json.valueWrites[IsSubscribed]
+  private implicit val isSubscribedWrites: Format[IsSubscribed] = Json.valueFormat[IsSubscribed]
 
   private implicit val mayReadItemsWrites: Writes[MayReadItems] = Json.valueWrites[MayReadItems]
   private implicit val mayAddItemsWrites: Writes[MayAddItems] = Json.valueWrites[MayAddItems]

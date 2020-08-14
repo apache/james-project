@@ -50,7 +50,7 @@ object MailboxSetRequest {
 }
 
 case class RemoveEmailsOnDestroy(value: Boolean) extends AnyVal
-case class MailboxCreationRequest(name: MailboxName, parentId: Option[UnparsedMailboxId])
+case class MailboxCreationRequest(name: MailboxName, parentId: Option[UnparsedMailboxId], isSubscribed: Option[IsSubscribed])
 
 case class MailboxPatchObject(value: Map[String, JsObject])
 
