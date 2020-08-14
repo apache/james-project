@@ -37,10 +37,9 @@ import play.api.libs.json._
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
-import scala.collection.immutable
-
 case class MailboxHasMailException(mailboxId: MailboxId) extends Exception
 case class MailboxHasChildException(mailboxId: MailboxId) extends Exception
+case class MailboxCreationParseException(mailboxSetError: MailboxSetError) extends Exception
 
 sealed trait CreationResult {
   def mailboxCreationId: MailboxCreationId
@@ -51,6 +50,7 @@ case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exce
     case e: MailboxNotFoundException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("parentId"))))
     case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("name"))))
     case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("name"))))
+    case e: MailboxCreationParseException => e.mailboxSetError
     case _: InsufficientRightsException => MailboxSetError.forbidden(Some(SetErrorDescription("Insufficient rights")), Some(Properties(List("parentId"))))
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
@@ -107,27 +107,18 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asMailboxSetRequest(invocation.arguments)
         .flatMap(mailboxSetRequest => {
-          val (unparsableCreateRequests, createRequests) = parseCreateRequests(mailboxSetRequest)
           for {
-            creationResults <- createMailboxes(mailboxSession, createRequests, processingContext)
-            deletionResults <- deleteMailboxes(mailboxSession, mailboxSetRequest.destroy.getOrElse(Seq()), processingContext)
-          } yield createResponse(invocation, mailboxSetRequest, unparsableCreateRequests, creationResults, deletionResults)
+            creationResults <- createMailboxes(mailboxSession, mailboxSetRequest, processingContext)
+            deletionResults <- deleteMailboxes(mailboxSession, mailboxSetRequest, processingContext)
+          } yield createResponse(invocation, mailboxSetRequest, creationResults, deletionResults)
         }))
   }
 
-  private def parseCreateRequests(mailboxSetRequest: MailboxSetRequest): (immutable.Iterable[(MailboxCreationId, MailboxSetError)], immutable.Iterable[(MailboxCreationId, MailboxCreationRequest)]) = {
-    mailboxSetRequest.create
-      .getOrElse(Map.empty)
-      .view
-      .mapValues(value => Json.fromJson(value)(serializer.mailboxCreationRequest))
-      .toMap
-      .partitionMap { case (creationId, creationRequestParseResult) =>
-        creationRequestParseResult match {
-          case JsSuccess(creationRequest, _) => Right((creationId, creationRequest))
-          case JsError(errors) => Left(creationId, mailboxSetError(errors))
-        }
-      }
-  }
+  def parseCreate(jsObject: JsObject): Either[MailboxCreationParseException, MailboxCreationRequest] =
+    Json.fromJson(jsObject)(serializer.mailboxCreationRequest) match {
+      case JsSuccess(creationRequest, _) => Right(creationRequest)
+      case JsError(errors) => Left(MailboxCreationParseException(mailboxSetError(errors)))
+    }
 
   private def mailboxSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): MailboxSetError =
     errors.head match {
@@ -136,8 +127,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       case (path, _) => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"Unknown error on property '$path'")), None)
     }
 
-  private def deleteMailboxes(mailboxSession: MailboxSession, deleteRequests: immutable.Iterable[UnparsedMailboxId], processingContext: ProcessingContext): SMono[DeletionResults] = {
-    SFlux.fromIterable(deleteRequests)
+  private def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest, processingContext: ProcessingContext): SMono[DeletionResults] = {
+    SFlux.fromIterable(mailboxSetRequest.destroy.getOrElse(Seq()))
       .flatMap(id => delete(mailboxSession, processingContext, id)
         .onErrorRecover(e => DeletionFailure(id, e)))
       .collectSeq()
@@ -165,12 +156,15 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   }
 
   private def createMailboxes(mailboxSession: MailboxSession,
-                              createRequests: immutable.Iterable[(MailboxCreationId, MailboxCreationRequest)],
+                              mailboxSetRequest: MailboxSetRequest,
                               processingContext: ProcessingContext): SMono[CreationResults] = {
-    SFlux.fromIterable(createRequests).flatMap {
-      case (mailboxCreationId: MailboxCreationId, mailboxCreationRequest: MailboxCreationRequest) =>
+    SFlux.fromIterable(mailboxSetRequest.create
+      .getOrElse(Map.empty)
+      .view)
+      .flatMap {
+      case (mailboxCreationId: MailboxCreationId, jsObject: JsObject) =>
         SMono.fromCallable(() => {
-          createMailbox(mailboxSession, mailboxCreationId, mailboxCreationRequest, processingContext)
+          createMailbox(mailboxSession, mailboxCreationId, jsObject, processingContext)
         }).subscribeOn(Schedulers.elastic())
     }
       .collectSeq()
@@ -179,9 +173,10 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def createMailbox(mailboxSession: MailboxSession,
                             mailboxCreationId: MailboxCreationId,
-                            mailboxCreationRequest: MailboxCreationRequest,
+                            jsObject: JsObject,
                             processingContext: ProcessingContext): CreationResult = {
-    resolvePath(mailboxSession, mailboxCreationRequest)
+    parseCreate(jsObject)
+        .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest))
       .map(path => createMailbox(mailboxSession, mailboxCreationId, processingContext, path))
       .fold(e => CreationFailure(mailboxCreationId, e), r => r)
   }
@@ -229,8 +224,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     }
 
   private def createResponse(invocation: Invocation, mailboxSetRequest: MailboxSetRequest,
-                             unparsableCreateRequests: immutable.Iterable[(MailboxCreationId, MailboxSetError)],
-                             creationResults: CreationResults, deletionResults: DeletionResults): Invocation = {
+                             creationResults: CreationResults,
+                             deletionResults: DeletionResults): Invocation = {
     val created: Map[MailboxCreationId, MailboxId] = creationResults.retrieveCreated
 
     Invocation(methodName, Arguments(serializer.serialize(MailboxSetResponse(
@@ -251,7 +246,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
         quotas = None,
         isSubscribed = IsSubscribed(true)
       )))).filter(_.nonEmpty),
-      notCreated = Some(unparsableCreateRequests.toMap ++ creationResults.retrieveErrors).filter(_.nonEmpty),
+      notCreated = Some(creationResults.retrieveErrors).filter(_.nonEmpty),
       updated = None,
       notUpdated = None,
       notDestroyed = Some(deletionResults.retrieveErrors).filter(_.nonEmpty)
