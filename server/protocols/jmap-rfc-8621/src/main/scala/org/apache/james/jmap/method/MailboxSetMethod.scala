@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, SetErrorDescription, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
+import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
@@ -34,7 +34,7 @@ import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MailboxPath, Messa
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
-import play.api.libs.json._
+import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, Json, JsonValidationError}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
@@ -71,6 +71,7 @@ case class CreationResults(created: Seq[CreationResult]) {
   private def toCreationResponse(mailboxId: MailboxId): MailboxCreationResponse = MailboxCreationResponse(
     id = mailboxId,
     role = None,
+    sortOrder = SortOrder.defaultSortOrder,
     totalEmails = TotalEmails(0L),
     unreadEmails = UnreadEmails(0L),
     totalThreads = TotalThreads(0L),

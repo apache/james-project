@@ -109,6 +109,7 @@ case class MailboxSetError(`type`: SetErrorType, description: Option[SetErrorDes
 
 case class MailboxCreationResponse(id: MailboxId,
                                    role: Option[Role],//TODO see if we need to return this, if a role is set by the server during creation
+                                   sortOrder: SortOrder,
                                    totalEmails: TotalEmails,
                                    unreadEmails: UnreadEmails,
                                    totalThreads: TotalThreads,
