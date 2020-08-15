@@ -23,7 +23,6 @@ The default configuration of the Basic Server includes the following features:
   ** Optionally use a volume if you are a Docker or Kubernetes user
  * Multi-domain (virtual domain) support
  * Administration of users either via a command-line tool or the admin api
- * ????? What else should go here? ?????
 
 We have disabled all of the insecure communications and require SSL. If you have
 a specific requirement to use an insecure protocol, or if the above list does not

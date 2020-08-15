@@ -17,6 +17,8 @@ community thinks, then that is what we should write.
 
 ////
 
+////
+Comment this out until there is agreement.
 == Warning
 
 Please note that if you want to try to use James, you are pretty
@@ -45,10 +47,6 @@ On the other hand, the developers would **love** for you to do stuff that
 they are not interested in doing, like documentation. If you don't know anything
 about the code, it would be a good way to help out until you can eventually
 join the exclusive committer club, too.
+////
 
-
-== Communications
-
- * Mailing List
- * Glitter
- * Anything else?? 
+(Redo this once there is consensus in the community.)
