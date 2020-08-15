@@ -48,6 +48,43 @@
   ** Status: 
 * listeners.xml -> https://issues.apache.org/jira/browse/JAMES-3244
   ** Status: 
+----
+Comment from chibenwa:
+chibenwa on Jun 15 Member
+Mailbox listeners allows to react upon users mailbox events like "message added", "message deleted"...
+
+ @dleangen
+dleangen on Jun 15 Author Member
+Thanks!
+
+ @dleangen
+dleangen on Jun 15 Author Member
+Sorry, are these the same as SMTP Hooks that are described on the old website?
+
+Where can I find examples of these?
+
+ @chibenwa
+chibenwa on Jun 15 Member
+No it is different.
+
+SMTP hooks are to add functionalities to the SMTP protocols.
+
+Here MailboxListener allow to react upon any mailbox changes whatever the protocol.
+
+See http://james.apache.org/server/config-listeners.html
+
+ @dleangen
+dleangen on Jun 15 Author Member
+Ah, hehe. Ok, makes sense. I read the page at the url you pasted.
+
+Are there any examples anywhere?
+
+ @mbaechler
+mbaechler on Jun 16 Member
+If you look at example of users in the code, the quota-search feature is a good example : https://github.com/apache/james-project/blob/master/mailbox/plugin/quota-search-elasticsearch/src/main/java/org/apache/james/quota/search/elasticsearch/events/ElasticSearchQuotaMailboxListener.java
+
+It allows to index quota usage per user into ElasticSearch
+----
 * managesieveserver.xml -> https://issues.apache.org/jira/browse/JAMES-3245
   ** Status: 
 * spring-server.xml - System Configuration
@@ -110,6 +147,20 @@ Jmx protocol is used by James cli to interact with the server. Jmx is known to b
 
 
 Scenarios for address rewriting
+----
+Comment from chibenwa:
+
+chibenwa on Jun 17 Member
+https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-recipientrewritetable.xml (not yet deployed on current website :-( tries to provide wording about Recipient Rewriting and use cases.
+
+ @chibenwa
+chibenwa on Jun 17 Member
+Maybe address rewriting needs to be moved in the concept part?
+
+ @dleangen
+dleangen on Jun 17 Author Member
+Yes, definitely. Anything that requires knowledge of any concept should be there.
+----
 
 The following scenarios are examples of how you can use address rewriting:
 
@@ -119,6 +170,14 @@ The following example shows how an organization, Contoso, Ltd., can hide its int
 
 Outbound messages from the northamerica.contoso.com, europe.contoso.com, and asia.contoso.com domains are rewritten so they appear to originate from a single contoso.com domain. All messages are rewritten as they pass through Edge Transport servers that provide SMTP connectivity between the whole organization and the Internet.
 
+----
+Comment from chibenwa:
+chibenwa on Jun 17 Member
+We speak of a domain alias here. I would more formulate it:
+
+External email can send emails to northamerica.contoso.com, europe.contoso.com, ...
+Internal users can send email from northamerica.contoso.com, europe.contoso.com, ...
+----
 Inbound messages to contoso.com recipients are relayed by the Edge Transport server to a Mailbox server. The message is delivered to the correct recipient based on the proxy address that's configured on the recipient's mailbox.
 
 Mergers and acquisitions: An acquired company might continue to run as a separate business, but you can use address rewriting to make the two organizations appear as if they're one integrated organization.
