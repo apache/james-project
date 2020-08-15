@@ -105,7 +105,7 @@
 Jmx protocol is used by James cli to interact with the server. Jmx is known to be insecure, and we have as a project to rewrite the cli for james servers in order to rely on webadmin.
 
 
-
+// Comment from chibenwa: this does not belong in the conf section
 Scenarios for address rewriting
 
 The following scenarios are examples of how you can use address rewriting:

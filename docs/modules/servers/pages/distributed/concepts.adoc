@@ -10,6 +10,7 @@ This section describes the concepts upon which the
  * https://en.wikipedia.org/wiki/NoSQL[NoSQL data storage]
   ** https://cassandra.apache.org/[Apache Cassandra]
  * Sharding
+// Note from chibenwa: this is not a simple task
  * Load balancing
  * Mail Processing
  * Queuing

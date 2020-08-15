@@ -8,6 +8,11 @@
  description. I also tried to remove "technical" elements from the overview.
  They are necessary, but IMO should be avoided here because many different people
  read the overview to decide if it is relevant to them or not.
+
+Comment from chibenwa:
+
+We should have a page about such a "migration", yes, good point.
+7731bc5 proposes a migration strategy from an arbitrary IMAP server
 ////
 
 The Distributed Server is based on the 
