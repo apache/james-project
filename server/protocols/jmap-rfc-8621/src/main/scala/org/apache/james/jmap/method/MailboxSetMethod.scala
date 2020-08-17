@@ -118,6 +118,8 @@ sealed trait UpdateResult
 case class UpdateSuccess(mailboxId: MailboxId) extends UpdateResult
 case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable) extends UpdateResult {
   def asMailboxSetError: MailboxSetError = exception match {
+    case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("/name"))))
+    case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("/name"))))
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
 }
