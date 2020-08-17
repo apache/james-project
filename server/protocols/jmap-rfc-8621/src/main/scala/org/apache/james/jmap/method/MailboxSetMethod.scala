@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, SetErrorDescription, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
+import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, SetErrorDescription, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
@@ -228,34 +228,43 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest, processingContext: ProcessingContext): SMono[DeletionResults] = {
     SFlux.fromIterable(mailboxSetRequest.destroy.getOrElse(Seq()))
-      .flatMap(id => delete(mailboxSession, processingContext, id)
+      .flatMap(id => delete(mailboxSession, processingContext, id, mailboxSetRequest.onDestroyRemoveEmails.getOrElse(RemoveEmailsOnDestroy(false)))
         .onErrorRecover(e => DeletionFailure(id, e)))
       .collectSeq()
       .map(DeletionResults)
   }
 
-  private def delete(mailboxSession: MailboxSession, processingContext: ProcessingContext, id: UnparsedMailboxId): SMono[DeletionResult] = {
+  private def delete(mailboxSession: MailboxSession, processingContext: ProcessingContext, id: UnparsedMailboxId, onDestroy: RemoveEmailsOnDestroy): SMono[DeletionResult] = {
     processingContext.resolveMailboxId(id, mailboxIdFactory) match {
-      case Right(mailboxId) => SMono.fromCallable(() => delete(mailboxSession, mailboxId))
+      case Right(mailboxId) => SMono.fromCallable(() => delete(mailboxSession, mailboxId, onDestroy))
         .subscribeOn(Schedulers.elastic())
         .`then`(SMono.just[DeletionResult](DeletionSuccess(mailboxId)))
       case Left(e) => SMono.raiseError(e)
     }
   }
 
-  private def delete(mailboxSession: MailboxSession, id: MailboxId): Unit = {
+  private def delete(mailboxSession: MailboxSession, id: MailboxId, onDestroy: RemoveEmailsOnDestroy): Unit = {
     val mailbox = mailboxManager.getMailbox(id, mailboxSession)
+
     if (isASystemMailbox(mailbox)) {
       throw SystemMailboxChangeException(id)
     }
-    if (mailbox.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession).hasNext) {
-      throw MailboxHasMailException(id)
-    }
+
     if (mailboxManager.hasChildren(mailbox.getMailboxPath, mailboxSession)) {
       throw MailboxHasChildException(id)
     }
-    val deletedMailbox = mailboxManager.deleteMailbox(id, mailboxSession)
-    subscriptionManager.unsubscribe(mailboxSession, deletedMailbox.getName)
+
+    if (onDestroy.value) {
+      val deletedMailbox = mailboxManager.deleteMailbox(id, mailboxSession)
+      subscriptionManager.unsubscribe(mailboxSession, deletedMailbox.getName)
+    } else {
+      if (mailbox.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession).hasNext) {
+        throw MailboxHasMailException(id)
+      }
+
+      val deletedMailbox = mailboxManager.deleteMailbox(id, mailboxSession)
+      subscriptionManager.unsubscribe(mailboxSession, deletedMailbox.getName)
+    }
   }
 
   private def isASystemMailbox(mailbox: MessageManager): Boolean = Role.from(mailbox.getMailboxPath.getName).isPresent
