@@ -2262,6 +2262,218 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  def updateShouldFailWhenWrongJsonObject(server: GuiceJamesServer): Unit = {
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId1.serialize()}": {
+        |                      "/name": ["newName"]
+        |                    }
+        |                }
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notUpdated": {
+         |				"${mailboxId1.serialize()}": {
+         |					"type": "invalidArguments",
+         |					"description": "Expecting a JSON string as an argument",
+         |					"properties": ["/name"]
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenUnknownProperty(server: GuiceJamesServer): Unit = {
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId1.serialize()}": {
+        |                      "/unknown": "newValue"
+        |                    }
+        |                }
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notUpdated": {
+         |				"${mailboxId1.serialize()}": {
+         |					"type": "invalidArguments",
+         |					"description": "/unknown property do not exist thus cannot be updated",
+         |					"properties": ["/unknown"]
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenEmptyProperty(server: GuiceJamesServer): Unit = {
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId1.serialize()}": {
+        |                      "": "newValue"
+        |                    }
+        |                }
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val message = "Invalid property specified in a patch object: Both predicates of (!isEmpty() && \\\"\\\".startsWith(\\\"/\\\")) failed. Left: Predicate isEmpty() did not fail. Right: Predicate failed: \\\"\\\".startsWith(\\\"/\\\")."
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notUpdated": {
+         |				"${mailboxId1.serialize()}": {
+         |					"type": "invalidPatch",
+         |					"description": "$message"
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenInvalidProperty(server: GuiceJamesServer): Unit = {
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId1.serialize()}": {
+        |                      "name": "newValue"
+        |                    }
+        |                }
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val message = "Invalid property specified in a patch object: Right predicate of (!isEmpty(name) && \\\"name\\\".startsWith(\\\"/\\\")) failed: Predicate failed: \\\"name\\\".startsWith(\\\"/\\\")."
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notUpdated": {
+         |				"${mailboxId1.serialize()}": {
+         |					"type": "invalidPatch",
+         |					"description": "$message"
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
   def updateShouldFailWhenMailboxNameIsTooLong(server: GuiceJamesServer): Unit = {
     val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
     val request =
@@ -2523,6 +2735,4 @@ trait MailboxSetMethodContract {
          |	]
          |}""".stripMargin)
   }
-
-  // TODO invalid path handling (unknown property, invalid name)
 }

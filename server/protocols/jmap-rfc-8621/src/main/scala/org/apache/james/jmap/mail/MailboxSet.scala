@@ -22,8 +22,12 @@ package org.apache.james.jmap.mail
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
+import eu.timepit.refined.boolean.And
 import eu.timepit.refined.collection.NonEmpty
+import eu.timepit.refined.refineV
+import eu.timepit.refined.string.StartsWith
 import org.apache.james.jmap.mail.MailboxName.MailboxName
+import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
 import org.apache.james.jmap.model.AccountId
 import org.apache.james.jmap.model.State.State
@@ -55,11 +59,20 @@ case class MailboxCreationRequest(name: MailboxName,
                                   isSubscribed: Option[IsSubscribed],
                                   rights: Option[Rights])
 
+object MailboxPatchObject {
+  type KeyConstraint = NonEmpty And StartsWith["/"]
+  type MailboxPatchObjectKey = String Refined KeyConstraint
+}
+
 case class MailboxPatchObject(value: Map[String, JsValue]) {
   def updates: Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
     case (property, newValue) => property match {
       case "/name" => NameUpdate.parse(newValue)
-      case property => Left(UnsupportedPropertyUpdated(property))
+      case property =>
+        val refinedKey: Either[String, MailboxPatchObjectKey] = refineV(property)
+        refinedKey.fold[Either[PatchUpdateValidationException, Update]](
+          cause => Left(InvalidPropertyException(property = property, cause = s"Invalid property specified in a patch object: $cause")),
+          value => Left(UnsupportedPropertyUpdatedException(value)))
     }
   })
 }
@@ -77,6 +90,7 @@ case class MailboxSetResponse(accountId: AccountId,
 object MailboxSetError {
   val invalidArgumentValue: SetErrorType = "invalidArguments"
   val serverFailValue: SetErrorType = "serverFail"
+  val invalidPatchValue: SetErrorType = "invalidPatch"
   val notFoundValue: SetErrorType = "notFound"
   val mailboxHasEmailValue: SetErrorType = "mailboxHasEmail"
   val mailboxHasChildValue: SetErrorType = "mailboxHasChild"
@@ -87,6 +101,7 @@ object MailboxSetError {
   def notFound(description: Option[SetErrorDescription]) = MailboxSetError(notFoundValue, description, None)
   def mailboxHasEmail(description: Option[SetErrorDescription]) = MailboxSetError(mailboxHasEmailValue, description, None)
   def mailboxHasChild(description: Option[SetErrorDescription]) = MailboxSetError(mailboxHasChildValue, description, None)
+  def invalidPatch(description: Option[SetErrorDescription]) = MailboxSetError(invalidPatchValue, description, None)
   def forbidden(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(forbiddenValue, description, properties)
 }
 
@@ -114,7 +129,7 @@ case class MailboxUpdateResponse(value: JsObject)
 object NameUpdate {
   def parse(newValue: JsValue): Either[PatchUpdateValidationException, Update] = newValue match {
     case JsString(newName) => scala.Right(NameUpdate(newName))
-    case _ => Left(InvalidUpdate("name", "Expectint a JSON string as an argument"))
+    case _ => Left(InvalidUpdateException("/name", "Expecting a JSON string as an argument"))
   }
 }
 
@@ -122,5 +137,7 @@ sealed trait Update
 case class NameUpdate(newName: String) extends Update
 
 class PatchUpdateValidationException() extends IllegalArgumentException
-case class UnsupportedPropertyUpdated(property: String) extends PatchUpdateValidationException
-case class InvalidUpdate(property: String, cause: String) extends PatchUpdateValidationException
+case class UnsupportedPropertyUpdatedException(property: MailboxPatchObjectKey) extends PatchUpdateValidationException
+case class InvalidPropertyUpdatedException(property: MailboxPatchObjectKey) extends PatchUpdateValidationException
+case class InvalidPropertyException(property: String, cause: String) extends PatchUpdateValidationException
+case class InvalidUpdateException(property: MailboxPatchObjectKey, cause: String) extends PatchUpdateValidationException
