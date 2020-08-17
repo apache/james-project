@@ -31,7 +31,7 @@ import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxManager.RenameOption
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MailboxPath, MessageRange}
-import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, SubscriptionManager}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json._
@@ -41,6 +41,7 @@ import reactor.core.scheduler.Schedulers
 import scala.jdk.CollectionConverters._
 
 case class MailboxHasMailException(mailboxId: MailboxId) extends Exception
+case class SystemMailboxChangeException(mailboxId: MailboxId) extends Exception
 case class MailboxHasChildException(mailboxId: MailboxId) extends Exception
 case class MailboxCreationParseException(mailboxSetError: MailboxSetError) extends Exception
 
@@ -95,6 +96,7 @@ case class DeletionFailure(mailboxId: UnparsedMailboxId, exception: Throwable) e
     case e: MailboxNotFoundException => MailboxSetError.notFound(Some(SetErrorDescription(e.getMessage)))
     case e: MailboxHasMailException => MailboxSetError.mailboxHasEmail(Some(SetErrorDescription(s"${e.mailboxId.serialize} is not empty")))
     case e: MailboxHasChildException => MailboxSetError.mailboxHasChild(Some(SetErrorDescription(s"${e.mailboxId.serialize} has child mailboxes")))
+    case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("System mailboxes cannot be destroyed")), None)
     case e: IllegalArgumentException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${mailboxId} is not a mailboxId: ${e.getMessage}")), None)
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
@@ -121,6 +123,7 @@ case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable) ext
     case e: MailboxNotFoundException => MailboxSetError.notFound(Some(SetErrorDescription(e.getMessage)))
     case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("/name"))))
     case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("/name"))))
+    case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), Some(Properties(List("/name"))))
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
 }
@@ -191,19 +194,22 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       .getOrElse(renameMailbox)
   }
 
-  private def updateMailboxPath(maiboxId: MailboxId, maybeNameUpdate: Option[NameUpdate], mailboxSession: MailboxSession): SMono[UpdateResult] = {
+  private def updateMailboxPath(mailboxId: MailboxId, maybeNameUpdate: Option[NameUpdate], mailboxSession: MailboxSession): SMono[UpdateResult] = {
     maybeNameUpdate.map(nameUpdate => {
       SMono.fromCallable(() => {
-        val mailbox = mailboxManager.getMailbox(maiboxId, mailboxSession)
-        mailboxManager.renameMailbox(maiboxId,
+        val mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession)
+        if (isASystemMailbox(mailbox)) {
+          throw SystemMailboxChangeException(mailboxId)
+        }
+        mailboxManager.renameMailbox(mailboxId,
           computeMailboxPath(mailbox, nameUpdate, mailboxSession),
           RenameOption.RENAME_SUBSCRIPTIONS,
           mailboxSession)
-      }).`then`(SMono.just[UpdateResult](UpdateSuccess(maiboxId)))
+      }).`then`(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
         .subscribeOn(Schedulers.elastic())
     })
       // No updated properties passed. Noop.
-      .getOrElse(SMono.just[UpdateResult](UpdateSuccess(maiboxId)))
+      .getOrElse(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
   }
 
   private def computeMailboxPath(mailbox: MessageManager, nameUpdate: NameUpdate, mailboxSession: MailboxSession): MailboxPath = {
@@ -236,6 +242,9 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def delete(mailboxSession: MailboxSession, id: MailboxId): Unit = {
     val mailbox = mailboxManager.getMailbox(id, mailboxSession)
+    if (isASystemMailbox(mailbox)) {
+      throw SystemMailboxChangeException(id)
+    }
     if (mailbox.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession).hasNext) {
       throw MailboxHasMailException(id)
     }
@@ -245,6 +254,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     val deletedMailbox = mailboxManager.deleteMailbox(id, mailboxSession)
     subscriptionManager.unsubscribe(mailboxSession, deletedMailbox.getName)
   }
+
+  private def isASystemMailbox(mailbox: MessageManager): Boolean = Role.from(mailbox.getMailboxPath.getName).isPresent
 
   private def createMailboxes(mailboxSession: MailboxSession,
                               mailboxSetRequest: MailboxSetRequest,

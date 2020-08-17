@@ -2371,7 +2371,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  def updateShouldNotRenameDelegtedMailboxes(server: GuiceJamesServer): Unit = {
+  def updateShouldNotRenameDelegatedMailboxes(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(ANDRE, "previousName")
     val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
@@ -2425,6 +2425,108 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
+  @Test
+  def updateShouldNotRenameSystemMailboxes(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId.serialize()}": {
+        |                      "/name": "newName"
+        |                    }
+        |                }
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notUpdated": {
+         |				"${mailboxId.serialize()}": {
+         |					"type": "invalidArguments",
+         |					"description": "Invalid change to a system mailbox",
+         |          "properties":{"value":["/name"]}
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldNotRemoveSystemMailboxes(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "destroy": ["${mailboxId.serialize()}"]
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |      "notDestroyed": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "System mailboxes cannot be destroyed"
+         |        }
+         |      }
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
   // TODO invalid path handling (unknown property, invalid name)
-  // TODO disable destroy / rename of system mailbox
 }
