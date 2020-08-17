@@ -2318,7 +2318,113 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
+  @Test
+  def updateShouldFailWhenMailboxNotFound(): Unit = {
+    val mailboxId1: MailboxId = randomMailboxId
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId1.serialize()}": {
+        |                      "/name": "newName"
+        |                    }
+        |                }
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notUpdated": {
+         |				"${mailboxId1.serialize()}": {
+         |					"type": "notFound",
+         |					"description": "${mailboxId1.serialize()} can not be found"
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldNotRenameDelegtedMailboxes(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(ANDRE, "previousName")
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS)
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId1.serialize()}": {
+        |                      "/name": "newName"
+        |                    }
+        |                }
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"notUpdated": {
+         |				"${mailboxId1.serialize()}": {
+         |					"type": "notFound",
+         |					"description": "#private:andre@domain.tld:previousName"
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin)
+  }
+
   // TODO invalid path handling (unknown property, invalid name)
   // TODO disable destroy / rename of system mailbox
-  // TODO renaming delegated mailboxes is not allowed
 }
