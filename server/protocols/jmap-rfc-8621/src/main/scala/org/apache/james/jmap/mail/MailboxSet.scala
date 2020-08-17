@@ -29,7 +29,7 @@ import org.apache.james.jmap.model.AccountId
 import org.apache.james.jmap.model.State.State
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, JsString, JsValue}
 
 case class MailboxSetRequest(accountId: AccountId,
                              ifInState: Option[State],
@@ -55,7 +55,14 @@ case class MailboxCreationRequest(name: MailboxName,
                                   isSubscribed: Option[IsSubscribed],
                                   rights: Option[Rights])
 
-case class MailboxPatchObject(value: Map[String, JsObject])
+case class MailboxPatchObject(value: Map[String, JsValue]) {
+  def updates: Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
+    case (property, newValue) => property match {
+      case "/name" => NameUpdate.parse(newValue)
+      case property => Left(UnsupportedPropertyUpdated(property))
+    }
+  })
+}
 
 case class MailboxSetResponse(accountId: AccountId,
                               oldState: Option[State],
@@ -98,4 +105,22 @@ case class MailboxCreationResponse(id: MailboxId,
                                    isSubscribed: IsSubscribed
                                   )
 
+object MailboxSetResponse {
+  def empty: MailboxUpdateResponse = MailboxUpdateResponse(JsObject(Map[String, JsValue]()))
+}
+
 case class MailboxUpdateResponse(value: JsObject)
+
+object NameUpdate {
+  def parse(newValue: JsValue): Either[PatchUpdateValidationException, Update] = newValue match {
+    case JsString(newName) => scala.Right(NameUpdate(newName))
+    case _ => Left(InvalidUpdate("name", "Expectint a JSON string as an argument"))
+  }
+}
+
+sealed trait Update
+case class NameUpdate(newName: String) extends Update
+
+class PatchUpdateValidationException() extends IllegalArgumentException
+case class UnsupportedPropertyUpdated(property: String) extends PatchUpdateValidationException
+case class InvalidUpdate(property: String, cause: String) extends PatchUpdateValidationException

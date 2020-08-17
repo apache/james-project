@@ -276,7 +276,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   private implicit val mailboxSetCreationResponseWrites: Writes[MailboxCreationResponse] = Json.writes[MailboxCreationResponse]
 
-  private implicit val mailboxSetUpdateResponseWrites: Writes[MailboxUpdateResponse] = Json.writes[MailboxUpdateResponse]
+  private implicit val mailboxSetUpdateResponseWrites: Writes[MailboxUpdateResponse] = Json.valueWrites[MailboxUpdateResponse]
 
   private implicit val propertiesWrites: Writes[Properties] = Json.writes[Properties]
 

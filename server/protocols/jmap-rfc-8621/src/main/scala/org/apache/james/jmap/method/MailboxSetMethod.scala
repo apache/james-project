@@ -23,19 +23,22 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, Properties, SetErrorDescription, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads}
+import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, SetErrorDescription, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
 import org.apache.james.jmap.routes.ProcessingContext
+import org.apache.james.mailbox.MailboxManager.RenameOption
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MailboxPath, MessageRange}
-import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json._
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
+
+import scala.jdk.CollectionConverters._
 
 case class MailboxHasMailException(mailboxId: MailboxId) extends Exception
 case class MailboxHasChildException(mailboxId: MailboxId) extends Exception
@@ -111,6 +114,25 @@ case class DeletionResults(results: Seq[DeletionResult]) {
     .toMap
 }
 
+sealed trait UpdateResult
+case class UpdateSuccess(mailboxId: MailboxId) extends UpdateResult
+case class UpdateFailure(mailboxId: MailboxId, exception: Throwable) extends UpdateResult {
+  def asMailboxSetError: MailboxSetError = exception match {
+    case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
+  }
+}
+case class UpdateResults(results: Seq[UpdateResult]) {
+  def updated: Map[MailboxId, MailboxUpdateResponse] =
+    results.flatMap(result => result match {
+      case success: UpdateSuccess => Some((success.mailboxId, MailboxSetResponse.empty))
+      case _ => None
+    }).toMap
+  def notUpdated: Map[MailboxId, MailboxSetError] = results.flatMap(result => result match {
+    case failure: UpdateFailure => Some(failure.mailboxId, failure.asMailboxSetError)
+    case _ => None
+  }).toMap
+}
+
 class MailboxSetMethod @Inject()(serializer: Serializer,
                                  mailboxManager: MailboxManager,
                                  subscriptionManager: SubscriptionManager,
@@ -125,8 +147,68 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
           for {
             creationResults <- createMailboxes(mailboxSession, mailboxSetRequest, processingContext)
             deletionResults <- deleteMailboxes(mailboxSession, mailboxSetRequest, processingContext)
-          } yield createResponse(invocation, mailboxSetRequest, creationResults, deletionResults)
+            updateResults <- updateMailboxes(mailboxSession, mailboxSetRequest, processingContext)
+          } yield createResponse(invocation, mailboxSetRequest, creationResults, deletionResults, updateResults)
         }))
+  }
+
+  private def updateMailboxes(mailboxSession: MailboxSession,
+                              mailboxSetRequest: MailboxSetRequest,
+                              processingContext: ProcessingContext): SMono[UpdateResults] = {
+    SFlux.fromIterable(mailboxSetRequest.update.getOrElse(Seq()))
+      .flatMap({
+        case (mailboxId: MailboxId, patch: MailboxPatchObject) => updateMailbox(mailboxSession, mailboxId, patch)
+          .onErrorResume(e => SMono.just(UpdateFailure(mailboxId, e)))
+      })
+      .collectSeq()
+      .map(UpdateResults)
+  }
+
+  private def updateMailbox(mailboxSession: MailboxSession,
+                            maiboxId: MailboxId,
+                            patch: MailboxPatchObject): SMono[UpdateResult] = {
+    val maybeParseException: Option[PatchUpdateValidationException] = patch.updates
+      .flatMap(x => x match {
+        case Left(e) => Some(e)
+        case _ => None
+      }).headOption
+
+    val maybeNameUpdate: Option[NameUpdate] = patch.updates
+      .flatMap(x => x match {
+        case Right(NameUpdate(newName)) => Some(NameUpdate(newName))
+        case _ => None
+      }).headOption
+
+    def renameMailbox: SMono[UpdateResult] = updateMailboxPath(maiboxId, maybeNameUpdate, mailboxSession)
+
+    maybeParseException.map(e => SMono.just[UpdateResult](UpdateFailure(maiboxId, e)))
+      .getOrElse(renameMailbox)
+  }
+
+  private def updateMailboxPath(maiboxId: MailboxId, maybeNameUpdate: Option[NameUpdate], mailboxSession: MailboxSession): SMono[UpdateResult] = {
+    maybeNameUpdate.map(nameUpdate => {
+      SMono.fromCallable(() => {
+        val mailbox = mailboxManager.getMailbox(maiboxId, mailboxSession)
+        mailboxManager.renameMailbox(maiboxId,
+          computeMailboxPath(mailbox, nameUpdate, mailboxSession),
+          RenameOption.RENAME_SUBSCRIPTIONS,
+          mailboxSession)
+      }).`then`(SMono.just[UpdateResult](UpdateSuccess(maiboxId)))
+        .subscribeOn(Schedulers.elastic())
+    })
+      // No updated properties passed. Noop.
+      .getOrElse(SMono.just[UpdateResult](UpdateSuccess(maiboxId)))
+  }
+
+  private def computeMailboxPath(mailbox: MessageManager, nameUpdate: NameUpdate, mailboxSession: MailboxSession): MailboxPath = {
+    val originalPath: MailboxPath = mailbox.getMailboxPath
+    val maybeParentPath: Option[MailboxPath] = originalPath.getHierarchyLevels(mailboxSession.getPathDelimiter)
+      .asScala
+      .reverse
+      .drop(1)
+      .headOption
+    maybeParentPath.map(_.child(nameUpdate.newName, mailboxSession.getPathDelimiter))
+      .getOrElse(MailboxPath.forUser(mailboxSession.getUser, nameUpdate.newName))
   }
 
   private def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest, processingContext: ProcessingContext): SMono[DeletionResults] = {
@@ -257,7 +339,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   private def createResponse(invocation: Invocation,
                              mailboxSetRequest: MailboxSetRequest,
                              creationResults: CreationResults,
-                             deletionResults: DeletionResults): Invocation = {
+                             deletionResults: DeletionResults,
+                             updateResults: UpdateResults): Invocation = {
     val response = MailboxSetResponse(
       mailboxSetRequest.accountId,
       oldState = None,
@@ -265,8 +348,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       destroyed = Some(deletionResults.destroyed).filter(_.nonEmpty),
       created = Some(creationResults.retrieveCreated).filter(_.nonEmpty),
       notCreated = Some(creationResults.retrieveErrors).filter(_.nonEmpty),
-      updated = None,
-      notUpdated = None,
+      updated = Some(updateResults.updated).filter(_.nonEmpty),
+      notUpdated = Some(updateResults.notUpdated).filter(_.nonEmpty),
       notDestroyed = Some(deletionResults.retrieveErrors).filter(_.nonEmpty))
     
     Invocation(methodName,
