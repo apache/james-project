@@ -993,7 +993,7 @@ trait MailboxSetMethodContract {
          |        "C42": {
          |          "type": "invalidArguments",
          |          "description": "${mailboxId.serialize()} can not be found",
-         |          "properties":{"value":["parentId"]}
+         |          "properties":["parentId"]
          |        }
          |      }
          |    },
@@ -1050,7 +1050,7 @@ trait MailboxSetMethodContract {
          |        "C42": {
          |          "type": "invalidArguments",
          |          "description": "Mailbox with name=#private:bob@domain.tld:mailbox already exists.",
-         |          "properties":{"value":["name"]}
+         |          "properties":["name"]
          |        }
          |      }
          |    },
@@ -1106,7 +1106,7 @@ trait MailboxSetMethodContract {
          |        "C42": {
          |          "type": "invalidArguments",
          |          "description": "Mailbox name exceeds maximum size of 200 characters",
-         |          "properties":{"value":["name"]}
+         |          "properties":["name"]
          |        }
          |      }
          |    },
@@ -1168,7 +1168,7 @@ trait MailboxSetMethodContract {
          |        "C42": {
          |          "type": "forbidden",
          |          "description": "Insufficient rights",
-         |          "properties":{"value":["parentId"]}
+         |          "properties":["parentId"]
          |        }
          |      }
          |    },
@@ -2253,9 +2253,7 @@ trait MailboxSetMethodContract {
          |				"${mailboxId1.serialize()}": {
          |					"type": "invalidArguments",
          |					"description": "Mailbox with name=#private:bob@domain.tld:newName already exists.",
-         |					"properties": {
-         |						"value": ["/name"]
-         |					}
+         |					"properties": ["/name"]
          |				}
          |			}
          |		}, "c1"]
@@ -2308,9 +2306,7 @@ trait MailboxSetMethodContract {
          |				"${mailboxId1.serialize()}": {
          |					"type": "invalidArguments",
          |					"description": "Mailbox name exceeds maximum size of 200 characters",
-         |					"properties": {
-         |						"value": ["/name"]
-         |					}
+         |					"properties": ["/name"]
          |				}
          |			}
          |		}, "c1"]
@@ -2471,7 +2467,7 @@ trait MailboxSetMethodContract {
          |				"${mailboxId.serialize()}": {
          |					"type": "invalidArguments",
          |					"description": "Invalid change to a system mailbox",
-         |          "properties":{"value":["/name"]}
+         |          "properties":["/name"]
          |				}
          |			}
          |		}, "c1"]
