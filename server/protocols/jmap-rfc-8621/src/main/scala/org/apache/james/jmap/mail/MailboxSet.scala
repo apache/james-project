@@ -34,7 +34,7 @@ import play.api.libs.json.{JsObject, JsString, JsValue}
 case class MailboxSetRequest(accountId: AccountId,
                              ifInState: Option[State],
                              create: Option[Map[MailboxCreationId, JsObject]],
-                             update: Option[Map[MailboxId, MailboxPatchObject]],
+                             update: Option[Map[UnparsedMailboxId, MailboxPatchObject]],
                              destroy: Option[Seq[UnparsedMailboxId]],
                              onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy])
 
@@ -71,7 +71,7 @@ case class MailboxSetResponse(accountId: AccountId,
                               updated: Option[Map[MailboxId, MailboxUpdateResponse]],
                               destroyed: Option[Seq[MailboxId]],
                               notCreated: Option[Map[MailboxCreationId, MailboxSetError]],
-                              notUpdated: Option[Map[MailboxId, MailboxSetError]],
+                              notUpdated: Option[Map[UnparsedMailboxId, MailboxSetError]],
                               notDestroyed: Option[Map[UnparsedMailboxId, MailboxSetError]])
 
 object MailboxSetError {

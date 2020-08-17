@@ -2077,7 +2077,94 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  // TODO update using creation ids
+  @Test
+  def updateShouldAcceptCreationIds(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C43": {
+        |                      "name": "mailbox"
+        |                    }
+        |                }
+        |           },
+        |    "c1"],
+        |      ["Mailbox/set",
+        |          {
+        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "update": {
+        |                 "#C43" : {
+        |                   "/name": "newName"
+        |                 }
+        |               }
+        |          },
+        |     "c2"]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", BOB.asString(), "newName")
+      .serialize()
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"created": {
+         |				"C43": {
+         |					"id": "$mailboxId",
+         |					"totalEmails": 0,
+         |					"unreadEmails": 0,
+         |					"totalThreads": 0,
+         |					"unreadThreads": 0,
+         |					"myRights": {
+         |						"mayReadItems": true,
+         |						"mayAddItems": true,
+         |						"mayRemoveItems": true,
+         |						"maySetSeen": true,
+         |						"maySetKeywords": true,
+         |						"mayCreateChild": true,
+         |						"mayRename": true,
+         |						"mayDelete": true,
+         |						"maySubmit": true
+         |					},
+         |					"isSubscribed": true
+         |				}
+         |			}
+         |		}, "c1"],
+         |		["Mailbox/set", {
+         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"newState": "000001",
+         |			"updated": {
+         |				"$mailboxId": {}
+         |			}
+         |		}, "c2"]
+         |	]
+         |}""".stripMargin)
+  }
+
   // TODO invalid path handling (unknown property, invalid name)
   // TODO mailbox already exists, too long name
   // TODO disable destroy / rename of sustem mailbox

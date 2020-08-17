@@ -241,9 +241,24 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   implicit val mailboxCreationRequest: Reads[MailboxCreationRequest] = Json.reads[MailboxCreationRequest]
   private implicit val mailboxPatchObject: Reads[MailboxPatchObject] = Json.valueReads[MailboxPatchObject]
 
-  private implicit val mapPatchObjectByMailboxIdReads: Reads[Map[MailboxId, MailboxPatchObject]] = _.validate[Map[String, MailboxPatchObject]]
-    .map(mapWithStringKey => mapWithStringKey
-      .map(keyValue => (mailboxIdFactory.fromString(keyValue._1), keyValue._2)))
+  private implicit val mapPatchObjectByMailboxIdReads: Reads[Map[UnparsedMailboxId, MailboxPatchObject]] = _.validate[Map[String, MailboxPatchObject]]
+    .flatMap(mapWithStringKey =>{
+      mapWithStringKey
+        .foldLeft[Either[JsError, Map[UnparsedMailboxId, MailboxPatchObject]]](scala.util.Right[JsError, Map[UnparsedMailboxId, MailboxPatchObject]](Map.empty))((acc: Either[JsError, Map[UnparsedMailboxId, MailboxPatchObject]], keyValue) => {
+          acc match {
+            case error@Left(_) => error
+            case scala.util.Right(validatedAcc) =>
+              val refinedKey: Either[String, UnparsedMailboxId] = refineV(keyValue._1)
+              refinedKey match {
+                case Left(error) => Left(JsError(error))
+                case scala.util.Right(unparsedMailboxId) => scala.util.Right(validatedAcc + (unparsedMailboxId -> keyValue._2))
+              }
+          }
+        }) match {
+        case Left(jsError) => jsError
+        case scala.util.Right(value) => JsSuccess(value)
+      }
+    })
 
   private implicit val mapCreationRequestByMailBoxCreationId: Reads[Map[MailboxCreationId, JsObject]] = _.validate[Map[String, JsObject]]
     .flatMap(mapWithStringKey => {

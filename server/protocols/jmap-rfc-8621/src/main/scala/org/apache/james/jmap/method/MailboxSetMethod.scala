@@ -116,7 +116,7 @@ case class DeletionResults(results: Seq[DeletionResult]) {
 
 sealed trait UpdateResult
 case class UpdateSuccess(mailboxId: MailboxId) extends UpdateResult
-case class UpdateFailure(mailboxId: MailboxId, exception: Throwable) extends UpdateResult {
+case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable) extends UpdateResult {
   def asMailboxSetError: MailboxSetError = exception match {
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
@@ -127,7 +127,7 @@ case class UpdateResults(results: Seq[UpdateResult]) {
       case success: UpdateSuccess => Some((success.mailboxId, MailboxSetResponse.empty))
       case _ => None
     }).toMap
-  def notUpdated: Map[MailboxId, MailboxSetError] = results.flatMap(result => result match {
+  def notUpdated: Map[UnparsedMailboxId, MailboxSetError] = results.flatMap(result => result match {
     case failure: UpdateFailure => Some(failure.mailboxId, failure.asMailboxSetError)
     case _ => None
   }).toMap
@@ -157,8 +157,11 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
                               processingContext: ProcessingContext): SMono[UpdateResults] = {
     SFlux.fromIterable(mailboxSetRequest.update.getOrElse(Seq()))
       .flatMap({
-        case (mailboxId: MailboxId, patch: MailboxPatchObject) => updateMailbox(mailboxSession, mailboxId, patch)
-          .onErrorResume(e => SMono.just(UpdateFailure(mailboxId, e)))
+        case (unparsedMailboxId: UnparsedMailboxId, patch: MailboxPatchObject) =>
+          processingContext.resolveMailboxId(unparsedMailboxId, mailboxIdFactory).fold(
+              e => SMono.just(UpdateFailure(unparsedMailboxId, e)),
+              mailboxId => updateMailbox(mailboxSession, mailboxId, patch))
+            .onErrorResume(e => SMono.just(UpdateFailure(unparsedMailboxId, e)))
       })
       .collectSeq()
       .map(UpdateResults)
@@ -181,7 +184,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
     def renameMailbox: SMono[UpdateResult] = updateMailboxPath(maiboxId, maybeNameUpdate, mailboxSession)
 
-    maybeParseException.map(e => SMono.just[UpdateResult](UpdateFailure(maiboxId, e)))
+    maybeParseException.map(e => SMono.raiseError[UpdateResult](e))
       .getOrElse(renameMailbox)
   }
 
