@@ -310,7 +310,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldNotSubscribeMailboxWhenRequired(server: GuiceJamesServer): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -351,7 +351,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldSubscribeMailboxByDefault(server: GuiceJamesServer): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -496,7 +496,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def destroyShouldUnsubscribeMailboxes(server: GuiceJamesServer): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
