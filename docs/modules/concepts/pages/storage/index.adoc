@@ -30,6 +30,3 @@ In this section, we describe the two principle types of storage that James manag
  * xref:storage/mailbox.adoc[Mailboxes] for email storage, and
 // "Repository" should be "Diretory". See JAMES-3360.
  * xref:storage/users.adoc[User Repository] for data about Mailbox users.
-
-James also optionally includes an
-xref:storage/indexing.adoc[optional indexer] for providing a better search experience.

@@ -116,6 +116,14 @@ https://tools.ietf.org/html/rfc5322[RFC5322] weighs in on how to describe a "mai
    like a traditional fax transmission.
 
 
+== Indexing
+
+// "Repository" should be "Diretory". See JAMES-3360.
+Once a system grows over time it will likely contain many messages
+stored in its xref:storage/mailbox.adoc[Mailboxes].
+Searching for the right email becomes increasingly difficult. At some point
+it becomes useful to use an https://en.wikipedia.org/wiki/Search_engine_indexing[indexing]
+
 
 == Related Concepts
 
