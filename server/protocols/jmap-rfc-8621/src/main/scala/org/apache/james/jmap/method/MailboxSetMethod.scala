@@ -23,10 +23,10 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
+import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, SetErrorDescription, SharedWithResetUpdate, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
+import org.apache.james.jmap.model._
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxManager.RenameOption
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
@@ -180,22 +180,28 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   private def updateMailbox(mailboxSession: MailboxSession,
                             maiboxId: MailboxId,
                             patch: MailboxPatchObject): SMono[UpdateResult] = {
-    val maybeParseException: Option[PatchUpdateValidationException] = patch.updates
+    val updates = patch.updates(serializer)
+    val maybeParseException: Option[PatchUpdateValidationException] = updates
       .flatMap(x => x match {
         case Left(e) => Some(e)
         case _ => None
       }).headOption
 
-    val maybeNameUpdate: Option[NameUpdate] = patch.updates
+    val maybeNameUpdate: Option[NameUpdate] = updates
       .flatMap(x => x match {
         case Right(NameUpdate(newName)) => Some(NameUpdate(newName))
         case _ => None
       }).headOption
 
-    def renameMailbox: SMono[UpdateResult] = updateMailboxPath(maiboxId, maybeNameUpdate, mailboxSession)
+    val maybeSharedWithResetUpdate: Option[SharedWithResetUpdate] = updates
+      .flatMap(x => x match {
+        case Right(SharedWithResetUpdate(rights)) => Some(SharedWithResetUpdate(rights))
+        case _ => None
+      }).headOption
 
     maybeParseException.map(e => SMono.raiseError[UpdateResult](e))
-      .getOrElse(renameMailbox)
+      .getOrElse(updateMailboxPath(maiboxId, maybeNameUpdate, mailboxSession)
+        .`then`(updateMailboxRights(maiboxId, maybeSharedWithResetUpdate, mailboxSession)))
   }
 
   private def updateMailboxPath(mailboxId: MailboxId, maybeNameUpdate: Option[NameUpdate], mailboxSession: MailboxSession): SMono[UpdateResult] = {
@@ -209,6 +215,19 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
           computeMailboxPath(mailbox, nameUpdate, mailboxSession),
           RenameOption.RENAME_SUBSCRIPTIONS,
           mailboxSession)
+      }).`then`(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
+        .subscribeOn(Schedulers.elastic())
+    })
+      // No updated properties passed. Noop.
+      .getOrElse(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
+  }
+
+  private def updateMailboxRights(mailboxId: MailboxId,
+                                  maybeSharedWithResetUpdate: Option[SharedWithResetUpdate],
+                                  mailboxSession: MailboxSession): SMono[UpdateResult] = {
+   maybeSharedWithResetUpdate.map(sharedWithResetUpdate => {
+      SMono.fromCallable(() => {
+        mailboxManager.setRights(mailboxId, sharedWithResetUpdate.rights.toMailboxAcl.asJava, mailboxSession)
       }).`then`(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
         .subscribeOn(Schedulers.elastic())
     })

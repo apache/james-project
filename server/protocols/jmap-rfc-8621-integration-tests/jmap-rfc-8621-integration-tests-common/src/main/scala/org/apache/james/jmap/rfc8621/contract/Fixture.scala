@@ -70,6 +70,8 @@ object Fixture {
   val _2_DOT_DOMAIN: Domain = Domain.of("do.main.tld")
   val BOB: Username = Username.fromLocalPartWithDomain("bob", DOMAIN)
   val ANDRE: Username = Username.fromLocalPartWithDomain("andre", DOMAIN)
+  val CEDRIC: Username = Username.fromLocalPartWithDomain("cedric", DOMAIN)
+  val DAVID: Username = Username.fromLocalPartWithDomain("david", DOMAIN)
   val ALICE: Username = Username.fromLocalPartWithDomain("alice", _2_DOT_DOMAIN)
   val BOB_PASSWORD: String = "bobpassword"
   val ANDRE_PASSWORD: String = "andrepassword"

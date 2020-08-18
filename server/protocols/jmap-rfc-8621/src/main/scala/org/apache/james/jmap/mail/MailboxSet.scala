@@ -26,6 +26,7 @@ import eu.timepit.refined.boolean.And
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.StartsWith
+import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
@@ -33,7 +34,7 @@ import org.apache.james.jmap.model.AccountId
 import org.apache.james.jmap.model.State.State
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
-import play.api.libs.json.{JsObject, JsString, JsValue}
+import play.api.libs.json._
 
 case class MailboxSetRequest(accountId: AccountId,
                              ifInState: Option[State],
@@ -65,9 +66,10 @@ object MailboxPatchObject {
 }
 
 case class MailboxPatchObject(value: Map[String, JsValue]) {
-  def updates: Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
+  def updates(serializer: Serializer): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
     case (property, newValue) => property match {
       case "/name" => NameUpdate.parse(newValue)
+      case "/sharedWith" => SharedWithResetUpdate.parse(newValue, serializer)
       case property =>
         val refinedKey: Either[String, MailboxPatchObjectKey] = refineV(property)
         refinedKey.fold[Either[PatchUpdateValidationException, Update]](
@@ -134,8 +136,16 @@ object NameUpdate {
   }
 }
 
+object SharedWithResetUpdate {
+  def parse(newValue: JsValue, serializer: Serializer): Either[PatchUpdateValidationException, Update] = serializer.deserializeRights(input = newValue) match {
+    case JsSuccess(value, _) => scala.Right(SharedWithResetUpdate(value))
+    case JsError(errors) => Left(InvalidUpdateException("/sharedWith", s"Specified value do not match the expected JSON format: $errors"))
+  }
+}
+
 sealed trait Update
 case class NameUpdate(newName: String) extends Update
+case class SharedWithResetUpdate(rights: Rights) extends Update
 
 class PatchUpdateValidationException() extends IllegalArgumentException
 case class UnsupportedPropertyUpdatedException(property: MailboxPatchObjectKey) extends PatchUpdateValidationException
