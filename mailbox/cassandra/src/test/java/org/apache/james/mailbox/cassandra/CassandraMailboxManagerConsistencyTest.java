@@ -79,7 +79,7 @@ class CassandraMailboxManagerConsistencyTest {
     @Nested
     class FailuresDuringCreation {
 
-        @Disabled("oups")
+        @Disabled("For performance reasons we don't validate path reads against mailbox table")
         @Test
         void createMailboxShouldBeConsistentWhenMailboxDaoFails(CassandraCluster cassandra) {
             cassandra.getConf().registerScenario(fail()
@@ -200,7 +200,7 @@ class CassandraMailboxManagerConsistencyTest {
     @Nested
     class FailuresDuringRenaming {
 
-        @Disabled("oups")
+        @Disabled("For performance reasons we don't validate path reads against mailbox table")
         @Test
         void renameShouldBeConsistentWhenMailboxDaoFails(CassandraCluster cassandra) throws Exception {
             MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
@@ -633,7 +633,7 @@ class CassandraMailboxManagerConsistencyTest {
 
                 cassandra.getConf().registerScenario(fail()
                     .times(TRY_COUNT_BEFORE_FAILURE)
-                    .whenQueryStartsWith("DELETE FROM mailboxPathV2"));
+                    .whenQueryStartsWith("DELETE FROM mailboxPathV3"));
 
                 doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
 
