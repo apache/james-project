@@ -2722,9 +2722,15 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
     @Nested
     class RightTests {
+
+        private MailboxSession session2;
+
         @BeforeEach
         void setUp() {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+
             session = mailboxManager.createSystemSession(USER_1);
+            session2 = mailboxManager.createSystemSession(USER_2);
         }
 
         @Test
@@ -2794,6 +2800,95 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.deleteMailbox(id, session);
 
             assertThatThrownBy(() -> mailboxManager.setRights(id, MailboxACL.EMPTY, session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void setRightsByIdShouldThrowWhenNotOwner() throws Exception {
+            MailboxId id = mailboxManager.createMailbox(MailboxPath.forUser(USER_2, "mailbox"), session2).get();
+            mailboxManager.setRights(id,  MailboxACL.EMPTY.apply(MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup))
+                .asAddition()), session2);
+
+            assertThatThrownBy(() -> mailboxManager.setRights(id, MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition()), session))
+                .isInstanceOf(InsufficientRightsException.class);
+        }
+
+        @Test
+        void setRightsByPathShouldThrowWhenNotOwner() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
+            mailboxManager.createMailbox(mailboxPath, session2).get();
+            mailboxManager.setRights(mailboxPath,  MailboxACL.EMPTY.apply(MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup))
+                .asAddition()), session2);
+
+            assertThatThrownBy(() -> mailboxManager.setRights(mailboxPath, MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition()), session))
+                .isInstanceOf(InsufficientRightsException.class);
+        }
+
+        @Test
+        void applyRightsCommandShouldThrowWhenNotOwner() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
+            mailboxManager.createMailbox(mailboxPath, session2).get();
+            mailboxManager.setRights(mailboxPath,  MailboxACL.EMPTY.apply(MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup))
+                .asAddition()), session2);
+
+            assertThatThrownBy(() -> mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition(), session))
+                .isInstanceOf(InsufficientRightsException.class);
+        }
+
+        @Test
+        void setRightsByIdShouldThrowWhenNoRights() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
+            MailboxId mailboxId = mailboxManager.createMailbox(mailboxPath, session2).get();
+
+            assertThatThrownBy(() -> mailboxManager.setRights(mailboxId, MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition()), session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void setRightsByPathShouldThrowWhenNoRights() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
+            mailboxManager.createMailbox(mailboxPath, session2).get();
+
+            assertThatThrownBy(() -> mailboxManager.setRights(mailboxPath, MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition()), session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void applyRightsCommandShouldThrowWhenNoRights() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
+            mailboxManager.createMailbox(mailboxPath, session2).get();
+
+            assertThatThrownBy(() -> mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition(), session))
                 .isInstanceOf(MailboxNotFoundException.class);
         }
     }

@@ -38,6 +38,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.DifferentDomainException;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -148,14 +149,18 @@ public class StoreRightManager implements RightManager {
         assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACLCommand);
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         block(mapper.findMailboxByPath(mailboxPath)
-            .flatMap(mailbox -> mapper.updateACL(mailbox, mailboxACLCommand)
-                .flatMap(aclDiff -> eventBus.dispatch(EventFactory.aclUpdated()
-                        .randomEventId()
-                        .mailboxSession(session)
-                        .mailbox(mailbox)
-                        .aclDiff(aclDiff)
-                        .build(),
-                    new MailboxIdRegistrationKey(mailbox.getMailboxId())))));
+            .flatMap(Throwing.<Mailbox, Mono<Void>>function(mailbox -> {
+                assertHaveAccessTo(mailbox, session);
+
+                return mapper.updateACL(mailbox, mailboxACLCommand)
+                    .flatMap(aclDiff -> eventBus.dispatch(EventFactory.aclUpdated()
+                            .randomEventId()
+                            .mailboxSession(session)
+                            .mailbox(mailbox)
+                            .aclDiff(aclDiff)
+                            .build(),
+                        new MailboxIdRegistrationKey(mailbox.getMailboxId())));
+            }).sneakyThrow()));
     }
 
     private void assertSharesBelongsToUserDomain(Username user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
@@ -208,10 +213,23 @@ public class StoreRightManager implements RightManager {
     @Override
     public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
         assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACL.getEntries());
-        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         block(mapper.findMailboxByPath(mailboxPath)
-            .flatMap(mailbox -> setRights(mailboxACL, mapper, mailbox, session)));
+            .flatMap(Throwing.<Mailbox, Mono<Void>>function(mailbox -> {
+                assertHaveAccessTo(mailbox, session);
+                return setRights(mailboxACL, mapper, mailbox, session);
+            }).sneakyThrow()));
+    }
+
+    private void assertHaveAccessTo(Mailbox mailbox, MailboxSession session) throws InsufficientRightsException, MailboxNotFoundException {
+        if (!mailbox.generateAssociatedPath().belongsTo(session)) {
+            if (mailbox.getACL().getEntries().containsKey(EntryKey.createUserEntryKey(session.getUser()))) {
+                throw new InsufficientRightsException("Setting ACL is only permitted to the owner of the mailbox");
+            } else {
+                throw new MailboxNotFoundException(mailbox.getMailboxId());
+            }
+        }
     }
 
     @VisibleForTesting

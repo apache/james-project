@@ -95,18 +95,40 @@ public class SetMailboxesMethodStepdefs {
         String mailboxId = mainStepdefs.getMailboxId(owner, mailboxName).serialize();
 
         String requestBody =
-                "[" +
-                    "  [ \"setMailboxes\"," +
-                    "    {" +
-                    "      \"update\": {" +
-                    "        \"" + mailboxId + "\" : {" +
-                    "          \"sharedWith\" : { \"" + shareTo + "\" : " + rightsAsString(rights) + " }" +
-                    "        }" +
-                    "      }" +
-                    "    }," +
-                    "    \"#0\"" +
-                    "  ]" +
-                    "]";
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailboxId + "\" : {" +
+                "          \"sharedWith\" : { \"" + shareTo + "\" : " + rightsAsString(rights) + " }" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+        httpClient.post(requestBody);
+    }
+
+    @Given("^\"([^\"]*)\" shares \"([^\"]*)\" delegated mailbox \"([^\"]*)\" with rights \"([^\"]*)\" with \"([^\"]*)\"$")
+    public void shareMailboxWithRight(String connectedUser, String owner,  String mailboxName, String rights, String shareTo) throws Throwable {
+        userStepdefs.connectUser(connectedUser);
+
+        String mailboxId = mainStepdefs.getMailboxId(owner, mailboxName).serialize();
+
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailboxId + "\" : {" +
+                "          \"sharedWith\" : { \"" + shareTo + "\" : " + rightsAsString(rights) + " }" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
         httpClient.post(requestBody);
     }
     
