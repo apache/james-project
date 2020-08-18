@@ -1,4 +1,4 @@
-= User Directory
+= User Repository
 :navtitle: Users
 
 == Overview
@@ -6,10 +6,11 @@
 Whereas xref:storage/mailbox.adoc[mailboxes] are clearly a core component of
 any email system, user management is a lighter shade of gray.
 
+// "Repository" should be "Diretory". See JAMES-3360.
 On the one hand, mailboxes ought to match up with actual users, so there is
 a clear relationship between mailbox management and user management.
-Because of this relationship, it is not at all strange to include a user directory
-directly within an email system.
+Because of this relationship, it is not at all strange to include a user respository
+within an email system.
 
 However, on the other hand email is only one of many applications that require
 user management. It is therefore also completely reasonable to use some kind of
@@ -23,7 +24,8 @@ amount of unproductive work.
 
 == Common Operations
 
-Because the user directory is used in the context of managing mailboxes, there
+// "Repository" should be "Diretory". See JAMES-3360.
+Because the user repository is used in the context of managing mailboxes, there
 are some operations that are relatively common to any email system.
 
 === Domain Management
