@@ -26,7 +26,7 @@ import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, Unparsed
 import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, SetErrorDescription, SharedWithResetUpdate, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.model._
+import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxManager.RenameOption
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}

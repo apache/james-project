@@ -31,7 +31,7 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.draft.MessageIdProbe
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture._
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Right}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
@@ -3451,9 +3451,9 @@ trait MailboxSetMethodContract {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
