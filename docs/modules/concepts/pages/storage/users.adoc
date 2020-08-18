@@ -7,7 +7,8 @@ Whereas xref:storage/mailbox.adoc[mailboxes] are clearly a core component of
 any email system, user management is a lighter shade of gray.
 
 // "Repository" should be "Diretory". See JAMES-3360.
-On the one hand, mailboxes ought to match up with actual users, so there is
+On the one hand, mailboxes ought to match up with actual 
+xref:user/index.adoc#_user[Users], so there is
 a clear relationship between mailbox management and user management.
 Because of this relationship, it is not at all strange to include a user respository
 within an email system.
@@ -36,6 +37,7 @@ system that can process multiple domains, the system will usually have operation
 * List available domains
 * Add a domain
 * Remove a domain
+* Update a user's password
 
 
 === User Management
@@ -51,11 +53,11 @@ For each domain that is managed by the system, it is common to be able to:
 
 === Other Common Operations
 
-It is common to allow user's to have one or more
-https://en.wikipedia.org/wiki/Email_alias[aliases].
-
-Some systems provide an https://en.wikipedia.org/wiki/Autoresponder[autoresponder]
-(or "vacation") facility to its users.
-
-An email system may provide the ability to https://james.apache.org/jsieve/[filter]
-messages.
+* Add or remove email https://en.wikipedia.org/wiki/Email_alias[aliases]
+for a given user
+* Add or remove email https://en.wikipedia.org/wiki/Email_forwarding[forwards]
+for a given user
+* Add or remove a user to a "group" mail address
+* Filter messages using https://james.apache.org/jsieve/[Sieve]
+* Rewrite mail addresses
+* Configure an https://en.wikipedia.org/wiki/Autoresponder[autoresponder]
