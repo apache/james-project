@@ -128,6 +128,7 @@ case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable) ext
     case e: InvalidUpdateException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.cause}")), Some(Properties(List(e.property))))
     case e: InvalidPropertyException => MailboxSetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
     case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), Some(Properties(List("/name"))))
+    case e: InsufficientRightsException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a delegated mailbox")), None)
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
 }

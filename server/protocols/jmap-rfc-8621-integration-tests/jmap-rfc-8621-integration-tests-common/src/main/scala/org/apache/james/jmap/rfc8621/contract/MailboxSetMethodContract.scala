@@ -33,7 +33,7 @@ import org.apache.james.jmap.draft.MessageIdProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.mailbox.MessageManager.AppendCommand
-import org.apache.james.mailbox.model.MailboxACL.Right
+import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Right}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
@@ -3408,6 +3408,173 @@ trait MailboxSetMethodContract {
          |    }, "c2"]
          |  ]
          |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldNotResetRightsInSharedMailboxes(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString(), new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/sharedWith": {
+         |                        "${DAVID.asString()}":["r", "l", "w"],
+         |                        "${BOB.asString()}":["r", "l", "w", "a"]
+         |                      }
+         |                    }
+         |                }
+         |           },
+         |    "c1"
+         |       ],
+         |       ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "ids": ["${mailboxId.serialize()}"]
+         |          },
+         |       "c2"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Invalid change to a delegated mailbox"
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [{
+         |        "id": "${mailboxId.serialize()}",
+         |        "name": "mailbox",
+         |        "sortOrder": 1000,
+         |        "totalEmails": 0,
+         |        "unreadEmails": 0,
+         |        "totalThreads": 0,
+         |        "unreadThreads": 0,
+         |        "myRights": {
+         |          "mayReadItems": false,
+         |          "mayAddItems": false,
+         |          "mayRemoveItems": false,
+         |          "maySetSeen": false,
+         |          "maySetKeywords": false,
+         |          "mayCreateChild": false,
+         |          "mayRename": false,
+         |          "mayDelete": false,
+         |          "maySubmit": false
+         |        },
+         |        "isSubscribed": false,
+         |        "namespace": "Delegated[andre@domain.tld]",
+         |        "rights": {
+         |          "bob@domain.tld": ["l"]
+         |        }
+         |      }],
+         |      "notFound": []
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+      .getEntries)
+      .doesNotContainKeys(EntryKey.createUserEntryKey(ANDRE))
+  }
+
+  @Test
+  def updateShouldFailOnOthersMailbox(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/sharedWith": {
+         |                        "${DAVID.asString()}":["r", "l", "w"],
+         |                        "${BOB.asString()}":["r", "l", "w", "a"]
+         |                      }
+         |                    }
+         |                }
+         |           },
+         |    "c1"
+         |       ]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "notFound",
+         |          "description": "${mailboxId.serialize()} can not be found"
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+      .getEntries)
+      .doesNotContainKeys(EntryKey.createUserEntryKey(ANDRE))
   }
 
   @Test
