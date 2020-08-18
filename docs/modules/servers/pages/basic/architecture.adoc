@@ -1,0 +1,4 @@
+= James Basic Server &mdash; Architecture
+:navtitle: Architecture
+
+(TODO)

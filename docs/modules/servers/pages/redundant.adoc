@@ -1,5 +1,0 @@
-= James Redundant Mail Server
-:navtitle: Redundant
-
-(TODO)
-

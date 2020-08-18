@@ -1,0 +1,30 @@
+= James Basic Server &mdash; Objectives
+:navtitle: Objectives
+
+The objective of the Basic Server is to be as simple and minimalistic as possible,
+while still being useful. Many people wish to have a basic self-hosted mail server that they
+can use without having to become a deep technical expert.
+The Basic Server is intended to be an entry-level server that is accessible to
+those who want a self-hosted mail server, but who don't want to have to learn about all the
+complexities of email communications.
+
+This server is therefore intended to be the simplest to set up and use in 
+production.
+Of all the James Servers, it has the least amount of dependencies and configurations.
+If you are not sure which of the James servers is best for you, you should
+probably choose this one.
+
+The default configuration of the Basic Server includes the following features:
+
+ * Secure SMTP (SSL/TLS) over port 465
+ * Secure IMAP4 (SSL/TLS) over port 993
+ * Local Mailbox support
+  ** Files are stored locally on the filesystem
+  ** Optionally use a volume if you are a Docker or Kubernetes user
+ * Multi-domain (virtual domain) support
+ * Administration of users either via a command-line tool or the admin api
+
+We have disabled all of the insecure communications and require SSL. If you have
+a specific requirement to use an insecure protocol, or if the above list does not
+satisfy your needs, then after having successfully set up this server you may want
+to move on to the xref:extendable.adoc[Extendable Server].

@@ -1,71 +1,70 @@
 = Apache James Mail Servers
 :navtitle: Servers
 
-James offers a number of ready-made Mail Servers. The servers are intended 
-for those with typcial use cases, and can be used out-of-the-box. These 
-servers have been tested and verified so you can get set up quickly with 
-a production-grade Mail Server that you can use with confidence.
+James offers five types of ready-made Mail Servers. The servers are intended 
+for those with different needs, ranging from xref:concepts:user/index.adoc#Operators[Operators]
+who are interested in setting up a server for the first time, to experienced teams of 
+xref:concepts:user/index.adoc#Developer[Developers]
+looking to deploy an advanced distributed system.
+Each of the servers has been tested and verified so you can 
+deploy a production-grade 
+xref:concepts/insert-link[Mail Server] with confidence.
 
 The available James Servers are:
 
  * <<demo,James Demo Mail Server>>
- * <<local,James Local Mail Server>>
- * <<redundant,James Redundant Mail Server>>
+ * <<basic,James Basic Mail Server>>
+ * <<extendable,James Extendable Mail Server>>
  * <<distributed,James Distributed Mail Server>>
+ * <<test,James Test Server>>
 
+If you are just checking out James for the first time, then we highly recommend
+investigating the servers in this order:
+
+. Initiate yourself with James by using the <<demo,Demo Server>>
+. Install the <<basic,Basic Server>>
+. If and only if the Basic Server is not enough, then try the <<extendable,Extendable Server>>
 
 [#demo]
 == James Demo Server
-The xref:demo.adoc[James Server Demo] is intended for those who just want 
-to give James a quick spin on their local machine.
+The xref:demo.adoc[Demo Server] is intended for those who just want 
+to give James a quick spin on their local machine to see what all
+the fuss is about.
 
 
-[#local]
-== James Local Mail Server
 
-If you are not sure which server you should be using, then
-you probably ought to be using the xref:local.adoc[*Local Server*].
-This server uses the local file system to store emails, which tends
-to considerably simplify the system. To safeguard your emails, you
-only need a simple generic backup solution that works with a data
-volume.
+[#basic]
+== James Basic Mail Server
+
+If you just want to get up and running quickly, if you have very simple needs,
+or you want to try deploying a mail server for the first time, then the
+xref:basic/index.adoc[*Basic Server*] is the right choice for you. If you are
+not sure which server you should be using, then this server is probably the right
+choice.
 
 This server is intended to be the simplest to set up and use in production.
-It has the least amount of dependencies and complexities. If you do not yet
-have a huge amount of emails to process, then usually the simplicity is
-well worth the loss of some functionality. The last thing you need is
+It has the least amount of complexity and configurations to worry about.
+The last thing you need is
 to have to resolve difficult issues on a production server when you have not
 yet acquired the requisite knowledge to deal with those issues. Using the
-xref:local.adoc[*Local Server*] will help you reduce the risk of running into 
+xref:basic/index.adoc[*Basic Server*] will help you reduce the risk of running into 
 production issues.
 
-This server is:
-
- * Suggested for use with smaller deployments
- * Appropriate for use by most operators
- * The preferred choice for most installations
- * Endowed with fewer dependencies, which makes it simpler and less risky to use in production
- * Only dependent on your local file system for data storage, so very easy to manage
 
 
+[#extendable]
+== James Extendable Mail Server
 
+When your requirements start to get a little more serious, or you
+start to feel adventurous and want to begin your own email adventure,
+you can consider using the xref:extendable.adoc[*Extendable Server*].
 
-[#redundant]
-== James Redundant Mail Server
-
-When your requirements start to get a little more serious 
-(let's say in the tens of millions of emails), then you may want to
-start to consider using the xref:redundant.adoc[*Redundant Server*].
-
-This server provides data redundancy so that it can stay live at
-all times, even in the rare case that your data gets corrupted.
-
-This server is:
-
- * Intended for use by experienced operators only
- * Used for mid-sized to large deployments
- * More performant than the Minimal and Basic Server, but also more complex
-
+This server is intended for experts who understand the consequences of
+what they are doing. It provides extension mechanisms, configurations,
+and integration points to customize its behavior. Unless you are processing
+millions of emails on a daily basis (in which case you should consider the
+<<distributed,Distributed Server>>), this server should cover just about
+any email needs you may have.
 
 
 
@@ -75,10 +74,12 @@ This server is:
 The xref:distributed.adoc[*Distributed Server*] is a heavy-duty industrial 
 enterprise mail server.
 
-This server is:
-
- * Intended for use by experts only
- * Use for large-scale distributed deployments
- * The most feature-rich server, but also by far the most complex
+This is the most feature-rich server, but also by far the most complex,
+and is intended for experts only.
 
 
+
+[#test]
+== James Test Server
+
+The xref:test.adoc[*Test Server*] is, as the name suggests, for testing purposes.

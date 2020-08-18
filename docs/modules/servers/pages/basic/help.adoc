@@ -1,0 +1,52 @@
+= James Basic Server &mdash; Where to get help
+:navtitle: Help
+
+////
+
+This information is based on the email discussion from here:
+  --> https://www.mail-archive.com/server-dev@james.apache.org/msg66420.html
+
+However, I am not satisfied that I have properly captured the community's
+opinion, and there are only a few people who have contributed to the
+thread.
+
+Would be good to have some comments on this content.
+
+It could just be that I don't like the content. But if that is what the
+community thinks, then that is what we should write.
+
+////
+
+////
+Comment this out until there is agreement.
+== Warning
+
+Please note that if you want to try to use James, you are pretty
+much on your own.
+
+James is intended for use only by the current committers, or perhaps only by
+competent developers only who have the ability to understand the code as it
+exists now and can make changes themselves without any help. What you see
+is what you get. Take it or leave it.
+
+The James Community is made up of people who "scratch their own itch".
+If you have a problem with the code or the documentation, then please
+step up and fix it rather than asking for help.
+
+If you are a user who wants to try to use James, you should seriously
+consider hiring a professional organization to help you. Most likely,
+James is not for you.
+
+You can try filing issues, but there is absolutely no guarantee it will be
+fixed. If you are lucky and a developer has the same problem as you, then
+it may be fixed. Or if one of the developers is feeling particularly generous and wants
+to volunteer their valuable time to help you, it may happen. There is no 
+way to know unless you try.
+
+On the other hand, the developers would **love** for you to do stuff that
+they are not interested in doing, like documentation. If you don't know anything
+about the code, it would be a good way to help out until you can eventually
+join the exclusive committer club, too.
+////
+
+(Redo this once there is consensus in the community.)

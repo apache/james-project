@@ -1,0 +1,14 @@
+= James Basic Server &mdash; Background Concepts
+:navtitle: Concepts
+
+Before embarking on your adventure with the **James Basic Server**, we
+highly recommend that you familiarize yourself with the following concepts:
+
+[TODO: provide links and ensure that articles exist for each of these topics]
+
+ * xref:concepts:user/index.adoc[James User Model]
+ * xref:concepts:protocols/smtp.adoc[SMTP]
+ * xref:concepts:protocols/imap.adoc[IMAP]
+// What link should go here??
+ * Secured email communications
+ * xref:concepts:/storage/index.adoc[Email storage]
