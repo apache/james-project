@@ -26,10 +26,3 @@ email handling. The system is free to use any method at its discretion. In the c
 mail is delivered locally simply via an in-process Java method call, making it simple and
 extremely fast.
 
-
-=== IMAP
-
-Although less common, it is possible for an email server to receive emails via IMAP. This is
-done by copying or moving an email from one remote mailbox to a local mailbox. You can try
-this out yourself by setting up two different IMAP accounts on the same email client and
-by copying or moving an email from one to the other.

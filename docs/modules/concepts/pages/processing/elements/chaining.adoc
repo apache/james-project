@@ -3,4 +3,33 @@
 
 == Overview
 
-(TODO)
+We can define a process that consists of 0 or more functions
+whereby the output of the function is of the same type as the input.
+The function can either modify the state of the input, or can optionally produce
+a side-effect (or both).
+
+       +------------+
+       |            |
+ IN -->|            |--> OUT
+       |            |
+       +------------+
+
+Now, precisely because the output type is the same as the input type,
+we can include any number of these functions one after another.
+
+
+       +------------+   +------------+           +------------+
+       |            |   |            |           |            |
+ IN -->|            |-->|            |--> ... -->|            |--> OUT
+       |            |   |            |           |            |
+       +------------+   +------------+           +------------+
+
+Lining up these functions one after another looks a lot like links
+of a chain. That is why this pattern is called "chaining". The chaining
+pattern is the core pattern used by James to process emails. It is so
+core, in fact, that when we write "email processing" we effectively mean
+"process chaining".
+
+
+
+// What are examples of "chaining" that James uses that we may want to explain here?
