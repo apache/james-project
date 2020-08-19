@@ -59,7 +59,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldReturnNotCreatedWhenNameIsMissing(): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -115,7 +115,7 @@ trait MailboxSetMethodContract {
   @Test
   @Disabled("should we support that? Anyway seems hard with Play-JSON")
   def mailboxSetShouldReturnNotCreatedWhenUnknownParameter(): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -172,7 +172,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldReturnNotCreatedWhenBadParameter(): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -229,7 +229,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldCreateMailboxWhenOnlyName(server: GuiceJamesServer): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -269,7 +269,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxGetShouldAllowTheUseOfCreationIds(server: GuiceJamesServer): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -374,7 +374,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldReturnCreatedWhenOnlyName(server: GuiceJamesServer): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -439,7 +439,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldReturnCreatedAndNotCreatedWhenOneWithOnlyNameAndOneWithoutName(server: GuiceJamesServer): Unit = {
-    val request=
+    val request =
       """
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -513,7 +513,7 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldCreateMailboxWhenNameAndParentId(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId  = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "parentMailbox"))
-    val request=
+    val request =
       s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -552,7 +552,7 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldNotCreateMailboxWhenParentIdNotFound(): Unit = {
     val mailboxId: MailboxId  = randomMailboxId
-    val request=
+    val request =
       s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -610,7 +610,7 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldNotCreateMailboxWhenNameExists(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
-    val request=
+    val request =
       s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -666,7 +666,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldNotCreateMailboxWhenNameTooLong(): Unit = {
-    val request=
+    val request =
       s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -1294,9 +1294,9 @@ trait MailboxSetMethodContract {
         .log().ifValidationFails()
         .statusCode(SC_OK)
         .contentType(JSON)
-       // We need to limit ourself to simple body assertions in order not to infer id allocation
-       .body("methodResponses[0][1].created.C42.totalThreads", equalTo(0))
-       .body("methodResponses[1][1].destroyed", hasSize(1))
+         // We need to limit ourself to simple body assertions in order not to infer id allocation
+         .body("methodResponses[0][1].created.C42.totalThreads", equalTo(0))
+         .body("methodResponses[1][1].destroyed", hasSize(1))
   }
 
   @Test
