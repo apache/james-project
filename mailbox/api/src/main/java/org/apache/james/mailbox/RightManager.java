@@ -98,7 +98,6 @@ public interface RightManager {
      */
     Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
-
     /**
      * Returns the rights applicable to the user who has sent the current
      * request on the mailbox designated by this mailboxPath.
@@ -135,6 +134,14 @@ public interface RightManager {
      */
     void applyRightsCommand(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
 
+    /**
+     * Update the Mailbox ACL of the designated mailbox. We can either ADD REPLACE or REMOVE entries.
+     *
+     * @param mailboxId Id of the mailbox you want to apply rights on.
+     * @param mailboxACLCommand Update to perform.
+     * @param session The session used to determine the user used to apply rights.
+     * @throws MailboxException in case of unknown mailbox or unsupported right
+     */
     void applyRightsCommand(MailboxId mailboxId, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
 
     /**
