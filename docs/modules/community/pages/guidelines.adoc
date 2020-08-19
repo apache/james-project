@@ -1,4 +1,139 @@
 = Apache James Project guidelines
 :navtitle: Guidelines
 
-(TODO)
+This document defines the guidelines for the Apache James Project. It includes definitions of how conflict is being
+resolved by voting and who is able to vote.
+
+The objective here is to avoid unnecessary conflicts over changes and continue to produce a quality system in a timely
+manner. Not all conflict can be avoided, but at least we can agree on the procedures for conflicts to be resolved.
+
+== People, Places, and Things
+
+=== Apache James Project Management Committee
+
+The group of volunteers who are responsible for managing the Apache James Project. This includes deciding what is
+distributed as products of the Apache James Project, maintaining the Project's shared resources, speaking on behalf of
+the Project, resolving license disputes regarding Apache James products, nominating new PMC members or committers,
+and establishing these guidelines.
+
+Membership in the Apache James PMC is by invitation only and must be approved by consensus of the active Apache James
+PMC members. A PMC member is considered inactive by their own declaration or by not contributing in any form to the
+project for over six months. An inactive member can become active again by reversing whichever condition made them
+inactive (i.e., by reversing their earlier declaration or by once again contributing toward the project's work).
+Membership can be revoked by a unanimous vote of all the active PMC members other than the member in question.
+
+=== Apache James Committers
+
+The group of volunteers who are responsible for the technical aspects of the Apache James Project. This group has write
+access to the appropriate source repositories and these volunteers may cast non-binding votes on any technical discussion.
+
+Membership as a Committer is by invitation only and must be approved by consensus of the active Apache James PMC members.
+A Committer is considered inactive by their own declaration or by not contributing in any form to the project for over
+six months. An inactive member can become active again by reversing whichever condition made them inactive (i.e., by
+reversing their earlier declaration or by once again contributing toward the project's work). Membership can be revoked
+by a unanimous vote of all the active PMC members (except the member in question if they are a PMC member).
+
+=== Mailing list
+
+The Apache committers' primary mailing list for discussion of issues and changes related to the project
+(xref:mailing-lists.adoc#_server_developer_list[server-dev@james.apache.org]). Subscription to the list is open, but
+only subscribers can post directly to the list.
+
+=== Private list
+
+The Apache James Project's private mailing list for discussion of issues that are inappropriate for public discussion,
+such as legal, personal, or security issues prior to a published fix. Subscription to the list is only opened to Apache
+James PMC members and Apache Software Foundation Members.
+
+=== GIT
+
+All of the Apache James products are maintained in shared information repositories using GIT on git-wip-us.apache.org.
+The Apache committers have write access to these repositories; everyone has read access via anonymous GIT.
+
+== Voting
+
+Any of the Apache James Committers may vote on any issue or action item. However, the only binding votes are those cast
+by active members of the Apache James PMC; if the vote is about a change to source code or documentation, the primary
+author of what is being changed may also cast a binding vote on that issue. All other votes are non-binding. All
+committers are encouraged to participate in decisions, but the decision itself is made by those who have been long-time
+contributors to the project. In other words, the Apache Project is a minimum-threshold meritocracy.
+
+The act of voting carries certain obligations -- voting members are not only stating their opinion, they are agreeing
+to help do the work of the Apache Project. Since we are all volunteers, members often become inactive for periods of
+time in order to take care of their "real jobs" or devote more time to other projects. It is therefore unlikely that the
+entire group membership will vote on every issue. To account for this, all voting decisions are based on a minimum quorum.
+
+Each vote can be made in one of three flavors:
+
+*+1*
+Yes, agree, or the action should be performed. On some issues, this vote is only binding if the voter has tested the
+action on their own system(s).
+
+*+-0*
+Abstain, no opinion, or I am happy to let the other group members decide this issue. An abstention may have detrimental
+effects if too many people abstain.
+
+*-1*
+No. On issues where consensus is required, this vote counts as a veto. All vetos must include an explanation of why the
+veto is appropriate. A veto with no explanation is void. No veto can be overruled. If you disagree with the veto, you
+should lobby the person who casts the veto. Voters intending to veto an action item should make their opinions known to
+the group immediately, so that the problem can be remedied as early as possible.
+
+An action item requiring consensus approval must receive at least 3 binding +1 votes and no vetos. An action item
+requiring majority approval must receive at least 3 binding +1 votes and more +1 votes than -1 votes (i.e., a majority
+with a minimum quorum of three positive votes). All other action items are considered to have lazy approval until
+someone votes -1, after which point they are decided by either consensus or a majority vote, depending upon the type
+of action item.
+
+All votes must be either sent to the mailing list for that action item.
+
+Votes are to remain open for 72 hours after which the developer who put forth the vote should tabulate the result and
+send this to the mailing list. A developer should be sensitive to holidays that could dampen participation in the vote.
+
+== Types of Action Items
+
+=== Long Term Plans
+
+Long term plans are simply announcements that group members are working on particular issues related to the Apache
+software. These are not voted on, but group members who do not agree with a particular plan, or think an alternate plan
+would be better, are obligated to inform the group of their feelings. In general, it is always better to hear about
+alternate plans prior to spending time on less adequate solutions.
+
+=== Short Term Plans
+
+Short term plans are announcements that a developer is working on a particular set of documentation or code files, with
+the implication that other committers should avoid them or try to coordinate their changes. This is a good way to
+proactively avoid conflict and possible duplication of work.
+
+=== Release Plan
+
+A release plan is used to keep all the committers aware of when a release is desired, who will be the release manager,
+when the repository will be frozen in order to create the release, and assorted other trivia to keep us from tripping
+over ourselves during the final moments. Lazy majority decides each issue in the release plan.
+
+=== Release Testing
+
+After a new release is built, colloquially termed a tarball, it must be tested before being released to the public.
+Majority approval is required before the tarball can be publically released.
+
+=== Showstoppers
+
+Showstoppers are issues that require a fix be in place before the next public release.
+
+=== Product Changes
+
+Changes to the Apache James products, including code and documentation, will appear as action items under several
+categories corresponding to the change status:
+
+* *Concept/Plan*
+An idea or plan for a change. These are represented as ADRs (Architectural Decision Records), stored under the `src/adr`
+folder. Votes are being requested early so as to uncover conflicts before too much work is done.
+
+* *Proposed Patch*
+A specific set of changes to the current product in the form of input to the patch command (a diff output).
+
+* *Committed Change*
+A one-line summary of a change that has been committed to the repository since the last public release.
+
+All product changes to the currently active repository are subject to lazy consensus. All product changes to a
+prior-branch (old version) repository require consensus before the change is committed.
