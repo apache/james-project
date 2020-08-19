@@ -30,8 +30,9 @@ import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.model.AccountId
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.State.State
+import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json._
@@ -109,19 +110,33 @@ object MailboxSetError {
 
 case class MailboxSetError(`type`: SetErrorType, description: Option[SetErrorDescription], properties: Option[Properties])
 
+
+object MailboxCreationResponse {
+  def allProperties: Set[String] = Set("id", "role", "totalEmails", "unreadEmails",
+    "totalThreads", "unreadThreads", "myRights", "isSubscribed", "quotas")
+
+  def propertiesFiltered(allowedCapabilities : Set[CapabilityIdentifier]) : Set[String] = {
+    val propertiesForCapabilities: Map[CapabilityIdentifier, Set[String]] = Map(
+      CapabilityIdentifier.JAMES_QUOTA -> Set("quotas"))
+
+    val propertiesToHide = propertiesForCapabilities.filterNot(entry => allowedCapabilities.contains(entry._1))
+      .flatMap(_._2)
+      .toSet
+
+    allProperties -- propertiesToHide
+  }
+}
+
 case class MailboxCreationResponse(id: MailboxId,
-                                   role: Option[Role],//TODO see if we need to return this, if a role is set by the server during creation
+                                   role: Option[Role],
                                    sortOrder: SortOrder,
                                    totalEmails: TotalEmails,
                                    unreadEmails: UnreadEmails,
                                    totalThreads: TotalThreads,
                                    unreadThreads: UnreadThreads,
                                    myRights: MailboxRights,
-                                   rights: Option[Rights],//TODO display only if RightsExtension and if some rights are set by the server during creation
-                                   namespace: Option[MailboxNamespace], //TODO display only if RightsExtension
-                                   quotas: Option[Quotas],//TODO display only if QuotasExtension
-                                   isSubscribed: IsSubscribed
-                                  )
+                                   quotas: Option[Quotas],
+                                   isSubscribed: IsSubscribed)
 
 object MailboxSetResponse {
   def empty: MailboxUpdateResponse = MailboxUpdateResponse(JsObject(Map[String, JsValue]()))

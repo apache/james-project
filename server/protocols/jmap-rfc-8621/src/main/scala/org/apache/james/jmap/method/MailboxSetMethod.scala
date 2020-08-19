@@ -28,6 +28,7 @@ import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
 import org.apache.james.jmap.routes.ProcessingContext
+import org.apache.james.jmap.utils.quotas.QuotaLoaderWithPreloadedDefaultFactory
 import org.apache.james.mailbox.MailboxManager.RenameOption
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MailboxPath, MessageRange}
@@ -48,7 +49,7 @@ case class MailboxCreationParseException(mailboxSetError: MailboxSetError) exten
 sealed trait CreationResult {
   def mailboxCreationId: MailboxCreationId
 }
-case class CreationSuccess(mailboxCreationId: MailboxCreationId, mailboxId: MailboxId) extends CreationResult
+case class CreationSuccess(mailboxCreationId: MailboxCreationId, mailboxCreationResponse: MailboxCreationResponse) extends CreationResult
 case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exception) extends CreationResult {
   def asMailboxSetError: MailboxSetError = exception match {
     case e: MailboxNotFoundException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("parentId"))))
@@ -62,25 +63,11 @@ case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exce
 case class CreationResults(created: Seq[CreationResult]) {
   def retrieveCreated: Map[MailboxCreationId, MailboxCreationResponse] = created
     .flatMap(result => result match {
-      case success: CreationSuccess => Some(success.mailboxCreationId, success.mailboxId)
+      case success: CreationSuccess => Some(success.mailboxCreationId, success.mailboxCreationResponse)
       case _ => None
     })
     .toMap
-    .map(creation => (creation._1, toCreationResponse(creation._2)))
-
-  private def toCreationResponse(mailboxId: MailboxId): MailboxCreationResponse = MailboxCreationResponse(
-    id = mailboxId,
-    role = None,
-    sortOrder = SortOrder.defaultSortOrder,
-    totalEmails = TotalEmails(0L),
-    unreadEmails = UnreadEmails(0L),
-    totalThreads = TotalThreads(0L),
-    unreadThreads = UnreadThreads(0L),
-    myRights = MailboxRights.FULL,
-    rights = None,
-    namespace = None,
-    quotas = None,
-    isSubscribed = IsSubscribed(true))
+    .map(creation => (creation._1, creation._2))
 
   def retrieveErrors: Map[MailboxCreationId, MailboxSetError] = created
     .flatMap(result => result match {
@@ -148,6 +135,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
                                  mailboxManager: MailboxManager,
                                  subscriptionManager: SubscriptionManager,
                                  mailboxIdFactory: MailboxId.Factory,
+                                 quotaFactory : QuotaLoaderWithPreloadedDefaultFactory,
                                  metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("Mailbox/set")
 
@@ -159,7 +147,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
             creationResults <- createMailboxes(mailboxSession, mailboxSetRequest, processingContext)
             deletionResults <- deleteMailboxes(mailboxSession, mailboxSetRequest, processingContext)
             updateResults <- updateMailboxes(mailboxSession, mailboxSetRequest, processingContext)
-          } yield createResponse(invocation, mailboxSetRequest, creationResults, deletionResults, updateResults)
+          } yield createResponse(capabilities, invocation, mailboxSetRequest, creationResults, deletionResults, updateResults)
         }))
   }
 
@@ -316,9 +304,9 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
           path = path,
           mailboxCreationRequest = mailboxCreationRequest)))
       .fold(e => CreationFailure(mailboxCreationId, e),
-        mailboxId => {
-          recordCreationIdInProcessingContext(mailboxCreationId, processingContext, mailboxId)
-          CreationSuccess(mailboxCreationId, mailboxId)
+        creationResponse => {
+          recordCreationIdInProcessingContext(mailboxCreationId, processingContext, creationResponse.id)
+          CreationSuccess(mailboxCreationId, creationResponse)
         })
   }
 
@@ -338,7 +326,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def createMailbox(mailboxSession: MailboxSession,
                             path: MailboxPath,
-                            mailboxCreationRequest: MailboxCreationRequest): Either[Exception, MailboxId] = {
+                            mailboxCreationRequest: MailboxCreationRequest): Either[Exception, MailboxCreationResponse] = {
     try {
       //can safely do a get as the Optional is empty only if the mailbox name is empty which is forbidden by the type constraint on MailboxName
       val mailboxId = mailboxManager.createMailbox(path, mailboxSession).get()
@@ -350,7 +338,21 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       mailboxCreationRequest.rights
           .foreach(rights => mailboxManager.setRights(mailboxId, rights.toMailboxAcl.asJava, mailboxSession))
 
-      Right(mailboxId)
+      val quotas = quotaFactory.loadFor(mailboxSession)
+        .flatMap(quotaLoader => quotaLoader.getQuotas(path))
+        .block()
+
+      Right(MailboxCreationResponse(
+        id = mailboxId,
+        sortOrder = SortOrder.defaultSortOrder,
+        role = None,
+        totalEmails = TotalEmails(0L),
+        unreadEmails = UnreadEmails(0L),
+        totalThreads = TotalThreads(0L),
+        unreadThreads = UnreadThreads(0L),
+        myRights = MailboxRights.FULL,
+        quotas = Some(quotas),
+        isSubscribed = IsSubscribed(true)))
     } catch {
       case error: Exception => Left(error)
     }
@@ -386,7 +388,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       case e: Exception => Left(e)
     }
 
-  private def createResponse(invocation: Invocation,
+  private def createResponse(capabilities: Set[CapabilityIdentifier],
+                             invocation: Invocation,
                              mailboxSetRequest: MailboxSetRequest,
                              creationResults: CreationResults,
                              deletionResults: DeletionResults,
@@ -403,7 +406,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       notDestroyed = Some(deletionResults.retrieveErrors).filter(_.nonEmpty))
     
     Invocation(methodName,
-      Arguments(serializer.serialize(response).as[JsObject]),
+      Arguments(serializer.serialize(response, capabilities).as[JsObject]),
       invocation.methodCallId)
   }
 
