@@ -5168,8 +5168,6 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  // TODO write test for rights store manager applyCommandById in MailboxManagerTest
-
   @Test
   def partialRightsUpdateShouldFailWhenInvalidUsername(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(BOB, "mailbox")

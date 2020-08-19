@@ -2854,6 +2854,23 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void applyRightsCommandByIdShouldThrowWhenNotOwner() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
+            MailboxId mailboxId = mailboxManager.createMailbox(mailboxPath, session2).get();
+            mailboxManager.setRights(mailboxPath,  MailboxACL.EMPTY.apply(MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup))
+                .asAddition()), session2);
+
+            assertThatThrownBy(() -> mailboxManager.applyRightsCommand(mailboxId,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition(), session))
+                .isInstanceOf(InsufficientRightsException.class);
+        }
+
+        @Test
         void setRightsByIdShouldThrowWhenNoRights() throws Exception {
             MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
             MailboxId mailboxId = mailboxManager.createMailbox(mailboxPath, session2).get();
@@ -2885,6 +2902,19 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(mailboxPath, session2).get();
 
             assertThatThrownBy(() -> mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition(), session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void applyRightsCommandByIdShouldThrowWhenNoRights() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
+            MailboxId mailboxId = mailboxManager.createMailbox(mailboxPath, session2).get();
+
+            assertThatThrownBy(() -> mailboxManager.applyRightsCommand(mailboxId,
                 MailboxACL.command()
                     .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
                     .rights(MailboxACL.FULL_RIGHTS)
