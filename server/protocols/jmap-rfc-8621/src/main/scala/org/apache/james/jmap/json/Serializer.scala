@@ -27,12 +27,13 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Right, Rights, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
+import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
 import org.apache.james.mailbox.Role
+import org.apache.james.mailbox.model.MailboxACL.{Right => JavaRight}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -189,6 +190,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
       }
     case _ => JsError("Right must be represented as a String")
   }
+  private implicit val mailboxJavaRightReads: Reads[JavaRight] = value => rightRead.reads(value).map(right => right.toMailboxRight)
+  private implicit val mailboxRfc4314RightsReads: Reads[Rfc4314Rights] = Json.valueReads[Rfc4314Rights]
   private implicit val rightsWrites: Writes[Rights] = Json.valueWrites[Rights]
 
   private implicit val mapRightsReads: Reads[Map[Username, Seq[Right]]] = _.validate[Map[String, Seq[Right]]]
@@ -403,4 +406,6 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   def deserializeMailboxSetRequest(input: JsValue): JsResult[MailboxSetRequest] = Json.fromJson[MailboxSetRequest](input)
 
   def deserializeRights(input: JsValue): JsResult[Rights] = Json.fromJson[Rights](input)
+
+  def deserializeRfc4314Rights(input: JsValue): JsResult[Rfc4314Rights] = Json.fromJson[Rfc4314Rights](input)
 }

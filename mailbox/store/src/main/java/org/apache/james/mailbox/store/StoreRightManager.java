@@ -163,6 +163,15 @@ public class StoreRightManager implements RightManager {
             }).sneakyThrow()));
     }
 
+    @Override
+    public void applyRightsCommand(MailboxId mailboxId, ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Mailbox mailbox = blockOptional(mapper.findMailboxById(mailboxId))
+            .orElseThrow(() -> new MailboxNotFoundException(mailboxId));
+
+        applyRightsCommand(mailbox.generateAssociatedPath(), mailboxACLCommand, session);
+    }
+
     private void assertSharesBelongsToUserDomain(Username user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
         assertSharesBelongsToUserDomain(user, ImmutableMap.of(mailboxACLCommand.getEntryKey(), mailboxACLCommand.getRights()));
     }

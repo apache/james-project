@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, IsSubscribedUpdate, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SharedWithResetUpdate, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
+import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, IsSubscribedUpdate, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SharedWithPartialUpdate, SharedWithResetUpdate, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
@@ -195,9 +195,14 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
         case _ => None
       }).headOption
 
+    val partialRightsUpdates: Seq[SharedWithPartialUpdate] = updates.flatMap(x => x match {
+      case Right(SharedWithPartialUpdate(username, rights)) => Some(SharedWithPartialUpdate(username, rights))
+      case _ => None
+    }).toSeq
+
     maybeParseException.map(e => SMono.raiseError[UpdateResult](e))
       .getOrElse(updateMailboxPath(maiboxId, maybeNameUpdate, mailboxSession)
-        .`then`(updateMailboxRights(maiboxId, maybeSharedWithResetUpdate, mailboxSession))
+        .`then`(updateMailboxRights(maiboxId, maybeSharedWithResetUpdate, partialRightsUpdates, mailboxSession))
         .`then`(updateSubscription(maiboxId, maybeIsSubscribedUpdate, mailboxSession)))
   }
 
@@ -239,15 +244,26 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def updateMailboxRights(mailboxId: MailboxId,
                                   maybeSharedWithResetUpdate: Option[SharedWithResetUpdate],
+                                  partialUpdates: Seq[SharedWithPartialUpdate],
                                   mailboxSession: MailboxSession): SMono[UpdateResult] = {
-   maybeSharedWithResetUpdate.map(sharedWithResetUpdate => {
+
+    val resetOperation: SMono[Unit] = maybeSharedWithResetUpdate.map(sharedWithResetUpdate => {
       SMono.fromCallable(() => {
         mailboxManager.setRights(mailboxId, sharedWithResetUpdate.rights.toMailboxAcl.asJava, mailboxSession)
-      }).`then`(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
-        .subscribeOn(Schedulers.elastic())
-    })
-      // No updated properties passed. Noop.
-      .getOrElse(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
+      }).`then`()
+    }).getOrElse(SMono.empty)
+
+    val partialUpdatesOperation: SMono[Unit] = SFlux.fromIterable(partialUpdates)
+      .flatMap(partialUpdate => SMono.fromCallable(() => {
+        mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession)
+      }))
+      .`then`()
+
+    SFlux.merge(Seq(resetOperation, partialUpdatesOperation))
+      .`then`()
+      .`then`(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
+      .subscribeOn(Schedulers.elastic())
+
   }
 
   private def computeMailboxPath(mailbox: MessageManager, nameUpdate: NameUpdate, mailboxSession: MailboxSession): MailboxPath = {

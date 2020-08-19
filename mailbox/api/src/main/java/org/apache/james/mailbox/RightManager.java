@@ -135,6 +135,8 @@ public interface RightManager {
      */
     void applyRightsCommand(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
 
+    void applyRightsCommand(MailboxId mailboxId, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
+
     /**
      * Reset the Mailbox ACL of the designated mailbox.
      *

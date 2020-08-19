@@ -5073,4 +5073,98 @@ trait MailboxSetMethodContract {
          |  ]
          |}""".stripMargin)
   }
+
+  @Test
+  def updateShouldAllowPerRightsSetting(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(BOB, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, DAVID.asString(), new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/sharedWith/${ANDRE.asString()}": ["r", "l"]
+         |                    }
+         |                }
+         |           },
+         |    "c1"
+         |       ],
+         |       ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "ids": ["${mailboxId.serialize()}"]
+         |          },
+         |       "c2"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "updated": {
+         |        "${mailboxId.serialize()}": {}
+         |      }
+         |    }, "c1"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [{
+         |        "id": "${mailboxId.serialize()}",
+         |        "name": "mailbox",
+         |        "sortOrder": 1000,
+         |        "totalEmails": 0,
+         |        "unreadEmails": 0,
+         |        "totalThreads": 0,
+         |        "unreadThreads": 0,
+         |        "myRights": {
+         |          "mayReadItems": true,
+         |          "mayAddItems": true,
+         |          "mayRemoveItems": true,
+         |          "maySetSeen": true,
+         |          "maySetKeywords": true,
+         |          "mayCreateChild": true,
+         |          "mayRename": true,
+         |          "mayDelete": true,
+         |          "maySubmit": true
+         |        },
+         |        "isSubscribed": false,
+         |        "namespace": "Personal",
+         |        "rights": {
+         |          "${ANDRE.asString()}": ["l", "r"],
+         |          "${DAVID.asString()}": ["l"]
+         |        }
+         |      }],
+         |      "notFound": []
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin)
+  }
 }

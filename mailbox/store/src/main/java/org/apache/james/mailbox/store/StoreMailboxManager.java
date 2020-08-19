@@ -797,6 +797,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public void applyRightsCommand(MailboxId mailboxId, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException {
+        storeRightManager.applyRightsCommand(mailboxId, mailboxACLCommand, session);
+    }
+
+    @Override
     public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
         storeRightManager.setRights(mailboxPath, mailboxACL, session);
     }
