@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, IsSubscribedUpdate, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SharedWithPartialUpdate, SharedWithResetUpdate, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
+import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, IsSubscribedUpdate, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SharedWithPartialUpdate, SharedWithResetUpdate, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPathObject}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
@@ -101,7 +101,7 @@ case class DeletionResults(results: Seq[DeletionResult]) {
       case failure: DeletionFailure => Some(failure.mailboxId, failure.asMailboxSetError)
       case _ => None
     })
-    .toMap
+      .toMap
 }
 
 sealed trait UpdateResult
@@ -115,6 +115,7 @@ case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable) ext
     case e: InvalidUpdateException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.cause}")), Some(Properties(List(e.property))))
     case e: ServerSetPropertyException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Can not modify server-set properties")), Some(Properties(List(e.property))))
     case e: InvalidPropertyException => MailboxSetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
+    case e: InvalidPatchException => MailboxSetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
     case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), Some(Properties(List("/name"))))
     case e: InsufficientRightsException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a delegated mailbox")), None)
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
@@ -159,8 +160,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       .flatMap({
         case (unparsedMailboxId: UnparsedMailboxId, patch: MailboxPatchObject) =>
           processingContext.resolveMailboxId(unparsedMailboxId, mailboxIdFactory).fold(
-              e => SMono.just(UpdateFailure(unparsedMailboxId, e)),
-              mailboxId => updateMailbox(mailboxSession, mailboxId, patch))
+            e => SMono.just(UpdateFailure(unparsedMailboxId, e)),
+            mailboxId => updateMailbox(mailboxSession, mailboxId, patch))
             .onErrorResume(e => SMono.just(UpdateFailure(unparsedMailboxId, e)))
       })
       .collectSeq()
@@ -168,46 +169,17 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   }
 
   private def updateMailbox(mailboxSession: MailboxSession,
-                            maiboxId: MailboxId,
+                            mailboxId: MailboxId,
                             patch: MailboxPatchObject): SMono[UpdateResult] = {
-    val updates = patch.updates(serializer)
-    val maybeParseException: Option[PatchUpdateValidationException] = updates
-      .flatMap(x => x match {
-        case Left(e) => Some(e)
-        case _ => None
-      }).headOption
-
-    val maybeNameUpdate: Option[NameUpdate] = updates
-      .flatMap(x => x match {
-        case Right(NameUpdate(newName)) => Some(NameUpdate(newName))
-        case _ => None
-      }).headOption
-
-    val maybeSharedWithResetUpdate: Option[SharedWithResetUpdate] = updates
-      .flatMap(x => x match {
-        case Right(SharedWithResetUpdate(rights)) => Some(SharedWithResetUpdate(rights))
-        case _ => None
-      }).headOption
-
-    val maybeIsSubscribedUpdate: Option[IsSubscribedUpdate] = updates
-      .flatMap(x => x match {
-        case Right(IsSubscribedUpdate(isSubscribed)) => Some(IsSubscribedUpdate(isSubscribed))
-        case _ => None
-      }).headOption
-
-    val partialRightsUpdates: Seq[SharedWithPartialUpdate] = updates.flatMap(x => x match {
-      case Right(SharedWithPartialUpdate(username, rights)) => Some(SharedWithPartialUpdate(username, rights))
-      case _ => None
-    }).toSeq
-
-    maybeParseException.map(e => SMono.raiseError[UpdateResult](e))
-      .getOrElse(updateMailboxPath(maiboxId, maybeNameUpdate, mailboxSession)
-        .`then`(updateMailboxRights(maiboxId, maybeSharedWithResetUpdate, partialRightsUpdates, mailboxSession))
-        .`then`(updateSubscription(maiboxId, maybeIsSubscribedUpdate, mailboxSession)))
+    patch.validate(serializer)
+      .fold(e => SMono.raiseError(e), validatedPatch =>
+        updateMailboxPath(mailboxId, validatedPatch, mailboxSession)
+          .`then`(updateMailboxRights(mailboxId, validatedPatch, mailboxSession))
+          .`then`(updateSubscription(mailboxId, validatedPatch, mailboxSession)))
   }
 
-  private def updateSubscription(mailboxId: MailboxId, maybeIsSubscribedUpdate: Option[IsSubscribedUpdate], mailboxSession: MailboxSession): SMono[UpdateResult] = {
-    maybeIsSubscribedUpdate.map(isSubscribedUpdate => {
+  private def updateSubscription(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPathObject, mailboxSession: MailboxSession): SMono[UpdateResult] = {
+    validatedPatch.isSubscribedUpdate.map(isSubscribedUpdate => {
       SMono.fromCallable(() => {
         val mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession)
         val isOwner = mailbox.getMailboxPath.belongsTo(mailboxSession)
@@ -224,8 +196,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       .getOrElse(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
   }
 
-  private def updateMailboxPath(mailboxId: MailboxId, maybeNameUpdate: Option[NameUpdate], mailboxSession: MailboxSession): SMono[UpdateResult] = {
-    maybeNameUpdate.map(nameUpdate => {
+  private def updateMailboxPath(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPathObject, mailboxSession: MailboxSession): SMono[UpdateResult] = {
+    validatedPatch.nameUpdate.map(nameUpdate => {
       SMono.fromCallable(() => {
         val mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession)
         if (isASystemMailbox(mailbox)) {
@@ -243,17 +215,16 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   }
 
   private def updateMailboxRights(mailboxId: MailboxId,
-                                  maybeSharedWithResetUpdate: Option[SharedWithResetUpdate],
-                                  partialUpdates: Seq[SharedWithPartialUpdate],
+                                  validatedPatch: ValidatedMailboxPathObject,
                                   mailboxSession: MailboxSession): SMono[UpdateResult] = {
 
-    val resetOperation: SMono[Unit] = maybeSharedWithResetUpdate.map(sharedWithResetUpdate => {
+    val resetOperation: SMono[Unit] = validatedPatch.rightsReset.map(sharedWithResetUpdate => {
       SMono.fromCallable(() => {
         mailboxManager.setRights(mailboxId, sharedWithResetUpdate.rights.toMailboxAcl.asJava, mailboxSession)
       }).`then`()
     }).getOrElse(SMono.empty)
 
-    val partialUpdatesOperation: SMono[Unit] = SFlux.fromIterable(partialUpdates)
+    val partialUpdatesOperation: SMono[Unit] = SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
       .flatMap(partialUpdate => SMono.fromCallable(() => {
         mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession)
       }))
@@ -327,11 +298,11 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       .getOrElse(Map.empty)
       .view)
       .flatMap {
-      case (mailboxCreationId: MailboxCreationId, jsObject: JsObject) =>
-        SMono.fromCallable(() => {
-          createMailbox(mailboxSession, mailboxCreationId, jsObject, processingContext)
-        }).subscribeOn(Schedulers.elastic())
-    }
+        case (mailboxCreationId: MailboxCreationId, jsObject: JsObject) =>
+          SMono.fromCallable(() => {
+            createMailbox(mailboxSession, mailboxCreationId, jsObject, processingContext)
+          }).subscribeOn(Schedulers.elastic())
+      }
       .collectSeq()
       .map(CreationResults)
   }
@@ -379,7 +350,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       }
 
       mailboxCreationRequest.rights
-          .foreach(rights => mailboxManager.setRights(mailboxId, rights.toMailboxAcl.asJava, mailboxSession))
+        .foreach(rights => mailboxManager.setRights(mailboxId, rights.toMailboxAcl.asJava, mailboxSession))
 
       val quotas = quotaFactory.loadFor(mailboxSession)
         .flatMap(quotaLoader => quotaLoader.getQuotas(path))
@@ -433,10 +404,10 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   }
 
   private def retrievePath(mailboxId: MailboxId, mailboxSession: MailboxSession): Either[Exception, MailboxPath] = try {
-      Right(mailboxManager.getMailbox(mailboxId, mailboxSession).getMailboxPath)
-    } catch {
-      case e: Exception => Left(e)
-    }
+    Right(mailboxManager.getMailbox(mailboxId, mailboxSession).getMailboxPath)
+  } catch {
+    case e: Exception => Left(e)
+  }
 
   private def createResponse(capabilities: Set[CapabilityIdentifier],
                              invocation: Invocation,
@@ -454,7 +425,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       updated = Some(updateResults.updated).filter(_.nonEmpty),
       notUpdated = Some(updateResults.notUpdated).filter(_.nonEmpty),
       notDestroyed = Some(deletionResults.retrieveErrors).filter(_.nonEmpty))
-    
+
     Invocation(methodName,
       Arguments(serializer.serialize(response, capabilities).as[JsObject]),
       invocation.methodCallId)

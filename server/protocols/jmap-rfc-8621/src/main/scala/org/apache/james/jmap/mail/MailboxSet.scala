@@ -79,7 +79,54 @@ object MailboxPatchObject {
 }
 
 case class MailboxPatchObject(value: Map[String, JsValue]) {
-  def updates(serializer: Serializer): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
+  def validate(serializer: Serializer): Either[PatchUpdateValidationException, ValidatedMailboxPathObject] = {
+    val asUpdatedIterable = updates(serializer)
+
+    val maybeParseException: Option[PatchUpdateValidationException] = asUpdatedIterable
+      .flatMap(x => x match {
+        case Left(e) => Some(e)
+        case _ => None
+      }).headOption
+
+    val nameUpdate: Option[NameUpdate] = asUpdatedIterable
+      .flatMap(x => x match {
+        case scala.Right(NameUpdate(newName)) => Some(NameUpdate(newName))
+        case _ => None
+      }).headOption
+
+    val isSubscribedUpdate: Option[IsSubscribedUpdate] = asUpdatedIterable
+      .flatMap(x => x match {
+        case scala.Right(IsSubscribedUpdate(isSubscribed)) => Some(IsSubscribedUpdate(isSubscribed))
+        case _ => None
+      }).headOption
+
+    val rightsReset: Option[SharedWithResetUpdate] = asUpdatedIterable
+      .flatMap(x => x match {
+        case scala.Right(SharedWithResetUpdate(rights)) => Some(SharedWithResetUpdate(rights))
+        case _ => None
+      }).headOption
+
+    val partialRightsUpdates: Seq[SharedWithPartialUpdate] = asUpdatedIterable.flatMap(x => x match {
+      case scala.Right(SharedWithPartialUpdate(username, rights)) => Some(SharedWithPartialUpdate(username, rights))
+      case _ => None
+    }).toSeq
+
+    val bothPartialAndResetRights: Option[PatchUpdateValidationException] = if (rightsReset.isDefined && partialRightsUpdates.nonEmpty) {
+      Some(InvalidPatchException("Resetting rights and partial updates cannot be done in the same method call"))
+    } else {
+       None
+    }
+    maybeParseException
+      .orElse(bothPartialAndResetRights)
+      .map(e => Left(e))
+      .getOrElse(scala.Right(ValidatedMailboxPathObject(
+        nameUpdate = nameUpdate,
+        isSubscribedUpdate = isSubscribedUpdate,
+        rightsReset = rightsReset,
+        rightsPartialUpdates = partialRightsUpdates)))
+  }
+
+  private def updates(serializer: Serializer): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
     case (property, newValue) => property match {
       case "/name" => NameUpdate.parse(newValue)
       case "/sharedWith" => SharedWithResetUpdate.parse(newValue, serializer)
@@ -102,6 +149,11 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
     }
   })
 }
+
+case class ValidatedMailboxPathObject(nameUpdate: Option[NameUpdate],
+                                      isSubscribedUpdate: Option[IsSubscribedUpdate],
+                                      rightsReset: Option[SharedWithResetUpdate],
+                                      rightsPartialUpdates: Seq[SharedWithPartialUpdate])
 
 case class MailboxSetResponse(accountId: AccountId,
                               oldState: Option[State],
@@ -225,3 +277,4 @@ case class InvalidPropertyUpdatedException(property: MailboxPatchObjectKey) exte
 case class InvalidPropertyException(property: String, cause: String) extends PatchUpdateValidationException
 case class InvalidUpdateException(property: MailboxPatchObjectKey, cause: String) extends PatchUpdateValidationException
 case class ServerSetPropertyException(property: MailboxPatchObjectKey) extends PatchUpdateValidationException
+case class InvalidPatchException(cause: String) extends PatchUpdateValidationException

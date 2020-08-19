@@ -5167,4 +5167,192 @@ trait MailboxSetMethodContract {
          |  ]
          |}""".stripMargin)
   }
+
+  // TODO testing delegation & partial updates
+  // TODO write test for rights store manager applyCommandById in MailboxManagerTest
+
+  @Test
+  def partialRightsUpdateShouldFailWhenInvalidUsername(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(BOB, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/sharedWith/invalid@invalid@${DOMAIN.asString()}": ["r", "l"]
+         |                    }
+         |                }
+         |           },
+         |    "c1"
+         |       ]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidPatch",
+         |          "description": "The username should not contain multiple domain delimiter. Value: invalid@invalid@domain.tld"
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def partialRightsUpdateShouldFailWhenInvalidRights(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(BOB, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/sharedWith/${ANDRE.asString()}": ["p"]
+         |                    }
+         |                }
+         |           },
+         |    "c1"
+         |       ]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [
+         |        [
+         |            "Mailbox/set",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "newState": "000001",
+         |                "notUpdated": {
+         |                    "${mailboxId.serialize()}": {
+         |                        "type": "invalidArguments",
+         |                        "description": "Specified value do not match the expected JSON format: List(((0),List(JsonValidationError(List(Unknown right 'p'),ArraySeq()))))",
+         |                        "properties": [
+         |                            "/sharedWith/andre@domain.tld"
+         |                        ]
+         |                    }
+         |                }
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def rightsUpdateShouldFailWhenBothPartialAndReset(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(BOB, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/sharedWith": {
+         |                        "${DAVID.asString()}":["r", "l", "w"]
+         |                      },
+         |                      "/sharedWith/${ANDRE.asString()}": ["r"]
+         |                    }
+         |                }
+         |           },
+         |    "c1"
+         |       ]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [
+         |        [
+         |            "Mailbox/set",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "newState": "000001",
+         |                "notUpdated": {
+         |                    "${mailboxId.serialize()}": {
+         |                        "type": "invalidPatch",
+         |                        "description": "Resetting rights and partial updates cannot be done in the same method call"
+         |                    }
+         |                }
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}""".stripMargin)
+  }
 }
