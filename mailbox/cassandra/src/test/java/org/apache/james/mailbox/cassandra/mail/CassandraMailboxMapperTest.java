@@ -103,6 +103,11 @@ class CassandraMailboxMapperTest {
             CassandraConfiguration.DEFAULT_CONFIGURATION,
             cassandraCluster.getCassandraConsistenciesConfiguration());
         versionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
+
+        versionDAO.truncateVersion()
+            .then(versionDAO.updateVersion(new SchemaVersion(7)))
+            .block();
+
         testee = new CassandraMailboxMapper(
             mailboxDAO,
             mailboxPathDAO,
@@ -830,8 +835,6 @@ class CassandraMailboxMapperTest {
 
     @Test
     void findMailboxWithPathLikeShouldReturnMailboxesWhenExistsInV1Table() {
-        versionDAO.updateVersion(new SchemaVersion(7)).block();
-
         mailboxDAO.save(MAILBOX)
             .block();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -850,8 +853,6 @@ class CassandraMailboxMapperTest {
 
     @Test
     void findMailboxWithPathLikeShouldReturnMailboxesWhenExistsInBothTables() {
-        versionDAO.updateVersion(new SchemaVersion(7)).block();
-
         mailboxDAO.save(MAILBOX)
             .block();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -872,8 +873,6 @@ class CassandraMailboxMapperTest {
 
     @Test
     void findMailboxWithPathLikeShouldReturnMailboxesWhenExistsInV2Table() {
-        versionDAO.updateVersion(new SchemaVersion(7)).block();
-
         mailboxDAO.save(MAILBOX)
             .block();
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -911,8 +910,6 @@ class CassandraMailboxMapperTest {
 
     @Test
     void hasChildrenShouldReturnChildWhenExistsInV1Table() {
-        versionDAO.updateVersion(new SchemaVersion(7)).block();
-
         mailboxDAO.save(MAILBOX)
             .block();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -932,8 +929,6 @@ class CassandraMailboxMapperTest {
 
     @Test
     void hasChildrenShouldReturnChildWhenExistsInBothTables() {
-        versionDAO.updateVersion(new SchemaVersion(7)).block();
-
         mailboxDAO.save(MAILBOX)
             .block();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -955,8 +950,6 @@ class CassandraMailboxMapperTest {
 
     @Test
     void hasChildrenShouldReturnChildWhenExistsInV2Table() {
-        versionDAO.updateVersion(new SchemaVersion(7)).block();
-
         mailboxDAO.save(MAILBOX)
             .block();
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -995,8 +988,6 @@ class CassandraMailboxMapperTest {
 
     @Test
     void findMailboxWithPathLikeShouldRemoveDuplicatesAndKeepV3() {
-        versionDAO.updateVersion(new SchemaVersion(7)).block();
-
         mailboxDAO.save(MAILBOX).block();
         mailboxPathV3DAO.save(MAILBOX).block();
 
