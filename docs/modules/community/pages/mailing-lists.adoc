@@ -1,76 +1,6 @@
 = Mailing lists
 
-== Guidelines
-
-A mailing list is an electronic discussion forum that anyone can subscribe to. When someone sends an email message to
-the mailing list, a copy of that message is broadcasted to everyone who is subscribed to that mailing list.
-Mailing lists provide a simple and effective communication mechanism for discussion and decision making.
-
-The *Apache Software Foundation* has well established reasons for using email and not other types of forum.
-We are *not* interested in hearing proposals to use NNTP (news groups) or web forums or any other medium.
-You may use a mail-news gateway, gmail or anything else you like but email is, and will remain, the official medium.
-
-With potentially thousands of subscribers, there is a common etiquette that you should observe. Please keep on reading.
-
-*Respect the mailing list type*
-
- * "User" lists are lists where you can send questions and comments about configuration, setup, usage and other "user"
-types of questions.
- * "Developer" lists are lists where you can send questions, comments and contributions about the project's software
-source code and general "development" types of questions.
-
-Some questions are appropriate for posting on both the "user" and the "developer" lists. In this case, pick one and
-only one. Do not cross post.
-
-Asking a configuration question on the developers list is frowned upon because developers' time is as precious as yours.
-By contacting them directly instead of the users list you are abusing resources. It is unlikely that you will get a
-quicker answer this way, those developers who have time to devote to providing support are also subscribed to the users
-list. If you contact individuals directly, or post your user issues to the developer list you may get no answer at all.
-
-*Join the lists that are appropriate for your discussion*
-
-Please make sure that you are joining the list that is appropriated for the topic that you would like to discuss.
-The general list is for discussions about the management and direction of the James project, not for "general support".
-
-*Ask smart questions*
-
-Every volunteer project obtains its strength from the people involved in it. You are welcome to join any of our mailing
-lists. You can choose to lurk, or actively participate; it's up to you. The level of community responsiveness to
-specific questions is generally directly proportional to the amount of effort you spend formulating your question.
-Eric Raymond and Rick Moen have even written an essay entitled "Asking Smart Questions" precisely on this topic.
-Although somewhat militant, it is definitely worth reading.
-
-*Note*: Please do NOT send your Java problems to the two authors. They welcome feedback on the FAQ's contents, but are
-simply not a Java help resource. Follow the essay's advice and choose your forum carefully.
-
-*Keep your email short and to the point*
-
-If your email is more than about a page of text, chances are that it won't get read by very many people. It is much
-better to try to pack a lot of informative information (see above about asking smart questions) into as small of an
-email as possible. If you are replying to a previous email only quote the parts that you are replying to and to remove
-the unnecessary bits. This makes it easier for people to follow a thread as well as making the email archives easier
-to search and read.
-
-*Do your best to ensure that you are not sending HTML or "Stylelized" email to the list*
-
-If you are using Outlook or Outlook Express or Eudora, chances are that you are sending HTML email by default. There is
-usually a setting that will allow you to send "Plain Text" email. If you are using Microsoft products to send email,
-there are several bugs in the software that prevent you from turning off the sending of HTML email.
-
-*Watch where you are sending email*
-
-The majority of our mailing lists have set the Reply-To to go back to the list. That means that when you Reply to a
-message, it will go to the list and not to the original author directly. The reason is because it helps facilitate
-discussion on the list for everyone to benefit from. Be careful of this as sometimes you may intend to reply to a
-message directly to someone instead of the entire list. The appropriate contents of the Reply-To header is an age-old
-debate that should not be brought up on the mailing lists. You can examine opposing points of view condemning our
-convention and condoning it. Bringing this up for debate on a mailing list will add nothing new and is considered off-topic.
-
-*Do not cross post messages*
-
-In other words, pick one mailing list and send your messages to that mailing list only. Do not send your messages to
-multiple mailing lists. The reason is that people may be subscribed to one list and not to the other. Therefore, some
-people will only see part of the conversation.
+Please read the <<_guidelines>> below before subscribing to our lists and join our community.
 
 == James mailing lists
 
@@ -163,3 +93,74 @@ To stop subscription for the address _john@host.domain_, send an email to
 or to
 
 `server-user-unsubscribe-john=\host.domain@james.apache.org`
+
+== Guidelines
+
+A mailing list is an electronic discussion forum that anyone can subscribe to. When someone sends an email message to
+the mailing list, a copy of that message is broadcasted to everyone who is subscribed to that mailing list.
+Mailing lists provide a simple and effective communication mechanism for discussion and decision making.
+
+The *Apache Software Foundation* has well established reasons for using email and not other types of forum.
+You may use a mail-news gateway, gmail or anything else you like but email is, and will remain, the official medium.
+
+With potentially thousands of subscribers, there is a common etiquette that you should observe. Please keep on reading.
+
+*Respect the mailing list type*
+
+* "User" lists are lists where you can send questions and comments about configuration, setup, usage and other "user"
+types of questions.
+* "Developer" lists are lists where you can send questions, comments and contributions about the project's software
+source code and general "development" types of questions.
+
+Some questions are appropriate for posting on both the "user" and the "developer" lists. In this case, pick one and
+only one. Do not cross post.
+
+Asking a configuration question on the developers list is frowned upon because developers' time is as precious as yours.
+By contacting them directly instead of the users list you are abusing resources. It is unlikely that you will get a
+quicker answer this way, those developers who have time to devote to providing support are also subscribed to the users
+list. If you contact individuals directly, or post your user issues to the developer list you may get no answer at all.
+
+*Join the lists that are appropriate for your discussion*
+
+Please make sure that you are joining the list that is appropriated for the topic that you would like to discuss.
+The general list is for discussions about the management and direction of the James project, not for "general support".
+
+*Ask smart questions*
+
+Every volunteer project obtains its strength from the people involved in it. You are welcome to join any of our mailing
+lists. You can choose to lurk, or actively participate; it's up to you. The level of community responsiveness to
+specific questions is generally directly proportional to the amount of effort you spend formulating your question.
+Eric Raymond and Rick Moen have even written an essay entitled "Asking Smart Questions" precisely on this topic.
+Although somewhat militant, it is definitely worth reading.
+
+*Note*: Please do NOT send your Java problems to the two authors. They welcome feedback on the FAQ's contents, but are
+simply not a Java help resource. Follow the essay's advice and choose your forum carefully.
+
+*Keep your email short and to the point*
+
+If your email is more than about a page of text, chances are that it won't get read by very many people. It is much
+better to try to pack a lot of informative information (see above about asking smart questions) into as small of an
+email as possible. If you are replying to a previous email only quote the parts that you are replying to and to remove
+the unnecessary bits. This makes it easier for people to follow a thread as well as making the email archives easier
+to search and read.
+
+*Do your best to ensure that you are not sending HTML or "Stylelized" email to the list*
+
+If you are using Outlook or Outlook Express or Eudora, chances are that you are sending HTML email by default. There is
+usually a setting that will allow you to send "Plain Text" email. If you are using Microsoft products to send email,
+there are several bugs in the software that prevent you from turning off the sending of HTML email.
+
+*Watch where you are sending email*
+
+The majority of our mailing lists have set the Reply-To to go back to the list. That means that when you Reply to a
+message, it will go to the list and not to the original author directly. The reason is because it helps facilitate
+discussion on the list for everyone to benefit from. Be careful of this as sometimes you may intend to reply to a
+message directly to someone instead of the entire list. The appropriate contents of the Reply-To header is an age-old
+debate that should not be brought up on the mailing lists. You can examine opposing points of view condemning our
+convention and condoning it. Bringing this up for debate on a mailing list will add nothing new and is considered off-topic.
+
+*Do not cross post messages*
+
+In other words, pick one mailing list and send your messages to that mailing list only. Do not send your messages to
+multiple mailing lists. The reason is that people may be subscribed to one list and not to the other. Therefore, some
+people will only see part of the conversation.
