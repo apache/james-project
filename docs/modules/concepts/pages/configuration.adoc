@@ -1,0 +1,34 @@
+= Configuration
+
+== Overview
+
+An important aspect to understand about James is the idea of "configuration".
+Sometimes "configuration" means different things to different people, so we
+wanted to ensure that what we mean by the concept is clear and precise, 
+because in order operate a James server, you will necessarily need to 
+configure it.
+
+A "*Configuration*" is a https://martinfowler.com/bliki/ValueObject.html[value object]
+that communicates to a James server how the xref:user/index.adoc#_operator[Operator] wishes the
+server to behave. It is very similar to an interface, but yet it is not quite an interface
+(which is why we call it something different).
+
+An "interface" provides a means for an Operator to interact with a server as part of the
+normal course of ongoing operations. Interfacing with the system essentially means either
+reading the server's current state, or updating the server's current state. A typical example
+would be adding a new mailbox via the xref:concepts:???.adoc[Useradmin API]. Each time the Operator
+interacts with the system via an interface, although the *state* of the system may change, 
+the *behavior* of the system is not expected to change.
+
+By contrast, "configuration" of a system (also a noun, but yet not the same as the
+"Configuration" we mention above) is more like a switching mechanism that instructs the server
+how to behave given some kind of interaction via an interface. For example, if a James server
+is configured to allow multiple domains, then if an Operator adds "user@domain1.com" and
+"user@domain2.com", the server will happily accept the command. If only a single domain is
+permitted via configuration, then only one of those mailboxes will be allowed. In other words,
+given the same interaction by the Operator, given different configurations the behavior of 
+the system is different.
+
+Some systems call these "settings", so as a user of a system you would "configure your settings".
+
+

@@ -45,6 +45,9 @@ xref:protocols/smtp.adoc[SMTP]::
 *Simple Mail Transfer Protocol* (SMTP) is a protocol that specifies how to transmit
 a valid email message from one MTA to another.
 
+[[open_relay]]
+Open Relay::
+
 POP::
 
 POP Client::

@@ -8,24 +8,24 @@ James runs on the JVM and is highly customizable.
 
 This Reference Book is divided into the following Parts:
 
-* xref:main:concepts:index.adoc[James Core Concepts]
+* xref:james-project:concepts:index.adoc[James Core Concepts]
 **    These are the core concepts that describe what James is all about.
     Start here if you want to learn more about what James can do
     and how it is designed.
-* xref:main:servers:index.adoc[James Servers]
+* xref:james-project:servers:index.adoc[James Servers]
 **    We provide a few out-of-the-box servers that you can 
     choose from depending on your needs. Start here if you just
     want to get up and running quickly with a working production-grade mail server.
-* xref:main:customization:index.adoc[Customization]
+* xref:james-project:customization:index.adoc[Customization]
 **    Shows how you can customize any James server with the 
     functionalities that you need.
     Check out this section if you have special business or technical
     needs and are interested in a custom solution.
-* xref:main:development:index.adoc[James Developer Guide]
+* xref:james-project:development:index.adoc[James Developer Guide]
 **    A guide aimed at experienced developers, describing 
     how you can assemble your own specialized server.
-* xref:main:community:index.adoc[James Community]
+* xref:james-project:community:index.adoc[James Community]
 **    All about the Apache James community, and how you can be 
     part of this active and dynamic group, too!
 
-Please note that this Reference Documentation is a **living document**. It is subject to change. You are currently reading version {page-version}. If you find anything that is unclear, unfinished, or confusing, please do not hestiate to xref:main:community:index.adoc[lend us a hand].
+Please note that this Reference Documentation is a **living document**. It is subject to change. You are currently reading version {page-version}. If you find anything that is unclear, unfinished, or confusing, please do not hestiate to xref:james-project:community:index.adoc[lend us a hand].

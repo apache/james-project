@@ -1,0 +1,63 @@
+= User Repository
+:navtitle: Users
+
+== Overview
+
+Whereas xref:storage/mailbox.adoc[mailboxes] are clearly a core component of
+any email system, user management is a lighter shade of gray.
+
+// "Repository" should be "Diretory". See JAMES-3360.
+On the one hand, mailboxes ought to match up with actual 
+xref:user/index.adoc#_user[Users], so there is
+a clear relationship between mailbox management and user management.
+Because of this relationship, it is not at all strange to include a user respository
+within an email system.
+
+However, on the other hand email is only one of many applications that require
+user management. It is therefore also completely reasonable to use some kind of
+centralized user directory, and ensure that mailboxes somehow synchronize with
+this external system.
+
+The former case is much simpler to manage, but requires duplicate and therefore
+unproductive work. The latter case can become quite complex from a technological 
+perspective (and all the risks that are associated with it), but reduces the
+amount of unproductive work.
+
+== Common Operations
+
+// "Repository" should be "Diretory". See JAMES-3360.
+Because the user repository is used in the context of managing mailboxes, there
+are some operations that are relatively common to any email system.
+
+=== Domain Management
+
+A mailbox belongs to a https://en.wikipedia.org/wiki/Domain_name[domain]. For a mail
+system that can process multiple domains, the system will usually have operations to:
+
+* List available domains
+* Add a domain
+* Remove a domain
+* Update a user's password
+
+
+=== User Management
+
+A User has at least one mail box, and will usually have a canonical mailbox
+that matches the user's identity in the system.
+For each domain that is managed by the system, it is common to be able to:
+
+* List all users for the domain
+* Add a user
+* Remove user 
+
+
+=== Other Common Operations
+
+* Add or remove email https://en.wikipedia.org/wiki/Email_alias[aliases]
+for a given user
+* Add or remove email https://en.wikipedia.org/wiki/Email_forwarding[forwards]
+for a given user
+* Add or remove a user to a "group" mail address
+* Filter messages using https://james.apache.org/jsieve/[Sieve]
+* Rewrite mail addresses
+* Configure an https://en.wikipedia.org/wiki/Autoresponder[autoresponder]
