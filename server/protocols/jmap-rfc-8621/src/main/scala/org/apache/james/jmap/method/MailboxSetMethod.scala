@@ -378,6 +378,9 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   private def resolvePath(mailboxSession: MailboxSession,
                           mailboxCreationRequest: MailboxCreationRequest,
                           processingContext: ProcessingContext): Either[Exception, MailboxPath] = {
+    if (mailboxCreationRequest.name.value.contains(mailboxSession.getPathDelimiter)) {
+      return Left(new MailboxNameException(s"The mailbox '${mailboxCreationRequest.name.value}' contains an illegal character: '${mailboxSession.getPathDelimiter}'"))
+    }
     mailboxCreationRequest.parentId
       .map(maybeParentId => for {
         parentId <- processingContext.resolveMailboxId(maybeParentId, mailboxIdFactory)
