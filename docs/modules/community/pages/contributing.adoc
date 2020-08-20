@@ -1,3 +1,185 @@
 = Contributing
 
-(TODO)
+This document defines the different ways available for contributing to the Apache James project.
+
+To keep you informed on James issues, subscribe to the relevant xref:mailing-lists.adoc[mailing lists].
+
+== Be involved in the community
+
+An easy start is to be involved in the community.
+
+Share your experiences with James, your needs, your enhancements proposition via the
+xref:mailing-lists.adoc[mailing lists], on https://gitter.im/apache/james-project[Gitter], or on our
+https://issues.apache.org/jira/projects/JAMES/issues[Bug Tracker].
+
+Don't hesitate to write articles and blog posts. Use your preferred media to spread the love!
+
+== Reporting bugs
+
+Many improvements come as a direct result of bug reports.
+
+To report a bug, please use the appropriate Bug Tracker JIRA link according to the project you want to address:
+
+* https://issues.apache.org/jira/browse/JAMES[Server]
+* https://issues.apache.org/jira/browse/MAILET[Mailet]
+* https://issues.apache.org/jira/browse/MAILBOX[Mailbox]
+* https://issues.apache.org/jira/browse/PROTOCOLS[Protocols]
+* https://issues.apache.org/jira/browse/MPT[MPT]
+* https://issues.apache.org/jira/browse/MIME4J[Mime4j]
+* https://issues.apache.org/jira/browse/JSIEVE[jSieve]
+* https://issues.apache.org/jira/browse/JSPF[jSPF]
+* https://issues.apache.org/jira/browse/JDKIM[jDKIM]
+* https://issues.apache.org/jira/browse/HUPA[Hupa]
+
+Once you are logged on the appropriate JIRA page, click on the red Create button, then complete the different fields
+as accurately as possible, so that any user can reproduce the reported bug. Also note that all your information must be
+readable (use markdown).
+
+Then, you have to click on Create to submit your bug.
+
+=== Reporting security vulnerabilities
+
+http://www.apache.org/security/[Security vulnerabilities] should be announced to the Apache Security team.
+PMCs will be notified about them, and will work hard to propose fixes as fast as possible.
+
+Specific details about security in James can be found here.
+
+== Documentation
+
+Documentation is an easy way to get on board! Check out the
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20documentation%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~documentation]
+label on JIRA to get some ideas.
+Report on JIRA the typos you spot, the information you miss, and any improvement you can think of.
+The next step is to contribute the documentation changes via https://github.com/apache/james-project/tree/master/docs/modules[Git].
+
+To edit an existing document try to edit the adoc version in `docs/modules` (check it out from Git) and if you can, submit a
+patch as for xref:_code_patches[Code Patches].
+
+If you want to contribute new files please try to use the AsciiDoc format as shown in `docs/modules`.
+
+If all this seems like unnecessary nonsense, send us whatever you like, we'd still be happy to receive good documentation.
+
+Each of the Apache James projects has its own documentation maintained with the automated build. Once a build is done,
+the documentation can be further committed in the https://git-wip-us.apache.org/repos/asf/james-site.git[site module]
+which will be automatically published via gitpubsub to http://james.apache.org[Apache James web site].
+
+== How to contribute some code?
+
+* Clone the source code of the project from its link:git://git.apache.org/james-project.git[apache git repository] or its
+https://github.com/apache/james-project[Github]
+* Create your branch and name it with the JIRA ticket number.
+* Create a Pull Request with your branch name and prefix its different commits with the same name.
+
+Alternatively you can create a patch as xref:_code_patches[outlined below], and attach it to the JIRA ticket.
+
+A valid commit comment might be:
+
+```
+JAMES-2285 My awesome commit title
+
+Here is some more details about what my commit does, and the rationals of the choice I took.
+```
+
+=== Licenses
+
+All contributions to the James project are made under the https://www.apache.org/licenses[Apache license 2.0]
+
+=== Contributions proposals
+
+* We reference some easy tasks to start with:
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20newbie%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~newbie]
+* We have a collection of minor fixes awaiting contributions:
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20easyfix%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~easyfix]
+* Challenge yourself with some cool features we thought to:
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20feature%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~feature]
+
+Additional ideas are more than welcome. Don't hesitate to discuss that with us!
+
+=== Coding standards
+
+While we are glad to accept contributions to documentation from anyone, in almost any format, because its much better
+than none, please consider these guidelines to help us to assimilate your contribution.
+
+Submissions to the James project must follow the coding conventions outlined in this document. James developers are
+asked to follow coding conventions already present in the code. (For example, if the existing code has the bracket on
+the same line as the if statement, then all subsequent code should also follow that convention.) Anything not explicitly
+mentioned in this document should adhere to the official
+https://www.oracle.com/java/technologies/javase/codeconventions-contents.html[Java Coding Conventions].
+
+*Developers who commit code that does not follow the coding conventions outlined in this document will be responsible
+for fixing their own code.*
+
+. Your code should pass our https://github.com/apache/james-project/blob/master/checkstyle.xml[checkstyle] which runs
+upon mvn clean install.
+. Extra spaces between parentheses are not allowed:
+
+```
+  if (foo) > Good
+
+  or
+
+  if ( foo ) > Bad
+```
+
+[start=3]
+. Four spaces. *No tabs.* Period.
+The James mailing list receives commit messages that are almost impossible to read if tabs are used.
+. Use Unix linefeeds for all .java source code files. Only platform-specific files (e.g. .bat files for Windows) should
+contain non-Unix linefeeds.
+. Javadoc *MUST* exist on all API methods. Contributing a missing javadoc for any method, class, variable, etc., will be
+GREATLY appreciated as this will help to improve the James project.
+. The standard Apache license header *MUST* be placed at the top of every file.
+. Your change set *MUST* be covered by tests. We also strongly appreciate integration tests.
+. We also  require the following best practice regarding maven and the *pom.xml*:
+
+** Define your dependency versions in james-project pom.xml. This structurally ensures all projects get the same v
+ersion, and that there is no version clashes.
+** Don't use _org.apache.james_ groupId for your dependencies. Use _${james.groupId}_. If not, you break the policies
+for automatic sorting, as well as make it more ambiguous.
+** You should be ordering your dependencies. The sort order is:
+*** If the project is part of org.james.apache groupId? Internal dependencies goes first.
+*** Then we order by groupId
+*** Then we order by artifactId
+*** Then we order by type. test-jar goes last.
+
+You should also split multiple attributes each on a new line.
+
+You should ensure your POM files, as well as sections ordering follow the
+https://maven.apache.org/ref/3.0.3/maven-model/maven.html[Maven Model].
+
+=== Code patches
+
+Patches should be attached to the corresponding JIRA issue.
+
+Always use diff -u to generate patches, so we can apply them using 'patch'.
+
+Make sure the patch only contains what is intended, your checkout could be outdated.
+
+Make sure it conforms to the code standards, otherwise it may be ignored. It is OK to make a single patch covering
+several files, but please only one issue at a time.
+
+Briefly outline the reason for your patch, the solution your patch implements, why a patch is needed and why your code
+will solve the problem. Note any bug numbers your patch addresses.
+
+The reason for these rules is so that committers can easily see what you are trying to achieve, it is their
+responsibility to manage the code and review submissions, if you make it easy for them to see what you are doing your
+patch is more likely to be committed quickly.
+
+== Idea or design proposals
+
+People can submit ideas, features or design changes proposals by discussing it through the
+xref:mailing-lists.adoc[mailing lists] and/or submitting an ADR (Architecture Decision Record). A discussion
+on the mailing list getting a consensus of the community can be the object of the writing of an ADR to confirm the
+change agreed upon.
+
+ADRs *MUST* be submitted under the folder `src/adr` via a pull request. The standards used for writing an ADR are
+described in the https://github.com/apache/james-project/blob/master/src/adr/0001-record-architecture-decisions.md[first ADR]
+written for the Apache James project.
+
+The number of the ADR should be incremental. If an other ADR gets merged concurrently, the committer is responsible for
+updating its number accordingly.
+
+When the ADR reaches a consensus within the community and is accepted, it can be merged and goes into effect.
+
+An ADR can't be removed after being accepted and merged. However, a new ADR can supersede a previous one. This is so
+we are able to keep track on all the decisions being made regarding the project.
