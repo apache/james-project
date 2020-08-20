@@ -122,6 +122,7 @@ case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable, pat
     case e: InvalidPatchException => MailboxSetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
     case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), filter(Properties(List("/name", "parentId"))))
     case e: InsufficientRightsException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a delegated mailbox")), None)
+    case e: MailboxHasChildException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.mailboxId.serialize()} parentId property cannot be updated as this mailbox has child mailboxes")), Some(Properties(List("parentId"))))
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
 }
@@ -216,8 +217,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
             throw SystemMailboxChangeException(mailboxId)
           }
           val oldPath = mailbox.getMailboxPath
-          val newPath = applyNameUpdate(validatedPatch.nameUpdate, mailboxSession)
-            .andThen(applyParentIdUpdate(validatedPatch.parentIdUpdate, mailboxSession))
+          val newPath = applyParentIdUpdate(mailboxId, validatedPatch.parentIdUpdate, mailboxSession)
+            .andThen(applyNameUpdate(validatedPatch.nameUpdate, mailboxSession))
             .apply(oldPath)
           if (!oldPath.equals(newPath)) {
             mailboxManager.renameMailbox(mailboxId,
@@ -236,8 +237,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     }
   }
 
-  private def applyParentIdUpdate(maybeParentIdUpdate: Option[ParentIdUpdate], mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
-    maybeParentIdUpdate.map(parentIdUpdate => applyParentIdUpdate(parentIdUpdate, mailboxSession))
+  private def applyParentIdUpdate(mailboxId: MailboxId, maybeParentIdUpdate: Option[ParentIdUpdate], mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
+    maybeParentIdUpdate.map(parentIdUpdate => applyParentIdUpdate(mailboxId, parentIdUpdate, mailboxSession))
       .getOrElse(x => x)
   }
 
@@ -253,11 +254,14 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     }).getOrElse(originalPath)
   }
 
-  private def applyParentIdUpdate(parentIdUpdate: ParentIdUpdate, mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
+  private def applyParentIdUpdate(mailboxId: MailboxId, parentIdUpdate: ParentIdUpdate, mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
     originalPath => {
       val currentName = originalPath.getName(mailboxSession.getPathDelimiter)
       parentIdUpdate.newId
         .map(id => {
+          if (mailboxManager.hasChildren(originalPath, mailboxSession)) {
+            throw MailboxHasChildException(mailboxId)
+          }
           val parentPath = mailboxManager.getMailbox(id, mailboxSession).getMailboxPath
           parentPath.child(currentName, mailboxSession.getPathDelimiter)
         })
