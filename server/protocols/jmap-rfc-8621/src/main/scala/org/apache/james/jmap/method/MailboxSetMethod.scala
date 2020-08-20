@@ -206,13 +206,16 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
         if (isASystemMailbox(mailbox)) {
           throw SystemMailboxChangeException(mailboxId)
         }
+        val oldPath = mailbox.getMailboxPath
         val newPath = applyNameUpdate(validatedPatch.nameUpdate, mailboxSession)
           .andThen(applyParentIdUpdate(validatedPatch.parentIdUpdate, mailboxSession))
-          .apply(mailbox.getMailboxPath)
-        mailboxManager.renameMailbox(mailboxId,
-          newPath,
-          RenameOption.RENAME_SUBSCRIPTIONS,
-          mailboxSession)
+          .apply(oldPath)
+        if (!oldPath.equals(newPath)) {
+          mailboxManager.renameMailbox(mailboxId,
+            newPath,
+            RenameOption.RENAME_SUBSCRIPTIONS,
+            mailboxSession)
+        }
       }).`then`(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
         .subscribeOn(Schedulers.elastic())
     } else {
