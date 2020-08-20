@@ -6220,4 +6220,245 @@ trait MailboxSetMethodContract {
          |  ]
          |}""".stripMargin)
   }
+
+  @Test
+  def updateShouldAcceptCreationIdsForParentId(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val request = s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                        "name": "parent"
+        |                    }
+        |                }
+        |           },
+        |           "c1"
+        |       ],
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId.serialize()}": {
+        |                      "/parentId": "#C42"
+        |                    }
+        |                }
+        |           },
+        |           "c2"
+        |       ],
+        |       ["Mailbox/get",
+        |         {
+        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "ids": ["${mailboxId.serialize()}"]
+        |          },
+        |          "c3"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val parentId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", BOB.asString(), "parent")
+      .serialize()
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "created": {
+         |        "C42": {
+         |          "id": "$parentId",
+         |          "sortOrder":1000,
+         |          "totalEmails": 0,
+         |          "unreadEmails": 0,
+         |          "totalThreads": 0,
+         |          "unreadThreads": 0,
+         |          "myRights": {
+         |            "mayReadItems": true,
+         |            "mayAddItems": true,
+         |            "mayRemoveItems": true,
+         |            "maySetSeen": true,
+         |            "maySetKeywords": true,
+         |            "mayCreateChild": true,
+         |            "mayRename": true,
+         |            "mayDelete": true,
+         |            "maySubmit": true
+         |          },
+         |          "isSubscribed": true
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "updated": {
+         |        "${mailboxId.serialize()}": {}
+         |      }
+         |    }, "c2"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [{
+         |        "id": "${mailboxId.serialize()}",
+         |        "sortOrder":1000,
+         |        "name": "mailbox",
+         |        "parentId": "$parentId",
+         |        "sortOrder": 1000,
+         |        "totalEmails": 0,
+         |        "unreadEmails": 0,
+         |        "totalThreads": 0,
+         |        "unreadThreads": 0,
+         |        "myRights": {
+         |          "mayReadItems": true,
+         |          "mayAddItems": true,
+         |          "mayRemoveItems": true,
+         |          "maySetSeen": true,
+         |          "maySetKeywords": true,
+         |          "mayCreateChild": true,
+         |          "mayRename": true,
+         |          "mayDelete": true,
+         |          "maySubmit": true
+         |        },
+         |        "isSubscribed": false
+         |      }],
+         |      "notFound": []
+         |    }, "c3"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldRejectInvalidParentIdJsonPayload(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val request = s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId.serialize()}": {
+        |                      "/parentId": ["invalid"]
+        |                    }
+        |                }
+        |           },
+        |           "c2"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "1": {
+         |          "type": "invalidArguments",
+         |          "description": "Expecting a JSON string or null as an argument",
+         |          "properties": ["/parentId"]
+         |        }
+         |      }
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldRejectUnresolvableCreationIds(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val request = s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId.serialize()}": {
+        |                      "/parentId": "#C42"
+        |                    }
+        |                }
+        |           },
+        |           "c2"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "1": {
+         |          "type": "invalidArguments",
+         |          "description": "ClientId(#C42) was not used in previously defined creationIds",
+         |          "properties": ["/parentId"]
+         |        }
+         |      }
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin)
+  }
 }
