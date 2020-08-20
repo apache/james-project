@@ -6616,8 +6616,6 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-   println(response)
-
     assertThatJson(response).isEqualTo(
       s"""{
          |  "sessionState": "75128aab4b1b",
@@ -6630,6 +6628,193 @@ trait MailboxSetMethodContract {
          |          "type": "invalidArguments",
          |          "description": "Mailbox with name=#private:bob@domain.tld:parent.newMailbox already exists.",
          |          "properties":["/name", "/parentId"]
+         |        }
+         |      }
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenRenamingParentIdWithinADelegatedAccount(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
+    val parentPath = MailboxPath.forUser(ANDRE, "parent")
+    val parentId = mailboxProbe.createMailbox(parentPath)
+
+    val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
+    aCLProbeImpl.replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS)
+    aCLProbeImpl.replaceRights(parentPath, BOB.asString, MailboxACL.FULL_RIGHTS)
+
+    val request = s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId.serialize()}": {
+        |                      "/parentId": "${parentId.serialize()}"
+        |                    }
+        |                }
+        |           },
+        |           "c2"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "notFound",
+         |          "description": "#private:andre@domain.tld:parent.mailbox"
+         |        }
+         |      }
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenRenamingParentIdFromADelegatedAccount(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
+    val parentPath = MailboxPath.forUser(BOB, "parent")
+    val parentId = mailboxProbe.createMailbox(parentPath)
+
+    val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
+    aCLProbeImpl.replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS)
+
+    val request = s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId.serialize()}": {
+        |                      "/parentId": "${parentId.serialize()}"
+        |                    }
+        |                }
+        |           },
+        |           "c2"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "notFound",
+         |          "description": "#private:andre@domain.tld:mailbox"
+         |        }
+         |      }
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenRenamingParentIdToADelegatedAccount(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val path = MailboxPath.forUser(BOB, "mailbox")
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
+    val parentPath = MailboxPath.forUser(ANDRE, "parent")
+    val parentId = mailboxProbe.createMailbox(parentPath)
+
+    val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
+    aCLProbeImpl.replaceRights(parentPath, BOB.asString, MailboxACL.FULL_RIGHTS)
+
+    val request = s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId.serialize()}": {
+        |                      "/parentId": "${parentId.serialize()}"
+        |                    }
+        |                }
+        |           },
+        |           "c2"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "notFound",
+         |          "description": "#private:andre@domain.tld:parent.mailbox"
          |        }
          |      }
          |    }, "c2"]
