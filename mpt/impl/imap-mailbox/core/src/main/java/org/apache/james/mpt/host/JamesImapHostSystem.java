@@ -118,7 +118,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
                 .forUser(username)
                 .rights(rights)
                 .asAddition()),
-            mailboxManager.createSystemSession(username));
+            mailboxSession);
         mailboxManager.logout(mailboxSession);
         mailboxManager.endProcessingRequest(mailboxSession);
     }
