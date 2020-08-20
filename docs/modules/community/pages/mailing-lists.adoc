@@ -4,6 +4,14 @@ Please read the <<_guidelines>> below before subscribing to our lists and join o
 
 == James mailing lists
 
+Most James mailing lists are open and also archived and available online.
+You can read them even if you are not subscribed. 
+You can post only if you are subscribed.
+
+=== Mailing list archives and web browsing
+
+You can browse the mailing list archives online using the https://lists.apache.org/list.html?james.apache.org[Pony Mail] instance.
+
 === Server user list
 
 *Low traffic*
