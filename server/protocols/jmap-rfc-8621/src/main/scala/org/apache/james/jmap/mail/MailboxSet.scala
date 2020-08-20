@@ -34,6 +34,7 @@ import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, Unparsed
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier}
+import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
@@ -86,8 +87,11 @@ object MailboxPatchObject {
 }
 
 case class MailboxPatchObject(value: Map[String, JsValue]) {
-  def validate(serializer: Serializer, capabilities: Set[CapabilityIdentifier]): Either[PatchUpdateValidationException, ValidatedMailboxPathObject] = {
-    val asUpdatedIterable = updates(serializer, capabilities)
+  def validate(processingContext: ProcessingContext,
+               mailboxIdFactory: MailboxId.Factory,
+               serializer: Serializer,
+               capabilities: Set[CapabilityIdentifier]): Either[PatchUpdateValidationException, ValidatedMailboxPathObject] = {
+    val asUpdatedIterable = updates(serializer, capabilities, processingContext, mailboxIdFactory)
 
     val maybeParseException: Option[PatchUpdateValidationException] = asUpdatedIterable
       .flatMap(x => x match {
@@ -113,6 +117,12 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
         case _ => None
       }).headOption
 
+    val parentIdUpdate: Option[ParentIdUpdate] = asUpdatedIterable
+      .flatMap(x => x match {
+        case scala.Right(ParentIdUpdate(newId)) => Some(ParentIdUpdate(newId))
+        case _ => None
+      }).headOption
+
     val partialRightsUpdates: Seq[SharedWithPartialUpdate] = asUpdatedIterable.flatMap(x => x match {
       case scala.Right(SharedWithPartialUpdate(username, rights)) => Some(SharedWithPartialUpdate(username, rights))
       case _ => None
@@ -128,14 +138,16 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
       .map(e => Left(e))
       .getOrElse(scala.Right(ValidatedMailboxPathObject(
         nameUpdate = nameUpdate,
+        parentIdUpdate = parentIdUpdate,
         isSubscribedUpdate = isSubscribedUpdate,
         rightsReset = rightsReset,
         rightsPartialUpdates = partialRightsUpdates)))
   }
 
-  private def updates(serializer: Serializer, capabilities: Set[CapabilityIdentifier]): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
+  def updates(serializer: Serializer, capabilities: Set[CapabilityIdentifier], processingContext: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
     case (property, newValue) => property match {
       case "/name" => NameUpdate.parse(newValue)
+      case "/parentId" => ParentIdUpdate.parse(newValue, processingContext, mailboxIdFactory)
       case "/sharedWith" => SharedWithResetUpdate.parse(serializer, capabilities)(newValue)
       case "/role" => Left(ServerSetPropertyException(MailboxPatchObject.roleProperty))
       case "/sortOrder" => Left(ServerSetPropertyException(MailboxPatchObject.sortOrderProperty))
@@ -161,9 +173,12 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
 }
 
 case class ValidatedMailboxPathObject(nameUpdate: Option[NameUpdate],
+                                      parentIdUpdate: Option[ParentIdUpdate],
                                       isSubscribedUpdate: Option[IsSubscribedUpdate],
                                       rightsReset: Option[SharedWithResetUpdate],
-                                      rightsPartialUpdates: Seq[SharedWithPartialUpdate])
+                                      rightsPartialUpdates: Seq[SharedWithPartialUpdate]) {
+  val shouldUpdateMailboxPath: Boolean = nameUpdate.isDefined || parentIdUpdate.isDefined
+}
 
 case class MailboxSetResponse(accountId: AccountId,
                               oldState: Option[State],
@@ -284,6 +299,20 @@ object SharedWithPartialUpdate {
   }
 }
 
+object ParentIdUpdate {
+  def parse(newValue: JsValue, processingContext: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Either[PatchUpdateValidationException, Update] =
+    newValue match {
+      case JsString(id) =>
+        val value: Either[String, UnparsedMailboxId] = refineV(id)
+        value.fold(error => Left(InvalidUpdateException("/parentId", error)),
+          id => processingContext.resolveMailboxId(id, mailboxIdFactory)
+            .fold(e => Left(InvalidUpdateException("/parentId", e.getMessage)),
+              mailboxId => scala.Right(ParentIdUpdate(Some(mailboxId)))))
+      case JsNull => scala.Right(ParentIdUpdate(None))
+      case _ => Left(InvalidUpdateException("/parentId", "Expecting a JSON string or null as an argument"))
+    }
+}
+
 sealed trait Update
 case class NameUpdate(newName: String) extends Update
 case class SharedWithResetUpdate(rights: Rights) extends Update
@@ -291,6 +320,7 @@ case class IsSubscribedUpdate(isSubscribed: Option[IsSubscribed]) extends Update
 case class SharedWithPartialUpdate(username: Username, rights: Rfc4314Rights) extends Update {
   def asACLCommand(): JavaMailboxACL.ACLCommand = JavaMailboxACL.command().forUser(username).rights(rights.asJava).asReplacement()
 }
+case class ParentIdUpdate(newId: Option[MailboxId]) extends Update
 
 class PatchUpdateValidationException() extends IllegalArgumentException
 case class UnsupportedPropertyUpdatedException(property: MailboxPatchObjectKey) extends PatchUpdateValidationException

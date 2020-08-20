@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPathObject}
+import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPathObject}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
@@ -162,7 +162,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
         case (unparsedMailboxId: UnparsedMailboxId, patch: MailboxPatchObject) =>
           processingContext.resolveMailboxId(unparsedMailboxId, mailboxIdFactory).fold(
             e => SMono.just(UpdateFailure(unparsedMailboxId, e)),
-            mailboxId => updateMailbox(mailboxSession, mailboxId, patch, capabilities))
+            mailboxId => updateMailbox(mailboxSession, processingContext, mailboxId, patch, capabilities))
             .onErrorResume(e => SMono.just(UpdateFailure(unparsedMailboxId, e)))
       })
       .collectSeq()
@@ -170,10 +170,11 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   }
 
   private def updateMailbox(mailboxSession: MailboxSession,
+                            processingContext: ProcessingContext,
                             mailboxId: MailboxId,
                             patch: MailboxPatchObject,
                             capabilities: Set[CapabilityIdentifier]): SMono[UpdateResult] = {
-    patch.validate(serializer, capabilities)
+    patch.validate(processingContext, mailboxIdFactory, serializer, capabilities)
       .fold(e => SMono.raiseError(e), validatedPatch =>
         updateMailboxPath(mailboxId, validatedPatch, mailboxSession)
           .`then`(updateMailboxRights(mailboxId, validatedPatch, mailboxSession))
@@ -199,21 +200,53 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   }
 
   private def updateMailboxPath(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPathObject, mailboxSession: MailboxSession): SMono[UpdateResult] = {
-    validatedPatch.nameUpdate.map(nameUpdate => {
+    if (validatedPatch.shouldUpdateMailboxPath) {
       SMono.fromCallable(() => {
         val mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession)
         if (isASystemMailbox(mailbox)) {
           throw SystemMailboxChangeException(mailboxId)
         }
+        val newPath = applyNameUpdate(validatedPatch.nameUpdate, mailboxSession)
+          .andThen(applyParentIdUpdate(validatedPatch.parentIdUpdate, mailboxSession))
+          .apply(mailbox.getMailboxPath)
         mailboxManager.renameMailbox(mailboxId,
-          computeMailboxPath(mailbox, nameUpdate, mailboxSession),
+          newPath,
           RenameOption.RENAME_SUBSCRIPTIONS,
           mailboxSession)
       }).`then`(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
         .subscribeOn(Schedulers.elastic())
-    })
-      // No updated properties passed. Noop.
-      .getOrElse(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
+    } else {
+      SMono.just[UpdateResult](UpdateSuccess(mailboxId))
+    }
+  }
+
+  private def applyParentIdUpdate(maybeParentIdUpdate: Option[ParentIdUpdate], mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
+    maybeParentIdUpdate.map(parentIdUpdate => applyParentIdUpdate(parentIdUpdate, mailboxSession))
+      .getOrElse(x => x)
+  }
+
+  private def applyNameUpdate(maybeNameUpdate: Option[NameUpdate], mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
+    originalPath => maybeNameUpdate.map(nameUpdate => {
+      val originalParentPath: Option[MailboxPath] = originalPath.getHierarchyLevels(mailboxSession.getPathDelimiter)
+        .asScala
+        .reverse
+        .drop(1)
+        .headOption
+      originalParentPath.map(_.child(nameUpdate.newName, mailboxSession.getPathDelimiter))
+        .getOrElse(MailboxPath.forUser(mailboxSession.getUser, nameUpdate.newName))
+    }).getOrElse(originalPath)
+  }
+
+  private def applyParentIdUpdate(parentIdUpdate: ParentIdUpdate, mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
+    originalPath => {
+      val currentName = originalPath.getName(mailboxSession.getPathDelimiter)
+      parentIdUpdate.newId
+        .map(id => {
+          val parentPath = mailboxManager.getMailbox(id, mailboxSession).getMailboxPath
+          parentPath.child(currentName, mailboxSession.getPathDelimiter)
+        })
+        .getOrElse(MailboxPath.forUser(originalPath.getUser, currentName))
+    }
   }
 
   private def updateMailboxRights(mailboxId: MailboxId,
@@ -239,16 +272,6 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   }
 
-  private def computeMailboxPath(mailbox: MessageManager, nameUpdate: NameUpdate, mailboxSession: MailboxSession): MailboxPath = {
-    val originalPath: MailboxPath = mailbox.getMailboxPath
-    val maybeParentPath: Option[MailboxPath] = originalPath.getHierarchyLevels(mailboxSession.getPathDelimiter)
-      .asScala
-      .reverse
-      .drop(1)
-      .headOption
-    maybeParentPath.map(_.child(nameUpdate.newName, mailboxSession.getPathDelimiter))
-      .getOrElse(MailboxPath.forUser(mailboxSession.getUser, nameUpdate.newName))
-  }
 
   private def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest, processingContext: ProcessingContext): SMono[DeletionResults] = {
     SFlux.fromIterable(mailboxSetRequest.destroy.getOrElse(Seq()))

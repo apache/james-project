@@ -34,8 +34,10 @@ import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * The path to a mailbox.
@@ -143,6 +145,14 @@ public class MailboxPath {
         }
         levels.add(this);
         return levels;
+    }
+
+    /**
+     * @return the name of the mailbox, accounting for the delimiter
+     */
+    public String getName(char delimiter) {
+        return Iterables.getLast(Splitter.on(delimiter)
+            .splitToList(name));
     }
 
     public MailboxPath sanitize(char delimiter) {

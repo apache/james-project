@@ -51,6 +51,24 @@ class MailboxPathTest {
     }
 
     @Test
+    void getNameShouldReturnSubfolder() {
+        assertThat(MailboxPath.forUser(USER, "inbox.folder.subfolder").getName('.'))
+            .isEqualTo("subfolder");
+    }
+
+    @Test
+    void getNameShouldNoopWhenNoDelimiter() {
+        assertThat(MailboxPath.forUser(USER, "name").getName('.'))
+            .isEqualTo("name");
+    }
+
+    @Test
+    void getNameShouldNoopWhenEmpty() {
+        assertThat(MailboxPath.forUser(USER, "").getName('.'))
+            .isEqualTo("");
+    }
+
+    @Test
     void getHierarchyLevelsShouldBeOrdered() {
         assertThat(MailboxPath.forUser(USER, "inbox.folder.subfolder")
             .getHierarchyLevels('.'))
