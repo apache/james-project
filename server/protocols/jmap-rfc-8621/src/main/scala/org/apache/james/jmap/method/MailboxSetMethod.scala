@@ -179,7 +179,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
                             unparsedMailboxId: UnparsedMailboxId,
                             patch: MailboxPatchObject,
                             capabilities: Set[CapabilityIdentifier]): SMono[UpdateResult] = {
-    patch.validate(processingContext, mailboxIdFactory, serializer, capabilities)
+    patch.validate(processingContext, mailboxIdFactory, serializer, capabilities, mailboxSession)
       .fold(e => SMono.raiseError(e), validatedPatch =>
         updateMailboxRights(mailboxId, validatedPatch, mailboxSession)
           .`then`(updateSubscription(mailboxId, validatedPatch, mailboxSession))

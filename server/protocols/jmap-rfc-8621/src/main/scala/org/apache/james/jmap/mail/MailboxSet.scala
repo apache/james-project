@@ -36,8 +36,8 @@ import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier}
 import org.apache.james.jmap.routes.ProcessingContext
-import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
+import org.apache.james.mailbox.{MailboxSession, Role}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
 
 case class MailboxSetRequest(accountId: AccountId,
@@ -91,8 +91,9 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
   def validate(processingContext: ProcessingContext,
                mailboxIdFactory: MailboxId.Factory,
                serializer: Serializer,
-               capabilities: Set[CapabilityIdentifier]): Either[PatchUpdateValidationException, ValidatedMailboxPatchObject] = {
-    val asUpdatedIterable = updates(serializer, capabilities, processingContext, mailboxIdFactory)
+               capabilities: Set[CapabilityIdentifier],
+               mailboxSession: MailboxSession): Either[PatchUpdateValidationException, ValidatedMailboxPatchObject] = {
+    val asUpdatedIterable = updates(serializer, capabilities, processingContext, mailboxIdFactory, mailboxSession)
 
     val maybeParseException: Option[PatchUpdateValidationException] = asUpdatedIterable
       .flatMap(x => x match {
@@ -145,9 +146,13 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
         rightsPartialUpdates = partialRightsUpdates)))
   }
 
-  def updates(serializer: Serializer, capabilities: Set[CapabilityIdentifier], processingContext: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
+  def updates(serializer: Serializer,
+              capabilities: Set[CapabilityIdentifier],
+              processingContext: ProcessingContext,
+              mailboxIdFactory: MailboxId.Factory,
+              mailboxSession: MailboxSession): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
     case (property, newValue) => property match {
-      case "/name" => NameUpdate.parse(newValue)
+      case "/name" => NameUpdate.parse(newValue, mailboxSession)
       case "/parentId" => ParentIdUpdate.parse(newValue, processingContext, mailboxIdFactory)
       case "/sharedWith" => SharedWithResetUpdate.parse(serializer, capabilities)(newValue)
       case "/role" => Left(ServerSetPropertyException(MailboxPatchObject.roleProperty))
@@ -256,8 +261,12 @@ object MailboxSetResponse {
 case class MailboxUpdateResponse(value: JsObject)
 
 object NameUpdate {
-  def parse(newValue: JsValue): Either[PatchUpdateValidationException, Update] = newValue match {
-    case JsString(newName) => scala.Right(NameUpdate(newName))
+  def parse(newValue: JsValue, mailboxSession: MailboxSession): Either[PatchUpdateValidationException, Update] = newValue match {
+    case JsString(newName) => if (newName.contains(mailboxSession.getPathDelimiter)) {
+      Left(InvalidUpdateException("/name", s"The mailbox '$newName' contains an illegal character: '${mailboxSession.getPathDelimiter}'"))
+    } else {
+      scala.Right(NameUpdate(newName))
+    }
     case _ => Left(InvalidUpdateException("/name", "Expecting a JSON string as an argument"))
   }
 }
