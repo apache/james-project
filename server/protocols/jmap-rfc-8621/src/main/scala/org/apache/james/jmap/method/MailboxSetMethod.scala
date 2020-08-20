@@ -331,7 +331,8 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       //can safely do a get as the Optional is empty only if the mailbox name is empty which is forbidden by the type constraint on MailboxName
       val mailboxId = mailboxManager.createMailbox(path, mailboxSession).get()
 
-      if (mailboxCreationRequest.isSubscribed.getOrElse(IsSubscribed(true)).value) {
+      val defaultSubscribed = IsSubscribed(true)
+      if (mailboxCreationRequest.isSubscribed.getOrElse(defaultSubscribed).value) {
         subscriptionManager.subscribe(mailboxSession, path.getName)
       }
 
@@ -352,7 +353,11 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
         unreadThreads = UnreadThreads(0L),
         myRights = MailboxRights.FULL,
         quotas = Some(quotas),
-        isSubscribed = IsSubscribed(true)))
+        isSubscribed =  if (mailboxCreationRequest.isSubscribed.isEmpty) {
+          Some(defaultSubscribed)
+        } else {
+          None
+        }))
     } catch {
       case error: Exception => Left(error)
     }
