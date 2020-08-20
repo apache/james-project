@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPathObject}
+import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
@@ -106,17 +106,21 @@ case class DeletionResults(results: Seq[DeletionResult]) {
 
 sealed trait UpdateResult
 case class UpdateSuccess(mailboxId: MailboxId) extends UpdateResult
-case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable) extends UpdateResult {
+case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable, patch: Option[ValidatedMailboxPatchObject]) extends UpdateResult {
+  def filter(acceptableProperties: Properties): Option[Properties] = Some(patch
+    .map(_.updatedProperties.intersect(acceptableProperties))
+    .getOrElse(acceptableProperties))
+
   def asMailboxSetError: MailboxSetError = exception match {
     case e: MailboxNotFoundException => MailboxSetError.notFound(Some(SetErrorDescription(e.getMessage)))
-    case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("/name"))))
-    case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("/name"))))
+    case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), filter(Properties(List("/name", "/parentId"))))
+    case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), filter(Properties(List("/name", "/parentId"))))
     case e: UnsupportedPropertyUpdatedException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated")), Some(Properties(List(e.property))))
     case e: InvalidUpdateException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.cause}")), Some(Properties(List(e.property))))
     case e: ServerSetPropertyException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Can not modify server-set properties")), Some(Properties(List(e.property))))
     case e: InvalidPropertyException => MailboxSetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
     case e: InvalidPatchException => MailboxSetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
-    case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), Some(Properties(List("/name"))))
+    case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), filter(Properties(List("/name", "parentId"))))
     case e: InsufficientRightsException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a delegated mailbox")), None)
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
@@ -161,9 +165,9 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       .flatMap({
         case (unparsedMailboxId: UnparsedMailboxId, patch: MailboxPatchObject) =>
           processingContext.resolveMailboxId(unparsedMailboxId, mailboxIdFactory).fold(
-            e => SMono.just(UpdateFailure(unparsedMailboxId, e)),
-            mailboxId => updateMailbox(mailboxSession, processingContext, mailboxId, patch, capabilities))
-            .onErrorResume(e => SMono.just(UpdateFailure(unparsedMailboxId, e)))
+              e => SMono.just(UpdateFailure(unparsedMailboxId, e, None)),
+              mailboxId => updateMailbox(mailboxSession, processingContext, mailboxId, unparsedMailboxId, patch, capabilities))
+            .onErrorResume(e => SMono.just(UpdateFailure(unparsedMailboxId, e, None)))
       })
       .collectSeq()
       .map(UpdateResults)
@@ -172,16 +176,17 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   private def updateMailbox(mailboxSession: MailboxSession,
                             processingContext: ProcessingContext,
                             mailboxId: MailboxId,
+                            unparsedMailboxId: UnparsedMailboxId,
                             patch: MailboxPatchObject,
                             capabilities: Set[CapabilityIdentifier]): SMono[UpdateResult] = {
     patch.validate(processingContext, mailboxIdFactory, serializer, capabilities)
       .fold(e => SMono.raiseError(e), validatedPatch =>
-        updateMailboxPath(mailboxId, validatedPatch, mailboxSession)
-          .`then`(updateMailboxRights(mailboxId, validatedPatch, mailboxSession))
-          .`then`(updateSubscription(mailboxId, validatedPatch, mailboxSession)))
+        updateMailboxRights(mailboxId, validatedPatch, mailboxSession)
+          .`then`(updateSubscription(mailboxId, validatedPatch, mailboxSession))
+          .`then`(updateMailboxPath(mailboxId, unparsedMailboxId, validatedPatch, mailboxSession)))
   }
 
-  private def updateSubscription(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPathObject, mailboxSession: MailboxSession): SMono[UpdateResult] = {
+  private def updateSubscription(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPatchObject, mailboxSession: MailboxSession): SMono[UpdateResult] = {
     validatedPatch.isSubscribedUpdate.map(isSubscribedUpdate => {
       SMono.fromCallable(() => {
         val mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession)
@@ -199,24 +204,32 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
       .getOrElse(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
   }
 
-  private def updateMailboxPath(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPathObject, mailboxSession: MailboxSession): SMono[UpdateResult] = {
+  private def updateMailboxPath(mailboxId: MailboxId,
+                                unparsedMailboxId: UnparsedMailboxId,
+                                validatedPatch: ValidatedMailboxPatchObject,
+                                mailboxSession: MailboxSession): SMono[UpdateResult] = {
     if (validatedPatch.shouldUpdateMailboxPath) {
-      SMono.fromCallable(() => {
-        val mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession)
-        if (isASystemMailbox(mailbox)) {
-          throw SystemMailboxChangeException(mailboxId)
+      SMono.fromCallable[UpdateResult](() => {
+        try {
+          val mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession)
+          if (isASystemMailbox(mailbox)) {
+            throw SystemMailboxChangeException(mailboxId)
+          }
+          val oldPath = mailbox.getMailboxPath
+          val newPath = applyNameUpdate(validatedPatch.nameUpdate, mailboxSession)
+            .andThen(applyParentIdUpdate(validatedPatch.parentIdUpdate, mailboxSession))
+            .apply(oldPath)
+          if (!oldPath.equals(newPath)) {
+            mailboxManager.renameMailbox(mailboxId,
+              newPath,
+              RenameOption.RENAME_SUBSCRIPTIONS,
+              mailboxSession)
+          }
+          UpdateSuccess(mailboxId)
+        } catch {
+          case e: Exception => UpdateFailure(unparsedMailboxId, e, Some(validatedPatch))
         }
-        val oldPath = mailbox.getMailboxPath
-        val newPath = applyNameUpdate(validatedPatch.nameUpdate, mailboxSession)
-          .andThen(applyParentIdUpdate(validatedPatch.parentIdUpdate, mailboxSession))
-          .apply(oldPath)
-        if (!oldPath.equals(newPath)) {
-          mailboxManager.renameMailbox(mailboxId,
-            newPath,
-            RenameOption.RENAME_SUBSCRIPTIONS,
-            mailboxSession)
-        }
-      }).`then`(SMono.just[UpdateResult](UpdateSuccess(mailboxId)))
+      })
         .subscribeOn(Schedulers.elastic())
     } else {
       SMono.just[UpdateResult](UpdateSuccess(mailboxId))
@@ -253,7 +266,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   }
 
   private def updateMailboxRights(mailboxId: MailboxId,
-                                  validatedPatch: ValidatedMailboxPathObject,
+                                  validatedPatch: ValidatedMailboxPatchObject,
                                   mailboxSession: MailboxSession): SMono[UpdateResult] = {
 
     val resetOperation: SMono[Unit] = validatedPatch.rightsReset.map(sharedWithResetUpdate => {

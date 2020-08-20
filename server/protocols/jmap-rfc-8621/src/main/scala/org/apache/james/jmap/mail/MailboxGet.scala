@@ -28,6 +28,8 @@ case class Ids(value: List[UnparsedMailboxId])
 
 case class Properties(value: List[NonEmptyString]) {
   def asSetOfString: Set[String] = value.map(_.toString()).toSet
+
+  def intersect(properties: Properties): Properties = Properties(value.toSet.intersect(properties.value.toSet).toList)
 }
 
 

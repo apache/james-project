@@ -26,6 +26,7 @@ import eu.timepit.refined.boolean.And
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.StartsWith
+import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.Username
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
@@ -90,7 +91,7 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
   def validate(processingContext: ProcessingContext,
                mailboxIdFactory: MailboxId.Factory,
                serializer: Serializer,
-               capabilities: Set[CapabilityIdentifier]): Either[PatchUpdateValidationException, ValidatedMailboxPathObject] = {
+               capabilities: Set[CapabilityIdentifier]): Either[PatchUpdateValidationException, ValidatedMailboxPatchObject] = {
     val asUpdatedIterable = updates(serializer, capabilities, processingContext, mailboxIdFactory)
 
     val maybeParseException: Option[PatchUpdateValidationException] = asUpdatedIterable
@@ -136,7 +137,7 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
     maybeParseException
       .orElse(bothPartialAndResetRights)
       .map(e => Left(e))
-      .getOrElse(scala.Right(ValidatedMailboxPathObject(
+      .getOrElse(scala.Right(ValidatedMailboxPatchObject(
         nameUpdate = nameUpdate,
         parentIdUpdate = parentIdUpdate,
         isSubscribedUpdate = isSubscribedUpdate,
@@ -172,12 +173,22 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
     }
 }
 
-case class ValidatedMailboxPathObject(nameUpdate: Option[NameUpdate],
-                                      parentIdUpdate: Option[ParentIdUpdate],
-                                      isSubscribedUpdate: Option[IsSubscribedUpdate],
-                                      rightsReset: Option[SharedWithResetUpdate],
-                                      rightsPartialUpdates: Seq[SharedWithPartialUpdate]) {
+object ValidatedMailboxPatchObject {
+  val nameProperty: NonEmptyString = "/name"
+  val parentIdProperty: NonEmptyString = "/parentId"
+}
+
+case class ValidatedMailboxPatchObject(nameUpdate: Option[NameUpdate],
+                                       parentIdUpdate: Option[ParentIdUpdate],
+                                       isSubscribedUpdate: Option[IsSubscribedUpdate],
+                                       rightsReset: Option[SharedWithResetUpdate],
+                                       rightsPartialUpdates: Seq[SharedWithPartialUpdate]) {
   val shouldUpdateMailboxPath: Boolean = nameUpdate.isDefined || parentIdUpdate.isDefined
+
+  val updatedProperties: Properties = Properties(List(
+      nameUpdate.map(_ => ValidatedMailboxPatchObject.nameProperty),
+      parentIdUpdate.map(_ => ValidatedMailboxPatchObject.parentIdProperty))
+    .flatMap(_.toList))
 }
 
 case class MailboxSetResponse(accountId: AccountId,
