@@ -60,6 +60,492 @@ trait MailboxSetMethodContract {
   def randomMailboxId: MailboxId
 
   @Test
+  def updateShouldFailWhenModifyingRole(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/role": "Draft"
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Can not modify server-set properties",
+         |          "properties":["/role"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenModifyingSortOrder(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/sortOrder": 42
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Can not modify server-set properties",
+         |          "properties":["/sortOrder"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenModifyingQuotas(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/quotas": {}
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Can not modify server-set properties",
+         |          "properties":["/quotas"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenModifyingNamespace(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/namespace": "Personal"
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Can not modify server-set properties",
+         |          "properties":["/namespace"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenModifyingMyRights(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/myRights": {}
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Can not modify server-set properties",
+         |          "properties":["/myRights"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenModifyingUnreadThreads(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/unreadThreads": 42
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Can not modify server-set properties",
+         |          "properties":["/unreadThreads"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenModifyingTotalThreads(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/totalThreads": 42
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Can not modify server-set properties",
+         |          "properties":["/totalThreads"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenModifyingUnreadEmails(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/unreadEmails": 42
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Can not modify server-set properties",
+         |          "properties":["/unreadEmails"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenModifyingTotalEmails(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize()}": {
+         |                      "/totalEmails": 42
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Can not modify server-set properties",
+         |          "properties":["/totalEmails"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
   def mailboxSetShouldReturnNotCreatedWhenNameIsMissing(): Unit = {
     val request =
       """

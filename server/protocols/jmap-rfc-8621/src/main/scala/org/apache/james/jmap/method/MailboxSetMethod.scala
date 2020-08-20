@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, SetErrorDescription, SharedWithResetUpdate, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
+import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SharedWithResetUpdate, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
@@ -113,6 +113,7 @@ case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable) ext
     case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("/name"))))
     case e: UnsupportedPropertyUpdatedException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated")), Some(Properties(List(e.property))))
     case e: InvalidUpdateException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.cause}")), Some(Properties(List(e.property))))
+    case e: ServerSetPropertyException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Can not modify server-set properties")), Some(Properties(List(e.property))))
     case e: InvalidPropertyException => MailboxSetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
     case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), Some(Properties(List("/name"))))
     case e: InsufficientRightsException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a delegated mailbox")), None)

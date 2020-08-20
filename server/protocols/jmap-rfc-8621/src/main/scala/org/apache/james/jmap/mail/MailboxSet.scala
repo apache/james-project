@@ -64,6 +64,16 @@ case class MailboxCreationRequest(name: MailboxName,
 object MailboxPatchObject {
   type KeyConstraint = NonEmpty And StartsWith["/"]
   type MailboxPatchObjectKey = String Refined KeyConstraint
+
+  val roleProperty: MailboxPatchObjectKey = "/role"
+  val sortOrderProperty: MailboxPatchObjectKey = "/sortOrder"
+  val quotasProperty: MailboxPatchObjectKey = "/quotas"
+  val namespaceProperty: MailboxPatchObjectKey = "/namespace"
+  val unreadThreadsProperty: MailboxPatchObjectKey = "/unreadThreads"
+  val totalThreadsProperty: MailboxPatchObjectKey = "/totalThreads"
+  val unreadEmailsProperty: MailboxPatchObjectKey = "/unreadEmails"
+  val totalEmailsProperty: MailboxPatchObjectKey = "/totalEmails"
+  val myRightsProperty: MailboxPatchObjectKey = "/myRights"
 }
 
 case class MailboxPatchObject(value: Map[String, JsValue]) {
@@ -71,6 +81,15 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
     case (property, newValue) => property match {
       case "/name" => NameUpdate.parse(newValue)
       case "/sharedWith" => SharedWithResetUpdate.parse(newValue, serializer)
+      case "/role" => Left(ServerSetPropertyException(MailboxPatchObject.roleProperty))
+      case "/sortOrder" => Left(ServerSetPropertyException(MailboxPatchObject.sortOrderProperty))
+      case "/quotas" => Left(ServerSetPropertyException(MailboxPatchObject.quotasProperty))
+      case "/namespace" => Left(ServerSetPropertyException(MailboxPatchObject.namespaceProperty))
+      case "/unreadThreads" => Left(ServerSetPropertyException(MailboxPatchObject.unreadThreadsProperty))
+      case "/totalThreads" => Left(ServerSetPropertyException(MailboxPatchObject.totalThreadsProperty))
+      case "/unreadEmails" => Left(ServerSetPropertyException(MailboxPatchObject.unreadEmailsProperty))
+      case "/totalEmails" => Left(ServerSetPropertyException(MailboxPatchObject.totalEmailsProperty))
+      case "/myRights" => Left(ServerSetPropertyException(MailboxPatchObject.myRightsProperty))
       case property =>
         val refinedKey: Either[String, MailboxPatchObjectKey] = refineV(property)
         refinedKey.fold[Either[PatchUpdateValidationException, Update]](
@@ -167,3 +186,4 @@ case class UnsupportedPropertyUpdatedException(property: MailboxPatchObjectKey) 
 case class InvalidPropertyUpdatedException(property: MailboxPatchObjectKey) extends PatchUpdateValidationException
 case class InvalidPropertyException(property: String, cause: String) extends PatchUpdateValidationException
 case class InvalidUpdateException(property: MailboxPatchObjectKey, cause: String) extends PatchUpdateValidationException
+case class ServerSetPropertyException(property: MailboxPatchObjectKey) extends PatchUpdateValidationException
