@@ -12,6 +12,11 @@ A **Mailbox** object has the following properties:
 - **id**: `Id` (immutable; server-set)
   The id of the Mailbox.
 - **name**: `String`
+
+<aside class="notice">
+  "name" should not contain the IMAP hierarchy delimiter ".".
+</aside>
+
   User-visible name for the Mailbox, e.g., "Inbox". This MUST be a Net-Unicode string [@!RFC5198] of at least 1 character in length, subject to the maximum size given in the capability object. There MUST NOT be two sibling Mailboxes with both the same parent and the same name. Servers MAY reject names that violate server policy (e.g., names containing a slash (/) or control characters).
 - **parentId**: `Id|null` (default: null)
   The Mailbox id for the parent of this Mailbox, or `null` if this Mailbox is at the top level. Mailboxes form acyclic graphs (forests) directed by the child-to-parent relationship. There MUST NOT be a loop.
@@ -160,6 +165,10 @@ This is a standard "/queryChanges" method as described in [@!RFC8620], Section 5
 
 ## Mailbox/set
 
+<aside class="notice">
+  Implemented
+</aside>
+
 This is a standard "/set" method as described in [@!RFC8620], Section 5.3, but with the following additional request argument:
 
 - **onDestroyRemoveEmails**: `Boolean` (default: false)
@@ -173,6 +182,14 @@ For **destroy**:
   client MUST remove these before it can delete the parent Mailbox.
 - `mailboxHasEmail`: The Mailbox has at least one Email assigned to it, and
   the *onDestroyRemoveEmails* argument was `false`.
+
+<aside class="notice">
+Restrictions:
+ - "parentId" updates only succeeds if the given mailbox has no child.
+ - all updates to shared mailboxes by a sharee are forbidden.
+ - Updates to server-set fields are rejected, even if they match the server value.
+ - as "role" and "sortOrder" are server-set by the current James implementation, updating them is not supported.
+</aside>
 
 ## Example
 
