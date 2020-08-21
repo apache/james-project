@@ -5566,12 +5566,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldAllowParentIdChangeWhenChildMailbox(server: GuiceJamesServer): Unit = {
-    val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val newParentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "newParent"))
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
+    val newParentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "newParent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
     val request =
       s"""
          |{
@@ -5655,11 +5653,10 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  def updateShouldAllowParentIdChangeWhenTopLevelMailboxAndNewMane(server: GuiceJamesServer): Unit = {
-    val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+  def updateShouldAllowParentIdChangeWhenTopLevelMailboxAndNewName(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val parentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
     val request =
       s"""
          |{
@@ -5745,12 +5742,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldAllowParentIdChangeWhenChildMailboxAndNewName(server: GuiceJamesServer): Unit = {
-    val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val newParentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "newParent"))
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
+    val newParentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "newParent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
     val request =
       s"""
          |{
@@ -5836,12 +5831,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldAllowParentIdDropWhenChildMailbox(server: GuiceJamesServer): Unit = {
-    val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val newParentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "newParent"))
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "newParent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
     val request =
       s"""
          |{
@@ -5925,10 +5918,9 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldAllowParentIdDropWhenTopLevelMailboxAndNewName(server: GuiceJamesServer): Unit = {
-    val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
     val request =
       s"""
          |{
@@ -6013,12 +6005,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldAllowParentIdDropWhenChildMailboxAndNewName(server: GuiceJamesServer): Unit = {
-    val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val newParentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "newParent"))
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "newParent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
     val request =
       s"""
          |{
