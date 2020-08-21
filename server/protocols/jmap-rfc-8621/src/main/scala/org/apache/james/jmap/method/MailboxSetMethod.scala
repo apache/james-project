@@ -205,7 +205,10 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
     maybeIsSubscribedUpdate.map(isSubscribedUpdate => {
       SMono.fromCallable(() => {
         val mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession)
-        if (isSubscribedUpdate.isSubscribed.value) {
+        val isOwner = mailbox.getMailboxPath.belongsTo(mailboxSession)
+        val shouldSubscribe = isSubscribedUpdate.isSubscribed.map(_.value).getOrElse(isOwner)
+
+        if (shouldSubscribe) {
           subscriptionManager.subscribe(mailboxSession, mailbox.getMailboxPath.getName)
         } else {
           subscriptionManager.unsubscribe(mailboxSession, mailbox.getMailboxPath.getName)

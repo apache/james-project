@@ -4136,6 +4136,354 @@ trait MailboxSetMethodContract {
 
 
   @Test
+  def updateShouldSubscribeDelegatedMailboxes(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |      ["Mailbox/set",
+         |          {
+         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "update": {
+         |                 "${mailboxId.serialize()}" : {
+         |                   "/isSubscribed": true
+         |                 }
+         |               }
+         |          },
+         |   "c3"],
+         |      ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "ids": ["${mailboxId.serialize()}"]
+         |          },
+         |       "c4"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "updated": {
+         |        "${mailboxId.serialize()}": {}
+         |      }
+         |    }, "c3"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [{
+         |        "id": "${mailboxId.serialize()}",
+         |        "name": "mailbox",
+         |        "sortOrder": 1000,
+         |        "totalEmails": 0,
+         |        "unreadEmails": 0,
+         |        "totalThreads": 0,
+         |        "unreadThreads": 0,
+         |        "myRights": {
+         |          "mayReadItems": false,
+         |          "mayAddItems": false,
+         |          "mayRemoveItems": false,
+         |          "maySetSeen": false,
+         |          "maySetKeywords": false,
+         |          "mayCreateChild": false,
+         |          "mayRename": false,
+         |          "mayDelete": false,
+         |          "maySubmit": false
+         |        },
+         |        "isSubscribed": true,
+         |        "namespace": "Delegated[andre@domain.tld]",
+         |        "rights": {
+         |          "bob@domain.tld": ["l"]
+         |        }
+         |      }],
+         |      "notFound": []
+         |    }, "c4"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldUnsubscribeDelegatedMailboxes(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |      ["Mailbox/set",
+         |          {
+         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "update": {
+         |                 "${mailboxId.serialize()}" : {
+         |                   "/isSubscribed": true
+         |                 }
+         |               }
+         |          },
+         |   "c2"],
+         |      ["Mailbox/set",
+         |          {
+         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "update": {
+         |                 "${mailboxId.serialize()}" : {
+         |                   "/isSubscribed": false
+         |                 }
+         |               }
+         |          },
+         |   "c3"],
+         |      ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "ids": ["${mailboxId.serialize()}"]
+         |          },
+         |       "c4"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "updated": {
+         |        "${mailboxId.serialize()}": {}
+         |      }
+         |    }, "c2"],
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "updated": {
+         |        "${mailboxId.serialize()}": {}
+         |      }
+         |    }, "c3"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [{
+         |        "id": "${mailboxId.serialize()}",
+         |        "name": "mailbox",
+         |        "sortOrder": 1000,
+         |        "totalEmails": 0,
+         |        "unreadEmails": 0,
+         |        "totalThreads": 0,
+         |        "unreadThreads": 0,
+         |        "myRights": {
+         |          "mayReadItems": false,
+         |          "mayAddItems": false,
+         |          "mayRemoveItems": false,
+         |          "maySetSeen": false,
+         |          "maySetKeywords": false,
+         |          "mayCreateChild": false,
+         |          "mayRename": false,
+         |          "mayDelete": false,
+         |          "maySubmit": false
+         |        },
+         |        "isSubscribed": false,
+         |        "namespace": "Delegated[andre@domain.tld]",
+         |        "rights": {
+         |          "bob@domain.tld": ["l"]
+         |        }
+         |      }],
+         |      "notFound": []
+         |    }, "c4"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldUnsubscribeDelegatedMailboxesWhenNull(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |      ["Mailbox/set",
+         |          {
+         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "update": {
+         |                 "${mailboxId.serialize()}" : {
+         |                   "/isSubscribed": true
+         |                 }
+         |               }
+         |          },
+         |   "c2"],
+         |      ["Mailbox/set",
+         |          {
+         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "update": {
+         |                 "${mailboxId.serialize()}" : {
+         |                   "/isSubscribed": null
+         |                 }
+         |               }
+         |          },
+         |   "c3"],
+         |      ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "ids": ["${mailboxId.serialize()}"]
+         |          },
+         |       "c4"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "updated": {
+         |        "${mailboxId.serialize()}": {}
+         |      }
+         |    }, "c2"],
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "updated": {
+         |        "${mailboxId.serialize()}": {}
+         |      }
+         |    }, "c3"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [{
+         |        "id": "${mailboxId.serialize()}",
+         |        "name": "mailbox",
+         |        "sortOrder": 1000,
+         |        "totalEmails": 0,
+         |        "unreadEmails": 0,
+         |        "totalThreads": 0,
+         |        "unreadThreads": 0,
+         |        "myRights": {
+         |          "mayReadItems": false,
+         |          "mayAddItems": false,
+         |          "mayRemoveItems": false,
+         |          "maySetSeen": false,
+         |          "maySetKeywords": false,
+         |          "mayCreateChild": false,
+         |          "mayRename": false,
+         |          "mayDelete": false,
+         |          "maySubmit": false
+         |        },
+         |        "isSubscribed": false,
+         |        "namespace": "Delegated[andre@domain.tld]",
+         |        "rights": {
+         |          "bob@domain.tld": ["l"]
+         |        }
+         |      }],
+         |      "notFound": []
+         |    }, "c4"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldNotAffectSubscriptionOfOthers(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(BOB, "mailbox")
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: MailboxId = mailboxProbe
+      .createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |      ["Mailbox/set",
+         |          {
+         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "update": {
+         |                 "${mailboxId.serialize()}" : {
+         |                   "/isSubscribed": true
+         |                 }
+         |               }
+         |          },
+         |   "c2"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+
+    assertThat(mailboxProbe.listSubscriptions(ANDRE.asString())).isEmpty()
+  }
+
+  @Test
   def updateShouldFailWhenInvalidIsSubscribedJSON(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
 

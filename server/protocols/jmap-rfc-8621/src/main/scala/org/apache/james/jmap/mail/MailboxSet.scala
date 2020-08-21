@@ -180,8 +180,8 @@ object SharedWithResetUpdate {
 
 object IsSubscribedUpdate {
   def parse(newValue: JsValue): Either[PatchUpdateValidationException, Update] = newValue match {
-    case JsBoolean(value) => scala.Right(IsSubscribedUpdate(IsSubscribed(value)))
-    case JsNull => scala.Right(IsSubscribedUpdate(IsSubscribed(true)))
+    case JsBoolean(value) => scala.Right(IsSubscribedUpdate(Some(IsSubscribed(value))))
+    case JsNull => scala.Right(IsSubscribedUpdate(None))
     case _ => Left(InvalidUpdateException("/isSubscribed", "Expecting a JSON boolean as an argument"))
   }
 }
@@ -189,7 +189,7 @@ object IsSubscribedUpdate {
 sealed trait Update
 case class NameUpdate(newName: String) extends Update
 case class SharedWithResetUpdate(rights: Rights) extends Update
-case class IsSubscribedUpdate(isSubscribed: IsSubscribed) extends Update
+case class IsSubscribedUpdate(isSubscribed: Option[IsSubscribed]) extends Update
 
 class PatchUpdateValidationException() extends IllegalArgumentException
 case class UnsupportedPropertyUpdatedException(property: MailboxPatchObjectKey) extends PatchUpdateValidationException
