@@ -4334,6 +4334,85 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
+  @Disabled("JAMES-3359 The storage layer should rely on the mailbox path and not the name to allow handling of this case")
+  @Test
+  def updateShouldAllowDifferentIsSubscribedValuesWhenMailboxHaveTheSameName(server: GuiceJamesServer): Unit = {
+    val andrePath = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreId: MailboxId = mailboxProbe.createMailbox(andrePath)
+    val bobId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    server.getProbe(classOf[ACLProbeImpl]).replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |      ["Mailbox/set",
+         |          {
+         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "update": {
+         |                 "${andreId.serialize()}" : {
+         |                   "/isSubscribed": true
+         |                 },
+         |                 "${bobId.serialize()}" : {
+         |                   "/isSubscribed": false
+         |                 }
+         |               }
+         |          },
+         |   "c2"],
+         |      ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "properties": ["id", "isSubscribed"],
+         |           "ids": ["${andreId.serialize()}", "${bobId.serialize()}"]
+         |          },
+         |       "c4"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "updated": {
+         |        "${andreId.serialize()}": {},
+         |        "${bobId.serialize()}": {}
+         |      }
+         |    }, "c2"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "000001",
+         |      "list": [{
+         |        "id": "${andreId.serialize()}",
+         |        "isSubscribed": true
+         |      }, {
+         |        "id": "${bobId.serialize()}",
+         |        "isSubscribed": false
+         |      }],
+         |      "notFound": []
+         |    }, "c4"]
+         |  ]
+         |}""".stripMargin)
+  }
+
   @Test
   def updateShouldUnsubscribeDelegatedMailboxesWhenNull(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(ANDRE, "mailbox")
