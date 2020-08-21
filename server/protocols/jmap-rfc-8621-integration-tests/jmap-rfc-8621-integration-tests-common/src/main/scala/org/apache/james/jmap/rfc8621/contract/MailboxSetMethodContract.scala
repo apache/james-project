@@ -4134,6 +4134,62 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
+
+  @Test
+  def updateShouldFailWhenInvalidIsSubscribedJSON(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |      ["Mailbox/set",
+         |          {
+         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "update": {
+         |                 "${mailboxId.serialize()}" : {
+         |                   "/isSubscribed": "invalid"
+         |                 }
+         |               }
+         |          },
+         |   "c3"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "Expecting a JSON boolean as an argument",
+         |          "properties": ["/isSubscribed"]
+         |        }
+         |      }
+         |    }, "c3"]
+         |  ]
+         |}""".stripMargin)
+  }
+
   @Test
   def deleteShouldNotRemoveMessageWhenMailboxIsNotEmptyAndOnDestroyRemoveEmailsIsFalse(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder

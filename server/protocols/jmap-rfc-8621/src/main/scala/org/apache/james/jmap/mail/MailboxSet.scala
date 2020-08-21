@@ -182,7 +182,7 @@ object IsSubscribedUpdate {
   def parse(newValue: JsValue): Either[PatchUpdateValidationException, Update] = newValue match {
     case JsBoolean(value) => scala.Right(IsSubscribedUpdate(IsSubscribed(value)))
     case JsNull => scala.Right(IsSubscribedUpdate(IsSubscribed(true)))
-    case _ => Left(InvalidUpdateException("/isSubscribed", "Expecting a JSON string as an argument"))
+    case _ => Left(InvalidUpdateException("/isSubscribed", "Expecting a JSON boolean as an argument"))
   }
 }
 
