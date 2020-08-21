@@ -571,7 +571,6 @@ trait MailboxGetMethodContract {
                |    "Mailbox/get",
                |    {
                |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |      "properties": ["id", "name", "rights"],
                |      "ids": ["invalid"]
                |    },
                |    "c1"]]
@@ -612,7 +611,6 @@ trait MailboxGetMethodContract {
                |    "Mailbox/get",
                |    {
                |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |      "properties": ["id", "name", "rights"],
                |      "ids": ["#C42"]
                |    },
                |    "c1"]]
