@@ -24,14 +24,13 @@ subscribed to this list to offer support to users of Apache James (Server).
 
 === Server developer list
 
-*High traffic*
+*Medium traffic*
 mailto:server-dev-subscribe@james.apache.org[Subscribe]
 mailto:server-dev-unsubscribe@james.apache.org[Unsubscribe]
 http://www.mail-archive.com/server-dev@james.apache.org[Archive]
 
 This is the list where participating developers of the Apache James Project meet and discuss issues, code changes/additions,
-etc. Subscribers to this list get notices of each and every code change, build results, testing notices, etc. Do not
-send mail to this list with usage questions or configuration problems -- that's what server-user@james is for.
+etc. Do not send mail to this list with usage questions or configuration problems -- that's what server-user@james is for.
 
 === Mime4j
 
@@ -41,17 +40,6 @@ mailto:mime4j-dev-unsubscribe@james.apache.org[Unsubscribe]
 http://mail-archives.apache.org/mod_mbox/james-mime4j-dev[Archive]
 
 Discussions on the http://james.apache.org/mime4j[Mime4j] parser library.
-
-=== Site developer list
-
-*Low traffic*
-mailto:site-dev-subscribe@james.apache.org[Subscribe]
-mailto:site-dev-unsubscribe@james.apache.org[Unsubscribe]
-http://www.mail-archive.com/site-dev@james.apache.org[Archive]
-
-This is the list where participating developers of the Apache James project discuss changes/additions to the James
-websites etc. Subscribers to this list get notifications of every commit of the website resources. Do not send mail to
-this list with James software problems -- that's what server-user@james is for.
 
 === James general list
 
@@ -64,16 +52,16 @@ This is the list for general discussions related to the running of the project, 
 James project management committee (PMC) and is a public list opened to all. Do not send mail to this list with James
 software problems -- that's what server-user@james is for.
 
-=== Mailet API list
+=== Notifications mailing list
 
-*Low traffic*
-mailto:mailet-api-subscribe@james.apache.org[Subscribe]
-mailto:mailet-api-unsubscribe@james.apache.org[Unsubscribe]
-https://mail-archives.apache.org/mod_mbox/james-mailet-api[Archive]
+*High traffic*
+mailto:notifications-subscribe@james.apache.org[Subscribe]
+mailto:notifications-unsubscribe@james.apache.org[Unsubscribe]
+http://www.mail-archive.com/notifications@james.apache.org[Archive]
 
-This is the public list for the Mailet API subproject, discussing all http://james.apache.org/mailet/index.html[Mailet API]
-design and implementation related topics. Questions about using Mailets and their configuration should be addressed
-to the server-user list.
+Subscribers to this list get notices of each and every code change, build results, testing notices, etc. This list is
+not for asking help, raising issues or starting discussions on the james product -- other mailing lists are specifically
+dedicated to that already.
 
 == How to unsubscribe your old email address
 
