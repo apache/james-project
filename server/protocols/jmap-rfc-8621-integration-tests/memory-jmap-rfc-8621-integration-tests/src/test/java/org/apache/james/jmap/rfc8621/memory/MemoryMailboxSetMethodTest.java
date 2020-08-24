@@ -44,4 +44,9 @@ public class MemoryMailboxSetMethodTest implements MailboxSetMethodContract {
     public MailboxId randomMailboxId() {
         return InMemoryId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
     }
+
+    @Override
+    public String errorInvalidMailboxIdMessage(String value) {
+        return String.format("%s is not a mailboxId: For input string: \\\"%s\\\"", value, value);
+    }
 }

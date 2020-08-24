@@ -59,4 +59,9 @@ public class DistributedMailboxSetMethodTest implements MailboxSetMethodContract
     public MailboxId randomMailboxId() {
         return CassandraId.of(UUIDs.timeBased());
     }
+
+    @Override
+    public String errorInvalidMailboxIdMessage(String value) {
+        return String.format("%s is not a mailboxId: Invalid UUID string: %s", value, value);
+    }
 }

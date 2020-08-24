@@ -58,6 +58,7 @@ trait MailboxSetMethodContract {
   }
 
   def randomMailboxId: MailboxId
+  def errorInvalidMailboxIdMessage(value: String): String
 
   @Test
   def updateShouldFailWhenModifyingRole(server: GuiceJamesServer): Unit = {
@@ -2295,7 +2296,6 @@ trait MailboxSetMethodContract {
         .body
         .asString
 
-    val message: String = "invalid is not a mailboxId: For input string: \\\"invalid\\\""
     assertThatJson(response).isEqualTo(
       s"""{
          |  "sessionState": "75128aab4b1b",
@@ -2307,7 +2307,7 @@ trait MailboxSetMethodContract {
          |      "notDestroyed": {
          |        "invalid": {
          |          "type": "invalidArguments",
-         |          "description": "$message"
+         |          "description": "${errorInvalidMailboxIdMessage("invalid")}"
          |        }
          |      }
          |    },
@@ -2712,14 +2712,14 @@ trait MailboxSetMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "newState": "000001",
          |      "updated": {
-         |        "1": {}
+         |        "${mailboxId.serialize()}": {}
          |      }
          |    }, "c2"],
          |    ["Mailbox/get", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "state": "000001",
          |      "list": [{
-         |        "id": "1",
+         |        "id": "${mailboxId.serialize()}",
          |        "name": "newName"
          |      }],
          |      "notFound": []
