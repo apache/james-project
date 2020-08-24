@@ -127,7 +127,8 @@ categories corresponding to the change status:
 
 * *Concept/Plan*
 An idea or plan for a change. These are represented as ADRs (Architectural Decision Records), stored under the `src/adr`
-folder. Votes are being requested early so as to uncover conflicts before too much work is done.
+folder. Votes are being requested early so as to uncover conflicts before too much work is done. You can find more
+information about this xref:contributing.adoc#_idea_or_design_proposals[here].
 
 * *Proposed Patch*
 A specific set of changes to the current product in the form of input to the patch command (a diff output).
