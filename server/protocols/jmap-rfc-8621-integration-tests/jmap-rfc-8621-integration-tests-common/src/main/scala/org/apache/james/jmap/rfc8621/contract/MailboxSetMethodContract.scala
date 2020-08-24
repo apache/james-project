@@ -1632,18 +1632,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+       .body(request)
+    .when
+       .post
+    .`then`
+       .log().ifValidationFails()
+       .statusCode(SC_OK)
+       .contentType(JSON)
+       .extract
+       .body
+       .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -1689,18 +1689,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+       .body(request)
+    .when
+       .post
+    .`then`
+       .log().ifValidationFails()
+       .statusCode(SC_OK)
+       .contentType(JSON)
+       .extract
+       .body
+       .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -1745,18 +1745,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -1807,18 +1807,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -1861,18 +1861,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -1909,15 +1909,15 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1985,15 +1985,15 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+     .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -2061,18 +2061,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+       .body(request)
+    .when
+       .post
+    .`then`
+       .log().ifValidationFails()
+       .statusCode(SC_OK)
+       .contentType(JSON)
+       .extract
+       .body
+       .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -2122,18 +2122,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -2176,18 +2176,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -2232,18 +2232,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -2283,18 +2283,18 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -2343,17 +2343,17 @@ trait MailboxSetMethodContract {
         |""".stripMargin
 
      `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .log().ifValidationFails()
-        .statusCode(SC_OK)
-        .contentType(JSON)
-         // We need to limit ourself to simple body assertions in order not to infer id allocation
-         .body("methodResponses[0][1].created.C42.totalThreads", equalTo(0))
-         .body("methodResponses[1][1].destroyed", hasSize(1))
+       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+       .body(request)
+     .when
+       .post
+     .`then`
+       .log().ifValidationFails()
+       .statusCode(SC_OK)
+       .contentType(JSON)
+        // We need to limit ourself to simple body assertions in order not to infer id allocation
+        .body("methodResponses[0][1].created.C42.totalThreads", equalTo(0))
+        .body("methodResponses[1][1].destroyed", hasSize(1))
   }
 
   @Test
@@ -4746,9 +4746,9 @@ trait MailboxSetMethodContract {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
@@ -4826,9 +4826,9 @@ trait MailboxSetMethodContract {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
