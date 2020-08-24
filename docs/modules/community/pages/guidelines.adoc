@@ -138,21 +138,3 @@ A one-line summary of a change that has been committed to the repository since t
 
 All product changes to the currently active repository are subject to lazy consensus. All product changes to a
 prior-branch (old version) repository require consensus before the change is committed.
-
-////
-
-Notes and thoughts on the guidelines (opened to discussion)
-
-Rene: old doc page => https://james.apache.org/guidelines.html
-
-* Took out the last two subsections `when to commit a change` and `patch format` as I believe it should belong more to
-contributing section.
-
-* took out status section, and mentions related to it. I don't think I ever saw such a file in James repo
-
-* Added the ADR notion in `product changes` action item for the `concept/plan` bullet point, replacing the status mention.
-I believe this is what we use now for this kind of decisions. Should we talk more about ADRs in a proper subsection?
-
-* not sure we do have all those action item types... Help would be appreciated :)
-
-////
