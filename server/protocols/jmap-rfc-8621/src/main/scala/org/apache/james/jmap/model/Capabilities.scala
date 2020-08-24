@@ -48,7 +48,9 @@ object DefaultCapabilities {
 
   val SHARES_CAPABILITY = SharesCapability()
 
-  val SUPPORTED = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, QUOTA_CAPABILITY, SHARES_CAPABILITY)
+  val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
+
+  val SUPPORTED = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, QUOTA_CAPABILITY, SHARES_CAPABILITY, VACATION_RESPONSE_CAPABILITY)
 }
 
 case class Capabilities(capabilities: Capability*) {

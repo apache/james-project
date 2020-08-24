@@ -100,11 +100,13 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val mailCapabilityWrites: Writes[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
   private implicit val quotaCapabilityWrites: Writes[QuotaCapabilityProperties] = OWrites[QuotaCapabilityProperties](_ => Json.obj())
   private implicit val sharesCapabilityWrites: Writes[SharesCapabilityProperties] = OWrites[SharesCapabilityProperties](_ => Json.obj())
+  private implicit val vacationResponseCapabilityWrites: Writes[VacationResponseCapabilityProperties] = OWrites[VacationResponseCapabilityProperties](_ => Json.obj())
 
   private implicit def setCapabilityWrites(implicit corePropertiesWriter: Writes[CoreCapabilityProperties],
                                    mailCapabilityWrites: Writes[MailCapabilityProperties],
                                    quotaCapabilityWrites: Writes[QuotaCapabilityProperties],
-                                   sharesCapabilityWrites: Writes[SharesCapabilityProperties]): Writes[Set[_ <: Capability]] =
+                                   sharesCapabilityWrites: Writes[SharesCapabilityProperties],
+                                   vacationResponseCapabilityWrites: Writes[VacationResponseCapabilityProperties]): Writes[Set[_ <: Capability]] =
     (set: Set[_ <: Capability]) => {
       set.foldLeft(JsObject.empty)((jsObject, capability) => {
         capability match {
@@ -116,6 +118,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
             jsObject.+(capability.identifier.value, quotaCapabilityWrites.writes(capability.properties))
           case capability: SharesCapability =>
             jsObject.+(capability.identifier.value, sharesCapabilityWrites.writes(capability.properties))
+          case capability: VacationResponseCapability =>
+            jsObject.+(capability.identifier.value, vacationResponseCapabilityWrites.writes(capability.properties))
           case _ => jsObject
         }
       })

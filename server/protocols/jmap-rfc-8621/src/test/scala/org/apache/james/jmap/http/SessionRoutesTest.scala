@@ -41,7 +41,6 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.Json
 import reactor.core.publisher.Mono
 
 import scala.jdk.CollectionConverters._
@@ -123,7 +122,8 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |      "mayCreateTopLevelMailbox" : true
                          |    },
                          |    "urn:apache:james:params:jmap:mail:quota": {},
-                         |    "urn:apache:james:params:jmap:mail:shares": {}
+                         |    "urn:apache:james:params:jmap:mail:shares": {},
+                         |    "urn:ietf:params:jmap:vacationresponse":{}
                          |  },
                          |  "accounts" : {
                          |    "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401" : {
@@ -150,7 +150,8 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |          "mayCreateTopLevelMailbox" : true
                          |        },
                          |        "urn:apache:james:params:jmap:mail:quota": {},
-                         |        "urn:apache:james:params:jmap:mail:shares": {}
+                         |        "urn:apache:james:params:jmap:mail:shares": {},
+                         |        "urn:ietf:params:jmap:vacationresponse":{}
                          |      }
                          |    }
                          |  },
@@ -158,7 +159,8 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |    "urn:ietf:params:jmap:core" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
                          |    "urn:ietf:params:jmap:mail" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
                          |    "urn:apache:james:params:jmap:mail:quota": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
-                         |    "urn:apache:james:params:jmap:mail:shares": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401"
+                         |    "urn:apache:james:params:jmap:mail:shares": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
+                         |    "urn:ietf:params:jmap:vacationresponse": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401"
                          |  },
                          |  "username" : "bob@james.org",
                          |  "apiUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/jmap",
