@@ -21,6 +21,10 @@ package org.apache.james.jmap.mail
 
 import java.time.ZonedDateTime
 
+import org.apache.james.jmap.api.vacation.Vacation
+
+import scala.compat.java8.OptionConverters._
+
 case class VacationResponseId()
 
 case class IsEnabled(value: Boolean)
@@ -29,6 +33,18 @@ case class ToDate(value: ZonedDateTime)
 case class Subject(value: String)
 case class TextBody(value: String)
 case class HtmlBody(value: String)
+
+object VacationResponse {
+  def asRfc8621(vacation: Vacation) = VacationResponse(
+    id = VacationResponseId(),
+    isEnabled = IsEnabled(vacation.isEnabled),
+    fromDate = vacation.getFromDate.asScala.map(FromDate),
+    toDate = vacation.getToDate.asScala.map(ToDate),
+    subject = vacation.getSubject.asScala.map(Subject),
+    textBody = vacation.getTextBody.asScala.map(TextBody),
+    htmlBody = vacation.getHtmlBody.asScala.map(HtmlBody)
+  )
+}
 
 case class VacationResponse(id: VacationResponseId,
                            isEnabled: IsEnabled,
