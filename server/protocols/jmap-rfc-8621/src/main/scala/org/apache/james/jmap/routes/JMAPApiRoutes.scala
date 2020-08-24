@@ -114,13 +114,14 @@ class JMAPApiRoutes (val authenticator: Authenticator,
                       mailboxSession: MailboxSession): SMono[Void] = {
     val processingContext: ProcessingContext = new ProcessingContext
     val unsupportedCapabilities = requestObject.using.toSet -- DefaultCapabilities.SUPPORTED.ids
+    val capabilities: Set[CapabilityIdentifier] = requestObject.using.toSet
 
     if (unsupportedCapabilities.nonEmpty) {
       SMono.raiseError(UnsupportedCapabilitiesException(unsupportedCapabilities))
     } else {
       requestObject
         .methodCalls
-        .map(invocation => this.processMethodWithMatchName(requestObject.using.toSet, invocation, mailboxSession, processingContext))
+        .map(invocation => process(capabilities, mailboxSession, processingContext, invocation))
         .foldLeft(SFlux.empty[Invocation]) { (flux: SFlux[Invocation], mono: SMono[Invocation]) => flux.concatWith(mono) }
         .collectSeq()
         .flatMap((invocations: Seq[Invocation]) =>
@@ -129,10 +130,23 @@ class JMAPApiRoutes (val authenticator: Authenticator,
             .sendString(
               SMono.fromCallable(() =>
                 serializer.serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations)).toString),
-              StandardCharsets.UTF_8
-            ).`then`())
+              StandardCharsets.UTF_8)
+            .`then`())
         )
     }
+  }
+
+  private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, processingContext: ProcessingContext, invocation: Invocation) = {
+    SMono.defer(() => {
+      processingContext.resolveBackReferences(serializer, invocation) match {
+        case Left(e) => SMono.just(Invocation.error(
+          errorCode = ErrorCode.InvalidResultReference,
+          description = s"Failed resolving back-reference: ${e.message}",
+          methodCallId = invocation.methodCallId))
+        case Right(resolvedInvocation) => processMethodWithMatchName(capabilities, resolvedInvocation, mailboxSession, processingContext)
+          .doOnNext(invocationResult => processingContext.recordInvocation(invocationResult))
+      }
+    })
   }
 
   private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): SMono[Invocation] =

@@ -35,6 +35,7 @@ import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
+import org.apache.james.jmap.routes.{BackReference, JsonPath}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxACL.{Right => JavaRight}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
@@ -231,8 +232,12 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   private implicit val idsRead: Reads[Ids] = Json.valueReads[Ids]
   private implicit val propertiesRead: Reads[Properties] = Json.valueReads[Properties]
+  private implicit val jsonPathReadRead: Reads[JsonPath] = {
+    case JsString(path) => JsSuccess(JsonPath.parse(path))
+    case _ => JsError("JsonPath objects are represented by JsonString")
+  }
   private implicit val mailboxGetRequest: Reads[MailboxGetRequest] = Json.reads[MailboxGetRequest]
-
+  private implicit val backReferenceReads: Reads[BackReference] = Json.reads[BackReference]
 
   private implicit val mailboxRemoveEmailsOnDestroy: Reads[RemoveEmailsOnDestroy] = Json.valueFormat[RemoveEmailsOnDestroy]
   implicit val mailboxCreationRequest: Reads[MailboxCreationRequest] = Json.reads[MailboxCreationRequest]
@@ -390,4 +395,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   def deserializeVacationResponseGetRequest(input: String): JsResult[VacationResponseGetRequest] = Json.parse(input).validate[VacationResponseGetRequest]
 
   def deserializeVacationResponseGetRequest(input: JsValue): JsResult[VacationResponseGetRequest] = Json.fromJson[VacationResponseGetRequest](input)
+
+  def deserializeBackReference(input: JsValue): JsResult[BackReference] = Json.fromJson[BackReference](input)
+
 }

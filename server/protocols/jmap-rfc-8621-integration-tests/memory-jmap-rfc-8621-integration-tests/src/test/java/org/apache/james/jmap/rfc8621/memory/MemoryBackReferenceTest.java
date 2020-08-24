@@ -16,23 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model
 
-import eu.timepit.refined.auto._
-import org.apache.http.HttpStatus.SC_BAD_REQUEST
-import org.apache.james.jmap.model.RequestLevelErrorType.ErrorTypeIdentifier
-import org.apache.james.jmap.model.StatusCode.ErrorStatus
+package org.apache.james.jmap.rfc8621.memory;
 
-/**
- * Problem Details for HTTP APIs within the JMAP context
- * https://tools.ietf.org/html/rfc7807
- * see https://jmap.io/spec-core.html#errors
- */
-case class ProblemDetails(`type`: ErrorTypeIdentifier, status: ErrorStatus, limit: Option[String], detail: String)
+import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
-object ProblemDetails {
-  def notRequestProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_REQUEST, SC_BAD_REQUEST, None, message)
-  def notJSONProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_JSON, SC_BAD_REQUEST, None, message)
-  def unknownCapabilityProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY, SC_BAD_REQUEST, None, message)
-  def invalidResultReference(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY, SC_BAD_REQUEST, None, message)
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.rfc8621.contract.BackReferenceContract;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+public class MemoryBackReferenceTest implements BackReferenceContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule()))
+        .build();
 }
