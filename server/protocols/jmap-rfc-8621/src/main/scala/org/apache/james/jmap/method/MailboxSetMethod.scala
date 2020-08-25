@@ -369,10 +369,11 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   }
 
   private def parseCreate(jsObject: JsObject): Either[MailboxCreationParseException, MailboxCreationRequest] =
-    Json.fromJson(jsObject)(serializer.mailboxCreationRequest) match {
-      case JsSuccess(creationRequest, _) => Right(creationRequest)
-      case JsError(errors) => Left(MailboxCreationParseException(mailboxSetError(errors)))
-    }
+    MailboxCreationRequest.validateProperties(jsObject)
+      .flatMap(validJsObject => Json.fromJson(validJsObject)(serializer.mailboxCreationRequest) match {
+        case JsSuccess(creationRequest, _) => Right(creationRequest)
+        case JsError(errors) => Left(MailboxCreationParseException(mailboxSetError(errors)))
+      })
 
   private def mailboxSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): MailboxSetError =
     errors.head match {

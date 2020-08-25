@@ -657,7 +657,6 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  @Disabled("should we support that? Anyway seems hard with Play-JSON")
   def mailboxSetShouldReturnNotCreatedWhenUnknownParameter(): Unit = {
     val request =
       """
@@ -706,7 +705,66 @@ trait MailboxSetMethodContract {
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
-         |          "description": "Unknown 'unknown' property in mailbox object"
+         |          "description": "Some unknown properties were specified",
+         |          "properties": ["unknown"]
+         |        }
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def mailboxSetShouldReturnNotCreatedWhenServerSetParameter(): Unit = {
+    val request =
+      """
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "plop",
+        |                      "id": "what?"
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response: String =
+      `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .log().ifValidationFails()
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "Mailbox/set",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notCreated": {
+         |        "C42": {
+         |          "type": "invalidArguments",
+         |          "description": "Some server-set properties were specified",
+         |          "properties": ["id"]
          |        }
          |      }
          |    },

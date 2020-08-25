@@ -32,6 +32,7 @@ import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
+import org.apache.james.jmap.method.MailboxCreationParseException
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier}
@@ -59,6 +60,32 @@ object MailboxSetRequest {
 }
 
 case class RemoveEmailsOnDestroy(value: Boolean) extends AnyVal
+
+object MailboxCreationRequest {
+  private val serverSetProperty = Set("id", "sortOrder", "role", "totalEmails", "totalThreads", "unreadEmails", "unreadThreads", "myRights")
+  private val assignableProperties = Set("name", "parentId", "isSubscribed", "rights")
+  private val knownProperties = assignableProperties ++ serverSetProperty
+
+  def validateProperties(jsObject: JsObject): Either[MailboxCreationParseException, JsObject] =
+    (jsObject.keys.intersect(serverSetProperty), jsObject.keys.diff(knownProperties)) match {
+      case (_, unknownProperties) if unknownProperties.nonEmpty =>
+        Left(MailboxCreationParseException(MailboxSetError.invalidArgument(
+          Some(SetErrorDescription("Some unknown properties were specified")),
+          Some(toProperties(unknownProperties.toList)))))
+      case (specifiedServerSetProperties, _) if specifiedServerSetProperties.nonEmpty =>
+        Left(MailboxCreationParseException(MailboxSetError.invalidArgument(
+          Some(SetErrorDescription("Some server-set properties were specified")),
+          Some(toProperties(specifiedServerSetProperties.toList)))))
+      case _ => scala.Right(jsObject)
+    }
+
+  private def toProperties(strings: List[String]): Properties = Properties(strings
+    .flatMap(string => {
+      val refinedValue: Either[String, NonEmptyString] = refineV[NonEmpty](string)
+      refinedValue.fold(_ => None,  Some(_))
+    }))
+}
+
 case class MailboxCreationRequest(name: MailboxName,
                                   parentId: Option[UnparsedMailboxId],
                                   isSubscribed: Option[IsSubscribed],
