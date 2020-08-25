@@ -60,6 +60,7 @@ import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -85,6 +86,9 @@ public class S3DumbBlobStore implements DumbBlobStore, Closeable {
 
     @Inject
     S3DumbBlobStore(AwsS3AuthConfiguration configuration, Region region) {
+        S3Configuration pathStyleAccess = S3Configuration.builder()
+            .pathStyleAccessEnabled(true)
+            .build();
         client = S3AsyncClient.builder()
             .credentialsProvider(StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(configuration.getAccessKeyId(), configuration.getSecretKey())))
@@ -93,6 +97,7 @@ public class S3DumbBlobStore implements DumbBlobStore, Closeable {
                 .maxPendingConnectionAcquires(10_000))
             .endpointOverride(configuration.getEndpoint())
             .region(region.asAws())
+            .serviceConfiguration(pathStyleAccess)
             .build();
     }
 
