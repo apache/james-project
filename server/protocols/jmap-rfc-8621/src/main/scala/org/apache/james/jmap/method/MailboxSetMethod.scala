@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, IsSubscribedUpdate, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, PatchUpdateValidationException, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SharedWithPartialUpdate, SharedWithResetUpdate, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPathObject}
+import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPathObject}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
@@ -148,20 +148,21 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
           for {
             creationResults <- createMailboxes(mailboxSession, mailboxSetRequest, processingContext)
             deletionResults <- deleteMailboxes(mailboxSession, mailboxSetRequest, processingContext)
-            updateResults <- updateMailboxes(mailboxSession, mailboxSetRequest, processingContext)
+            updateResults <- updateMailboxes(mailboxSession, mailboxSetRequest, processingContext, capabilities)
           } yield createResponse(capabilities, invocation, mailboxSetRequest, creationResults, deletionResults, updateResults)
         }))
   }
 
   private def updateMailboxes(mailboxSession: MailboxSession,
                               mailboxSetRequest: MailboxSetRequest,
-                              processingContext: ProcessingContext): SMono[UpdateResults] = {
+                              processingContext: ProcessingContext,
+                              capabilities: Set[CapabilityIdentifier]): SMono[UpdateResults] = {
     SFlux.fromIterable(mailboxSetRequest.update.getOrElse(Seq()))
       .flatMap({
         case (unparsedMailboxId: UnparsedMailboxId, patch: MailboxPatchObject) =>
           processingContext.resolveMailboxId(unparsedMailboxId, mailboxIdFactory).fold(
             e => SMono.just(UpdateFailure(unparsedMailboxId, e)),
-            mailboxId => updateMailbox(mailboxSession, mailboxId, patch))
+            mailboxId => updateMailbox(mailboxSession, mailboxId, patch, capabilities))
             .onErrorResume(e => SMono.just(UpdateFailure(unparsedMailboxId, e)))
       })
       .collectSeq()
@@ -170,8 +171,9 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def updateMailbox(mailboxSession: MailboxSession,
                             mailboxId: MailboxId,
-                            patch: MailboxPatchObject): SMono[UpdateResult] = {
-    patch.validate(serializer)
+                            patch: MailboxPatchObject,
+                            capabilities: Set[CapabilityIdentifier]): SMono[UpdateResult] = {
+    patch.validate(serializer, capabilities)
       .fold(e => SMono.raiseError(e), validatedPatch =>
         updateMailboxPath(mailboxId, validatedPatch, mailboxSession)
           .`then`(updateMailboxRights(mailboxId, validatedPatch, mailboxSession))

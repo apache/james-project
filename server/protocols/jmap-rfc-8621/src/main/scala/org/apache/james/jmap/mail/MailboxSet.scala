@@ -35,8 +35,8 @@ import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier}
 import org.apache.james.mailbox.Role
-import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
+import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
 
 case class MailboxSetRequest(accountId: AccountId,
                              ifInState: Option[State],
@@ -66,6 +66,13 @@ object MailboxPatchObject {
   type KeyConstraint = NonEmpty And StartsWith["/"]
   type MailboxPatchObjectKey = String Refined KeyConstraint
 
+  def notFound(property: String): Either[PatchUpdateValidationException, Update] = {
+    val refinedKey: Either[String, MailboxPatchObjectKey] = refineV(property)
+    refinedKey.fold[Either[PatchUpdateValidationException, Update]](
+      cause => Left(InvalidPropertyException(property = property, cause = s"Invalid property specified in a patch object: $cause")),
+      value => Left(UnsupportedPropertyUpdatedException(value)))
+  }
+
   val roleProperty: MailboxPatchObjectKey = "/role"
   val sortOrderProperty: MailboxPatchObjectKey = "/sortOrder"
   val quotasProperty: MailboxPatchObjectKey = "/quotas"
@@ -79,8 +86,8 @@ object MailboxPatchObject {
 }
 
 case class MailboxPatchObject(value: Map[String, JsValue]) {
-  def validate(serializer: Serializer): Either[PatchUpdateValidationException, ValidatedMailboxPathObject] = {
-    val asUpdatedIterable = updates(serializer)
+  def validate(serializer: Serializer, capabilities: Set[CapabilityIdentifier]): Either[PatchUpdateValidationException, ValidatedMailboxPathObject] = {
+    val asUpdatedIterable = updates(serializer, capabilities)
 
     val maybeParseException: Option[PatchUpdateValidationException] = asUpdatedIterable
       .flatMap(x => x match {
@@ -126,13 +133,13 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
         rightsPartialUpdates = partialRightsUpdates)))
   }
 
-  private def updates(serializer: Serializer): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
+  private def updates(serializer: Serializer, capabilities: Set[CapabilityIdentifier]): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
     case (property, newValue) => property match {
       case "/name" => NameUpdate.parse(newValue)
-      case "/sharedWith" => SharedWithResetUpdate.parse(newValue, serializer)
+      case "/sharedWith" => SharedWithResetUpdate.parse(serializer, capabilities)(newValue)
       case "/role" => Left(ServerSetPropertyException(MailboxPatchObject.roleProperty))
       case "/sortOrder" => Left(ServerSetPropertyException(MailboxPatchObject.sortOrderProperty))
-      case "/quotas" => Left(ServerSetPropertyException(MailboxPatchObject.quotasProperty))
+      case "/quotas" => rejectQuotasUpdate(capabilities)
       case "/namespace" => Left(ServerSetPropertyException(MailboxPatchObject.namespaceProperty))
       case "/unreadThreads" => Left(ServerSetPropertyException(MailboxPatchObject.unreadThreadsProperty))
       case "/totalThreads" => Left(ServerSetPropertyException(MailboxPatchObject.totalThreadsProperty))
@@ -140,14 +147,17 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
       case "/totalEmails" => Left(ServerSetPropertyException(MailboxPatchObject.totalEmailsProperty))
       case "/myRights" => Left(ServerSetPropertyException(MailboxPatchObject.myRightsProperty))
       case "/isSubscribed" => IsSubscribedUpdate.parse(newValue)
-      case property: String if property.startsWith(MailboxPatchObject.sharedWithPrefix) => SharedWithPartialUpdate.parse(newValue, property, serializer)
-      case property =>
-        val refinedKey: Either[String, MailboxPatchObjectKey] = refineV(property)
-        refinedKey.fold[Either[PatchUpdateValidationException, Update]](
-          cause => Left(InvalidPropertyException(property = property, cause = s"Invalid property specified in a patch object: $cause")),
-          value => Left(UnsupportedPropertyUpdatedException(value)))
+      case property: String if property.startsWith(MailboxPatchObject.sharedWithPrefix) =>
+        SharedWithPartialUpdate.parse(serializer, capabilities)(property, newValue)
+      case property => MailboxPatchObject.notFound(property)
     }
   })
+
+  private def rejectQuotasUpdate(capabilities: Set[CapabilityIdentifier]) = if (capabilities.contains(CapabilityIdentifier.JAMES_QUOTA)) {
+      Left(ServerSetPropertyException(MailboxPatchObject.quotasProperty))
+    } else {
+      MailboxPatchObject.notFound("/quotas")
+    }
 }
 
 case class ValidatedMailboxPathObject(nameUpdate: Option[NameUpdate],
@@ -227,10 +237,16 @@ object NameUpdate {
 }
 
 object SharedWithResetUpdate {
-  def parse(newValue: JsValue, serializer: Serializer): Either[PatchUpdateValidationException, Update] = serializer.deserializeRights(input = newValue) match {
-    case JsSuccess(value, _) => scala.Right(SharedWithResetUpdate(value))
-    case JsError(errors) => Left(InvalidUpdateException("/sharedWith", s"Specified value do not match the expected JSON format: $errors"))
-  }
+  def parse(serializer: Serializer, capabilities: Set[CapabilityIdentifier])
+           (newValue: JsValue): Either[PatchUpdateValidationException, Update] =
+    if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
+      serializer.deserializeRights(input = newValue) match {
+        case JsSuccess(value, _) => scala.Right(SharedWithResetUpdate(value))
+        case JsError(errors) => Left(InvalidUpdateException("/sharedWith", s"Specified value do not match the expected JSON format: $errors"))
+      }
+    } else {
+      MailboxPatchObject.notFound("/sharedWith")
+    }
 }
 
 object IsSubscribedUpdate {
@@ -242,10 +258,15 @@ object IsSubscribedUpdate {
 }
 
 object SharedWithPartialUpdate {
-  def parse(newValue: JsValue, property: String, serializer: Serializer): Either[PatchUpdateValidationException, Update] =
-    parseUsername(property)
-      .flatMap(username => parseRights(newValue, property, serializer)
-        .map(rights => SharedWithPartialUpdate(username, rights)))
+  def parse(serializer: Serializer, capabilities: Set[CapabilityIdentifier])
+           ( property: String, newValue: JsValue): Either[PatchUpdateValidationException, Update] =
+    if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
+      parseUsername(property)
+        .flatMap(username => parseRights(newValue, property, serializer)
+          .map(rights => SharedWithPartialUpdate(username, rights)))
+    } else {
+      MailboxPatchObject.notFound(property)
+    }
 
   def parseUsername(property: String): Either[PatchUpdateValidationException, Username] = try {
     scala.Right(Username.of(property.substring(MailboxPatchObject.sharedWithPrefix.length)))
