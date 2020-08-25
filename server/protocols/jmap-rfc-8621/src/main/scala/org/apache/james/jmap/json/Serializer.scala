@@ -27,9 +27,10 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{DelegatedNamespace, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SetErrorDescription, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseId, Value}
+import org.apache.james.jmap.mail.{DelegatedNamespace, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SetErrorDescription, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
 import org.apache.james.mailbox.Role
@@ -377,7 +378,16 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val textBodyWrites: Writes[TextBody] = Json.valueWrites[TextBody]
   private implicit val htmlBodyWrites: Writes[HtmlBody] = Json.valueWrites[HtmlBody]
 
-  private implicit val vacationResponseWrites: Writes[VacationResponse] = Json.writes[VacationResponse]
+  implicit val vacationResponseWrites: Writes[VacationResponse] = Json.writes[VacationResponse]
+
+  private implicit val vacationResponseIdReads: Reads[VacationResponseIds] = Json.valueReads[VacationResponseIds]
+  private implicit val vacationResponseGetRequest: Reads[VacationResponseGetRequest] = Json.reads[VacationResponseGetRequest]
+
+  private implicit def vacationResponseNotFoundWrites(implicit idWrites: Writes[Id]): Writes[VacationResponseNotFound] =
+    notFound => JsArray(notFound.value.toList.map(idWrites.writes))
+
+  private implicit def vacationResponseGetResponseWrites(implicit vacationResponseWrites: Writes[VacationResponse]): Writes[VacationResponseGetResponse] =
+    Json.writes[VacationResponseGetResponse]
 
   private implicit def jsErrorWrites: Writes[JsError] = Json.writes[JsError]
 
@@ -407,7 +417,10 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 
-  def serialize(vacationResponse: VacationResponse): JsValue = Json.toJson(vacationResponse)
+  def serialize(vacationResponse: VacationResponse)(implicit vacationResponseWrites: Writes[VacationResponse]): JsValue =
+    Json.toJson(vacationResponse)
+
+  def serialize(vacationResponseGetResponse: VacationResponseGetResponse): JsValue = Json.toJson(vacationResponseGetResponse)
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
@@ -424,4 +437,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   def deserializeRights(input: JsValue): JsResult[Rights] = Json.fromJson[Rights](input)
 
   def deserializeRfc4314Rights(input: JsValue): JsResult[Rfc4314Rights] = Json.fromJson[Rfc4314Rights](input)
+
+  def deserializeVacationResponseGetRequest(input: String): JsResult[VacationResponseGetRequest] = Json.parse(input).validate[VacationResponseGetRequest]
+
+  def deserializeVacationResponseGetRequest(input: JsValue): JsResult[VacationResponseGetRequest] = Json.fromJson[VacationResponseGetRequest](input)
 }
