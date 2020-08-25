@@ -23,11 +23,13 @@ import static org.apache.james.vault.DeletedMessageFixture.DELETION_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.DELIVERY_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.INTERNAL_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.memory.MemoryDumbBlobStore;
@@ -58,6 +60,7 @@ import org.apache.james.vault.search.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
@@ -161,6 +164,19 @@ class DeletedMessageVaultHookTest {
         DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE, messageSize);
         assertThat(Flux.from(messageVault.search(ALICE, Query.ALL)).blockFirst())
             .isEqualTo(deletedMessage);
+    }
+
+    @Test
+    void deletingManyMessagesShouldSucceed() throws Exception {
+        MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
+        MessageManager messageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
+
+        ImmutableList<MessageId> ids = IntStream.range(0, 1000)
+            .mapToObj(Throwing.intFunction(i -> appendMessage(messageManager).getMessageId()))
+            .collect(Guavate.toImmutableList());
+
+        assertThatCode(() -> messageIdManager.delete(ids, aliceSession))
+            .doesNotThrowAnyException();
     }
 
     @Test

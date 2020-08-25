@@ -50,19 +50,6 @@ import reactor.core.publisher.Mono;
 
 public class DeletedMessageVaultHook implements PreDeletionHook {
     static class DeletedMessageMailboxContext {
-        private static DeletedMessageMailboxContext combine(DeletedMessageMailboxContext first, DeletedMessageMailboxContext second) {
-            Preconditions.checkArgument(first.messageId.equals(second.getMessageId()));
-            Preconditions.checkArgument(first.owner.equals(second.getOwner()));
-
-            return new DeletedMessageMailboxContext(
-                first.messageId,
-                first.owner,
-                ImmutableList.<MailboxId>builder()
-                    .addAll(first.ownerMailboxes)
-                    .addAll(second.ownerMailboxes)
-                    .build());
-        }
-
         private final MessageId messageId;
         private final Username owner;
         private final List<MailboxId> ownerMailboxes;
@@ -146,19 +133,13 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
     private Flux<DeletedMessageMailboxContext> groupMetadataByOwnerAndMessageId(DeleteOperation deleteOperation) {
         return Flux.fromIterable(deleteOperation.getDeletionMetadataList())
             .groupBy(MetadataWithMailboxId::getMailboxId)
-            .flatMap(this::addOwnerToMetadata)
-            .groupBy(this::toMessageIdUserPair)
-            .flatMap(groupFlux -> groupFlux.reduce(DeletedMessageMailboxContext::combine));
+            .flatMap(this::addOwnerToMetadata);
     }
 
     private Flux<DeletedMessageMailboxContext> addOwnerToMetadata(GroupedFlux<MailboxId, MetadataWithMailboxId> groupedFlux) {
         return retrieveMailboxUser(groupedFlux.key())
             .flatMapMany(owner -> groupedFlux.map(metadata ->
                 new DeletedMessageMailboxContext(metadata.getMessageMetaData().getMessageId(), owner, ImmutableList.of(metadata.getMailboxId()))));
-    }
-
-    private Pair<MessageId, Username> toMessageIdUserPair(DeletedMessageMailboxContext deletedMessageMetadata) {
-        return Pair.of(deletedMessageMetadata.getMessageId(), deletedMessageMetadata.getOwner());
     }
 
     private Mono<Username> retrieveMailboxUser(MailboxId mailboxId) {
