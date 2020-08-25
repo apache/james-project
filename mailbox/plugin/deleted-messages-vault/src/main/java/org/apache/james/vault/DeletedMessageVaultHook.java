@@ -90,6 +90,8 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
         }
     }
 
+    private static final int CONCURRENCY = 8;
+
     private final MailboxSession session;
     private final DeletedMessageVault deletedMessageVault;
     private final DeletedMessageConverter deletedMessageConverter;
@@ -114,7 +116,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
         Preconditions.checkNotNull(deleteOperation);
 
         return groupMetadataByOwnerAndMessageId(deleteOperation)
-            .flatMap(this::appendToTheVault)
+            .flatMap(this::appendToTheVault, CONCURRENCY)
             .then();
     }
 
@@ -133,7 +135,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
     private Flux<DeletedMessageMailboxContext> groupMetadataByOwnerAndMessageId(DeleteOperation deleteOperation) {
         return Flux.fromIterable(deleteOperation.getDeletionMetadataList())
             .groupBy(MetadataWithMailboxId::getMailboxId)
-            .flatMap(this::addOwnerToMetadata);
+            .flatMap(this::addOwnerToMetadata, CONCURRENCY);
     }
 
     private Flux<DeletedMessageMailboxContext> addOwnerToMetadata(GroupedFlux<MailboxId, MetadataWithMailboxId> groupedFlux) {
