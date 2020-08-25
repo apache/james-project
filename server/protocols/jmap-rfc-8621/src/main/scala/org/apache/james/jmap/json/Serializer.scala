@@ -27,7 +27,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
+import org.apache.james.jmap.mail.{DelegatedNamespace, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SetErrorDescription, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseId, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
@@ -369,6 +369,16 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
     mailboxCreationResponseWrites(MailboxCreationResponse.propertiesFiltered(capabilities))
   }
 
+  private implicit val vacationResponseIdWrites: Writes[VacationResponseId] = _ => JsString("singleton")
+  private implicit val isEnabledWrites: Writes[IsEnabled] = Json.valueWrites[IsEnabled]
+  private implicit val fromDateWrites: Writes[FromDate] = Json.valueWrites[FromDate]
+  private implicit val toDateWrites: Writes[ToDate] = Json.valueWrites[ToDate]
+  private implicit val subjectWrites: Writes[Subject] = Json.valueWrites[Subject]
+  private implicit val textBodyWrites: Writes[TextBody] = Json.valueWrites[TextBody]
+  private implicit val htmlBodyWrites: Writes[HtmlBody] = Json.valueWrites[HtmlBody]
+
+  private implicit val vacationResponseWrites: Writes[VacationResponse] = Json.writes[VacationResponse]
+
   private implicit def jsErrorWrites: Writes[JsError] = Json.writes[JsError]
 
   private implicit val problemDetailsWrites: Writes[ProblemDetails] = Json.writes[ProblemDetails]
@@ -396,6 +406,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
     serialize(mailboxSetResponse)(mailboxCreationResponseWritesWithFilteredProperties(capabilities))
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
+
+  def serialize(vacationResponse: VacationResponse): JsValue = Json.toJson(vacationResponse)
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
