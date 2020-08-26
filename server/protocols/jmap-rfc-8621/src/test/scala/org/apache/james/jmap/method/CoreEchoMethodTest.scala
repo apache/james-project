@@ -36,15 +36,15 @@ class CoreEchoMethodTest extends AnyWordSpec with Matchers {
   "CoreEcho" should {
     "Process" should {
       "success and return the same with parameters as the invocation request" in {
-        val expectedResponse: Invocation = invocation1
-        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession, new ProcessingContext)).block()
+        val expectedResponse: (Invocation, ProcessingContext) = (invocation1, ProcessingContext(Map.empty, Map.empty))
+        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession, ProcessingContext(Map.empty, Map.empty))).block()
 
         dataResponse shouldBe expectedResponse
       }
 
       "success and not return anything else different than the original invocation" in {
-        val wrongExpected: Invocation = invocation2
-        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession, new ProcessingContext)).block()
+        val wrongExpected: (Invocation, ProcessingContext) = (invocation2, ProcessingContext(Map.empty, Map.empty))
+        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession, ProcessingContext(Map.empty, Map.empty))).block()
         
         dataResponse should not be(wrongExpected)
       }

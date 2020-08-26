@@ -112,48 +112,61 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   private def process(requestObject: RequestObject,
                       httpServerResponse: HttpServerResponse,
                       mailboxSession: MailboxSession): SMono[Void] = {
-    val processingContext: ProcessingContext = new ProcessingContext
+    val processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)
     val unsupportedCapabilities = requestObject.using.toSet -- DefaultCapabilities.SUPPORTED.ids
     val capabilities: Set[CapabilityIdentifier] = requestObject.using.toSet
 
     if (unsupportedCapabilities.nonEmpty) {
       SMono.raiseError(UnsupportedCapabilitiesException(unsupportedCapabilities))
     } else {
-      requestObject
-        .methodCalls
-        .map(invocation => process(capabilities, mailboxSession, processingContext, invocation))
-        .foldLeft(SFlux.empty[Invocation]) { (flux: SFlux[Invocation], mono: SMono[Invocation]) => flux.concatWith(mono) }
-        .collectSeq()
-        .flatMap((invocations: Seq[Invocation]) =>
+      processSequentiallyAndUpdateContext(requestObject, mailboxSession, processingContext, capabilities)
+        .flatMap((invocations : Seq[(Invocation, ProcessingContext)]) =>
           SMono.fromPublisher(httpServerResponse.status(OK)
             .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
             .sendString(
               SMono.fromCallable(() =>
-                serializer.serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations)).toString),
+                serializer.serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations.map(_._1))).toString),
               StandardCharsets.UTF_8)
             .`then`())
         )
     }
   }
 
-  private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, processingContext: ProcessingContext, invocation: Invocation) = {
+  private def processSequentiallyAndUpdateContext(requestObject: RequestObject, mailboxSession: MailboxSession, processingContext: ProcessingContext, capabilities: Set[CapabilityIdentifier]): SMono[Seq[(Invocation, ProcessingContext)]] = {
+    SFlux.fromIterable(requestObject.methodCalls)
+      .foldLeft(List[SMono[(Invocation, ProcessingContext)]]())((acc, elem) => {
+        val lastProcessingContext: SMono[ProcessingContext] = acc.headOption
+          .map(last => last.map(_._2))
+          .getOrElse(SMono.just(processingContext))
+        val invocation: SMono[(Invocation, ProcessingContext)] = lastProcessingContext.flatMap(context => process(capabilities, mailboxSession, context, elem))
+        invocation.cache() :: acc
+      })
+      .map(_.reverse)
+      .flatMap(list => SFlux.fromIterable(list)
+        .concatMap(e => e)
+        .collectSeq())
+  }
+
+  private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, processingContext: ProcessingContext, invocation: Invocation) : SMono[(Invocation, ProcessingContext)] = {
     SMono.defer(() => {
       processingContext.resolveBackReferences(serializer, invocation) match {
-        case Left(e) => SMono.just(Invocation.error(
+        case Left(e) => SMono.just((Invocation.error(
           errorCode = ErrorCode.InvalidResultReference,
           description = s"Failed resolving back-reference: ${e.message}",
-          methodCallId = invocation.methodCallId))
+          methodCallId = invocation.methodCallId), processingContext))
         case Right(resolvedInvocation) => processMethodWithMatchName(capabilities, resolvedInvocation, mailboxSession, processingContext)
-          .doOnNext(invocationResult => processingContext.recordInvocation(invocationResult))
+          .map {
+            case (invocation: Invocation, updatedProcessingContext: ProcessingContext) => (invocation, updatedProcessingContext.recordInvocation(invocation))
+          }
       }
     })
   }
 
-  private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): SMono[Invocation] =
+  private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): SMono[(Invocation, ProcessingContext)] =
     SMono.justOrEmpty(methodsByName.get(invocation.methodName))
       .flatMap(method => SMono.fromPublisher(method.process(capabilities, invocation, mailboxSession, processingContext)))
-      .onErrorResume(throwable => SMono.just(Invocation.error(ErrorCode.ServerFail, throwable.getMessage, invocation.methodCallId)))
-      .switchIfEmpty(SMono.just(Invocation.error(ErrorCode.UnknownMethod, invocation.methodCallId)))
+      .onErrorResume(throwable => SMono.just((Invocation.error(ErrorCode.ServerFail, throwable.getMessage, invocation.methodCallId), processingContext)))
+      .switchIfEmpty(SMono.just((Invocation.error(ErrorCode.UnknownMethod, invocation.methodCallId), processingContext)))
 
   private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = throwable match {
     case exception: IllegalArgumentException => respondDetails(httpServerResponse,

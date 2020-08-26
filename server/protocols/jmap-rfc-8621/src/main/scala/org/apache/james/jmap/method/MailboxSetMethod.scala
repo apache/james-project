@@ -147,15 +147,15 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
                                  metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("Mailbox/set")
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[Invocation] = {
+  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asMailboxSetRequest(invocation.arguments)
         .flatMap(mailboxSetRequest => {
           for {
-            creationResults <- createMailboxes(mailboxSession, mailboxSetRequest, processingContext)
+            creationResultsWithUpdatedProcessingContext <- createMailboxes(mailboxSession, mailboxSetRequest, processingContext)
             deletionResults <- deleteMailboxes(mailboxSession, mailboxSetRequest, processingContext)
             updateResults <- updateMailboxes(mailboxSession, mailboxSetRequest, processingContext, capabilities)
-          } yield createResponse(capabilities, invocation, mailboxSetRequest, creationResults, deletionResults, updateResults)
+          } yield (createResponse(capabilities, invocation, mailboxSetRequest, creationResultsWithUpdatedProcessingContext._1, deletionResults, updateResults), creationResultsWithUpdatedProcessingContext._2)
         }))
   }
 
@@ -339,33 +339,34 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def createMailboxes(mailboxSession: MailboxSession,
                               mailboxSetRequest: MailboxSetRequest,
-                              processingContext: ProcessingContext): SMono[CreationResults] = {
+                              processingContext: ProcessingContext): SMono[(CreationResults, ProcessingContext)] = {
     SFlux.fromIterable(mailboxSetRequest.create
       .getOrElse(Map.empty)
       .view)
-      .flatMap {
-        case (mailboxCreationId: MailboxCreationId, jsObject: JsObject) =>
-          SMono.fromCallable(() => {
-            createMailbox(mailboxSession, mailboxCreationId, jsObject, processingContext)
-          }).subscribeOn(Schedulers.elastic())
+      .foldLeft((CreationResults(Nil), processingContext)){
+         (acc : (CreationResults, ProcessingContext), elem: (MailboxCreationId, JsObject)) => {
+           val (mailboxCreationId, jsObject) = elem
+           val (creationResult, updatedProcessingContext) = createMailbox(mailboxSession, mailboxCreationId, jsObject, acc._2)
+           (CreationResults(acc._1.created :+ creationResult), updatedProcessingContext)
+          }
       }
-      .collectSeq()
-      .map(CreationResults)
+      .subscribeOn(Schedulers.elastic())
   }
 
   private def createMailbox(mailboxSession: MailboxSession,
                             mailboxCreationId: MailboxCreationId,
                             jsObject: JsObject,
-                            processingContext: ProcessingContext): CreationResult = {
+                            processingContext: ProcessingContext): (CreationResult, ProcessingContext) = {
     parseCreate(jsObject)
       .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest, processingContext)
         .flatMap(path => createMailbox(mailboxSession = mailboxSession,
           path = path,
           mailboxCreationRequest = mailboxCreationRequest)))
-      .fold(e => CreationFailure(mailboxCreationId, e),
-        creationResponse => {
-          recordCreationIdInProcessingContext(mailboxCreationId, processingContext, creationResponse.id)
-          CreationSuccess(mailboxCreationId, creationResponse)
+      .flatMap(creationResponse => recordCreationIdInProcessingContext(mailboxCreationId, processingContext, creationResponse.id)
+        .map(context => (creationResponse, context)))
+      .fold(e => (CreationFailure(mailboxCreationId, e), processingContext),
+        creationResponseWithUpdatedContext => {
+          (CreationSuccess(mailboxCreationId, creationResponseWithUpdatedContext._1), creationResponseWithUpdatedContext._2)
         })
   }
 
@@ -425,7 +426,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def recordCreationIdInProcessingContext(mailboxCreationId: MailboxCreationId,
                                                   processingContext: ProcessingContext,
-                                                  mailboxId: MailboxId): Unit = {
+                                                  mailboxId: MailboxId): Either[IllegalArgumentException, ProcessingContext] = {
     for {
       creationId <- Id.validate(mailboxCreationId)
       serverAssignedId <- Id.validate(mailboxId.serialize())

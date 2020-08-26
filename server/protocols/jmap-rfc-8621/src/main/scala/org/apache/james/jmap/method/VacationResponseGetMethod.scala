@@ -64,7 +64,7 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
   override def process(capabilities: Set[CapabilityIdentifier],
                        invocation: Invocation,
                        mailboxSession: MailboxSession,
-                       processingContext: ProcessingContext): Publisher[Invocation] = {
+                       processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       validate(capabilities)
         .flatMap(_ => asVacationResponseGetRequest(invocation.arguments))
@@ -76,7 +76,8 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
               .map(vacationResponseGetResponse => Invocation(
                 methodName = methodName,
                 arguments = Arguments(serializer.serialize(vacationResponseGetResponse).as[JsObject]),
-                methodCallId = invocation.methodCallId))))
+                methodCallId = invocation.methodCallId)))
+              .map((_, processingContext)))
   }
 
   private def validate(capabilities: Set[CapabilityIdentifier]): Either[MissingCapabilityException, Unit] =
@@ -92,7 +93,7 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
       case errors: JsError => Left(new IllegalArgumentException(serializer.serialize(errors).toString))
     }
 
-  private def handleRequestValidationErrors(exception: Exception, methodCallId: MethodCallId): Publisher[Invocation] = exception match {
+  private def handleRequestValidationErrors(exception: Exception, methodCallId: MethodCallId): SMono[Invocation] = exception match {
     case _: MissingCapabilityException => SMono.just(Invocation.error(ErrorCode.UnknownMethod, methodCallId))
     case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, methodCallId))
   }

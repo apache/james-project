@@ -90,14 +90,12 @@ case class BackReference(name: MethodName, path: JsonPath, resultOf: MethodCallI
 
 case class InvalidResultReferenceException(message: String) extends IllegalArgumentException
 
-class ProcessingContext {
- private val creationIds: mutable.Map[ClientId, ServerId] = mutable.Map()
- private val invocations: mutable.Map[MethodCallId, Invocation] = mutable.Map()
+case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], private val invocations: Map[MethodCallId, Invocation]) {
 
- def recordCreatedId(clientId: ClientId, serverId: ServerId): Unit = creationIds.put(clientId, serverId)
+ def recordCreatedId(clientId: ClientId, serverId: ServerId): ProcessingContext = ProcessingContext(creationIds + (clientId -> serverId), invocations)
  private def retrieveServerId(clientId: ClientId): Option[ServerId] = creationIds.get(clientId)
 
-  def recordInvocation(invocation: Invocation): Unit = invocations.put(invocation.methodCallId, invocation)
+  def recordInvocation(invocation: Invocation): ProcessingContext = ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation))
 
   def resolveBackReferences(serializer: Serializer, invocation: Invocation): Either[InvalidResultReferenceException, Invocation] =
     backReferenceResolver(serializer).reads(invocation.arguments.value) match {

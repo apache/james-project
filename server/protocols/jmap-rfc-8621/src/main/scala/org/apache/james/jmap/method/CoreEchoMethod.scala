@@ -31,5 +31,5 @@ import reactor.core.scala.publisher.SMono
 class CoreEchoMethod extends Method {
   override val methodName = MethodName("Core/echo")
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[Invocation] = SMono.just(invocation)
+  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = SMono.just((invocation, processingContext))
 }
