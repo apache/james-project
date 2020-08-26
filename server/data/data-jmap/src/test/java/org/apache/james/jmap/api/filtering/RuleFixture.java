@@ -23,10 +23,10 @@ public interface RuleFixture {
     String NAME = "a name";
     Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
     Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"));
-    Rule.Builder RULE_BUILER = Rule.builder().name(NAME).condition(CONDITION).action(ACTION);
-    Rule RULE_1 = RULE_BUILER.id(Rule.Id.of("1")).build();
-    Rule RULE_2 = RULE_BUILER.id(Rule.Id.of("2")).build();
-    Rule RULE_3 = RULE_BUILER.id(Rule.Id.of("3")).build();
+    Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).condition(CONDITION).action(ACTION);
+    Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
+    Rule RULE_2 = RULE_BUILDER.id(Rule.Id.of("2")).build();
+    Rule RULE_3 = RULE_BUILDER.id(Rule.Id.of("3")).build();
 
     Rule RULE_TO = Rule.builder()
             .id(Rule.Id.of("id-to"))

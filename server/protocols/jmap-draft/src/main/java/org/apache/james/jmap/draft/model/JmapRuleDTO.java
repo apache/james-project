@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft.model;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.jmap.api.filtering.Rule;
 
@@ -132,51 +133,57 @@ public class JmapRuleDTO {
     }
 
     public static JmapRuleDTO from(Rule rule) {
-        return new JmapRuleDTO(rule.getId().asString(),
-                rule.getName(),
-                ConditionDTO.from(rule.getCondition()),
-                ActionDTO.from(rule.getAction()));
+        return new JmapRuleDTO(Optional.of(rule.getId().asString()),
+                Optional.of(rule.getName()),
+                Optional.of(ConditionDTO.from(rule.getCondition())),
+                Optional.of(ActionDTO.from(rule.getAction())));
     }
 
-    private final String id;
-    private final String name;
-    private final ConditionDTO conditionDTO;
-    private final ActionDTO actionDTO;
+    private final Optional<String> id;
+    private final Optional<String> name;
+    private final Optional<ConditionDTO> conditionDTO;
+    private final Optional<ActionDTO> actionDTO;
 
     @JsonCreator
-    public JmapRuleDTO(@JsonProperty("id") String id,
-                       @JsonProperty("name") String name,
-                       @JsonProperty("condition") ConditionDTO conditionDTO,
-                       @JsonProperty("action") ActionDTO actionDTO) {
+    public JmapRuleDTO(@JsonProperty("id") Optional<String> id,
+                       @JsonProperty("name") Optional<String> name,
+                       @JsonProperty("condition") Optional<ConditionDTO> conditionDTO,
+                       @JsonProperty("action") Optional<ActionDTO> actionDTO) {
         this.name = name;
         this.conditionDTO = conditionDTO;
         this.actionDTO = actionDTO;
         this.id = id;
     }
 
-    public String getId() {
+    public Optional<String> getId() {
         return id;
     }
 
-    public String getName() {
+    public Optional<String> getName() {
         return name;
     }
 
-    public ConditionDTO getCondition() {
+    public Optional<ConditionDTO> getCondition() {
         return conditionDTO;
     }
 
-    public ActionDTO getAction() {
+    public Optional<ActionDTO> getAction() {
         return actionDTO;
     }
 
     public Rule toRule() {
+        Preconditions.checkState(conditionDTO.isPresent(), "`condition` is mandatory");
+        Preconditions.checkState(actionDTO.isPresent(), "`action` is mandatory");
+        Preconditions.checkState(name.isPresent(), "`name` is mandatory");
+        Preconditions.checkState(!name.get().isEmpty(), "`name` is mandatory");
+        Preconditions.checkState(id.isPresent(), "`id` is mandatory");
+        Preconditions.checkState(!id.get().isEmpty(), "`id` is mandatory");
+
         return Rule.builder()
-            .id(Rule.Id.of(id))
-            .name(name)
-            .condition(conditionDTO.toCondition())
-            .name(name)
-            .action(actionDTO.toAction())
+            .id(Rule.Id.of(id.get()))
+            .name(name.get())
+            .condition(conditionDTO.get().toCondition())
+            .action(actionDTO.get().toAction())
             .build();
     }
 

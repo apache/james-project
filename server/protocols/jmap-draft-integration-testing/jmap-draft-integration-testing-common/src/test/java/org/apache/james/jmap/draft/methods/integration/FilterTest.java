@@ -241,6 +241,136 @@ public abstract class FilterTest {
     }
 
     @Test
+    public void setFilterShouldRejectRuleWithInvalidRuleName() {
+        MailboxId mailbox = randomMailboxId();
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body("[[" +
+                "  \"setFilter\", " +
+                "  {" +
+                "    \"singleton\": [" +
+                "    {" +
+                "      \"id\": \"3000-34e\"," +
+                "      \"name\": null," +
+                "      \"condition\": {" +
+                "        \"field\": \"subject\"," +
+                "        \"comparator\": \"contains\"," +
+                "        \"value\": \"question\"" +
+                "      }," +
+                "      \"action\": {" +
+                "        \"appendIn\": {" +
+                "          \"mailboxIds\": [\"" + mailbox.serialize() + "\"]" +
+                "        }" +
+                "      }" +
+                "    }" +
+                "  ]}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", equalTo("`name` is mandatory"));
+    }
+
+    @Test
+    public void setFilterShouldRejectRuleWithInvalidRuleId() {
+        MailboxId mailbox = randomMailboxId();
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body("[[" +
+                "  \"setFilter\", " +
+                "  {" +
+                "    \"singleton\": [" +
+                "    {" +
+                "      \"id\": null," +
+                "      \"name\": \"some name\"," +
+                "      \"condition\": {" +
+                "        \"field\": \"subject\"," +
+                "        \"comparator\": \"contains\"," +
+                "        \"value\": \"question\"" +
+                "      }," +
+                "      \"action\": {" +
+                "        \"appendIn\": {" +
+                "          \"mailboxIds\": [\"" + mailbox.serialize() + "\"]" +
+                "        }" +
+                "      }" +
+                "    }" +
+                "  ]}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", equalTo("`id` is mandatory"));
+    }
+
+    @Test
+    public void setFilterShouldRejectRuleWithoutRuleCondition() {
+        MailboxId mailbox = randomMailboxId();
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body("[[" +
+                "  \"setFilter\", " +
+                "  {" +
+                "    \"singleton\": [" +
+                "    {" +
+                "      \"id\": \"3000-34e\"," +
+                "      \"name\": \"some name\"," +
+                "      \"condition\": null," +
+                "      \"action\": {" +
+                "        \"appendIn\": {" +
+                "          \"mailboxIds\": [\"" + mailbox.serialize() + "\"]" +
+                "        }" +
+                "      }" +
+                "    }" +
+                "  ]}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", equalTo("`condition` is mandatory"));
+    }
+
+    @Test
+    public void setFilterShouldRejectRuleWithInvalidRuleCondition() {
+        MailboxId mailbox = randomMailboxId();
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body("[[" +
+                "  \"setFilter\", " +
+                "  {" +
+                "    \"singleton\": [" +
+                "    {" +
+                "      \"id\": \"3000-34e\"," +
+                "      \"name\": \"some name\"," +
+                "      \"condition\": {" +
+                "        \"field\": \"subject\" " +
+                "       }," +
+                "      \"action\": {" +
+                "        \"appendIn\": {" +
+                "          \"mailboxIds\": [\"" + mailbox.serialize() + "\"]" +
+                "        }" +
+                "      }" +
+                "    }" +
+                "  ]}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", equalTo("'null' is not a valid comparator name"));
+    }
+
+    @Test
     public void setFilterShouldReturnUpdatedSingleton() {
         MailboxId mailbox = randomMailboxId();
 
@@ -1304,7 +1434,6 @@ public abstract class FilterTest {
             () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, inbox));
     }
 
-
     @Test
     public void messageShouldBeAppendedInInboxWhenSubjectRuleDoesNotMatchRuleBecauseOfCase() {
         given()
@@ -1634,7 +1763,6 @@ public abstract class FilterTest {
         calmlyAwait.until(
             () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, matchedMailbox));
     }
-
 
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenExactlyEqualsMatchesCaseInsensitivelyFullHeader() {

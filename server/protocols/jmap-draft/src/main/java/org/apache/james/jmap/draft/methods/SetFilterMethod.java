@@ -128,16 +128,22 @@ public class SetFilterMethod implements Method {
         try {
             return updateFilter(methodCallId, request, mailboxSession.getUser())
                 .doOnEach(ReactorUtils.logOnError(e -> LOGGER.warn("Failed setting Rules", e)))
-                .onErrorResume(e -> Mono.just(unKnownError(methodCallId)));
+                .onErrorResume(e -> Mono.just(unknownError(methodCallId)));
         } catch (MultipleMailboxIdException e) {
             LOGGER.debug("Rule targeting several mailboxes", e);
             return Mono.just(multipleMailboxesError(methodCallId, e));
         }  catch (DuplicatedRuleException e) {
             LOGGER.debug("Duplicated rules", e);
             return Mono.just(duplicatedIdsError(methodCallId, e));
-        }  catch (Exception e) {
+        }  catch (IllegalArgumentException e) {
+            LOGGER.warn("IllegalArgumentException of setting Rules", e);
+            return Mono.just(invalidArgumentsError(methodCallId, e.getMessage()));
+        } catch (IllegalStateException e) {
+            LOGGER.warn("IllegalStateException of setting Rules", e);
+            return Mono.just(invalidArgumentsError(methodCallId, e.getMessage()));
+        } catch (Exception e) {
             LOGGER.warn("Failed setting Rules", e);
-            return Mono.just(unKnownError(methodCallId));
+            return Mono.just(unknownError(methodCallId));
         }
     }
 
@@ -185,13 +191,28 @@ public class SetFilterMethod implements Method {
         }
     }
 
-    private JmapResponse unKnownError(MethodCallId methodCallId) {
+    private JmapResponse unknownError(MethodCallId methodCallId) {
+        return unknownError(methodCallId, "Failed to retrieve filter");
+    }
+
+    private JmapResponse invalidArgumentsError(MethodCallId methodCallId, String errorMessage) {
+        return JmapResponse.builder()
+            .methodCallId(methodCallId)
+            .responseName(RESPONSE_NAME)
+            .response(ErrorResponse.builder()
+                .type(SetError.Type.INVALID_ARGUMENTS.asString())
+                .description(errorMessage)
+                .build())
+            .build();
+    }
+
+    private JmapResponse unknownError(MethodCallId methodCallId, String errorMessage) {
         return JmapResponse.builder()
             .methodCallId(methodCallId)
             .responseName(RESPONSE_NAME)
             .response(ErrorResponse.builder()
                 .type(SetError.Type.ERROR.asString())
-                .description("Failed to retrieve filter")
+                .description(errorMessage)
                 .build())
             .build();
     }

@@ -92,7 +92,7 @@ class RuleTest {
                 .condition(CONDITION)
                 .action(ACTION)
                 .build())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -103,11 +103,11 @@ class RuleTest {
                 .condition(CONDITION)
                 .action(ACTION)
                 .build())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void shouldWhenNameEmpty() {
+    void shouldFailWhenNameEmpty() {
         assertThatThrownBy(() ->
             Rule.builder()
                 .id(UNIQUE_ID)
@@ -115,11 +115,11 @@ class RuleTest {
                 .condition(CONDITION)
                 .action(ACTION)
                 .build())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void shouldWhenNameBlank() {
+    void shouldFailWhenNameBlank() {
         assertThatThrownBy(() ->
             Rule.builder()
                 .id(UNIQUE_ID)
@@ -127,11 +127,11 @@ class RuleTest {
                 .condition(CONDITION)
                 .action(ACTION)
                 .build())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void shouldWhenNameNull() {
+    void shouldFailWhenNameNull() {
         assertThatThrownBy(() ->
             Rule.builder()
                 .id(UNIQUE_ID)
@@ -139,7 +139,7 @@ class RuleTest {
                 .condition(CONDITION)
                 .action(ACTION)
                 .build())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -150,7 +150,7 @@ class RuleTest {
                 .name(NAME)
                 .action(ACTION)
                 .build())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -161,7 +161,7 @@ class RuleTest {
                 .name(NAME)
                 .condition(CONDITION)
                 .build())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
