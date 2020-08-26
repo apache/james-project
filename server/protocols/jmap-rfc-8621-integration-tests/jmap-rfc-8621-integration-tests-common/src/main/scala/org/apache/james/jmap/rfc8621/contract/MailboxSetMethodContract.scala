@@ -4577,7 +4577,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "newState": "000001",
          |                "notUpdated": {
-         |                    "1": {
+         |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
          |                        "description": "/sharedWith property do not exist thus cannot be updated",
          |                        "properties": ["/sharedWith"]
@@ -4637,7 +4637,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "newState": "000001",
          |                "notUpdated": {
-         |                    "1": {
+         |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
          |                        "description": "/sharedWith/${ANDRE.asString()} property do not exist thus cannot be updated",
          |                        "properties": ["/sharedWith/${ANDRE.asString()}"]
@@ -4697,7 +4697,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "newState": "000001",
          |                "notUpdated": {
-         |                    "1": {
+         |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
          |                        "description": "/quotas property do not exist thus cannot be updated",
          |                        "properties": ["/quotas"]
@@ -6259,7 +6259,7 @@ trait MailboxSetMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "newState": "000001",
          |      "notUpdated": {
-         |        "1": {
+         |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
          |          "description": "Expecting a JSON string or null as an argument",
          |          "properties": ["/parentId"]
@@ -6315,7 +6315,7 @@ trait MailboxSetMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "newState": "000001",
          |      "notUpdated": {
-         |        "1": {
+         |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
          |          "description": "ClientId(#C42) was not used in previously defined creationIds",
          |          "properties": ["/parentId"]
@@ -6812,9 +6812,9 @@ trait MailboxSetMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "newState": "000001",
          |      "notUpdated": {
-         |        "1": {
+         |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "1 parentId property cannot be updated as this mailbox has child mailboxes",
+         |          "description": "${mailboxId.serialize} parentId property cannot be updated as this mailbox has child mailboxes",
          |          "properties": ["parentId"]
          |        }
          |      }
