@@ -35,8 +35,8 @@ public class Rule {
     public static class Id {
 
         public static Id of(String id) {
-            Preconditions.checkNotNull(id, "id should not be null");
-            Preconditions.checkArgument(StringUtils.isNotBlank(id), "id should not be empty");
+            Preconditions.checkArgument(StringUtils.isNotEmpty(id), "`id` is mandatory");
+            Preconditions.checkArgument(StringUtils.isNotBlank(id), "`id` is mandatory");
             return new Id(id);
         }
 
@@ -93,7 +93,7 @@ public class Rule {
             
             private final String fieldName;
             
-            private Field(String fieldName) {
+            Field(String fieldName) {
                 this.fieldName = fieldName;
             }
             
@@ -120,7 +120,7 @@ public class Rule {
             
             private final String comparatorName;
             
-            private Comparator(String comparator) {
+            Comparator(String comparator) {
                 this.comparatorName = comparator;
             }
             
@@ -268,45 +268,33 @@ public class Rule {
 
     public static class Builder {
 
-        private Optional<Id> id;
-        private Optional<String> name;
-        private Optional<Condition> condition;
-        private Optional<Action> action;
-
-        public Builder() {
-            this.id = Optional.empty();
-            this.name = Optional.empty();
-            this.condition = Optional.empty();
-            this.action = Optional.empty();
-        }
+        private Id id;
+        private String name;
+        private Condition condition;
+        private Action action;
 
         public Builder id(Id id) {
-            this.id = Optional.of(id);
+            this.id = id;
             return this;
         }
 
         public Builder name(String name) {
-            this.name = Optional.of(name);
+            this.name = name;
             return this;
         }
 
         public Builder condition(Condition condition) {
-            this.condition = Optional.of(condition);
+            this.condition = condition;
             return this;
         }
 
         public Builder action(Action action) {
-            this.action = Optional.of(action);
+            this.action = action;
             return this;
         }
 
         public Rule build() {
-            Preconditions.checkState(id.isPresent(), "`id` is mandatory");
-            Preconditions.checkState(name.isPresent(), "`name` is mandatory");
-            Preconditions.checkState(condition.isPresent(), "`condition` is mandatory");
-            Preconditions.checkState(action.isPresent(), "`action` is mandatory");
-
-            return new Rule(id.get(), name.get(), condition.get(), action.get());
+            return new Rule(id, name, condition, action);
         }
 
     }
@@ -321,6 +309,12 @@ public class Rule {
     private final Action action;
 
     public Rule(Id id, String name, Condition condition, Action action) {
+        Preconditions.checkArgument(id != null, "`id` is mandatory");
+        Preconditions.checkArgument(StringUtils.isNotBlank(name), "`name` is mandatory");
+        Preconditions.checkArgument(StringUtils.isNotEmpty(name), "`name` is mandatory");
+        Preconditions.checkArgument(condition != null, "`condition` is mandatory");
+        Preconditions.checkArgument(action != null, "`action` is mandatory");
+
         this.id = id;
         this.name = name;
         this.condition = condition;

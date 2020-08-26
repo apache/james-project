@@ -151,8 +151,6 @@ public class JmapRuleDTO {
         this.name = name;
         this.conditionDTO = conditionDTO;
         this.actionDTO = actionDTO;
-        Preconditions.checkNotNull(id);
-
         this.id = id;
     }
 
