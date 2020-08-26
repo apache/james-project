@@ -67,6 +67,12 @@ case class MailboxValidation(mailboxName: MailboxName,
                              totalEmails: TotalEmails,
                              totalThreads: TotalThreads)
 
+case class Subscriptions(subscribedNames: Set[String]) {
+  def isSubscribed(name: String): IsSubscribed = IsSubscribed(subscribedNames.contains(name))
+
+  def isSubscribed(metaData: MailboxMetaData): IsSubscribed = isSubscribed(metaData.getPath.getName)
+}
+
 class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailboxManager: MailboxManager) {
 
   private def getRole(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Option[Role] = Role.from(mailboxPath.getName)
@@ -117,6 +123,7 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
              mailboxSession: MailboxSession,
              allMailboxesMetadata: Seq[MailboxMetaData],
              quotaLoader: QuotaLoader): SMono[Mailbox] = {
+    val subscriptions: Subscriptions = Subscriptions(subscriptionManager.subscriptions(mailboxSession).asScala.toSet)
     val sanitizedCounters: MailboxCounters = mailboxMetaData.getCounters.sanitize()
 
     MailboxValidation.validate(mailboxMetaData.getPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
@@ -134,7 +141,7 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
               .map(_.getId)
               .headOption
             val myRights: MailboxRights = getMyRights(mailboxMetaData.getPath, mailboxMetaData.getResolvedAcls, mailboxSession)
-            val isSubscribed: IsSubscribed = retrieveIsSubscribed(mailboxMetaData.getPath, mailboxSession)
+            val isSubscribed: IsSubscribed = subscriptions.isSubscribed(mailboxMetaData)
 
             Mailbox(
               id = id,
