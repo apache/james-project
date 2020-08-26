@@ -21,7 +21,11 @@ package org.apache.james.jmap.mail
 
 import java.time.ZonedDateTime
 
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.auto._
+import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.api.vacation.Vacation
+import org.apache.james.jmap.model.Id.Id
 
 import scala.compat.java8.OptionConverters._
 
@@ -35,6 +39,10 @@ case class TextBody(value: String)
 case class HtmlBody(value: String)
 
 object VacationResponse {
+  val VACATION_RESPONSE_ID: Id = "singleton"
+
+  type UnparsedVacationResponseId = String Refined NonEmpty
+
   def asRfc8621(vacation: Vacation) = VacationResponse(
     id = VacationResponseId(),
     isEnabled = IsEnabled(vacation.isEnabled),

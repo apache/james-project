@@ -27,10 +27,10 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
+import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
 import org.apache.james.jmap.mail.{DelegatedNamespace, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SetErrorDescription, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
 import org.apache.james.mailbox.Role
@@ -370,7 +370,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
     mailboxCreationResponseWrites(MailboxCreationResponse.propertiesFiltered(capabilities))
   }
 
-  private implicit val vacationResponseIdWrites: Writes[VacationResponseId] = _ => JsString("singleton")
+  private implicit val vacationResponseIdWrites: Writes[VacationResponseId] = _ => JsString(VACATION_RESPONSE_ID)
   private implicit val isEnabledWrites: Writes[IsEnabled] = Json.valueWrites[IsEnabled]
   private implicit val fromDateWrites: Writes[FromDate] = Json.valueWrites[FromDate]
   private implicit val toDateWrites: Writes[ToDate] = Json.valueWrites[ToDate]
@@ -383,7 +383,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val vacationResponseIdReads: Reads[VacationResponseIds] = Json.valueReads[VacationResponseIds]
   private implicit val vacationResponseGetRequest: Reads[VacationResponseGetRequest] = Json.reads[VacationResponseGetRequest]
 
-  private implicit def vacationResponseNotFoundWrites(implicit idWrites: Writes[Id]): Writes[VacationResponseNotFound] =
+  private implicit def vacationResponseNotFoundWrites(implicit idWrites: Writes[UnparsedVacationResponseId]): Writes[VacationResponseNotFound] =
     notFound => JsArray(notFound.value.toList.map(idWrites.writes))
 
   private implicit def vacationResponseGetResponseWrites(implicit vacationResponseWrites: Writes[VacationResponse]): Writes[VacationResponseGetResponse] =

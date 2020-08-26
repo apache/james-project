@@ -20,6 +20,8 @@
 package org.apache.james.jmap.routes
 
 import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
+import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
+import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.{ClientId, Id, ServerId}
 import org.apache.james.mailbox.model.MailboxId
 
@@ -33,8 +35,8 @@ class ProcessingContext {
 
  def resolveMailboxId(unparsedMailboxId: UnparsedMailboxId, mailboxIdFactory: MailboxId.Factory): Either[IllegalArgumentException, MailboxId] =
   Id.validate(unparsedMailboxId.value)
-      .flatMap(id => resolveServerId(ClientId(id)))
-      .flatMap(serverId => parseMailboxId(mailboxIdFactory, serverId))
+   .flatMap(id => resolveServerId(ClientId(id)))
+   .flatMap(serverId => parseMailboxId(mailboxIdFactory, serverId))
 
  private def parseMailboxId(mailboxIdFactory: MailboxId.Factory, serverId: ServerId) =
   try {
@@ -49,4 +51,11 @@ class ProcessingContext {
       .map(serverId => Right(serverId))
       .getOrElse(Left[IllegalArgumentException, ServerId](new IllegalArgumentException(s"$id was not used in previously defined creationIds")))))
     .getOrElse(Right(ServerId(id.value)))
+
+ def resolveVacationResponseId(unparsedVacationId: UnparsedVacationResponseId): Either[IllegalArgumentException, Id] =
+  if (unparsedVacationId.equals(VACATION_RESPONSE_ID)) {
+   Right(VACATION_RESPONSE_ID)
+  } else {
+   Left(new IllegalArgumentException(s"$unparsedVacationId is not a valid VacationResponse ID"))
+  }
 }

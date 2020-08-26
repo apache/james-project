@@ -24,9 +24,9 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SERIALIZER, SINGLETON_ID}
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
+import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
 import org.apache.james.jmap.mail.{Properties, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
 import org.apache.james.jmap.model.AccountId
-import org.apache.james.jmap.model.Id.Id
 import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -38,7 +38,7 @@ object VacationResponseGetSerializationTest {
 
   private val ACCOUNT_ID: AccountId = AccountId(id)
 
-  private val SINGLETON_ID: Id = "singleton"
+  private val SINGLETON_ID: UnparsedVacationResponseId = "singleton"
   private val PROPERTIES: Properties = Properties(List("isEnabled", "fromDate"))
 }
 

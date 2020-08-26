@@ -23,6 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.vacation.{AccountId, VacationRepository}
 import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
 import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
@@ -33,9 +34,19 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
-import reactor.core.scala.publisher.SMono
+import reactor.core.scala.publisher.{SFlux, SMono}
 
-case class VacationResponseGetResult(vacationResponse: VacationResponse, notFound: VacationResponseNotFound)
+object VacationResponseGetResult {
+  def found(vacationResponse: VacationResponse): VacationResponseGetResult =
+    VacationResponseGetResult(Set(vacationResponse), VacationResponseNotFound(Set.empty))
+  def notFound(vacationResponseId: UnparsedVacationResponseId): VacationResponseGetResult =
+    VacationResponseGetResult(Set.empty, VacationResponseNotFound(Set(vacationResponseId)))
+}
+
+case class VacationResponseGetResult(vacationResponses: Set[VacationResponse], notFound: VacationResponseNotFound) {
+  def merge(other: VacationResponseGetResult): VacationResponseGetResult =
+    VacationResponseGetResult(this.vacationResponses ++ other.vacationResponses, this.notFound.merge(other.notFound))
+}
 
 class VacationResponseGetMethod @Inject() (serializer: Serializer,
                                            vacationRepository: VacationRepository,
@@ -50,11 +61,12 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
       validate(capabilities, invocation)
         .switchIfEmpty(asVacationResponseGetRequest(invocation.arguments)
           .flatMap(vacationResponseGetRequest =>
-            getVacationResponse(vacationResponseGetRequest, mailboxSession)
+            getVacationResponse(vacationResponseGetRequest, processingContext, mailboxSession)
+              .reduce(VacationResponseGetResult(Set.empty, VacationResponseNotFound(Set.empty)), (result1: VacationResponseGetResult, result2: VacationResponseGetResult) => result1.merge(result2))
               .map(vacationResult => VacationResponseGetResponse(
                 accountId = vacationResponseGetRequest.accountId,
                 state = INSTANCE,
-                list = List(vacationResult.vacationResponse),
+                list = vacationResult.vacationResponses.toList,
                 notFound = vacationResult.notFound))
               .map(vacationResponseGetResponse => Invocation(
                 methodName = methodName,
@@ -77,10 +89,16 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
     }
 
   private def getVacationResponse(vacationResponseGetRequest: VacationResponseGetRequest,
-                                  mailboxSession: MailboxSession): SMono[VacationResponseGetResult] =
+                                  processingContext: ProcessingContext,
+                                  mailboxSession: MailboxSession): SFlux[VacationResponseGetResult] =
     vacationResponseGetRequest.ids match {
       case None => getVacationSingleton(mailboxSession)
-        .map(vacationResponse => VacationResponseGetResult(vacationResponse, VacationResponseNotFound(Set.empty)))
+        .map(VacationResponseGetResult.found)
+        .flux()
+      case Some(ids) => SFlux.fromIterable(ids.value)
+        .flatMap(id => processingContext.resolveVacationResponseId(id)
+          .fold(e => SMono.just(VacationResponseGetResult.notFound(id)),
+            vacationResponseId => getVacationSingleton(mailboxSession).map(VacationResponseGetResult.found)))
     }
 
   private def getVacationSingleton(mailboxSession: MailboxSession): SMono[VacationResponse] = {
