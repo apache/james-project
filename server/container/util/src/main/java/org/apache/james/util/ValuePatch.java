@@ -107,6 +107,18 @@ public class ValuePatch<T> {
         return toOptional().orElse(replacement);
     }
 
+    public ValuePatch<T> merge(ValuePatch<T> other) {
+        if (isKept()) {
+            return other;
+        }
+
+        if (other.isKept()) {
+            return this;
+        }
+
+        throw new IllegalStateException("the two merged ValuePatch represent a mutation");
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof ValuePatch) {

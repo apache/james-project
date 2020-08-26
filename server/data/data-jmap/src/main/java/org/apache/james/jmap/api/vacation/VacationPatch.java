@@ -117,6 +117,16 @@ public class VacationPatch {
             return this;
         }
 
+        public Builder addAll(Builder other) {
+            return builder()
+                .isEnabled(this.isEnabled.merge(other.isEnabled))
+                .fromDate(this.fromDate.merge(other.fromDate))
+                .toDate(this.toDate.merge(other.toDate))
+                .subject(this.subject.merge(other.subject))
+                .htmlBody(this.htmlBody.merge(other.htmlBody))
+                .textBody(this.textBody.merge(other.textBody));
+        }
+
         public VacationPatch build() {
             return new VacationPatch(subject, textBody, htmlBody, toDate, fromDate, isEnabled);
         }
