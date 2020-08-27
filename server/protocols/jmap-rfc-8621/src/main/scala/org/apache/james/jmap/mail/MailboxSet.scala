@@ -22,10 +22,8 @@ package org.apache.james.jmap.mail
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
-import eu.timepit.refined.boolean.And
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
-import eu.timepit.refined.string.StartsWith
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.Username
 import org.apache.james.jmap.json.Serializer
@@ -92,7 +90,7 @@ case class MailboxCreationRequest(name: MailboxName,
                                   rights: Option[Rights])
 
 object MailboxPatchObject {
-  type KeyConstraint = NonEmpty And StartsWith["/"]
+  type KeyConstraint = NonEmpty
   type MailboxPatchObjectKey = String Refined KeyConstraint
 
   def notFound(property: String): Either[PatchUpdateValidationException, Update] = {
@@ -102,16 +100,16 @@ object MailboxPatchObject {
       value => Left(UnsupportedPropertyUpdatedException(value)))
   }
 
-  val roleProperty: MailboxPatchObjectKey = "/role"
-  val sortOrderProperty: MailboxPatchObjectKey = "/sortOrder"
-  val quotasProperty: MailboxPatchObjectKey = "/quotas"
-  val namespaceProperty: MailboxPatchObjectKey = "/namespace"
-  val unreadThreadsProperty: MailboxPatchObjectKey = "/unreadThreads"
-  val totalThreadsProperty: MailboxPatchObjectKey = "/totalThreads"
-  val unreadEmailsProperty: MailboxPatchObjectKey = "/unreadEmails"
-  val totalEmailsProperty: MailboxPatchObjectKey = "/totalEmails"
-  val myRightsProperty: MailboxPatchObjectKey = "/myRights"
-  val sharedWithPrefix = "/sharedWith/"
+  val roleProperty: MailboxPatchObjectKey = "role"
+  val sortOrderProperty: MailboxPatchObjectKey = "sortOrder"
+  val quotasProperty: MailboxPatchObjectKey = "quotas"
+  val namespaceProperty: MailboxPatchObjectKey = "namespace"
+  val unreadThreadsProperty: MailboxPatchObjectKey = "unreadThreads"
+  val totalThreadsProperty: MailboxPatchObjectKey = "totalThreads"
+  val unreadEmailsProperty: MailboxPatchObjectKey = "unreadEmails"
+  val totalEmailsProperty: MailboxPatchObjectKey = "totalEmails"
+  val myRightsProperty: MailboxPatchObjectKey = "myRights"
+  val sharedWithPrefix = "sharedWith/"
 }
 
 case class MailboxPatchObject(value: Map[String, JsValue]) {
@@ -179,19 +177,19 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
               mailboxIdFactory: MailboxId.Factory,
               mailboxSession: MailboxSession): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
     case (property, newValue) => property match {
-      case "/name" => NameUpdate.parse(newValue, mailboxSession)
-      case "/parentId" => ParentIdUpdate.parse(newValue, processingContext, mailboxIdFactory)
-      case "/sharedWith" => SharedWithResetUpdate.parse(serializer, capabilities)(newValue)
-      case "/role" => Left(ServerSetPropertyException(MailboxPatchObject.roleProperty))
-      case "/sortOrder" => Left(ServerSetPropertyException(MailboxPatchObject.sortOrderProperty))
-      case "/quotas" => rejectQuotasUpdate(capabilities)
-      case "/namespace" => Left(ServerSetPropertyException(MailboxPatchObject.namespaceProperty))
-      case "/unreadThreads" => Left(ServerSetPropertyException(MailboxPatchObject.unreadThreadsProperty))
-      case "/totalThreads" => Left(ServerSetPropertyException(MailboxPatchObject.totalThreadsProperty))
-      case "/unreadEmails" => Left(ServerSetPropertyException(MailboxPatchObject.unreadEmailsProperty))
-      case "/totalEmails" => Left(ServerSetPropertyException(MailboxPatchObject.totalEmailsProperty))
-      case "/myRights" => Left(ServerSetPropertyException(MailboxPatchObject.myRightsProperty))
-      case "/isSubscribed" => IsSubscribedUpdate.parse(newValue)
+      case "name" => NameUpdate.parse(newValue, mailboxSession)
+      case "parentId" => ParentIdUpdate.parse(newValue, processingContext, mailboxIdFactory)
+      case "sharedWith" => SharedWithResetUpdate.parse(serializer, capabilities)(newValue)
+      case "role" => Left(ServerSetPropertyException(MailboxPatchObject.roleProperty))
+      case "sortOrder" => Left(ServerSetPropertyException(MailboxPatchObject.sortOrderProperty))
+      case "quotas" => rejectQuotasUpdate(capabilities)
+      case "namespace" => Left(ServerSetPropertyException(MailboxPatchObject.namespaceProperty))
+      case "unreadThreads" => Left(ServerSetPropertyException(MailboxPatchObject.unreadThreadsProperty))
+      case "totalThreads" => Left(ServerSetPropertyException(MailboxPatchObject.totalThreadsProperty))
+      case "unreadEmails" => Left(ServerSetPropertyException(MailboxPatchObject.unreadEmailsProperty))
+      case "totalEmails" => Left(ServerSetPropertyException(MailboxPatchObject.totalEmailsProperty))
+      case "myRights" => Left(ServerSetPropertyException(MailboxPatchObject.myRightsProperty))
+      case "isSubscribed" => IsSubscribedUpdate.parse(newValue)
       case property: String if property.startsWith(MailboxPatchObject.sharedWithPrefix) =>
         SharedWithPartialUpdate.parse(serializer, capabilities)(property, newValue)
       case property => MailboxPatchObject.notFound(property)
@@ -201,13 +199,13 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
   private def rejectQuotasUpdate(capabilities: Set[CapabilityIdentifier]) = if (capabilities.contains(CapabilityIdentifier.JAMES_QUOTA)) {
       Left(ServerSetPropertyException(MailboxPatchObject.quotasProperty))
     } else {
-      MailboxPatchObject.notFound("/quotas")
+      MailboxPatchObject.notFound("quotas")
     }
 }
 
 object ValidatedMailboxPatchObject {
-  val nameProperty: NonEmptyString = "/name"
-  val parentIdProperty: NonEmptyString = "/parentId"
+  val nameProperty: NonEmptyString = "name"
+  val parentIdProperty: NonEmptyString = "parentId"
 }
 
 case class ValidatedMailboxPatchObject(nameUpdate: Option[NameUpdate],
@@ -290,11 +288,11 @@ case class MailboxUpdateResponse(value: JsObject)
 object NameUpdate {
   def parse(newValue: JsValue, mailboxSession: MailboxSession): Either[PatchUpdateValidationException, Update] = newValue match {
     case JsString(newName) => if (newName.contains(mailboxSession.getPathDelimiter)) {
-      Left(InvalidUpdateException("/name", s"The mailbox '$newName' contains an illegal character: '${mailboxSession.getPathDelimiter}'"))
+      Left(InvalidUpdateException("name", s"The mailbox '$newName' contains an illegal character: '${mailboxSession.getPathDelimiter}'"))
     } else {
       scala.Right(NameUpdate(newName))
     }
-    case _ => Left(InvalidUpdateException("/name", "Expecting a JSON string as an argument"))
+    case _ => Left(InvalidUpdateException("name", "Expecting a JSON string as an argument"))
   }
 }
 
@@ -304,10 +302,10 @@ object SharedWithResetUpdate {
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
       serializer.deserializeRights(input = newValue) match {
         case JsSuccess(value, _) => scala.Right(SharedWithResetUpdate(value))
-        case JsError(errors) => Left(InvalidUpdateException("/sharedWith", s"Specified value do not match the expected JSON format: $errors"))
+        case JsError(errors) => Left(InvalidUpdateException("sharedWith", s"Specified value do not match the expected JSON format: $errors"))
       }
     } else {
-      MailboxPatchObject.notFound("/sharedWith")
+      MailboxPatchObject.notFound("sharedWith")
     }
 }
 
@@ -315,7 +313,7 @@ object IsSubscribedUpdate {
   def parse(newValue: JsValue): Either[PatchUpdateValidationException, Update] = newValue match {
     case JsBoolean(value) => scala.Right(IsSubscribedUpdate(Some(IsSubscribed(value))))
     case JsNull => scala.Right(IsSubscribedUpdate(None))
-    case _ => Left(InvalidUpdateException("/isSubscribed", "Expecting a JSON boolean as an argument"))
+    case _ => Left(InvalidUpdateException("isSubscribed", "Expecting a JSON boolean as an argument"))
   }
 }
 
@@ -351,12 +349,12 @@ object ParentIdUpdate {
     newValue match {
       case JsString(id) =>
         val value: Either[String, UnparsedMailboxId] = refineV(id)
-        value.fold(error => Left(InvalidUpdateException("/parentId", error)),
+        value.fold(error => Left(InvalidUpdateException("parentId", error)),
           id => processingContext.resolveMailboxId(id, mailboxIdFactory)
-            .fold(e => Left(InvalidUpdateException("/parentId", e.getMessage)),
+            .fold(e => Left(InvalidUpdateException("parentId", e.getMessage)),
               mailboxId => scala.Right(ParentIdUpdate(Some(mailboxId)))))
       case JsNull => scala.Right(ParentIdUpdate(None))
-      case _ => Left(InvalidUpdateException("/parentId", "Expecting a JSON string or null as an argument"))
+      case _ => Left(InvalidUpdateException("parentId", "Expecting a JSON string or null as an argument"))
     }
 }
 

@@ -74,7 +74,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/role": "Draft"
+         |                      "role": "Draft"
          |                    }
          |                }
          |           },
@@ -106,7 +106,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Can not modify server-set properties",
-         |          "properties":["/role"]
+         |          "properties":["role"]
          |        }
          |      }
          |    }, "c1"]
@@ -128,7 +128,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sortOrder": 42
+         |                      "sortOrder": 42
          |                    }
          |                }
          |           },
@@ -160,7 +160,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Can not modify server-set properties",
-         |          "properties":["/sortOrder"]
+         |          "properties":["sortOrder"]
          |        }
          |      }
          |    }, "c1"]
@@ -182,7 +182,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/quotas": {}
+         |                      "quotas": {}
          |                    }
          |                }
          |           },
@@ -214,7 +214,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Can not modify server-set properties",
-         |          "properties":["/quotas"]
+         |          "properties":["quotas"]
          |        }
          |      }
          |    }, "c1"]
@@ -236,7 +236,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/namespace": "Personal"
+         |                      "namespace": "Personal"
          |                    }
          |                }
          |           },
@@ -268,7 +268,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Can not modify server-set properties",
-         |          "properties":["/namespace"]
+         |          "properties":["namespace"]
          |        }
          |      }
          |    }, "c1"]
@@ -290,7 +290,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/myRights": {}
+         |                      "myRights": {}
          |                    }
          |                }
          |           },
@@ -322,7 +322,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Can not modify server-set properties",
-         |          "properties":["/myRights"]
+         |          "properties":["myRights"]
          |        }
          |      }
          |    }, "c1"]
@@ -399,7 +399,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/unreadThreads": 42
+         |                      "unreadThreads": 42
          |                    }
          |                }
          |           },
@@ -431,7 +431,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Can not modify server-set properties",
-         |          "properties":["/unreadThreads"]
+         |          "properties":["unreadThreads"]
          |        }
          |      }
          |    }, "c1"]
@@ -453,7 +453,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/totalThreads": 42
+         |                      "totalThreads": 42
          |                    }
          |                }
          |           },
@@ -485,7 +485,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Can not modify server-set properties",
-         |          "properties":["/totalThreads"]
+         |          "properties":["totalThreads"]
          |        }
          |      }
          |    }, "c1"]
@@ -507,7 +507,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/unreadEmails": 42
+         |                      "unreadEmails": 42
          |                    }
          |                }
          |           },
@@ -539,7 +539,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Can not modify server-set properties",
-         |          "properties":["/unreadEmails"]
+         |          "properties":["unreadEmails"]
          |        }
          |      }
          |    }, "c1"]
@@ -561,7 +561,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/totalEmails": 42
+         |                      "totalEmails": 42
          |                    }
          |                }
          |           },
@@ -593,7 +593,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Can not modify server-set properties",
-         |          "properties":["/totalEmails"]
+         |          "properties":["totalEmails"]
          |        }
          |      }
          |    }, "c1"]
@@ -2733,7 +2733,7 @@ trait MailboxSetMethodContract {
         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |               "update": {
         |                 "${mailboxId.serialize()}" : {
-        |                   "/name": "newName"
+        |                   "name": "newName"
         |                 }
         |               }
         |          },
@@ -2808,7 +2808,7 @@ trait MailboxSetMethodContract {
         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |               "update": {
         |                 "#C43" : {
-        |                   "/name": "newName"
+        |                   "name": "newName"
         |                 }
         |               }
         |          },
@@ -2897,7 +2897,7 @@ trait MailboxSetMethodContract {
         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |               "update": {
         |                 "#C43" : {
-        |                   "/name": "newName"
+        |                   "name": "newName"
         |                 }
         |               }
         |          },
@@ -2930,7 +2930,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId1.serialize()}": {
-        |                      "/name": "newName"
+        |                      "name": "newName"
         |                    }
         |                }
         |           },
@@ -2962,7 +2962,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId1.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Mailbox with name=#private:bob@domain.tld:newName already exists.",
-         |          "properties": ["/name"]
+         |          "properties": ["name"]
          |        }
          |      }
          |    }, "c1"]
@@ -2983,7 +2983,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId1.serialize()}": {
-        |                      "/name": ["newName"]
+        |                      "name": ["newName"]
         |                    }
         |                }
         |           },
@@ -3015,7 +3015,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId1.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Expecting a JSON string as an argument",
-         |          "properties": ["/name"]
+         |          "properties": ["name"]
          |        }
          |      }
          |    }, "c1"]
@@ -3036,7 +3036,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId1.serialize()}": {
-        |                      "/unknown": "newValue"
+        |                      "unknown": "newValue"
         |                    }
         |                }
         |           },
@@ -3067,8 +3067,61 @@ trait MailboxSetMethodContract {
          |      "notUpdated": {
          |        "${mailboxId1.serialize()}": {
          |          "type": "invalidArguments",
-         |          "description": "/unknown property do not exist thus cannot be updated",
-         |          "properties": ["/unknown"]
+         |          "description": "unknown property do not exist thus cannot be updated",
+         |          "properties": ["unknown"]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenPropertyStartWithImplicitSlash(server: GuiceJamesServer): Unit = {
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "update": {
+        |                    "${mailboxId1.serialize()}": {
+        |                      "/name": "newValue"
+        |                    }
+        |                }
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "newState": "000001",
+         |      "notUpdated": {
+         |        "${mailboxId1.serialize()}": {
+         |          "type": "invalidArguments",
+         |          "description": "/name property do not exist thus cannot be updated",
+         |          "properties": ["/name"]
          |        }
          |      }
          |    }, "c1"]
@@ -3110,60 +3163,7 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-    val message = "Invalid property specified in a patch object: Both predicates of (!isEmpty() && \\\"\\\".startsWith(\\\"/\\\")) failed. Left: Predicate isEmpty() did not fail. Right: Predicate failed: \\\"\\\".startsWith(\\\"/\\\")."
-    assertThatJson(response).isEqualTo(
-      s"""{
-         |  "sessionState": "75128aab4b1b",
-         |  "methodResponses": [
-         |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
-         |      "notUpdated": {
-         |        "${mailboxId1.serialize()}": {
-         |          "type": "invalidPatch",
-         |          "description": "$message"
-         |        }
-         |      }
-         |    }, "c1"]
-         |  ]
-         |}""".stripMargin)
-  }
-
-  @Test
-  def updateShouldFailWhenInvalidProperty(server: GuiceJamesServer): Unit = {
-    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
-    val request =
-      s"""
-        |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
-        |   "methodCalls": [
-        |       ["Mailbox/set",
-        |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-        |                "update": {
-        |                    "${mailboxId1.serialize()}": {
-        |                      "name": "newValue"
-        |                    }
-        |                }
-        |           },
-        |    "c1"]]
-        |}
-        |""".stripMargin
-
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .log().ifValidationFails()
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
-
-    val message = "Invalid property specified in a patch object: Right predicate of (!isEmpty(name) && \\\"name\\\".startsWith(\\\"/\\\")) failed: Predicate failed: \\\"name\\\".startsWith(\\\"/\\\")."
+    val message = "Invalid property specified in a patch object: Predicate isEmpty() did not fail."
     assertThatJson(response).isEqualTo(
       s"""{
          |  "sessionState": "75128aab4b1b",
@@ -3195,7 +3195,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId1.serialize()}": {
-        |                      "/name": "${"a".repeat(201)}"
+        |                      "name": "${"a".repeat(201)}"
         |                    }
         |                }
         |           },
@@ -3227,7 +3227,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId1.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Mailbox name exceeds maximum size of 200 characters",
-         |          "properties": ["/name"]
+         |          "properties": ["name"]
          |        }
          |      }
          |    }, "c1"]
@@ -3248,7 +3248,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId1.serialize()}": {
-        |                      "/name": "newName"
+        |                      "name": "newName"
         |                    }
         |                }
         |           },
@@ -3303,7 +3303,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId1.serialize()}": {
-        |                      "/name": "newName"
+        |                      "name": "newName"
         |                    }
         |                }
         |           },
@@ -3356,7 +3356,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/name": "newName"
+        |                      "name": "newName"
         |                    }
         |                }
         |           },
@@ -3388,7 +3388,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Invalid change to a system mailbox",
-         |          "properties":["/name"]
+         |          "properties":["name"]
          |        }
          |      }
          |    }, "c1"]
@@ -3462,7 +3462,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${childId.serialize()}": {
-        |                      "/name": "newChild"
+        |                      "name": "newChild"
         |                    }
         |                }
         |           },
@@ -3534,7 +3534,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${parentId.serialize()}": {
-        |                      "/name": "newParent"
+        |                      "name": "newParent"
         |                    }
         |                }
         |           },
@@ -3859,7 +3859,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": true
+         |                   "isSubscribed": true
          |                 }
          |               }
          |          },
@@ -3926,7 +3926,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": true
+         |                   "isSubscribed": true
          |                 }
          |               }
          |          },
@@ -3936,7 +3936,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": false
+         |                   "isSubscribed": false
          |                 }
          |               }
          |          },
@@ -4010,7 +4010,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": null
+         |                   "isSubscribed": null
          |                 }
          |               }
          |          },
@@ -4082,7 +4082,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": true
+         |                   "isSubscribed": true
          |                 }
          |               }
          |          },
@@ -4154,7 +4154,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": true
+         |                   "isSubscribed": true
          |                 }
          |               }
          |          },
@@ -4164,7 +4164,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": false
+         |                   "isSubscribed": false
          |                 }
          |               }
          |          },
@@ -4238,7 +4238,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId1.serialize()}": {
-         |                      "/name": "a.b"
+         |                      "name": "a.b"
          |                    }
          |                }
          |           },
@@ -4270,7 +4270,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId1.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "The mailbox 'a.b' contains an illegal character: '.'",
-         |          "properties": ["/name"]
+         |          "properties": ["name"]
          |        }
          |      }
          |    }, "c1"]
@@ -4297,10 +4297,10 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${andreId.serialize()}" : {
-         |                   "/isSubscribed": true
+         |                   "isSubscribed": true
          |                 },
          |                 "${bobId.serialize()}" : {
-         |                   "/isSubscribed": false
+         |                   "isSubscribed": false
          |                 }
          |               }
          |          },
@@ -4375,7 +4375,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": true
+         |                   "isSubscribed": true
          |                 }
          |               }
          |          },
@@ -4385,7 +4385,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": null
+         |                   "isSubscribed": null
          |                 }
          |               }
          |          },
@@ -4465,7 +4465,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": true
+         |                   "isSubscribed": true
          |                 }
          |               }
          |          },
@@ -4501,7 +4501,7 @@ trait MailboxSetMethodContract {
          |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |               "update": {
          |                 "${mailboxId.serialize()}" : {
-         |                   "/isSubscribed": "invalid"
+         |                   "isSubscribed": "invalid"
          |                 }
          |               }
          |          },
@@ -4534,7 +4534,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Expecting a JSON boolean as an argument",
-         |          "properties": ["/isSubscribed"]
+         |          "properties": ["isSubscribed"]
          |        }
          |      }
          |    }, "c3"]
@@ -4600,7 +4600,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith": {
+         |                      "sharedWith": {
          |                        "${ANDRE.asString()}":["r", "l"]
          |                      }
          |                    }
@@ -4637,8 +4637,8 @@ trait MailboxSetMethodContract {
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
-         |                        "description": "/sharedWith property do not exist thus cannot be updated",
-         |                        "properties": ["/sharedWith"]
+         |                        "description": "sharedWith property do not exist thus cannot be updated",
+         |                        "properties": ["sharedWith"]
          |                    }
          |                }
          |            },
@@ -4662,7 +4662,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith/${ANDRE.asString()}": ["r", "l"]
+         |                      "sharedWith/${ANDRE.asString()}": ["r", "l"]
          |                    }
          |                }
          |           },
@@ -4697,8 +4697,8 @@ trait MailboxSetMethodContract {
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
-         |                        "description": "/sharedWith/${ANDRE.asString()} property do not exist thus cannot be updated",
-         |                        "properties": ["/sharedWith/${ANDRE.asString()}"]
+         |                        "description": "sharedWith/${ANDRE.asString()} property do not exist thus cannot be updated",
+         |                        "properties": ["sharedWith/${ANDRE.asString()}"]
          |                    }
          |                }
          |            },
@@ -4782,7 +4782,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith": {
+         |                      "sharedWith": {
          |                        "${ANDRE.asString()}":["r", "l"]
          |                      }
          |                    }
@@ -4861,7 +4861,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith": {
+         |                      "sharedWith": {
          |                        "${ANDRE.asString()}":["r", "l"],
          |                        "${DAVID.asString()}":["r", "l", "w"]
          |                      }
@@ -4940,7 +4940,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith": {
+         |                      "sharedWith": {
          |                        "${DAVID.asString()}":["r", "l", "w"],
          |                        "${BOB.asString()}":["r", "l", "w", "a"]
          |                      }
@@ -5023,7 +5023,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith": {
+         |                      "sharedWith": {
          |                        "${DAVID.asString()}":["r", "l", "w"],
          |                        "${BOB.asString()}":["r", "l", "w", "a"]
          |                      }
@@ -5086,7 +5086,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith":  "invalid"
+         |                      "sharedWith":  "invalid"
          |                    }
          |                 }
          |           },
@@ -5120,7 +5120,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Specified value do not match the expected JSON format: List((,List(JsonValidationError(List(error.expected.jsobject),ArraySeq()))))",
-         |          "properties": ["/sharedWith"]
+         |          "properties": ["sharedWith"]
          |        }
          |      }
          |    }, "c1"]
@@ -5147,7 +5147,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith/${ANDRE.asString()}": ["r", "l"]
+         |                      "sharedWith/${ANDRE.asString()}": ["r", "l"]
          |                    }
          |                }
          |           },
@@ -5220,7 +5220,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith/invalid@invalid@${DOMAIN.asString()}": ["r", "l"]
+         |                      "sharedWith/invalid@invalid@${DOMAIN.asString()}": ["r", "l"]
          |                    }
          |                }
          |           },
@@ -5277,7 +5277,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith/${ANDRE.asString()}": ["p"]
+         |                      "sharedWith/${ANDRE.asString()}": ["p"]
          |                    }
          |                }
          |           },
@@ -5314,7 +5314,7 @@ trait MailboxSetMethodContract {
          |                        "type": "invalidArguments",
          |                        "description": "Specified value do not match the expected JSON format: List(((0),List(JsonValidationError(List(Unknown right 'p'),ArraySeq()))))",
          |                        "properties": [
-         |                            "/sharedWith/andre@domain.tld"
+         |                            "sharedWith/andre@domain.tld"
          |                        ]
          |                    }
          |                }
@@ -5341,10 +5341,10 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/sharedWith": {
+         |                      "sharedWith": {
          |                        "${DAVID.asString()}":["r", "l", "w"]
          |                      },
-         |                      "/sharedWith/${ANDRE.asString()}": ["r"]
+         |                      "sharedWith/${ANDRE.asString()}": ["r"]
          |                    }
          |                }
          |           },
@@ -5405,8 +5405,8 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                          "/sharedWith/${BOB.asString()}": ["r"],
-         |                          "/sharedWith/${DAVID.asString()}": ["r"]
+         |                          "sharedWith/${BOB.asString()}": ["r"],
+         |                          "sharedWith/${DAVID.asString()}": ["r"]
          |                      }
          |                }
          |           },
@@ -5470,8 +5470,8 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                          "/sharedWith/${BOB.asString()}": ["r"],
-         |                          "/sharedWith/${DAVID.asString()}": ["r"]
+         |                          "sharedWith/${BOB.asString()}": ["r"],
+         |                          "sharedWith/${DAVID.asString()}": ["r"]
          |                      }
          |                }
          |           },
@@ -5533,7 +5533,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/parentId": "${parentId.serialize()}"
+         |                      "parentId": "${parentId.serialize()}"
          |                    }
          |                }
          |           },
@@ -5605,7 +5605,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/parentId": "${newParentId.serialize()}"
+         |                      "parentId": "${newParentId.serialize()}"
          |                    }
          |                }
          |           },
@@ -5676,8 +5676,8 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/parentId": "${parentId.serialize()}",
-         |                      "/name": "newName"
+         |                      "parentId": "${parentId.serialize()}",
+         |                      "name": "newName"
          |                    }
          |                }
          |           },
@@ -5749,8 +5749,8 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/parentId": "${newParentId.serialize()}",
-         |                      "/name": "newName"
+         |                      "parentId": "${newParentId.serialize()}",
+         |                      "name": "newName"
          |                    }
          |                }
          |           },
@@ -5822,7 +5822,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/parentId": null
+         |                      "parentId": null
          |                    }
          |                }
          |           },
@@ -5892,8 +5892,8 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/parentId": null,
-         |                      "/name": "newName"
+         |                      "parentId": null,
+         |                      "name": "newName"
          |                    }
          |                }
          |           },
@@ -5964,8 +5964,8 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
-         |                      "/parentId": null,
-         |                      "/name": "newName"
+         |                      "parentId": null,
+         |                      "name": "newName"
          |                    }
          |                }
          |           },
@@ -6034,7 +6034,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/name": "mailbox"
+        |                      "name": "mailbox"
         |                    }
         |                }
         |           },
@@ -6105,7 +6105,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "${parentId.serialize()}"
+        |                      "parentId": "${parentId.serialize()}"
         |                    }
         |                }
         |           },
@@ -6186,7 +6186,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "#C42"
+        |                      "parentId": "#C42"
         |                    }
         |                }
         |           },
@@ -6286,7 +6286,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": ["invalid"]
+        |                      "parentId": ["invalid"]
         |                    }
         |                }
         |           },
@@ -6320,7 +6320,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
          |          "description": "Expecting a JSON string or null as an argument",
-         |          "properties": ["/parentId"]
+         |          "properties": ["parentId"]
          |        }
          |      }
          |    }, "c2"]
@@ -6342,7 +6342,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "#C42"
+        |                      "parentId": "#C42"
         |                    }
         |                }
         |           },
@@ -6376,7 +6376,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
          |          "description": "ClientId(#C42) was not used in previously defined creationIds",
-         |          "properties": ["/parentId"]
+         |          "properties": ["parentId"]
          |        }
          |      }
          |    }, "c2"]
@@ -6399,7 +6399,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "${parentId.serialize()}"
+        |                      "parentId": "${parentId.serialize()}"
         |                    }
         |                }
         |           },
@@ -6456,7 +6456,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "${parentId.serialize()}"
+        |                      "parentId": "${parentId.serialize()}"
         |                    }
         |                }
         |           },
@@ -6490,7 +6490,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Mailbox with name=#private:bob@domain.tld:parent.mailbox already exists.",
-         |          "properties":["/parentId"]
+         |          "properties":["parentId"]
          |        }
          |      }
          |    }, "c2"]
@@ -6514,8 +6514,8 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "${parentId.serialize()}",
-        |                      "/name": "newMailbox"
+        |                      "parentId": "${parentId.serialize()}",
+        |                      "name": "newMailbox"
         |                    }
         |                }
         |           },
@@ -6549,7 +6549,7 @@ trait MailboxSetMethodContract {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
          |          "description": "Mailbox with name=#private:bob@domain.tld:parent.newMailbox already exists.",
-         |          "properties":["/name", "/parentId"]
+         |          "properties":["name", "parentId"]
          |        }
          |      }
          |    }, "c2"]
@@ -6579,7 +6579,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "${parentId.serialize()}"
+        |                      "parentId": "${parentId.serialize()}"
         |                    }
         |                }
         |           },
@@ -6641,7 +6641,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "${parentId.serialize()}"
+        |                      "parentId": "${parentId.serialize()}"
         |                    }
         |                }
         |           },
@@ -6703,7 +6703,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "${parentId.serialize()}"
+        |                      "parentId": "${parentId.serialize()}"
         |                    }
         |                }
         |           },
@@ -6765,7 +6765,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "${parentId.serialize()}"
+        |                      "parentId": "${parentId.serialize()}"
         |                    }
         |                }
         |           },
@@ -6839,7 +6839,7 @@ trait MailboxSetMethodContract {
         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
         |                "update": {
         |                    "${mailboxId.serialize()}": {
-        |                      "/parentId": "${parentId.serialize()}"
+        |                      "parentId": "${parentId.serialize()}"
         |                    }
         |                }
         |           },
