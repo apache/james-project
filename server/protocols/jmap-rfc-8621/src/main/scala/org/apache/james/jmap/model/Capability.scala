@@ -28,6 +28,9 @@ import org.apache.james.jmap.model.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.model.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 
+sealed trait CapabilityValidationException extends IllegalArgumentException
+case class MissingCapabilityException(capabilityIdentifier: CapabilityIdentifier) extends CapabilityValidationException
+
 object CapabilityIdentifier {
   type CapabilityIdentifier = String Refined Uri
   val JMAP_CORE: CapabilityIdentifier = "urn:ietf:params:jmap:core"

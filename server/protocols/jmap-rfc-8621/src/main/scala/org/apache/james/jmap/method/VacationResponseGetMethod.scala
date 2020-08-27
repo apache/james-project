@@ -28,7 +28,7 @@ import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest,
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{CapabilityIdentifier, ErrorCode, Invocation}
+import org.apache.james.jmap.model.{CapabilityIdentifier, ErrorCode, Invocation, MissingCapabilityException}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
@@ -58,28 +58,29 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
                        mailboxSession: MailboxSession,
                        processingContext: ProcessingContext): Publisher[Invocation] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      validate(capabilities, invocation)
-        .switchIfEmpty(asVacationResponseGetRequest(invocation.arguments)
-          .flatMap(vacationResponseGetRequest =>
-            getVacationResponse(vacationResponseGetRequest, processingContext, mailboxSession)
-              .reduce(VacationResponseGetResult(Set.empty, VacationResponseNotFound(Set.empty)), (result1: VacationResponseGetResult, result2: VacationResponseGetResult) => result1.merge(result2))
-              .map(vacationResult => VacationResponseGetResponse(
-                accountId = vacationResponseGetRequest.accountId,
-                state = INSTANCE,
-                list = vacationResult.vacationResponses.toList,
-                notFound = vacationResult.notFound))
-              .map(vacationResponseGetResponse => Invocation(
-                methodName = methodName,
-                arguments = Arguments(serializer.serialize(vacationResponseGetResponse).as[JsObject]),
-                methodCallId = invocation.methodCallId)))))
+      validate(capabilities)
+        .fold(e => SMono.just(Invocation.error(ErrorCode.UnknownMethod, invocation.methodCallId)),
+          success => asVacationResponseGetRequest(invocation.arguments)
+            .flatMap(vacationResponseGetRequest =>
+              getVacationResponse(vacationResponseGetRequest, processingContext, mailboxSession)
+                .reduce(VacationResponseGetResult(Set.empty, VacationResponseNotFound(Set.empty)), (result1: VacationResponseGetResult, result2: VacationResponseGetResult) => result1.merge(result2))
+                .map(vacationResult => VacationResponseGetResponse(
+                  accountId = vacationResponseGetRequest.accountId,
+                  state = INSTANCE,
+                  list = vacationResult.vacationResponses.toList,
+                  notFound = vacationResult.notFound))
+                .map(vacationResponseGetResponse => Invocation(
+                  methodName = methodName,
+                  arguments = Arguments(serializer.serialize(vacationResponseGetResponse).as[JsObject]),
+                  methodCallId = invocation.methodCallId)))))
 
   }
 
-  private def validate(capabilities: Set[CapabilityIdentifier], invocation: Invocation): SMono[Invocation] =
+  private def validate(capabilities: Set[CapabilityIdentifier]): Either[MissingCapabilityException, Unit] =
     if (!capabilities.contains(CapabilityIdentifier.JMAP_VACATION_RESPONSE)) {
-      SMono.just(Invocation.error(ErrorCode.UnknownMethod, invocation.methodCallId))
+      Left(MissingCapabilityException(CapabilityIdentifier.JMAP_VACATION_RESPONSE))
     } else {
-      SMono.empty
+      Right()
     }
 
   private def asVacationResponseGetRequest(arguments: Arguments): SMono[VacationResponseGetRequest] =
