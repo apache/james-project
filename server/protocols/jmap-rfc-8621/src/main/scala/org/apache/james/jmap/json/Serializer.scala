@@ -417,8 +417,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 
-  def serialize(vacationResponse: VacationResponse)(implicit vacationResponseWrites: Writes[VacationResponse]): JsValue =
-    Json.toJson(vacationResponse)
+  def serialize(vacationResponse: VacationResponse): JsValue = Json.toJson(vacationResponse)
 
   def serialize(vacationResponseGetResponse: VacationResponseGetResponse): JsValue = Json.toJson(vacationResponseGetResponse)
 
