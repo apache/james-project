@@ -24,19 +24,20 @@ import java.time.ZonedDateTime
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
 import org.apache.james.jmap.mail.{FromDate, HtmlBody, IsEnabled, Subject, TextBody, ToDate, VacationResponse, VacationResponseId}
+import org.apache.james.jmap.model.UTCDate
 import org.apache.james.mailbox.model.TestId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 
 object VacationResponseSerializationTest {
-  private val DATE_TIME_2016 = ZonedDateTime.parse("2016-10-09T08:07:06+07:00[Asia/Vientiane]")
-  private val DATE_TIME_2017 = ZonedDateTime.parse("2017-10-09T08:07:06+07:00[Asia/Vientiane]")
+  private val UTC_DATE_TIME_2016 = UTCDate(ZonedDateTime.parse("2016-10-09T01:07:06Z"))
+  private val UTC_DATE_TIME_2017 = UTCDate(ZonedDateTime.parse("2017-10-09T01:07:06Z"))
 
   private val VACATION_RESPONSE_ID: VacationResponseId = VacationResponseId()
   private val IS_ENABLED: IsEnabled = IsEnabled(true)
-  private val FROM_DATE: Option[FromDate] = Some(FromDate(DATE_TIME_2016))
-  private val TO_DATE: Option[ToDate] = Some(ToDate(DATE_TIME_2017))
+  private val FROM_DATE: Option[FromDate] = Some(FromDate(UTC_DATE_TIME_2016))
+  private val TO_DATE: Option[ToDate] = Some(ToDate(UTC_DATE_TIME_2017))
   private val SUBJECT: Option[Subject] = Some(Subject("Hello world"))
   private val TEXT_BODY: Option[TextBody] = Some(TextBody("text is required when enabled"))
   private val HTML_BODY: Option[HtmlBody] = Some(HtmlBody("<b>HTML body</b>"))
@@ -59,8 +60,8 @@ class VacationResponseSerializationTest extends AnyWordSpec with Matchers {
         """{
           | "id":"singleton",
           | "isEnabled":true,
-          | "fromDate":"2016-10-09T08:07:06+07:00[Asia/Vientiane]",
-          | "toDate":"2017-10-09T08:07:06+07:00[Asia/Vientiane]",
+          | "fromDate":"2016-10-09T01:07:06Z",
+          | "toDate":"2017-10-09T01:07:06Z",
           | "subject":"Hello world",
           | "textBody":"text is required when enabled",
           | "htmlBody":"<b>HTML body</b>"

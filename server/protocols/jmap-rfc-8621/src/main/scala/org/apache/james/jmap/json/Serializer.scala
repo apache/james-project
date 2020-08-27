@@ -21,6 +21,7 @@ package org.apache.james.jmap.json
 
 import java.io.InputStream
 import java.net.URL
+import java.time.format.DateTimeFormatter
 
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
@@ -369,6 +370,9 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private def mailboxCreationResponseWritesWithFilteredProperties(capabilities: Set[CapabilityIdentifier]): Writes[MailboxCreationResponse] = {
     mailboxCreationResponseWrites(MailboxCreationResponse.propertiesFiltered(capabilities))
   }
+
+  private implicit val utcDateWrites: Writes[UTCDate] =
+    utcDate => JsString(utcDate.asUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")))
 
   private implicit val vacationResponseIdWrites: Writes[VacationResponseId] = _ => JsString(VACATION_RESPONSE_ID)
   private implicit val isEnabledWrites: Writes[IsEnabled] = Json.valueWrites[IsEnabled]

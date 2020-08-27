@@ -169,8 +169,8 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
           |  "list": [{
           |    "id":"singleton",
           |    "isEnabled":true,
-          |    "fromDate":"2016-10-09T08:07:06+07:00[Asia/Vientiane]",
-          |    "toDate":"2017-10-09T08:07:06+07:00[Asia/Vientiane]",
+          |    "fromDate":"2016-10-09T01:07:06Z",
+          |    "toDate":"2017-10-09T01:07:06Z",
           |    "subject":"Hello world",
           |    "textBody":"text is required when enabled",
           |    "htmlBody":"<b>HTML body</b>"
