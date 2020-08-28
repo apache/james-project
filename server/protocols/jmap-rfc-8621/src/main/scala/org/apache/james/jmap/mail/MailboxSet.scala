@@ -69,15 +69,15 @@ object MailboxCreationRequest {
       case (_, unknownProperties) if unknownProperties.nonEmpty =>
         Left(MailboxCreationParseException(MailboxSetError.invalidArgument(
           Some(SetErrorDescription("Some unknown properties were specified")),
-          Some(toProperties(unknownProperties.toList)))))
+          Some(toProperties(unknownProperties.toSet)))))
       case (specifiedServerSetProperties, _) if specifiedServerSetProperties.nonEmpty =>
         Left(MailboxCreationParseException(MailboxSetError.invalidArgument(
           Some(SetErrorDescription("Some server-set properties were specified")),
-          Some(toProperties(specifiedServerSetProperties.toList)))))
+          Some(toProperties(specifiedServerSetProperties.toSet)))))
       case _ => scala.Right(jsObject)
     }
 
-  private def toProperties(strings: List[String]): Properties = Properties(strings
+  private def toProperties(strings: Set[String]): Properties = Properties(strings
     .flatMap(string => {
       val refinedValue: Either[String, NonEmptyString] = refineV[NonEmpty](string)
       refinedValue.fold(_ => None,  Some(_))
@@ -215,7 +215,7 @@ case class ValidatedMailboxPatchObject(nameUpdate: Option[NameUpdate],
                                        rightsPartialUpdates: Seq[SharedWithPartialUpdate]) {
   val shouldUpdateMailboxPath: Boolean = nameUpdate.isDefined || parentIdUpdate.isDefined
 
-  val updatedProperties: Properties = Properties(List(
+  val updatedProperties: Properties = Properties(Set(
       nameUpdate.map(_ => ValidatedMailboxPatchObject.nameProperty),
       parentIdUpdate.map(_ => ValidatedMailboxPatchObject.parentIdProperty))
     .flatMap(_.toList))

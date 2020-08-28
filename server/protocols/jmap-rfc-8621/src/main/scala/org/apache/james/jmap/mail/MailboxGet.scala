@@ -26,10 +26,26 @@ import org.apache.james.jmap.model.State.State
 
 case class Ids(value: List[UnparsedMailboxId])
 
-case class Properties(value: List[NonEmptyString]) {
-  def asSetOfString: Set[String] = value.map(_.toString()).toSet
+object Properties {
+  def empty(): Properties = Properties(Set())
+}
 
-  def intersect(properties: Properties): Properties = Properties(value.toSet.intersect(properties.value.toSet).toList)
+case class Properties(value: Set[NonEmptyString]) {
+  def union(other: Properties): Properties = Properties(value.union(other.value))
+
+  def removedAll(other: Properties): Properties = Properties(value.removedAll(other.value))
+
+  def ++(other: Properties): Properties = union(other)
+
+  def --(other: Properties): Properties = removedAll(other)
+
+  def intersect(properties: Properties): Properties = Properties(value.intersect(properties.value))
+
+  def isEmpty(): Boolean = value.isEmpty
+
+  def contains(property: NonEmptyString): Boolean = value.contains(property)
+
+  def format(): String = value.mkString(", ")
 }
 
 

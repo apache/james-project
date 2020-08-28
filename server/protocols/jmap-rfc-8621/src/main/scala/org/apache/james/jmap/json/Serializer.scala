@@ -25,6 +25,8 @@ import java.time.format.DateTimeFormatter
 
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.collection.NonEmpty
+import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
@@ -238,8 +240,11 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
       })
     }
 
-  implicit def mailboxWrites(properties: Set[String]): Writes[Mailbox] = Json.writes[Mailbox]
-    .transform((o: JsObject) => JsObject(o.fields.filter(entry => properties.contains(entry._1))))
+  implicit def mailboxWrites(properties: Properties): Writes[Mailbox] = Json.writes[Mailbox]
+    .transform((o: JsObject) => JsObject(o.fields.filter(entry => {
+      val refined: Either[String, NonEmptyString] = refineV[NonEmpty](entry._1)
+      refined.fold(e => throw new RuntimeException(e), property => properties.contains(property))
+    })))
 
   implicit def mailboxCreationResponseWrites(properties: Set[String]): Writes[MailboxCreationResponse] =
     Json.writes[MailboxCreationResponse]
@@ -363,7 +368,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
       })
     }
 
-  private def mailboxWritesWithFilteredProperties(properties: Option[Properties], capabilities: Set[CapabilityIdentifier]): Writes[Mailbox] = {
+  private def mailboxWritesWithFilteredProperties(properties: Properties, capabilities: Set[CapabilityIdentifier]): Writes[Mailbox] = {
     mailboxWrites(Mailbox.propertiesFiltered(properties, capabilities))
   }
 
@@ -409,7 +414,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   def serialize(mailboxGetResponse: MailboxGetResponse)(implicit mailboxWrites: Writes[Mailbox]): JsValue = Json.toJson(mailboxGetResponse)
 
-  def serialize(mailboxGetResponse: MailboxGetResponse, properties: Option[Properties], capabilities: Set[CapabilityIdentifier]): JsValue =
+  def serialize(mailboxGetResponse: MailboxGetResponse, properties: Properties, capabilities: Set[CapabilityIdentifier]): JsValue =
     serialize(mailboxGetResponse)(mailboxWritesWithFilteredProperties(properties, capabilities))
 
   def serialize(mailboxSetResponse: MailboxSetResponse)

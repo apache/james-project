@@ -73,17 +73,18 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asMailboxGetRequest(invocation.arguments)
         .flatMap(mailboxGetRequest => {
-          mailboxGetRequest.properties match {
-            case Some(properties) if !properties.asSetOfString.subsetOf(Mailbox.allProperties) =>
-              SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
-                description = s"The following properties [${properties.asSetOfString.diff(Mailbox.allProperties).mkString(", ")}] do not exist.",
-                methodCallId = invocation.methodCallId))
-            case _ => getMailboxes(capabilities, mailboxGetRequest, processingContext, mailboxSession)
+          val requestedProperties: Properties = mailboxGetRequest.properties.getOrElse(Mailbox.allProperties)
+          requestedProperties -- Mailbox.allProperties match {
+            case invalidProperties if invalidProperties.isEmpty() => getMailboxes(capabilities, mailboxGetRequest, processingContext, mailboxSession)
               .reduce(MailboxGetResults.empty(), MailboxGetResults.merge)
               .map(mailboxes => mailboxes.asResponse(mailboxGetRequest.accountId))
               .map(mailboxGetResponse => Invocation(
                 methodName = methodName,
-                arguments = Arguments(serializer.serialize(mailboxGetResponse, mailboxGetRequest.properties, capabilities).as[JsObject]),
+                arguments = Arguments(serializer.serialize(mailboxGetResponse, requestedProperties, capabilities).as[JsObject]),
+                methodCallId = invocation.methodCallId))
+            case invalidProperties: Properties =>
+              SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
+                description = s"The following properties [${invalidProperties.format()}] do not exist.",
                 methodCallId = invocation.methodCallId))
           }
         }

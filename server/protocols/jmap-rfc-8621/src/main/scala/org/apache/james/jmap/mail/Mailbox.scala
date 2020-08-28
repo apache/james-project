@@ -147,22 +147,18 @@ case class Mailbox(id: MailboxId,
 }
 
 object Mailbox {
-  def allProperties: Set[String] = Set("id", "name", "parentId", "role", "sortOrder", "totalEmails", "unreadEmails",
-    "totalThreads", "unreadThreads", "myRights", "isSubscribed", "namespace", "rights", "quotas")
+  val allProperties: Properties = Properties(Set("id", "name", "parentId", "role", "sortOrder", "totalEmails", "unreadEmails",
+    "totalThreads", "unreadThreads", "myRights", "isSubscribed", "namespace", "rights", "quotas"))
+  val idProperty: Properties = Properties(Set("id"))
+  val propertiesForCapabilities: Map[CapabilityIdentifier, Properties] = Map(
+    CapabilityIdentifier.JAMES_QUOTA -> Properties(Set("quotas")),
+    CapabilityIdentifier.JAMES_SHARES -> Properties(Set("namespace", "rights")))
 
-  def propertiesFiltered(requestedProperties: Option[Properties], allowedCapabilities : Set[CapabilityIdentifier]) : Set[String] = {
-    val propertiesForCapabilities: Map[CapabilityIdentifier, Set[String]] = Map(
-      CapabilityIdentifier.JAMES_QUOTA -> Set("quotas"),
-      CapabilityIdentifier.JAMES_SHARES -> Set("namespace", "rights")
-    )
+  def propertiesFiltered(requestedProperties: Properties, allowedCapabilities : Set[CapabilityIdentifier]) : Properties = {
+    val propertiesToHide: Properties = propertiesForCapabilities.filterNot(entry => allowedCapabilities.contains(entry._1))
+      .values
+      .fold(Properties.empty())(_ ++ _)
 
-    val propertiesToHide = propertiesForCapabilities.filterNot(entry => allowedCapabilities.contains(entry._1))
-      .flatMap(_._2)
-      .toSet
-
-    requestedProperties match {
-      case None => allProperties -- propertiesToHide
-      case Some(requested) => (Set("id") ++ requested.value.map(_.toString()).toSet) -- propertiesToHide
-    }
+    (idProperty ++ requestedProperties) -- propertiesToHide
   }
 }

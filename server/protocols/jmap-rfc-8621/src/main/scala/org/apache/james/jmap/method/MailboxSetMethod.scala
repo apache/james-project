@@ -52,11 +52,11 @@ sealed trait CreationResult {
 case class CreationSuccess(mailboxCreationId: MailboxCreationId, mailboxCreationResponse: MailboxCreationResponse) extends CreationResult
 case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exception) extends CreationResult {
   def asMailboxSetError: MailboxSetError = exception match {
-    case e: MailboxNotFoundException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("parentId"))))
-    case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("name"))))
-    case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(List("name"))))
+    case e: MailboxNotFoundException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(Set("parentId"))))
+    case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(Set("name"))))
+    case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(Set("name"))))
     case e: MailboxCreationParseException => e.mailboxSetError
-    case _: InsufficientRightsException => MailboxSetError.forbidden(Some(SetErrorDescription("Insufficient rights")), Some(Properties(List("parentId"))))
+    case _: InsufficientRightsException => MailboxSetError.forbidden(Some(SetErrorDescription("Insufficient rights")), Some(Properties(Set("parentId"))))
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
 }
@@ -113,16 +113,16 @@ case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable, pat
 
   def asMailboxSetError: MailboxSetError = exception match {
     case e: MailboxNotFoundException => MailboxSetError.notFound(Some(SetErrorDescription(e.getMessage)))
-    case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), filter(Properties(List("name", "parentId"))))
-    case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), filter(Properties(List("name", "parentId"))))
-    case e: UnsupportedPropertyUpdatedException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated")), Some(Properties(List(e.property))))
-    case e: InvalidUpdateException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.cause}")), Some(Properties(List(e.property))))
-    case e: ServerSetPropertyException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Can not modify server-set properties")), Some(Properties(List(e.property))))
+    case e: MailboxNameException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), filter(Properties(Set("name", "parentId"))))
+    case e: MailboxExistsException => MailboxSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), filter(Properties(Set("name", "parentId"))))
+    case e: UnsupportedPropertyUpdatedException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated")), Some(Properties(Set(e.property))))
+    case e: InvalidUpdateException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.cause}")), Some(Properties(Set(e.property))))
+    case e: ServerSetPropertyException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Can not modify server-set properties")), Some(Properties(Set(e.property))))
     case e: InvalidPropertyException => MailboxSetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
     case e: InvalidPatchException => MailboxSetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
-    case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), filter(Properties(List("name", "parentId"))))
+    case e: SystemMailboxChangeException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), filter(Properties(Set("name", "parentId"))))
     case e: InsufficientRightsException => MailboxSetError.invalidArgument(Some(SetErrorDescription("Invalid change to a delegated mailbox")), None)
-    case e: MailboxHasChildException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.mailboxId.serialize()} parentId property cannot be updated as this mailbox has child mailboxes")), Some(Properties(List("parentId"))))
+    case e: MailboxHasChildException => MailboxSetError.invalidArgument(Some(SetErrorDescription(s"${e.mailboxId.serialize()} parentId property cannot be updated as this mailbox has child mailboxes")), Some(Properties(Set("parentId"))))
     case _ => MailboxSetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
   }
 }
