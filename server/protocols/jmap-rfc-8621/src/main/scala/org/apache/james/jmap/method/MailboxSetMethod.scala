@@ -53,12 +53,12 @@ sealed trait CreationResult {
 case class CreationSuccess(mailboxCreationId: MailboxCreationId, mailboxCreationResponse: MailboxCreationResponse) extends CreationResult
 case class CreationFailure(mailboxCreationId: MailboxCreationId, exception: Exception) extends CreationResult {
   def asMailboxSetError: SetError = exception match {
-    case e: MailboxNotFoundException => SetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(Set("parentId"))))
-    case e: MailboxExistsException => SetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(Set("name"))))
-    case e: MailboxNameException => SetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), Some(Properties(Set("name"))))
+    case e: MailboxNotFoundException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties(Set("parentId"))))
+    case e: MailboxExistsException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties(Set("name"))))
+    case e: MailboxNameException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties(Set("name"))))
     case e: MailboxCreationParseException => e.setError
-    case _: InsufficientRightsException => SetError.forbidden(Some(SetErrorDescription("Insufficient rights")), Some(Properties(Set("parentId"))))
-    case _ => SetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
+    case _: InsufficientRightsException => SetError.forbidden(SetErrorDescription("Insufficient rights"), Properties(Set("parentId")))
+    case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
   }
 }
 case class CreationResults(created: Seq[CreationResult]) {
@@ -82,12 +82,12 @@ sealed trait DeletionResult
 case class DeletionSuccess(mailboxId: MailboxId) extends DeletionResult
 case class DeletionFailure(mailboxId: UnparsedMailboxId, exception: Throwable) extends DeletionResult {
   def asMailboxSetError: SetError = exception match {
-    case e: MailboxNotFoundException => SetError.notFound(Some(SetErrorDescription(e.getMessage)))
-    case e: MailboxHasMailException => MailboxSetError.mailboxHasEmail(Some(SetErrorDescription(s"${e.mailboxId.serialize} is not empty")))
-    case e: MailboxHasChildException => MailboxSetError.mailboxHasChild(Some(SetErrorDescription(s"${e.mailboxId.serialize} has child mailboxes")))
-    case e: SystemMailboxChangeException => SetError.invalidArgument(Some(SetErrorDescription("System mailboxes cannot be destroyed")), None)
-    case e: IllegalArgumentException => SetError.invalidArgument(Some(SetErrorDescription(s"${mailboxId} is not a mailboxId: ${e.getMessage}")), None)
-    case _ => SetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
+    case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription(e.getMessage))
+    case e: MailboxHasMailException => MailboxSetError.mailboxHasEmail(SetErrorDescription(s"${e.mailboxId.serialize} is not empty"))
+    case e: MailboxHasChildException => MailboxSetError.mailboxHasChild(SetErrorDescription(s"${e.mailboxId.serialize} has child mailboxes"))
+    case e: SystemMailboxChangeException => SetError.invalidArguments(SetErrorDescription("System mailboxes cannot be destroyed"))
+    case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(s"${mailboxId} is not a mailboxId: ${e.getMessage}"))
+    case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
   }
 }
 case class DeletionResults(results: Seq[DeletionResult]) {
@@ -113,18 +113,18 @@ case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable, pat
     .getOrElse(acceptableProperties))
 
   def asMailboxSetError: SetError = exception match {
-    case e: MailboxNotFoundException => SetError.notFound(Some(SetErrorDescription(e.getMessage)))
-    case e: MailboxNameException => SetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), filter(Properties(Set("name", "parentId"))))
-    case e: MailboxExistsException => SetError.invalidArgument(Some(SetErrorDescription(e.getMessage)), filter(Properties(Set("name", "parentId"))))
-    case e: UnsupportedPropertyUpdatedException => SetError.invalidArgument(Some(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated")), Some(Properties(Set(e.property))))
-    case e: InvalidUpdateException => SetError.invalidArgument(Some(SetErrorDescription(s"${e.cause}")), Some(Properties(Set(e.property))))
-    case e: ServerSetPropertyException => SetError.invalidArgument(Some(SetErrorDescription("Can not modify server-set properties")), Some(Properties(Set(e.property))))
-    case e: InvalidPropertyException => SetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
-    case e: InvalidPatchException => SetError.invalidPatch(Some(SetErrorDescription(s"${e.cause}")))
-    case e: SystemMailboxChangeException => SetError.invalidArgument(Some(SetErrorDescription("Invalid change to a system mailbox")), filter(Properties(Set("name", "parentId"))))
-    case e: InsufficientRightsException => SetError.invalidArgument(Some(SetErrorDescription("Invalid change to a delegated mailbox")), None)
-    case e: MailboxHasChildException => SetError.invalidArgument(Some(SetErrorDescription(s"${e.mailboxId.serialize()} parentId property cannot be updated as this mailbox has child mailboxes")), Some(Properties(Set("parentId"))))
-    case _ => SetError.serverFail(Some(SetErrorDescription(exception.getMessage)), None)
+    case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription(e.getMessage))
+    case e: MailboxNameException => SetError.invalidArguments(SetErrorDescription(e.getMessage), filter(Properties(Set("name", "parentId"))))
+    case e: MailboxExistsException => SetError.invalidArguments(SetErrorDescription(e.getMessage), filter(Properties(Set("name", "parentId"))))
+    case e: UnsupportedPropertyUpdatedException => SetError.invalidArguments(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated"), Some(Properties(Set(e.property))))
+    case e: InvalidUpdateException => SetError.invalidArguments(SetErrorDescription(s"${e.cause}"), Some(Properties(Set(e.property))))
+    case e: ServerSetPropertyException => SetError.invalidArguments(SetErrorDescription("Can not modify server-set properties"), Some(Properties(Set(e.property))))
+    case e: InvalidPropertyException => SetError.invalidPatch(SetErrorDescription(s"${e.cause}"))
+    case e: InvalidPatchException => SetError.invalidPatch(SetErrorDescription(s"${e.cause}"))
+    case e: SystemMailboxChangeException => SetError.invalidArguments(SetErrorDescription("Invalid change to a system mailbox"), filter(Properties(Set("name", "parentId"))))
+    case e: InsufficientRightsException => SetError.invalidArguments(SetErrorDescription("Invalid change to a delegated mailbox"))
+    case e: MailboxHasChildException => SetError.invalidArguments(SetErrorDescription(s"${e.mailboxId.serialize()} parentId property cannot be updated as this mailbox has child mailboxes"), Some(Properties(Set("parentId"))))
+    case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
   }
 }
 case class UpdateResults(results: Seq[UpdateResult]) {
@@ -378,10 +378,10 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
 
   private def mailboxSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): SetError =
     errors.head match {
-      case (path, Seq()) => SetError.invalidArgument(Some(SetErrorDescription(s"'$path' property in mailbox object is not valid")), None)
-      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => SetError("invalidArguments", Some(SetErrorDescription(s"Missing '$path' property in mailbox object")), None)
-      case (path, Seq(JsonValidationError(Seq(message)))) => SetError("invalidArguments", Some(SetErrorDescription(s"'$path' property in mailbox object is not valid: $message")), None)
-      case (path, _) => SetError.invalidArgument(Some(SetErrorDescription(s"Unknown error on property '$path'")), None)
+      case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in mailbox object is not valid"))
+      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => SetError.invalidArguments(SetErrorDescription(s"Missing '$path' property in mailbox object"))
+      case (path, Seq(JsonValidationError(Seq(message)))) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in mailbox object is not valid: $message"))
+      case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
     }
 
   private def createMailbox(mailboxSession: MailboxSession,

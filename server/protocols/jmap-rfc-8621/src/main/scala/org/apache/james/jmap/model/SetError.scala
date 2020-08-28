@@ -34,11 +34,11 @@ object SetError {
   val notFoundValue: SetErrorType = "notFound"
   val forbiddenValue: SetErrorType = "forbidden"
 
-  def invalidArgument(description: Option[SetErrorDescription], properties: Option[Properties]) = SetError(invalidArgumentValue, description, properties)
-  def serverFail(description: Option[SetErrorDescription], properties: Option[Properties]) = SetError(serverFailValue, description, properties)
-  def notFound(description: Option[SetErrorDescription]) = SetError(notFoundValue, description, None)
-  def invalidPatch(description: Option[SetErrorDescription]) = SetError(invalidPatchValue, description, None)
-  def forbidden(description: Option[SetErrorDescription], properties: Option[Properties]) = SetError(forbiddenValue, description, properties)
+  def invalidArguments(description: SetErrorDescription, properties: Option[Properties] = None) = SetError(invalidArgumentValue, description, properties)
+  def serverFail(description: SetErrorDescription) = SetError(serverFailValue, description, None)
+  def notFound(description: SetErrorDescription) = SetError(notFoundValue, description, None)
+  def invalidPatch(description: SetErrorDescription) = SetError(invalidPatchValue, description, None)
+  def forbidden(description: SetErrorDescription, properties: Properties) = SetError(forbiddenValue, description, Some(properties))
 }
 
-case class SetError(`type`: SetErrorType, description: Option[SetErrorDescription], properties: Option[Properties])
+case class SetError(`type`: SetErrorType, description: SetErrorDescription, properties: Option[Properties])

@@ -68,12 +68,12 @@ object MailboxCreationRequest {
   def validateProperties(jsObject: JsObject): Either[MailboxCreationParseException, JsObject] =
     (jsObject.keys.intersect(serverSetProperty), jsObject.keys.diff(knownProperties)) match {
       case (_, unknownProperties) if unknownProperties.nonEmpty =>
-        Left(MailboxCreationParseException(SetError.invalidArgument(
-          Some(SetErrorDescription("Some unknown properties were specified")),
+        Left(MailboxCreationParseException(SetError.invalidArguments(
+          SetErrorDescription("Some unknown properties were specified"),
           Some(toProperties(unknownProperties.toSet)))))
       case (specifiedServerSetProperties, _) if specifiedServerSetProperties.nonEmpty =>
-        Left(MailboxCreationParseException(SetError.invalidArgument(
-          Some(SetErrorDescription("Some server-set properties were specified")),
+        Left(MailboxCreationParseException(SetError.invalidArguments(
+          SetErrorDescription("Some server-set properties were specified"),
           Some(toProperties(specifiedServerSetProperties.toSet)))))
       case _ => scala.Right(jsObject)
     }
@@ -235,8 +235,8 @@ case class MailboxSetResponse(accountId: AccountId,
 object MailboxSetError {
   val mailboxHasEmailValue: SetErrorType = "mailboxHasEmail"
   val mailboxHasChildValue: SetErrorType = "mailboxHasChild"
-  def mailboxHasEmail(description: Option[SetErrorDescription]) = SetError(mailboxHasEmailValue, description, None)
-  def mailboxHasChild(description: Option[SetErrorDescription]) = SetError(mailboxHasChildValue, description, None)
+  def mailboxHasEmail(description: SetErrorDescription) = SetError(mailboxHasEmailValue, description, None)
+  def mailboxHasChild(description: SetErrorDescription) = SetError(mailboxHasChildValue, description, None)
 }
 
 object MailboxCreationResponse {
