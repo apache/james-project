@@ -24,9 +24,10 @@ import java.net.URL
 import java.time.format.DateTimeFormatter
 
 import eu.timepit.refined._
+import eu.timepit.refined.collection.NonEmpty
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
-import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
+import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId, UnparsedMailboxIdConstraint}
 import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
 import org.apache.james.jmap.mail.{DelegatedNamespace, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
 import org.apache.james.jmap.model
@@ -237,17 +238,17 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   implicit val mailboxCreationRequest: Reads[MailboxCreationRequest] = Json.reads[MailboxCreationRequest]
   private implicit val mailboxPatchObject: Reads[MailboxPatchObject] = Json.valueReads[MailboxPatchObject]
 
-  private implicit val mapPatchObjectByMailboxIdReads: Reads[Map[UnparsedMailboxId, MailboxPatchObject]] = _.validate[Map[String, MailboxPatchObject]]
+  private def readMapEntry[K, V](keyValidator: String => Either[String, K], valueTransformer: JsObject => V): Reads[Map[K, V]] = _.validate[Map[String, JsObject]]
     .flatMap(mapWithStringKey =>{
       mapWithStringKey
-        .foldLeft[Either[JsError, Map[UnparsedMailboxId, MailboxPatchObject]]](scala.util.Right[JsError, Map[UnparsedMailboxId, MailboxPatchObject]](Map.empty))((acc: Either[JsError, Map[UnparsedMailboxId, MailboxPatchObject]], keyValue) => {
+        .foldLeft[Either[JsError, Map[K, V]]](scala.util.Right[JsError, Map[K, V]](Map.empty))((acc: Either[JsError, Map[K, V]], keyValue) => {
           acc match {
             case error@Left(_) => error
             case scala.util.Right(validatedAcc) =>
-              val refinedKey: Either[String, UnparsedMailboxId] = refineV(keyValue._1)
+              val refinedKey: Either[String, K] = keyValidator.apply(keyValue._1)
               refinedKey match {
                 case Left(error) => Left(JsError(error))
-                case scala.util.Right(unparsedMailboxId) => scala.util.Right(validatedAcc + (unparsedMailboxId -> keyValue._2))
+                case scala.util.Right(unparsedK) => scala.util.Right(validatedAcc + (unparsedK -> valueTransformer.apply(keyValue._2)))
               }
           }
         }) match {
@@ -256,24 +257,12 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
       }
     })
 
-  private implicit val mapCreationRequestByMailBoxCreationId: Reads[Map[MailboxCreationId, JsObject]] = _.validate[Map[String, JsObject]]
-    .flatMap(mapWithStringKey => {
-      mapWithStringKey
-        .foldLeft[Either[JsError, Map[MailboxCreationId, JsObject]]](scala.util.Right[JsError, Map[MailboxCreationId, JsObject]](Map.empty))((acc: Either[JsError, Map[MailboxCreationId, JsObject]], keyValue) => {
-          acc match {
-            case error@Left(_) => error
-            case scala.util.Right(validatedAcc) =>
-              val refinedKey: Either[String, MailboxCreationId] = refineV(keyValue._1)
-              refinedKey match {
-                case Left(error) => Left(JsError(error))
-                case scala.util.Right(mailboxCreationId) => scala.util.Right(validatedAcc + (mailboxCreationId -> keyValue._2))
-              }
-          }
-        }) match {
-        case Left(jsError) => jsError
-        case scala.util.Right(value) => JsSuccess(value)
-      }
-    })
+  private implicit val mapPatchObjectByMailboxIdReads: Reads[Map[UnparsedMailboxId, MailboxPatchObject]] =
+    readMapEntry[UnparsedMailboxId, MailboxPatchObject](s => refineV[UnparsedMailboxIdConstraint](s),
+      o => MailboxPatchObject(o.value.toMap))
+
+  private implicit val mapCreationRequestByMailBoxCreationId: Reads[Map[MailboxCreationId, JsObject]] =
+    readMapEntry[MailboxCreationId, JsObject](s => refineV[NonEmpty](s), o => o)
 
   private implicit val mailboxSetRequestReads: Reads[MailboxSetRequest] = Json.reads[MailboxSetRequest]
 
@@ -331,7 +320,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val utcDateWrites: Writes[UTCDate] =
     utcDate => JsString(utcDate.asUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")))
 
-  private implicit val vacationResponseIdWrites: Writes[VacationResponseId] = _ => JsString(VACATION_RESPONSE_ID)
+  private implicit val vacationResponseIdWrites: Writes[VacationResponseId] = _ => JsString(VACATION_RESPONSE_ID.value)
   private implicit val isEnabledWrites: Writes[IsEnabled] = Json.valueWrites[IsEnabled]
   private implicit val fromDateWrites: Writes[FromDate] = Json.valueWrites[FromDate]
   private implicit val toDateWrites: Writes[ToDate] = Json.valueWrites[ToDate]
