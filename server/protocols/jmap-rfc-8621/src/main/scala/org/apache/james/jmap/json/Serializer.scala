@@ -24,7 +24,6 @@ import java.net.URL
 import java.time.format.DateTimeFormatter
 
 import eu.timepit.refined._
-import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
@@ -51,13 +50,16 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val serverIdFormat: Format[ServerId] = Json.valueFormat[ServerId]
   private implicit val createdIdsFormat: Format[CreatedIds] = Json.valueFormat[CreatedIds]
 
-  private implicit def createdIdsIdWrites(implicit serverIdWriter: Writes[ServerId]): Writes[Map[ClientId, ServerId]] =
-    (ids: Map[ClientId, ServerId]) => {
+  private def mapWrites[K, V](keyWriter: K => String, valueWriter: Writes[V]): Writes[Map[K, V]] =
+    (ids: Map[K, V]) => {
       ids.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (clientId: ClientId, serverId: ServerId) = kv
-        jsObject.+(clientId.value.value, serverIdWriter.writes(serverId))
+        val (key: K, value: V) = kv
+        jsObject.+(keyWriter.apply(key), valueWriter.writes(value))
       })
     }
+
+  private implicit def createdIdsIdWrites(implicit serverIdWriter: Writes[ServerId]): Writes[Map[ClientId, ServerId]] =
+    mapWrites[ClientId, ServerId](_.value.value, serverIdWriter)
 
   private implicit def createdIdsIdRead(implicit serverIdReader: Reads[ServerId]): Reads[Map[ClientId, ServerId]] =
     Reads.mapReads[ClientId, ServerId] {
@@ -131,13 +133,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(capabilities.toSet)
 
   private implicit val accountIdWrites: Format[AccountId] = Json.valueFormat[AccountId]
-  private implicit def identifierMapWrite[Any](implicit idWriter: Writes[AccountId]): Writes[Map[CapabilityIdentifier, Any]] =
-    (m: Map[CapabilityIdentifier, Any]) => {
-      m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (identifier: CapabilityIdentifier, id: AccountId) = kv
-        jsObject.+(identifier.value, idWriter.writes(id))
-      })
-    }
+  private implicit def identifierMapWrite[Any](implicit idWriter: Writes[AccountId]): Writes[Map[CapabilityIdentifier, AccountId]] =
+    mapWrites[CapabilityIdentifier, AccountId](_.value, idWriter)
 
   private implicit val isPersonalFormat: Format[IsPersonal] = Json.valueFormat[IsPersonal]
   private implicit val isReadOnlyFormat: Format[IsReadOnly] = Json.valueFormat[IsReadOnly]
@@ -207,12 +204,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val rightsReads: Reads[Rights] = json => mapRightsReads.reads(json).map(rawMap => Rights(rawMap))
 
   private implicit def rightsMapWrites(implicit rightWriter: Writes[Seq[Right]]): Writes[Map[Username, Seq[Right]]] =
-    (m: Map[Username, Seq[Right]]) => {
-      m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (username: Username, rights: Seq[Right]) = kv
-        jsObject.+(username.asString, rightWriter.writes(rights))
-      })
-    }
+    mapWrites[Username, Seq[Right]](_.asString(), rightWriter)
 
   private implicit val domainWrites: Writes[Domain] = domain => JsString(domain.asString)
   private implicit val quotaRootWrites: Writes[QuotaRoot] = Json.writes[QuotaRoot]
@@ -222,22 +214,12 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val quotaWrites: Writes[Quota] = Json.valueWrites[Quota]
 
   private implicit def quotaMapWrites(implicit valueWriter: Writes[Value]): Writes[Map[Quotas.Type, Value]] =
-    (m: Map[Quotas.Type, Value]) => {
-      m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (quotaType: Quotas.Type, value: Value) = kv
-        jsObject.+(quotaType.toString, valueWriter.writes(value))
-      })
-    }
+    mapWrites[Quotas.Type, Value](_.toString, valueWriter)
 
   private implicit val quotasWrites: Writes[Quotas] = Json.valueWrites[Quotas]
 
   private implicit def quotasMapWrites(implicit quotaWriter: Writes[Quota]): Writes[Map[QuotaId, Quota]] =
-    (m: Map[QuotaId, Quota]) => {
-      m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (quotaId: QuotaId, quota: Quota) = kv
-        jsObject.+(quotaId.getName, quotaWriter.writes(quota))
-      })
-    }
+    mapWrites[QuotaId, Quota](_.getName, quotaWriter)
 
   implicit def mailboxWrites(properties: Properties): Writes[Mailbox] = Json.writes[Mailbox]
     .transform(properties.filter(_))
@@ -311,41 +293,15 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val mailboxSetErrorWrites: Writes[SetError] = Json.writes[SetError]
 
   private implicit def mailboxMapSetErrorForCreationWrites: Writes[Map[MailboxCreationId, SetError]] =
-    (m: Map[MailboxCreationId, SetError]) => {
-      m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (mailboxCreationId: MailboxCreationId, mailboxSetError: SetError) = kv
-        jsObject.+(mailboxCreationId, mailboxSetErrorWrites.writes(mailboxSetError))
-      })
-    }
+    mapWrites[MailboxCreationId, SetError](_.value, mailboxSetErrorWrites)
   private implicit def mailboxMapSetErrorWrites: Writes[Map[MailboxId, SetError]] =
-    (m: Map[MailboxId, SetError]) => {
-      m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (mailboxId: MailboxId, mailboxSetError: SetError) = kv
-        jsObject.+(mailboxId.serialize(), mailboxSetErrorWrites.writes(mailboxSetError))
-      })
-    }
+    mapWrites[MailboxId, SetError](_.serialize(), mailboxSetErrorWrites)
   private implicit def mailboxMapSetErrorWritesByClientId: Writes[Map[ClientId, SetError]] =
-    (m: Map[ClientId, SetError]) => {
-      m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (clientId: ClientId, mailboxSetError: SetError) = kv
-        jsObject.+(clientId.value, mailboxSetErrorWrites.writes(mailboxSetError))
-      })
-    }
-
+    mapWrites[ClientId, SetError](_.value.value, mailboxSetErrorWrites)
   private implicit def mailboxMapCreationResponseWrites(implicit mailboxSetCreationResponseWrites: Writes[MailboxCreationResponse]): Writes[Map[MailboxCreationId, MailboxCreationResponse]] =
-    (m: Map[MailboxCreationId, MailboxCreationResponse]) => {
-      m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (mailboxCreationId: MailboxCreationId, mailboxCreationResponse: MailboxCreationResponse) = kv
-        jsObject.+(mailboxCreationId, mailboxSetCreationResponseWrites.writes(mailboxCreationResponse))
-      })
-    }
+    mapWrites[MailboxCreationId, MailboxCreationResponse](_.value, mailboxSetCreationResponseWrites)
   private implicit def mailboxMapUpdateResponseWrites: Writes[Map[MailboxId, MailboxUpdateResponse]] =
-    (m: Map[MailboxId, MailboxUpdateResponse]) => {
-      m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (mailboxId: MailboxId, mailboxUpdateResponse: MailboxUpdateResponse) = kv
-        jsObject.+(mailboxId.serialize(), mailboxSetUpdateResponseWrites.writes(mailboxUpdateResponse))
-      })
-    }
+    mapWrites[MailboxId, MailboxUpdateResponse](_.serialize(), mailboxSetUpdateResponseWrites)
 
   private implicit val jsonValidationErrorWrites: Writes[JsonValidationError] = error => JsString(error.message)
 
