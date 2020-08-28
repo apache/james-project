@@ -27,7 +27,7 @@ import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{CapabilityIdentifier, ErrorCode, Invocation, MailboxFactory}
+import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MailboxFactory}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.utils.quotas.{QuotaLoader, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
@@ -49,6 +49,8 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
   override val methodName: MethodName = MethodName("Mailbox/get")
 
   object MailboxGetResults {
+    def merge(result1: MailboxGetResults, result2: MailboxGetResults): MailboxGetResults = result1.merge(result2)
+    def empty(): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set.empty))
     def found(mailbox: Mailbox): MailboxGetResults = MailboxGetResults(Set(mailbox), NotFound(Set.empty))
     def notFound(mailboxId: UnparsedMailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(mailboxId)))
     def notFound(mailboxId: MailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(MailboxSetRequest.asUnparsed(mailboxId))))
@@ -56,6 +58,12 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
 
   case class MailboxGetResults(mailboxes: Set[Mailbox], notFound: NotFound) {
     def merge(other: MailboxGetResults): MailboxGetResults = MailboxGetResults(this.mailboxes ++ other.mailboxes, this.notFound.merge(other.notFound))
+
+    def asResponse(accountId: AccountId): MailboxGetResponse = MailboxGetResponse(
+      accountId = accountId,
+      state = INSTANCE,
+      list = mailboxes.toList.sortBy(_.sortOrder),
+      notFound = notFound)
   }
 
   override def process(capabilities: Set[CapabilityIdentifier],
@@ -71,12 +79,8 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
                 description = s"The following properties [${properties.asSetOfString.diff(Mailbox.allProperties).mkString(", ")}] do not exist.",
                 methodCallId = invocation.methodCallId))
             case _ => getMailboxes(capabilities, mailboxGetRequest, processingContext, mailboxSession)
-              .reduce(MailboxGetResults(Set.empty, NotFound(Set.empty)), (result1: MailboxGetResults, result2: MailboxGetResults) => result1.merge(result2))
-              .map(mailboxes => MailboxGetResponse(
-                accountId = mailboxGetRequest.accountId,
-                state = INSTANCE,
-                list = mailboxes.mailboxes.toList.sortBy(_.sortOrder),
-                notFound = mailboxes.notFound))
+              .reduce(MailboxGetResults.empty(), MailboxGetResults.merge)
+              .map(mailboxes => mailboxes.asResponse(mailboxGetRequest.accountId))
               .map(mailboxGetResponse => Invocation(
                 methodName = methodName,
                 arguments = Arguments(serializer.serialize(mailboxGetResponse, mailboxGetRequest.properties, capabilities).as[JsObject]),
