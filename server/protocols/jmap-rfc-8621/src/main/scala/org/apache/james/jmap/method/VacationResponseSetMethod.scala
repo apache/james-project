@@ -24,6 +24,7 @@ import javax.inject.Inject
 import org.apache.james.jmap.api.vacation.{AccountId, VacationRepository}
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.SetErrorDescription
+import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{Invocation, State}
@@ -41,19 +42,23 @@ sealed trait UpdateResult {
   def notUpdated: Option[Map[String, VacationResponseSetError]]
 }
 case class UpdateSuccess() extends UpdateResult {
-  override def updated: Option[Map[String, VacationResponseUpdateResponse]] = Some(Map("singleton" -> VacationResponseUpdateResponse(JsObject(Seq()))))
+  override def updated: Option[Map[String, VacationResponseUpdateResponse]] = Some(Map(VACATION_RESPONSE_PATCH_OBJECT_KEY -> VacationResponseUpdateResponse(JsObject(Seq()))))
 
   override def notUpdated: Option[Map[String, VacationResponseSetError]] = None
 }
 case class UpdateFailure(exception: Throwable) extends UpdateResult {
   override def updated: Option[Map[String, VacationResponseUpdateResponse]] = None
 
-  override def notUpdated: Option[Map[String, VacationResponseSetError]] = Some(Map("singleton" -> asSetError(exception)))
+  override def notUpdated: Option[Map[String, VacationResponseSetError]] = Some(Map(VACATION_RESPONSE_PATCH_OBJECT_KEY -> asSetError(exception)))
 
   def asSetError(exception: Throwable): VacationResponseSetError = exception match {
       case e: IllegalArgumentException => VacationResponseSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)))
       case e: Throwable => VacationResponseSetError.serverFail(Some(SetErrorDescription(e.getMessage)))
     }
+}
+
+object VacationResponseSetMethod {
+  val VACATION_RESPONSE_PATCH_OBJECT_KEY = "singleton"
 }
 
 class VacationResponseSetMethod @Inject() (serializer: Serializer,

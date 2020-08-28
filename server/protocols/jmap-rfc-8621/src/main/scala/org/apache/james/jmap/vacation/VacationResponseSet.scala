@@ -33,6 +33,14 @@ import play.api.libs.json.{JsBoolean, JsNull, JsObject, JsString, JsValue}
 case class VacationResponseSetRequest(accountId: AccountId,
                                update: Map[String, VacationResponsePatchObject]) {
   def parsePatch(): Either[IllegalArgumentException, VacationResponsePatchObject] = {
+    if(update.isEmpty) {
+      return Left(new IllegalArgumentException("Patch object must be present"))
+    }
+
+    if(update.size > 1) {
+      return Left(new IllegalArgumentException("Only one patch object is allowed"))
+    }
+
     update.map({
       case (id, patch) => id match {
         case "singleton" => Right(patch)
@@ -71,7 +79,15 @@ case class VacationResponsePatchObject(jsObject: JsObject) {
       .build()
 
     maybeError.map(e => Left(e))
-      .getOrElse(Right(patch))
+      .getOrElse(validatePatch(patch))
+  }
+
+  private def validatePatch(patch: VacationPatch): Either[IllegalArgumentException, VacationPatch] = {
+    if(patch.getFromDate.isModified && patch.getToDate.isModified && patch.getFromDate.get().isAfter(patch.getToDate.get())) {
+      Left(new IllegalArgumentException("fromDate must be after toDate"))
+    } else {
+      Right(patch)
+    }
   }
 
   private def asVacationPatch(entry: (String, JsValue)): Either[IllegalArgumentException, VacationPatch.Builder] = entry match {

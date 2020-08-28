@@ -114,8 +114,8 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateUpdateShouldBeIdempotentWhenEmptyPatchObject(server: GuiceJamesServer): Unit = {
-    val request =
+  def updateShouldBeIdempotentWhenEmptyPatchObject(server: GuiceJamesServer): Unit = {
+    val request1 =
       s"""
          |{
          |   "using": [ "urn:ietf:params:jmap:core",
@@ -127,7 +127,40 @@ trait VacationResponseSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "singleton": {
+         |                      "isEnabled": true,
+         |                      "fromDate": "2014-10-30T14:12:00Z",
+         |                      "toDate": "2014-11-30T14:12:00Z",
+         |                      "subject": "I am in vacation",
+         |                      "textBody": "I'm currently enjoying life. Please disturb me later",
+         |                      "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
          |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request1)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+
+    val request2 =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core",
+         |     "urn:ietf:params:jmap:mail",
+         |     "urn:ietf:params:jmap:vacationresponse" ],
+         |   "methodCalls": [
+         |       ["VacationResponse/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "singleton": {}
          |                }
          |           },
          |    "c1"]]
@@ -136,10 +169,10 @@ trait VacationResponseSetMethodContract {
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-      .when
+      .body(request2)
+    .when
       .post
-      .`then`
+    .`then`
       .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
@@ -165,12 +198,12 @@ trait VacationResponseSetMethodContract {
 
     //Should be replaced with vacation/get method when available
     assertSoftly(softly => {
-      softly.assertThat(vacation.isEnabled).isEqualTo(false)
-      softly.assertThat(vacation.getFromDate).isEmpty
-      softly.assertThat(vacation.getToDate).isEmpty
-      softly.assertThat(vacation.getSubject).isEmpty
-      softly.assertThat(vacation.getTextBody).isEmpty
-      softly.assertThat(vacation.getHtmlBody).isEmpty
+      softly.assertThat(vacation.isEnabled).isEqualTo(true)
+      softly.assertThat(vacation.getFromDate.get()).isEqualTo("2014-10-30T14:12:00Z")
+      softly.assertThat(vacation.getToDate.get()).isEqualTo("2014-11-30T14:12:00Z")
+      softly.assertThat(vacation.getSubject.get()).isEqualTo("I am in vacation")
+      softly.assertThat(vacation.getTextBody.get()).isEqualTo("I'm currently enjoying life. Please disturb me later")
+      softly.assertThat(vacation.getHtmlBody.get()).isEqualTo("I'm currently enjoying <b>life</b>. <br/>Please disturb me later")
     })
   }
 
@@ -459,7 +492,118 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  @Disabled("not implemented yet")
+  def updateShouldFailWhenFromDateIsAfterToDate(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core",
+         |     "urn:ietf:params:jmap:mail",
+         |     "urn:ietf:params:jmap:vacationresponse" ],
+         |   "methodCalls": [
+         |       ["VacationResponse/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "singleton": {
+         |                      "fromDate": "2014-11-30T14:12:00Z",
+         |                      "toDate": "2014-10-30T14:12:00Z"
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		[
+         |			"VacationResponse/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"newState": "000001",
+         |				"notUpdated": {
+         |					"singleton": {
+         |						"type": "invalidArguments",
+         |						"description": "fromDate must be after toDate"
+         |					}
+         |				}
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def updateShouldFailWhenEmptyMap(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core",
+         |     "urn:ietf:params:jmap:mail",
+         |     "urn:ietf:params:jmap:vacationresponse" ],
+         |   "methodCalls": [
+         |       ["VacationResponse/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		[
+         |			"VacationResponse/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"newState": "000001",
+         |				"notUpdated": {
+         |					"singleton": {
+         |						"type": "invalidArguments",
+         |						"description": "Patch object must be present"
+         |					}
+         |				}
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
   def updateShouldFailWhenMultiplePatchObjects(server: GuiceJamesServer): Unit = {
     val request =
       s"""
@@ -475,7 +619,7 @@ trait VacationResponseSetMethodContract {
          |                    "singleton": {
          |                      "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
          |                    },
-         |                    "singleton": {
+         |                    "singleton2": {
          |                      "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
          |                    }
          |                }
@@ -509,7 +653,121 @@ trait VacationResponseSetMethodContract {
          |				"notUpdated": {
          |					"singleton": {
          |						"type": "invalidArguments",
-         |						"description": "java.time.format.DateTimeParseException: Text '2014/12/30' could not be parsed at index 4"
+         |						"description": "Only one patch object is allowed"
+         |					}
+         |				}
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  @Disabled("Not implemented yet")
+  def createShouldFail(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core",
+         |     "urn:ietf:params:jmap:mail",
+         |     "urn:ietf:params:jmap:vacationresponse" ],
+         |   "methodCalls": [
+         |       ["VacationResponse/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "create": {
+         |                    "singleton": {
+         |                      "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
+         |                    }
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		[
+         |			"VacationResponse/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"newState": "000001",
+         |				"notCreated": {
+         |					"singleton": {
+         |						"type": "invalidArguments",
+         |						"description": ""
+         |					}
+         |				}
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  @Disabled("Not implemented yet")
+  def destroyShouldFail(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core",
+         |     "urn:ietf:params:jmap:mail",
+         |     "urn:ietf:params:jmap:vacationresponse" ],
+         |   "methodCalls": [
+         |       ["VacationResponse/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "destroy": {
+         |                    "singleton": {}
+         |                }
+         |           },
+         |    "c1"]]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |	"sessionState": "75128aab4b1b",
+         |	"methodResponses": [
+         |		[
+         |			"VacationResponse/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"newState": "000001",
+         |				"notDestroyed": {
+         |					"singleton": {
+         |						"type": "invalidArguments",
+         |						"description": ""
          |					}
          |				}
          |			},
