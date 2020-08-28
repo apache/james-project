@@ -25,9 +25,9 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.core.Username
 import org.apache.james.jmap.mail.MailboxName.MailboxName
-import org.apache.james.jmap.model.CapabilityIdentifier
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
+import org.apache.james.jmap.model.{CapabilityIdentifier, Properties}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 

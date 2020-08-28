@@ -27,7 +27,7 @@ import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MailboxFactory}
+import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MailboxFactory, Properties}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.utils.quotas.{QuotaLoader, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException

@@ -33,7 +33,7 @@ import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, Unparsed
 import org.apache.james.jmap.method.MailboxCreationParseException
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier}
+import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, Properties}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.{MailboxSession, Role}

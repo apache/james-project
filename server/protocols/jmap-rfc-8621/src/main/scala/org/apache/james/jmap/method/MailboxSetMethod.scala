@@ -23,10 +23,10 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
-import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, Properties, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
+import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, RemoveEmailsOnDestroy, ServerSetPropertyException, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, State}
+import org.apache.james.jmap.model.{ClientId, Id, Invocation, Properties, ServerId, State}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.utils.quotas.QuotaLoaderWithPreloadedDefaultFactory
 import org.apache.james.mailbox.MailboxManager.RenameOption

@@ -17,23 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.model
 
-import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
-import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, Properties}
+import eu.timepit.refined.types.string.NonEmptyString
 
-case class Ids(value: List[UnparsedMailboxId])
-
-case class MailboxGetRequest(accountId: AccountId,
-                             ids: Option[Ids],
-                             properties: Option[Properties])
-
-case class NotFound(value: Set[UnparsedMailboxId]) {
-  def merge(other: NotFound): NotFound = NotFound(this.value ++ other.value)
+object Properties {
+  def empty(): Properties = Properties(Set())
 }
 
-case class MailboxGetResponse(accountId: AccountId,
-                              state: State,
-                              list: List[Mailbox],
-                              notFound: NotFound)
+case class Properties(value: Set[NonEmptyString]) {
+  def union(other: Properties): Properties = Properties(value.union(other.value))
+
+  def removedAll(other: Properties): Properties = Properties(value.removedAll(other.value))
+
+  def ++(other: Properties): Properties = union(other)
+
+  def --(other: Properties): Properties = removedAll(other)
+
+  def intersect(properties: Properties): Properties = Properties(value.intersect(properties.value))
+
+  def isEmpty(): Boolean = value.isEmpty
+
+  def contains(property: NonEmptyString): Boolean = value.contains(property)
+
+  def format(): String = value.mkString(", ")
+}

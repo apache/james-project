@@ -26,7 +26,7 @@ import org.apache.james.jmap.json.MailboxGetSerializationTest._
 import org.apache.james.jmap.json.MailboxSerializationTest.MAILBOX
 import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.mail._
-import org.apache.james.jmap.model.AccountId
+import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
