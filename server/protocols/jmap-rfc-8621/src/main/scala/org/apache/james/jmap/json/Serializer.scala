@@ -25,8 +25,6 @@ import java.time.format.DateTimeFormatter
 
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
-import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
@@ -242,14 +240,11 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
     }
 
   implicit def mailboxWrites(properties: Properties): Writes[Mailbox] = Json.writes[Mailbox]
-    .transform((o: JsObject) => JsObject(o.fields.filter(entry => {
-      val refined: Either[String, NonEmptyString] = refineV[NonEmpty](entry._1)
-      refined.fold(e => throw new RuntimeException(e), property => properties.contains(property))
-    })))
+    .transform(properties.filter(_))
 
-  implicit def mailboxCreationResponseWrites(properties: Set[String]): Writes[MailboxCreationResponse] =
+  implicit def mailboxCreationResponseWrites(properties: Properties): Writes[MailboxCreationResponse] =
     Json.writes[MailboxCreationResponse]
-      .transform((o: JsObject) => JsObject(o.fields.filter(entry => properties.contains(entry._1))))
+      .transform(properties.filter(_))
 
   private implicit val idsRead: Reads[Ids] = Json.valueReads[Ids]
   private implicit val propertiesRead: Reads[Properties] = Json.valueReads[Properties]

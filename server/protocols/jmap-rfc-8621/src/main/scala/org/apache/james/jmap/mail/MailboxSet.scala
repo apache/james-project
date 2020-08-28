@@ -240,16 +240,15 @@ object MailboxSetError {
 }
 
 object MailboxCreationResponse {
-  def allProperties: Set[String] = Set("id", "sortOrder", "role", "totalEmails", "unreadEmails",
-    "totalThreads", "unreadThreads", "myRights", "isSubscribed", "quotas")
+  val allProperties: Properties = Properties(Set("id", "sortOrder", "role", "totalEmails", "unreadEmails",
+    "totalThreads", "unreadThreads", "myRights", "isSubscribed", "quotas"))
+  val propertiesForCapabilities: Map[CapabilityIdentifier, Properties] = Map(
+    CapabilityIdentifier.JAMES_QUOTA -> Properties(Set("quotas")))
 
-  def propertiesFiltered(allowedCapabilities : Set[CapabilityIdentifier]) : Set[String] = {
-    val propertiesForCapabilities: Map[CapabilityIdentifier, Set[String]] = Map(
-      CapabilityIdentifier.JAMES_QUOTA -> Set("quotas"))
-
+  def propertiesFiltered(allowedCapabilities : Set[CapabilityIdentifier]) : Properties = {
     val propertiesToHide = propertiesForCapabilities.filterNot(entry => allowedCapabilities.contains(entry._1))
-      .flatMap(_._2)
-      .toSet
+      .values
+      .fold(Properties.empty()) (_ ++ _)
 
     allProperties -- propertiesToHide
   }
