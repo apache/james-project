@@ -18,11 +18,6 @@
  * ***************************************************************/
 package org.apache.james.jmap
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.collection.NonEmpty
-
 
 package object mail {
- type SetErrorType = String Refined NonEmpty
- case class SetErrorDescription(description: String) extends AnyVal
 }

@@ -32,8 +32,9 @@ import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
 import org.apache.james.jmap.method.MailboxCreationParseException
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.model.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, Properties}
+import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, Properties, SetError}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.{MailboxSession, Role}
@@ -67,11 +68,11 @@ object MailboxCreationRequest {
   def validateProperties(jsObject: JsObject): Either[MailboxCreationParseException, JsObject] =
     (jsObject.keys.intersect(serverSetProperty), jsObject.keys.diff(knownProperties)) match {
       case (_, unknownProperties) if unknownProperties.nonEmpty =>
-        Left(MailboxCreationParseException(MailboxSetError.invalidArgument(
+        Left(MailboxCreationParseException(SetError.invalidArgument(
           Some(SetErrorDescription("Some unknown properties were specified")),
           Some(toProperties(unknownProperties.toSet)))))
       case (specifiedServerSetProperties, _) if specifiedServerSetProperties.nonEmpty =>
-        Left(MailboxCreationParseException(MailboxSetError.invalidArgument(
+        Left(MailboxCreationParseException(SetError.invalidArgument(
           Some(SetErrorDescription("Some server-set properties were specified")),
           Some(toProperties(specifiedServerSetProperties.toSet)))))
       case _ => scala.Right(jsObject)
@@ -227,30 +228,16 @@ case class MailboxSetResponse(accountId: AccountId,
                               created: Option[Map[MailboxCreationId, MailboxCreationResponse]],
                               updated: Option[Map[MailboxId, MailboxUpdateResponse]],
                               destroyed: Option[Seq[MailboxId]],
-                              notCreated: Option[Map[MailboxCreationId, MailboxSetError]],
-                              notUpdated: Option[Map[UnparsedMailboxId, MailboxSetError]],
-                              notDestroyed: Option[Map[UnparsedMailboxId, MailboxSetError]])
+                              notCreated: Option[Map[MailboxCreationId, SetError]],
+                              notUpdated: Option[Map[UnparsedMailboxId, SetError]],
+                              notDestroyed: Option[Map[UnparsedMailboxId, SetError]])
 
 object MailboxSetError {
-  val invalidArgumentValue: SetErrorType = "invalidArguments"
-  val serverFailValue: SetErrorType = "serverFail"
-  val invalidPatchValue: SetErrorType = "invalidPatch"
-  val notFoundValue: SetErrorType = "notFound"
   val mailboxHasEmailValue: SetErrorType = "mailboxHasEmail"
   val mailboxHasChildValue: SetErrorType = "mailboxHasChild"
-  val forbiddenValue: SetErrorType = "forbidden"
-
-  def invalidArgument(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(invalidArgumentValue, description, properties)
-  def serverFail(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(serverFailValue, description, properties)
-  def notFound(description: Option[SetErrorDescription]) = MailboxSetError(notFoundValue, description, None)
-  def mailboxHasEmail(description: Option[SetErrorDescription]) = MailboxSetError(mailboxHasEmailValue, description, None)
-  def mailboxHasChild(description: Option[SetErrorDescription]) = MailboxSetError(mailboxHasChildValue, description, None)
-  def invalidPatch(description: Option[SetErrorDescription]) = MailboxSetError(invalidPatchValue, description, None)
-  def forbidden(description: Option[SetErrorDescription], properties: Option[Properties]) = MailboxSetError(forbiddenValue, description, properties)
+  def mailboxHasEmail(description: Option[SetErrorDescription]) = SetError(mailboxHasEmailValue, description, None)
+  def mailboxHasChild(description: Option[SetErrorDescription]) = SetError(mailboxHasChildValue, description, None)
 }
-
-case class MailboxSetError(`type`: SetErrorType, description: Option[SetErrorDescription], properties: Option[Properties])
-
 
 object MailboxCreationResponse {
   def allProperties: Set[String] = Set("id", "sortOrder", "role", "totalEmails", "unreadEmails",

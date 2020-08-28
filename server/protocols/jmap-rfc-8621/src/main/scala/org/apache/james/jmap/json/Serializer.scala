@@ -31,11 +31,11 @@ import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
 import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
-import org.apache.james.jmap.mail.{DelegatedNamespace, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Properties, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SetErrorDescription, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
-import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SetErrorDescription, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
+import org.apache.james.jmap.mail.{DelegatedNamespace, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
+import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxACL.{Right => JavaRight}
@@ -313,26 +313,26 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   private implicit val setErrorDescriptionWrites: Writes[SetErrorDescription] = Json.valueWrites[SetErrorDescription]
 
-  private implicit val mailboxSetErrorWrites: Writes[MailboxSetError] = Json.writes[MailboxSetError]
+  private implicit val mailboxSetErrorWrites: Writes[SetError] = Json.writes[SetError]
 
-  private implicit def mailboxMapSetErrorForCreationWrites: Writes[Map[MailboxCreationId, MailboxSetError]] =
-    (m: Map[MailboxCreationId, MailboxSetError]) => {
+  private implicit def mailboxMapSetErrorForCreationWrites: Writes[Map[MailboxCreationId, SetError]] =
+    (m: Map[MailboxCreationId, SetError]) => {
       m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (mailboxCreationId: MailboxCreationId, mailboxSetError: MailboxSetError) = kv
+        val (mailboxCreationId: MailboxCreationId, mailboxSetError: SetError) = kv
         jsObject.+(mailboxCreationId, mailboxSetErrorWrites.writes(mailboxSetError))
       })
     }
-  private implicit def mailboxMapSetErrorWrites: Writes[Map[MailboxId, MailboxSetError]] =
-    (m: Map[MailboxId, MailboxSetError]) => {
+  private implicit def mailboxMapSetErrorWrites: Writes[Map[MailboxId, SetError]] =
+    (m: Map[MailboxId, SetError]) => {
       m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (mailboxId: MailboxId, mailboxSetError: MailboxSetError) = kv
+        val (mailboxId: MailboxId, mailboxSetError: SetError) = kv
         jsObject.+(mailboxId.serialize(), mailboxSetErrorWrites.writes(mailboxSetError))
       })
     }
-  private implicit def mailboxMapSetErrorWritesByClientId: Writes[Map[ClientId, MailboxSetError]] =
-    (m: Map[ClientId, MailboxSetError]) => {
+  private implicit def mailboxMapSetErrorWritesByClientId: Writes[Map[ClientId, SetError]] =
+    (m: Map[ClientId, SetError]) => {
       m.foldLeft(JsObject.empty)((jsObject, kv) => {
-        val (clientId: ClientId, mailboxSetError: MailboxSetError) = kv
+        val (clientId: ClientId, mailboxSetError: SetError) = kv
         jsObject.+(clientId.value, mailboxSetErrorWrites.writes(mailboxSetError))
       })
     }
