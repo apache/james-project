@@ -366,7 +366,7 @@ trait VacationResponseSetMethodContract {
          |				"notUpdated": {
          |					"singleton": {
          |						"type": "invalidArguments",
-         |						"description": "id must be singleton"
+         |						"description": "id invalid must be singleton"
          |					}
          |				}
          |			},
@@ -653,7 +653,7 @@ trait VacationResponseSetMethodContract {
          |				"notUpdated": {
          |					"singleton": {
          |						"type": "invalidArguments",
-         |						"description": "Only one patch object is allowed"
+         |						"description": "id singleton2 must be singleton"
          |					}
          |				}
          |			},
