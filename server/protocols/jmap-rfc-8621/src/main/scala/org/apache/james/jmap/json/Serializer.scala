@@ -37,7 +37,7 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodNa
 import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{Account, Invocation, Session, _}
 import org.apache.james.jmap.routes.{BackReference, JsonPath}
-import org.apache.james.jmap.vacation.{FromDate, IsEnabled, ToDate, UTCDate, VacationResponseId, VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
+import org.apache.james.jmap.vacation.{VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxACL.{Right => JavaRight}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
@@ -46,7 +46,7 @@ import play.api.libs.json._
 
 import scala.collection.{Seq => LegacySeq}
 import scala.language.implicitConversions
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   // CreateIds
@@ -275,18 +275,14 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   private implicit val UTCDateReads: Reads[UTCDate] = {
     case JsString(value) =>
-      try {
-        JsSuccess(UTCDate(ZonedDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME)))
-      } catch {
-        case e: Throwable => JsError(e.getMessage)
+      Try(UTCDate(ZonedDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME))) match {
+        case Success(value) => JsSuccess(value)
+        case Failure(e) => JsError(e.getMessage)
       }
     case _ => JsError("Expecting js string to represent UTC Date")
   }
 
-  private implicit val UTCDateWrites: Writes[UTCDate] = date => JsString(DateTimeFormatter.ISO_DATE_TIME.format(date.value))
-  private implicit val fromDateFormat: Format[FromDate] = Json.valueFormat[FromDate]
-  private implicit val toDateFormat: Format[ToDate] = Json.valueFormat[ToDate]
-  private implicit val isEnabledFormat: Format[IsEnabled] = Json.valueFormat[IsEnabled]
+  private implicit val isEnabledReads: Reads[IsEnabled] = Json.valueReads[IsEnabled]
   private implicit val vacationResponsePatchObjectReads: Reads[VacationResponsePatchObject] = {
     case jsObject: JsObject => JsSuccess(VacationResponsePatchObject(jsObject))
     case _ => JsError("VacationResponsePatchObject needs to be represented by a JsObject")

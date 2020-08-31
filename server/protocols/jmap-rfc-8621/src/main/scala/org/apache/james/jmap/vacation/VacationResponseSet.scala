@@ -22,41 +22,27 @@ package org.apache.james.jmap.vacation
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+import org.apache.james.jmap.api.vacation.Vacation.ID
 import org.apache.james.jmap.api.vacation.VacationPatch
-import org.apache.james.jmap.mail.MailboxSetError.{invalidArgumentValue, serverFailValue}
-import org.apache.james.jmap.mail.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.model.AccountId
+import org.apache.james.jmap.model.SetError.{SetErrorDescription, SetErrorType, invalidArgumentValue, serverFailValue}
 import org.apache.james.jmap.model.State.State
 import org.apache.james.util.ValuePatch
 import play.api.libs.json.{JsBoolean, JsNull, JsObject, JsString, JsValue}
 
+import scala.util.{Failure, Success, Try}
+
 case class VacationResponseSetRequest(accountId: AccountId,
-                               update: Map[String, VacationResponsePatchObject]) {
-  def parsePatch(): Either[IllegalArgumentException, VacationResponsePatchObject] = {
-    if(update.isEmpty) {
-      return Left(new IllegalArgumentException("Patch object must be present"))
-    }
-
-    if(update.size > 1) {
-      return Left(new IllegalArgumentException("Only one patch object is allowed"))
-    }
-
-    update.map({
-      case (id, patch) => id match {
-        case "singleton" => Right(patch)
-        case _ => Left(new IllegalArgumentException("id must be singleton"))
-      }
-    }).head
-  }
+                                      update: Option[Map[String, VacationResponsePatchObject]],
+                                      create: Option[Map[String, JsObject]],
+                                      destroy: Option[Seq[String]]) {
+  def parsePatch(): Map[String, Either[IllegalArgumentException, VacationResponsePatchObject]] =
+    update.getOrElse(Map())
+    .map({
+      case (id, patch) if id.equals(ID) => (id, Right(patch))
+      case (id, _) => (id, Left(new IllegalArgumentException(s"id $id must be singleton")))
+    })
 }
-
-case class IsEnabled(value: Boolean) extends AnyVal
-
-case class UTCDate(value: ZonedDateTime)
-
-case class FromDate(value: UTCDate)
-
-case class ToDate(value: UTCDate)
 
 case class VacationResponsePatchObject(jsObject: JsObject) {
   def asVacationPatch: Either[IllegalArgumentException, VacationPatch] = {
@@ -82,7 +68,7 @@ case class VacationResponsePatchObject(jsObject: JsObject) {
 
   private def validatePatch(patch: VacationPatch): Either[IllegalArgumentException, VacationPatch] = {
     if(patch.getFromDate.isModified && patch.getToDate.isModified && patch.getFromDate.get().isAfter(patch.getToDate.get())) {
-      Left(new IllegalArgumentException("fromDate must be after toDate"))
+      Left(new IllegalArgumentException("fromDate must be older than toDate"))
     } else {
       Right(patch)
     }
@@ -105,17 +91,19 @@ case class VacationResponsePatchObject(jsObject: JsObject) {
     case (unknownProperty, _) => Left(new IllegalArgumentException(s"$unknownProperty is an unknown property"))
   }
 
-  private def parseDate(string: String): Either[IllegalArgumentException, ZonedDateTime] = try {
-    Right(ZonedDateTime.parse(string, DateTimeFormatter.ISO_DATE_TIME))
-  } catch {
-    case e: Throwable => Left(new IllegalArgumentException(e))
-  }
+  private def parseDate(string: String): Either[IllegalArgumentException, ZonedDateTime] =
+    Try(ZonedDateTime.parse(string, DateTimeFormatter.ISO_DATE_TIME)) match {
+      case Success(value) => Right(value)
+      case Failure(e) => Left(new IllegalArgumentException(e))
+    }
 }
 
 case class VacationResponseSetResponse(accountId: AccountId,
                                        newState: State,
                                        updated: Option[Map[String, VacationResponseUpdateResponse]],
-                                       notUpdated: Option[Map[String, VacationResponseSetError]])
+                                       notUpdated: Option[Map[String, VacationResponseSetError]],
+                                       notCreated: Option[Map[String, VacationResponseSetError]],
+                                       notDestroyed: Option[Map[String, VacationResponseSetError]])
 
 object VacationResponseSetError {
   def invalidArgument(description: Option[SetErrorDescription]) = VacationResponseSetError(invalidArgumentValue, description)

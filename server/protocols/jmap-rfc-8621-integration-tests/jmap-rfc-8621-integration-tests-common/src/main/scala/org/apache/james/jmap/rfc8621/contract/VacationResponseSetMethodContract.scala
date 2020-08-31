@@ -31,7 +31,7 @@ import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.SoftAssertions.assertSoftly
-import org.junit.jupiter.api.{BeforeEach, Disabled, Test}
+import org.junit.jupiter.api.{BeforeEach, Test}
 
 trait VacationResponseSetMethodContract {
   @BeforeEach
@@ -364,7 +364,7 @@ trait VacationResponseSetMethodContract {
          |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |				"newState": "000001",
          |				"notUpdated": {
-         |					"singleton": {
+         |					"invalid": {
          |						"type": "invalidArguments",
          |						"description": "id invalid must be singleton"
          |					}
@@ -492,7 +492,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateShouldFailWhenFromDateIsAfterToDate(server: GuiceJamesServer): Unit = {
+  def updateShouldFailWhenFromDateIsMoreRecentThanToDate(server: GuiceJamesServer): Unit = {
     val request =
       s"""
          |{
@@ -539,7 +539,7 @@ trait VacationResponseSetMethodContract {
          |				"notUpdated": {
          |					"singleton": {
          |						"type": "invalidArguments",
-         |						"description": "fromDate must be after toDate"
+         |						"description": "fromDate must be older than toDate"
          |					}
          |				}
          |			},
@@ -550,7 +550,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateShouldFailWhenEmptyMap(server: GuiceJamesServer): Unit = {
+  def updateShouldNoopWhenEmptyMap(server: GuiceJamesServer): Unit = {
     val request =
       s"""
          |{
@@ -589,13 +589,7 @@ trait VacationResponseSetMethodContract {
          |			"VacationResponse/set",
          |			{
          |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |				"newState": "000001",
-         |				"notUpdated": {
-         |					"singleton": {
-         |						"type": "invalidArguments",
-         |						"description": "Patch object must be present"
-         |					}
-         |				}
+         |				"newState": "000001"
          |			},
          |			"c1"
          |		]
@@ -650,8 +644,11 @@ trait VacationResponseSetMethodContract {
          |			{
          |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |				"newState": "000001",
+         |        "updated" : {
+         |          "singleton": {}
+         |        },
          |				"notUpdated": {
-         |					"singleton": {
+         |					"singleton2": {
          |						"type": "invalidArguments",
          |						"description": "id singleton2 must be singleton"
          |					}
@@ -664,7 +661,6 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  @Disabled("Not implemented yet")
   def createShouldFail(server: GuiceJamesServer): Unit = {
     val request =
       s"""
@@ -711,7 +707,7 @@ trait VacationResponseSetMethodContract {
          |				"notCreated": {
          |					"singleton": {
          |						"type": "invalidArguments",
-         |						"description": ""
+         |						"description": "'create' is not supported on singleton objects"
          |					}
          |				}
          |			},
@@ -722,7 +718,6 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  @Disabled("Not implemented yet")
   def destroyShouldFail(server: GuiceJamesServer): Unit = {
     val request =
       s"""
@@ -734,9 +729,7 @@ trait VacationResponseSetMethodContract {
          |       ["VacationResponse/set",
          |           {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "destroy": {
-         |                    "singleton": {}
-         |                }
+         |                "destroy": ["singleton"]
          |           },
          |    "c1"]]
          |}
@@ -767,7 +760,7 @@ trait VacationResponseSetMethodContract {
          |				"notDestroyed": {
          |					"singleton": {
          |						"type": "invalidArguments",
-         |						"description": ""
+         |						"description": "'destroy' is not supported on singleton objects"
          |					}
          |				}
          |			},
