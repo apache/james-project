@@ -466,9 +466,9 @@ system cache. We recommend turning it off on modern SSD hardware.
 
 A review of your usage can be conducted using
 https://cassandra.apache.org/doc/latest/tools/nodetool/nodetool.html[nodetool]
-utility. For example `nodetool tablestats {keyspace}` allows reviewing
+utility. For example `nodetool tablestats \{keyspace\}` allows reviewing
 the number of SSTables, the read/write ratios, bloom filter efficiency.
-`nodetool tablehistograms {keyspace}.{table}` might give insight about
+`nodetool tablehistograms \{keyspace\}.\{table\}` might give insight about
 read/write performance.
 
 Table level options can be changed using *ALTER TABLE* for example with

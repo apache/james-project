@@ -1,0 +1,96 @@
+The name of the project is "Jame Self Hosting Sandbox", and I see the term "self hosting" in a few places... So it sounds like it is important, but what is that intended to mean?
+
+I would like to understand better the intention behind the term.
+
+
+
+I would say "self hosting" means individuals having bought a domain name and want to install their own mail server for hosting their personal emails. Volumetry is small. They want control on their data.
+
+One generally tricky point about this kind of set up is getting third parties (like eg GMail) trusting your setup. It would be important to document a checklist regarding Mail Exchange trust like:
+
+ I'm not an open spam relay
+ MX record registered for my domain
+ Reverse DNS setted up for MX servers
+ SPF records setted up
+ DKIM signature setted up
+(which is slightly external to James as DNS setup is required)
+
+
+
+A "how to" regarding this is a MUST have in my opinion http://james.apache.org/howTo/index.html
+
+
+
+Just a thought based on the ideas you wrote here...
+
+But what if the mission of James were to "help people self-host their email" as an alternative to providers like gmail etc.
+
+Right now James is very obscure and is only for total tekkie geeks. If we modify the target, perhaps this could be the mission.
+
+The way of accomplishing this is:
+
+Provide in-depth "concept" articles
+Provide more "how tos" for important things
+Make James easier to install and operate
+wdyt?
+
+
+It would be more like:
+
+Apache James give you the ability to "self-host" email. Many companies and individuals are unable to develop their own mail infrastructure, but often feel trapped into using services like gmail, yahoo, etc. James provides a low-cost alternative for those who desire the freedom to use email the way they want.
+
+Or something like that.
+
+
+
+Apache James give you the ability to "self-host" email. Many companies and individuals are unable to develop their own mail infrastructure, but often feel trapped into using services like gmail, yahoo, etc. James provides a low-cost alternative for those who desire the freedom to use email the way they want.
+
+This should be the goal of the Basic server.
+
+Regarding "Advanced server":
+
+Free email servers are generaly old, written in complex languages (C) and extending their behavior is not one of there main concerns. 
+
+Apache James Advanced server have been designed with extensibility in mind. It provides several extension mechanisms allowing you to easily configure and extend the behavior of your email server in order to make it fits your needs. Java and other JVM languages can be used to write your own extensions.
+And for the Apache James Distributed server:
+
+Scaling out IMAP mail server is notoriously difficult, as Mail server generally relies on technologies that don't scale well. Apache James server had been designed on top of modern distributed middlewares that allow you to scale it out just like any other modern web applications, reducing the management overhead of large scale deployments.
+We could be thinking of, regarding the testing server:
+
+Embed a tiny, zero external dependency, easy to configure, feature complete, testing mail server to test the email logics for your code. Could be run directly in your JVM tests or spawn via docker.
+Would that go in your direction?
+
+
+For the Basic server we should manage to be less "teckie oriented".
+
+However "Advanced servers" branding should be compelling for "teckies" and discourage other operators.
+
+
+Very nice!
+
+That gives me an idea for the naming, then:
+
+Basic Server (for self-hosting - should be very simple)
+Extendable Server (for customizing - can be more complex)
+Advanced Server (for just about everything else, including "Distributed" - no holds barred)
+wdyt?
+
+
+In the wording above I really prefer the term Distributed Server to Advanced Server as (as my little description above in #9 (comment) demonstrates it) 'distributed server' addresses a all category of advanced users concerns.
+
+I prefer branding the "distributed" term as this is a selling argument.
+
+
+
+IMO the Advanced server should be configured as local per default but configurable to redundant if needed.
+
+Technically: let's use a default embedded derby database for it, but if needed the operator can connect it with a PostgresSQL server for instance.
+
+
+
+
+https://dmatthews.org/email_auth.html
+https://dmatthews.org/java_email.html
+
+
+

@@ -1,0 +1,36 @@
+= James Distributed Server
+:navtitle: Distributed
+
+////
+// dml: Comment for discussion (to be removed)
+ If possible, I think that the Distributed Server should be easily migratable
+ from the Extendable Server. With this in mind, I propose some updates to the
+ description. I also tried to remove "technical" elements from the overview.
+ They are necessary, but IMO should be avoided here because many different people
+ read the overview to decide if it is relevant to them or not.
+
+Comment from chibenwa:
+
+We should have a page about such a "migration", yes, good point.
+7731bc5 proposes a migration strategy from an arbitrary IMAP server
+////
+
+The Distributed Server is based on the 
+xref:servers/extendable/index.adoc[Extendable Server],
+but was built for a large-scale distributed deployments.
+It was designed mainly for xref:concepts/???.adoc[Mail Delivery],
+but can also be used for xref:concepts/???.adoc[Mail Processing]
+Although operating a Distributed Server does assume that you have advanced 
+technical knowledge because it is the most complex and feature-rich option, 
+it is intended to be easy to operate for large deployments.
+
+In this section of the documentation, we will introduce you to:
+
+ * xref:distributed/context/adoc[The context of a large-sacle distributed email system]
+ * xref:distributed/objectives.adoc[Objectives and motivation of the Distributed Server]
+ * xref:distributed/concepts.adoc[Useful background concepts]
+ * xref:distributed/architecture.adoc[Overview of architecture]
+ * xref:distributed/operating/index.adoc[Operation of the Distributed Server]
+ * xref:distributed/extending/index.adoc[How to extend the server]
+ * xref:distributed/help.adoc[Where to go for help]
+
