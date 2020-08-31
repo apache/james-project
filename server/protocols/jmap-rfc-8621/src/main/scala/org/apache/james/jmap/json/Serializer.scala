@@ -273,8 +273,6 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   private implicit val mailboxSetRequestReads: Reads[MailboxSetRequest] = Json.reads[MailboxSetRequest]
 
-  private implicit val vacationResponseIdReads: Reads[VacationResponseId] = Json.valueReads[VacationResponseId]
-
   private implicit val UTCDateReads: Reads[UTCDate] = {
     case JsString(value) =>
       try {

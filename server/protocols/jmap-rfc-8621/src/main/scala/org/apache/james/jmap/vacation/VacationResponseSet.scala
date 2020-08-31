@@ -50,8 +50,6 @@ case class VacationResponseSetRequest(accountId: AccountId,
   }
 }
 
-case class VacationResponseId(value: String)
-
 case class IsEnabled(value: Boolean) extends AnyVal
 
 case class UTCDate(value: ZonedDateTime)
