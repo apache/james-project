@@ -20,8 +20,8 @@
 package org.apache.james.jmap.mail
 
 import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
-import org.apache.james.jmap.model.AccountId
 import org.apache.james.jmap.model.State.State
+import org.apache.james.jmap.model.{AccountId, Properties}
 
 case class VacationResponseIds(value: List[UnparsedVacationResponseId])
 

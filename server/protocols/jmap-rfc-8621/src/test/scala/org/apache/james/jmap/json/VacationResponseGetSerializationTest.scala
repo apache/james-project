@@ -25,8 +25,8 @@ import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SERIALIZER, SINGLETON_ID}
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
 import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
-import org.apache.james.jmap.mail.{Properties, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
-import org.apache.james.jmap.model.AccountId
+import org.apache.james.jmap.mail.{VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
+import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -39,7 +39,7 @@ object VacationResponseGetSerializationTest {
   private val ACCOUNT_ID: AccountId = AccountId(id)
 
   private val SINGLETON_ID: UnparsedVacationResponseId = "singleton"
-  private val PROPERTIES: Properties = Properties(List("isEnabled", "fromDate"))
+  private val PROPERTIES: Properties = Properties(Set("isEnabled", "fromDate"))
 }
 
 class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
@@ -94,7 +94,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
       val expectedRequestObject = VacationResponseGetRequest(
         accountId = ACCOUNT_ID,
         ids = Some(VacationResponseIds(List(SINGLETON_ID))),
-        properties = Some(Properties(Nil)))
+        properties = Some(Properties(Set())))
 
       SERIALIZER.deserializeVacationResponseGetRequest(
         """
