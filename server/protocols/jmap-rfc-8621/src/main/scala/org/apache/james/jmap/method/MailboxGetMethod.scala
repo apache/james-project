@@ -27,21 +27,24 @@ import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MailboxFactory, Properties}
+import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MailboxFactory, Properties, Subscriptions}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.utils.quotas.{QuotaLoader, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.search.MailboxQuery
 import org.apache.james.mailbox.model.{MailboxId, MailboxMetaData}
-import org.apache.james.mailbox.{MailboxManager, MailboxSession}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
+import scala.jdk.CollectionConverters._
+
 class MailboxGetMethod @Inject() (serializer: Serializer,
                                   mailboxManager: MailboxManager,
+                                  subscriptionManager: SubscriptionManager,
                                   quotaFactory : QuotaLoaderWithPreloadedDefaultFactory,
                                   mailboxIdFactory: MailboxId.Factory,
                                   mailboxFactory: MailboxFactory,
@@ -136,17 +139,27 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
   }
 
   private def getAllMailboxes(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SFlux[Mailbox] = {
+    val subscriptions: SMono[Subscriptions] = SMono.fromCallable(() =>
+      Subscriptions(subscriptionManager.subscriptions(mailboxSession).asScala.toSet))
+
     quotaFactory.loadFor(mailboxSession)
+      .flatMap(quotaLoader => subscriptions.map[(QuotaLoader, Subscriptions)](subscriptions => (quotaLoader, subscriptions)))
       .subscribeOn(Schedulers.elastic)
-      .flatMapMany(quotaLoader =>
-        getAllMailboxesMetaData(capabilities, mailboxSession)
-          .flatMapMany(mailboxesMetaData =>
-            SFlux.fromIterable(mailboxesMetaData)
-              .flatMap(mailboxMetaData =>
-                getMailboxResult(mailboxMetaData = mailboxMetaData,
-                  mailboxSession = mailboxSession,
-                  allMailboxesMetadata = mailboxesMetaData,
-                  quotaLoader = quotaLoader))))
+      .flatMap {
+        case (quotaLoader, subscriptions) => getAllMailboxesMetaData(capabilities, mailboxSession)
+          .map((_, quotaLoader, subscriptions))
+      }
+      .flatMapMany {
+        case (mailboxes, quotaLoader, subscriptions) => SFlux.fromIterable(mailboxes)
+          .map(mailbox => (mailboxes, mailbox, quotaLoader, subscriptions))
+      }
+      .flatMap {
+        case (mailboxes, mailbox, quotaLoader, subs) => mailboxFactory.create(mailboxMetaData = mailbox,
+          mailboxSession = mailboxSession,
+          subscriptions = subs,
+          allMailboxesMetadata = mailboxes,
+          quotaLoader = quotaLoader)
+      }
   }
 
   private def getAllMailboxesMetaData(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[Seq[MailboxMetaData]] =
@@ -166,13 +179,4 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
         .user(mailboxSession.getUser)
         .build
     }
-
-  private def getMailboxResult(mailboxSession: MailboxSession,
-                               allMailboxesMetadata: Seq[MailboxMetaData],
-                               mailboxMetaData: MailboxMetaData,
-                               quotaLoader: QuotaLoader): SMono[Mailbox] =
-    mailboxFactory.create(mailboxMetaData = mailboxMetaData,
-      mailboxSession = mailboxSession,
-      allMailboxesMetadata = allMailboxesMetadata,
-      quotaLoader = quotaLoader)
 }

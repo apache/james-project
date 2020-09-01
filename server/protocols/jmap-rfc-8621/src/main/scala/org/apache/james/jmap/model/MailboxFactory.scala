@@ -121,9 +121,9 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
 
   def create(mailboxMetaData: MailboxMetaData,
              mailboxSession: MailboxSession,
+             subscriptions: Subscriptions,
              allMailboxesMetadata: Seq[MailboxMetaData],
              quotaLoader: QuotaLoader): SMono[Mailbox] = {
-    val subscriptions: Subscriptions = Subscriptions(subscriptionManager.subscriptions(mailboxSession).asScala.toSet)
     val sanitizedCounters: MailboxCounters = mailboxMetaData.getCounters.sanitize()
 
     MailboxValidation.validate(mailboxMetaData.getPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
