@@ -25,7 +25,7 @@ import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SERIALIZER, SINGLETON_ID}
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
 import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
-import org.apache.james.jmap.mail.{VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
+import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
 import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
@@ -179,7 +179,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin
 
-      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue)(SERIALIZER.vacationResponseWrites(VacationResponse.allProperties)))).isEqualTo(expectedJson)
     }
   }
 }

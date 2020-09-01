@@ -28,7 +28,7 @@ import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest,
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MissingCapabilityException}
+import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
@@ -69,15 +69,23 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
       validate(capabilities)
         .flatMap(_ => asVacationResponseGetRequest(invocation.arguments))
         .fold(e => handleRequestValidationErrors(e, invocation.methodCallId),
-          vacationResponseGetRequest =>
-            getVacationResponse(vacationResponseGetRequest, processingContext, mailboxSession)
-              .reduce(VacationResponseGetResult.empty, VacationResponseGetResult.merge)
-              .map(vacationResult => vacationResult.asResponse(vacationResponseGetRequest.accountId))
-              .map(vacationResponseGetResponse => Invocation(
-                methodName = methodName,
-                arguments = Arguments(serializer.serialize(vacationResponseGetResponse).as[JsObject]),
-                methodCallId = invocation.methodCallId)))
-              .map((_, processingContext)))
+          vacationResponseGetRequest => {
+            val requestedProperties: Properties = vacationResponseGetRequest.properties.getOrElse(VacationResponse.allProperties)
+            requestedProperties -- VacationResponse.allProperties match {
+              case invalidProperties if invalidProperties.isEmpty() => getVacationResponse(vacationResponseGetRequest, processingContext, mailboxSession)
+                .reduce(VacationResponseGetResult.empty, VacationResponseGetResult.merge)
+                .map(vacationResult => vacationResult.asResponse(vacationResponseGetRequest.accountId))
+                .map(vacationResponseGetResponse => Invocation(
+                  methodName = methodName,
+                  arguments = Arguments(serializer.serialize(vacationResponseGetResponse, requestedProperties).as[JsObject]),
+                  methodCallId = invocation.methodCallId))
+              case invalidProperties: Properties =>
+                SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
+                  description = s"The following properties [${invalidProperties.format}] do not exist.",
+                  methodCallId = invocation.methodCallId))
+            }
+          })
+          .map((_, processingContext)))
   }
 
   private def validate(capabilities: Set[CapabilityIdentifier]): Either[MissingCapabilityException, Unit] =

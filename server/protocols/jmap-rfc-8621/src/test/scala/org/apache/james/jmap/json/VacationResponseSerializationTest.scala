@@ -68,7 +68,7 @@ class VacationResponseSerializationTest extends AnyWordSpec with Matchers {
           |}""".stripMargin
 
       val serializer = new Serializer(new TestId.Factory)
-      assertThatJson(Json.stringify(serializer.serialize(VACATION_RESPONSE))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(serializer.serialize(VACATION_RESPONSE)(serializer.vacationResponseWrites(VacationResponse.allProperties)))).isEqualTo(expectedJson)
     }
   }
 }

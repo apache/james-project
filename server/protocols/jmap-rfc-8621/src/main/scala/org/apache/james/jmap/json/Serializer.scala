@@ -333,7 +333,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val textBodyWrites: Writes[TextBody] = Json.valueWrites[TextBody]
   private implicit val htmlBodyWrites: Writes[HtmlBody] = Json.valueWrites[HtmlBody]
 
-  implicit val vacationResponseWrites: Writes[VacationResponse] = Json.writes[VacationResponse]
+  implicit def vacationResponseWrites(properties: Properties): Writes[VacationResponse] = Json.writes[VacationResponse]
+    .transform(properties.filter(_))
 
   private implicit val vacationResponseIdReads: Reads[VacationResponseIds] = Json.valueReads[VacationResponseIds]
   private implicit val vacationResponseGetRequest: Reads[VacationResponseGetRequest] = Json.reads[VacationResponseGetRequest]
@@ -343,6 +344,9 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   private implicit def vacationResponseGetResponseWrites(implicit vacationResponseWrites: Writes[VacationResponse]): Writes[VacationResponseGetResponse] =
     Json.writes[VacationResponseGetResponse]
+
+  private def vacationResponseWritesWithFilteredProperties(properties: Properties): Writes[VacationResponse] =
+    vacationResponseWrites(VacationResponse.propertiesFiltered(properties))
 
   private implicit def jsErrorWrites: Writes[JsError] = Json.writes[JsError]
 
@@ -372,9 +376,13 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 
-  def serialize(vacationResponse: VacationResponse): JsValue = Json.toJson(vacationResponse)
+  def serialize(vacationResponse: VacationResponse)(implicit vacationResponseWrites: Writes[VacationResponse]): JsValue = Json.toJson(vacationResponse)
 
-  def serialize(vacationResponseGetResponse: VacationResponseGetResponse): JsValue = Json.toJson(vacationResponseGetResponse)
+  def serialize(vacationResponseGetResponse: VacationResponseGetResponse)(implicit vacationResponseWrites: Writes[VacationResponse]): JsValue =
+    Json.toJson(vacationResponseGetResponse)
+
+  def serialize(vacationResponseGetResponse: VacationResponseGetResponse, properties: Properties): JsValue =
+    serialize(vacationResponseGetResponse)(vacationResponseWritesWithFilteredProperties(properties))
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
