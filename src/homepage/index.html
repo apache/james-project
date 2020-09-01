@@ -154,14 +154,22 @@ WHAT WILL YOU TRY:</b><br>
               </li>
               <li class="post-template"><span><b>INCOMING FEATURES</b><br>
                 <ul>
-                  <li><span class="long-arrow-right">&#8594;</span><span><b>Blobs garbage collector</b>:
-                    the deduplication mechanism used to save some spaces makes it complicated to remove blobs. We are implementing a
-                    garbage collector responsible for removing the no more used blobs.
-                    See this <a href="https://github.com/linagora/james-project/pull/3122">ADR</a> (Architecture Decision Record) for more explanation.</span></li>
+                  <li><span class="long-arrow-right">&#8594;</span><span>Rework our documentation with <a href="https://antora.org/">Antora</a>,
+                    specify it on a per-server basis for ease of use.<br/>
+                    We will furthermore target servers to identified use cases, formulated in non technical terms: Basic Server, Advanced Server and Distributed Server.<br/>
+                    Spring server will be deprecated. A summary of community call describing this item can be found
+                    <a href="https://www.mail-archive.com/server-dev@james.apache.org/msg67212.html">here</a>.</span></li>
+                  <li><span class="long-arrow-right">&#8594;</span><span>Improve developper experience with a migration to the Gradle
+                    build system and Apache hosted automated builds. A summary of community call describing this item can be found
+                    <a href="https://www.mail-archive.com/server-dev@james.apache.org/msg67212.html">here</a>.</span></li>
                   <li><span class="long-arrow-right">&#8594;</span><span>Update the currently implemented JMAP draft specification
                     to the <b>new JMAP RFC</b>. See this
                     <a href="https://github.com/apache/james-project/blob/master/src/adr/0018-jmap-new-specs.md">ADR</a>
                     for more information.</span></li>
+                   <li><span class="long-arrow-right">&#8594;</span><span><b>Blobs garbage collector</b>:
+                    the deduplication mechanism used to save some spaces makes it complicated to remove blobs. We are implementing a
+                    garbage collector responsible for removing the no more used blobs.
+                    See this <a href="https://github.com/linagora/james-project/pull/3122">ADR</a> (Architecture Decision Record) for more explanation.</span></li>
                   <li><span class="long-arrow-right">&#8594;</span><span>Enhance our eventual consistency model by providing
                     <b>tools for reparing projections</b>. See this
                     <a href="https://github.com/linagora/james-project/pull/3125">discussion</a> for more information.</span></li>
