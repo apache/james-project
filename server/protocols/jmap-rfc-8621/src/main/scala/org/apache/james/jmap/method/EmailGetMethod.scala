@@ -26,7 +26,7 @@ import org.apache.james.jmap.mail.{Email, EmailGetRequest, EmailGetResponse, Ema
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, ErrorCode, Invocation}
+import org.apache.james.jmap.model.{AccountId, ErrorCode, Invocation, Properties}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.model.{FetchGroup, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
@@ -69,16 +69,35 @@ class EmailGetMethod @Inject() (serializer: Serializer,
   override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] =
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asEmailGetRequest(invocation.arguments)
-        .flatMap(request => getEmails(request, mailboxSession))
-        .map(response => Invocation(
-          methodName = methodName,
-          arguments = Arguments(serializer.serialize(response).as[JsObject]),
-          methodCallId = invocation.methodCallId))
+        .flatMap(computeResponseInvocation(_, invocation, mailboxSession))
         .onErrorResume({
           case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
           case e: Throwable => SMono.raiseError(e)
         })
         .map(invocationResult => (invocationResult, processingContext)))
+
+  private def computeResponseInvocation(request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
+    validateProperties(request)
+        .fold(
+          e => SMono.raiseError(e),
+          properties => getEmails(request, mailboxSession)
+            .map(response => Invocation(
+              methodName = methodName,
+              arguments = Arguments(serializer.serialize(response, properties).as[JsObject]),
+              methodCallId = invocation.methodCallId)))
+
+
+  private def validateProperties(request: EmailGetRequest): Either[IllegalArgumentException, Properties] =
+    request.properties match {
+      case None => Right(Email.defaultProperties)
+      case Some(properties) =>
+        val invalidProperties = properties -- Email.allowedProperties
+        if (invalidProperties.isEmpty()) {
+          Right(properties ++ Email.idProperty)
+        } else {
+          Left(new IllegalArgumentException(s"The following properties [${invalidProperties.format()}] do not exist."))
+        }
+    }
 
   private def asEmailGetRequest(arguments: Arguments): SMono[EmailGetRequest] =
     serializer.deserializeEmailGetRequest(arguments.value) match {

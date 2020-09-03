@@ -26,6 +26,7 @@ import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import org.apache.james.jmap.mail.Email.Size
+import org.apache.james.jmap.model.Properties
 import org.apache.james.mailbox.model.{MessageId, MessageResult}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -34,6 +35,10 @@ object Email {
 
   type UnparsedEmailIdConstraint = NonEmpty
   type UnparsedEmailId = String Refined UnparsedEmailIdConstraint
+
+  val defaultProperties: Properties = Properties("id", "size")
+  val allowedProperties: Properties = Properties("id", "size")
+  val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): UnparsedEmailId = refined.refineV[UnparsedEmailIdConstraint](messageId.serialize()) match {
     case Left(e) => throw new IllegalArgumentException(e)

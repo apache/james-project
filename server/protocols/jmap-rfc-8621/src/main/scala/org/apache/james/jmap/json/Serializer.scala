@@ -250,7 +250,10 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val emailNotFoundWrites: Writes[EmailNotFound] = Json.valueWrites[EmailNotFound]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
   private implicit val emailWrites: Writes[Email] = Json.writes[Email]
+  private implicit def emailWritesWithPropertyFilter(properties: Properties): Writes[Email] = Json.writes[Email]
+    .transform(obj => properties.filter(obj))
   private implicit val emailGetResponseWrites: Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
+  private implicit def emailGetResponseWrites(implicit emailWrites: Writes[Email]): Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
 
   private def readMapEntry[K, V](keyValidator: String => Either[String, K], valueTransformer: JsObject => V): Reads[Map[K, V]] = _.validate[Map[String, JsObject]]
     .flatMap(mapWithStringKey =>{
@@ -417,7 +420,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   def serialize(vacationResponseSetResponse: VacationResponseSetResponse): JsValue = Json.toJson(vacationResponseSetResponse)
 
-  def serialize(emailGetResponse: EmailGetResponse): JsValue = Json.toJson(emailGetResponse)
+  def serialize(emailGetResponse: EmailGetResponse, properties: Properties): JsValue =
+    Json.toJson(emailGetResponse)(emailGetResponseWrites(emailWritesWithPropertyFilter(properties)))
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
