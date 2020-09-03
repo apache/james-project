@@ -51,7 +51,7 @@ sealed trait ErrorCode {
 
 object ErrorCode {
   case object InvalidArguments extends ErrorCode {
-    override def code: String = "error"
+    override def code: String = "invalidArguments"
   }
 
   case object ServerFail extends ErrorCode {

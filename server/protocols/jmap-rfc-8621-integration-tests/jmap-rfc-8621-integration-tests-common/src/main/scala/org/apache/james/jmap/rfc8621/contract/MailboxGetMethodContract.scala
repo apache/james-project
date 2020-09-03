@@ -674,7 +674,7 @@ trait MailboxGetMethodContract {
          |  "sessionState": "75128aab4b1b",
          |  "methodResponses": [[
          |   "error", {
-         |     "type": "error",
+         |     "type": "invalidArguments",
          |     "description": "The following properties [invalidProperty] do not exist."
          |},
          |    "c1"]]
