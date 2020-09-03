@@ -35,6 +35,7 @@ import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.json.Serializer;
 import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
 import org.apache.james.jmap.method.CoreEchoMethod;
+import org.apache.james.jmap.method.EmailGetMethod;
 import org.apache.james.jmap.method.MailboxGetMethod;
 import org.apache.james.jmap.method.MailboxSetMethod;
 import org.apache.james.jmap.method.Method;
@@ -65,6 +66,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEchoMethod.class);
         methods.addBinding().to(MailboxGetMethod.class);
+        methods.addBinding().to(EmailGetMethod.class);
         methods.addBinding().to(MailboxSetMethod.class);
         methods.addBinding().to(VacationResponseGetMethod.class);
         methods.addBinding().to(VacationResponseSetMethod.class);
