@@ -39,7 +39,7 @@ object VacationResponseGetSerializationTest {
   private val ACCOUNT_ID: AccountId = AccountId(id)
 
   private val SINGLETON_ID: UnparsedVacationResponseId = "singleton"
-  private val PROPERTIES: Properties = Properties(Set("isEnabled", "fromDate"))
+  private val PROPERTIES: Properties = Properties("isEnabled", "fromDate")
 }
 
 class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
@@ -94,7 +94,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
       val expectedRequestObject = VacationResponseGetRequest(
         accountId = ACCOUNT_ID,
         ids = Some(VacationResponseIds(List(SINGLETON_ID))),
-        properties = Some(Properties(Set())))
+        properties = Some(Properties.empty()))
 
       SERIALIZER.deserializeVacationResponseGetRequest(
         """

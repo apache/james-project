@@ -42,7 +42,7 @@ object MailboxGetSerializationTest {
   private val MAILBOX_ID_1: UnparsedMailboxId = "1"
   private val MAILBOX_ID_2: UnparsedMailboxId = "2"
 
-  private val PROPERTIES: Properties = Properties(Set("name", "role"))
+  private val PROPERTIES: Properties = Properties("name", "role")
 }
 
 class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
@@ -98,7 +98,7 @@ class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
       val expectedRequestObject = MailboxGetRequest(
         accountId = ACCOUNT_ID,
         ids = Some(Ids(List(MAILBOX_ID_1))),
-        properties = Some(Properties(Set())))
+        properties = Some(Properties.empty()))
 
       SERIALIZER.deserializeMailboxGetRequest(
         """

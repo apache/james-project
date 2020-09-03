@@ -25,7 +25,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 import play.api.libs.json.JsObject
 
 object Properties {
-  def empty(): Properties = Properties(Set())
+  def empty(): Properties = Properties()
+
+  def apply(values: NonEmptyString*): Properties = Properties(values.toSet)
 }
 
 case class Properties(value: Set[NonEmptyString]) {

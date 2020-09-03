@@ -147,12 +147,12 @@ case class Mailbox(id: MailboxId,
 }
 
 object Mailbox {
-  val allProperties: Properties = Properties(Set("id", "name", "parentId", "role", "sortOrder", "totalEmails", "unreadEmails",
-    "totalThreads", "unreadThreads", "myRights", "isSubscribed", "namespace", "rights", "quotas"))
-  val idProperty: Properties = Properties(Set("id"))
+  val allProperties: Properties = Properties("id", "name", "parentId", "role", "sortOrder", "totalEmails", "unreadEmails",
+    "totalThreads", "unreadThreads", "myRights", "isSubscribed", "namespace", "rights", "quotas")
+  val idProperty: Properties = Properties("id")
   val propertiesForCapabilities: Map[CapabilityIdentifier, Properties] = Map(
-    CapabilityIdentifier.JAMES_QUOTA -> Properties(Set("quotas")),
-    CapabilityIdentifier.JAMES_SHARES -> Properties(Set("namespace", "rights")))
+    CapabilityIdentifier.JAMES_QUOTA -> Properties("quotas"),
+    CapabilityIdentifier.JAMES_SHARES -> Properties("namespace", "rights"))
 
   def propertiesFiltered(requestedProperties: Properties, allowedCapabilities : Set[CapabilityIdentifier]) : Properties = {
     val propertiesToHide: Properties = propertiesForCapabilities.filterNot(entry => allowedCapabilities.contains(entry._1))

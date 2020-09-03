@@ -23,7 +23,6 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.api.vacation.Vacation
-import org.apache.james.jmap.mail.Mailbox.idProperty
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.{Properties, UTCDate}
 
@@ -53,8 +52,8 @@ object VacationResponse {
     htmlBody = vacation.getHtmlBody.asScala.map(HtmlBody)
   )
 
-  val allProperties: Properties = Properties(Set("id", "isEnabled", "fromDate", "toDate", "subject", "textBody", "htmlBody"))
-  val idProperty: Properties = Properties(Set("id"))
+  val allProperties: Properties = Properties("id", "isEnabled", "fromDate", "toDate", "subject", "textBody", "htmlBody")
+  val idProperty: Properties = Properties("id")
 
   def propertiesFiltered(requestedProperties: Properties) : Properties = idProperty ++ requestedProperties
 }
