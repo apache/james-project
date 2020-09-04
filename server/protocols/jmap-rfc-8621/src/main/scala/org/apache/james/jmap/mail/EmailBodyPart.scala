@@ -64,17 +64,17 @@ object EmailBodyPart {
         val childrenValidation: Try[List[EmailBodyPart]] = scanResults.map(list => list.flatMap(_._1))
 
         zip(childrenValidation, highestPartIdValidation)
-            .flatMap({
+            .flatMap {
               case (children, highestPartId) => of(None, partId, entity, Some(children))
                 .map(part => (part, highestPartId))
-            })
+            }
       case _ => BlobId.of(messageId, partId)
           .flatMap(blobId => of(Some(blobId), partId, entity, None))
           .map(part => (part, partId))
     }
 
   def traverse(messageId: MessageId)(acc: Try[(Option[EmailBodyPart], PartId)], entity: Entity): Try[(Option[EmailBodyPart], PartId)] = {
-    acc.flatMap({
+    acc.flatMap {
       case (_, previousPartId) =>
         val partId = previousPartId.next
 
@@ -82,7 +82,7 @@ object EmailBodyPart {
           .map({
             case (part, partId) => (Some(part), partId)
           })
-    })
+    }
   }
 
   private def of(blobId: Option[BlobId],
@@ -114,7 +114,10 @@ object EmailBodyPart {
     }
   }
 
-  def zip[A, B](a: Try[A], b: Try[B]): Try[(A, B)] = a.flatMap(aValue => b.map(bValue => (aValue, bValue)))
+  def zip[A, B](a: Try[A], b: Try[B]): Try[(A, B)] = for {
+    aValue <- a
+    bValue <- b
+  } yield (aValue, bValue)
 }
 
 case class EmailBodyPart(partId: PartId,

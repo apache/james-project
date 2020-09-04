@@ -154,8 +154,7 @@ class EmailGetMethod @Inject() (serializer: Serializer,
     val foundResultsMono: SMono[Map[MessageId, Email]] = SFlux.fromPublisher(messageIdManager.getMessagesReactive(ids.toList.asJava, FetchGroup.MINIMAL, mailboxSession))
       .groupBy(_.getMessageId)
       .flatMap(groupedFlux => groupedFlux.collectSeq().map(results => (groupedFlux.key(), results)))
-      .map(Email.from)
-      .map(_.get)
+      .flatMap(email => SMono.fromTry(Email.from(email)))
       .collectMap(_.id)
 
     foundResultsMono.flatMapMany(foundResults => SFlux.fromIterable(ids)
