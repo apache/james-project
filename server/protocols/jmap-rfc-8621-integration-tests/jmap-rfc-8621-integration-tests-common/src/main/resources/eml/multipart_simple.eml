@@ -1,0 +1,64 @@
+Return-Path: <from@linagora.com>
+To: to@linagora.com
+From: Lina <from@linagora.com>
+Subject: MultiAttachment
+Message-ID: <13d4375e-a4a9-f613-06a1-7e8cb1e0ea93@linagora.com>
+Date: Mon, 27 Feb 2017 11:24:48 +0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------64D8D789FC30153D6ED18258"
+
+This is a multi-part message in MIME format.
+--------------64D8D789FC30153D6ED18258
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Send
+
+
+--------------64D8D789FC30153D6ED18258
+Content-Type: text/plain; charset=UTF-8;
+ name="text1"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="text1"
+
+LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb2dJQkFBS0NBUUVBeDdQRzAr
+RS8vRU1wbTdJZ0k1UTlUTURTRnlhLzFoRSt2dlRKcmswaUdGbGxQZUhMCkE1L1ZsVE0wWVdn
+RzZYNTBxaU1mRTNWTGF6ZjJjMTlpWHJUMG1xLzIxUFoxd0Zub2d2NHp4VU5haWgrQm5nNjIK
+RjBTeXJ1RS9PL05qcXhoL0NjcTZLL2UwNVRWNFQ2NDNVU3hBZUcwS3BwbVlXOXg4SEEvR3ZW
+ODMyYXBadXhrVgppNk5Wa0RCcmZ6YVVDd3U0ekgrSHdPdi9wSTg3RTdLY2NIWUMrK0JpYWoz
+Cg==
+--------------64D8D789FC30153D6ED18258
+Content-Type: application/vnd.ms-publisher;
+ name="text2"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="text2"
+
+c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFESHM4YlQ0VC84UXltYnNp
+QWpsRDFNd05JWEpyL1dFVDYrOU1tdVRTSVlXV1U5NGNzRG45V1ZNelJoYUFicGZuU3FJeDhU
+ZFV0ck4vWnpYMkpldFBTYXIvYlU5blhBV2VpQy9qUEZRMXFLSDRHZURyWVhSTEt1NFQ4Nzgy
+T3JHSDhKeXJvcjk3VGxOWGhQcmpkUkxFQjRiUXFtbVpoYjNId2NEOGE5WHpmWnFsbTdHUldM
+bzFXUU1HdC9OcFFMQzdqTWY0ZkE2LytranpzVHNweHdkZ0w3NEdKcVBmT1hPaXdnTEhYOENa
+Ni81UnlUcWhUNnBEM01rdFNOV2F6L3pJSFBORXFmNUJZOUNCTTFURlI1dys2TURIbzBnbWlJ
+c1hGRUpUUG5maEJ2SERoU2pCMVJJMEt4VUNseVlySjRmQmxVVmVLZm5hd29WY3U3WXZDcUY0
+RjUgcXV5bmhubkBsaW5hZ29yYQo=
+--------------64D8D789FC30153D6ED18258
+Content-Type: text/plain; charset=UTF-8;
+ name="text3"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="text3"
+
+fDF8b1M3NU9nTDN2RjJHZGw5OUNKRGJFcGFKM3lFPXxJTkdxbGpDVzFYTWY0Z2dPUW0yNi9C
+Tm5LR2M9IHNzaC1yc2EgQUFBQUIzTnphQzF5YzJFQUFBQUJJd0FBQVFFQXEyQTdoUkdtZG5t
+OXRVRGJPOUlEU3dCSzZUYlFhK1BYWVBDUHk2cmJUclR0dzdQSGtjY0tycHAweVZocDVIZEVJ
+Y0tyNnBMbFZEQmZPTFg5UVVzeUNPVjB3emZqSUpObEdFWXNkbExKaXpIaGJuMm1VanZTQUhR
+cVpFVFlQODFlRnpMUU5uUEh0NEVWVlVoN1ZmREVTVTg0S2V6bUQ1UWxXcFhMbXZVMzEveU1m
+K1NlOHhoSFR2S1NDWklGSW1Xd29HNm1iVW9XZjluenBJb2FTakIrd2VxcVVVbXBhYWFzWFZh
+bDcySitVWDJCKzJSUFczUmNUMGVPelFncWxKTDNSS3JUSnZkc2pFM0pFQXZHcTNsR0hTWlh5
+TjZtNVU0aHBwaDl1T3Y1NGFIYzRYcjhqaEFhL1NYNU1KCg==
+--------------64D8D789FC30153D6ED18258--
