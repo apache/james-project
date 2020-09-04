@@ -20,16 +20,18 @@
 package org.apache.james.jmap.draft.model;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.jmap.draft.model.deserialization.JmapRuleDTODeserializer;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+@JsonDeserialize(using = JmapRuleDTODeserializer.class)
 public class JmapRuleDTO {
 
     public static class ConditionDTO {
@@ -133,57 +135,50 @@ public class JmapRuleDTO {
     }
 
     public static JmapRuleDTO from(Rule rule) {
-        return new JmapRuleDTO(Optional.of(rule.getId().asString()),
-                Optional.of(rule.getName()),
-                Optional.of(ConditionDTO.from(rule.getCondition())),
-                Optional.of(ActionDTO.from(rule.getAction())));
+        return new JmapRuleDTO(rule.getId().asString(),
+                rule.getName(),
+                ConditionDTO.from(rule.getCondition()),
+                ActionDTO.from(rule.getAction()));
     }
 
-    private final Optional<String> id;
-    private final Optional<String> name;
-    private final Optional<ConditionDTO> conditionDTO;
-    private final Optional<ActionDTO> actionDTO;
+    private final String id;
+    private final String name;
+    private final ConditionDTO conditionDTO;
+    private final ActionDTO actionDTO;
 
     @JsonCreator
-    public JmapRuleDTO(@JsonProperty("id") Optional<String> id,
-                       @JsonProperty("name") Optional<String> name,
-                       @JsonProperty("condition") Optional<ConditionDTO> conditionDTO,
-                       @JsonProperty("action") Optional<ActionDTO> actionDTO) {
+    public JmapRuleDTO(@JsonProperty("id") String id,
+                       @JsonProperty("name") String name,
+                       @JsonProperty("condition") ConditionDTO conditionDTO,
+                       @JsonProperty("action") ActionDTO actionDTO) {
         this.name = name;
         this.conditionDTO = conditionDTO;
         this.actionDTO = actionDTO;
         this.id = id;
     }
 
-    public Optional<String> getId() {
+    public String getId() {
         return id;
     }
 
-    public Optional<String> getName() {
+    public String getName() {
         return name;
     }
 
-    public Optional<ConditionDTO> getCondition() {
+    public ConditionDTO getCondition() {
         return conditionDTO;
     }
 
-    public Optional<ActionDTO> getAction() {
+    public ActionDTO getAction() {
         return actionDTO;
     }
 
     public Rule toRule() {
-        Preconditions.checkState(conditionDTO.isPresent(), "`condition` is mandatory");
-        Preconditions.checkState(actionDTO.isPresent(), "`action` is mandatory");
-        Preconditions.checkState(name.isPresent(), "`name` is mandatory");
-        Preconditions.checkState(!name.get().isEmpty(), "`name` is mandatory");
-        Preconditions.checkState(id.isPresent(), "`id` is mandatory");
-        Preconditions.checkState(!id.get().isEmpty(), "`id` is mandatory");
-
         return Rule.builder()
-            .id(Rule.Id.of(id.get()))
-            .name(name.get())
-            .condition(conditionDTO.get().toCondition())
-            .action(actionDTO.get().toAction())
+            .id(Rule.Id.of(id))
+            .name(name)
+            .condition(conditionDTO.toCondition())
+            .action(actionDTO.toAction())
             .build();
     }
 

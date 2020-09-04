@@ -38,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.io.IOException;
@@ -271,7 +272,7 @@ public abstract class FilterTest {
             .post("/jmap")
         .then()
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", equalTo("`name` is mandatory"));
+            .body(ARGUMENTS + ".description", containsString("`name` is mandatory"));
     }
 
     @Test
@@ -305,7 +306,7 @@ public abstract class FilterTest {
             .post("/jmap")
         .then()
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", equalTo("`id` is mandatory"));
+            .body(ARGUMENTS + ".description", containsString("`id` is mandatory"));
     }
 
     @Test
@@ -335,7 +336,7 @@ public abstract class FilterTest {
             .post("/jmap")
         .then()
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", equalTo("`condition` is mandatory"));
+            .body(ARGUMENTS + ".description", containsString("`condition` is mandatory"));
     }
 
     @Test
