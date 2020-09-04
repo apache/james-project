@@ -30,6 +30,8 @@ import org.apache.james.jmap.model.Properties
 import org.apache.james.mailbox.model.{MessageId, MessageResult}
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.util.{Failure, Success, Try}
+
 object Email {
   private val logger: Logger = LoggerFactory.getLogger(classOf[Email])
 
@@ -40,9 +42,10 @@ object Email {
   val allowedProperties: Properties = Properties("id", "size")
   val idProperty: Properties = Properties("id")
 
-  def asUnparsed(messageId: MessageId): UnparsedEmailId = refined.refineV[UnparsedEmailIdConstraint](messageId.serialize()) match {
-    case Left(e) => throw new IllegalArgumentException(e)
-    case scala.Right(value) => value
+  def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
+    refined.refineV[UnparsedEmailIdConstraint](messageId.serialize()) match {
+    case Left(e) => Failure(new IllegalArgumentException(e))
+    case scala.Right(value) => Success(value)
   }
 
   type Size = Long Refined NonNegative

@@ -39,11 +39,18 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.jdk.CollectionConverters._
 
 object EmailGetResults {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[EmailGetResults])
+
   def merge(result1: EmailGetResults, result2: EmailGetResults): EmailGetResults = result1.merge(result2)
   def empty(): EmailGetResults = EmailGetResults(Set.empty, EmailNotFound(Set.empty))
   def found(email: Email): EmailGetResults = EmailGetResults(Set(email), EmailNotFound(Set.empty))
   def notFound(emailId: UnparsedEmailId): EmailGetResults = EmailGetResults(Set.empty, EmailNotFound(Set(emailId)))
-  def notFound(messageId: MessageId): EmailGetResults = EmailGetResults(Set.empty, EmailNotFound(Set(Email.asUnparsed(messageId))))
+  def notFound(messageId: MessageId): EmailGetResults = Email.asUnparsed(messageId)
+    .fold(e => {
+        logger.error("messageId is not a valid UnparsedEmailId", e)
+        empty()
+      },
+      id => notFound(id))
 }
 
 case class EmailGetResults(emails: Set[Email], notFound: EmailNotFound) {
