@@ -105,12 +105,13 @@ public class ObjectStorageBlobStore implements BlobStore {
             .flatMap(blobId -> {
                 Payload payload = payloadCodec.write(data);
 
+                Long length = payload.getLength().orElse(Long.valueOf(data.length));
                 Blob blob = blobStore.blobBuilder(blobId.asString())
                     .payload(payload.getPayload())
-                    .contentLength(payload.getLength().orElse(Long.valueOf(data.length)))
+                    .contentLength(length)
                     .build();
 
-                return blobPutter.putDirectly(resolvedBucketName, blob)
+                return blobPutter.putDirectly(resolvedBucketName, blob, Optional.of(length))
                     .thenReturn(blobId);
             });
     }

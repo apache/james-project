@@ -51,7 +51,7 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
     }
 
     @Override
-    public Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
+    public Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob, Optional<Long> length) {
         return Mono.fromRunnable(() -> blobStore.putBlob(bucketName.asString(), blob))
             .publishOn(Schedulers.elastic())
             .retryWhen(Retry
@@ -67,7 +67,7 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
 
     @Override
     public Mono<BlobId> putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
-        return putDirectly(bucketName, initialBlob)
+        return putDirectly(bucketName, initialBlob, Optional.empty())
             .then(Mono.fromCallable(blobIdSupplier::get))
             .map(blobId -> updateBlobId(bucketName, initialBlob.getMetadata().getName(), blobId));
     }

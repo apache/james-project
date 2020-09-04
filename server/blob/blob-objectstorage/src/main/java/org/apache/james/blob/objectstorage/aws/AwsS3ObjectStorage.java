@@ -146,8 +146,8 @@ public class AwsS3ObjectStorage {
         }
 
         @Override
-        public Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
-            return putWithRetry(bucketName, () -> uploadByBlob(bucketName, blob));
+        public Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob, Optional<Long> length) {
+            return putWithRetry(bucketName, () -> uploadByBlob(bucketName, blob, length));
         }
 
         @Override
@@ -191,12 +191,14 @@ public class AwsS3ObjectStorage {
             upload(request);
         }
 
-        private void uploadByBlob(ObjectStorageBucketName bucketName, Blob blob) throws InterruptedException, IOException {
+        private void uploadByBlob(ObjectStorageBucketName bucketName, Blob blob, Optional<Long> length) throws InterruptedException, IOException {
             try (InputStream payload = blob.getPayload().openStream()) {
+                ObjectMetadata objectMetadata = new ObjectMetadata();
+                length.ifPresent(objectMetadata::setContentLength);
                 PutObjectRequest request = new PutObjectRequest(bucketName.asString(),
                     blob.getMetadata().getName(),
                     payload,
-                    new ObjectMetadata());
+                    objectMetadata);
 
                 upload(request);
             }

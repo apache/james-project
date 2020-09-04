@@ -20,6 +20,7 @@
 package org.apache.james.blob.objectstorage;
 
 import java.io.Closeable;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.apache.james.blob.api.BlobId;
@@ -39,7 +40,7 @@ import reactor.core.publisher.Mono;
 
 public interface BlobPutter extends Closeable {
 
-    Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob);
+    Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob, Optional<Long> length);
 
     Mono<BlobId> putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier);
 }
