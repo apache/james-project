@@ -1097,7 +1097,6 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize()}",
          |                        "bodyStructure": {
          |                            "partId": "1",
-         |                            "blobId": "${messageId.serialize()}_1",
          |                            "headers": [
          |                                {
          |                                    "name": "Return-Path",
@@ -1287,7 +1286,6 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize()}",
          |                        "bodyStructure": {
          |                            "partId": "1",
-         |                            "blobId": "${messageId.serialize()}_1",
          |                            "headers": [
          |                                {
          |                                    "name": "Date",
@@ -1336,7 +1334,6 @@ trait EmailGetMethodContract {
          |                            "subParts": [
          |                                {
          |                                    "partId": "2",
-         |                                    "blobId": "${messageId.serialize()}_2",
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",

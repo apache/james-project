@@ -65,10 +65,12 @@ object EmailBodyPart {
 
         zip(childrenValidation, highestPartIdValidation)
             .flatMap({
-              case (children, highestPartId) => of(messageId, partId, entity, Some(children))
+              case (children, highestPartId) => of(None, partId, entity, Some(children))
                 .map(part => (part, highestPartId))
             })
-      case _ => of(messageId, partId, entity, None).map(part => (part, partId))
+      case _ => BlobId.of(messageId, partId)
+          .flatMap(blobId => of(Some(blobId), partId, entity, None))
+          .map(part => (part, partId))
     }
 
   def traverse(messageId: MessageId)(acc: Try[(Option[EmailBodyPart], PartId)], entity: Entity): Try[(Option[EmailBodyPart], PartId)] = {
@@ -83,13 +85,12 @@ object EmailBodyPart {
     })
   }
 
-  private def of(messageId: MessageId,
+  private def of(blobId: Option[BlobId],
                  partId: PartId,
                  entity: Entity,
                  subParts: Option[List[EmailBodyPart]]): Try[EmailBodyPart] =
-    zip(BlobId.of(messageId, partId), size(entity))
-      .map({
-        case (blobId, size) => EmailBodyPart(
+    size(entity)
+      .map(size => EmailBodyPart(
           partId = partId,
           blobId = blobId,
           headers = entity.getHeader.getFields.asScala.toList.map(EmailHeader(_)),
@@ -101,8 +102,7 @@ object EmailBodyPart {
           cid = entity.getHeader.getFields("Content-Id").asScala.headOption.map(field => field.getBody),
           language = entity.getHeader.getFields("Content-Language").asScala.headOption.map(field => field.getBody),
           location = entity.getHeader.getFields("Content-Location").asScala.headOption.map(field => field.getBody),
-          subParts = subParts)
-      })
+          subParts = subParts))
 
   def size(entity: Entity): Try[Size] = {
     val countingOutputStream: CountingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream())
@@ -118,7 +118,7 @@ object EmailBodyPart {
 }
 
 case class EmailBodyPart(partId: PartId,
-                         blobId: BlobId,
+                         blobId: Option[BlobId],
                          headers: List[EmailHeader],
                          size: Size,
                          name: Option[String],
