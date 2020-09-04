@@ -135,6 +135,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.typelevel</groupId>
+            <artifactId>cats-core_${scala.base}</artifactId>
+            <version>2.2.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
