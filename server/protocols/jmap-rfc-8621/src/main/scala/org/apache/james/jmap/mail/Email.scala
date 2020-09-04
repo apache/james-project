@@ -28,6 +28,10 @@ import eu.timepit.refined.refineV
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.model.Properties
 import org.apache.james.mailbox.model.{MessageId, MessageResult}
+import org.apache.james.mime4j.codec.DecodeMonitor
+import org.apache.james.mime4j.dom.Message
+import org.apache.james.mime4j.message.DefaultMessageBuilder
+import org.apache.james.mime4j.stream.MimeConfig
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.{Failure, Success, Try}
@@ -39,7 +43,7 @@ object Email {
   type UnparsedEmailId = String Refined UnparsedEmailIdConstraint
 
   val defaultProperties: Properties = Properties("id", "size")
-  val allowedProperties: Properties = Properties("id", "size")
+  val allowedProperties: Properties = Properties("id", "size", "bodyStructure")
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
@@ -60,8 +64,21 @@ object Email {
       refinedValue => refinedValue)
   }
 
-  def from(message: (MessageId, Seq[MessageResult])): Email =
-    Email(message._1, sanitizeSize(message._2.head.getSize))
+  def from(message: (MessageId, Seq[MessageResult])): Try[Email] = {
+    val firstMessage: MessageResult = message._2.head
+
+    val defaultMessageBuilder = new DefaultMessageBuilder
+    defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
+    defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
+    val mime4JMessage: Message = defaultMessageBuilder.parseMessage(firstMessage.getFullContent.getInputStream)
+    val messageId: MessageId = message._1
+    val bodyStructureTry = EmailBodyPart.of(messageId, mime4JMessage)
+
+
+    bodyStructureTry.map(bodyStructure => Email(messageId, sanitizeSize(firstMessage.getSize), bodyStructure))
+  }
 }
 
-case class Email(id: MessageId, size: Size)
+case class Email(id: MessageId,
+                 size: Size,
+                 bodyStructure: EmailBodyPart)

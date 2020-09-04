@@ -155,6 +155,7 @@ class EmailGetMethod @Inject() (serializer: Serializer,
       .groupBy(_.getMessageId)
       .flatMap(groupedFlux => groupedFlux.collectSeq().map(results => (groupedFlux.key(), results)))
       .map(Email.from)
+      .map(_.get)
       .collectMap(_.id)
 
     foundResultsMono.flatMapMany(foundResults => SFlux.fromIterable(ids)
