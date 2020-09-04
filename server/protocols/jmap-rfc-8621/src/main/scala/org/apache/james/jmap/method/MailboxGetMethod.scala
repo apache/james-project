@@ -25,9 +25,10 @@ import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MailboxFactory, Properties, Subscriptions}
+import org.apache.james.jmap.model.{AccountId, Capabilities, CapabilityIdentifier, ErrorCode, Invocation, MailboxFactory, Properties, Subscriptions}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.utils.quotas.{QuotaLoader, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
@@ -50,6 +51,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
                                   mailboxFactory: MailboxFactory,
                                   metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("Mailbox/get")
+  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
   object MailboxGetResults {
     def merge(result1: MailboxGetResults, result2: MailboxGetResults): MailboxGetResults = result1.merge(result2)

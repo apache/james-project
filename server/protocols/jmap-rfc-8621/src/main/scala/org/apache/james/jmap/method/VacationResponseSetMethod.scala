@@ -25,9 +25,10 @@ import org.apache.james.jmap.api.vacation.{AccountId, VacationPatch, VacationRep
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.SetError.SetErrorDescription
-import org.apache.james.jmap.model.{Invocation, State}
+import org.apache.james.jmap.model.{Capabilities, Invocation, State}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.vacation.{VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import org.apache.james.mailbox.MailboxSession
@@ -76,6 +77,7 @@ class VacationResponseSetMethod @Inject() (serializer: Serializer,
                                            zonedDateTimeProvider: ZonedDateTimeProvider,
                                            metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("VacationResponse/set")
+  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY)
 
   override def process(capabilities: Set[CapabilityIdentifier],
                        invocation: Invocation,

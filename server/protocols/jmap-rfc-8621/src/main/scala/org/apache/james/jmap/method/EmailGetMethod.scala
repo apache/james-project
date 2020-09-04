@@ -24,9 +24,10 @@ import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.{Email, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, ErrorCode, Invocation, Properties}
+import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, Properties}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.model.{FetchGroup, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
@@ -72,6 +73,7 @@ class EmailGetMethod @Inject() (serializer: Serializer,
                                messageIdFactory: MessageId.Factory,
                                metricFactory: MetricFactory) extends Method {
   override val methodName = MethodName("Email/get")
+  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] =
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,

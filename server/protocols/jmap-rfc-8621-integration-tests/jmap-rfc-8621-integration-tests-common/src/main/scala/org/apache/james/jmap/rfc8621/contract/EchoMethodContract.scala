@@ -128,4 +128,31 @@ trait EchoMethodContract {
 
     assertThatJson(response).isEqualTo(RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD)
   }
+
+  @Test
+  def echoMethodShouldReturnUnknownMethodWhenMissingCoreCapability(): Unit = {
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(ECHO_REQUEST_OBJECT_WITHOUT_CORE_CAPABILITY)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "error",
+         |    {
+         |      "type": "unknownMethod",
+         |      "description": "Missing capability(ies): urn:ietf:params:jmap:core"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
 }

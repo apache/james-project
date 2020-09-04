@@ -26,9 +26,10 @@ import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
 import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MissingCapabilityException, Properties}
+import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
@@ -60,14 +61,14 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
                                            vacationRepository: VacationRepository,
                                            metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("VacationResponse/get")
+  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY)
 
   override def process(capabilities: Set[CapabilityIdentifier],
                        invocation: Invocation,
                        mailboxSession: MailboxSession,
                        processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      validate(capabilities)
-        .flatMap(_ => asVacationResponseGetRequest(invocation.arguments))
+      asVacationResponseGetRequest(invocation.arguments)
         .fold(e => handleRequestValidationErrors(e, invocation.methodCallId),
           vacationResponseGetRequest => {
             val requestedProperties: Properties = vacationResponseGetRequest.properties.getOrElse(VacationResponse.allProperties)
@@ -87,13 +88,6 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
           })
           .map((_, processingContext)))
   }
-
-  private def validate(capabilities: Set[CapabilityIdentifier]): Either[MissingCapabilityException, Unit] =
-    if (!capabilities.contains(CapabilityIdentifier.JMAP_VACATION_RESPONSE)) {
-      Left(MissingCapabilityException(CapabilityIdentifier.JMAP_VACATION_RESPONSE))
-    } else {
-      Right()
-    }
 
   private def asVacationResponseGetRequest(arguments: Arguments): Either[IllegalArgumentException, VacationResponseGetRequest] =
     serializer.deserializeVacationResponseGetRequest(arguments.value) match {

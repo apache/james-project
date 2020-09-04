@@ -164,9 +164,21 @@ class JMAPApiRoutes (val authenticator: Authenticator,
 
   private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): SMono[(Invocation, ProcessingContext)] =
     SMono.justOrEmpty(methodsByName.get(invocation.methodName))
-      .flatMap(method => SMono.fromPublisher(method.process(capabilities, invocation, mailboxSession, processingContext)))
+      .flatMap(method => validateCapabilities(capabilities, method.requiredCapabilities)
+      .fold(e => SMono.just((Invocation.error(ErrorCode.UnknownMethod, e.description, invocation.methodCallId), processingContext)),
+        _ => SMono.fromPublisher(method.process(capabilities, invocation, mailboxSession, processingContext))
+      ))
       .onErrorResume(throwable => SMono.just((Invocation.error(ErrorCode.ServerFail, throwable.getMessage, invocation.methodCallId), processingContext)))
       .switchIfEmpty(SMono.just((Invocation.error(ErrorCode.UnknownMethod, invocation.methodCallId), processingContext)))
+
+  private def validateCapabilities(capabilities: Set[CapabilityIdentifier], requiredCapabilities: Capabilities): Either[MissingCapabilityException, Unit] = {
+    val missingCapabilities = requiredCapabilities.ids -- capabilities
+    if (missingCapabilities.nonEmpty) {
+      Left(MissingCapabilityException(s"Missing capability(ies): ${missingCapabilities.mkString(", ")}"))
+    } else {
+      Right()
+    }
+  }
 
   private def handleError(throwable: Throwable, httpServerResponse: HttpServerResponse): SMono[Void] = throwable match {
     case exception: IllegalArgumentException => respondDetails(httpServerResponse,

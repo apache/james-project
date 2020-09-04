@@ -20,8 +20,8 @@ package org.apache.james.jmap.method
 
 
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Invocation
 import org.apache.james.jmap.model.Invocation.MethodName
+import org.apache.james.jmap.model.{Capabilities, Invocation}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.reactivestreams.Publisher
@@ -30,6 +30,8 @@ trait Method {
   val JMAP_RFC8621_PREFIX: String = "JMAP-RFC8621-"
 
   val methodName: MethodName
+
+  val requiredCapabilities: Capabilities
 
   def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)]
 }

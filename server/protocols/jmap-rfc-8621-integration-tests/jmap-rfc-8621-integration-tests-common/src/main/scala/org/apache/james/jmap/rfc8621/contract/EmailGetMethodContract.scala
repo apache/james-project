@@ -887,4 +887,78 @@ trait EmailGetMethodContract {
          |        ]]
          |}""".stripMargin)
   }
+
+  @Test
+  def emailGetShouldReturnUnknownMethodWhenMissingOneCapability(): Unit = {
+    val messageId: MessageId = randomMessageId
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core"],
+               |  "methodCalls": [[
+               |     "Email/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["${messageId.serialize()}"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "error",
+         |    {
+         |      "type": "unknownMethod",
+         |      "description": "Missing capability(ies): urn:ietf:params:jmap:mail"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def emailGetShouldReturnUnknownMethodWhenMissingAllCapabilities(): Unit = {
+    val messageId: MessageId = randomMessageId
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [],
+               |  "methodCalls": [[
+               |     "Email/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["${messageId.serialize()}"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "error",
+         |    {
+         |      "type": "unknownMethod",
+         |      "description": "Missing capability(ies): urn:ietf:params:jmap:core, urn:ietf:params:jmap:mail"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
 }

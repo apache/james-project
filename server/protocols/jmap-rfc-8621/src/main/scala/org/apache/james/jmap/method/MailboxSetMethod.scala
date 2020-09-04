@@ -25,9 +25,10 @@ import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
 import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, RemoveEmailsOnDestroy, ServerSetPropertyException, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.SetError.SetErrorDescription
-import org.apache.james.jmap.model.{ClientId, Id, Invocation, Properties, ServerId, SetError, State}
+import org.apache.james.jmap.model.{Capabilities, ClientId, Id, Invocation, Properties, ServerId, SetError, State}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.utils.quotas.QuotaLoaderWithPreloadedDefaultFactory
 import org.apache.james.mailbox.MailboxManager.RenameOption
@@ -146,6 +147,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
                                  quotaFactory : QuotaLoaderWithPreloadedDefaultFactory,
                                  metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("Mailbox/set")
+  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,

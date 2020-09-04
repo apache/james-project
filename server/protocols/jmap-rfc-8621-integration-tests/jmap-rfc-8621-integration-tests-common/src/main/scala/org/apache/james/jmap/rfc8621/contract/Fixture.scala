@@ -96,6 +96,21 @@ object Fixture {
       |  ]
       |}""".stripMargin
 
+  val ECHO_REQUEST_OBJECT_WITHOUT_CORE_CAPABILITY: String =
+    """{
+      |  "using": [],
+      |  "methodCalls": [
+      |    [
+      |      "Core/echo",
+      |      {
+      |        "arg1": "arg1data",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c1"
+      |    ]
+      |  ]
+      |}""".stripMargin
+
   val ECHO_RESPONSE_OBJECT: String =
     """{
       |  "sessionState": "75128aab4b1b",

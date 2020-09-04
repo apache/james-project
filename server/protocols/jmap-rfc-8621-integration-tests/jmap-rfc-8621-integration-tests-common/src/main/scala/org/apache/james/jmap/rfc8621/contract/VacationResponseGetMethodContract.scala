@@ -164,7 +164,7 @@ trait VacationResponseGetMethodContract {
   }
 
   @Test
-  def vacationResponseShouldReturnMethodNotFoundWhenOmittingCapability(): Unit = {
+  def vacationResponseShouldReturnUnknownMethodWhenOmittingOneCapability(): Unit = {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(s"""{
@@ -194,7 +194,44 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "error",
          |    {
-         |      "type": "unknownMethod"
+         |      "type": "unknownMethod",
+         |      "description":"Missing capability(ies): urn:ietf:params:jmap:vacationresponse"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def vacationResponseShouldReturnUnknownMethodWhenMissingAllCapability(): Unit = {
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [],
+               |  "methodCalls": [[
+               |    "VacationResponse/get",
+               |    {
+               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "ids": null
+               |    },
+               |    "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "75128aab4b1b",
+         |  "methodResponses": [[
+         |    "error",
+         |    {
+         |      "type": "unknownMethod",
+         |      "description":"Missing capability(ies): urn:ietf:params:jmap:core, urn:ietf:params:jmap:mail, urn:ietf:params:jmap:vacationresponse"
          |    },
          |    "c1"]]
          |}""".stripMargin)
