@@ -29,7 +29,7 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
-import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
+import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId, UnparsedMailboxIdConstraint}
 import org.apache.james.jmap.method.MailboxCreationParseException
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.SetError.{SetErrorDescription, SetErrorType}
@@ -331,18 +331,25 @@ object SharedWithPartialUpdate {
 }
 
 object ParentIdUpdate {
-  def parse(newValue: JsValue, processingContext: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Either[PatchUpdateValidationException, Update] =
-    newValue match {
-      case JsString(id) =>
-        val value: Either[String, UnparsedMailboxId] = refineV(id)
-        value.fold(error => Left(InvalidUpdateException("parentId", error)),
-          id => processingContext.resolveMailboxId(id, mailboxIdFactory)
-            .fold(e => Left(InvalidUpdateException("parentId", e.getMessage)),
-              mailboxId => scala.Right(ParentIdUpdate(Some(mailboxId)))))
-      case JsNull => scala.Right(ParentIdUpdate(None))
-      case _ => Left(InvalidUpdateException("parentId", "Expecting a JSON string or null as an argument"))
-    }
+  def parse(newValue: JsValue, processingContext: ProcessingContext, mailboxIdFactory: MailboxId.Factory):
+    Either[PatchUpdateValidationException, Update] =
+      (newValue match {
+        case JsString(id) =>
+          for {
+            unparsedMailboxId <- refineV[UnparsedMailboxIdConstraint](id)
+            mailboxId <- processingContext.resolveMailboxId(unparsedMailboxId, mailboxIdFactory).left.map(_.getMessage)
+          } yield changeParentTo(mailboxId)
+
+        case JsNull => scala.Right(removeParent())
+
+        case _ => Left("Expecting a JSON string or null as an argument")
+      })
+        .left.map(error => InvalidUpdateException("parentId", error))
+
+  def changeParentTo(newId: MailboxId): ParentIdUpdate = ParentIdUpdate(Some(newId))
+  def removeParent(): ParentIdUpdate = ParentIdUpdate(None)
 }
+case class ParentIdUpdate private (newId: Option[MailboxId]) extends Update
 
 sealed trait Update
 case class NameUpdate(newName: String) extends Update
@@ -351,7 +358,6 @@ case class IsSubscribedUpdate(isSubscribed: Option[IsSubscribed]) extends Update
 case class SharedWithPartialUpdate(username: Username, rights: Rfc4314Rights) extends Update {
   def asACLCommand(): JavaMailboxACL.ACLCommand = JavaMailboxACL.command().forUser(username).rights(rights.asJava).asReplacement()
 }
-case class ParentIdUpdate(newId: Option[MailboxId]) extends Update
 
 class PatchUpdateValidationException() extends IllegalArgumentException
 case class UnsupportedPropertyUpdatedException(property: MailboxPatchObjectKey) extends PatchUpdateValidationException
