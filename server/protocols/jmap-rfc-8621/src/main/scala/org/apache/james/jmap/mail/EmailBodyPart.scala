@@ -53,7 +53,7 @@ object EmailBodyPart {
   def of(messageId: MessageId, message: Message): Try[EmailBodyPart] =
     of(messageId, PartId(1), message).map(_._1)
 
-  def of(messageId: MessageId, partId: PartId, entity: Entity): Try[(EmailBodyPart, PartId)] =
+  private def of(messageId: MessageId, partId: PartId, entity: Entity): Try[(EmailBodyPart, PartId)] =
     entity.getBody match {
       case multipart: Multipart =>
         val scanResults: Try[List[(Option[EmailBodyPart], PartId)]] = multipart.getBodyParts
@@ -73,7 +73,7 @@ object EmailBodyPart {
           .map(part => (part, partId))
     }
 
-  def traverse(messageId: MessageId)(acc: Try[(Option[EmailBodyPart], PartId)], entity: Entity): Try[(Option[EmailBodyPart], PartId)] = {
+  private def traverse(messageId: MessageId)(acc: Try[(Option[EmailBodyPart], PartId)], entity: Entity): Try[(Option[EmailBodyPart], PartId)] = {
     acc.flatMap {
       case (_, previousPartId) =>
         val partId = previousPartId.next
@@ -104,7 +104,7 @@ object EmailBodyPart {
           location = entity.getHeader.getFields("Content-Location").asScala.headOption.map(field => field.getBody),
           subParts = subParts))
 
-  def size(entity: Entity): Try[Size] = {
+  private def size(entity: Entity): Try[Size] = {
     val countingOutputStream: CountingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream())
     val writer = new DefaultMessageWriter
     writer.writeEntity(entity, countingOutputStream)
@@ -114,7 +114,7 @@ object EmailBodyPart {
     }
   }
 
-  def zip[A, B](a: Try[A], b: Try[B]): Try[(A, B)] = for {
+  private def zip[A, B](a: Try[A], b: Try[B]): Try[(A, B)] = for {
     aValue <- a
     bValue <- b
   } yield (aValue, bValue)
