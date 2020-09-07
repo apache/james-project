@@ -2628,7 +2628,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  def creationIdReferencesShouldFailWhenNone(server: GuiceJamesServer): Unit = {
+  def creationIdReferencesShouldFailWhenNone(): Unit = {
     val request =
       s"""
         |{
@@ -3597,7 +3597,6 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  @Tag(CategoryTags.BASIC_FEATURE)
   def deleteShouldSucceedWhenOnDestroyRemoveEmails(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
     val message: Message = Message.Builder

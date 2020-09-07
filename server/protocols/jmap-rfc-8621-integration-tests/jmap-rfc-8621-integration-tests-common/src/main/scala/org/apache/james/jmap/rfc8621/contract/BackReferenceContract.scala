@@ -25,9 +25,8 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
-import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
-import org.junit.jupiter.api.{BeforeEach, Tag, Test}
+import org.junit.jupiter.api.{BeforeEach, Test}
 
 trait BackReferenceContract {
   @BeforeEach
@@ -44,7 +43,6 @@ trait BackReferenceContract {
   }
 
   @Test
-  @Tag(CategoryTags.BASIC_FEATURE)
   def backReferenceResolvingShouldWork(): Unit = {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)

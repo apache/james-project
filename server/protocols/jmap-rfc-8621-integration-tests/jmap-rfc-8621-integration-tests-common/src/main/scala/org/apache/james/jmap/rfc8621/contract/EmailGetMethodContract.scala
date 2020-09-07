@@ -673,7 +673,7 @@ trait EmailGetMethodContract {
   }
 
   @Test
-  def requestingTheSameNotFoundIdTwiceReturnsItOnce(server: GuiceJamesServer): Unit = {
+  def requestingTheSameNotFoundIdTwiceReturnsItOnce(): Unit = {
     val messageId: MessageId = randomMessageId
     val request =
       s"""{
@@ -1725,16 +1725,6 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "2",
          |                                "blobId": "${messageId.serialize()}_2",
-         |                                "headers": [
-         |                                    {
-         |                                        "name": "Content-Type",
-         |                                        "value": "text/plain; charset=utf-8; format=flowed"
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Transfer-Encoding",
-         |                                        "value": "7bit"
-         |                                    }
-         |                                ],
          |                                "size": 97,
          |                                "type": "text/plain",
          |                                "charset": "utf-8"
@@ -1799,16 +1789,6 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "3",
          |                                "blobId": "${messageId.serialize()}_3",
-         |                                "headers": [
-         |                                    {
-         |                                        "name": "Content-Type",
-         |                                        "value": "text/plain; charset=ISO-8859-1; format=flowed"
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Transfer-Encoding",
-         |                                        "value": "8bit"
-         |                                    }
-         |                                ],
          |                                "size": 114,
          |                                "type": "text/plain",
          |                                "charset": "ISO-8859-1"
@@ -1873,16 +1853,6 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "4",
          |                                "blobId": "${messageId.serialize()}_4",
-         |                                "headers": [
-         |                                    {
-         |                                        "name": "Content-Type",
-         |                                        "value": "text/html; charset=ISO-8859-1"
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Transfer-Encoding",
-         |                                        "value": "7bit"
-         |                                    }
-         |                                ],
          |                                "size": 108,
          |                                "type": "text/html",
          |                                "charset": "ISO-8859-1"
@@ -1947,20 +1917,6 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "3",
          |                                "blobId": "${messageId.serialize()}_3",
-         |                                "headers": [
-         |                                    {
-         |                                        "name": "Content-Type",
-         |                                        "value": "text/plain; charset=UTF-8; name=\\\"text1\\\""
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Transfer-Encoding",
-         |                                        "value": "base64"
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Disposition",
-         |                                        "value": "attachment; filename=\\\"text1\\\""
-         |                                    }
-         |                                ],
          |                                "size": 519,
          |                                "name": "text1",
          |                                "type": "text/plain",
@@ -1970,20 +1926,6 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "4",
          |                                "blobId": "${messageId.serialize()}_4",
-         |                                "headers": [
-         |                                    {
-         |                                        "name": "Content-Type",
-         |                                        "value": "application/vnd.ms-publisher; name=\\\"text2\\\""
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Transfer-Encoding",
-         |                                        "value": "base64"
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Disposition",
-         |                                        "value": "attachment; filename=\\\"text2\\\""
-         |                                    }
-         |                                ],
          |                                "size": 694,
          |                                "name": "text2",
          |                                "type": "application/vnd.ms-publisher",
@@ -1993,20 +1935,6 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "5",
          |                                "blobId": "${messageId.serialize()}_5",
-         |                                "headers": [
-         |                                    {
-         |                                        "name": "Content-Type",
-         |                                        "value": "text/plain; charset=UTF-8; name=\\\"text3\\\""
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Transfer-Encoding",
-         |                                        "value": "base64"
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Disposition",
-         |                                        "value": "attachment; filename=\\\"text3\\\""
-         |                                    }
-         |                                ],
          |                                "size": 713,
          |                                "name": "text3",
          |                                "type": "text/plain",
@@ -2073,30 +2001,12 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "5",
          |                                "blobId": "${messageId.serialize()}_5",
-         |                                "headers": [
-         |                                    {
-         |                                        "name": "Content-ID",
-         |                                        "value": "<14672787885774e5c4d4cee471352039@linagora.com>"
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Type",
-         |                                        "value": "text/plain; charset=\\\"iso-8859-1\\\"; name=\\\"avertissement.txt\\\""
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Disposition",
-         |                                        "value": "inline; filename=\\\"avertissement.txt\\\""
-         |                                    },
-         |                                    {
-         |                                        "name": "Content-Transfer-Encoding",
-         |                                        "value": "binary"
-         |                                    }
-         |                                ],
          |                                "size": 249,
          |                                "name": "avertissement.txt",
          |                                "type": "text/plain",
          |                                "charset": "iso-8859-1",
          |                                "disposition": "inline",
-         |                                "cid": "<14672787885774e5c4d4cee471352039@linagora.com>"
+         |                                "cid": "14672787885774e5c4d4cee471352039@linagora.com"
          |                            }
          |                        ]
          |                    }

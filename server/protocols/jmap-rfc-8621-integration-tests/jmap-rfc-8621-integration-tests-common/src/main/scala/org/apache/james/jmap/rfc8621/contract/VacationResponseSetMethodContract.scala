@@ -46,7 +46,7 @@ trait VacationResponseSetMethodContract {
 
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
-  def updateShouldSucceed(server: GuiceJamesServer): Unit = {
+  def updateShouldSucceed(): Unit = {
     val request =
       s"""
          |{
@@ -120,7 +120,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateShouldNoopWhenEmptyPatchObject(server: GuiceJamesServer): Unit = {
+  def updateShouldNoopWhenEmptyPatchObject(): Unit = {
     val request1 =
       s"""
          |{
@@ -220,8 +220,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  @Tag(CategoryTags.BASIC_FEATURE)
-  def partialUpdateShouldSucceed(server: GuiceJamesServer): Unit = {
+  def partialUpdateShouldSucceed(): Unit = {
     val request =
       s"""
          |{
@@ -270,7 +269,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def partialUpdateShouldNotAffectOtherFields(server: GuiceJamesServer): Unit = {
+  def partialUpdateShouldNotAffectOtherFields(): Unit = {
     val request1 =
       s"""
          |{
@@ -373,7 +372,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateShouldFailWhenInvalidKey(server: GuiceJamesServer): Unit = {
+  def updateShouldFailWhenInvalidKey(): Unit = {
     val request =
       s"""
          |{
@@ -425,7 +424,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateShouldFailWhenIdIsPresent(server: GuiceJamesServer): Unit = {
+  def updateShouldFailWhenIdIsPresent(): Unit = {
     val request =
       s"""
          |{
@@ -478,7 +477,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateShouldFailWhenInvalidDate(server: GuiceJamesServer): Unit = {
+  def updateShouldFailWhenInvalidDate(): Unit = {
     val request =
       s"""
          |{
@@ -530,7 +529,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateShouldFailWhenFromDateIsMoreRecentThanToDate(server: GuiceJamesServer): Unit = {
+  def updateShouldFailWhenFromDateIsMoreRecentThanToDate(): Unit = {
     val request =
       s"""
          |{
@@ -583,7 +582,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateShouldNoopWhenEmptyMap(server: GuiceJamesServer): Unit = {
+  def updateShouldNoopWhenEmptyMap(): Unit = {
     val request =
       s"""
          |{
@@ -626,7 +625,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def updateShouldFailWhenMultiplePatchObjects(server: GuiceJamesServer): Unit = {
+  def updateShouldFailWhenMultiplePatchObjects(): Unit = {
     val request =
       s"""
          |{
@@ -684,7 +683,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def createShouldFail(server: GuiceJamesServer): Unit = {
+  def createShouldFail(): Unit = {
     val request =
       s"""
          |{
@@ -736,7 +735,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
-  def destroyShouldFail(server: GuiceJamesServer): Unit = {
+  def destroyShouldFail(): Unit = {
     val request =
       s"""
          |{
