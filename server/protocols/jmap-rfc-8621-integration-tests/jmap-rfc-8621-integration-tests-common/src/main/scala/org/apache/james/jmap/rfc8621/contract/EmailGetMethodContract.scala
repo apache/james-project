@@ -1641,4 +1641,215 @@ trait EmailGetMethodContract {
          |        ]]
          |}""".stripMargin)
   }
+
+  @Test
+  def attachmentsForSimpleMultipart(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties":["attachments"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [[
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "state": "000001",
+         |                "list": [
+         |                    {
+         |                        "id": "${messageId.serialize()}",
+         |                        "attachments": [
+         |                            {
+         |                                "partId": "3",
+         |                                "blobId": "${messageId.serialize()}_3",
+         |                                "headers": [
+         |                                    {
+         |                                        "name": "Content-Type",
+         |                                        "value": "text/plain; charset=UTF-8; name=\\\"text1\\\""
+         |                                    },
+         |                                    {
+         |                                        "name": "Content-Transfer-Encoding",
+         |                                        "value": "base64"
+         |                                    },
+         |                                    {
+         |                                        "name": "Content-Disposition",
+         |                                        "value": "attachment; filename=\\\"text1\\\""
+         |                                    }
+         |                                ],
+         |                                "size": 519,
+         |                                "name": "text1",
+         |                                "type": "text/plain",
+         |                                "charset": "UTF-8",
+         |                                "disposition": "attachment"
+         |                            },
+         |                            {
+         |                                "partId": "4",
+         |                                "blobId": "${messageId.serialize()}_4",
+         |                                "headers": [
+         |                                    {
+         |                                        "name": "Content-Type",
+         |                                        "value": "application/vnd.ms-publisher; name=\\\"text2\\\""
+         |                                    },
+         |                                    {
+         |                                        "name": "Content-Transfer-Encoding",
+         |                                        "value": "base64"
+         |                                    },
+         |                                    {
+         |                                        "name": "Content-Disposition",
+         |                                        "value": "attachment; filename=\\\"text2\\\""
+         |                                    }
+         |                                ],
+         |                                "size": 694,
+         |                                "name": "text2",
+         |                                "type": "application/vnd.ms-publisher",
+         |                                "charset": "us-ascii",
+         |                                "disposition": "attachment"
+         |                            },
+         |                            {
+         |                                "partId": "5",
+         |                                "blobId": "${messageId.serialize()}_5",
+         |                                "headers": [
+         |                                    {
+         |                                        "name": "Content-Type",
+         |                                        "value": "text/plain; charset=UTF-8; name=\\\"text3\\\""
+         |                                    },
+         |                                    {
+         |                                        "name": "Content-Transfer-Encoding",
+         |                                        "value": "base64"
+         |                                    },
+         |                                    {
+         |                                        "name": "Content-Disposition",
+         |                                        "value": "attachment; filename=\\\"text3\\\""
+         |                                    }
+         |                                ],
+         |                                "size": 713,
+         |                                "name": "text3",
+         |                                "type": "text/plain",
+         |                                "charset": "UTF-8",
+         |                                "disposition": "attachment"
+         |                            }
+         |                        ]
+         |                    }
+         |                ],
+         |                "notFound": []
+         |            },
+         |            "c1"
+         |        ]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def attachmentsForComplexMultipart(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_complex.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties":["attachments"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [[
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "state": "000001",
+         |                "list": [
+         |                    {
+         |                        "id": "${messageId.serialize()}",
+         |                        "attachments": [
+         |                            {
+         |                                "partId": "5",
+         |                                "blobId": "${messageId.serialize()}_5",
+         |                                "headers": [
+         |                                    {
+         |                                        "name": "Content-ID",
+         |                                        "value": "<14672787885774e5c4d4cee471352039@linagora.com>"
+         |                                    },
+         |                                    {
+         |                                        "name": "Content-Type",
+         |                                        "value": "text/plain; charset=\\\"iso-8859-1\\\"; name=\\\"avertissement.txt\\\""
+         |                                    },
+         |                                    {
+         |                                        "name": "Content-Disposition",
+         |                                        "value": "inline; filename=\\\"avertissement.txt\\\""
+         |                                    },
+         |                                    {
+         |                                        "name": "Content-Transfer-Encoding",
+         |                                        "value": "binary"
+         |                                    }
+         |                                ],
+         |                                "size": 249,
+         |                                "name": "avertissement.txt",
+         |                                "type": "text/plain",
+         |                                "charset": "iso-8859-1",
+         |                                "disposition": "inline",
+         |                                "cid": "<14672787885774e5c4d4cee471352039@linagora.com>"
+         |                            }
+         |                        ]
+         |                    }
+         |                ],
+         |                "notFound": []
+         |            },
+         |            "c1"
+         |        ]]
+         |}""".stripMargin)
+  }
 }

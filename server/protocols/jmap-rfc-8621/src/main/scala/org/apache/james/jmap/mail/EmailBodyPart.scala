@@ -163,7 +163,15 @@ case class EmailBodyPart(partId: PartId,
 
   def htmlBody: List[EmailBodyPart] = selfBody ++ htmlBodyOfMultipart
 
+  def attachments: List[EmailBodyPart] = selfAttachment ++ attachmentsOfMultipart
+
   private def selfBody: List[EmailBodyPart] = if (shouldBeDisplayedAsBody) {
+    List(this)
+  } else {
+    Nil
+  }
+
+  private def selfAttachment: List[EmailBodyPart] = if (shouldBeDisplayedAsAttachment) {
     List(this)
   } else {
     Nil
@@ -171,6 +179,7 @@ case class EmailBodyPart(partId: PartId,
 
   private val hasTextMediaType: Boolean = `type`.equals(TEXT_PLAIN) || `type`.equals(TEXT_HTML)
   private val shouldBeDisplayedAsBody: Boolean = hasTextMediaType && disposition.isEmpty && cid.isEmpty
+  private val shouldBeDisplayedAsAttachment: Boolean = !shouldBeDisplayedAsBody && subParts.isEmpty
 
   private def textBodyOfMultipart: List[EmailBodyPart] = `type` match {
     case MULTIPART_ALTERNATIVE => textPlainSubparts
@@ -183,6 +192,9 @@ case class EmailBodyPart(partId: PartId,
     case _ => subParts.getOrElse(Nil)
       .flatMap(subPart => subPart.htmlBody)
   }
+
+  private def attachmentsOfMultipart: List[EmailBodyPart] = subParts.getOrElse(Nil)
+    .flatMap(_.attachments)
 
   private def textPlainSubparts: List[EmailBodyPart] = subParts.getOrElse(Nil)
     .filter(subPart => subPart.`type`.equals(TEXT_PLAIN))
