@@ -65,17 +65,22 @@ object Email {
   }
 
   def from(message: (MessageId, Seq[MessageResult])): Try[Email] = {
-    val firstMessage: MessageResult = message._2.head
 
     val defaultMessageBuilder = new DefaultMessageBuilder
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
-    val mime4JMessage: Message = defaultMessageBuilder.parseMessage(firstMessage.getFullContent.getInputStream)
     val messageId: MessageId = message._1
-    val bodyStructureTry = EmailBodyPart.of(messageId, mime4JMessage)
 
-
-    bodyStructureTry.map(bodyStructure => Email(messageId, sanitizeSize(firstMessage.getSize), bodyStructure))
+    for {
+      firstMessage <- message._2
+        .headOption
+        .map(Success(_))
+        .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
+      mime4JMessage <- Try(defaultMessageBuilder.parseMessage(firstMessage.getFullContent.getInputStream))
+      bodyStructure <- EmailBodyPart.of(messageId, mime4JMessage)
+    } yield {
+      Email(messageId, sanitizeSize(firstMessage.getSize), bodyStructure)
+    }
   }
 }
 
