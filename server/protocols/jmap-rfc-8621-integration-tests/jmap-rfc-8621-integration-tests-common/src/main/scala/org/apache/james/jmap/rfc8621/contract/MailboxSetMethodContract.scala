@@ -32,6 +32,7 @@ import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.draft.MessageIdProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Right}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
@@ -41,7 +42,7 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.{Assertions, SoftAssertions}
 import org.hamcrest.Matchers.{equalTo, hasSize}
-import org.junit.jupiter.api.{BeforeEach, Disabled, Test}
+import org.junit.jupiter.api.{BeforeEach, Disabled, Tag, Test}
 
 trait MailboxSetMethodContract {
 
@@ -870,6 +871,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def mailboxSetShouldSubscribeMailboxWhenRequired(server: GuiceJamesServer): Unit = {
     val request =
       """
@@ -1066,6 +1068,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def mailboxSetCreationShouldHandleRights(server: GuiceJamesServer): Unit = {
     val request =
       s"""
@@ -1411,6 +1414,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def mailboxSetShouldReturnCreatedWhenOnlyName(server: GuiceJamesServer): Unit = {
     val request =
       """
@@ -1899,6 +1903,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def deleteShouldSucceedWhenMailboxExists(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
 
@@ -2720,6 +2725,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldRenameMailboxes(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
 
@@ -2876,6 +2882,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldRenameSubscriptions(server: GuiceJamesServer): Unit = {
     val request =
       s"""
@@ -3590,6 +3597,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def deleteShouldSucceedWhenOnDestroyRemoveEmails(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
     val message: Message = Message.Builder
@@ -3846,6 +3854,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldSubscribeMailboxes(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
 
@@ -4769,6 +4778,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldAllowSettingRights(server: GuiceJamesServer): Unit = {
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
     val request =
@@ -4841,6 +4851,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldAllowResettingRights(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(BOB, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
@@ -5517,6 +5528,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldAllowParentIdChangeWhenTopLevelMailbox(server: GuiceJamesServer): Unit = {
     val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "parent"))

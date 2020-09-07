@@ -27,8 +27,9 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
+import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
 trait VacationResponseSetMethodContract {
   @BeforeEach
@@ -44,6 +45,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldSucceed(server: GuiceJamesServer): Unit = {
     val request =
       s"""
@@ -218,6 +220,7 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def partialUpdateShouldSucceed(server: GuiceJamesServer): Unit = {
     val request =
       s"""
