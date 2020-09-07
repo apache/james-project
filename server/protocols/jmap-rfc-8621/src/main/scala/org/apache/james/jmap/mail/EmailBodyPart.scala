@@ -31,6 +31,8 @@ import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.EmailBodyPart.{MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageId}
+import org.apache.james.jmap.model.Properties
+import org.apache.james.mailbox.model.MessageId
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart}
 import org.apache.james.mime4j.message.DefaultMessageWriter
 
@@ -52,9 +54,12 @@ case class PartId(value: PartIdValue) {
 }
 
 object EmailBodyPart {
-  val TEXT_PLAIN: String = "text/plain"
-  val TEXT_HTML: String = "text/html"
-  val MULTIPART_ALTERNATIVE: String = "multipart/alternative"
+  val TEXT_PLAIN: Type = Type("text/plain")
+  val TEXT_HTML: Type = Type("text/html")
+  val MULTIPART_ALTERNATIVE: Type = Type("multipart/alternative")
+
+  val defaultProperties: Properties = Properties("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location")
+  val allowedProperties: Properties = defaultProperties ++ Properties("subParts", "headers")
 
   def of(messageId: MessageId, message: Message): Try[EmailBodyPart] =
     of(messageId, PartId(1), message).map(_._1)

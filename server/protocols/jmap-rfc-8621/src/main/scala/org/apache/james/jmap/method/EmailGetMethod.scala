@@ -22,7 +22,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
-import org.apache.james.jmap.mail.{Email, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound}
+import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
@@ -87,14 +87,15 @@ class EmailGetMethod @Inject() (serializer: Serializer,
 
   private def computeResponseInvocation(request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     validateProperties(request)
-        .fold(
-          e => SMono.raiseError(e),
-          properties => getEmails(request, mailboxSession)
+      .flatMap(properties => validateBodyProperties(request).map((properties, _)))
+      .fold(
+        e => SMono.raiseError(e), {
+          case (properties, bodyProperties) => getEmails(request, mailboxSession)
             .map(response => Invocation(
               methodName = methodName,
-              arguments = Arguments(serializer.serialize(response, properties).as[JsObject]),
-              methodCallId = invocation.methodCallId)))
-
+              arguments = Arguments(serializer.serialize(response, properties, bodyProperties).as[JsObject]),
+              methodCallId = invocation.methodCallId))
+        })
 
   private def validateProperties(request: EmailGetRequest): Either[IllegalArgumentException, Properties] =
     request.properties match {
@@ -105,6 +106,18 @@ class EmailGetMethod @Inject() (serializer: Serializer,
           Right(properties ++ Email.idProperty)
         } else {
           Left(new IllegalArgumentException(s"The following properties [${invalidProperties.format()}] do not exist."))
+        }
+    }
+
+  private def validateBodyProperties(request: EmailGetRequest): Either[IllegalArgumentException, Properties] =
+    request.bodyProperties match {
+      case None => Right(EmailBodyPart.defaultProperties)
+      case Some(properties) =>
+        val invalidProperties = properties -- EmailBodyPart.allowedProperties
+        if (invalidProperties.isEmpty()) {
+          Right(properties)
+        } else {
+          Left(new IllegalArgumentException(s"The following bodyProperties [${invalidProperties.format()}] do not exist."))
         }
     }
 

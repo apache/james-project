@@ -255,15 +255,14 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val locationWrites: Writes[Location] = Json.valueWrites[Location]
   private implicit val partIdWrites: Writes[PartId] = partId => JsString(partId.serialize)
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
-  private implicit val emailPartsWrites: Writes[EmailBodyPart] = Json.writes[EmailBodyPart]
   private implicit val emailIdsReads: Reads[EmailIds] = Json.valueReads[EmailIds]
   private implicit val emailGetRequestReads: Reads[EmailGetRequest] = Json.reads[EmailGetRequest]
   private implicit val emailNotFoundWrites: Writes[EmailNotFound] = Json.valueWrites[EmailNotFound]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
-  private implicit val emailWrites: Writes[Email] = Json.writes[Email]
-  private implicit def emailWritesWithPropertyFilter(properties: Properties): Writes[Email] = Json.writes[Email]
+  private implicit def emailWritesWithPropertyFilter(properties: Properties)(implicit partsWrites: Writes[EmailBodyPart]): Writes[Email] = Json.writes[Email]
     .transform(obj => properties.filter(obj))
-  private implicit val emailGetResponseWrites: Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
+  private implicit def bodyPartWritesWithPropertyFilter(properties: Properties): Writes[EmailBodyPart] = Json.writes[EmailBodyPart]
+    .transform(obj => properties.filter(obj))
   private implicit def emailGetResponseWrites(implicit emailWrites: Writes[Email]): Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
 
   private def readMapEntry[K, V](keyValidator: String => Either[String, K], valueTransformer: JsObject => V): Reads[Map[K, V]] = _.validate[Map[String, JsObject]]
@@ -431,8 +430,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
 
   def serialize(vacationResponseSetResponse: VacationResponseSetResponse): JsValue = Json.toJson(vacationResponseSetResponse)
 
-  def serialize(emailGetResponse: EmailGetResponse, properties: Properties): JsValue =
-    Json.toJson(emailGetResponse)(emailGetResponseWrites(emailWritesWithPropertyFilter(properties)))
+  def serialize(emailGetResponse: EmailGetResponse, properties: Properties, bodyProperties: Properties): JsValue =
+    Json.toJson(emailGetResponse)(emailGetResponseWrites(emailWritesWithPropertyFilter(properties)(bodyPartWritesWithPropertyFilter(bodyProperties))))
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 

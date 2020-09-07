@@ -27,7 +27,8 @@ case class EmailIds(value: List[UnparsedEmailId])
 
 case class EmailGetRequest(accountId: AccountId,
                            ids: Option[EmailIds],
-                           properties: Option[Properties])
+                           properties: Option[Properties],
+                           bodyProperties: Option[Properties])
 
 case class EmailNotFound(value: Set[UnparsedEmailId]) {
   def merge(other: EmailNotFound): EmailNotFound = EmailNotFound(this.value ++ other.value)
