@@ -1406,7 +1406,7 @@ trait EmailGetMethodContract {
          |                                    "type": "text/plain",
          |                                    "charset": "iso-8859-1",
          |                                    "disposition": "inline",
-         |                                    "cid": "<14672787885774e5c4d4cee471352039@linagora.com>"
+         |                                    "cid": "14672787885774e5c4d4cee471352039@linagora.com"
          |                                }
          |                            ]
          |                        }

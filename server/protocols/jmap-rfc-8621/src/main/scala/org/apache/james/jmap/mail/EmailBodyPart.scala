@@ -29,11 +29,12 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.PartId.PartIdValue
-import org.apache.james.mailbox.model.MessageId
+import org.apache.james.mailbox.model.{Cid, MessageId}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart}
 import org.apache.james.mime4j.message.DefaultMessageWriter
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.util.{Failure, Success, Try}
 
 object PartId {
@@ -99,7 +100,15 @@ object EmailBodyPart {
           `type` = entity.getMimeType,
           charset = Option(entity.getCharset),
           disposition = Option(entity.getDispositionType),
-          cid = entity.getHeader.getFields("Content-Id").asScala.headOption.map(field => field.getBody),
+          cid = entity.getHeader.getFields("Content-Id")
+            .asScala
+            .headOption
+            .map(field => field.getBody)
+            .flatMap(Cid.parser()
+              .relaxed()
+              .unwrap()
+              .parse(_)
+              .toScala),
           language = entity.getHeader.getFields("Content-Language").asScala.headOption.map(field => field.getBody),
           location = entity.getHeader.getFields("Content-Location").asScala.headOption.map(field => field.getBody),
           subParts = subParts))
@@ -128,7 +137,7 @@ case class EmailBodyPart(partId: PartId,
                          `type`: String,
                          charset: Option[String],
                          disposition: Option[String],
-                         cid: Option[String],
+                         cid: Option[Cid],
                          language: Option[String],
                          location: Option[String],
                          subParts: Option[List[EmailBodyPart]]) {

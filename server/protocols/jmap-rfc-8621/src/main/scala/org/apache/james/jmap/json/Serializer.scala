@@ -40,7 +40,7 @@ import org.apache.james.jmap.routes.{BackReference, JsonPath}
 import org.apache.james.jmap.vacation.{VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxACL.{Right => JavaRight}
-import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MessageId}
+import org.apache.james.mailbox.model.{Cid, MailboxACL, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -246,6 +246,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val mailboxPatchObject: Reads[MailboxPatchObject] = Json.valueReads[MailboxPatchObject]
 
   private implicit val blobIdWrites: Writes[BlobId] = Json.valueWrites[BlobId]
+  private implicit val CidWrites: Writes[Cid] = cid => JsString(cid.getValue)
   private implicit val partIdWrites: Writes[PartId] = partId => JsString(partId.serialize)
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
   private implicit val emailPartsWrites: Writes[EmailBodyPart] = Json.writes[EmailBodyPart]
