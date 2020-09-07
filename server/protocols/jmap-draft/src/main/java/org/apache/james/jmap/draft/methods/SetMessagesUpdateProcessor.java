@@ -53,7 +53,6 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
@@ -290,9 +289,6 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private boolean isTargetingOutbox(Set<MailboxId> outboxes, Set<MailboxId> targetMailboxIds) throws MailboxException {
-        if (outboxes.isEmpty()) {
-            throw new MailboxNotFoundException("At least one outbox should be accessible");
-        }
         return targetMailboxIds.stream().anyMatch(outboxes::contains);
     }
 
