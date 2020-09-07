@@ -29,7 +29,6 @@ import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.model.Properties
 import org.apache.james.mailbox.model.{MessageId, MessageResult}
 import org.apache.james.mime4j.codec.DecodeMonitor
-import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.MimeConfig
 import org.slf4j.{Logger, LoggerFactory}
@@ -43,7 +42,7 @@ object Email {
   type UnparsedEmailId = String Refined UnparsedEmailIdConstraint
 
   val defaultProperties: Properties = Properties("id", "size")
-  val allowedProperties: Properties = Properties("id", "size", "bodyStructure")
+  val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody")
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
@@ -79,11 +78,18 @@ object Email {
       mime4JMessage <- Try(defaultMessageBuilder.parseMessage(firstMessage.getFullContent.getInputStream))
       bodyStructure <- EmailBodyPart.of(messageId, mime4JMessage)
     } yield {
-      Email(messageId, sanitizeSize(firstMessage.getSize), bodyStructure)
+      Email(
+        id = messageId,
+        size = sanitizeSize(firstMessage.getSize),
+        bodyStructure = bodyStructure,
+        textBody = bodyStructure.textBody,
+        htmlBody = bodyStructure.htmlBody)
     }
   }
 }
 
 case class Email(id: MessageId,
                  size: Size,
-                 bodyStructure: EmailBodyPart)
+                 bodyStructure: EmailBodyPart,
+                 textBody: List[EmailBodyPart],
+                 htmlBody: List[EmailBodyPart])

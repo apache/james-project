@@ -28,6 +28,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import org.apache.james.jmap.mail.Email.Size
+import org.apache.james.jmap.mail.EmailBodyPart.{MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageId}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart}
@@ -51,6 +52,10 @@ case class PartId(value: PartIdValue) {
 }
 
 object EmailBodyPart {
+  val TEXT_PLAIN: String = "text/plain"
+  val TEXT_HTML: String = "text/html"
+  val MULTIPART_ALTERNATIVE: String = "multipart/alternative"
+
   def of(messageId: MessageId, message: Message): Try[EmailBodyPart] =
     of(messageId, PartId(1), message).map(_._1)
 
@@ -154,4 +159,34 @@ case class EmailBodyPart(partId: PartId,
                          location: Option[Location],
                          subParts: Option[List[EmailBodyPart]]) {
 
+  def textBody: List[EmailBodyPart] = selfBody ++ textBodyOfMultipart
+
+  def htmlBody: List[EmailBodyPart] = selfBody ++ htmlBodyOfMultipart
+
+  private def selfBody: List[EmailBodyPart] = if (shouldBeDisplayedAsBody) {
+    List(this)
+  } else {
+    Nil
+  }
+
+  private val hasTextMediaType: Boolean = `type`.equals(TEXT_PLAIN) || `type`.equals(TEXT_HTML)
+  private val shouldBeDisplayedAsBody: Boolean = hasTextMediaType && disposition.isEmpty && cid.isEmpty
+
+  private def textBodyOfMultipart: List[EmailBodyPart] = `type` match {
+    case MULTIPART_ALTERNATIVE => textPlainSubparts
+    case _ => subParts.getOrElse(Nil)
+      .flatMap(subPart => subPart.textBody)
+  }
+
+  private def htmlBodyOfMultipart: List[EmailBodyPart] = `type` match {
+    case MULTIPART_ALTERNATIVE => textHtmlSubparts
+    case _ => subParts.getOrElse(Nil)
+      .flatMap(subPart => subPart.htmlBody)
+  }
+
+  private def textPlainSubparts: List[EmailBodyPart] = subParts.getOrElse(Nil)
+    .filter(subPart => subPart.`type`.equals(TEXT_PLAIN))
+
+  private def textHtmlSubparts: List[EmailBodyPart] = subParts.getOrElse(Nil)
+    .filter(subPart => subPart.`type`.equals(TEXT_HTML))
 }
