@@ -96,22 +96,27 @@ object EmailBodyPart {
           blobId = blobId,
           headers = entity.getHeader.getFields.asScala.toList.map(EmailHeader(_)),
           size = size,
-          name = Option(entity.getFilename),
-          `type` = entity.getMimeType,
-          charset = Option(entity.getCharset),
-          disposition = Option(entity.getDispositionType),
-          cid = entity.getHeader.getFields("Content-Id")
-            .asScala
-            .headOption
-            .map(field => field.getBody)
+          name = Option(entity.getFilename).map(Name),
+          `type` = Type(entity.getMimeType),
+          charset = Option(entity.getCharset).map(Charset),
+          disposition = Option(entity.getDispositionType).map(Disposition),
+          cid = headerValue(entity, "Content-Id")
             .flatMap(Cid.parser()
               .relaxed()
               .unwrap()
               .parse(_)
               .toScala),
-          language = entity.getHeader.getFields("Content-Language").asScala.headOption.map(field => field.getBody),
-          location = entity.getHeader.getFields("Content-Location").asScala.headOption.map(field => field.getBody),
+          language = headerValue(entity, "Content-Language")
+            .map(Language),
+          location = headerValue(entity, "Content-Location")
+            .map(Location),
           subParts = subParts))
+
+  private def headerValue(entity: Entity, headerName: String): Option[String] = entity.getHeader
+    .getFields(headerName)
+    .asScala
+    .headOption
+    .map(_.getBody)
 
   private def size(entity: Entity): Try[Size] = {
     val countingOutputStream: CountingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream())
@@ -129,17 +134,24 @@ object EmailBodyPart {
   } yield (aValue, bValue)
 }
 
+case class Name(value: String)
+case class Type(value: String)
+case class Charset(value: String)
+case class Disposition(value: String)
+case class Language(value: String)
+case class Location(value: String)
+
 case class EmailBodyPart(partId: PartId,
                          blobId: Option[BlobId],
                          headers: List[EmailHeader],
                          size: Size,
-                         name: Option[String],
-                         `type`: String,
-                         charset: Option[String],
-                         disposition: Option[String],
+                         name: Option[Name],
+                         `type`: Type,
+                         charset: Option[Charset],
+                         disposition: Option[Disposition],
                          cid: Option[Cid],
-                         language: Option[String],
-                         location: Option[String],
+                         language: Option[Language],
+                         location: Option[Location],
                          subParts: Option[List[EmailBodyPart]]) {
 
 }
