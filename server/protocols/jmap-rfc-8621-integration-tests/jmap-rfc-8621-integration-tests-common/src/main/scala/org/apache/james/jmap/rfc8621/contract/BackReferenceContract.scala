@@ -151,7 +151,7 @@ trait BackReferenceContract {
            |     "c2"]]
            |}""".stripMargin)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .extract()
@@ -221,7 +221,7 @@ trait BackReferenceContract {
            |     "c2"]]
            |}""".stripMargin)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .extract()
@@ -291,7 +291,7 @@ trait BackReferenceContract {
            |     "c2"]]
            |}""".stripMargin)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .extract()
@@ -361,7 +361,7 @@ trait BackReferenceContract {
            |     "c2"]]
            |}""".stripMargin)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .extract()
