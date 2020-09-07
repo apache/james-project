@@ -30,7 +30,7 @@ import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId, UnparsedMailboxIdConstraint}
 import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
-import org.apache.james.jmap.mail.{BlobId, Charset, DelegatedNamespace, Disposition, Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailHeader, EmailIds, EmailNotFound, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Language, Location, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, Name, NotFound, PartId, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, Type, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
+import org.apache.james.jmap.mail.{BlobId, Charset, DelegatedNamespace, Disposition, Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailIds, EmailNotFound, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Language, Location, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, Name, NotFound, PartId, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, Type, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
@@ -254,6 +254,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val languageWrites: Writes[Language] = Json.valueWrites[Language]
   private implicit val locationWrites: Writes[Location] = Json.valueWrites[Location]
   private implicit val partIdWrites: Writes[PartId] = partId => JsString(partId.serialize)
+  private implicit val headerNameWrites: Writes[EmailHeaderName] = Json.valueWrites[EmailHeaderName]
+  private implicit val headerValueWrites: Writes[EmailHeaderValue] = Json.valueWrites[EmailHeaderValue]
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
   private implicit val emailIdsReads: Reads[EmailIds] = Json.valueReads[EmailIds]
   private implicit val emailGetRequestReads: Reads[EmailGetRequest] = Json.reads[EmailGetRequest]

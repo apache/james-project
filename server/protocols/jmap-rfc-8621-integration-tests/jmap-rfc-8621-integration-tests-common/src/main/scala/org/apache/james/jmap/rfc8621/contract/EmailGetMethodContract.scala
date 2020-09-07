@@ -28,7 +28,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ANDRE, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
@@ -311,7 +311,8 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .isEqualTo(
       s"""{
          |    "sessionState": "75128aab4b1b",
          |    "methodResponses": [[
@@ -2011,6 +2012,74 @@ trait EmailGetMethodContract {
          |                        ]
          |                    }
          |                ],
+         |                "notFound": []
+         |            },
+         |            "c1"
+         |        ]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def emailGetShouldReturnUnparsedHeaders(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB);
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE);
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setSubject("World domination \r\n" +
+        " and this is also part of the header")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |     "Email/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["${messageId.serialize()}"],
+               |       "properties": ["headers"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [[
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "state": "000001",
+         |                "list": [{
+         |                    "id": "${messageId.serialize()}",
+         |                    "headers": [
+         |                      {"name":"MIME-Version","value":" 1.0"},
+         |                      {"name":"Subject","value":" =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?="},
+         |                      {"name":"Sender","value":" andre@domain.tld"},
+         |                      {"name":"From","value":" andre@domain.tld"},
+         |                      {"name":"Content-Type","value":" text/plain; charset=UTF-8"}
+         |                    ]
+         |                }],
          |                "notFound": []
          |            },
          |            "c1"

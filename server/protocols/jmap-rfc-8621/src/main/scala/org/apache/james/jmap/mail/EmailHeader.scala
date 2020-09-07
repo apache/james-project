@@ -22,7 +22,10 @@ package org.apache.james.jmap.mail
 import org.apache.james.mime4j.stream.Field
 
 object EmailHeader {
-  def apply(field: Field): EmailHeader = EmailHeader(field.getName, field.getBody)
+  def apply(field: Field): EmailHeader = EmailHeader(EmailHeaderName(field.getName), EmailHeaderValue(field.getBody))
 }
 
-case class EmailHeader(name: String, value: String)
+case class EmailHeaderName(value: String) extends AnyVal
+case class EmailHeaderValue(value: String) extends AnyVal
+
+case class EmailHeader(name: EmailHeaderName, value: EmailHeaderValue)
