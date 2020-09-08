@@ -189,6 +189,8 @@ case class EmailBodyPart(partId: PartId,
 
   def attachments: List[EmailBodyPart] = selfAttachment ++ attachmentsOfMultipart
 
+  def flatten: List[EmailBodyPart] = subParts.getOrElse(Nil).flatMap(part => part.flatten) ++ List(this)
+
   private def selfBody: List[EmailBodyPart] = if (shouldBeDisplayedAsBody) {
     List(this)
   } else {

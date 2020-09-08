@@ -2058,7 +2058,7 @@ trait EmailGetMethodContract {
   }
 
   @Test
-  def allBodyValuesForComplexMultipart(server: GuiceJamesServer): Unit = {
+  def textAndHtmlBodyValuesForComplexMultipart(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
@@ -2129,7 +2129,7 @@ trait EmailGetMethodContract {
   }
 
   @Test
-  def allBodyValuesForSimpleMultipart(server: GuiceJamesServer): Unit = {
+  def textAndHtmlBodyValuesForSimpleMultipart(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
@@ -2179,6 +2179,153 @@ trait EmailGetMethodContract {
          |                        "bodyValues": {
          |                            "2": {
          |                                "value": "Send\\n\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            }
+         |                        }
+         |                    }
+         |                ],
+         |                "notFound": []
+         |            },
+         |            "c1"
+         |        ]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def allBodyValuesForSimpleMultipart(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties":["bodyValues"],
+         |      "fetchAllBodyValues": true
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [
+         |        [
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "state": "000001",
+         |                "list": [
+         |                    {
+         |                        "id": "1",
+         |                        "bodyValues": {
+         |                            "2": {
+         |                                "value": "Send\\n\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            },
+         |                            "3": {
+         |                                "value": "-----BEGIN RSA PRIVATE KEY-----\\nMIIEogIBAAKCAQEAx7PG0+E//EMpm7IgI5Q9TMDSFya/1hE+vvTJrk0iGFllPeHL\\nA5/VlTM0YWgG6X50qiMfE3VLazf2c19iXrT0mq/21PZ1wFnogv4zxUNaih+Bng62\\nF0SyruE/O/Njqxh/Ccq6K/e05TV4T643USxAeG0KppmYW9x8HA/GvV832apZuxkV\\ni6NVkDBrfzaUCwu4zH+HwOv/pI87E7KccHYC++Biaj3\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            },
+         |                            "5": {
+         |                                "value": "|1|oS75OgL3vF2Gdl99CJDbEpaJ3yE=|INGqljCW1XMf4ggOQm26/BNnKGc= ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXyN6m5U4hpph9uOv54aHc4Xr8jhAa/SX5MJ\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            }
+         |                        }
+         |                    }
+         |                ],
+         |                "notFound": []
+         |            },
+         |            "c1"
+         |        ]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def allBodyValuesForComplexMultipart(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_complex.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties":["bodyValues"],
+         |      "fetchAllBodyValues": true
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [[
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "state": "000001",
+         |                "list": [
+         |                    {
+         |                        "id": "1",
+         |                        "bodyValues": {
+         |                            "3": {
+         |                                "value": "/blabla/\\n*bloblo*\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            },
+         |                            "4": {
+         |                                "value": "<i>blabla</i>\\n<b>bloblo</b>\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            },
+         |                            "5": {
+         |                                "value": "inline attachment\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }

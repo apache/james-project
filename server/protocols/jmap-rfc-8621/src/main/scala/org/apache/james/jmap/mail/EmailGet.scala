@@ -36,10 +36,15 @@ import scala.util.{Failure, Success, Try}
 
 case class EmailIds(value: List[UnparsedEmailId])
 
+case class FetchAllBodyValues(value: Boolean) extends AnyVal
+case class FetchTextBodyValues(value: Boolean) extends AnyVal
+case class FetchHTMLBodyValues(value: Boolean) extends AnyVal
+
 case class EmailGetRequest(accountId: AccountId,
                            ids: Option[EmailIds],
-                           fetchTextBodyValues: Option[Boolean],
-                           fetchHTMLBodyValues: Option[Boolean],
+                           fetchAllBodyValues: Option[FetchAllBodyValues],
+                           fetchTextBodyValues: Option[FetchTextBodyValues],
+                           fetchHTMLBodyValues: Option[FetchHTMLBodyValues],
                            properties: Option[Properties],
                            bodyProperties: Option[Properties]) {
   def toEmail(message: (MessageId, Seq[MessageResult])): Try[Email] = {
@@ -70,10 +75,11 @@ case class EmailGetRequest(accountId: AccountId,
   }
 
   def extractBodyValues(bodyStructure: EmailBodyPart): Try[Map[PartId, EmailBodyValue]] = for {
-    textBodyValues <- extractBodyValues(bodyStructure.textBody, fetchTextBodyValues.getOrElse(false))
-    htmlBodyValues <- extractBodyValues(bodyStructure.htmlBody, fetchHTMLBodyValues.getOrElse(false))
+    textBodyValues <- extractBodyValues(bodyStructure.textBody, fetchTextBodyValues.exists(_.value))
+    htmlBodyValues <- extractBodyValues(bodyStructure.htmlBody, fetchHTMLBodyValues.exists(_.value))
+    allBodyValues <- extractBodyValues(bodyStructure.flatten, fetchAllBodyValues.exists(_.value))
   } yield {
-    (textBodyValues ++ htmlBodyValues)
+    (textBodyValues ++ htmlBodyValues ++ allBodyValues)
       .distinctBy(_._1)
       .toMap
   }
