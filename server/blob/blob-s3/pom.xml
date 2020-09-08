@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <s3-sdk.version>2.10.64</s3-sdk.version>
+        <s3-sdk.version>2.14.12</s3-sdk.version>
     </properties>
 
     <parent>
@@ -76,12 +76,12 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
-            <version>4.1.42.Final</version>
+            <version>4.1.46.Final</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
-            <version>4.1.42.Final</version>
+            <version>4.1.46.Final</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor.addons</groupId>
