@@ -2105,7 +2105,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "1",
+         |                        "id": "${messageId.serialize()}",
          |                        "bodyValues": {
          |                            "3": {
          |                                "value": "/blabla/\\n*bloblo*\\n",
@@ -2220,7 +2220,7 @@ trait EmailGetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
@@ -2239,7 +2239,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "1",
+         |                        "id": "${messageId.serialize()}",
          |                        "bodyValues": {
          |                            "2": {
          |                                "value": "Send\\n\\n",
@@ -2255,6 +2255,81 @@ trait EmailGetMethodContract {
          |                                "value": "|1|oS75OgL3vF2Gdl99CJDbEpaJ3yE=|INGqljCW1XMf4ggOQm26/BNnKGc= ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXyN6m5U4hpph9uOv54aHc4Xr8jhAa/SX5MJ\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
+         |                            }
+         |                        }
+         |                    }
+         |                ],
+         |                "notFound": []
+         |            },
+         |            "c1"
+         |        ]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def bodyValueShouldBeTruncatedIfNeeded(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties":["bodyValues"],
+         |      "fetchAllBodyValues": true,
+         |      "maxBodyValueBytes": 32
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [
+         |        [
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "state": "000001",
+         |                "list": [
+         |                    {
+         |                        "id": "${messageId.serialize()}",
+         |                        "bodyValues": {
+         |                            "2": {
+         |                                "value": "Send\\n\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            },
+         |                            "3": {
+         |                                "value": "-----BEGIN RSA PRIVATE KEY-----\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": true
+         |                            },
+         |                            "5": {
+         |                                "value": "|1|oS75OgL3vF2Gdl99CJDbEpaJ3yE=|",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": true
          |                            }
          |                        }
          |                    }
@@ -2294,7 +2369,7 @@ trait EmailGetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
@@ -2312,7 +2387,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "1",
+         |                        "id": "${messageId.serialize()}",
          |                        "bodyValues": {
          |                            "3": {
          |                                "value": "/blabla/\\n*bloblo*\\n",

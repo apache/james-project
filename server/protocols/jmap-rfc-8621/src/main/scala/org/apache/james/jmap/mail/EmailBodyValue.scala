@@ -19,9 +19,32 @@
 
 package org.apache.james.jmap.mail
 
+import java.nio.charset.{CoderResult, StandardCharsets}
+import java.nio.{ByteBuffer, CharBuffer}
+
+import org.apache.james.jmap.mail.EmailGetRequest.{MaxBodyValueBytes, ZERO}
+
 case class IsEncodingProblem(value: Boolean)
 case class IsTruncated(value: Boolean)
 
 case class EmailBodyValue(value: String,
                           isEncodingProblem: IsEncodingProblem,
-                          isTruncated: IsTruncated)
+                          isTruncated: IsTruncated) {
+  def truncate(maxBodyValueBytes: Option[MaxBodyValueBytes]): EmailBodyValue = maxBodyValueBytes match {
+    case None => this
+    case Some(ZERO) => this
+    case Some(truncateAt) if truncateAt.value > value.getBytes(StandardCharsets.UTF_8).length => this
+    case Some(truncateAt) =>
+      val array: Array[Byte] = new Array[Byte](truncateAt.value)
+      val outBuf: ByteBuffer = ByteBuffer.wrap(array)
+      val result: CoderResult = StandardCharsets.UTF_8
+        .newEncoder()
+        .encode(CharBuffer.wrap(value.toCharArray), outBuf, true)
+      val truncatedValue: String = new String(array, StandardCharsets.UTF_8)
+
+      EmailBodyValue(
+        value = truncatedValue,
+        isEncodingProblem = IsEncodingProblem(result.isError),
+        isTruncated = IsTruncated(true))
+  }
+}
