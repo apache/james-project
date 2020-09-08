@@ -30,7 +30,7 @@ import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId, UnparsedMailboxIdConstraint}
 import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
-import org.apache.james.jmap.mail.{BlobId, Charset, DelegatedNamespace, Disposition, Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailIds, EmailNotFound, FromDate, HtmlBody, Ids, IsEnabled, IsSubscribed, Language, Location, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, Name, NotFound, PartId, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, Type, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
+import org.apache.james.jmap.mail.{BlobId, Charset, DelegatedNamespace, Disposition, Email, EmailBodyPart, EmailBodyValue, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailIds, EmailNotFound, FromDate, HtmlBody, Ids, IsEnabled, IsEncodingProblem, IsSubscribed, IsTruncated, Language, Location, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, Name, NotFound, PartId, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, Type, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
@@ -253,18 +253,44 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val dispositionWrites: Writes[Disposition] = Json.valueWrites[Disposition]
   private implicit val languageWrites: Writes[Language] = Json.valueWrites[Language]
   private implicit val locationWrites: Writes[Location] = Json.valueWrites[Location]
+  private implicit val isEncodingProblemWrites: Writes[IsEncodingProblem] = Json.valueWrites[IsEncodingProblem]
+  private implicit val isTruncatedWrites: Writes[IsTruncated] = Json.valueWrites[IsTruncated]
   private implicit val partIdWrites: Writes[PartId] = partId => JsString(partId.serialize)
   private implicit val headerNameWrites: Writes[EmailHeaderName] = Json.valueWrites[EmailHeaderName]
   private implicit val headerValueWrites: Writes[EmailHeaderValue] = Json.valueWrites[EmailHeaderValue]
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
+  private implicit val bodyValueWrites: Writes[EmailBodyValue] = Json.writes[EmailBodyValue]
   private implicit val emailIdsReads: Reads[EmailIds] = Json.valueReads[EmailIds]
   private implicit val emailGetRequestReads: Reads[EmailGetRequest] = Json.reads[EmailGetRequest]
   private implicit val emailNotFoundWrites: Writes[EmailNotFound] = Json.valueWrites[EmailNotFound]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
-  private implicit def emailWritesWithPropertyFilter(properties: Properties)(implicit partsWrites: Writes[EmailBodyPart]): Writes[Email] = Json.writes[Email]
-    .transform(obj => properties.filter(obj))
-  private implicit def bodyPartWritesWithPropertyFilter(properties: Properties): Writes[EmailBodyPart] = Json.writes[EmailBodyPart]
-    .transform(obj => properties.filter(obj))
+  private implicit def bodyValueMapWrites(implicit bodyValueWriter: Writes[EmailBodyValue]): Writes[Map[PartId, EmailBodyValue]] =
+    mapWrites[PartId, EmailBodyValue](_.value.toString(), bodyValueWriter)
+  private def bodyPartWritesWithPropertyFilter(properties: Properties): Writes[EmailBodyPart] =
+    new Writes[EmailBodyPart] {
+      def removeJsNull(obj: JsObject): JsObject =
+        JsObject(obj.fields.filter({
+          case (_, JsNull) => false
+          case _ => true
+        }))
+      def writes(part: EmailBodyPart): JsValue = properties.filter(
+        removeJsNull(
+          Json.obj("partId" -> Json.toJson(part.partId),
+            "blobId" -> Json.toJson(part.blobId),
+            "headers" -> Json.toJson(part.headers),
+            "size" -> Json.toJson(part.size),
+            "name" -> Json.toJson(part.name),
+            "type" -> Json.toJson(part.`type`),
+            "charset" -> Json.toJson(part.charset),
+            "disposition" -> Json.toJson(part.disposition),
+            "cid" -> Json.toJson(part.cid),
+            "language" -> Json.toJson(part.language),
+            "location" -> Json.toJson(part.location),
+            "subParts" -> part.subParts.map(list => list.map(writes)))))
+    }
+  private def emailWritesWithPropertyFilter(properties: Properties)(implicit partsWrites: Writes[EmailBodyPart]): Writes[Email] =
+    Json.writes[Email]
+      .transform(obj => properties.filter(obj))
   private implicit def emailGetResponseWrites(implicit emailWrites: Writes[Email]): Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
 
   private def readMapEntry[K, V](keyValidator: String => Either[String, K], valueTransformer: JsObject => V): Reads[Map[K, V]] = _.validate[Map[String, JsObject]]

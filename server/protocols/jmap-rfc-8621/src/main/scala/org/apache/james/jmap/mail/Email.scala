@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.mail
 
-import java.nio.charset.StandardCharsets.US_ASCII
-
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
@@ -29,14 +27,9 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.model.Properties
-import org.apache.james.mailbox.model.{MessageId, MessageResult}
-import org.apache.james.mime4j.codec.DecodeMonitor
-import org.apache.james.mime4j.dom.Header
-import org.apache.james.mime4j.message.DefaultMessageBuilder
-import org.apache.james.mime4j.stream.MimeConfig
+import org.apache.james.mailbox.model.MessageId
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 object Email {
@@ -46,7 +39,7 @@ object Email {
   type UnparsedEmailId = String Refined UnparsedEmailIdConstraint
 
   val defaultProperties: Properties = Properties("id", "size")
-  val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody", "attachments", "headers")
+  val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody", "attachments", "headers", "bodyValues")
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
@@ -66,43 +59,6 @@ object Email {
     },
       refinedValue => refinedValue)
   }
-
-  def from(message: (MessageId, Seq[MessageResult])): Try[Email] = {
-
-    val defaultMessageBuilder = new DefaultMessageBuilder
-    defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
-    defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
-    val messageId: MessageId = message._1
-
-    for {
-      firstMessage <- message._2
-        .headOption
-        .map(Success(_))
-        .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
-      mime4JMessage <- Try(defaultMessageBuilder.parseMessage(firstMessage.getFullContent.getInputStream))
-      bodyStructure <- EmailBodyPart.of(messageId, mime4JMessage)
-    } yield {
-      Email(
-        id = messageId,
-        size = sanitizeSize(firstMessage.getSize),
-        bodyStructure = bodyStructure,
-        textBody = bodyStructure.textBody,
-        htmlBody = bodyStructure.htmlBody,
-        attachments = bodyStructure.attachments,
-        headers = asEmailHeaders(mime4JMessage.getHeader)
-      )
-    }
-  }
-
-  private def asEmailHeaders(header: Header): List[EmailHeader] = {
-    header.iterator()
-      .asScala
-      .map(header => EmailHeader(
-        EmailHeaderName(header.getName),
-        EmailHeaderValue(new String(header.getRaw.toByteArray, US_ASCII)
-          .substring(header.getName.length + 1))))
-      .toList
-  }
 }
 
 case class Email(id: MessageId,
@@ -111,5 +67,5 @@ case class Email(id: MessageId,
                  textBody: List[EmailBodyPart],
                  htmlBody: List[EmailBodyPart],
                  attachments: List[EmailBodyPart],
-                 headers: List[EmailHeader])
-
+                 headers: List[EmailHeader],
+                 bodyValues: Map[PartId, EmailBodyValue])

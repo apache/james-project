@@ -27,12 +27,13 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
+import org.apache.james.mime4j.dom.{TextBody => Mime4JTextBody}
+import org.apache.commons.io.IOUtils
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.EmailBodyPart.{MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
-import org.apache.james.mailbox.model.{Cid, MessageId}
 import org.apache.james.jmap.model.Properties
-import org.apache.james.mailbox.model.MessageId
+import org.apache.james.mailbox.model.{Cid, MessageId}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart}
 import org.apache.james.mime4j.message.DefaultMessageWriter
 
@@ -120,7 +121,8 @@ object EmailBodyPart {
             .map(Language),
           location = headerValue(entity, "Content-Location")
             .map(Location),
-          subParts = subParts))
+          subParts = subParts,
+          entity = entity))
 
   private def headerValue(entity: Entity, headerName: String): Option[String] = entity.getHeader
     .getFields(headerName)
@@ -162,7 +164,24 @@ case class EmailBodyPart(partId: PartId,
                          cid: Option[Cid],
                          language: Option[Language],
                          location: Option[Location],
-                         subParts: Option[List[EmailBodyPart]]) {
+                         subParts: Option[List[EmailBodyPart]],
+                         entity: Entity) {
+
+  def bodyContent: Try[Option[EmailBodyValue]] = entity.getBody match {
+    case textBody: Mime4JTextBody =>
+      for {
+        value <- Try(IOUtils.toString(textBody.getInputStream, charset(Option(textBody.getMimeCharset)).name()))
+      } yield {
+        Some(EmailBodyValue(value = value,
+          isEncodingProblem = IsEncodingProblem(false),
+          isTruncated = IsTruncated(false)))
+      }
+    case _ => Success(None)
+  }
+
+  private def charset(charset: Option[String]): java.nio.charset.Charset = charset
+    .map(java.nio.charset.Charset.forName)
+    .getOrElse(org.apache.james.mime4j.Charsets.DEFAULT_CHARSET)
 
   def textBody: List[EmailBodyPart] = selfBody ++ textBodyOfMultipart
 

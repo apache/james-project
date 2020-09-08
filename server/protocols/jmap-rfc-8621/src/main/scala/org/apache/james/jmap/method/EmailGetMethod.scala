@@ -130,7 +130,7 @@ class EmailGetMethod @Inject() (serializer: Serializer,
   private def getEmails(request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
     request.ids match {
       case None => SMono.raiseError(new IllegalArgumentException("ids can not be ommited for email/get"))
-      case Some(ids) => getEmails(ids, mailboxSession)
+      case Some(ids) => getEmails(ids, mailboxSession, request)
         .map(result => EmailGetResponse(
           accountId = request.accountId,
           state = INSTANCE,
@@ -138,7 +138,7 @@ class EmailGetMethod @Inject() (serializer: Serializer,
           notFound = result.notFound))
     }
 
-  private def getEmails(ids: EmailIds, mailboxSession: MailboxSession): SMono[EmailGetResults] = {
+  private def getEmails(ids: EmailIds, mailboxSession: MailboxSession, request: EmailGetRequest): SMono[EmailGetResults] = {
     val parsedIds: List[Either[(UnparsedEmailId, IllegalArgumentException),  MessageId]] = ids.value
       .map(asMessageId)
     val messagesIds: List[MessageId] = parsedIds.flatMap({
@@ -152,7 +152,7 @@ class EmailGetMethod @Inject() (serializer: Serializer,
       case Right(_) => None
     }))
 
-    SFlux.merge(Seq(retrieveEmails(messagesIds, mailboxSession), parsingErrors))
+    SFlux.merge(Seq(retrieveEmails(messagesIds, mailboxSession, request), parsingErrors))
       .reduce(EmailGetResults.empty(), EmailGetResults.merge)
   }
 
@@ -163,11 +163,11 @@ class EmailGetMethod @Inject() (serializer: Serializer,
       case e: Exception => Left((id, new IllegalArgumentException(e)))
     }
 
-  private def retrieveEmails(ids: Seq[MessageId], mailboxSession: MailboxSession): SFlux[EmailGetResults] = {
+  private def retrieveEmails(ids: Seq[MessageId], mailboxSession: MailboxSession, request: EmailGetRequest): SFlux[EmailGetResults] = {
     val foundResultsMono: SMono[Map[MessageId, Email]] = SFlux.fromPublisher(messageIdManager.getMessagesReactive(ids.toList.asJava, FetchGroup.MINIMAL, mailboxSession))
       .groupBy(_.getMessageId)
       .flatMap(groupedFlux => groupedFlux.collectSeq().map(results => (groupedFlux.key(), results)))
-      .flatMap(email => SMono.fromTry(Email.from(email)))
+      .flatMap(email => SMono.fromTry(request.toEmail(email)))
       .collectMap(_.id)
 
     foundResultsMono.flatMapMany(foundResults => SFlux.fromIterable(ids)
