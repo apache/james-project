@@ -25,6 +25,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
+import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.model.{Properties, UTCDate}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
@@ -41,7 +42,8 @@ object Email {
   val defaultProperties: Properties = Properties("id", "size")
   val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody",
     "attachments", "headers", "bodyValues", "messageId", "inReplyTo", "references", "to", "cc", "bcc",
-    "from", "sender", "replyTo", "subject", "sentAt", "mailboxIds", "blobId", "threadId", "receivedAt")
+    "from", "sender", "replyTo", "subject", "sentAt", "mailboxIds", "blobId", "threadId", "receivedAt",
+    "preview", "hasAttachment")
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
@@ -74,11 +76,10 @@ object HeaderMessageId {
 }
 
 case class HeaderMessageId(value: String) extends AnyVal
-
 case class Subject(value: String) extends AnyVal
-
 case class MailboxIds(value: List[MailboxId])
 case class ThreadId(value: String) extends AnyVal
+case class HasAttachment(value: Boolean) extends AnyVal
 
 case class EmailMetadata(id: MessageId,
                          blobId: BlobId,
@@ -101,10 +102,12 @@ case class EmailHeaders(headers: List[EmailHeader],
                         sentAt: Option[UTCDate])
 
 case class EmailBody(bodyStructure: EmailBodyPart,
-                 textBody: List[EmailBodyPart],
-                 htmlBody: List[EmailBodyPart],
-                 attachments: List[EmailBodyPart],
-                 bodyValues: Map[PartId, EmailBodyValue])
+                     textBody: List[EmailBodyPart],
+                     htmlBody: List[EmailBodyPart],
+                     attachments: List[EmailBodyPart],
+                     bodyValues: Map[PartId, EmailBodyValue],
+                     hasAttachment: HasAttachment,
+                     preview: Preview)
 
 case class Email(metadata: EmailMetadata,
                  header: EmailHeaders,
