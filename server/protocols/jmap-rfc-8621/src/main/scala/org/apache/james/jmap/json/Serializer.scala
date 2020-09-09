@@ -30,7 +30,7 @@ import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId, UnparsedMailboxIdConstraint}
 import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
-import org.apache.james.jmap.mail.{BlobId, Charset, DelegatedNamespace, Disposition, Email, EmailBodyPart, EmailBodyValue, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailIds, EmailNotFound, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, FromDate, HtmlBody, Ids, IsEnabled, IsEncodingProblem, IsSubscribed, IsTruncated, Language, Location, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, Name, NotFound, PartId, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, Type, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
+import org.apache.james.jmap.mail.{BlobId, Charset, DelegatedNamespace, Disposition, Email, EmailBodyPart, EmailBodyValue, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailIds, EmailNotFound, EmailQueryRequest, EmailQueryResponse, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, FromDate, HtmlBody, Ids, IsEnabled, IsEncodingProblem, IsSubscribed, IsTruncated, Language, Location, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, Name, NotFound, PartId, PersonalNamespace, Position, QueryState, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ToDate, TotalEmails, TotalThreads, Type, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
@@ -265,6 +265,9 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   private implicit val bodyValueWrites: Writes[EmailBodyValue] = Json.writes[EmailBodyValue]
   private implicit val emailIdsReads: Reads[EmailIds] = Json.valueReads[EmailIds]
   private implicit val emailGetRequestReads: Reads[EmailGetRequest] = Json.reads[EmailGetRequest]
+  private implicit val emailQueryRequestReads: Reads[EmailQueryRequest] = Json.reads[EmailQueryRequest]
+  private implicit val queryStateWrites: Writes[QueryState] = Json.valueWrites[QueryState]
+  private implicit val positionFormat: Format[Position] = Json.valueFormat[Position]
   private implicit val emailNotFoundWrites: Writes[EmailNotFound] = Json.valueWrites[EmailNotFound]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
   private implicit def bodyValueMapWrites(implicit bodyValueWriter: Writes[EmailBodyValue]): Writes[Map[PartId, EmailBodyValue]] =
@@ -295,6 +298,7 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
     Json.writes[Email]
       .transform(obj => properties.filter(obj))
   private implicit def emailGetResponseWrites(implicit emailWrites: Writes[Email]): Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
+  private implicit def emailQueryResponseWrites: OWrites[EmailQueryResponse] = Json.writes[EmailQueryResponse]
 
   private def readMapEntry[K, V](keyValidator: String => Either[String, K], valueTransformer: JsObject => V): Reads[Map[K, V]] = _.validate[Map[String, JsObject]]
     .flatMap(mapWithStringKey =>{
@@ -442,6 +446,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   def serialize(mailboxGetResponse: MailboxGetResponse, properties: Properties, capabilities: Set[CapabilityIdentifier]): JsValue =
     serialize(mailboxGetResponse)(mailboxWritesWithFilteredProperties(properties, capabilities))
 
+  def serialize(emailQueryResponse: EmailQueryResponse): JsObject = Json.toJsObject(emailQueryResponse)
+
   def serialize(mailboxSetResponse: MailboxSetResponse)
                (implicit mailboxCreationResponseWrites: Writes[MailboxCreationResponse]): JsValue =
     Json.toJson(mailboxSetResponse)(mailboxSetResponseWrites(mailboxCreationResponseWrites))
@@ -475,6 +481,8 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
   def deserializeMailboxGetRequest(input: JsValue): JsResult[MailboxGetRequest] = Json.fromJson[MailboxGetRequest](input)
 
   def deserializeEmailGetRequest(input: JsValue): JsResult[EmailGetRequest] = Json.fromJson[EmailGetRequest](input)
+
+  def deserializeEmailQueryRequest(input: JsValue): JsResult[EmailQueryRequest] = Json.fromJson[EmailQueryRequest](input)
 
   def deserializeMailboxSetRequest(input: JsValue): JsResult[MailboxSetRequest] = Json.fromJson[MailboxSetRequest](input)
 
