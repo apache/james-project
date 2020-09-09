@@ -39,7 +39,8 @@ object Email {
   type UnparsedEmailId = String Refined UnparsedEmailIdConstraint
 
   val defaultProperties: Properties = Properties("id", "size")
-  val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody", "attachments", "headers", "bodyValues")
+  val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody",
+    "attachments", "headers", "bodyValues", "messageId")
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
@@ -61,6 +62,18 @@ object Email {
   }
 }
 
+object HeaderMessageId {
+  def from(string: String): HeaderMessageId = HeaderMessageId(sanitize(string))
+
+  private def sanitize(string: String): String = string match {
+    case s if s.startsWith("<") => sanitize(s.substring(1))
+    case s if s.endsWith(">") => sanitize(s.substring(0, s.length - 1))
+    case s => s
+  }
+}
+
+case class HeaderMessageId(value: String) extends AnyVal
+
 case class Email(id: MessageId,
                  size: Size,
                  bodyStructure: EmailBodyPart,
@@ -68,4 +81,5 @@ case class Email(id: MessageId,
                  htmlBody: List[EmailBodyPart],
                  attachments: List[EmailBodyPart],
                  headers: List[EmailHeader],
-                 bodyValues: Map[PartId, EmailBodyValue])
+                 bodyValues: Map[PartId, EmailBodyValue],
+                 messageId: Option[List[HeaderMessageId]])

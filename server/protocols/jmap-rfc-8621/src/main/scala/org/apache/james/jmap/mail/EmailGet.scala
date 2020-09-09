@@ -31,11 +31,11 @@ import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mailbox.model.{MessageId, MessageResult}
 import org.apache.james.mime4j.codec.DecodeMonitor
-import org.apache.james.mime4j.dom.Header
+import org.apache.james.mime4j.dom.{Header, Message}
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.MimeConfig
-import scala.jdk.CollectionConverters._
 
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 case class EmailIds(value: List[UnparsedEmailId])
@@ -81,9 +81,18 @@ case class EmailGetRequest(accountId: AccountId,
         htmlBody = bodyStructure.htmlBody,
         attachments = bodyStructure.attachments,
         headers = asEmailHeaders(mime4JMessage.getHeader),
-        bodyValues = bodyValues)
+        bodyValues = bodyValues,
+        messageId = extractMessageId(mime4JMessage))
     }
   }
+
+  private def extractMessageId(mime4JMessage: Message): Option[List[HeaderMessageId]] =
+    Option(mime4JMessage.getHeader.getFields("Message-Id"))
+      .map(_.asScala
+        .map(_.getBody)
+        .map(HeaderMessageId.from)
+        .toList)
+      .filter(_.nonEmpty)
 
   def extractBodyValues(bodyStructure: EmailBodyPart): Try[Map[PartId, EmailBodyValue]] = for {
     textBodyValues <- extractBodyValues(bodyStructure.textBody, fetchTextBodyValues.exists(_.value))
