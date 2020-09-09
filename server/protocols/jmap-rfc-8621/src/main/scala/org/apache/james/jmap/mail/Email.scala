@@ -26,7 +26,7 @@ import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.model.Properties
+import org.apache.james.jmap.model.{Properties, UTCDate}
 import org.apache.james.mailbox.model.MessageId
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -41,7 +41,7 @@ object Email {
   val defaultProperties: Properties = Properties("id", "size")
   val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody",
     "attachments", "headers", "bodyValues", "messageId", "inReplyTo", "references", "to", "cc", "bcc",
-    "from", "sender", "replyTo", "subject")
+    "from", "sender", "replyTo", "subject", "sentAt")
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
@@ -94,4 +94,5 @@ case class Email(id: MessageId,
                  from: Option[List[EmailAddress]],
                  sender: Option[List[EmailAddress]],
                  replyTo: Option[List[EmailAddress]],
-                 subject: Option[Subject])
+                 subject: Option[Subject],
+                 sentAt: Option[UTCDate])

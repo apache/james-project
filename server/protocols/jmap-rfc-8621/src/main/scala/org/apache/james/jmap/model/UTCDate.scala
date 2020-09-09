@@ -20,11 +20,14 @@
 package org.apache.james.jmap.model
 
 import java.time.{ZoneId, ZonedDateTime}
+import java.util.Date
 
 import org.apache.james.jmap.model.UTCDate.UTC_ZONE_ID
 
 object UTCDate {
   private val UTC_ZONE_ID: ZoneId = ZoneId.of("UTC")
+
+  def from(date: Date, zoneId: ZoneId): UTCDate = UTCDate(ZonedDateTime.ofInstant(date.toInstant, zoneId))
 }
 
 case class UTCDate(date: ZonedDateTime) {

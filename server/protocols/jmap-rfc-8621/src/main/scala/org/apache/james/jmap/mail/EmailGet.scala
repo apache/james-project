@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 
 import java.nio.charset.StandardCharsets.US_ASCII
+import java.time.ZoneId
 
 import cats.implicits._
 import eu.timepit.refined.api.Refined
@@ -28,7 +29,7 @@ import eu.timepit.refined.numeric.NonNegative
 import org.apache.james.jmap.mail.Email.{UnparsedEmailId, sanitizeSize}
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, Properties}
+import org.apache.james.jmap.model.{AccountId, Properties, UTCDate}
 import org.apache.james.mailbox.model.{MessageId, MessageResult}
 import org.apache.james.mime4j.codec.DecodeMonitor
 import org.apache.james.mime4j.dom.{Header, Message}
@@ -58,7 +59,7 @@ case class EmailGetRequest(accountId: AccountId,
                            maxBodyValueBytes: Option[MaxBodyValueBytes],
                            properties: Option[Properties],
                            bodyProperties: Option[Properties]) {
-  def toEmail(message: (MessageId, Seq[MessageResult])): Try[Email] = {
+  def toEmail(zoneId: ZoneId)(message: (MessageId, Seq[MessageResult])): Try[Email] = {
     val defaultMessageBuilder = new DefaultMessageBuilder
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
@@ -91,7 +92,8 @@ case class EmailGetRequest(accountId: AccountId,
         from = Option(mime4JMessage.getFrom).map(EmailAddress.from),
         replyTo = Option(mime4JMessage.getReplyTo).map(EmailAddress.from),
         sender = Option(mime4JMessage.getSender).map(EmailAddress.from).map(List(_)),
-        subject = Option(mime4JMessage.getSubject).map(Subject))
+        subject = Option(mime4JMessage.getSubject).map(Subject),
+        sentAt = Option(mime4JMessage.getDate).map(date => UTCDate.from(date, zoneId)))
     }
   }
 

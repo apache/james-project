@@ -40,8 +40,10 @@ import org.apache.james.jmap.method.EmailQueryMethod;
 import org.apache.james.jmap.method.MailboxGetMethod;
 import org.apache.james.jmap.method.MailboxSetMethod;
 import org.apache.james.jmap.method.Method;
+import org.apache.james.jmap.method.SystemZoneIdProvider;
 import org.apache.james.jmap.method.VacationResponseGetMethod;
 import org.apache.james.jmap.method.VacationResponseSetMethod;
+import org.apache.james.jmap.method.ZoneIdProvider;
 import org.apache.james.jmap.model.JmapRfc8621Configuration;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
 import org.apache.james.metrics.api.MetricFactory;
@@ -63,6 +65,7 @@ public class RFC8621MethodsModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(Serializer.class).in(Scopes.SINGLETON);
+        bind(ZoneIdProvider.class).to(SystemZoneIdProvider.class);
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEchoMethod.class);

@@ -18,6 +18,8 @@
  * ***************************************************************/
 package org.apache.james.jmap.method
 
+import java.time.ZoneId
+
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
@@ -68,9 +70,18 @@ object EmailGetMethod {
   private val logger: Logger = LoggerFactory.getLogger(classOf[EmailGetMethod])
 }
 
+trait ZoneIdProvider {
+  def get(): ZoneId
+}
+
+class SystemZoneIdProvider extends ZoneIdProvider {
+  override def get(): ZoneId = ZoneId.systemDefault()
+}
+
 class EmailGetMethod @Inject() (serializer: Serializer,
                                messageIdManager: MessageIdManager,
                                messageIdFactory: MessageId.Factory,
+                               zoneIdProvider: ZoneIdProvider,
                                metricFactory: MetricFactory) extends Method {
   override val methodName = MethodName("Email/get")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
@@ -167,7 +178,8 @@ class EmailGetMethod @Inject() (serializer: Serializer,
     val foundResultsMono: SMono[Map[MessageId, Email]] = SFlux.fromPublisher(messageIdManager.getMessagesReactive(ids.toList.asJava, FetchGroup.MINIMAL, mailboxSession))
       .groupBy(_.getMessageId)
       .flatMap(groupedFlux => groupedFlux.collectSeq().map(results => (groupedFlux.key(), results)))
-      .flatMap(email => SMono.fromTry(request.toEmail(email)))
+      .map(request.toEmail(zoneIdProvider.get()))
+      .flatMap(SMono.fromTry(_))
       .collectMap(_.id)
 
     foundResultsMono.flatMapMany(foundResults => SFlux.fromIterable(ids)
