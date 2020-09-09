@@ -33,7 +33,6 @@ case class VacationResponseId()
 case class IsEnabled(value: Boolean)
 case class FromDate(value: UTCDate)
 case class ToDate(value: UTCDate)
-case class Subject(value: String)
 case class TextBody(value: String)
 case class HtmlBody(value: String)
 

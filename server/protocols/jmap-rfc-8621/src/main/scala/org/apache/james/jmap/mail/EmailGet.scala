@@ -90,7 +90,8 @@ case class EmailGetRequest(accountId: AccountId,
         bcc = Option(mime4JMessage.getBcc).map(EmailAddress.from),
         from = Option(mime4JMessage.getFrom).map(EmailAddress.from),
         replyTo = Option(mime4JMessage.getReplyTo).map(EmailAddress.from),
-        sender = Option(mime4JMessage.getSender).map(EmailAddress.from).map(List(_)))
+        sender = Option(mime4JMessage.getSender).map(EmailAddress.from).map(List(_)),
+        subject = Option(mime4JMessage.getSubject).map(Subject))
     }
   }
 
