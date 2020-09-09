@@ -82,12 +82,13 @@ case class EmailGetRequest(accountId: AccountId,
         attachments = bodyStructure.attachments,
         headers = asEmailHeaders(mime4JMessage.getHeader),
         bodyValues = bodyValues,
-        messageId = extractMessageId(mime4JMessage))
+        messageId = extractMessageId(mime4JMessage, "Message-Id"),
+        inReplyTo = extractMessageId(mime4JMessage, "In-Reply-To"))
     }
   }
 
-  private def extractMessageId(mime4JMessage: Message): Option[List[HeaderMessageId]] =
-    Option(mime4JMessage.getHeader.getFields("Message-Id"))
+  private def extractMessageId(mime4JMessage: Message, fieldName: String): Option[List[HeaderMessageId]] =
+    Option(mime4JMessage.getHeader.getFields(fieldName))
       .map(_.asScala
         .map(_.getBody)
         .map(HeaderMessageId.from)
