@@ -83,7 +83,8 @@ case class EmailGetRequest(accountId: AccountId,
         headers = asEmailHeaders(mime4JMessage.getHeader),
         bodyValues = bodyValues,
         messageId = extractMessageId(mime4JMessage, "Message-Id"),
-        inReplyTo = extractMessageId(mime4JMessage, "In-Reply-To"))
+        inReplyTo = extractMessageId(mime4JMessage, "In-Reply-To"),
+        references = extractMessageId(mime4JMessage, "References"))
     }
   }
 
