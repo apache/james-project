@@ -40,7 +40,8 @@ object Email {
 
   val defaultProperties: Properties = Properties("id", "size")
   val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody",
-    "attachments", "headers", "bodyValues", "messageId", "inReplyTo", "references", "to", "cc", "bcc")
+    "attachments", "headers", "bodyValues", "messageId", "inReplyTo", "references", "to", "cc", "bcc",
+    "from")
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
@@ -87,4 +88,5 @@ case class Email(id: MessageId,
                  references: Option[List[HeaderMessageId]],
                  to: Option[List[EmailAddress]],
                  cc: Option[List[EmailAddress]],
-                 bcc: Option[List[EmailAddress]])
+                 bcc: Option[List[EmailAddress]],
+                 from: Option[List[EmailAddress]])

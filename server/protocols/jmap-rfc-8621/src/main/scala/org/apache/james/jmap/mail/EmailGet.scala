@@ -87,7 +87,8 @@ case class EmailGetRequest(accountId: AccountId,
         references = extractMessageId(mime4JMessage, "References"),
         to = Option(mime4JMessage.getTo).map(EmailAddress.from),
         cc = Option(mime4JMessage.getCc).map(EmailAddress.from),
-        bcc = Option(mime4JMessage.getBcc).map(EmailAddress.from))
+        bcc = Option(mime4JMessage.getBcc).map(EmailAddress.from),
+        from = Option(mime4JMessage.getFrom).map(EmailAddress.from))
     }
   }
 

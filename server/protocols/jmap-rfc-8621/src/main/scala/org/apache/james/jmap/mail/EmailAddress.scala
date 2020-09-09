@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.mime4j.dom.address.{AddressList, Mailbox => Mime4jMailbox}
+import org.apache.james.mime4j.dom.address.{AddressList, MailboxList, Mailbox => Mime4jMailbox}
 
 import scala.jdk.CollectionConverters._
 
@@ -28,8 +28,10 @@ case class Address(value: String) extends AnyVal
 
 object EmailAddress {
   def from(addressList: AddressList): List[EmailAddress] =
-    addressList.flatten()
-      .asScala
+    from(addressList.flatten())
+
+  def from(addressList: MailboxList): List[EmailAddress] =
+    addressList.asScala
       .toList
       .map(from)
 
