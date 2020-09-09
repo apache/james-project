@@ -25,8 +25,8 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
 
@@ -37,11 +37,11 @@ import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
 
-public class MemoryDumbBlobStore implements DumbBlobStore {
+public class MemoryBlobStoreDAO implements BlobStoreDAO {
 
     private final Table<BucketName, BlobId, byte[]> blobs;
 
-    public MemoryDumbBlobStore() {
+    public MemoryBlobStoreDAO() {
         blobs = HashBasedTable.create();
     }
 

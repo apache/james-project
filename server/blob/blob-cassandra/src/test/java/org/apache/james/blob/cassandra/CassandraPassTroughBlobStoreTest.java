@@ -52,7 +52,7 @@ public class CassandraPassTroughBlobStoreTest implements DeleteBlobStoreContract
         testee = new MetricableBlobStore(
             metricsTestExtension.getMetricFactory(),
                 BlobStoreFactory.builder()
-                    .dumbBlobStore(new CassandraDumbBlobStore(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT))
+                    .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT))
                     .blobIdFactory(blobIdFactory)
                     .defaultBucketName()
                     .passthrough());

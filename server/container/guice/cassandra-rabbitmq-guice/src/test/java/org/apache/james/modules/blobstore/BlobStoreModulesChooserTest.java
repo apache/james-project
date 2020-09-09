@@ -32,7 +32,7 @@ class BlobStoreModulesChooserTest {
                     .disableCache()
                     .deduplication()))
             .first()
-            .isInstanceOf(BlobStoreModulesChooser.ObjectStorageDumdBlobStoreDeclarationModule.class);
+            .isInstanceOf(BlobStoreModulesChooser.ObjectStorageBlobStoreDAODeclarationModule.class);
     }
 
     @Test
@@ -42,6 +42,6 @@ class BlobStoreModulesChooserTest {
                 .disableCache()
                 .passthrough()))
             .first()
-            .isInstanceOf(BlobStoreModulesChooser.CassandraDumbBlobStoreDeclarationModule.class);
+            .isInstanceOf(BlobStoreModulesChooser.CassandraBlobStoreDAODeclarationModule.class);
     }
 }

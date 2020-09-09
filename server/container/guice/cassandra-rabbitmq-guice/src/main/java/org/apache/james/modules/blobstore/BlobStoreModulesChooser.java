@@ -22,10 +22,10 @@ package org.apache.james.modules.blobstore;
 import java.util.List;
 
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.DumbBlobStore;
-import org.apache.james.blob.cassandra.CassandraDumbBlobStore;
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
-import org.apache.james.blob.objectstorage.aws.S3DumbBlobStore;
+import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
@@ -48,21 +48,21 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class BlobStoreModulesChooser {
-    static class CassandraDumbBlobStoreDeclarationModule extends AbstractModule {
+    static class CassandraBlobStoreDAODeclarationModule extends AbstractModule {
         @Override
         protected void configure() {
             install(new CassandraBlobStoreDependenciesModule());
 
-            bind(DumbBlobStore.class).to(CassandraDumbBlobStore.class);
+            bind(BlobStoreDAO.class).to(CassandraBlobStoreDAO.class);
         }
     }
 
-    static class ObjectStorageDumdBlobStoreDeclarationModule extends AbstractModule {
+    static class ObjectStorageBlobStoreDAODeclarationModule extends AbstractModule {
         @Override
         protected void configure() {
             install(new S3BlobStoreModule());
 
-            bind(DumbBlobStore.class).to(S3DumbBlobStore.class);
+            bind(BlobStoreDAO.class).to(S3BlobStoreDAO.class);
         }
     }
 
@@ -90,18 +90,18 @@ public class BlobStoreModulesChooser {
     @VisibleForTesting
     public static List<Module> chooseModules(BlobStoreConfiguration choosingConfiguration) {
         return ImmutableList.<Module>builder()
-            .add(chooseDumBlobStoreModule(choosingConfiguration.getImplementation()))
+            .add(chooseBlobStoreDAOModule(choosingConfiguration.getImplementation()))
             .add(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
             .add(new StoragePolicyConfigurationSanityEnforcementModule(choosingConfiguration))
             .build();
     }
 
-    public static Module chooseDumBlobStoreModule(BlobStoreConfiguration.BlobStoreImplName implementation) {
+    public static Module chooseBlobStoreDAOModule(BlobStoreConfiguration.BlobStoreImplName implementation) {
         switch (implementation) {
             case CASSANDRA:
-                return new CassandraDumbBlobStoreDeclarationModule();
+                return new CassandraBlobStoreDAODeclarationModule();
             case S3:
-                return new ObjectStorageDumdBlobStoreDeclarationModule();
+                return new ObjectStorageBlobStoreDAODeclarationModule();
             default:
                 throw new RuntimeException("Unsupported blobStore implementation " + implementation);
         }

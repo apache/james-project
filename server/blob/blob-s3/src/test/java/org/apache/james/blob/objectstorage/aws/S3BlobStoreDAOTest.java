@@ -16,24 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.blob.objectstorage.aws;
 
-package org.apache.james.blob.memory;
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BlobStoreDAOContract;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.apache.james.blob.api.DumbBlobStore;
-import org.apache.james.blob.api.DumbBlobStoreContract;
-import org.junit.jupiter.api.BeforeEach;
+@ExtendWith(DockerAwsS3Extension.class)
+public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
+    private static S3BlobStoreDAO testee;
 
-class MemoryDumbBlobStoreTest implements DumbBlobStoreContract {
+    @BeforeAll
+    static void setUp(DockerAwsS3Container dockerAwsS3) {
+        AwsS3AuthConfiguration configuration = AwsS3AuthConfiguration.builder()
+            .endpoint(dockerAwsS3.getEndpoint())
+            .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
+            .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
+            .build();
 
-    private MemoryDumbBlobStore blobStore;
+        testee = new S3BlobStoreDAO(configuration, dockerAwsS3.dockerAwsS3().region());
+    }
 
-    @BeforeEach
-    void setUp() {
-        blobStore = new MemoryDumbBlobStore();
+    @AfterEach
+    void tearDown() {
+        testee.deleteAllBuckets().block();
+    }
+
+    @AfterAll
+    static void tearDownClass() {
+        testee.close();
     }
 
     @Override
-    public DumbBlobStore testee() {
-        return blobStore;
+    public BlobStoreDAO testee() {
+        return testee;
     }
 }

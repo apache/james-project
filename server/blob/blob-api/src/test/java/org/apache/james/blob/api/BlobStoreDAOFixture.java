@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 
 import com.google.common.base.Strings;
 
-public interface DumbBlobStoreFixture {
+public interface BlobStoreDAOFixture {
     BucketName TEST_BUCKET_NAME = BucketName.of("my-test-bucket");
     BucketName CUSTOM_BUCKET_NAME = BucketName.of("custom");
     BlobId TEST_BLOB_ID = new TestBlobId("test-blob-id");

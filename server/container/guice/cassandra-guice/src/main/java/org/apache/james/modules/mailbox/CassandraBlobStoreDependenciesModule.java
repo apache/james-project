@@ -22,9 +22,9 @@ package org.apache.james.modules.mailbox;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
-import org.apache.james.blob.cassandra.CassandraDumbBlobStore;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 
 import com.google.inject.AbstractModule;
@@ -37,7 +37,7 @@ public class CassandraBlobStoreDependenciesModule extends AbstractModule {
     protected void configure() {
         bind(CassandraDefaultBucketDAO.class).in(Scopes.SINGLETON);
         bind(CassandraBlobStoreFactory.class).in(Scopes.SINGLETON);
-        bind(CassandraDumbBlobStore.class).in(Scopes.SINGLETON);
+        bind(CassandraBlobStoreDAO.class).in(Scopes.SINGLETON);
 
         bind(BucketName.class)
             .annotatedWith(Names.named(DeDuplicationBlobStore.DEFAULT_BUCKET()))

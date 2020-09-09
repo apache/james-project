@@ -16,7 +16,24 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.blob.api;
 
-public interface DumbBlobStoreContract extends ReadSaveDumbBlobStoreContract, DeleteDumbBlobStoreContract, BucketDumbBlobStoreContract {
+package org.apache.james.blob.memory;
+
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BlobStoreDAOContract;
+import org.junit.jupiter.api.BeforeEach;
+
+class MemoryBlobStoreDAOTest implements BlobStoreDAOContract {
+
+    private MemoryBlobStoreDAO blobStore;
+
+    @BeforeEach
+    void setUp() {
+        blobStore = new MemoryBlobStoreDAO();
+    }
+
+    @Override
+    public BlobStoreDAO testee() {
+        return blobStore;
+    }
 }

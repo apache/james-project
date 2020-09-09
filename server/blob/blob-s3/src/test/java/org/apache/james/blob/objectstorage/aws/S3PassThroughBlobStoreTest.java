@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class S3PassThroughBlobStoreTest implements BlobStoreContract {
 
     private static BlobStore testee;
-    private static S3DumbBlobStore s3DumbBlobStore;
+    private static S3BlobStoreDAO s3BlobStoreDAO;
 
     @BeforeAll
     static void setUpClass(DockerAwsS3Container dockerAwsS3) {
@@ -43,9 +43,9 @@ class S3PassThroughBlobStoreTest implements BlobStoreContract {
             .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
             .build();
 
-        s3DumbBlobStore = new S3DumbBlobStore(configuration, dockerAwsS3.dockerAwsS3().region());
+        s3BlobStoreDAO = new S3BlobStoreDAO(configuration, dockerAwsS3.dockerAwsS3().region());
         testee = BlobStoreFactory.builder()
-            .dumbBlobStore(s3DumbBlobStore)
+            .blobStoreDAO(s3BlobStoreDAO)
             .blobIdFactory(new HashBlobId.Factory())
             .defaultBucketName()
             .deduplication();
@@ -53,12 +53,12 @@ class S3PassThroughBlobStoreTest implements BlobStoreContract {
 
     @AfterEach
     void tearDown() {
-        s3DumbBlobStore.deleteAllBuckets().block();
+        s3BlobStoreDAO.deleteAllBuckets().block();
     }
 
     @AfterAll
     static void tearDownClass() {
-        s3DumbBlobStore.close();
+        s3BlobStoreDAO.close();
     }
 
     @Override

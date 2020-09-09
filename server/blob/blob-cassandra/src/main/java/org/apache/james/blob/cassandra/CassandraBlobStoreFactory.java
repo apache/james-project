@@ -31,8 +31,9 @@ public class CassandraBlobStoreFactory {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, session);
         CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(session);
-        CassandraDumbBlobStore dumbBlobStore = new CassandraDumbBlobStore(defaultBucketDAO, bucketDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, BucketName.DEFAULT);
-        return BlobStoreFactory.builder().dumbBlobStore(dumbBlobStore)
+        CassandraBlobStoreDAO blobStoreDAO = new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, BucketName.DEFAULT);
+        return BlobStoreFactory.builder()
+            .blobStoreDAO(blobStoreDAO)
             .blobIdFactory(blobIdFactory)
             .defaultBucketName();
     }

@@ -40,7 +40,7 @@ import java.time.ZonedDateTime;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.apache.james.utils.UpdatableTickingClock;
@@ -64,14 +64,14 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
     void setUp() {
         clock = new UpdatableTickingClock(NOW.toInstant());
         metricFactory = new RecordingMetricFactory();
-        MemoryDumbBlobStore dumbBlobStore = new MemoryDumbBlobStore();
+        MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
         messageVault = new BlobStoreDeletedMessageVault(metricFactory, new MemoryDeletedMessageMetadataVault(),
             BlobStoreFactory.builder()
-                .dumbBlobStore(dumbBlobStore)
+                .blobStoreDAO(blobStoreDAO)
                 .blobIdFactory(new HashBlobId.Factory())
                 .defaultBucketName()
                 .passthrough(),
-            dumbBlobStore, new BucketNameGenerator(clock), clock, RetentionConfiguration.DEFAULT);
+            blobStoreDAO, new BucketNameGenerator(clock), clock, RetentionConfiguration.DEFAULT);
     }
 
     @Override

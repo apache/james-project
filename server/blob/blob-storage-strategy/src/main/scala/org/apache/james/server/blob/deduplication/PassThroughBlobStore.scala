@@ -23,12 +23,12 @@ import java.io.InputStream
 
 import com.google.common.base.Preconditions
 import javax.inject.{Inject, Named}
-import org.apache.james.blob.api.{BlobId, BlobStore, BucketName, DumbBlobStore}
+import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
 
-class PassThroughBlobStore @Inject()(dumbBlobStore: DumbBlobStore,
+class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
                                      @Named("defaultBucket") defaultBucketName: BucketName,
                                      blobIdFactory: BlobId.Factory) extends BlobStore {
 
@@ -38,7 +38,7 @@ class PassThroughBlobStore @Inject()(dumbBlobStore: DumbBlobStore,
 
     val blobId = blobIdFactory.randomId()
 
-    SMono(dumbBlobStore.save(bucketName, blobId, data))
+    SMono(blobStoreDAO.save(bucketName, blobId, data))
       .`then`(SMono.just(blobId))
   }
 
@@ -47,32 +47,32 @@ class PassThroughBlobStore @Inject()(dumbBlobStore: DumbBlobStore,
     Preconditions.checkNotNull(data)
     val blobId = blobIdFactory.randomId()
 
-    SMono(dumbBlobStore.save(bucketName, blobId, data))
+    SMono(blobStoreDAO.save(bucketName, blobId, data))
       .`then`(SMono.just(blobId))
   }
 
   override def readBytes(bucketName: BucketName, blobId: BlobId): Publisher[Array[Byte]] = {
     Preconditions.checkNotNull(bucketName)
 
-    dumbBlobStore.readBytes(bucketName, blobId)
+    blobStoreDAO.readBytes(bucketName, blobId)
   }
 
   override def read(bucketName: BucketName, blobId: BlobId): InputStream = {
     Preconditions.checkNotNull(bucketName)
 
-    dumbBlobStore.read(bucketName, blobId)
+    blobStoreDAO.read(bucketName, blobId)
   }
 
   override def getDefaultBucketName: BucketName = defaultBucketName
 
   override def deleteBucket(bucketName: BucketName): Publisher[Void] = {
-    dumbBlobStore.deleteBucket(bucketName)
+    blobStoreDAO.deleteBucket(bucketName)
   }
 
   override def delete(bucketName: BucketName, blobId: BlobId): Publisher[Void] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(blobId)
 
-    dumbBlobStore.delete(bucketName, blobId)
+    blobStoreDAO.delete(bucketName, blobId)
   }
 }

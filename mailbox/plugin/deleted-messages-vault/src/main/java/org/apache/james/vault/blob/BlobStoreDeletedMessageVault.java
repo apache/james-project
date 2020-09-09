@@ -29,8 +29,8 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
@@ -68,7 +68,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final MetricFactory metricFactory;
     private final DeletedMessageMetadataVault messageMetadataVault;
     private final BlobStore blobStore;
-    private final DumbBlobStore dumbBlobStore;
+    private final BlobStoreDAO blobStoreDAO;
     private final BucketNameGenerator nameGenerator;
     private final Clock clock;
     private final RetentionConfiguration retentionConfiguration;
@@ -76,13 +76,13 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
 
     @Inject
     public BlobStoreDeletedMessageVault(MetricFactory metricFactory, DeletedMessageMetadataVault messageMetadataVault,
-                                        BlobStore blobStore, DumbBlobStore dumbBlobStore, BucketNameGenerator nameGenerator,
+                                        BlobStore blobStore, BlobStoreDAO blobStoreDAO, BucketNameGenerator nameGenerator,
                                         Clock clock,
                                         RetentionConfiguration retentionConfiguration) {
         this.metricFactory = metricFactory;
         this.messageMetadataVault = messageMetadataVault;
         this.blobStore = blobStore;
-        this.dumbBlobStore = dumbBlobStore;
+        this.blobStoreDAO = blobStoreDAO;
         this.nameGenerator = nameGenerator;
         this.clock = clock;
         this.retentionConfiguration = retentionConfiguration;
@@ -159,7 +159,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         return Mono.from(messageMetadataVault.retrieveStorageInformation(username, messageId))
             .flatMap(storageInformation -> Mono.from(messageMetadataVault.remove(storageInformation.getBucketName(), username, messageId))
                 .thenReturn(storageInformation))
-            .flatMap(storageInformation -> Mono.from(dumbBlobStore.delete(storageInformation.getBucketName(), storageInformation.getBlobId())))
+            .flatMap(storageInformation -> Mono.from(blobStoreDAO.delete(storageInformation.getBucketName(), storageInformation.getBlobId())))
             .subscribeOn(Schedulers.elastic());
     }
 

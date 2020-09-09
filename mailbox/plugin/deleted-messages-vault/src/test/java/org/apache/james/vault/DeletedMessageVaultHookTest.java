@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
@@ -112,13 +112,13 @@ class DeletedMessageVaultHookTest {
     @BeforeEach
     void setUp() throws Exception {
         clock = Clock.fixed(DELETION_DATE.toInstant(), ZoneOffset.UTC);
-        MemoryDumbBlobStore dumbBlobStore = new MemoryDumbBlobStore();
+        MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
         messageVault = new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             BlobStoreFactory.builder()
-                .dumbBlobStore(dumbBlobStore)
+                .blobStoreDAO(blobStoreDAO)
                 .blobIdFactory(new HashBlobId.Factory())
                 .defaultBucketName()
-                .passthrough(), dumbBlobStore, new BucketNameGenerator(clock), clock,
+                .passthrough(), blobStoreDAO, new BucketNameGenerator(clock), clock,
             RetentionConfiguration.DEFAULT);
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();

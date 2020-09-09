@@ -23,6 +23,6 @@ import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 
 public class MemoryBlobStoreFactory {
     public static BlobStoreFactory.RequireBlobIdFactory builder() {
-        return BlobStoreFactory.builder().dumbBlobStore(new MemoryDumbBlobStore());
+        return BlobStoreFactory.builder().blobStoreDAO(new MemoryBlobStoreDAO());
     }
 }

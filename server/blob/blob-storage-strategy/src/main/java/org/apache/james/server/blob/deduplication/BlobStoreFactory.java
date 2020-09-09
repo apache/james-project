@@ -21,13 +21,13 @@ package org.apache.james.server.blob.deduplication;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.DumbBlobStore;
 
 public abstract class BlobStoreFactory {
     @FunctionalInterface
-    public interface RequireDumbBlobStore {
-        RequireBlobIdFactory dumbBlobStore(DumbBlobStore dumbBlobStore);
+    public interface RequireBlobStoreDAO {
+        RequireBlobIdFactory blobStoreDAO(BlobStoreDAO blobStoreDAO);
     }
 
     @FunctionalInterface
@@ -57,13 +57,13 @@ public abstract class BlobStoreFactory {
         }
     }
 
-    public static RequireDumbBlobStore builder() {
-        return dumbBlobStore -> blobIdFactory -> defaultBucketName -> storageStrategy -> {
+    public static RequireBlobStoreDAO builder() {
+        return blobStoreDAO -> blobIdFactory -> defaultBucketName -> storageStrategy -> {
             switch (storageStrategy) {
                 case PASSTHROUGH:
-                    return new PassThroughBlobStore(dumbBlobStore, defaultBucketName, blobIdFactory);
+                    return new PassThroughBlobStore(blobStoreDAO, defaultBucketName, blobIdFactory);
                 case DEDUPLICATION:
-                    return new DeDuplicationBlobStore(dumbBlobStore, defaultBucketName, blobIdFactory);
+                    return new DeDuplicationBlobStore(blobStoreDAO, defaultBucketName, blobIdFactory);
                 default:
                     throw new IllegalArgumentException("Unknown storage strategy");
             }

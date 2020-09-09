@@ -21,10 +21,10 @@ package org.apache.james.modules;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 
 import com.google.inject.AbstractModule;
@@ -41,8 +41,8 @@ public class BlobMemoryModule extends AbstractModule {
         bind(DeDuplicationBlobStore.class).in(Scopes.SINGLETON);
         bind(BlobStore.class).to(DeDuplicationBlobStore.class);
 
-        bind(MemoryDumbBlobStore.class).in(Scopes.SINGLETON);
-        bind(DumbBlobStore.class).to(MemoryDumbBlobStore.class);
+        bind(MemoryBlobStoreDAO.class).in(Scopes.SINGLETON);
+        bind(BlobStoreDAO.class).to(MemoryBlobStoreDAO.class);
 
         bind(BucketName.class)
             .annotatedWith(Names.named(DeDuplicationBlobStore.DEFAULT_BUCKET()))

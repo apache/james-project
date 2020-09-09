@@ -26,7 +26,7 @@ import com.google.common.hash.{Hashing, HashingInputStream}
 import com.google.common.io.{ByteSource, FileBackedOutputStream}
 import javax.inject.{Inject, Named}
 import org.apache.commons.io.IOUtils
-import org.apache.james.blob.api.{BlobId, BlobStore, BucketName, DumbBlobStore}
+import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
@@ -38,7 +38,7 @@ object DeDuplicationBlobStore {
   val FILE_THRESHOLD = 10000
 }
 
-class DeDuplicationBlobStore @Inject()(dumbBlobStore: DumbBlobStore,
+class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
                                        @Named("defaultBucket") defaultBucketName: BucketName,
                                        blobIdFactory: BlobId.Factory) extends BlobStore {
 
@@ -48,7 +48,7 @@ class DeDuplicationBlobStore @Inject()(dumbBlobStore: DumbBlobStore,
 
     val blobId = blobIdFactory.forPayload(data)
 
-    SMono(dumbBlobStore.save(bucketName, blobId, data))
+    SMono(blobStoreDAO.save(bucketName, blobId, data))
       .`then`(SMono.just(blobId))
   }
 
@@ -69,26 +69,26 @@ class DeDuplicationBlobStore @Inject()(dumbBlobStore: DumbBlobStore,
       Tuples.of(blobIdFactory.from(hashingInputStream.hash.toString), fileBackedOutputStream.asByteSource)
     })
       .flatMap((tuple: Tuple2[BlobId, ByteSource]) =>
-        SMono(dumbBlobStore.save(bucketName, tuple.getT1, tuple.getT2))
+        SMono(blobStoreDAO.save(bucketName, tuple.getT1, tuple.getT2))
           .`then`(SMono.just(tuple.getT1)))
 
 
   override def readBytes(bucketName: BucketName, blobId: BlobId): Publisher[Array[Byte]] = {
     Preconditions.checkNotNull(bucketName)
 
-    dumbBlobStore.readBytes(bucketName, blobId)
+    blobStoreDAO.readBytes(bucketName, blobId)
   }
 
   override def read(bucketName: BucketName, blobId: BlobId): InputStream = {
     Preconditions.checkNotNull(bucketName)
 
-    dumbBlobStore.read(bucketName, blobId)
+    blobStoreDAO.read(bucketName, blobId)
   }
 
   override def getDefaultBucketName: BucketName = defaultBucketName
 
   override def deleteBucket(bucketName: BucketName): Publisher[Void] = {
-    dumbBlobStore.deleteBucket(bucketName)
+    blobStoreDAO.deleteBucket(bucketName)
   }
 
   override def delete(bucketName: BucketName, blobId: BlobId): Publisher[Void] = {

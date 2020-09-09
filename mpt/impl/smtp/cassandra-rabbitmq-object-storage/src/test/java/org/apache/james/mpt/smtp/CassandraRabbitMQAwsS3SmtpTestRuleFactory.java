@@ -26,9 +26,9 @@ import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.DumbBlobStore;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.MetricableBlobStore;
-import org.apache.james.blob.objectstorage.aws.S3DumbBlobStore;
+import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.mailbox.KeyspacesConfiguration;
@@ -60,7 +60,7 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
             bind(BlobStore.class)
                 .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
                 .to(DeDuplicationBlobStore.class);
-            bind(DumbBlobStore.class).to(S3DumbBlobStore.class);
+            bind(BlobStoreDAO.class).to(S3BlobStoreDAO.class);
         }
     };
 

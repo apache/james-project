@@ -19,14 +19,14 @@
 
 package org.apache.james.blob.api;
 
-import static org.apache.james.blob.api.DumbBlobStoreFixture.CUSTOM_BUCKET_NAME;
-import static org.apache.james.blob.api.DumbBlobStoreFixture.ELEVEN_KILOBYTES;
-import static org.apache.james.blob.api.DumbBlobStoreFixture.OTHER_TEST_BLOB_ID;
-import static org.apache.james.blob.api.DumbBlobStoreFixture.SHORT_BYTEARRAY;
-import static org.apache.james.blob.api.DumbBlobStoreFixture.TEST_BLOB_ID;
-import static org.apache.james.blob.api.DumbBlobStoreFixture.TEST_BUCKET_NAME;
-import static org.apache.james.blob.api.DumbBlobStoreFixture.TWELVE_MEGABYTES;
-import static org.apache.james.blob.api.DumbBlobStoreFixture.TWELVE_MEGABYTES_STRING;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.CUSTOM_BUCKET_NAME;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.ELEVEN_KILOBYTES;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.OTHER_TEST_BLOB_ID;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.SHORT_BYTEARRAY;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BLOB_ID;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TWELVE_MEGABYTES;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TWELVE_MEGABYTES_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,13 +44,13 @@ import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
-public interface DeleteDumbBlobStoreContract  {
+public interface DeleteBlobStoreDAOContract {
 
-    DumbBlobStore testee();
+    BlobStoreDAO testee();
 
     @Test
     default void deleteShouldNotThrowWhenBlobDoesNotExist() {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         assertThatCode(() -> Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block())
             .doesNotThrowAnyException();
@@ -58,7 +58,7 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void deleteShouldNotThrowWhenBucketDoesNotExist() {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         assertThatCode(() -> Mono.from(store.delete(BucketName.of("not_existing_bucket_name"), TEST_BLOB_ID)).block())
             .doesNotThrowAnyException();
@@ -66,7 +66,7 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void deleteShouldDeleteExistingBlobData() {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID,  SHORT_BYTEARRAY)).block();
         Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
@@ -77,7 +77,7 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void deleteShouldBeIdempotent() {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
@@ -88,7 +88,7 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void deleteShouldNotDeleteOtherBlobs() {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         Mono.from(store.save(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
@@ -102,7 +102,7 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void deleteConcurrentlyShouldNotFail() throws Exception {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
 
@@ -115,14 +115,14 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void deleteShouldThrowWhenNullBucketName() {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
         assertThatThrownBy(() -> Mono.from(store.delete(null, TEST_BLOB_ID)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void deleteShouldNotDeleteFromOtherBucket() {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         Mono.from(store.save(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID, "custom")).block();
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
@@ -136,7 +136,7 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void deleteShouldNotDeleteFromOtherBucketWhenSameBlobId() {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         Mono.from(store.save(CUSTOM_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
@@ -150,7 +150,7 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() throws Exception {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
 
@@ -176,7 +176,7 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() throws Exception {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
 
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
 
@@ -201,7 +201,7 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void mixingSaveReadAndDeleteShouldReturnConsistentState() throws ExecutionException, InterruptedException {
-        DumbBlobStore store = testee();
+        BlobStoreDAO store = testee();
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
         ConcurrentTestRunner.builder()
             .randomlyDistributedReactorOperations(

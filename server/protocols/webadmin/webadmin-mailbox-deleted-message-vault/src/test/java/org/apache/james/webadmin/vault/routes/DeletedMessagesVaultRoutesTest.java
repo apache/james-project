@@ -76,7 +76,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
-import org.apache.james.blob.memory.MemoryDumbBlobStore;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -182,15 +182,15 @@ class DeletedMessagesVaultRoutesTest {
     @BeforeEach
     void beforeEach() throws Exception {
         blobIdFactory = new HashBlobId.Factory();
-        MemoryDumbBlobStore dumbBlobStore = new MemoryDumbBlobStore();
+        MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
         blobStore = spy(BlobStoreFactory.builder()
-            .dumbBlobStore(dumbBlobStore)
+            .blobStoreDAO(blobStoreDAO)
             .blobIdFactory(blobIdFactory)
             .defaultBucketName()
             .passthrough());
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
-            blobStore, dumbBlobStore, new BucketNameGenerator(clock), clock,
+            blobStore, blobStoreDAO, new BucketNameGenerator(clock), clock,
             RetentionConfiguration.DEFAULT));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());

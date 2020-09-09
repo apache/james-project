@@ -33,8 +33,8 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.lifecycle.api.Startable;
@@ -76,7 +76,7 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
-public class S3DumbBlobStore implements DumbBlobStore, Startable, Closeable {
+public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     private static final int CHUNK_SIZE = 1024 * 1024;
     private static final int EMPTY_BUCKET_BATCH_SIZE = 1000;
@@ -89,7 +89,7 @@ public class S3DumbBlobStore implements DumbBlobStore, Startable, Closeable {
     private final InstrumentedPool<S3AsyncClient> clientPool;
 
     @Inject
-    S3DumbBlobStore(AwsS3AuthConfiguration configuration, Region region) {
+    S3BlobStoreDAO(AwsS3AuthConfiguration configuration, Region region) {
         S3Configuration pathStyleAccess = S3Configuration.builder()
             .pathStyleAccessEnabled(true)
             .build();

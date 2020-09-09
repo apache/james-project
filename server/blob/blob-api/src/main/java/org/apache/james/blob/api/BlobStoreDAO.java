@@ -26,7 +26,7 @@ import org.reactivestreams.Publisher;
 
 import com.google.common.io.ByteSource;
 
-public interface DumbBlobStore {
+public interface BlobStoreDAO {
 
     /**
      * Reads a Blob based on its BucketName and its BlobId.

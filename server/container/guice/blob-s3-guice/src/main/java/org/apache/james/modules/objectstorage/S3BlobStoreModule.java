@@ -29,7 +29,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
-import org.apache.james.blob.objectstorage.aws.S3DumbBlobStore;
+import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -71,9 +71,9 @@ public class S3BlobStoreModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    InitializationOperation startS3DumbBlobStore(S3DumbBlobStore s3DumbBlobStore) {
+    InitializationOperation startS3BlobStoreDAO(S3BlobStoreDAO s3BlobStoreDAO) {
         return InitilizationOperationBuilder
-            .forClass(S3DumbBlobStore.class)
-            .init(s3DumbBlobStore::start);
+            .forClass(S3BlobStoreDAO.class)
+            .init(s3BlobStoreDAO::start);
     }
 }
