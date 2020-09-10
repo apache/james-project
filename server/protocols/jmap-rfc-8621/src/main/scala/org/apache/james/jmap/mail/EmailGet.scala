@@ -81,6 +81,7 @@ case class EmailGetRequest(accountId: AccountId,
       Email(
         id = messageId,
         blobId = blobId,
+        threadId = ThreadId(messageId.serialize()),
         mailboxIds = mailboxIds,
         size = sanitizeSize(firstMessage.getSize),
         bodyStructure = bodyStructure,
