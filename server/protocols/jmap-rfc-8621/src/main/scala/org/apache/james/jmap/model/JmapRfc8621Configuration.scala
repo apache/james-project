@@ -21,7 +21,6 @@ package org.apache.james.jmap.model
 
 import java.net.URL
 
-import eu.timepit.refined.api.Refined
 import org.apache.commons.configuration2.Configuration
 
 object JmapRfc8621Configuration {
@@ -37,7 +36,7 @@ object JmapRfc8621Configuration {
 case class JmapRfc8621Configuration(urlPrefixString: String) {
   val urlPrefix: URL = new URL(urlPrefixString)
   val apiUrl: URL = new URL(s"$urlPrefixString/jmap")
-  val downloadUrl: URL = new URL(s"$urlPrefixString/download")
+  val downloadUrl: URL = new URL(urlPrefixString + "/download/$accountId/$blobId/?type=$type&name=$name")
   val uploadUrl: URL = new URL(s"$urlPrefixString/upload")
   val eventSourceUrl: URL = new URL(s"$urlPrefixString/eventSource")
 }

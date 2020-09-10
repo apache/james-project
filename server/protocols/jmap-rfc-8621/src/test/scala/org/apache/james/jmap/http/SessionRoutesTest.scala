@@ -98,6 +98,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .thenReturn
         .getBody
         .asString()
+    val downloadPath: String = "download/$accountId/$blobId/?type=$type&name=$name"
     val expectedJson = s"""{
                          |  "capabilities" : {
                          |    "urn:ietf:params:jmap:core" : {
@@ -161,7 +162,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |  },
                          |  "username" : "bob@james.org",
                          |  "apiUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/jmap",
-                         |  "downloadUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/download",
+                         |  "downloadUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/$downloadPath",
                          |  "uploadUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/upload",
                          |  "eventSourceUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/eventSource",
                          |  "state" : "000001"
