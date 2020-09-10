@@ -41,7 +41,7 @@ object Email {
   val defaultProperties: Properties = Properties("id", "size")
   val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody",
     "attachments", "headers", "bodyValues", "messageId", "inReplyTo", "references", "to", "cc", "bcc",
-    "from", "sender", "replyTo", "subject", "sentAt", "mailboxIds", "blobId", "threadId")
+    "from", "sender", "replyTo", "subject", "sentAt", "mailboxIds", "blobId", "threadId", "receivedAt")
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
@@ -80,25 +80,32 @@ case class Subject(value: String) extends AnyVal
 case class MailboxIds(value: List[MailboxId])
 case class ThreadId(value: String) extends AnyVal
 
-case class Email(id: MessageId,
-                 blobId: BlobId,
-                 threadId: ThreadId,
-                 mailboxIds: MailboxIds,
-                 size: Size,
-                 bodyStructure: EmailBodyPart,
+case class EmailMetadata(id: MessageId,
+                         blobId: BlobId,
+                         threadId: ThreadId,
+                         mailboxIds: MailboxIds,
+                         size: Size,
+                         receivedAt: UTCDate)
+
+case class EmailHeaders(headers: List[EmailHeader],
+                        messageId: Option[List[HeaderMessageId]],
+                        inReplyTo: Option[List[HeaderMessageId]],
+                        references: Option[List[HeaderMessageId]],
+                        to: Option[List[EmailAddress]],
+                        cc: Option[List[EmailAddress]],
+                        bcc: Option[List[EmailAddress]],
+                        from: Option[List[EmailAddress]],
+                        sender: Option[List[EmailAddress]],
+                        replyTo: Option[List[EmailAddress]],
+                        subject: Option[Subject],
+                        sentAt: Option[UTCDate])
+
+case class EmailBody(bodyStructure: EmailBodyPart,
                  textBody: List[EmailBodyPart],
                  htmlBody: List[EmailBodyPart],
                  attachments: List[EmailBodyPart],
-                 headers: List[EmailHeader],
-                 bodyValues: Map[PartId, EmailBodyValue],
-                 messageId: Option[List[HeaderMessageId]],
-                 inReplyTo: Option[List[HeaderMessageId]],
-                 references: Option[List[HeaderMessageId]],
-                 to: Option[List[EmailAddress]],
-                 cc: Option[List[EmailAddress]],
-                 bcc: Option[List[EmailAddress]],
-                 from: Option[List[EmailAddress]],
-                 sender: Option[List[EmailAddress]],
-                 replyTo: Option[List[EmailAddress]],
-                 subject: Option[Subject],
-                 sentAt: Option[UTCDate])
+                 bodyValues: Map[PartId, EmailBodyValue])
+
+case class Email(metadata: EmailMetadata,
+                 header: EmailHeaders,
+                 body: EmailBody)

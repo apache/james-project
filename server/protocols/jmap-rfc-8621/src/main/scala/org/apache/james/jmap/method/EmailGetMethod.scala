@@ -180,7 +180,7 @@ class EmailGetMethod @Inject() (serializer: Serializer,
       .flatMap(groupedFlux => groupedFlux.collectSeq().map(results => (groupedFlux.key(), results)))
       .map(request.toEmail(zoneIdProvider.get()))
       .flatMap(SMono.fromTry(_))
-      .collectMap(_.id)
+      .collectMap(_.metadata.id)
 
     foundResultsMono.flatMapMany(foundResults => SFlux.fromIterable(ids)
       .map(id => foundResults.get(id)

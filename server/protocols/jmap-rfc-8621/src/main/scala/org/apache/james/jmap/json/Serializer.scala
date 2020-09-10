@@ -31,6 +31,7 @@ import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId, UnparsedMailboxIdConstraint}
 import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
 import org.apache.james.jmap.mail.{Address, BlobId, Charset, DelegatedNamespace, Disposition, Email, EmailAddress, EmailBodyPart, EmailBodyValue, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailIds, EmailNotFound, EmailQueryRequest, EmailQueryResponse, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, FromDate, HeaderMessageId, HtmlBody, Ids, IsEnabled, IsEncodingProblem, IsSubscribed, IsTruncated, Language, Limit, Location, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxIds, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, Name, NotFound, PartId, PersonalNamespace, Position, QueryState, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ThreadId, ToDate, TotalEmails, TotalThreads, Type, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
+import org.apache.james.jmap.mail.{Address, BlobId, Charset, DelegatedNamespace, Disposition, Email, EmailAddress, EmailBody, EmailBodyPart, EmailBodyValue, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaders, EmailIds, EmailMetadata, EmailNotFound, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, FromDate, HeaderMessageId, HtmlBody, Ids, IsEnabled, IsEncodingProblem, IsSubscribed, IsTruncated, Language, Location, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxIds, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, Name, NotFound, PartId, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, Subject, TextBody, ThreadId, ToDate, TotalEmails, TotalThreads, Type, UnreadEmails, UnreadThreads, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, Value}
 import org.apache.james.jmap.model
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
@@ -302,9 +303,18 @@ class Serializer @Inject() (mailboxIdFactory: MailboxId.Factory) {
             "location" -> Json.toJson(part.location),
             "subParts" -> part.subParts.map(list => list.map(writes)))))
     }
-  private def emailWritesWithPropertyFilter(properties: Properties)(implicit partsWrites: Writes[EmailBodyPart]): Writes[Email] =
-    Json.writes[Email]
-      .transform(obj => properties.filter(obj))
+
+  private def emailWritesWithPropertyFilter(properties: Properties)(implicit partsWrites: Writes[EmailBodyPart]): Writes[Email] = {
+    implicit val emailMetadataWrites: Writes[EmailMetadata] = Json.writes[EmailMetadata]
+    implicit val emailHeadersWrites: Writes[EmailHeaders] = Json.writes[EmailHeaders]
+    implicit val emailBodyWrites: Writes[EmailBody] = Json.writes[EmailBody]
+
+    val emailWrites: OWrites[Email] = (JsPath.write[EmailMetadata] and
+        JsPath.write[EmailHeaders] and
+        JsPath.write[EmailBody]) (unlift(Email.unapply))
+
+    emailWrites.transform(obj => properties.filter(obj))
+  }
   private implicit def emailGetResponseWrites(implicit emailWrites: Writes[Email]): Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
   private implicit def emailQueryResponseWrites: OWrites[EmailQueryResponse] = Json.writes[EmailQueryResponse]
 

@@ -20,6 +20,8 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.time.ZonedDateTime
+import java.util.Date
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
@@ -2257,6 +2259,54 @@ trait EmailGetMethodContract {
          |    "mailboxIds": {
          |        "${mailboxId}": true
          |    }
+         |}""".stripMargin)
+  }
+
+  @Test
+  def receivedAtPropertyShouldBeReturned(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant))
+        .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties":["receivedAt"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "receivedAt": "2014-10-30T14:12:00Z"
          |}""".stripMargin)
   }
 

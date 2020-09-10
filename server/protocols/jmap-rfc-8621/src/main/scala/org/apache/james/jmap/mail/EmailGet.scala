@@ -78,29 +78,32 @@ case class EmailGetRequest(accountId: AccountId,
       bodyValues <- extractBodyValues(bodyStructure)
       blobId <- BlobId.of(messageId)
     } yield {
-      Email(
-        id = messageId,
-        blobId = blobId,
-        threadId = ThreadId(messageId.serialize()),
-        mailboxIds = mailboxIds,
-        size = sanitizeSize(firstMessage.getSize),
-        bodyStructure = bodyStructure,
-        textBody = bodyStructure.textBody,
-        htmlBody = bodyStructure.htmlBody,
-        attachments = bodyStructure.attachments,
-        headers = asEmailHeaders(mime4JMessage.getHeader),
-        bodyValues = bodyValues,
-        messageId = extractMessageId(mime4JMessage, "Message-Id"),
-        inReplyTo = extractMessageId(mime4JMessage, "In-Reply-To"),
-        references = extractMessageId(mime4JMessage, "References"),
-        to = Option(mime4JMessage.getTo).map(EmailAddress.from),
-        cc = Option(mime4JMessage.getCc).map(EmailAddress.from),
-        bcc = Option(mime4JMessage.getBcc).map(EmailAddress.from),
-        from = Option(mime4JMessage.getFrom).map(EmailAddress.from),
-        replyTo = Option(mime4JMessage.getReplyTo).map(EmailAddress.from),
-        sender = Option(mime4JMessage.getSender).map(EmailAddress.from).map(List(_)),
-        subject = Option(mime4JMessage.getSubject).map(Subject),
-        sentAt = Option(mime4JMessage.getDate).map(date => UTCDate.from(date, zoneId)))
+      Email(metadata = EmailMetadata(
+          id = messageId,
+          blobId = blobId,
+          threadId = ThreadId(messageId.serialize),
+          mailboxIds = mailboxIds,
+          receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneId),
+          size = sanitizeSize(firstMessage.getSize)),
+        header = EmailHeaders(
+          headers = asEmailHeaders(mime4JMessage.getHeader),
+          messageId = extractMessageId(mime4JMessage, "Message-Id"),
+          inReplyTo = extractMessageId(mime4JMessage, "In-Reply-To"),
+          references = extractMessageId(mime4JMessage, "References"),
+          to = Option(mime4JMessage.getTo).map(EmailAddress.from),
+          cc = Option(mime4JMessage.getCc).map(EmailAddress.from),
+          bcc = Option(mime4JMessage.getBcc).map(EmailAddress.from),
+          from = Option(mime4JMessage.getFrom).map(EmailAddress.from),
+          replyTo = Option(mime4JMessage.getReplyTo).map(EmailAddress.from),
+          sender = Option(mime4JMessage.getSender).map(EmailAddress.from).map(List(_)),
+          subject = Option(mime4JMessage.getSubject).map(Subject),
+          sentAt = Option(mime4JMessage.getDate).map(date => UTCDate.from(date, zoneId))),
+        body = EmailBody(
+          bodyStructure = bodyStructure,
+          textBody = bodyStructure.textBody,
+          htmlBody = bodyStructure.htmlBody,
+          attachments = bodyStructure.attachments,
+          bodyValues = bodyValues))
     }
   }
 
