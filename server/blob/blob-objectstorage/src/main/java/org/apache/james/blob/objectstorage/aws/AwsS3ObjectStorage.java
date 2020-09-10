@@ -181,8 +181,17 @@ public class AwsS3ObjectStorage {
                 .publishOn(Schedulers.elastic())
                 .retryWhen(Retry
                     .backoff(MAX_RETRY_ON_EXCEPTION, FIRST_BACK_OFF)
-                    .filter(throwable -> needToCreateBucket(throwable))
-                    .doBeforeRetry(retryContext -> s3Client.createBucket(bucketName.asString()))
+                    .filter(this::needToCreateBucket)
+                    .doBeforeRetry(retryContext -> {
+                        try {
+                            s3Client.createBucket(bucketName.asString());
+                        } catch (AmazonS3Exception e) {
+                            if (e.getStatusCode() != 409 ||
+                                !e.getErrorCode().equals("BucketAlreadyOwnedByYou")) {
+                                throw e;
+                            }
+                        }
+                    })
                     .scheduler(Schedulers.elastic()));
         }
 
