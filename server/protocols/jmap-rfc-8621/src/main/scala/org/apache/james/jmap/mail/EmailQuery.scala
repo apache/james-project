@@ -29,6 +29,10 @@ case class Position(value: Int) extends AnyVal
 object Position{
   val zero: Position = Position(0)
 }
+case class Limit(value: Long) extends AnyVal
+object Limit {
+  val default: Limit = Limit(256L)
+}
 case class QueryState(value: String) extends AnyVal
 
 object QueryState {
@@ -42,4 +46,5 @@ case class EmailQueryResponse(accountId: AccountId,
                               queryState: QueryState,
                               canCalculateChanges: Boolean,
                               ids: Seq[MessageId],
-                              position: Position)
+                              position: Position,
+                              limit: Option[Limit])

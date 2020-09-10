@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.Serializer
-import org.apache.james.jmap.mail.{EmailQueryRequest, EmailQueryResponse, Position, QueryState}
+import org.apache.james.jmap.mail.{EmailQueryRequest, EmailQueryResponse, Limit, Position, QueryState}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
@@ -34,11 +34,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
-
-
-object EmailQueryMethod {
-  val DEFAULT_MAXIMUM_LIMIT: Long = 256L
-}
 
 class EmailQueryMethod @Inject() (serializer: Serializer,
                                   mailboxManager: MailboxManager,
@@ -58,9 +53,14 @@ class EmailQueryMethod @Inject() (serializer: Serializer,
 
   private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: EmailQueryRequest): SMono[Invocation] = {
     val searchQuery = MultimailboxesSearchQuery.from(new SearchQuery.Builder().sorts(new SearchQuery.Sort(SortClause.Arrival, SearchQuery.Sort.Order.REVERSE)).build()).build()
-    SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, EmailQueryMethod.DEFAULT_MAXIMUM_LIMIT))
+    SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, Limit.default.value))
       .collectSeq()
-      .map(ids => EmailQueryResponse(accountId = request.accountId, queryState = QueryState.forIds(ids), canCalculateChanges = false, ids = ids, position = Position.zero))
+      .map(ids => EmailQueryResponse(accountId = request.accountId,
+        queryState = QueryState.forIds(ids),
+        canCalculateChanges = false,
+        ids = ids,
+        position = Position.zero,
+        limit = Some(Limit.default)))
       .map(response => Invocation(methodName = methodName, arguments = Arguments(serializer.serialize(response)), methodCallId = invocation.methodCallId))
   }
 
