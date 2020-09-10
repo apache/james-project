@@ -76,9 +76,11 @@ case class EmailGetRequest(accountId: AccountId,
       mime4JMessage <- Try(defaultMessageBuilder.parseMessage(firstMessage.getFullContent.getInputStream))
       bodyStructure <- EmailBodyPart.of(messageId, mime4JMessage)
       bodyValues <- extractBodyValues(bodyStructure)
+      blobId <- BlobId.of(messageId)
     } yield {
       Email(
         id = messageId,
+        blobId = blobId,
         mailboxIds = mailboxIds,
         size = sanitizeSize(firstMessage.getSize),
         bodyStructure = bodyStructure,
