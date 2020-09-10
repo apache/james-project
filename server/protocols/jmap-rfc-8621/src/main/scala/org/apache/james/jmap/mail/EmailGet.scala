@@ -64,6 +64,9 @@ case class EmailGetRequest(accountId: AccountId,
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
     val messageId: MessageId = message._1
+    val mailboxIds: MailboxIds = MailboxIds(message._2
+      .map(_.getMailboxId)
+      .toList)
 
     for {
       firstMessage <- message._2
@@ -76,6 +79,7 @@ case class EmailGetRequest(accountId: AccountId,
     } yield {
       Email(
         id = messageId,
+        mailboxIds = mailboxIds,
         size = sanitizeSize(firstMessage.getSize),
         bodyStructure = bodyStructure,
         textBody = bodyStructure.textBody,
