@@ -50,10 +50,10 @@ class EmailQueryMethod @Inject() (serializer: Serializer,
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asEmailQueryRequest(invocation.arguments)
         .flatMap(processRequest(mailboxSession, invocation, _))
-        .onErrorResume({
+        .onErrorResume {
           case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
           case e: Throwable => SMono.raiseError(e)
-        })
+        }
         .map(invocationResult => (invocationResult, processingContext)))
 
   private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: EmailQueryRequest): SMono[Invocation] = {
