@@ -27,15 +27,16 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
-import org.apache.james.mime4j.dom.{TextBody => Mime4JTextBody}
 import org.apache.commons.io.IOUtils
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.EmailBodyPart.{MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.jmap.model.Properties
-import org.apache.james.mailbox.model.{Cid, MessageId}
-import org.apache.james.mime4j.dom.{Entity, Message, Multipart}
-import org.apache.james.mime4j.message.DefaultMessageWriter
+import org.apache.james.mailbox.model.{Cid, MessageId, MessageResult}
+import org.apache.james.mime4j.codec.DecodeMonitor
+import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
+import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWriter}
+import org.apache.james.mime4j.stream.MimeConfig
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
@@ -43,6 +44,12 @@ import scala.util.{Failure, Success, Try}
 
 object PartId {
   type PartIdValue = Int Refined NonNegative
+
+  def parse(string: String): Try[PartId] = Try(string.toInt)
+    .flatMap(i => refineV[NonNegative](i) match {
+      case Left(e) => Failure(new IllegalArgumentException(e))
+      case scala.Right(id) => Success(PartId(id))
+    })
 }
 
 case class PartId(value: PartIdValue) {
@@ -61,6 +68,15 @@ object EmailBodyPart {
 
   val defaultProperties: Properties = Properties("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location")
   val allowedProperties: Properties = defaultProperties ++ Properties("subParts", "headers")
+
+  def of(messageId: MessageId, message: MessageResult): Try[EmailBodyPart] = {
+    val defaultMessageBuilder = new DefaultMessageBuilder
+    defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
+    defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
+
+    val mime4JMessage = Try(defaultMessageBuilder.parseMessage(message.getFullContent.getInputStream))
+    mime4JMessage.flatMap(of(messageId, _))
+  }
 
   def of(messageId: MessageId, message: Message): Try[EmailBodyPart] =
     of(messageId, PartId(1), message).map(_._1)
