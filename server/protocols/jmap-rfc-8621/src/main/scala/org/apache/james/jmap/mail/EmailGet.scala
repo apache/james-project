@@ -21,6 +21,7 @@ package org.apache.james.jmap.mail
 
 import java.nio.charset.StandardCharsets.US_ASCII
 import java.time.ZoneId
+import java.util.Date
 
 import cats.implicits._
 import eu.timepit.refined.api.Refined
@@ -32,9 +33,10 @@ import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties, UTCDate}
 import org.apache.james.mailbox.model.{MessageId, MessageResult}
 import org.apache.james.mime4j.codec.DecodeMonitor
+import org.apache.james.mime4j.dom.field.{AddressListField, DateTimeField, MailboxField, MailboxListField}
 import org.apache.james.mime4j.dom.{Header, Message}
 import org.apache.james.mime4j.message.DefaultMessageBuilder
-import org.apache.james.mime4j.stream.MimeConfig
+import org.apache.james.mime4j.stream.{Field, MimeConfig}
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -90,14 +92,14 @@ case class EmailGetRequest(accountId: AccountId,
           messageId = extractMessageId(mime4JMessage, "Message-Id"),
           inReplyTo = extractMessageId(mime4JMessage, "In-Reply-To"),
           references = extractMessageId(mime4JMessage, "References"),
-          to = Option(mime4JMessage.getTo).map(EmailAddress.from),
-          cc = Option(mime4JMessage.getCc).map(EmailAddress.from),
-          bcc = Option(mime4JMessage.getBcc).map(EmailAddress.from),
-          from = Option(mime4JMessage.getFrom).map(EmailAddress.from),
-          replyTo = Option(mime4JMessage.getReplyTo).map(EmailAddress.from),
-          sender = Option(mime4JMessage.getSender).map(EmailAddress.from).map(List(_)),
-          subject = Option(mime4JMessage.getSubject).map(Subject),
-          sentAt = Option(mime4JMessage.getDate).map(date => UTCDate.from(date, zoneId))),
+          to = extractAddresses(mime4JMessage, "To"),
+          cc = extractAddresses(mime4JMessage, "Cc"),
+          bcc = extractAddresses(mime4JMessage, "Bcc"),
+          from = extractAddresses(mime4JMessage, "From"),
+          replyTo = extractAddresses(mime4JMessage, "Reply-To"),
+          sender = extractAddresses(mime4JMessage, "Sender"),
+          subject = extractLastField(mime4JMessage, "Subject").map(_.getBody).map(Subject),
+          sentAt = extractDate(mime4JMessage, "Date").map(date => UTCDate.from(date, zoneId))),
         body = EmailBody(
           bodyStructure = bodyStructure,
           textBody = bodyStructure.textBody,
@@ -114,6 +116,28 @@ case class EmailGetRequest(accountId: AccountId,
         .map(HeaderMessageId.from)
         .toList)
       .filter(_.nonEmpty)
+
+  private def extractAddresses(mime4JMessage: Message, fieldName: String): Option[List[EmailAddress]] =
+    extractLastField(mime4JMessage, fieldName)
+      .flatMap {
+        case f: AddressListField => Some(EmailAddress.from(f.getAddressList))
+        case f: MailboxListField => Some(EmailAddress.from(f.getMailboxList))
+        case f: MailboxField => Some(List(EmailAddress.from(f.getMailbox)))
+        case _ => None
+      }
+      .filter(_.nonEmpty)
+
+  private def extractDate(mime4JMessage: Message, fieldName: String): Option[Date] =
+    extractLastField(mime4JMessage, fieldName)
+      .flatMap {
+        case f: DateTimeField => Some(f.getDate)
+        case _ => None
+      }
+
+  private def extractLastField(mime4JMessage: Message, fieldName: String): Option[Field] =
+    Option(mime4JMessage.getHeader.getFields(fieldName))
+      .map(_.asScala)
+      .flatMap(fields => fields.reverse.headOption)
 
   def extractBodyValues(bodyStructure: EmailBodyPart): Try[Map[PartId, EmailBodyValue]] = for {
     textBodyValues <- extractBodyValues(bodyStructure.textBody, fetchTextBodyValues.exists(_.value))

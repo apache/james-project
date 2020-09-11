@@ -460,7 +460,7 @@ trait EmailGetMethodContract {
   }
 
   @Test
-  def convenienceHeaderShouldOnlyTakeFirstHeaderIntoAccount(server: GuiceJamesServer): Unit = {
+  def toPropertyShouldReturnLastWhenMultipleFields(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
       .addField(new RawField("To",
@@ -505,11 +505,322 @@ trait EmailGetMethodContract {
       s"""{
          |    "id": "${messageId.serialize()}",
          |    "to": [
-         |         {
-         |             "name": "user1",
-         |             "email": "user1@domain.tld"
+         |          {
+         |             "email": "user2@domain.tld"
          |          }
          |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def fromPropertyShouldReturnLastWhenMultipleFields(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("From",
+        "\"user1\" <user1@domain.tld>"))
+      .addField(new RawField("From",
+        "user2@domain.tld"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["from"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "from": [
+         |          {
+         |             "email": "user2@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def ccPropertyShouldReturnLastWhenMultipleFields(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Cc",
+        "\"user1\" <user1@domain.tld>"))
+      .addField(new RawField("Cc",
+        "user2@domain.tld"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["cc"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "cc": [
+         |          {
+         |             "email": "user2@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def bccPropertyShouldReturnLastWhenMultipleFields(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Bcc",
+        "\"user1\" <user1@domain.tld>"))
+      .addField(new RawField("Bcc",
+        "user2@domain.tld"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["bcc"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "bcc": [
+         |          {
+         |             "email": "user2@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def senderPropertyShouldReturnLastWhenMultipleFields(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Sender",
+        "\"user1\" <user1@domain.tld>"))
+      .addField(new RawField("Sender",
+        "user2@domain.tld"))
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["sender"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "sender": [
+         |          {
+         |             "email": "user2@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def replyToPropertyShouldReturnLastWhenMultipleFields(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Reply-To",
+        "\"user1\" <user1@domain.tld>"))
+      .addField(new RawField("Reply-To",
+        "user2@domain.tld"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["replyTo"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "replyTo": [
+         |          {
+         |             "email": "user2@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def subjectPropertyShouldReturnLastWhenMultipleFields(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Subject",
+        "Ga Bou"))
+      .addField(new RawField("Subject",
+        "Zo Meuh"))
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["subject"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "subject": "Zo Meuh"
          |}""".stripMargin)
   }
 
@@ -1045,6 +1356,55 @@ trait EmailGetMethodContract {
   def sentAtPropertyShouldBeSupported(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
+      .addField(new RawField("Date",
+        "Wed, 9 Sep 2020 07:00:26 +0200"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["sentAt"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "sentAt": "2020-09-09T05:00:26Z"
+         |}""".stripMargin)
+  }
+
+  @Test
+  def sentAtPropertyShouldReturnLastWhenMultipleFields(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Date",
+        "Wed, 9 Sep 2014 07:00:26 +0200"))
       .addField(new RawField("Date",
         "Wed, 9 Sep 2020 07:00:26 +0200"))
       .setSubject("test")
