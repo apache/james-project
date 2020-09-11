@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import org.apache.commons.io.IOUtils
-import org.apache.http.HttpStatus.{SC_NOT_FOUND, SC_OK}
+import org.apache.http.HttpStatus.{SC_NOT_FOUND, SC_OK, SC_UNAUTHORIZED}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
@@ -86,6 +86,24 @@ trait DownloadContract {
       .hasContent(expectedResponse)
   }
 
+  @Test
+  def downloadMessageShouldFailWhenUnauthentified(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    `given`
+      .auth().none()
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/${messageId.serialize()}")
+    .`then`
+      .statusCode(SC_UNAUTHORIZED)
+  }
 
   @Test
   def downloadMessageShouldSucceedWhenDelegated(server: GuiceJamesServer): Unit = {
