@@ -23,7 +23,9 @@ import com.google.common.hash.Hashing
 import org.apache.james.jmap.model.AccountId
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 
-case class EmailQueryRequest(accountId: AccountId, inMailbox: Option[MailboxId])
+case class FilterCondition(inMailbox: Option[MailboxId])
+
+case class EmailQueryRequest(accountId: AccountId, filter: Option[FilterCondition])
 
 case class Position(value: Int) extends AnyVal
 object Position{

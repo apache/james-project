@@ -26,8 +26,6 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class MemoryEmailQueryMethodTest implements EmailQueryMethodContract {
@@ -38,11 +36,4 @@ public class MemoryEmailQueryMethodTest implements EmailQueryMethodContract {
             .overrideWith(new TestJMAPServerModule()))
         .build();
 
-    @Disabled("Can't be done in memory because the SimpleMessageSearchIndex doesn't handle sorting")
-    @Test
-    public void shouldListMailsInAllUserMailboxes(GuiceJamesServer server)  {}
-
-    @Disabled("Can't be done in memory because the SimpleMessageSearchIndex doesn't handle sorting")
-    @Test
-    public void listMailsShouldBeSortedByDescendingOrderOfArrivalByDefault(GuiceJamesServer server)  {}
 }
