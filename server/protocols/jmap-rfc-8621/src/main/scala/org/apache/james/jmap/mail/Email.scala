@@ -75,6 +75,10 @@ object HeaderMessageId {
   }
 }
 
+object EmailHeaders {
+  val SPECIFIC_HEADER_PREFIX = "header:"
+}
+
 case class HeaderMessageId(value: String) extends AnyVal
 case class Subject(value: String) extends AnyVal
 case class MailboxIds(value: List[MailboxId])
@@ -111,4 +115,5 @@ case class EmailBody(bodyStructure: EmailBodyPart,
 
 case class Email(metadata: EmailMetadata,
                  header: EmailHeaders,
-                 body: EmailBody)
+                 body: EmailBody,
+                 specificHeaders: Map[String, Option[EmailHeaderValue]])

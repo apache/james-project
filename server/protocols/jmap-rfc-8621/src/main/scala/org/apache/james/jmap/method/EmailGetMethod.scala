@@ -21,11 +21,12 @@ package org.apache.james.jmap.method
 import java.time.ZoneId
 
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
-import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound}
+import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, SpecificHeaderRequest}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
@@ -102,7 +103,7 @@ class EmailGetMethod @Inject() (messageIdManager: MessageIdManager,
       .flatMap(properties => validateBodyProperties(request).map((properties, _)))
       .fold(
         e => SMono.raiseError(e), {
-          case (properties, bodyProperties) => getEmails(request, mailboxSession)
+          case (properties, bodyProperties) => getEmails(request, properties, mailboxSession)
             .map(response => Invocation(
               methodName = methodName,
               arguments = Arguments(EmailGetSerializer.serialize(response, properties, bodyProperties).as[JsObject]),
@@ -113,11 +114,17 @@ class EmailGetMethod @Inject() (messageIdManager: MessageIdManager,
     request.properties match {
       case None => Right(Email.defaultProperties)
       case Some(properties) =>
-        val invalidProperties = properties -- Email.allowedProperties
-        if (invalidProperties.isEmpty()) {
-          Right(properties ++ Email.idProperty)
+        val invalidProperties: Set[NonEmptyString] = properties.value
+          .flatMap(property => SpecificHeaderRequest.from(property)
+            .fold(
+              invalidProperty => Some(invalidProperty),
+              _ => None
+            )) -- Email.allowedProperties.value
+
+        if (invalidProperties.nonEmpty) {
+          Left(new IllegalArgumentException(s"The following properties [${invalidProperties.map(p => p.value).mkString(", ")}] do not exist."))
         } else {
-          Left(new IllegalArgumentException(s"The following properties [${invalidProperties.format()}] do not exist."))
+          Right(properties ++ Email.idProperty)
         }
     }
 
@@ -139,7 +146,7 @@ class EmailGetMethod @Inject() (messageIdManager: MessageIdManager,
       case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
-  private def getEmails(request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
+  private def getEmails(request: EmailGetRequest, properties: Properties, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
     request.ids match {
       case None => SMono.raiseError(new IllegalArgumentException("ids can not be ommited for email/get"))
       case Some(ids) => getEmails(ids, mailboxSession, request)

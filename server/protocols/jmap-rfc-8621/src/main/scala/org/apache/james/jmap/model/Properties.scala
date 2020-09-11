@@ -50,6 +50,7 @@ case class Properties(value: Set[NonEmptyString]) {
   def filter(o: JsObject): JsObject =
     JsObject(o.fields.filter(entry => {
       val refined: Either[String, NonEmptyString] = refineV[NonEmpty](entry._1)
-      refined.fold(e => throw new RuntimeException(e), property => contains(property))
+      refined.fold(e => throw new RuntimeException(e),
+        property => value.contains(property))
     }))
 }

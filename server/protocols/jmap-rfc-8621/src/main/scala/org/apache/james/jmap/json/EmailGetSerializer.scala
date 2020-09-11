@@ -95,9 +95,10 @@ object EmailGetSerializer {
 
     val emailWrites: OWrites[Email] = (JsPath.write[EmailMetadata] and
         JsPath.write[EmailHeaders] and
-        JsPath.write[EmailBody]) (unlift(Email.unapply))
+        JsPath.write[EmailBody] and
+        JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(Email.unapply))
 
-    emailWrites.transform(obj => properties.filter(obj))
+    emailWrites.transform(properties.filter(_))
   }
   private implicit def emailGetResponseWrites(implicit emailWrites: Writes[Email]): Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
 

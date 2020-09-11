@@ -19,10 +19,16 @@
 
 package org.apache.james.jmap.mail
 
+import java.nio.charset.StandardCharsets.US_ASCII
+
 import org.apache.james.mime4j.stream.Field
 
 object EmailHeader {
   def apply(field: Field): EmailHeader = EmailHeader(EmailHeaderName(field.getName), EmailHeaderValue(field.getBody))
+}
+
+object EmailHeaderValue {
+  def from(field: Field): EmailHeaderValue = EmailHeaderValue(new String(field.getRaw.toByteArray, US_ASCII).substring(field.getName.length + 1))
 }
 
 case class EmailHeaderName(value: String) extends AnyVal
