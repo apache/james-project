@@ -29,10 +29,11 @@ import org.apache.http.HttpStatus.{SC_NOT_FOUND, SC_OK}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
-import org.apache.james.mailbox.model.{MailboxPath, MessageId}
-import org.apache.james.modules.MailboxProbeImpl
+import org.apache.james.mailbox.model.MailboxACL.Right
+import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
+import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.{containsString, emptyOrNullString}
@@ -83,6 +84,106 @@ trait DownloadContract {
       StandardCharsets.UTF_8)
     assertThat(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)))
       .hasContent(expectedResponse)
+  }
+
+
+  @Test
+  def downloadMessageShouldSucceedWhenDelegated(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(ANDRE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(ANDRE.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString(), new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val response = `given`
+        .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/${messageId.serialize()}")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("message/rfc822")
+      .extract
+      .body
+      .asString
+
+    val expectedResponse: String = IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml"),
+      StandardCharsets.UTF_8)
+    assertThat(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)))
+      .hasContent(expectedResponse)
+  }
+
+  @Test
+  def downloadingOtherPeopleMessageShouldFail(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(ANDRE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(ANDRE.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    `given`
+        .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/${messageId.serialize()}")
+    .`then`
+      .statusCode(SC_NOT_FOUND)
+  }
+
+  @Test
+  def downloadPartShouldSucceedWhenDelegated(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(ANDRE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(ANDRE.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString(), new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val response = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/${messageId.serialize()}_3").prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("text/plain")
+      .extract
+      .body
+      .asString
+
+    val expectedResponse: String =
+      """-----BEGIN RSA PRIVATE KEY-----
+        |MIIEogIBAAKCAQEAx7PG0+E//EMpm7IgI5Q9TMDSFya/1hE+vvTJrk0iGFllPeHL
+        |A5/VlTM0YWgG6X50qiMfE3VLazf2c19iXrT0mq/21PZ1wFnogv4zxUNaih+Bng62
+        |F0SyruE/O/Njqxh/Ccq6K/e05TV4T643USxAeG0KppmYW9x8HA/GvV832apZuxkV
+        |i6NVkDBrfzaUCwu4zH+HwOv/pI87E7KccHYC++Biaj3
+        |""".stripMargin
+    assertThat(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)))
+      .hasContent(expectedResponse)
+  }
+
+  @Test
+  def downloadingOtherPeopleMessagePartShouldFail(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(ANDRE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(ANDRE.asString, path, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    `given`
+        .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/${messageId.serialize()}_3")
+    .`then`
+      .statusCode(SC_NOT_FOUND)
   }
 
   @Test
