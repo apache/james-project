@@ -35,7 +35,11 @@ trait KeywordsValidator {
 }
 
 object ToKeyword {
-  val STRICT: ToKeyword = (value: String) => Some(Keyword.of(value).get)
+  val STRICT: ToKeyword = (value: String) => Keyword.of(value) match {
+    case Failure(_) => None
+    case Success(value: Keyword) => Some(value)
+  }
+
   val LENIENT: ToKeyword = (value: String) => Keyword.parse(value) match {
     case Left(_) => None
     case Right(value: Keyword) => Some(value)
@@ -44,19 +48,19 @@ object ToKeyword {
 
 object KeywordsValidator {
   val THROW_ON_IMAP_NON_EXPOSED_KEYWORDS: KeywordsValidator = (keywords: Set[Keyword]) => {
-    val exposed_keywords = keywords.filter(keyword => keyword.isExposedImapKeyword)
-    if (exposed_keywords.isEmpty || exposed_keywords.size != keywords.size) {
+    val exposedKeywords = keywords.filter(_.isExposedImapKeyword)
+    if (exposedKeywords.isEmpty || exposedKeywords.size != keywords.size) {
       Failure(new IllegalArgumentException("Does not allow to update 'Deleted' or 'Recent' flag"))
     } else {
       Success()
     }
   }
 
-  val IGNORE_NON_EXPOSED_IMAP_KEYWORDS: KeywordsValidator = (_: Set[Keyword]) => Success()
+  val IGNORE_NON_EXPOSED_IMAP_KEYWORDS: KeywordsValidator = _ => Success()
 }
 
 object KeywordFilter {
-  val FILTER_IMAP_NON_EXPOSED_KEYWORDS: Keyword => Boolean = keyword => keyword.isExposedImapKeyword
+  val FILTER_IMAP_NON_EXPOSED_KEYWORDS: Keyword => Boolean = _.isExposedImapKeyword
   val KEEP_ALL: Keyword => Boolean = _ => true
 }
 
@@ -93,31 +97,31 @@ final case class Keywords(keywords: Set[Keyword]) {
 }
 
 class KeywordsFactory(val validator: KeywordsValidator, val filter: Keyword => Boolean, val toKeyword: ToKeyword) {
-    def fromSet(setKeywords: Set[Keyword]): Keywords = {
-      validator.validate(setKeywords) match {
-        case Success(_) => Keywords(setKeywords.filter(filter))
-        case Failure(e: Throwable) => throw e
-      }
-    }
-
-    def from(keywords: Keyword*): Keywords = {
-      fromSet(keywords.toSet)
-    }
-
-    def fromCollection(keywords: Set[String]): Keywords = fromSet(keywords.flatMap(toKeyword.toKeyword))
-
-    def fromMap(mapKeywords: Map[String, Boolean]): Try[Keywords] = {
-      if (mapKeywords.values.exists((value: Boolean) => value.equals(false))) {
-        Failure(throw new IllegalArgumentException("Keyword must be true"))
-      } else {
-        Success(fromCollection(mapKeywords.keySet))
-      }
-    }
-
-    def fromFlags(flags: Flags): Keywords = {
-      val fromUserFlags: Set[Option[Keyword]] = flags.getUserFlags.map[Option[Keyword]](toKeyword.toKeyword).toSet
-      val fromSystemFlags: Set[Option[Keyword]] = flags.getSystemFlags.map[Option[Keyword]](Keyword.fromFlag).toSet
-
-      fromSet((fromUserFlags ++ fromSystemFlags).flatten)
+  def fromSet(setKeywords: Set[Keyword]): Try[Keywords] = {
+    validator.validate(setKeywords) match {
+      case Success(_) => Success(Keywords(setKeywords.filter(filter)))
+      case Failure(throwable: Throwable) => Failure(throwable)
     }
   }
+
+  def from(keywords: Keyword*): Try[Keywords] = {
+    fromSet(keywords.toSet)
+  }
+
+  def fromCollection(keywords: Set[String]): Try[Keywords] = fromSet(keywords.flatMap(toKeyword.toKeyword))
+
+  def fromMap(mapKeywords: Map[String, Boolean]): Try[Keywords] = {
+    if (mapKeywords.values.exists(!_)) {
+      Failure(new IllegalArgumentException("Keyword must be true"))
+    } else {
+      fromCollection(mapKeywords.keySet)
+    }
+  }
+
+  def fromFlags(flags: Flags): Try[Keywords] = {
+    val fromUserFlags: Set[Option[Keyword]] = flags.getUserFlags.map[Option[Keyword]](toKeyword.toKeyword).toSet
+    val fromSystemFlags: Set[Option[Keyword]] = flags.getSystemFlags.map[Option[Keyword]](Keyword.fromFlag).toSet
+
+    fromSet((fromUserFlags ++ fromSystemFlags).flatten)
+  }
+}

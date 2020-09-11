@@ -62,6 +62,10 @@ object EmailGetSerializer {
   private implicit val subjectWrites: Writes[Subject] = Json.valueWrites[Subject]
   private implicit val emailNotFoundWrites: Writes[EmailNotFound] = Json.valueWrites[EmailNotFound]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
+  private implicit val keywordWrites: Writes[Keyword] = Json.valueWrites[Keyword]
+  private implicit val keywordsWrites: Writes[Keywords] = keywords => JsObject(keywords.asMap.map {
+    case (keyword, b) => (keyword.flagName, JsBoolean(b))
+  })
 
   private implicit def bodyValueMapWrites(implicit bodyValueWriter: Writes[EmailBodyValue]): Writes[Map[PartId, EmailBodyValue]] =
     mapWrites[PartId, EmailBodyValue](_.value.toString(), bodyValueWriter)

@@ -29,39 +29,48 @@ import scala.jdk.CollectionConverters._
 class KeywordsCombinerTest extends AnyWordSpec with Matchers {
   "apply should union seen keyword" in {
       val keywordsCombiner = KeywordsCombiner()
-    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(Keyword.SEEN)))
-      .isEqualTo(LENIENT_KEYWORDS_FACTORY.from(Keyword.SEEN))
+    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(Keyword.SEEN).get))
+      .isEqualTo(LENIENT_KEYWORDS_FACTORY.from(Keyword.SEEN).get)
   }
 
   "apply should union answered keyword" in {
     val keywordsCombiner = KeywordsCombiner()
-    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(Keyword.ANSWERED))).isEqualTo(LENIENT_KEYWORDS_FACTORY.from(Keyword.ANSWERED))
+    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(Keyword.ANSWERED).get))
+      .isEqualTo(LENIENT_KEYWORDS_FACTORY.from(Keyword.ANSWERED).get)
   }
 
   "apply should union flagged keyword" in {
     val keywordsCombiner = KeywordsCombiner()
-    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED))).isEqualTo(LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED))
+    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED).get))
+      .isEqualTo(LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED).get)
   }
 
   "apply should intersect draft keyword" in {
     val keywordsCombiner = KeywordsCombiner()
-    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(Keyword.DRAFT))).isEqualTo(Keywords.DEFAULT_VALUE)
+    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(Keyword.DRAFT).get))
+      .isEqualTo(Keywords.DEFAULT_VALUE)
   }
 
   "apply should union custom keyword" in {
     val keywordsCombiner = KeywordsCombiner()
     val customKeyword = Keyword.of("$Any")
-    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(customKeyword.get))).isEqualTo(LENIENT_KEYWORDS_FACTORY.from(customKeyword.get))
+    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, LENIENT_KEYWORDS_FACTORY.from(customKeyword.get).get))
+      .isEqualTo(LENIENT_KEYWORDS_FACTORY.from(customKeyword.get).get)
   }
 
   "apply should accept empty as a zeroValue" in {
     val keywordsCombiner = KeywordsCombiner()
-    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, Keywords.DEFAULT_VALUE)).isEqualTo(Keywords.DEFAULT_VALUE)
+    assertThat(keywordsCombiner.apply(Keywords.DEFAULT_VALUE, Keywords.DEFAULT_VALUE))
+      .isEqualTo(Keywords.DEFAULT_VALUE)
   }
 
   "apply should union different flags" in {
     val keywordsCombiner = KeywordsCombiner()
-    assertThat(keywordsCombiner.apply(LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED), LENIENT_KEYWORDS_FACTORY.from(Keyword.ANSWERED))).isEqualTo(LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED, Keyword.ANSWERED))
+    val keywords: Keywords = keywordsCombiner.apply(LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED).get,
+      LENIENT_KEYWORDS_FACTORY.from(Keyword.ANSWERED).get)
+
+    assertThat(keywords)
+      .isEqualTo(LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED, Keyword.ANSWERED).get)
   }
 
   "keywords combiner should be commutative" in {
@@ -72,19 +81,20 @@ class KeywordsCombinerTest extends AnyWordSpec with Matchers {
       Keyword.FLAGGED,
       Keyword.SEEN,
       Keyword.of("$Forwarded").get,
-      Keyword.of("$Any").get)
+      Keyword.of("$Any").get).get
 
     val values:Set[Keywords] = Set(
-      LENIENT_KEYWORDS_FACTORY.from(Keyword.ANSWERED),
-      LENIENT_KEYWORDS_FACTORY.from(Keyword.DELETED),
-      LENIENT_KEYWORDS_FACTORY.from(Keyword.DRAFT),
-      LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED),
-      LENIENT_KEYWORDS_FACTORY.from(Keyword.SEEN),
-      LENIENT_KEYWORDS_FACTORY.from(),
-      LENIENT_KEYWORDS_FACTORY.from(Keyword.of("$Forwarded").get),
-      LENIENT_KEYWORDS_FACTORY.from(Keyword.of("$Any").get),
+      LENIENT_KEYWORDS_FACTORY.from(Keyword.ANSWERED).get,
+      LENIENT_KEYWORDS_FACTORY.from(Keyword.DELETED).get,
+      LENIENT_KEYWORDS_FACTORY.from(Keyword.DRAFT).get,
+      LENIENT_KEYWORDS_FACTORY.from(Keyword.FLAGGED).get,
+      LENIENT_KEYWORDS_FACTORY.from(Keyword.SEEN).get,
+      Keywords.DEFAULT_VALUE,
+      LENIENT_KEYWORDS_FACTORY.from(Keyword.of("$Forwarded").get).get,
+      LENIENT_KEYWORDS_FACTORY.from(Keyword.of("$Any").get).get,
       allKeyword)
 
-    assertThat(new CommutativityChecker[Keywords](values.asJava, KeywordsCombiner()).findNonCommutativeInput).isEmpty()
+    assertThat(new CommutativityChecker(values.asJava, KeywordsCombiner()).findNonCommutativeInput)
+      .isEmpty()
   }
 }

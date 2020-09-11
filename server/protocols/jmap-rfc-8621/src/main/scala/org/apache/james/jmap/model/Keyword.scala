@@ -53,7 +53,7 @@ object Keyword {
   def parse(flagName: String): Either[String, Keyword] = Either.cond(isValid(flagName), Keyword(flagName), VALIDATION_MESSAGE)
 
   def of(flagName: String): Try[Keyword] = parse(flagName) match {
-    case Left(errorMessage: String) => Failure(throw new IllegalArgumentException(errorMessage))
+    case Left(errorMessage: String) => Failure(new IllegalArgumentException(errorMessage))
     case Right(keyword: Keyword) => Success(keyword)
   }
 
@@ -66,12 +66,10 @@ object Keyword {
     }
 }
 
-final case class Keyword(flagName: String) {
+final case class Keyword(flagName: String) extends AnyVal {
   def getFlagName: String = flagName
 
   def isExposedImapKeyword: Boolean = !Keyword.NON_EXPOSED_IMAP_KEYWORDS.contains(this)
-
-  def isDraft: Boolean = Keyword.DRAFT == this
 
   def asSystemFlag: Option[Flags.Flag] = Keyword.IMAP_SYSTEM_FLAGS
     .filter(entry => entry._2.equals(this))

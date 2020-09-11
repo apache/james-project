@@ -32,6 +32,7 @@ import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.mail.Email.{UnparsedEmailId, sanitizeSize}
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.EmailHeaders.SPECIFIC_HEADER_PREFIX
+import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties, UTCDate}
 import org.apache.james.mailbox.model.{MessageId, MessageResult}
@@ -41,7 +42,6 @@ import org.apache.james.mime4j.dom.{Header, Message}
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.{Field, MimeConfig}
 import org.apache.james.mime4j.util.MimeUtil
-import org.apache.james.mime4j.stream.MimeConfig
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -97,6 +97,7 @@ case class EmailGetRequest(accountId: AccountId,
       mime4JMessage <- Try(defaultMessageBuilder.parseMessage(firstMessage.getFullContent.getInputStream))
       bodyStructure <- EmailBodyPart.of(messageId, mime4JMessage)
       bodyValues <- extractBodyValues(bodyStructure)
+      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
       blobId <- BlobId.of(messageId)
       preview <- Try(previewFactory.fromMessageResult(firstMessage))
     } yield {
@@ -125,6 +126,7 @@ case class EmailGetRequest(accountId: AccountId,
           textBody = bodyStructure.textBody,
           htmlBody = bodyStructure.htmlBody,
           attachments = bodyStructure.attachments,
+          keywords = keywords,
           bodyValues = bodyValues,
           hasAttachment = HasAttachment(!firstMessage.getLoadedAttachments.isEmpty),
           preview = preview),

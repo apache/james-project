@@ -20,7 +20,6 @@
 package org.apache.james.jmap.model
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import javax.mail.Flags
 import javax.mail.Flags.Flag
 import org.apache.james.mailbox.FlagsBuilder
@@ -39,8 +38,8 @@ class KeywordsTest extends AnyWordSpec with Matchers {
     EqualsVerifier.forClass(classOf[Keywords]).verify()
   }
 
-  "fromMap should throw when wrong keyword value" in {
-    assertThatThrownBy(() => LENIENT_KEYWORDS_FACTORY.fromMap(Map(KeywordsTest.ANY_KEYWORD -> false)))
+  "fromMap should return empty when wrong keyword value" in {
+    assertThat(LENIENT_KEYWORDS_FACTORY.fromMap(Map(KeywordsTest.ANY_KEYWORD -> false)).failed.get)
       .isInstanceOf(classOf[IllegalArgumentException])
   }
 
@@ -50,71 +49,71 @@ class KeywordsTest extends AnyWordSpec with Matchers {
   }
 
   "fromFlags should return keywords from allFlag" in {
-    val keywords = LENIENT_KEYWORDS_FACTORY.fromFlags(new Flags(Flag.ANSWERED))
+    val keywords = LENIENT_KEYWORDS_FACTORY.fromFlags(new Flags(Flag.ANSWERED)).get
     assertThat(keywords.getKeywords).isEqualTo(Set(Keyword.ANSWERED))
   }
 
   "fromSet should return keywords from set of keywords" in {
-    val keywords = LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED))
+    val keywords = LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED)).get
     assertThat(keywords.getKeywords).isEqualTo(Set(Keyword.ANSWERED))
   }
 
   "asFlags should build flags from keywords" in {
-    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED)).asFlags).isEqualTo(new Flags(Flag.ANSWERED))
+    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED)).get.asFlags).isEqualTo(new Flags(Flag.ANSWERED))
   }
 
   "asFlags with recent and deleted from should build flags from keywords and recent originFlags" in {
     val originFlags = FlagsBuilder.builder.add(Flag.RECENT, Flag.DRAFT).build
     val expectedFlags = FlagsBuilder.builder.add(Flag.ANSWERED, Flag.RECENT).build
-    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED)).asFlagsWithRecentAndDeletedFrom(originFlags)).isEqualTo(expectedFlags)
+    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED)).get.asFlagsWithRecentAndDeletedFrom(originFlags)).isEqualTo(expectedFlags)
   }
 
   "asFlags with recent and deleted from should build flags from keywords with deleted and recent originFlags" in {
     val originFlags = FlagsBuilder.builder.add(Flag.RECENT, Flag.DELETED, Flag.DRAFT).build
     val expectedFlags = FlagsBuilder.builder.add(Flag.ANSWERED, Flag.RECENT, Flag.DELETED).build
-    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED)).asFlagsWithRecentAndDeletedFrom(originFlags)).isEqualTo(expectedFlags)
+    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED)).get.asFlagsWithRecentAndDeletedFrom(originFlags)).isEqualTo(expectedFlags)
   }
 
   "asMap should return empty when empty map of string and boolean" in {
-    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set.empty).keywords.nonEmpty).isFalse
+    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set.empty).isFailure).isFalse
   }
 
   "asMap should return map of string and boolean" in {
     val expectedMap = Map(Keyword.of("$Answered").get -> Keyword.FLAG_VALUE)
-    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED)).asMap).isEqualTo(expectedMap)
+    assertThat(LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED)).get.asMap).isEqualTo(expectedMap)
   }
 
-  "throwWhenUnsupportedKeyword should throw when have unsupportedKeywords" in {
-    assertThatThrownBy(() => STRICT_KEYWORDS_FACTORY.fromSet(Set(Keyword.DRAFT, Keyword.DELETED))).isInstanceOf(classOf[IllegalArgumentException])
+  "throwWhenUnsupportedKeyword should return failure when have unsupportedKeywords" in {
+    assertThat(STRICT_KEYWORDS_FACTORY.fromSet(Set(Keyword.DRAFT, Keyword.DELETED)).isFailure).isTrue
   }
 
   "throwWhenUnsupportedKeyword should not throw when have draft" in {
-    val keywords = STRICT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED, Keyword.DRAFT))
+    val keywords = STRICT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED, Keyword.DRAFT)).get
     assertThat(keywords.getKeywords).isEqualTo(Set(Keyword.ANSWERED, Keyword.DRAFT))
   }
 
   "filterUnsupported should filter" in {
-    val keywords = LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED, Keyword.DELETED, Keyword.RECENT, Keyword.DRAFT))
+    val keywords = LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.ANSWERED, Keyword.DELETED, Keyword.RECENT, Keyword.DRAFT)).get
     assertThat(keywords.getKeywords).isEqualTo(Set(Keyword.ANSWERED, Keyword.DRAFT))
   }
 
   "contains should return true when keywords contain keyword" in {
-    val keywords = LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.SEEN))
+    val keywords = LENIENT_KEYWORDS_FACTORY.fromSet(Set(Keyword.SEEN)).get
     assertThat(keywords.contains(Keyword.SEEN)).isTrue
   }
 
   "contains should return false when keywords do not contain keyword" in {
-    val keywords = LENIENT_KEYWORDS_FACTORY.fromSet(Set())
+    val keywords = LENIENT_KEYWORDS_FACTORY.fromSet(Set()).get
     assertThat(keywords.contains(Keyword.SEEN)).isFalse
   }
 
   "fromList should return keywords fromList of strings" in {
-    val keywords = LENIENT_KEYWORDS_FACTORY.fromCollection(Set("$Answered", "$Flagged"))
+    val keywords = LENIENT_KEYWORDS_FACTORY.fromCollection(Set("$Answered", "$Flagged")).get
     assertThat(keywords.getKeywords).isEqualTo(Set(Keyword.ANSWERED, Keyword.FLAGGED))
   }
 
   "fromList should not throw on invalidKeyword for lenientFactory" in {
-    assertThat(LENIENT_KEYWORDS_FACTORY.fromCollection(Set("in&valid")).keywords).isEqualTo(Keywords.DEFAULT_VALUE.keywords)
+    assertThat(LENIENT_KEYWORDS_FACTORY.fromCollection(Set("in&valid")).get.keywords).isEqualTo(Keywords.DEFAULT_VALUE.keywords)
   }
 
   "fromMap should Not Throw On InvalidKeyword For LenientFactory" in {
@@ -122,6 +121,6 @@ class KeywordsTest extends AnyWordSpec with Matchers {
   }
 
   "fromFlags should Not Throw On InvalidKeyword For LenientFactory" in {
-    assertThat(LENIENT_KEYWORDS_FACTORY.fromFlags(new Flags("in&valid")).keywords).isEqualTo(Keywords.DEFAULT_VALUE.keywords)
+    assertThat(LENIENT_KEYWORDS_FACTORY.fromFlags(new Flags("in&valid")).get.keywords).isEqualTo(Keywords.DEFAULT_VALUE.keywords)
   }
 }

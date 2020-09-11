@@ -27,8 +27,10 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.model.{Properties, UTCDate}
-import org.apache.james.mailbox.model.{MailboxId, MessageId}
+import org.apache.james.jmap.model.UTCDate
+import org.apache.james.mailbox.model.MailboxId
+import org.apache.james.jmap.model.{Keywords, Properties}
+import org.apache.james.mailbox.model.MessageId
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.{Failure, Success, Try}
@@ -43,7 +45,7 @@ object Email {
   val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody",
     "attachments", "headers", "bodyValues", "messageId", "inReplyTo", "references", "to", "cc", "bcc",
     "from", "sender", "replyTo", "subject", "sentAt", "mailboxIds", "blobId", "threadId", "receivedAt",
-    "preview", "hasAttachment")
+    "preview", "hasAttachment", "keywords")
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
@@ -106,6 +108,7 @@ case class EmailHeaders(headers: List[EmailHeader],
                         sentAt: Option[UTCDate])
 
 case class EmailBody(bodyStructure: EmailBodyPart,
+                     keywords: Keywords,
                      textBody: List[EmailBodyPart],
                      htmlBody: List[EmailBodyPart],
                      attachments: List[EmailBodyPart],

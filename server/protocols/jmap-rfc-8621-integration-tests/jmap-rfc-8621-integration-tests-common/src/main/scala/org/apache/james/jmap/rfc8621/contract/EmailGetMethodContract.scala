@@ -26,20 +26,35 @@ import java.util.Date
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
+import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
+import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract.createTestMessage
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ANDRE, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
-import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageId}
+import org.apache.james.mailbox.model.MailboxId
+import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.message.MultipartBuilder
 import org.apache.james.mime4j.stream.RawField
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
+
+object EmailGetMethodContract {
+  private def createTestMessage: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setSubject("World domination \r\n" +
+        " and this is also part of the header")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+}
 
 trait EmailGetMethodContract {
   @BeforeEach
@@ -189,7 +204,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"]
+         |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -214,7 +229,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [],
-         |                "notFound": ["${messageId.serialize()}"]
+         |                "notFound": ["${messageId.serialize}"]
          |            },
          |            "c1"
          |        ]]
@@ -242,7 +257,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"]
+         |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -267,7 +282,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [{
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "size": 85
          |                    }],
          |                "notFound": []
@@ -295,7 +310,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["messageId"]
          |    },
          |    "c1"]]
@@ -316,7 +331,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "messageId": ["13d4375e-a4a9-f613-06a1-7e8cb1e0ea93@linagora.com"]
          |}""".stripMargin)
   }
@@ -337,7 +352,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["inReplyTo"]
          |    },
          |    "c1"]]
@@ -358,7 +373,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "inReplyTo": ["d5c6f1d6-96e7-8172-9fe6-41fa6c9bd6ec@linagora.com"]
          |}""".stripMargin)
   }
@@ -379,7 +394,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["references"]
          |    },
          |    "c1"]]
@@ -400,7 +415,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "references": ["9b6a4271-69fb-217a-5c14-c68c68375d96@linagora.com"]
          |}""".stripMargin)
   }
@@ -426,7 +441,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["to"]
          |    },
          |    "c1"]]
@@ -447,7 +462,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "to": [
          |         {
          |             "name": "user1",
@@ -483,7 +498,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["to"]
          |    },
          |    "c1"]]
@@ -504,7 +519,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "to": [
          |          {
          |             "email": "user2@domain.tld"
@@ -534,7 +549,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["to"]
          |    },
          |    "c1"]]
@@ -555,7 +570,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "to": [
          |          {
          |             "name": "MODALİF",
@@ -586,7 +601,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["from"]
          |    },
          |    "c1"]]
@@ -607,7 +622,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "from": [
          |          {
          |             "name": "MODALİF",
@@ -638,7 +653,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["cc"]
          |    },
          |    "c1"]]
@@ -659,7 +674,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "cc": [
          |          {
          |             "name": "MODALİF",
@@ -690,7 +705,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["bcc"]
          |    },
          |    "c1"]]
@@ -711,7 +726,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "bcc": [
          |          {
          |             "name": "MODALİF",
@@ -742,7 +757,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
          |    "c1"]]
@@ -763,7 +778,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "sender": [
          |          {
          |             "name": "MODALİF",
@@ -794,7 +809,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["replyTo"]
          |    },
          |    "c1"]]
@@ -815,7 +830,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "replyTo": [
          |          {
          |             "name": "MODALİF",
@@ -845,7 +860,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["subject"]
          |    },
          |    "c1"]]
@@ -866,7 +881,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "subject": "MODALİF is the best!"
          |}""".stripMargin)
   }
@@ -894,7 +909,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["from"]
          |    },
          |    "c1"]]
@@ -915,7 +930,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "from": [
          |          {
          |             "email": "user2@domain.tld"
@@ -947,7 +962,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["cc"]
          |    },
          |    "c1"]]
@@ -968,7 +983,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "cc": [
          |          {
          |             "email": "user2@domain.tld"
@@ -1000,7 +1015,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["bcc"]
          |    },
          |    "c1"]]
@@ -1021,7 +1036,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "bcc": [
          |          {
          |             "email": "user2@domain.tld"
@@ -1052,7 +1067,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
          |    "c1"]]
@@ -1073,7 +1088,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "sender": [
          |          {
          |             "email": "user2@domain.tld"
@@ -1105,7 +1120,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["replyTo"]
          |    },
          |    "c1"]]
@@ -1126,7 +1141,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "replyTo": [
          |          {
          |             "email": "user2@domain.tld"
@@ -1157,7 +1172,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["subject"]
          |    },
          |    "c1"]]
@@ -1178,7 +1193,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "subject": "Zo Meuh"
          |}""".stripMargin)
   }
@@ -1202,7 +1217,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["to"]
          |    },
          |    "c1"]]
@@ -1223,7 +1238,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -1248,7 +1263,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["cc"]
          |    },
          |    "c1"]]
@@ -1269,7 +1284,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "cc": [
          |         {
          |             "name": "user1",
@@ -1301,7 +1316,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["cc"]
          |    },
          |    "c1"]]
@@ -1322,7 +1337,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -1347,7 +1362,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["bcc"]
          |    },
          |    "c1"]]
@@ -1368,7 +1383,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "bcc": [
          |         {
          |             "name": "user1",
@@ -1400,7 +1415,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["bcc"]
          |    },
          |    "c1"]]
@@ -1421,7 +1436,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -1446,7 +1461,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["from"]
          |    },
          |    "c1"]]
@@ -1467,7 +1482,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "from": [
          |         {
          |             "name": "user1",
@@ -1499,7 +1514,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["from"]
          |    },
          |    "c1"]]
@@ -1520,7 +1535,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -1545,7 +1560,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["replyTo"]
          |    },
          |    "c1"]]
@@ -1566,7 +1581,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "replyTo": [
          |         {
          |             "name": "user1",
@@ -1598,7 +1613,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["replyTo"]
          |    },
          |    "c1"]]
@@ -1619,7 +1634,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -1642,7 +1657,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["subject"]
          |    },
          |    "c1"]]
@@ -1663,7 +1678,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "subject": "test"
          |}""".stripMargin)
   }
@@ -1686,7 +1701,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["subject"]
          |    },
          |    "c1"]]
@@ -1707,7 +1722,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -1732,7 +1747,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sentAt"]
          |    },
          |    "c1"]]
@@ -1753,7 +1768,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "sentAt": "2020-09-09T05:00:26Z"
          |}""".stripMargin)
   }
@@ -1781,7 +1796,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sentAt"]
          |    },
          |    "c1"]]
@@ -1802,7 +1817,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "sentAt": "2020-09-09T05:00:26Z"
          |}""".stripMargin)
   }
@@ -1826,7 +1841,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sentAt"]
          |    },
          |    "c1"]]
@@ -1847,7 +1862,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -1872,7 +1887,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
          |    "c1"]]
@@ -1893,7 +1908,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "sender": [
          |         {
          |             "name": "user1",
@@ -1924,7 +1939,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
          |    "c1"]]
@@ -1945,7 +1960,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "sender": [
          |         {
          |             "email": "user1@domain.tld"
@@ -1975,7 +1990,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
          |    "c1"]]
@@ -1996,7 +2011,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "sender": [
          |         {
          |             "name": "user1",
@@ -2025,7 +2040,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
          |    "c1"]]
@@ -2046,7 +2061,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -2068,7 +2083,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["messageId"]
          |    },
          |    "c1"]]
@@ -2089,7 +2104,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -2111,7 +2126,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["inReplyTo"]
          |    },
          |    "c1"]]
@@ -2132,7 +2147,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -2154,7 +2169,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties": ["references"]
          |    },
          |    "c1"]]
@@ -2175,7 +2190,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -2201,7 +2216,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}", "invalid", "${nonExistingMessageId.serialize()}"]
+         |      "ids": ["${messageId.serialize}", "invalid", "${nonExistingMessageId.serialize}"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2227,10 +2242,10 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [ {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "size": 85
          |                    }],
-         |                "notFound": ["${nonExistingMessageId.serialize()}", "invalid"]
+         |                "notFound": ["${nonExistingMessageId.serialize}", "invalid"]
          |            },
          |            "c1"
          |        ]]
@@ -2323,7 +2338,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}", "${messageId.serialize()}"]
+         |      "ids": ["${messageId.serialize}", "${messageId.serialize}"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2348,7 +2363,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [{
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "size": 85
          |                    }],
          |                "notFound": []
@@ -2379,7 +2394,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}", "${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
          |      "properties": ["id"]
          |    },
          |    "c1"]]
@@ -2405,7 +2420,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [{
-         |                        "id": "${messageId.serialize()}"
+         |                        "id": "${messageId.serialize}"
          |                    }],
          |                "notFound": []
          |            },
@@ -2435,7 +2450,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}", "${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
          |      "properties": []
          |    },
          |    "c1"]]
@@ -2461,7 +2476,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [{
-         |                        "id": "${messageId.serialize()}"
+         |                        "id": "${messageId.serialize}"
          |                    }],
          |                "notFound": []
          |            },
@@ -2491,7 +2506,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}", "${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
          |      "properties": ["size"]
          |    },
          |    "c1"]]
@@ -2517,7 +2532,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [{
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "size": 85
          |                    }],
          |                "notFound": []
@@ -2548,7 +2563,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}", "${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
          |      "properties": ["invalid"]
          |    },
          |    "c1"]]
@@ -2591,7 +2606,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}", "${messageId.serialize()}"]
+         |      "ids": ["${messageId.serialize}", "${messageId.serialize}"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2616,7 +2631,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [],
-         |                "notFound": ["${messageId.serialize()}"]
+         |                "notFound": ["${messageId.serialize}"]
          |            },
          |            "c1"
          |        ]]
@@ -2646,7 +2661,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"]
+         |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2671,7 +2686,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [],
-         |                "notFound": ["${messageId.serialize()}"]
+         |                "notFound": ["${messageId.serialize}"]
          |            },
          |            "c1"
          |        ]]
@@ -2703,7 +2718,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"]
+         |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2728,7 +2743,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [{
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "size": 85
          |                    }],
          |                "notFound": []
@@ -2763,7 +2778,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"]
+         |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2788,7 +2803,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [],
-         |                "notFound": ["${messageId.serialize()}"]
+         |                "notFound": ["${messageId.serialize}"]
          |            },
          |            "c1"
          |        ]]
@@ -2806,7 +2821,7 @@ trait EmailGetMethodContract {
                |     "Email/get",
                |     {
                |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |       "ids": ["${messageId.serialize()}"]
+               |       "ids": ["${messageId.serialize}"]
                |     },
                |     "c1"]]
                |}""".stripMargin)
@@ -2843,7 +2858,7 @@ trait EmailGetMethodContract {
                |     "Email/get",
                |     {
                |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |       "ids": ["${messageId.serialize()}"]
+               |       "ids": ["${messageId.serialize}"]
                |     },
                |     "c1"]]
                |}""".stripMargin)
@@ -2891,7 +2906,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId"]
          |    },
@@ -2919,10 +2934,10 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyStructure": {
          |                            "partId": "1",
-         |                            "blobId": "${messageId.serialize()}_1"
+         |                            "blobId": "${messageId.serialize}_1"
          |                        }
          |                    }
          |                ],
@@ -2953,7 +2968,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["mailboxIds"]
          |    },
          |    "c1"]]
@@ -2974,7 +2989,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "mailboxIds": {
          |        "${mailboxId}": true
          |    }
@@ -3003,7 +3018,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["receivedAt"]
          |    },
          |    "c1"]]
@@ -3024,7 +3039,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "receivedAt": "2014-10-30T14:12:00Z"
          |}""".stripMargin)
   }
@@ -3049,7 +3064,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["blobId"]
          |    },
          |    "c1"]]
@@ -3070,8 +3085,8 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
-         |    "blobId": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}",
+         |    "blobId": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -3095,7 +3110,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["threadId"]
          |    },
          |    "c1"]]
@@ -3116,8 +3131,8 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
-         |    "threadId": "${messageId.serialize()}"
+         |    "id": "${messageId.serialize}",
+         |    "threadId": "${messageId.serialize}"
          |}""".stripMargin)
   }
 
@@ -3143,7 +3158,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"]
          |    },
          |    "c1"]]
@@ -3171,10 +3186,10 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyStructure": {
          |                            "partId": "1",
-         |                            "blobId": "${messageId.serialize()}_1",
+         |                            "blobId": "${messageId.serialize}_1",
          |                            "size": 85,
          |                            "type": "text/plain",
          |                            "charset": "UTF-8"
@@ -3213,7 +3228,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":[]
          |    },
@@ -3241,7 +3256,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyStructure": {}
          |                    }
          |                ],
@@ -3276,7 +3291,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["invalid"]
          |    },
@@ -3332,7 +3347,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location", "subParts", "headers"]
          |    },
@@ -3361,10 +3376,10 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyStructure": {
          |                            "partId": "1",
-         |                            "blobId": "${messageId.serialize()}_1",
+         |                            "blobId": "${messageId.serialize}_1",
          |                            "headers": [
          |                                {
          |                                    "name": "MIME-Version",
@@ -3413,7 +3428,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location", "subParts", "headers"]
          |    },
@@ -3443,7 +3458,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyStructure": {
          |                            "partId": "1",
          |                            "headers": [
@@ -3490,7 +3505,7 @@ trait EmailGetMethodContract {
          |                            "subParts": [
          |                                {
          |                                    "partId": "2",
-         |                                    "blobId": "${messageId.serialize()}_2",
+         |                                    "blobId": "${messageId.serialize}_2",
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",
@@ -3507,7 +3522,7 @@ trait EmailGetMethodContract {
          |                                },
          |                                {
          |                                    "partId": "3",
-         |                                    "blobId": "${messageId.serialize()}_3",
+         |                                    "blobId": "${messageId.serialize}_3",
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",
@@ -3530,7 +3545,7 @@ trait EmailGetMethodContract {
          |                                },
          |                                {
          |                                    "partId": "4",
-         |                                    "blobId": "${messageId.serialize()}_4",
+         |                                    "blobId": "${messageId.serialize}_4",
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",
@@ -3553,7 +3568,7 @@ trait EmailGetMethodContract {
          |                                },
          |                                {
          |                                    "partId": "5",
-         |                                    "blobId": "${messageId.serialize()}_5",
+         |                                    "blobId": "${messageId.serialize}_5",
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",
@@ -3604,7 +3619,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location", "subParts", "headers"]
          |    },
@@ -3633,7 +3648,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyStructure": {
          |                            "partId": "1",
          |                            "headers": [
@@ -3696,7 +3711,7 @@ trait EmailGetMethodContract {
          |                                    "subParts": [
          |                                        {
          |                                            "partId": "3",
-         |                                            "blobId": "${messageId.serialize()}_3",
+         |                                            "blobId": "${messageId.serialize}_3",
          |                                            "headers": [
          |                                                {
          |                                                    "name": "Content-Type",
@@ -3713,7 +3728,7 @@ trait EmailGetMethodContract {
          |                                        },
          |                                        {
          |                                            "partId": "4",
-         |                                            "blobId": "${messageId.serialize()}_4",
+         |                                            "blobId": "${messageId.serialize}_4",
          |                                            "headers": [
          |                                                {
          |                                                    "name": "Content-Type",
@@ -3732,7 +3747,7 @@ trait EmailGetMethodContract {
          |                                },
          |                                {
          |                                    "partId": "5",
-         |                                    "blobId": "${messageId.serialize()}_5",
+         |                                    "blobId": "${messageId.serialize}_5",
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-ID",
@@ -3788,7 +3803,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["textBody"]
          |    },
          |    "c1"]]
@@ -3815,11 +3830,11 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "textBody": [
          |                            {
          |                                "partId": "2",
-         |                                "blobId": "${messageId.serialize()}_2",
+         |                                "blobId": "${messageId.serialize}_2",
          |                                "size": 97,
          |                                "type": "text/plain",
          |                                "charset": "utf-8"
@@ -3852,7 +3867,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["textBody"]
          |    },
          |    "c1"]]
@@ -3879,11 +3894,11 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "textBody": [
          |                            {
          |                                "partId": "3",
-         |                                "blobId": "${messageId.serialize()}_3",
+         |                                "blobId": "${messageId.serialize}_3",
          |                                "size": 114,
          |                                "type": "text/plain",
          |                                "charset": "ISO-8859-1"
@@ -3916,7 +3931,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["htmlBody"]
          |    },
          |    "c1"]]
@@ -3943,11 +3958,11 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "htmlBody": [
          |                            {
          |                                "partId": "4",
-         |                                "blobId": "${messageId.serialize()}_4",
+         |                                "blobId": "${messageId.serialize}_4",
          |                                "size": 108,
          |                                "type": "text/html",
          |                                "charset": "ISO-8859-1"
@@ -3980,7 +3995,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true
          |    },
@@ -4008,7 +4023,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "2": {
          |                                "value": "Send\\n\\n",
@@ -4043,7 +4058,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true
          |    },
@@ -4071,7 +4086,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "3": {
          |                                "value": "/blabla/\\n*bloblo*\\n",
@@ -4106,7 +4121,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchHTMLBodyValues": true
          |    },
@@ -4134,7 +4149,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "4": {
          |                                "value": "<i>blabla</i>\\n<b>bloblo</b>\\n",
@@ -4169,7 +4184,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true,
          |      "fetchHTMLBodyValues": true
@@ -4199,7 +4214,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "3": {
          |                                "value": "/blabla/\\n*bloblo*\\n",
@@ -4240,7 +4255,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true,
          |      "fetchHTMLBodyValues": true
@@ -4269,7 +4284,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "2": {
          |                                "value": "Send\\n\\n",
@@ -4304,7 +4319,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchAllBodyValues": true
          |    },
@@ -4333,7 +4348,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "2": {
          |                                "value": "Send\\n\\n",
@@ -4378,7 +4393,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchAllBodyValues": true,
          |      "maxBodyValueBytes": 32
@@ -4408,7 +4423,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "2": {
          |                                "value": "Send\\n\\n",
@@ -4453,7 +4468,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchAllBodyValues": true
          |    },
@@ -4481,7 +4496,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "3": {
          |                                "value": "/blabla/\\n*bloblo*\\n",
@@ -4526,7 +4541,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"]
          |    },
          |    "c1"]]
@@ -4553,7 +4568,7 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {}
          |                    }
          |                ],
@@ -4583,7 +4598,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["attachments"]
          |    },
          |    "c1"]]
@@ -4610,11 +4625,11 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "attachments": [
          |                            {
          |                                "partId": "3",
-         |                                "blobId": "${messageId.serialize()}_3",
+         |                                "blobId": "${messageId.serialize}_3",
          |                                "size": 519,
          |                                "name": "text1",
          |                                "type": "text/plain",
@@ -4623,7 +4638,7 @@ trait EmailGetMethodContract {
          |                            },
          |                            {
          |                                "partId": "4",
-         |                                "blobId": "${messageId.serialize()}_4",
+         |                                "blobId": "${messageId.serialize}_4",
          |                                "size": 694,
          |                                "name": "text2",
          |                                "type": "application/vnd.ms-publisher",
@@ -4632,7 +4647,7 @@ trait EmailGetMethodContract {
          |                            },
          |                            {
          |                                "partId": "5",
-         |                                "blobId": "${messageId.serialize()}_5",
+         |                                "blobId": "${messageId.serialize}_5",
          |                                "size": 713,
          |                                "name": "text3",
          |                                "type": "text/plain",
@@ -4667,7 +4682,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["attachments"]
          |    },
          |    "c1"]]
@@ -4694,11 +4709,11 @@ trait EmailGetMethodContract {
          |                "state": "000001",
          |                "list": [
          |                    {
-         |                        "id": "${messageId.serialize()}",
+         |                        "id": "${messageId.serialize}",
          |                        "attachments": [
          |                            {
          |                                "partId": "5",
-         |                                "blobId": "${messageId.serialize()}_5",
+         |                                "blobId": "${messageId.serialize}_5",
          |                                "size": 249,
          |                                "name": "avertissement.txt",
          |                                "type": "text/plain",
@@ -4736,7 +4751,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["preview"]
          |    },
          |    "c1"]]
@@ -4782,7 +4797,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["preview"]
          |    },
          |    "c1"]]
@@ -4828,7 +4843,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["preview"]
          |    },
          |    "c1"]]
@@ -4874,7 +4889,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["preview"]
          |    },
          |    "c1"]]
@@ -4920,7 +4935,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["hasAttachment"]
          |    },
          |    "c1"]]
@@ -4962,7 +4977,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["hasAttachment"]
          |    },
          |    "c1"]]
@@ -5010,7 +5025,7 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize()}"],
+         |      "ids": ["${messageId.serialize}"],
          |      "properties":["hasAttachment"]
          |    },
          |    "c1"]]
@@ -5038,9 +5053,9 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnUnparsedHeaders(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB);
+    val bobPath = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE);
+    val alicePath = MailboxPath.inbox(ALICE)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
@@ -5065,7 +5080,7 @@ trait EmailGetMethodContract {
                |     "Email/get",
                |     {
                |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |       "ids": ["${messageId.serialize()}"],
+               |       "ids": ["${messageId.serialize}"],
                |       "properties": ["headers"]
                |     },
                |     "c1"]]
@@ -5088,7 +5103,7 @@ trait EmailGetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "state": "000001",
          |                "list": [{
-         |                    "id": "${messageId.serialize()}",
+         |                    "id": "${messageId.serialize}",
          |                    "headers": [
          |                      {"name":"MIME-Version","value":" 1.0"},
          |                      {"name":"Subject","value":" =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?="},
@@ -5108,7 +5123,7 @@ trait EmailGetMethodContract {
   def emailGetShouldReturnSpecificUnparsedHeaders(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE);
+    val alicePath = MailboxPath.inbox(ALICE)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
@@ -5132,7 +5147,7 @@ trait EmailGetMethodContract {
                |     "Email/get",
                |     {
                |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |       "ids": ["${messageId.serialize()}"],
+               |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:Subject", "header:From", "header:Sender"]
                |     },
                |     "c1"]]
@@ -5150,7 +5165,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
         s"""{
-           |    "id": "${messageId.serialize()}",
+           |    "id": "${messageId.serialize}",
            |    "header:Subject":" =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?=",
            |    "header:From":" andre@domain.tld",
            |    "header:Sender":" andre@domain.tld"
@@ -5161,7 +5176,7 @@ trait EmailGetMethodContract {
   def emailGetShouldReturnSpecificUnparsedHeadersWithInsensitiveCaseMatching(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE);
+    val alicePath = MailboxPath.inbox(ALICE)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
@@ -5185,7 +5200,7 @@ trait EmailGetMethodContract {
                |     "Email/get",
                |     {
                |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |       "ids": ["${messageId.serialize()}"],
+               |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:subJeCt"]
                |     },
                |     "c1"]]
@@ -5203,7 +5218,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "header:subJeCt":" =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?="
          |}""".stripMargin)
   }
@@ -5212,7 +5227,7 @@ trait EmailGetMethodContract {
   def emailGetShouldRejectSpecificUnparsedHeadersWithColon(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE);
+    val alicePath = MailboxPath.inbox(ALICE)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
@@ -5236,7 +5251,7 @@ trait EmailGetMethodContract {
                |     "Email/get",
                |     {
                |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |       "ids": ["${messageId.serialize()}"],
+               |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:From:Subject"]
                |     },
                |     "c1"]]
@@ -5268,7 +5283,7 @@ trait EmailGetMethodContract {
   def emailGetShouldReturnNullWhenUnknownSpecificUnparsedHeaders(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE);
+    val alicePath = MailboxPath.inbox(ALICE)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
@@ -5292,7 +5307,7 @@ trait EmailGetMethodContract {
                |     "Email/get",
                |     {
                |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |       "ids": ["${messageId.serialize()}"],
+               |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:blahblah"]
                |     },
                |     "c1"]]
@@ -5310,7 +5325,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize()}",
+         |    "id": "${messageId.serialize}",
          |    "header:blahblah": null
          |}""".stripMargin)
   }
@@ -5319,7 +5334,7 @@ trait EmailGetMethodContract {
   def emailGetShouldRejectEmptySpecificUnparsedHeaders(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE);
+    val alicePath = MailboxPath.inbox(ALICE)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
@@ -5343,7 +5358,7 @@ trait EmailGetMethodContract {
                |     "Email/get",
                |     {
                |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-               |       "ids": ["${messageId.serialize()}"],
+               |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:"]
                |     },
                |     "c1"]]
@@ -5369,5 +5384,223 @@ trait EmailGetMethodContract {
          |            "c1"
          |        ]]
          |}""".stripMargin)
+  }
+
+  @Test
+  def emailGetShouldReturnKeyword(server: GuiceJamesServer): Unit = {
+    val message: Message = createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["keywords"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(String.format(
+        """
+          |  {
+          |     "id":"%s",
+          |    "keywords": {
+          |      "$Answered": true
+          |    }
+          |  }
+      """.stripMargin, messageId.serialize)
+      )
+  }
+
+  @Test
+  def emailGetShouldReturnSystemKeywords(server: GuiceJamesServer): Unit = {
+    val message: Message = createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+    flags.add(Flags.Flag.DRAFT)
+    flags.add(Flags.Flag.FLAGGED)
+    flags.add(Flags.Flag.SEEN)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["keywords"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(String.format(
+        """
+          |  {
+          |     "id":"%s",
+          |    "keywords": {
+          |      "$Answered": true,
+          |      "$Seen":  true,
+          |      "$Draft":  true,
+          |      "$Flagged": true
+          |    }
+          |  }
+      """.stripMargin, messageId.serialize)
+      )
+  }
+
+  @Test
+  def emailGetShouldReturnSystemAndUserKeywordsIfExposed(server: GuiceJamesServer): Unit = {
+    val message: Message = createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+    flags.add(Flags.Flag.DRAFT)
+    flags.add(Flags.Flag.FLAGGED)
+    flags.add("custom_flag")
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["keywords"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(String.format(
+        """
+          |  {
+          |     "id":"%s",
+          |    "keywords": {
+          |      "$Answered": true,
+          |      "custom_flag":  true,
+          |      "$Draft":  true,
+          |      "$Flagged": true
+          |    }
+          |  }
+      """.stripMargin, messageId.serialize)
+      )
+  }
+
+  @Test
+  def emailGetShouldNotReturnNonExposedKeywords(server: GuiceJamesServer): Unit = {
+    val message: Message = createTestMessage
+
+    val nonExposedFlags: Flags = new Flags(Flags.Flag.RECENT)
+    nonExposedFlags.add(Flags.Flag.DELETED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(nonExposedFlags)
+      .build(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["keywords"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""
+           |  {
+           |     "id":"${messageId.serialize}",
+           |    "keywords": {}
+           |  }
+      """.stripMargin)
   }
 }

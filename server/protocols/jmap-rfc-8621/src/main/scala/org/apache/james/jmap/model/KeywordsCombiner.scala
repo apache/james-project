@@ -26,18 +26,13 @@ object KeywordsCombiner {
 }
 
 final case class KeywordsCombiner() extends BinaryOperator[Keywords] {
-  val keywordsFactory: KeywordsFactory = KeywordsFactory.LENIENT_KEYWORDS_FACTORY
-
   override def apply(keywords: Keywords, keywords2: Keywords): Keywords =
-    keywordsFactory.fromSet(
-      keywords.getKeywords.union(keywords2.getKeywords).union(KeywordsCombiner.KEYWORD_NOT_TO_UNION)
-        .union(keywords.getKeywords.intersect(keywords2.getKeywords).intersect(KeywordsCombiner.KEYWORD_TO_INTERSECT)))
+    Keywords(keywords.getKeywords.union(keywords2.getKeywords).filterNot(KeywordsCombiner.KEYWORD_NOT_TO_UNION)
+      .union(keywords.getKeywords.intersect(keywords2.getKeywords).filterNot(KeywordsCombiner.KEYWORD_TO_INTERSECT)))
 
   def union(set1: Set[Keyword], set2: Set[Keyword], exceptKeywords: List[Keyword]): Set[Keyword] =
-    set1.union(set2)
-      .filter((keyword: Keyword) => !exceptKeywords.contains(keyword))
+    set1.union(set2).filter(!exceptKeywords.contains(_))
 
   def intersect(set1: Set[Keyword], set2: Set[Keyword], forKeywords: List[Keyword]): Set[Keyword] =
-    set1.intersect(set2)
-      .filter(forKeywords.contains)
+    set1.intersect(set2).filter(forKeywords.contains)
 }
