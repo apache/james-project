@@ -37,6 +37,7 @@ import org.apache.james.mime4j.dom.field.{AddressListField, DateTimeField, Mailb
 import org.apache.james.mime4j.dom.{Header, Message}
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.{Field, MimeConfig}
+import org.apache.james.mime4j.util.MimeUtil
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -98,7 +99,7 @@ case class EmailGetRequest(accountId: AccountId,
           from = extractAddresses(mime4JMessage, "From"),
           replyTo = extractAddresses(mime4JMessage, "Reply-To"),
           sender = extractAddresses(mime4JMessage, "Sender"),
-          subject = extractLastField(mime4JMessage, "Subject").map(_.getBody).map(Subject),
+          subject = extractSubject(mime4JMessage),
           sentAt = extractDate(mime4JMessage, "Date").map(date => UTCDate.from(date, zoneId))),
         body = EmailBody(
           bodyStructure = bodyStructure,
@@ -108,6 +109,12 @@ case class EmailGetRequest(accountId: AccountId,
           bodyValues = bodyValues))
     }
   }
+
+  private def extractSubject(mime4JMessage: Message) =
+    extractLastField(mime4JMessage, "Subject")
+      .map(_.getBody)
+      .map(MimeUtil.unscrambleHeaderValue)
+      .map(Subject)
 
   private def extractMessageId(mime4JMessage: Message, fieldName: String): Option[List[HeaderMessageId]] =
     Option(mime4JMessage.getHeader.getFields(fieldName))

@@ -513,6 +513,364 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def toPropertyShouldDecodeField(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("To",
+        "=?UTF-8?Q?MODAL=C4=B0F?=\r\n <modalif@domain.tld>"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["to"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "to": [
+         |          {
+         |             "name": "MODALİF",
+         |             "email": "modalif@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def fromPropertyShouldDecodeField(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("From",
+        "=?UTF-8?Q?MODAL=C4=B0F?=\r\n <modalif@domain.tld>"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["from"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "from": [
+         |          {
+         |             "name": "MODALİF",
+         |             "email": "modalif@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def ccPropertyShouldDecodeField(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Cc",
+        "=?UTF-8?Q?MODAL=C4=B0F?=\r\n <modalif@domain.tld>"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["cc"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "cc": [
+         |          {
+         |             "name": "MODALİF",
+         |             "email": "modalif@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def bccPropertyShouldDecodeField(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Bcc",
+        "=?UTF-8?Q?MODAL=C4=B0F?=\r\n <modalif@domain.tld>"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["bcc"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "bcc": [
+         |          {
+         |             "name": "MODALİF",
+         |             "email": "modalif@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def senderPropertyShouldDecodeField(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Sender",
+        "=?UTF-8?Q?MODAL=C4=B0F?=\r\n <modalif@domain.tld>"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["sender"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "sender": [
+         |          {
+         |             "name": "MODALİF",
+         |             "email": "modalif@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def replyToPropertyShouldDecodeField(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Reply-To",
+        "=?UTF-8?Q?MODAL=C4=B0F?=\r\n <modalif@domain.tld>"))
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["replyTo"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "replyTo": [
+         |          {
+         |             "name": "MODALİF",
+         |             "email": "modalif@domain.tld"
+         |          }
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def subjectPropertyShouldDecodeField(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .addField(new RawField("Subject",
+        "=?UTF-8?Q?MODAL=C4=B0F?= is\r\n the best!"))
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize()}"],
+         |      "properties": ["subject"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize()}",
+         |    "subject": "MODALİF is the best!"
+         |}""".stripMargin)
+  }
+
+  @Test
   def fromPropertyShouldReturnLastWhenMultipleFields(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
