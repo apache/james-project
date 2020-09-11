@@ -133,7 +133,7 @@ object EmailBodyPart {
   private def size(entity: Entity): Try[Size] = {
     val countingOutputStream: CountingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream())
     val writer = new DefaultMessageWriter
-    writer.writeEntity(entity, countingOutputStream)
+    writer.writeBody(entity.getBody, countingOutputStream)
     refineV[NonNegative](countingOutputStream.getCount) match {
       case scala.Right(size) => Success(size)
       case Left(e) => Failure(new IllegalArgumentException(e))

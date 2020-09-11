@@ -3190,7 +3190,7 @@ trait EmailGetMethodContract {
          |                        "bodyStructure": {
          |                            "partId": "1",
          |                            "blobId": "${messageId.serialize}_1",
-         |                            "size": 85,
+         |                            "size": 8,
          |                            "type": "text/plain",
          |                            "charset": "UTF-8"
          |                        }
@@ -3394,7 +3394,7 @@ trait EmailGetMethodContract {
          |                                    "value": "text/plain; charset=UTF-8"
          |                                }
          |                            ],
-         |                            "size": 85,
+         |                            "size": 8,
          |                            "type": "text/plain",
          |                            "charset": "UTF-8"
          |                        }
@@ -3499,7 +3499,7 @@ trait EmailGetMethodContract {
          |                                    "value": "$contentType"
          |                                }
          |                            ],
-         |                            "size": 2688,
+         |                            "size": 2280,
          |                            "type": "multipart/mixed",
          |                            "charset": "us-ascii",
          |                            "subParts": [
@@ -3516,7 +3516,7 @@ trait EmailGetMethodContract {
          |                                            "value": "7bit"
          |                                        }
          |                                    ],
-         |                                    "size": 97,
+         |                                    "size": 6,
          |                                    "type": "text/plain",
          |                                    "charset": "utf-8"
          |                                },
@@ -3537,7 +3537,7 @@ trait EmailGetMethodContract {
          |                                            "value": "attachment; filename=\\\"text1\\\""
          |                                        }
          |                                    ],
-         |                                    "size": 519,
+         |                                    "size": 271,
          |                                    "name": "text1",
          |                                    "type": "text/plain",
          |                                    "charset": "UTF-8",
@@ -3560,7 +3560,7 @@ trait EmailGetMethodContract {
          |                                            "value": "attachment; filename=\\\"text2\\\""
          |                                        }
          |                                    ],
-         |                                    "size": 694,
+         |                                    "size": 398,
          |                                    "name": "text2",
          |                                    "type": "application/vnd.ms-publisher",
          |                                    "charset": "us-ascii",
@@ -3583,7 +3583,7 @@ trait EmailGetMethodContract {
          |                                            "value": "attachment; filename=\\\"text3\\\""
          |                                        }
          |                                    ],
-         |                                    "size": 713,
+         |                                    "size": 412,
          |                                    "name": "text3",
          |                                    "type": "text/plain",
          |                                    "charset": "UTF-8",
@@ -3693,7 +3693,7 @@ trait EmailGetMethodContract {
          |                                    "value": "multipart/mixed; boundary=\\"----------=_1483455916-7086-3\\""
          |                                }
          |                            ],
-         |                            "size": 1300,
+         |                            "size": 887,
          |                            "type": "multipart/mixed",
          |                            "charset": "us-ascii",
          |                            "subParts": [
@@ -3705,7 +3705,7 @@ trait EmailGetMethodContract {
          |                                            "value": "multipart/alternative; boundary=\\\"------------060506070600060108040700\\\""
          |                                        }
          |                                    ],
-         |                                    "size": 483,
+         |                                    "size": 395,
          |                                    "type": "multipart/alternative",
          |                                    "charset": "us-ascii",
          |                                    "subParts": [
@@ -3722,7 +3722,7 @@ trait EmailGetMethodContract {
          |                                                    "value": "8bit"
          |                                                }
          |                                            ],
-         |                                            "size": 114,
+         |                                            "size": 18,
          |                                            "type": "text/plain",
          |                                            "charset": "ISO-8859-1"
          |                                        },
@@ -3739,7 +3739,7 @@ trait EmailGetMethodContract {
          |                                                    "value": "7bit"
          |                                                }
          |                                            ],
-         |                                            "size": 108,
+         |                                            "size": 28,
          |                                            "type": "text/html",
          |                                            "charset": "ISO-8859-1"
          |                                        }
@@ -3766,7 +3766,7 @@ trait EmailGetMethodContract {
          |                                            "value": "binary"
          |                                        }
          |                                    ],
-         |                                    "size": 249,
+         |                                    "size": 18,
          |                                    "name": "avertissement.txt",
          |                                    "type": "text/plain",
          |                                    "charset": "iso-8859-1",
@@ -3835,7 +3835,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "2",
          |                                "blobId": "${messageId.serialize}_2",
-         |                                "size": 97,
+         |                                "size": 6,
          |                                "type": "text/plain",
          |                                "charset": "utf-8"
          |                            }
@@ -3899,7 +3899,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "3",
          |                                "blobId": "${messageId.serialize}_3",
-         |                                "size": 114,
+         |                                "size": 18,
          |                                "type": "text/plain",
          |                                "charset": "ISO-8859-1"
          |                            }
@@ -3963,7 +3963,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "4",
          |                                "blobId": "${messageId.serialize}_4",
-         |                                "size": 108,
+         |                                "size": 28,
          |                                "type": "text/html",
          |                                "charset": "ISO-8859-1"
          |                            }
@@ -4630,7 +4630,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "3",
          |                                "blobId": "${messageId.serialize}_3",
-         |                                "size": 519,
+         |                                "size": 271,
          |                                "name": "text1",
          |                                "type": "text/plain",
          |                                "charset": "UTF-8",
@@ -4639,7 +4639,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "4",
          |                                "blobId": "${messageId.serialize}_4",
-         |                                "size": 694,
+         |                                "size": 398,
          |                                "name": "text2",
          |                                "type": "application/vnd.ms-publisher",
          |                                "charset": "us-ascii",
@@ -4648,7 +4648,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "5",
          |                                "blobId": "${messageId.serialize}_5",
-         |                                "size": 713,
+         |                                "size": 412,
          |                                "name": "text3",
          |                                "type": "text/plain",
          |                                "charset": "UTF-8",
@@ -4714,7 +4714,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "5",
          |                                "blobId": "${messageId.serialize}_5",
-         |                                "size": 249,
+         |                                "size": 18,
          |                                "name": "avertissement.txt",
          |                                "type": "text/plain",
          |                                "charset": "iso-8859-1",
