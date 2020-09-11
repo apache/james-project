@@ -28,6 +28,7 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model._
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.exception.{MailboxNotFoundException}
+import org.apache.james.jmap.utils.search.MailboxFilter
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
 import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
@@ -71,13 +72,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     val defaultSort = new SearchQuery.Sort(SortClause.Arrival, SearchQuery.Sort.Order.REVERSE)
     val querySorted = query.sorts(defaultSort)
 
-    val multiMailboxQueryBuilder = MultimailboxesSearchQuery.from(querySorted.build())
-
-    val multiMailboxQueryBuilderWithInMailboxFilter = request.inMailbox match {
-      case Some(mailboxId) => multiMailboxQueryBuilder.inMailboxes(mailboxId)
-      case None => multiMailboxQueryBuilder
-    }
-    multiMailboxQueryBuilderWithInMailboxFilter.build()
+    MailboxFilter.buildQuery(request, querySorted.build())
   }
 
   private def asEmailQueryRequest(arguments: Arguments): SMono[EmailQueryRequest] =
