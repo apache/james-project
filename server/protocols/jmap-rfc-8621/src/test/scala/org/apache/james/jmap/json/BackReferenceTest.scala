@@ -22,15 +22,10 @@ package org.apache.james.jmap.json
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.model.Invocation.{MethodCallId, MethodName}
 import org.apache.james.jmap.routes.{BackReference, JsonPath}
-import org.apache.james.mailbox.model.TestId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsError, JsSuccess, Json}
 
-
-object BackReferenceTest {
-  val SERIALIZER: Serializer = new Serializer(new TestId.Factory)
-}
 
 class BackReferenceTest extends AnyWordSpec with Matchers {
   "Deserialize backReference" should {
@@ -41,7 +36,7 @@ class BackReferenceTest extends AnyWordSpec with Matchers {
         resultOf = MethodCallId("c1"),
         path = jsonPath)
 
-      BackReferenceTest.SERIALIZER.deserializeBackReference(
+      BackReferenceDeserializer.deserializeBackReference(
         Json.parse("""{
           |  "resultOf":"c1",
           |  "name":"Mailbox/get",

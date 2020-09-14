@@ -35,7 +35,7 @@ import play.api.libs.json.{JsSuccess, Json}
 object MailboxGetSerializationTest {
   private val FACTORY: MailboxId.Factory = new TestId.Factory
 
-  private val SERIALIZER: Serializer = new Serializer(FACTORY)
+  private val SERIALIZER: MailboxSerializer = new MailboxSerializer(FACTORY)
 
   private val ACCOUNT_ID: AccountId = AccountId(id)
 

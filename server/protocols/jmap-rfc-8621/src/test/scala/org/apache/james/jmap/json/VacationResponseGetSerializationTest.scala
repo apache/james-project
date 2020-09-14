@@ -22,7 +22,7 @@ package org.apache.james.jmap.json
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.json.Fixture.id
-import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SERIALIZER, SINGLETON_ID}
+import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SINGLETON_ID}
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
 import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
 import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
@@ -34,7 +34,6 @@ import play.api.libs.json.{JsSuccess, Json}
 
 object VacationResponseGetSerializationTest {
   private val FACTORY: MailboxId.Factory = new TestId.Factory
-  private val SERIALIZER: Serializer = new Serializer(FACTORY)
 
   private val ACCOUNT_ID: AccountId = AccountId(id)
 
@@ -50,7 +49,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
         ids = Some(VacationResponseIds(List("invalid"))),
         properties = None)
 
-      SERIALIZER.deserializeVacationResponseGetRequest(
+      VacationSerializer.deserializeVacationResponseGetRequest(
         """
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
@@ -65,7 +64,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
         ids = Some(VacationResponseIds(List(SINGLETON_ID))),
         properties = None)
 
-      SERIALIZER.deserializeVacationResponseGetRequest(
+      VacationSerializer.deserializeVacationResponseGetRequest(
         """
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
@@ -80,7 +79,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
         ids = Some(VacationResponseIds(List(SINGLETON_ID))),
         properties = None)
 
-      SERIALIZER.deserializeVacationResponseGetRequest(
+      VacationSerializer.deserializeVacationResponseGetRequest(
         """
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
@@ -96,7 +95,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
         ids = Some(VacationResponseIds(List(SINGLETON_ID))),
         properties = Some(Properties.empty()))
 
-      SERIALIZER.deserializeVacationResponseGetRequest(
+      VacationSerializer.deserializeVacationResponseGetRequest(
         """
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
@@ -112,7 +111,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
         ids = Some(VacationResponseIds(Nil)),
         properties = None)
 
-      SERIALIZER.deserializeVacationResponseGetRequest(
+      VacationSerializer.deserializeVacationResponseGetRequest(
         """
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
@@ -127,7 +126,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
         ids = None,
         properties = None)
 
-      SERIALIZER.deserializeVacationResponseGetRequest(
+      VacationSerializer.deserializeVacationResponseGetRequest(
         """
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
@@ -142,7 +141,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
         ids = Some(VacationResponseIds(List(SINGLETON_ID, "randomId"))),
         properties = Some(PROPERTIES))
 
-      SERIALIZER.deserializeVacationResponseGetRequest(
+      VacationSerializer.deserializeVacationResponseGetRequest(
         """
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
@@ -179,7 +178,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin
 
-      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue)(SERIALIZER.vacationResponseWrites(VacationResponse.allProperties)))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(VacationSerializer.serialize(actualValue)(VacationSerializer.vacationResponseWrites(VacationResponse.allProperties)))).isEqualTo(expectedJson)
     }
   }
 }

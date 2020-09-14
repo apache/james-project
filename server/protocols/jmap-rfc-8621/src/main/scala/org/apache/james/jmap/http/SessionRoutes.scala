@@ -31,7 +31,7 @@ import org.apache.james.jmap.JMAPUrls.AUTHENTICATION
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.SessionRoutes.{JMAP_SESSION, LOGGER}
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.model.Session
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.slf4j.LoggerFactory
@@ -47,8 +47,7 @@ object SessionRoutes {
 }
 
 class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
-                    val serializer: Serializer,
-                    val sessionSupplier: SessionSupplier) extends JMAPRoutes {
+                               val sessionSupplier: SessionSupplier) extends JMAPRoutes {
 
   private val generateSession: JMAPRoute.Action =
     (request, response) => SMono.fromPublisher(authenticator.authenticate(request))
@@ -73,7 +72,7 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
   private def sendRespond(session: Session, resp: HttpServerResponse) =
     SMono.fromPublisher(resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
       .status(OK)
-      .sendString(SMono.fromCallable(() => Json.stringify(serializer.serialize(session))))
+      .sendString(SMono.fromCallable(() => Json.stringify(ResponseSerializer.serialize(session))))
       .`then`())
 
   def errorHandling(throwable: Throwable, response: HttpServerResponse): Mono[Void] =

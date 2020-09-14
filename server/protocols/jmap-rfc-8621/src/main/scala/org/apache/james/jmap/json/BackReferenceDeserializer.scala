@@ -19,41 +19,19 @@
 
 package org.apache.james.jmap.json
 
-import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsError, JsPath, Json, JsonValidationError}
+import org.apache.james.jmap.model.Invocation.{MethodCallId, MethodName}
+import org.apache.james.jmap.routes.{BackReference, JsonPath}
+import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, Reads}
 
-class JsErrorSerializationTest extends AnyWordSpec with Matchers {
-  "Serialize JsError" should {
-    "succeed " in {
-      val errors: JsError = JsError(Seq(
-        (
-          JsPath.\("name"),
-          Seq(JsonValidationError("validate.error.expected.jsstring"), JsonValidationError("error.maxLength"))
-        ),
-        (
-          JsPath.\("id"),
-          Seq(JsonValidationError("error.path.missing"))
-        )))
-
-      val expectedJson: String =
-        """
-          |{
-          |  "errors": [
-          |    {
-          |      "path": "obj.name",
-          |      "messages": ["validate.error.expected.jsstring", "error.maxLength"]
-          |    },
-          |    {
-          |      "path": "obj.id",
-          |      "messages": ["error.path.missing"]
-          |    }
-          |  ]
-          |}
-          |""".stripMargin
-
-      assertThatJson(Json.stringify(ResponseSerializer.serialize(errors))).isEqualTo(expectedJson)
-    }
+object BackReferenceDeserializer {
+  private implicit val jsonPathReadRead: Reads[JsonPath] = {
+    case JsString(path) => JsSuccess(JsonPath.parse(path))
+    case _ => JsError("JsonPath objects are represented by JsonString")
   }
+
+  private implicit val methodNameFormat: Format[MethodName] = Json.valueFormat[MethodName]
+  private implicit val methodCallIdFormat: Format[MethodCallId] = Json.valueFormat[MethodCallId]
+  private implicit val backReferenceReads: Reads[BackReference] = Json.reads[BackReference]
+
+  def deserializeBackReference(input: JsValue): JsResult[BackReference] = Json.fromJson[BackReference](input)
 }

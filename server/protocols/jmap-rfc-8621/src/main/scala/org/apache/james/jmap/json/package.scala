@@ -17,20 +17,54 @@
  * under the License.                                           *
  ****************************************************************/
 
-// code copied from https://github.com/avdv/play-json-refined/blob/master/src/main/scala/de.cbley.refined.play.json/package.scala
-
 package org.apache.james.jmap
+
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 import eu.timepit.refined.api.{RefType, Validate}
 import org.apache.james.jmap.model.Id.Id
+import org.apache.james.jmap.model.SetError.SetErrorDescription
+import org.apache.james.jmap.model.{AccountId, Properties, SetError, UTCDate}
 import play.api.libs.json._
 
+import scala.util.{Failure, Success, Try}
+
 package object json {
+  def mapWrites[K, V](keyWriter: K => String, valueWriter: Writes[V]): Writes[Map[K, V]] =
+    (ids: Map[K, V]) => {
+      ids.foldLeft(JsObject.empty)((jsObject, kv) => {
+        val (key: K, value: V) = kv
+        jsObject.+(keyWriter.apply(key), valueWriter.writes(value))
+      })
+    }
+
+  def readMapEntry[K, V](keyValidator: String => Either[String, K], valueTransformer: JsObject => V): Reads[Map[K, V]] = _.validate[Map[String, JsObject]]
+    .flatMap(mapWithStringKey =>{
+      mapWithStringKey
+        .foldLeft[Either[JsError, Map[K, V]]](scala.util.Right[JsError, Map[K, V]](Map.empty))((acc: Either[JsError, Map[K, V]], keyValue) => {
+          acc match {
+            case error@Left(_) => error
+            case scala.util.Right(validatedAcc) =>
+              val refinedKey: Either[String, K] = keyValidator.apply(keyValue._1)
+              refinedKey match {
+                case Left(error) => Left(JsError(error))
+                case scala.util.Right(unparsedK) => scala.util.Right(validatedAcc + (unparsedK -> valueTransformer.apply(keyValue._2)))
+              }
+          }
+        }) match {
+        case Left(jsError) => jsError
+        case scala.util.Right(value) => JsSuccess(value)
+      }
+    })
+
+  // code copied from https://github.com/avdv/play-json-refined/blob/master/src/main/scala/de.cbley.refined.play.json/package.scala
   implicit def writeRefined[T, P, F[_, _]](
                                             implicit writesT: Writes[T],
                                             reftype: RefType[F]
                                           ): Writes[F[T, P]] = Writes(value => writesT.writes(reftype.unwrap(value)))
 
+  // code copied from https://github.com/avdv/play-json-refined/blob/master/src/main/scala/de.cbley.refined.play.json/package.scala
   implicit def readRefined[T, P, F[_, _]](
                                            implicit readsT: Reads[T],
                                            reftype: RefType[F],
@@ -48,4 +82,19 @@ package object json {
     (m: Map[Id, Any]) => {
       JsObject(m.map { case (k, v) => (k.value, vr.writes(v)) }.toSeq)
     }
+
+  private[json] implicit val UTCDateReads: Reads[UTCDate] = {
+    case JsString(value) =>
+      Try(UTCDate(ZonedDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME))) match {
+        case Success(value) => JsSuccess(value)
+        case Failure(e) => JsError(e.getMessage)
+      }
+    case _ => JsError("Expecting js string to represent UTC Date")
+  }
+  private[json] implicit val accountIdWrites: Format[AccountId] = Json.valueFormat[AccountId]
+  private[json] implicit val propertiesFormat: Format[Properties] = Json.valueFormat[Properties]
+  private[json] implicit val setErrorDescriptionWrites: Writes[SetErrorDescription] = Json.valueWrites[SetErrorDescription]
+  private[json] implicit val setErrorWrites: Writes[SetError] = Json.writes[SetError]
+  private[json] implicit val utcDateWrites: Writes[UTCDate] =
+    utcDate => JsString(utcDate.asUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")))
 }

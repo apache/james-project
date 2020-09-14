@@ -22,7 +22,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.vacation.{AccountId, VacationPatch, VacationRepository}
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY}
@@ -72,8 +72,7 @@ object VacationResponseSetMethod {
   val VACATION_RESPONSE_PATCH_OBJECT_KEY = "singleton"
 }
 
-class VacationResponseSetMethod @Inject() (serializer: Serializer,
-                                           vacationRepository: VacationRepository,
+class VacationResponseSetMethod @Inject() (vacationRepository: VacationRepository,
                                            zonedDateTimeProvider: ZonedDateTimeProvider,
                                            metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("VacationResponse/set")
@@ -115,9 +114,9 @@ class VacationResponseSetMethod @Inject() (serializer: Serializer,
   }
 
   private def asVacationResponseSetRequest(arguments: Arguments): SMono[VacationResponseSetRequest] = {
-    serializer.deserializeVacationResponseSetRequest(arguments.value) match {
+    VacationSerializer.deserializeVacationResponseSetRequest(arguments.value) match {
       case JsSuccess(vacationResponseSetRequest, _) => SMono.just(vacationResponseSetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(serializer.serialize(errors).toString))
+      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
   }
 
@@ -133,7 +132,7 @@ class VacationResponseSetMethod @Inject() (serializer: Serializer,
       notDestroyed = validateNoDestroy(vacationResponseSetRequest))
 
     Invocation(methodName,
-      Arguments(serializer.serialize(response).as[JsObject]),
+      Arguments(VacationSerializer.serialize(response).as[JsObject]),
       invocation.methodCallId)
   }
 

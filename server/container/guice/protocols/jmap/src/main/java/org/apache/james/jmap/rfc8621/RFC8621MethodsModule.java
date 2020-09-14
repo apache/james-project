@@ -32,7 +32,6 @@ import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.BasicAuthenticationStrategy;
 import org.apache.james.jmap.http.SessionRoutes;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
-import org.apache.james.jmap.json.Serializer;
 import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
 import org.apache.james.jmap.method.CoreEchoMethod;
 import org.apache.james.jmap.method.EmailGetMethod;
@@ -53,7 +52,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
@@ -64,7 +62,6 @@ public class RFC8621MethodsModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(Serializer.class).in(Scopes.SINGLETON);
         bind(ZoneIdProvider.class).to(SystemZoneIdProvider.class);
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);

@@ -20,7 +20,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{EmailQueryRequest, EmailQueryResponse, Limit, Position, QueryState}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
@@ -35,7 +35,7 @@ import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-class EmailQueryMethod @Inject() (serializer: Serializer,
+class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   mailboxManager: MailboxManager,
                                   metricFactory: MetricFactory) extends Method {
   override val methodName = MethodName("Email/query")
@@ -67,7 +67,7 @@ class EmailQueryMethod @Inject() (serializer: Serializer,
   private def asEmailQueryRequest(arguments: Arguments): SMono[EmailQueryRequest] =
     serializer.deserializeEmailQueryRequest(arguments.value) match {
       case JsSuccess(emailQueryRequest, _) => SMono.just(emailQueryRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(serializer.serialize(errors).toString))
+      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
 }

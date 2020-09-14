@@ -25,7 +25,6 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
 import org.apache.james.jmap.mail.{FromDate, HtmlBody, IsEnabled, Subject, TextBody, ToDate, VacationResponse, VacationResponseId}
 import org.apache.james.jmap.model.UTCDate
-import org.apache.james.mailbox.model.TestId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
@@ -67,8 +66,7 @@ class VacationResponseSerializationTest extends AnyWordSpec with Matchers {
           | "htmlBody":"<b>HTML body</b>"
           |}""".stripMargin
 
-      val serializer = new Serializer(new TestId.Factory)
-      assertThatJson(Json.stringify(serializer.serialize(VACATION_RESPONSE)(serializer.vacationResponseWrites(VacationResponse.allProperties)))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(VacationSerializer.serialize(VACATION_RESPONSE)(VacationSerializer.vacationResponseWrites(VacationResponse.allProperties)))).isEqualTo(expectedJson)
     }
   }
 }

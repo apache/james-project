@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
 import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, RemoveEmailsOnDestroy, ServerSetPropertyException, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
@@ -140,7 +140,7 @@ case class UpdateResults(results: Seq[UpdateResult]) {
   }).toMap
 }
 
-class MailboxSetMethod @Inject()(serializer: Serializer,
+class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                                  mailboxManager: MailboxManager,
                                  subscriptionManager: SubscriptionManager,
                                  mailboxIdFactory: MailboxId.Factory,
@@ -484,7 +484,7 @@ class MailboxSetMethod @Inject()(serializer: Serializer,
   private def asMailboxSetRequest(arguments: Arguments): SMono[MailboxSetRequest] = {
     serializer.deserializeMailboxSetRequest(arguments.value) match {
       case JsSuccess(mailboxSetRequest, _) => SMono.just(mailboxSetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(serializer.serialize(errors).toString))
+      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
   }
 }

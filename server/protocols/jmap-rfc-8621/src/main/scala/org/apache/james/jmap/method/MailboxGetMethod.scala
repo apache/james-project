@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
@@ -43,7 +43,7 @@ import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 
-class MailboxGetMethod @Inject() (serializer: Serializer,
+class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   mailboxManager: MailboxManager,
                                   subscriptionManager: SubscriptionManager,
                                   quotaFactory : QuotaLoaderWithPreloadedDefaultFactory,
@@ -99,7 +99,7 @@ class MailboxGetMethod @Inject() (serializer: Serializer,
   private def asMailboxGetRequest(arguments: Arguments): SMono[MailboxGetRequest] = {
     serializer.deserializeMailboxGetRequest(arguments.value) match {
       case JsSuccess(mailboxGetRequest, _) => SMono.just(mailboxGetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(serializer.serialize(errors).toString))
+      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
   }
 

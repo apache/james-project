@@ -34,7 +34,7 @@ import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, MailboxesProvisioner, UserProvisioning}
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.method.Method
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.MethodName
@@ -56,7 +56,6 @@ object JMAPApiRoutes {
 }
 
 class JMAPApiRoutes (val authenticator: Authenticator,
-                     serializer: Serializer,
                      userProvisioner: UserProvisioning,
                      mailboxesProvisioner: MailboxesProvisioner,
                      methods: Set[Method]) extends JMAPRoutes {
@@ -65,11 +64,10 @@ class JMAPApiRoutes (val authenticator: Authenticator,
 
   @Inject
   def this(@Named(InjectionKeys.RFC_8621) authenticator: Authenticator,
-           serializer: Serializer,
            userProvisioner: UserProvisioning,
            mailboxesProvisioner: MailboxesProvisioner,
            javaMethods: java.util.Set[Method]) {
-    this(authenticator, serializer, userProvisioner, mailboxesProvisioner, javaMethods.asScala.toSet)
+    this(authenticator, userProvisioner, mailboxesProvisioner, javaMethods.asScala.toSet)
   }
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
@@ -104,9 +102,9 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   }
 
   private def parseRequestObject(inputStream: InputStream): SMono[RequestObject] =
-    serializer.deserializeRequestObject(inputStream) match {
+    ResponseSerializer.deserializeRequestObject(inputStream) match {
       case JsSuccess(requestObject, _) => SMono.just(requestObject)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(serializer.serialize(errors).toString()))
+      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString()))
     }
 
   private def process(requestObject: RequestObject,
@@ -125,7 +123,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
             .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
             .sendString(
               SMono.fromCallable(() =>
-                serializer.serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations.map(_._1))).toString),
+                ResponseSerializer.serialize(ResponseObject(ResponseObject.SESSION_STATE, invocations.map(_._1))).toString),
               StandardCharsets.UTF_8)
             .`then`())
         )
@@ -149,7 +147,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
 
   private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, processingContext: ProcessingContext, invocation: Invocation) : SMono[(Invocation, ProcessingContext)] = {
     SMono.defer(() => {
-      processingContext.resolveBackReferences(serializer, invocation) match {
+      processingContext.resolveBackReferences(invocation) match {
         case Left(e) => SMono.just((Invocation.error(
           errorCode = ErrorCode.InvalidResultReference,
           description = s"Failed resolving back-reference: ${e.message}",
@@ -196,7 +194,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Void] =
     SMono.fromPublisher(httpServerResponse.status(SC_BAD_REQUEST)
       .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-      .sendString(SMono.fromCallable(() => serializer.serialize(details).toString),
+      .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString),
         StandardCharsets.UTF_8)
       .`then`)
 }

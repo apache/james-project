@@ -26,7 +26,7 @@ import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.Username
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId, UnparsedMailboxIdConstraint}
@@ -116,7 +116,7 @@ object MailboxPatchObject {
 case class MailboxPatchObject(value: Map[String, JsValue]) {
   def validate(processingContext: ProcessingContext,
                mailboxIdFactory: MailboxId.Factory,
-               serializer: Serializer,
+               serializer: MailboxSerializer,
                capabilities: Set[CapabilityIdentifier],
                mailboxSession: MailboxSession): Either[PatchUpdateValidationException, ValidatedMailboxPatchObject] = {
     val asUpdatedIterable = updates(serializer, capabilities, processingContext, mailboxIdFactory, mailboxSession)
@@ -172,7 +172,7 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
         rightsPartialUpdates = partialRightsUpdates)))
   }
 
-  def updates(serializer: Serializer,
+  def updates(serializer: MailboxSerializer,
               capabilities: Set[CapabilityIdentifier],
               processingContext: ProcessingContext,
               mailboxIdFactory: MailboxId.Factory,
@@ -283,7 +283,7 @@ object NameUpdate {
 }
 
 object SharedWithResetUpdate {
-  def parse(serializer: Serializer, capabilities: Set[CapabilityIdentifier])
+  def parse(serializer: MailboxSerializer, capabilities: Set[CapabilityIdentifier])
            (newValue: JsValue): Either[PatchUpdateValidationException, Update] =
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
       serializer.deserializeRights(input = newValue) match {
@@ -304,7 +304,7 @@ object IsSubscribedUpdate {
 }
 
 object SharedWithPartialUpdate {
-  def parse(serializer: Serializer, capabilities: Set[CapabilityIdentifier])
+  def parse(serializer: MailboxSerializer, capabilities: Set[CapabilityIdentifier])
            ( property: String, newValue: JsValue): Either[PatchUpdateValidationException, Update] =
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
       parseUsername(property)
@@ -320,7 +320,7 @@ object SharedWithPartialUpdate {
     case e: Exception => Left(InvalidPropertyException(property, e.getMessage))
   }
 
-  def parseRights(newValue: JsValue, property: String, serializer: Serializer): Either[PatchUpdateValidationException, Rfc4314Rights] = serializer.deserializeRfc4314Rights(newValue) match {
+  def parseRights(newValue: JsValue, property: String, serializer: MailboxSerializer): Either[PatchUpdateValidationException, Rfc4314Rights] = serializer.deserializeRfc4314Rights(newValue) match {
     case JsSuccess(rights, _) => scala.Right(rights)
     case JsError(errors) =>
       val refinedKey: Either[String, MailboxPatchObjectKey] = refineV(property)

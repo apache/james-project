@@ -22,7 +22,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.vacation.{VacationRepository, AccountId => JavaAccountId}
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
 import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
@@ -57,8 +57,7 @@ case class VacationResponseGetResult(vacationResponses: Set[VacationResponse], n
       notFound = notFound)
 }
 
-class VacationResponseGetMethod @Inject() (serializer: Serializer,
-                                           vacationRepository: VacationRepository,
+class VacationResponseGetMethod @Inject() (vacationRepository: VacationRepository,
                                            metricFactory: MetricFactory) extends Method {
   override val methodName: MethodName = MethodName("VacationResponse/get")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY)
@@ -78,7 +77,7 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
                 .map(vacationResult => vacationResult.asResponse(vacationResponseGetRequest.accountId))
                 .map(vacationResponseGetResponse => Invocation(
                   methodName = methodName,
-                  arguments = Arguments(serializer.serialize(vacationResponseGetResponse, requestedProperties).as[JsObject]),
+                  arguments = Arguments(VacationSerializer.serialize(vacationResponseGetResponse, requestedProperties).as[JsObject]),
                   methodCallId = invocation.methodCallId))
               case invalidProperties: Properties =>
                 SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
@@ -90,9 +89,9 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
   }
 
   private def asVacationResponseGetRequest(arguments: Arguments): Either[IllegalArgumentException, VacationResponseGetRequest] =
-    serializer.deserializeVacationResponseGetRequest(arguments.value) match {
+    VacationSerializer.deserializeVacationResponseGetRequest(arguments.value) match {
       case JsSuccess(vacationResponseGetRequest, _) => Right(vacationResponseGetRequest)
-      case errors: JsError => Left(new IllegalArgumentException(serializer.serialize(errors).toString))
+      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
   private def handleRequestValidationErrors(exception: Exception, methodCallId: MethodCallId): SMono[Invocation] = exception match {
@@ -109,8 +108,8 @@ class VacationResponseGetMethod @Inject() (serializer: Serializer,
         .flux()
       case Some(ids) => SFlux.fromIterable(ids.value)
         .flatMap(id => processingContext.resolveVacationResponseId(id)
-          .fold(e => SMono.just(VacationResponseGetResult.notFound(id)),
-            vacationResponseId => getVacationSingleton(mailboxSession).map(VacationResponseGetResult.found)))
+          .fold(_ => SMono.just(VacationResponseGetResult.notFound(id)),
+            _ => getVacationSingleton(mailboxSession).map(VacationResponseGetResult.found)))
     }
 
   private def getVacationSingleton(mailboxSession: MailboxSession): SMono[VacationResponse] = {

@@ -20,16 +20,11 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.json.Fixture._
-import org.apache.james.jmap.json.RequestObjectSerializationTest.SERIALIZER
 import org.apache.james.jmap.model.RequestObject
-import org.apache.james.mailbox.model.TestId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
 
-object RequestObjectSerializationTest {
-  private val SERIALIZER: Serializer = new Serializer(new TestId.Factory)
-}
 
 class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
   "Deserialize RequestObject" should {
@@ -39,7 +34,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
         methodCalls = Seq(invocation1),
         createdIds = Option.empty)
 
-      SERIALIZER
+      ResponseSerializer
         .deserializeRequestObject(
           """
             |{
@@ -60,7 +55,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
         methodCalls = Seq(invocation1),
         createdIds = Option(createdIds))
 
-      SERIALIZER
+      ResponseSerializer
         .deserializeRequestObject(
           """
             |{
@@ -82,7 +77,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
         methodCalls = Seq(invocation1, invocation2),
         createdIds = Option.empty)
 
-      SERIALIZER
+      ResponseSerializer
         .deserializeRequestObject(
           """
             |{
@@ -104,7 +99,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
 
   "Serialize RequestObject" should {
     "succeed when write to string without CreatedIds" in {
-      val actualValue = SERIALIZER.serialize(
+      val actualValue = ResponseSerializer.serialize(
         RequestObject(
           using = Seq(coreIdentifier, mailIdentifier),
           methodCalls = Seq(invocation1),
@@ -127,7 +122,7 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
     }
 
     "succeed when write to string with CreatedIds" in {
-      val actualValue = SERIALIZER.serialize(
+      val actualValue = ResponseSerializer.serialize(
         RequestObject(
           using = Seq(coreIdentifier, mailIdentifier),
           methodCalls = Seq(invocation1),

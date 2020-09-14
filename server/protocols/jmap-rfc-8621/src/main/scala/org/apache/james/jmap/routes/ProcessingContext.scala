@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.routes
 
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.BackReferenceDeserializer
 import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
 import org.apache.james.jmap.model.Id.Id
@@ -27,8 +27,6 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodNa
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId}
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json.{JsArray, JsError, JsObject, JsResult, JsSuccess, JsValue, Reads}
-
-import scala.collection.mutable
 
 sealed trait JsonPathPart
 
@@ -97,8 +95,8 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
 
   def recordInvocation(invocation: Invocation): ProcessingContext = ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation))
 
-  def resolveBackReferences(serializer: Serializer, invocation: Invocation): Either[InvalidResultReferenceException, Invocation] =
-    backReferenceResolver(serializer).reads(invocation.arguments.value) match {
+  def resolveBackReferences(invocation: Invocation): Either[InvalidResultReferenceException, Invocation] =
+    backReferenceResolver().reads(invocation.arguments.value) match {
       case JsError(e) => Left(InvalidResultReferenceException(e.toString()))
       case JsSuccess(JsObject(underlying), _) => Right(Invocation(methodName = invocation.methodName,
         methodCallId = invocation.methodCallId,
@@ -106,21 +104,21 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
       case others: JsSuccess[JsValue] => Left(InvalidResultReferenceException(s"Unexpected value $others"))
     }
 
-  private def backReferenceResolver(serializer: Serializer): Reads[JsValue] = {
-    case JsArray(value) => resolveBackReferences(serializer, value)
-    case JsObject(underlying) => resolveBackReference(serializer, underlying)
+  private def backReferenceResolver(): Reads[JsValue] = {
+    case JsArray(value) => resolveBackReferences(value)
+    case JsObject(underlying) => resolveBackReference(underlying)
     case others: JsValue => JsSuccess(others)
   }
 
-  private def resolveBackReferences(serializer: Serializer, array: collection.IndexedSeq[JsValue]): JsResult[JsValue] = {
-    val resolver: Reads[JsValue] = backReferenceResolver(serializer)
+  private def resolveBackReferences(array: collection.IndexedSeq[JsValue]): JsResult[JsValue] = {
+    val resolver: Reads[JsValue] = backReferenceResolver()
     val results: Seq[JsResult[JsValue]] = array.map(resolver.reads).toSeq
     results.find(_.isError)
       .getOrElse(JsSuccess(JsArray(results.map(_.get))))
   }
 
-  private def resolveBackReference(serializer: Serializer, underlying: collection.Map[String, JsValue]): JsResult[JsObject] = {
-    val resolutions = underlying.map(resolveBackReference(serializer))
+  private def resolveBackReference(underlying: collection.Map[String, JsValue]): JsResult[JsObject] = {
+    val resolutions = underlying.map(resolveBackReference)
 
     val firstError = resolutions.flatMap({
       case Left(jsError) => Some(jsError)
@@ -135,17 +133,17 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
     firstError.getOrElse(JsSuccess(JsObject(transformedMap)))
   }
 
-  private def resolveBackReference(serializer: Serializer)(entry: (String, JsValue)): Either[JsError, (String, JsValue)] = {
+  private def resolveBackReference(entry: (String, JsValue)): Either[JsError, (String, JsValue)] = {
     if (entry._1.startsWith("#")) {
       val newEntry: String = entry._1.substring(1)
 
-      serializer.deserializeBackReference(entry._2) match {
+      BackReferenceDeserializer.deserializeBackReference(entry._2) match {
         case JsSuccess(backReference, _) => resolveBackReference(newEntry, backReference)
         // If the JSON object is not a back-reference continue parsing (it could be a creationId)
-        case JsError(_) => propagateBackReferenceResolution(serializer, entry)
+        case JsError(_) => propagateBackReferenceResolution(entry)
       }
     } else {
-      propagateBackReferenceResolution(serializer, entry)
+      propagateBackReferenceResolution(entry)
     }
   }
 
@@ -156,8 +154,8 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
     }
   }
 
-  private def propagateBackReferenceResolution(serializer: Serializer, entry: (String, JsValue)): Either[JsError, (String, JsValue)] = {
-    val entryPayload: JsResult[JsValue] = backReferenceResolver(serializer).reads(entry._2)
+  private def propagateBackReferenceResolution(entry: (String, JsValue)): Either[JsError, (String, JsValue)] = {
+    val entryPayload: JsResult[JsValue] = backReferenceResolver().reads(entry._2)
 
     entryPayload match {
       case JsError(e) => Left(JsError(e))

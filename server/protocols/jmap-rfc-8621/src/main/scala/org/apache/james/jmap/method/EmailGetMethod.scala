@@ -23,7 +23,7 @@ import java.time.ZoneId
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
-import org.apache.james.jmap.json.Serializer
+import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
@@ -79,12 +79,11 @@ class SystemZoneIdProvider extends ZoneIdProvider {
   override def get(): ZoneId = ZoneId.systemDefault()
 }
 
-class EmailGetMethod @Inject() (serializer: Serializer,
-                               messageIdManager: MessageIdManager,
-                               messageIdFactory: MessageId.Factory,
-                               zoneIdProvider: ZoneIdProvider,
-                               previewFactory: Preview.Factory,
-                               metricFactory: MetricFactory) extends Method {
+class EmailGetMethod @Inject() (messageIdManager: MessageIdManager,
+                                messageIdFactory: MessageId.Factory,
+                                zoneIdProvider: ZoneIdProvider,
+                                previewFactory: Preview.Factory,
+                                metricFactory: MetricFactory) extends Method {
   override val methodName = MethodName("Email/get")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
@@ -106,7 +105,7 @@ class EmailGetMethod @Inject() (serializer: Serializer,
           case (properties, bodyProperties) => getEmails(request, mailboxSession)
             .map(response => Invocation(
               methodName = methodName,
-              arguments = Arguments(serializer.serialize(response, properties, bodyProperties).as[JsObject]),
+              arguments = Arguments(EmailGetSerializer.serialize(response, properties, bodyProperties).as[JsObject]),
               methodCallId = invocation.methodCallId))
         })
 
@@ -135,9 +134,9 @@ class EmailGetMethod @Inject() (serializer: Serializer,
     }
 
   private def asEmailGetRequest(arguments: Arguments): SMono[EmailGetRequest] =
-    serializer.deserializeEmailGetRequest(arguments.value) match {
+    EmailGetSerializer.deserializeEmailGetRequest(arguments.value) match {
       case JsSuccess(emailGetRequest, _) => SMono.just(emailGetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(serializer.serialize(errors).toString))
+      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
   private def getEmails(request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
