@@ -99,7 +99,7 @@ case class EmailBodyPartBlob(blobId: BlobId, part: EmailBodyPart) extends Blob {
 }
 
 class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
-                          val messageIdManager: MessageIdManager) extends BlobResolver {
+                                    val messageIdManager: MessageIdManager) extends BlobResolver {
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): Option[SMono[Blob]] = {
     Try(messageIdFactory.fromString(blobId.value.value)) match {
       case Failure(_) => None
@@ -112,7 +112,7 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
 }
 
 class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
-                              val messageIdManager: MessageIdManager) extends BlobResolver {
+                                        val messageIdManager: MessageIdManager) extends BlobResolver {
   private def asMessageAndPartId(blobId: BlobId): Try[(MessageId, PartId)] = {
     blobId.value.value.split("_").toList match {
       case List(messageIdString, partIdString) => for {
@@ -183,17 +183,17 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
               .map(ContentType.of)
               .getOrElse(blob.contentType),
             blob = blob))
-          .`then`())
+          .`then`)
       .onErrorResume {
-        case e: UnauthorizedException => SMono.fromPublisher(handleAuthenticationFailure(response, LOGGER, e)).`then`()
-        case _: BlobNotFoundException => SMono.fromPublisher(response.status(SC_NOT_FOUND).send).`then`()
+        case e: UnauthorizedException => SMono.fromPublisher(handleAuthenticationFailure(response, LOGGER, e)).`then`
+        case _: BlobNotFoundException => SMono.fromPublisher(response.status(SC_NOT_FOUND).send).`then`
         case e =>
           LOGGER.error("Unexpected error", e)
-          SMono.fromPublisher(handleInternalError(response, LOGGER, e)).`then`()
+          SMono.fromPublisher(handleInternalError(response, LOGGER, e)).`then`
       }
       .subscribeOn(Schedulers.elastic)
       .asJava()
-      .`then`()
+      .`then`
 
   private def downloadBlob(optionalName: Option[String],
                            response: HttpServerResponse,
@@ -209,9 +209,9 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
         .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
           .map(Unpooled.wrappedBuffer(_))
           .subscribeOn(Schedulers.elastic))
-        .`then`(),
+        .`then`,
       asJavaConsumer[InputStream]((stream: InputStream) => stream.close())))
-      .`then`()
+      .`then`
 
   private def addContentDispositionHeader(optionalName: Option[String]): HttpServerResponse => HttpServerResponse =
     resp => optionalName.map(addContentDispositionHeaderRegardingEncoding(_, resp))

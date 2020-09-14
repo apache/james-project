@@ -117,7 +117,7 @@ trait DownloadContract {
       .replaceRights(path, BOB.asString(), new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     val response = `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${messageId.serialize()}")
@@ -144,7 +144,7 @@ trait DownloadContract {
       .getMessageId
 
     `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${messageId.serialize()}")
@@ -167,7 +167,7 @@ trait DownloadContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$accountId/${messageId.serialize()}_3").prettyPeek()
+      .get(s"/download/$accountId/${messageId.serialize()}_3")
     .`then`
       .statusCode(SC_OK)
       .contentType("text/plain")
@@ -196,7 +196,7 @@ trait DownloadContract {
       .getMessageId
 
     `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${messageId.serialize()}_3")
@@ -364,7 +364,7 @@ trait DownloadContract {
       .getMessageId
 
     `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${messageId.serialize()}_333")
@@ -382,7 +382,7 @@ trait DownloadContract {
       .getMessageId
 
     `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${messageId.serialize()}_invalid")
@@ -399,15 +399,12 @@ trait DownloadContract {
         ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
 
     `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/invalid")
     .`then`
       .statusCode(SC_NOT_FOUND)
-      .extract
-      .body
-      .asString
   }
 
   @Test
@@ -419,7 +416,7 @@ trait DownloadContract {
         ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
 
     `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${randomMessageId.serialize()}")
@@ -436,7 +433,7 @@ trait DownloadContract {
         ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
 
     `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${randomMessageId.serialize()}_3")
@@ -453,7 +450,7 @@ trait DownloadContract {
         ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
 
     `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${randomMessageId.serialize()}_2")
@@ -471,7 +468,7 @@ trait DownloadContract {
       .getMessageId
 
     `given`
-        .basePath("")
+      .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${messageId.serialize()}_3_3")
