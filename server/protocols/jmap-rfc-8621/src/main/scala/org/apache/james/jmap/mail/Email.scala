@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,28 +15,44 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
+ ****************************************************************/
 
 package org.apache.james.jmap.mail
 
+import java.nio.charset.StandardCharsets.US_ASCII
+import java.time.ZoneId
+import java.util.Date
+
+import cats.implicits._
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
+import eu.timepit.refined.types.string.NonEmptyString
+import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
-import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.model.UTCDate
-import org.apache.james.mailbox.model.MailboxId
-import org.apache.james.jmap.model.{Keywords, Properties}
-import org.apache.james.mailbox.model.MessageId
+import org.apache.james.jmap.mail.Email.{Size, sanitizeSize}
+import org.apache.james.jmap.method.ZoneIdProvider
+import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
+import org.apache.james.jmap.model.{Keywords, Properties, UTCDate}
+import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageId, MessageResult}
+import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
+import org.apache.james.mime4j.codec.DecodeMonitor
+import org.apache.james.mime4j.dom.field.{AddressListField, DateTimeField, MailboxField, MailboxListField}
+import org.apache.james.mime4j.dom.{Header, Message}
+import org.apache.james.mime4j.message.DefaultMessageBuilder
+import org.apache.james.mime4j.stream.{Field, MimeConfig}
+import org.apache.james.mime4j.util.MimeUtil
 import org.slf4j.{Logger, LoggerFactory}
+import reactor.core.scala.publisher.{SFlux, SMono}
 
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 object Email {
-  private val logger: Logger = LoggerFactory.getLogger(classOf[Email])
+  private val logger: Logger = LoggerFactory.getLogger(classOf[EmailView])
 
   type UnparsedEmailIdConstraint = NonEmpty
   type UnparsedEmailId = String Refined UnparsedEmailIdConstraint
@@ -57,7 +73,7 @@ object Email {
   type Size = Long Refined NonNegative
   val Zero: Size = 0L
 
-  def sanitizeSize(value: Long): Size = {
+  private[mail] def sanitizeSize(value: Long): Size = {
     val size: Either[String, Size] = refineV[NonNegative](value)
     size.fold(e => {
       logger.error(s"Encountered an invalid Email size: $e")
@@ -65,7 +81,59 @@ object Email {
     },
       refinedValue => refinedValue)
   }
+
+  private[mail] def parseAsMime4JMessage(firstMessage: MessageResult): Try[Message] = {
+    val defaultMessageBuilder = new DefaultMessageBuilder
+    defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
+    defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
+    val inputStream = firstMessage.getFullContent.getInputStream
+    val resultMessage = Try(defaultMessageBuilder.parseMessage(inputStream))
+    resultMessage.fold(e => {
+      Try(inputStream.close())
+          .flatMap(closeFailure => {
+            logger.error(s"Could not close $inputStream", closeFailure)
+            Failure(e)
+          })
+    }, msg => {
+      Try(inputStream.close())
+        .fold(
+          closeFailure => {
+            logger.error(s"Could not close $inputStream", closeFailure)
+            Success(msg)
+          },
+          _ => Success(msg))
+    })
+  }
 }
+
+object ReadLevel {
+  private val metadataProperty: Seq[NonEmptyString] = Seq("id", "size", "mailboxIds",
+    "mailboxIds", "blobId", "threadId", "receivedAt")
+  private val fullProperty: Seq[NonEmptyString] = Seq("bodyStructure", "textBody", "htmlBody",
+    "attachments", "bodyValues", "preview", "hasAttachment")
+
+  def of(property: NonEmptyString): ReadLevel = if (metadataProperty.contains(property)) {
+    MetadataReadLevel
+  } else if (fullProperty.contains(property)) {
+    FullReadLevel
+  } else {
+    HeaderReadLevel
+  }
+
+  def combine(readLevel1: ReadLevel, readLevel2: ReadLevel): ReadLevel = readLevel1 match {
+    case MetadataReadLevel => readLevel2
+    case FullReadLevel => FullReadLevel
+    case HeaderReadLevel => readLevel2 match {
+      case FullReadLevel => FullReadLevel
+      case _ => HeaderReadLevel
+    }
+  }
+}
+
+sealed trait ReadLevel
+case object MetadataReadLevel extends ReadLevel
+case object HeaderReadLevel extends ReadLevel
+case object FullReadLevel extends ReadLevel
 
 object HeaderMessageId {
   def from(string: String): HeaderMessageId = HeaderMessageId(sanitize(string))
@@ -77,22 +145,97 @@ object HeaderMessageId {
   }
 }
 
-object EmailHeaders {
-  val SPECIFIC_HEADER_PREFIX = "header:"
-}
 
 case class HeaderMessageId(value: String) extends AnyVal
+
 case class Subject(value: String) extends AnyVal
+
 case class MailboxIds(value: List[MailboxId])
+
 case class ThreadId(value: String) extends AnyVal
+
 case class HasAttachment(value: Boolean) extends AnyVal
 
 case class EmailMetadata(id: MessageId,
                          blobId: BlobId,
                          threadId: ThreadId,
+                         keywords: Keywords,
                          mailboxIds: MailboxIds,
                          size: Size,
                          receivedAt: UTCDate)
+
+object EmailHeaders {
+  val SPECIFIC_HEADER_PREFIX = "header:"
+
+  private[mail] def from(zoneId: ZoneId)(mime4JMessage: Message): EmailHeaders = {
+    EmailHeaders(
+      headers = asEmailHeaders(mime4JMessage.getHeader),
+      messageId = extractMessageId(mime4JMessage, "Message-Id"),
+      inReplyTo = extractMessageId(mime4JMessage, "In-Reply-To"),
+      references = extractMessageId(mime4JMessage, "References"),
+      to = extractAddresses(mime4JMessage, "To"),
+      cc = extractAddresses(mime4JMessage, "Cc"),
+      bcc = extractAddresses(mime4JMessage, "Bcc"),
+      from = extractAddresses(mime4JMessage, "From"),
+      replyTo = extractAddresses(mime4JMessage, "Reply-To"),
+      sender = extractAddresses(mime4JMessage, "Sender"),
+      subject = extractSubject(mime4JMessage),
+      sentAt = extractDate(mime4JMessage, "Date").map(date => UTCDate.from(date, zoneId)))
+  }
+
+  def extractSpecificHeaders(properties: Option[Properties])(mime4JMessage: Message) = {
+    properties.getOrElse(Properties.empty()).value
+      .flatMap(property => SpecificHeaderRequest.from(property).toOption)
+      .map(_.retrieveHeader(mime4JMessage))
+      .toMap
+  }
+
+  private def asEmailHeaders(header: Header): List[EmailHeader] =
+    header.iterator()
+      .asScala
+      .map(header => EmailHeader(
+        EmailHeaderName(header.getName),
+        EmailHeaderValue(new String(header.getRaw.toByteArray, US_ASCII)
+          .substring(header.getName.length + 1))))
+      .toList
+
+  private def extractSubject(mime4JMessage: Message) =
+    extractLastField(mime4JMessage, "Subject")
+      .map(_.getBody)
+      .map(MimeUtil.unscrambleHeaderValue)
+      .map(Subject)
+
+  private def extractMessageId(mime4JMessage: Message, fieldName: String): Option[List[HeaderMessageId]] =
+    Option(mime4JMessage.getHeader.getFields(fieldName))
+      .map(_.asScala
+        .map(_.getBody)
+        .map(HeaderMessageId.from)
+        .toList)
+      .filter(_.nonEmpty)
+
+  private def extractAddresses(mime4JMessage: Message, fieldName: String): Option[List[EmailAddress]] =
+    extractLastField(mime4JMessage, fieldName)
+      .flatMap {
+        case f: AddressListField => Some(EmailAddress.from(f.getAddressList))
+        case f: MailboxListField => Some(EmailAddress.from(f.getMailboxList))
+        case f: MailboxField => Some(List(EmailAddress.from(f.getMailbox)))
+        case _ => None
+      }
+      .filter(_.nonEmpty)
+
+  private def extractDate(mime4JMessage: Message, fieldName: String): Option[Date] =
+    extractLastField(mime4JMessage, fieldName)
+      .flatMap {
+        case f: DateTimeField => Some(f.getDate)
+        case _ => None
+      }
+
+  private def extractLastField(mime4JMessage: Message, fieldName: String): Option[Field] =
+    Option(mime4JMessage.getHeader.getFields(fieldName))
+      .map(_.asScala)
+      .flatMap(fields => fields.reverse.headOption)
+
+}
 
 case class EmailHeaders(headers: List[EmailHeader],
                         messageId: Option[List[HeaderMessageId]],
@@ -108,7 +251,6 @@ case class EmailHeaders(headers: List[EmailHeader],
                         sentAt: Option[UTCDate])
 
 case class EmailBody(bodyStructure: EmailBodyPart,
-                     keywords: Keywords,
                      textBody: List[EmailBodyPart],
                      htmlBody: List[EmailBodyPart],
                      attachments: List[EmailBodyPart],
@@ -116,7 +258,205 @@ case class EmailBody(bodyStructure: EmailBodyPart,
                      hasAttachment: HasAttachment,
                      preview: Preview)
 
-case class Email(metadata: EmailMetadata,
-                 header: EmailHeaders,
-                 body: EmailBody,
-                 specificHeaders: Map[String, Option[EmailHeaderValue]])
+sealed trait EmailView {
+  def metadata: EmailMetadata
+}
+
+case class EmailMetadataView(metadata: EmailMetadata) extends EmailView
+
+case class EmailHeaderView(metadata: EmailMetadata,
+                           header: EmailHeaders,
+                           specificHeaders: Map[String, Option[EmailHeaderValue]]) extends EmailView
+
+case class EmailFullView(metadata: EmailMetadata,
+                         header: EmailHeaders,
+                         body: EmailBody,
+                         specificHeaders: Map[String, Option[EmailHeaderValue]]) extends EmailView
+
+
+class EmailViewReaderFactory @Inject() (metadataReader: EmailMetadataViewReader,
+                                        headerReader: EmailHeaderViewReader,
+                                        fullReader: EmailFullViewReader) {
+  def selectReader(request: EmailGetRequest): EmailViewReader = {
+    val readLevel: ReadLevel = request.properties
+      .getOrElse(Email.defaultProperties)
+      .value
+      .map(ReadLevel.of)
+      .reduceOption(ReadLevel.combine)
+      .getOrElse(MetadataReadLevel)
+
+    readLevel match {
+      case MetadataReadLevel => metadataReader
+      case HeaderReadLevel => headerReader
+      case FullReadLevel => fullReader
+    }
+  }
+}
+
+sealed trait EmailViewReader {
+  def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView]
+}
+
+private sealed trait EmailViewFactory {
+  def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailView]
+}
+
+private class GenericEmailViewReader(messageIdManager: MessageIdManager,
+                                     fetchGroup: FetchGroup,
+                                     metadataViewFactory: EmailViewFactory) extends EmailViewReader {
+  override def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] =
+    SFlux.fromPublisher(messageIdManager.getMessagesReactive(
+      ids.toList.asJava,
+      fetchGroup,
+      mailboxSession))
+      .groupBy(_.getMessageId)
+      .flatMap(groupedFlux => groupedFlux.collectSeq().map(results => (groupedFlux.key(), results)))
+      .map(metadataViewFactory.toEmail(request))
+      .flatMap(SMono.fromTry(_))
+}
+
+private class EmailMetadataViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) extends EmailViewFactory {
+  override def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailView] = {
+    val messageId: MessageId = message._1
+    val mailboxIds: MailboxIds = MailboxIds(message._2
+      .map(_.getMailboxId)
+      .toList)
+
+    for {
+      firstMessage <- message._2
+        .headOption
+        .map(Success(_))
+        .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
+      blobId <- BlobId.of(messageId)
+      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
+    } yield {
+      EmailMetadataView(
+        metadata = EmailMetadata(
+          id = messageId,
+          blobId = blobId,
+          threadId = ThreadId(messageId.serialize),
+          keywords = keywords,
+          mailboxIds = mailboxIds,
+          receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
+          size = sanitizeSize(firstMessage.getSize)))
+    }
+  }
+}
+
+private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) extends EmailViewFactory {
+  override def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailView] = {
+    val messageId: MessageId = message._1
+    val mailboxIds: MailboxIds = MailboxIds(message._2
+      .map(_.getMailboxId)
+      .toList)
+
+    for {
+      firstMessage <- message._2
+        .headOption
+        .map(Success(_))
+        .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
+      mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
+      blobId <- BlobId.of(messageId)
+      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
+    } yield {
+      EmailHeaderView(
+        metadata = EmailMetadata(
+          id = messageId,
+          blobId = blobId,
+          threadId = ThreadId(messageId.serialize),
+          mailboxIds = mailboxIds,
+          receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
+          size = sanitizeSize(firstMessage.getSize),
+          keywords = keywords),
+        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(mime4JMessage))
+    }
+  }
+
+}
+
+private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, previewFactory: Preview.Factory) extends EmailViewFactory {
+  override def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailView] = {
+    val messageId: MessageId = message._1
+    val mailboxIds: MailboxIds = MailboxIds(message._2
+      .map(_.getMailboxId)
+      .toList)
+
+    for {
+      firstMessage <- message._2
+        .headOption
+        .map(Success(_))
+        .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
+      mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
+      bodyStructure <- EmailBodyPart.of(messageId, mime4JMessage)
+      bodyValues <- extractBodyValues(bodyStructure, request)
+      blobId <- BlobId.of(messageId)
+      preview <- Try(previewFactory.fromMessageResult(firstMessage))
+      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
+    } yield {
+      EmailFullView(
+        metadata = EmailMetadata(
+          id = messageId,
+          blobId = blobId,
+          threadId = ThreadId(messageId.serialize),
+          mailboxIds = mailboxIds,
+          receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
+          keywords = keywords,
+          size = sanitizeSize(firstMessage.getSize)),
+        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
+        body = EmailBody(
+          bodyStructure = bodyStructure,
+          textBody = bodyStructure.textBody,
+          htmlBody = bodyStructure.htmlBody,
+          attachments = bodyStructure.attachments,
+          bodyValues = bodyValues,
+          hasAttachment = HasAttachment(!firstMessage.getLoadedAttachments.isEmpty),
+          preview = preview),
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(mime4JMessage))
+    }
+  }
+
+  private def extractBodyValues(bodyStructure: EmailBodyPart, request: EmailGetRequest): Try[Map[PartId, EmailBodyValue]] = for {
+    textBodyValues <- extractBodyValues(bodyStructure.textBody, request, request.fetchTextBodyValues.exists(_.value))
+    htmlBodyValues <- extractBodyValues(bodyStructure.htmlBody, request, request.fetchHTMLBodyValues.exists(_.value))
+    allBodyValues <- extractBodyValues(bodyStructure.flatten, request, request.fetchAllBodyValues.exists(_.value))
+  } yield {
+    (textBodyValues ++ htmlBodyValues ++ allBodyValues)
+      .distinctBy(_._1)
+      .toMap
+  }
+
+  private def extractBodyValues(parts: List[EmailBodyPart], request: EmailGetRequest, shouldFetch: Boolean): Try[List[(PartId, EmailBodyValue)]] =
+    if (shouldFetch) {
+      parts
+        .map(part => part.bodyContent.map(bodyValue => bodyValue.map(b => (part.partId, b.truncate(request.maxBodyValueBytes)))))
+        .sequence
+        .map(list => list.flatten)
+    } else {
+      Success(Nil)
+    }
+}
+
+private class EmailMetadataViewReader @Inject()(messageIdManager: MessageIdManager,
+                                                metadataViewFactory: EmailMetadataViewFactory) extends EmailViewReader {
+  private val reader: GenericEmailViewReader = new GenericEmailViewReader(messageIdManager, FetchGroup.MINIMAL, metadataViewFactory)
+
+  override def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] =
+    reader.read(ids, request, mailboxSession)
+}
+
+private class EmailHeaderViewReader @Inject()(messageIdManager: MessageIdManager,
+                                              headerViewFactory: EmailHeaderViewFactory) extends EmailViewReader {
+  private val reader: GenericEmailViewReader = new GenericEmailViewReader(messageIdManager, FetchGroup.HEADERS, headerViewFactory)
+
+  override def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] =
+    reader.read(ids, request, mailboxSession)
+}
+
+private class EmailFullViewReader @Inject()(messageIdManager: MessageIdManager,
+                                            metadataViewFactory: EmailFullViewFactory) extends EmailViewReader {
+  private val reader: GenericEmailViewReader = new GenericEmailViewReader(messageIdManager, FetchGroup.FULL_CONTENT, metadataViewFactory)
+
+  override def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] =
+    reader.read(ids, request, mailboxSession)
+}

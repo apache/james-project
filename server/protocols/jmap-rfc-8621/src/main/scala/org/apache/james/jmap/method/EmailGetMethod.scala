@@ -26,29 +26,27 @@ import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
-import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, SpecificHeaderRequest}
+import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
 import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, Properties}
 import org.apache.james.jmap.routes.ProcessingContext
-import org.apache.james.mailbox.model.{FetchGroup, MessageId}
-import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
+import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import scala.jdk.CollectionConverters._
-
 object EmailGetResults {
   private val logger: Logger = LoggerFactory.getLogger(classOf[EmailGetResults])
 
   def merge(result1: EmailGetResults, result2: EmailGetResults): EmailGetResults = result1.merge(result2)
   def empty(): EmailGetResults = EmailGetResults(Set.empty, EmailNotFound(Set.empty))
-  def found(email: Email): EmailGetResults = EmailGetResults(Set(email), EmailNotFound(Set.empty))
+  def found(email: EmailView): EmailGetResults = EmailGetResults(Set(email), EmailNotFound(Set.empty))
   def notFound(emailId: UnparsedEmailId): EmailGetResults = EmailGetResults(Set.empty, EmailNotFound(Set(emailId)))
   def notFound(messageId: MessageId): EmailGetResults = Email.asUnparsed(messageId)
     .fold(e => {
@@ -58,7 +56,7 @@ object EmailGetResults {
       id => notFound(id))
 }
 
-case class EmailGetResults(emails: Set[Email], notFound: EmailNotFound) {
+case class EmailGetResults(emails: Set[EmailView], notFound: EmailNotFound) {
   def merge(other: EmailGetResults): EmailGetResults = EmailGetResults(this.emails ++ other.emails, this.notFound.merge(other.notFound))
 
   def asResponse(accountId: AccountId): EmailGetResponse = EmailGetResponse(
@@ -80,7 +78,7 @@ class SystemZoneIdProvider extends ZoneIdProvider {
   override def get(): ZoneId = ZoneId.systemDefault()
 }
 
-class EmailGetMethod @Inject() (messageIdManager: MessageIdManager,
+class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
                                 messageIdFactory: MessageId.Factory,
                                 zoneIdProvider: ZoneIdProvider,
                                 previewFactory: Preview.Factory,
@@ -183,12 +181,10 @@ class EmailGetMethod @Inject() (messageIdManager: MessageIdManager,
     }
 
   private def retrieveEmails(ids: Seq[MessageId], mailboxSession: MailboxSession, request: EmailGetRequest): SFlux[EmailGetResults] = {
-    val foundResultsMono: SMono[Map[MessageId, Email]] = SFlux.fromPublisher(messageIdManager.getMessagesReactive(ids.toList.asJava, FetchGroup.MINIMAL, mailboxSession))
-      .groupBy(_.getMessageId)
-      .flatMap(groupedFlux => groupedFlux.collectSeq().map(results => (groupedFlux.key(), results)))
-      .map(request.toEmail(previewFactory, zoneIdProvider.get()))
-      .flatMap(SMono.fromTry(_))
-      .collectMap(_.metadata.id)
+    val foundResultsMono: SMono[Map[MessageId, EmailView]] =
+      readerFactory.selectReader(request)
+        .read(ids, request, mailboxSession)
+        .collectMap(_.metadata.id)
 
     foundResultsMono.flatMapMany(foundResults => SFlux.fromIterable(ids)
       .map(id => foundResults.get(id)
