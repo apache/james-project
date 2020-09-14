@@ -21,9 +21,11 @@ package org.apache.james.mailbox.store.search;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Stream;
@@ -68,6 +70,42 @@ import reactor.core.scheduler.Schedulers;
  *
  */
 public class SimpleMessageSearchIndex implements MessageSearchIndex {
+
+    private static class SearchComparator implements Comparator<MailboxMessage> {
+        public static final int REVERSE = -1;
+        public static final int EQUALS = 0;
+        private final List<SearchQuery.Sort> sorts;
+
+        public SearchComparator(SearchQuery query) {
+            sorts = query.getSorts();
+        }
+
+        @Override
+        public int compare(MailboxMessage message, MailboxMessage other) {
+            return sorts.stream()
+                .mapToInt(sort -> {
+                    SearchQuery.Sort.SortClause sortClause = sort.getSortClause();
+                    int sortResult = compareWithSortClause(message, other, sortClause);
+                    if (sort.isReverse()) {
+                        return sortResult * REVERSE;
+                    }
+                    return sortResult;
+                })
+                .filter(i -> i != 0)
+                .findFirst()
+                .orElse(EQUALS);
+        }
+
+        private int compareWithSortClause(MailboxMessage message, MailboxMessage other, SearchQuery.Sort.SortClause sortClause) {
+            switch (sortClause) {
+                case Arrival:
+                    return message.metaData().getInternalDate().compareTo(other.getInternalDate());
+                default:
+                    return message.compareTo(other);
+            }
+        }
+    }
+
     private final MessageMapperFactory messageMapperFactory;
     private final MailboxMapperFactory mailboxMapperFactory;
     private final TextExtractor textExtractor;
@@ -89,7 +127,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
             SearchCapabilities.PartialEmailMatch,
             SearchCapabilities.AttachmentFileName);
     }
-    
+
     /**
      * Walks down the query tree's conjunctions to find a UidCriterion
      * @param crits - list of Criterion to search from
@@ -118,7 +156,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
             .toStream();
     }
 
-    private List<SearchResult> searchResults(MailboxSession session, Mailbox mailbox, SearchQuery query) throws MailboxException {
+    private Set<MailboxMessage> searchResults(MailboxSession session, Mailbox mailbox, SearchQuery query) throws MailboxException {
         MessageMapper mapper = messageMapperFactory.getMessageMapper(session);
 
         final SortedSet<MailboxMessage> hitSet = new TreeSet<>();
@@ -142,14 +180,15 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
                 hitSet.add(m);
             }
         }
-        return ImmutableList.copyOf(new MessageSearches(hitSet.iterator(), query, textExtractor, attachmentContentLoader, session).iterator());
+        return hitSet;
     }
 
     @Override
     public Flux<MessageId> search(MailboxSession session, final Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(session);
 
-        Flux<Mailbox> filteredMailboxes = Flux.fromIterable(mailboxIds)
+        Flux<Mailbox> filteredMailboxes =
+            Flux.fromIterable(mailboxIds)
             .concatMap(mailboxMapper::findMailboxById);
 
         return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery), limit);
@@ -157,10 +196,13 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
 
     private Flux<? extends SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
         return mailboxes.concatMap(mailbox -> Flux.fromStream(getSearchResultStream(session, query, mailbox)))
+            .collectSortedList(new SearchComparator(query))
+            .map(list ->  ImmutableList.copyOf(new MessageSearches(list.iterator(), query, textExtractor, attachmentContentLoader, session).iterator()))
+            .flatMapIterable(list -> list)
             .subscribeOn(Schedulers.elastic());
     }
 
-    private Stream<? extends SearchResult> getSearchResultStream(MailboxSession session, SearchQuery query, Mailbox mailbox) {
+    private Stream<MailboxMessage> getSearchResultStream(MailboxSession session, SearchQuery query, Mailbox mailbox) {
         try {
             return searchResults(session, mailbox, query).stream();
         } catch (MailboxException e) {
