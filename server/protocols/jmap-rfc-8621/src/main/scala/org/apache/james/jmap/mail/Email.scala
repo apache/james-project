@@ -49,6 +49,7 @@ import org.apache.james.mime4j.stream.{Field, MimeConfig}
 import org.apache.james.mime4j.util.MimeUtil
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -296,7 +297,7 @@ class EmailViewReaderFactory @Inject() (metadataReader: EmailMetadataViewReader,
                                         headerReader: EmailHeaderViewReader,
                                         fastViewReader: EmailFastViewReader,
                                         fullReader: EmailFullViewReader) {
-  def selectReader(request: EmailGetRequest): EmailViewReader = {
+  def selectReader(request: EmailGetRequest): EmailViewReader[EmailView] = {
     val readLevel: ReadLevel = request.properties
       .getOrElse(Email.defaultProperties)
       .value
@@ -313,18 +314,18 @@ class EmailViewReaderFactory @Inject() (metadataReader: EmailMetadataViewReader,
   }
 }
 
-sealed trait EmailViewReader {
-  def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView]
+sealed trait EmailViewReader[+EmailView] {
+  def read[T >: EmailView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T]
 }
 
-private sealed trait EmailViewFactory {
+private sealed trait EmailViewFactory[+EmailView] {
   def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailView]
 }
 
-private class GenericEmailViewReader(messageIdManager: MessageIdManager,
+private class GenericEmailViewReader[+EmailView](messageIdManager: MessageIdManager,
                                      fetchGroup: FetchGroup,
-                                     metadataViewFactory: EmailViewFactory) extends EmailViewReader {
-  override def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] =
+                                     metadataViewFactory: EmailViewFactory[EmailView]) extends EmailViewReader[EmailView] {
+  override def read[T >: EmailView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] =
     SFlux.fromPublisher(messageIdManager.getMessagesReactive(
         ids.toList.asJava,
         fetchGroup,
@@ -335,8 +336,8 @@ private class GenericEmailViewReader(messageIdManager: MessageIdManager,
       .flatMap(SMono.fromTry(_))
 }
 
-private class EmailMetadataViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) extends EmailViewFactory {
-  override def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailView] = {
+private class EmailMetadataViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) extends EmailViewFactory[EmailMetadataView] {
+  override def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailMetadataView] = {
     val messageId: MessageId = message._1
     val mailboxIds: MailboxIds = MailboxIds(message._2
       .map(_.getMailboxId)
@@ -363,8 +364,8 @@ private class EmailMetadataViewFactory @Inject()(zoneIdProvider: ZoneIdProvider)
   }
 }
 
-private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) extends EmailViewFactory {
-  override def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailView] = {
+private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) extends EmailViewFactory[EmailHeaderView] {
+  override def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailHeaderView] = {
     val messageId: MessageId = message._1
     val mailboxIds: MailboxIds = MailboxIds(message._2
       .map(_.getMailboxId)
@@ -395,8 +396,8 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
 
 }
 
-private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, previewFactory: Preview.Factory) extends EmailViewFactory {
-  override def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailView] = {
+private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, previewFactory: Preview.Factory) extends EmailViewFactory[EmailFullView] {
+  override def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult])): Try[EmailFullView] = {
     val messageId: MessageId = message._1
     val mailboxIds: MailboxIds = MailboxIds(message._2
       .map(_.getMailboxId)
@@ -459,34 +460,39 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
 }
 
 private class EmailMetadataViewReader @Inject()(messageIdManager: MessageIdManager,
-                                                metadataViewFactory: EmailMetadataViewFactory) extends EmailViewReader {
-  private val reader: GenericEmailViewReader = new GenericEmailViewReader(messageIdManager, MINIMAL, metadataViewFactory)
+                                                metadataViewFactory: EmailMetadataViewFactory) extends EmailViewReader[EmailMetadataView] {
+  private val reader: GenericEmailViewReader[EmailMetadataView] = new GenericEmailViewReader[EmailMetadataView](messageIdManager, MINIMAL, metadataViewFactory)
 
-  override def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] =
+  override def read[T >: EmailMetadataView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] =
     reader.read(ids, request, mailboxSession)
 }
 
 private class EmailHeaderViewReader @Inject()(messageIdManager: MessageIdManager,
-                                              headerViewFactory: EmailHeaderViewFactory) extends EmailViewReader {
-  private val reader: GenericEmailViewReader = new GenericEmailViewReader(messageIdManager, HEADERS, headerViewFactory)
+                                              headerViewFactory: EmailHeaderViewFactory) extends EmailViewReader[EmailHeaderView] {
+  private val reader: GenericEmailViewReader[EmailHeaderView] = new GenericEmailViewReader[EmailHeaderView](messageIdManager, HEADERS, headerViewFactory)
 
-  override def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] =
+  override def read[T >: EmailHeaderView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] =
     reader.read(ids, request, mailboxSession)
 }
 
 private class EmailFullViewReader @Inject()(messageIdManager: MessageIdManager,
-                                            fullViewFactory: EmailFullViewFactory) extends EmailViewReader {
-  private val reader: GenericEmailViewReader = new GenericEmailViewReader(messageIdManager, FULL_CONTENT, fullViewFactory)
+                                            fullViewFactory: EmailFullViewFactory) extends EmailViewReader[EmailFullView] {
+  private val reader: GenericEmailViewReader[EmailFullView] = new GenericEmailViewReader[EmailFullView](messageIdManager, FULL_CONTENT, fullViewFactory)
 
-  override def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] =
+
+  override def read[T >: EmailFullView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] =
     reader.read(ids, request, mailboxSession)
+}
+
+object EmailFastViewReader {
+  val logger: Logger = LoggerFactory.getLogger(classOf[EmailFastViewReader])
 }
 
 private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
                                             messageFastViewProjection: MessageFastViewProjection,
                                             zoneIdProvider: ZoneIdProvider,
-                                            fullViewFactory: EmailFullViewFactory) extends EmailViewReader {
-  private val fullReader: GenericEmailViewReader = new GenericEmailViewReader(messageIdManager, FULL_CONTENT, fullViewFactory)
+                                            fullViewFactory: EmailFullViewFactory) extends EmailViewReader[EmailView] {
+  private val fullReader: GenericEmailViewReader[EmailFullView] = new GenericEmailViewReader[EmailFullView](messageIdManager, FULL_CONTENT, fullViewFactory)
 
   private sealed trait FastViewResult
 
@@ -494,7 +500,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
 
   private case class FastViewUnavailable(id: MessageId) extends FastViewResult
 
-  override def read(ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] = {
+  override def read[T >: EmailView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
     SMono.fromPublisher(messageFastViewProjection.retrieve(ids.asJava))
       .map(_.asScala.toMap)
       .flatMapMany(fastViews => SFlux.fromIterable(ids)
@@ -505,7 +511,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
       .flatMapMany(results => toEmailViews(results, request, mailboxSession))
   }
 
-  private def toEmailViews(results: Seq[FastViewResult], request: EmailGetRequest, mailboxSession: MailboxSession) = {
+  private def toEmailViews[T >: EmailView](results: Seq[FastViewResult], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
     val availables: Seq[FastViewAvailable] = results.flatMap {
       case available: FastViewAvailable => Some(available)
       case _ => None
@@ -517,8 +523,20 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
 
     SFlux.merge(Seq(
       toFastViews(availables, request, mailboxSession),
-      fullReader.read(unavailables.map(_.id), request, mailboxSession)))
+      fullReader.read(unavailables.map(_.id), request, mailboxSession)
+        .doOnNext(storeOnCacheMisses)))
+  }
 
+  private def storeOnCacheMisses(fullView: EmailFullView) = {
+    SMono.fromPublisher(messageFastViewProjection.store(
+      fullView.metadata.id,
+      MessageFastViewPrecomputedProperties.builder()
+        .preview(fullView.bodyMetadata.preview)
+        .hasAttachment(fullView.bodyMetadata.hasAttachment.value)
+        .build()))
+      .doOnError(e => EmailFastViewReader.logger.error(s"Cannot store the projection to MessageFastViewProjection for ${fullView.metadata.id}", e))
+      .subscribeOn(Schedulers.elastic())
+      .subscribe()
   }
 
   private def toFastViews(fastViews: Seq[FastViewAvailable], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] ={
