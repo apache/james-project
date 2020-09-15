@@ -158,6 +158,25 @@ object HeaderMessageId {
 }
 
 
+object ParseOptions {
+  val allowedParseOption: Properties = Properties("asRaw", "asText", "asAddresses", "asGroupedAddresses", "asMessageIds", "asDate", "asURLs")
+
+  def validate(value: String): Boolean = {
+    from(value).isDefined
+  }
+
+  def from(value: String): Option[ParseOption] = {
+    allowedParseOption.value
+      .find(_.value.equals(value))
+      .map({parseOption => parseOption.value match {
+        case "asRaw" => AsRaw
+      }})
+  }
+}
+
+sealed trait ParseOption
+case object AsRaw extends ParseOption
+
 case class HeaderMessageId(value: String) extends AnyVal
 
 case class Subject(value: String) extends AnyVal
@@ -207,7 +226,7 @@ object EmailHeaders {
       .asScala
       .map(header => EmailHeader(
         EmailHeaderName(header.getName),
-        EmailHeaderValue(new String(header.getRaw.toByteArray, US_ASCII)
+        RawHeaderValue(new String(header.getRaw.toByteArray, US_ASCII)
           .substring(header.getName.length + 1))))
       .toList
 

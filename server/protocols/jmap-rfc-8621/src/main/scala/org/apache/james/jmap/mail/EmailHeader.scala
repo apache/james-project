@@ -24,14 +24,16 @@ import java.nio.charset.StandardCharsets.US_ASCII
 import org.apache.james.mime4j.stream.Field
 
 object EmailHeader {
-  def apply(field: Field): EmailHeader = EmailHeader(EmailHeaderName(field.getName), EmailHeaderValue(field.getBody))
+  def apply(field: Field): EmailHeader = EmailHeader(EmailHeaderName(field.getName), RawHeaderValue.from(field))
 }
 
-object EmailHeaderValue {
-  def from(field: Field): EmailHeaderValue = EmailHeaderValue(new String(field.getRaw.toByteArray, US_ASCII).substring(field.getName.length + 1))
+object RawHeaderValue extends EmailHeaderValue {
+  def from(field: Field): RawHeaderValue = RawHeaderValue(new String(field.getRaw.toByteArray, US_ASCII).substring(field.getName.length + 1))
 }
 
 case class EmailHeaderName(value: String) extends AnyVal
-case class EmailHeaderValue(value: String) extends AnyVal
+
+sealed trait EmailHeaderValue
+case class RawHeaderValue(value: String) extends EmailHeaderValue
 
 case class EmailHeader(name: EmailHeaderName, value: EmailHeaderValue)

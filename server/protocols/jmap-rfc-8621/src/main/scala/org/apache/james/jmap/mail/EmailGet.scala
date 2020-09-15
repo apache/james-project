@@ -29,6 +29,7 @@ import org.apache.james.jmap.mail.EmailHeaders.SPECIFIC_HEADER_PREFIX
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mime4j.dom.Message
+import org.apache.james.mime4j.stream.Field
 
 case class EmailIds(value: List[UnparsedEmailId])
 
@@ -48,9 +49,14 @@ object SpecificHeaderRequest {
     case property if property.startsWith(SPECIFIC_HEADER_PREFIX)  =>
       val headerName = property.substring(SPECIFIC_HEADER_PREFIX.length)
       if (headerName.contains(":")) {
-        Left(property)
+        val parseOption = headerName.substring(headerName.indexOf(":") + 1)
+        if (ParseOptions.validate(parseOption)) {
+          scala.Right(SpecificHeaderRequest(property, headerName.substring(0, headerName.indexOf(":")), ParseOptions.from(parseOption)))
+        } else {
+          Left(property)
+        }
       } else {
-        scala.Right(SpecificHeaderRequest(property, headerName))
+        scala.Right(SpecificHeaderRequest(property, headerName, None))
       }
     case _ => Left(property)
   }
@@ -74,8 +80,13 @@ case class EmailGetResponse(accountId: AccountId,
                             list: List[EmailView],
                             notFound: EmailNotFound)
 
-case class SpecificHeaderRequest(headerName: NonEmptyString, property: String) {
-  def retrieveHeader(message: Message): (String, Option[EmailHeaderValue]) = (headerName,
-    Option(message.getHeader.getField(property))
-    .map(field => EmailHeaderValue.from(field)))
+case class SpecificHeaderRequest(headerName: NonEmptyString, property: String, parseOption: Option[ParseOption]) {
+  def retrieveHeader(message: Message): (String, Option[EmailHeaderValue]) = {
+    val field: Option[Field] = Option(message.getHeader.getField(property))
+
+    parseOption.getOrElse(AsRaw) match {
+      case AsRaw => (headerName, field.map(RawHeaderValue.from))
+      case _ => (headerName, field.map(RawHeaderValue.from))
+    }
+  }
 }

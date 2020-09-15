@@ -38,8 +38,7 @@ import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract.createTestM
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ANDRE, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
-import org.apache.james.mailbox.model.MailboxId
-import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
+import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.message.MultipartBuilder
 import org.apache.james.mime4j.stream.RawField
@@ -3387,15 +3386,15 @@ trait EmailGetMethodContract {
          |                            "headers": [
          |                                {
          |                                    "name": "MIME-Version",
-         |                                    "value": "1.0"
+         |                                    "value": " 1.0"
          |                                },
          |                                {
          |                                    "name": "Subject",
-         |                                    "value": "test"
+         |                                    "value": " test"
          |                                },
          |                                {
          |                                    "name": "Content-Type",
-         |                                    "value": "text/plain; charset=UTF-8"
+         |                                    "value": " text/plain; charset=UTF-8"
          |                                }
          |                            ],
          |                            "size": 8,
@@ -3450,7 +3449,7 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    val contentType = "multipart/mixed; boundary=\\\"------------64D8D789FC30153D6ED18258\\\""
+    val contentType = " multipart/mixed;\\r\\n boundary=\\\"------------64D8D789FC30153D6ED18258\\\""
     assertThatJson(response).isEqualTo(
       s"""{
          |    "sessionState": "75128aab4b1b",
@@ -3468,35 +3467,35 @@ trait EmailGetMethodContract {
          |                            "headers": [
          |                                {
          |                                    "name": "Return-Path",
-         |                                    "value": "<from@linagora.com>"
+         |                                    "value": " <from@linagora.com>"
          |                                },
          |                                {
          |                                    "name": "To",
-         |                                    "value": "to@linagora.com"
+         |                                    "value": " to@linagora.com"
          |                                },
          |                                {
          |                                    "name": "From",
-         |                                    "value": "Lina <from@linagora.com>"
+         |                                    "value": " Lina <from@linagora.com>"
          |                                },
          |                                {
          |                                    "name": "Subject",
-         |                                    "value": "MultiAttachment"
+         |                                    "value": " MultiAttachment"
          |                                },
          |                                {
          |                                    "name": "Message-ID",
-         |                                    "value": "<13d4375e-a4a9-f613-06a1-7e8cb1e0ea93@linagora.com>"
+         |                                    "value": " <13d4375e-a4a9-f613-06a1-7e8cb1e0ea93@linagora.com>"
          |                                },
          |                                {
          |                                    "name": "Date",
-         |                                    "value": "Mon, 27 Feb 2017 11:24:48 +0700"
+         |                                    "value": " Mon, 27 Feb 2017 11:24:48 +0700"
          |                                },
          |                                {
          |                                    "name": "User-Agent",
-         |                                    "value": "Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Thunderbird/45.2.0"
+         |                                    "value": " Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101\\r\\n Thunderbird/45.2.0"
          |                                },
          |                                {
          |                                    "name": "MIME-Version",
-         |                                    "value": "1.0"
+         |                                    "value": " 1.0"
          |                                },
          |                                {
          |                                    "name": "Content-Type",
@@ -3513,11 +3512,11 @@ trait EmailGetMethodContract {
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",
-         |                                            "value": "text/plain; charset=utf-8; format=flowed"
+         |                                            "value": " text/plain; charset=utf-8; format=flowed"
          |                                        },
          |                                        {
          |                                            "name": "Content-Transfer-Encoding",
-         |                                            "value": "7bit"
+         |                                            "value": " 7bit"
          |                                        }
          |                                    ],
          |                                    "size": 8,
@@ -3530,15 +3529,15 @@ trait EmailGetMethodContract {
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",
-         |                                            "value": "text/plain; charset=UTF-8; name=\\\"text1\\\""
+         |                                            "value": " text/plain; charset=UTF-8;\\r\\n name=\\\"text1\\\""
          |                                        },
          |                                        {
          |                                            "name": "Content-Transfer-Encoding",
-         |                                            "value": "base64"
+         |                                            "value": " base64"
          |                                        },
          |                                        {
          |                                            "name": "Content-Disposition",
-         |                                            "value": "attachment; filename=\\\"text1\\\""
+         |                                            "value": " attachment;\\r\\n filename=\\\"text1\\\""
          |                                        }
          |                                    ],
          |                                    "size": 271,
@@ -3553,15 +3552,15 @@ trait EmailGetMethodContract {
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",
-         |                                            "value": "application/vnd.ms-publisher; name=\\\"text2\\\""
+         |                                            "value": " application/vnd.ms-publisher;\\r\\n name=\\\"text2\\\""
          |                                        },
          |                                        {
          |                                            "name": "Content-Transfer-Encoding",
-         |                                            "value": "base64"
+         |                                            "value": " base64"
          |                                        },
          |                                        {
          |                                            "name": "Content-Disposition",
-         |                                            "value": "attachment; filename=\\\"text2\\\""
+         |                                            "value": " attachment;\\r\\n filename=\\\"text2\\\""
          |                                        }
          |                                    ],
          |                                    "size": 398,
@@ -3576,15 +3575,15 @@ trait EmailGetMethodContract {
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",
-         |                                            "value": "text/plain; charset=UTF-8; name=\\\"text3\\\""
+         |                                            "value": " text/plain; charset=UTF-8;\\r\\n name=\\\"text3\\\""
          |                                        },
          |                                        {
          |                                            "name": "Content-Transfer-Encoding",
-         |                                            "value": "base64"
+         |                                            "value": " base64"
          |                                        },
          |                                        {
          |                                            "name": "Content-Disposition",
-         |                                            "value": "attachment; filename=\\\"text3\\\""
+         |                                            "value": " attachment;\\r\\n filename=\\\"text3\\\""
          |                                        }
          |                                    ],
          |                                    "size": 412,
@@ -3658,35 +3657,35 @@ trait EmailGetMethodContract {
          |                            "headers": [
          |                                {
          |                                    "name": "Date",
-         |                                    "value": "Tue, 03 Jan 2017 16:05:01 +0100"
+         |                                    "value": " Tue, 03 Jan 2017 16:05:01 +0100"
          |                                },
          |                                {
          |                                    "name": "From",
-         |                                    "value": "sender <sender@james.org>"
+         |                                    "value": " sender <sender@james.org>"
          |                                },
          |                                {
          |                                    "name": "MIME-Version",
-         |                                    "value": "1.0"
+         |                                    "value": " 1.0"
          |                                },
          |                                {
          |                                    "name": "To",
-         |                                    "value": "David DOLCIMASCOLO <david.ddo@linagora.com>"
+         |                                    "value": " David DOLCIMASCOLO <david.ddo@linagora.com>"
          |                                },
          |                                {
          |                                    "name": "Subject",
-         |                                    "value": "Re: [Internet] Rendez-vous"
+         |                                    "value": " Re: [Internet] Rendez-vous"
          |                                },
          |                                {
          |                                    "name": "References",
-         |                                    "value": "<9b6a4271-69fb-217a-5c14-c68c68375d96@linagora.com>"
+         |                                    "value": " <9b6a4271-69fb-217a-5c14-c68c68375d96@linagora.com>"
          |                                },
          |                                {
          |                                    "name": "In-Reply-To",
-         |                                    "value": "<d5c6f1d6-96e7-8172-9fe6-41fa6c9bd6ec@linagora.com>"
+         |                                    "value": " <d5c6f1d6-96e7-8172-9fe6-41fa6c9bd6ec@linagora.com>"
          |                                },
          |                                {
          |                                    "name": "X-Gie-Attachments",
-         |                                    "value": "none"
+         |                                    "value": " none"
          |                                },
          |                                {
          |                                    "name": "Cc",
@@ -3694,7 +3693,7 @@ trait EmailGetMethodContract {
          |                                },
          |                                {
          |                                    "name": "Content-type",
-         |                                    "value": "multipart/mixed; boundary=\\"----------=_1483455916-7086-3\\""
+         |                                    "value": " multipart/mixed; boundary=\\"----------=_1483455916-7086-3\\""
          |                                }
          |                            ],
          |                            "size": 891,
@@ -3706,7 +3705,7 @@ trait EmailGetMethodContract {
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-Type",
-         |                                            "value": "multipart/alternative; boundary=\\\"------------060506070600060108040700\\\""
+         |                                            "value": " multipart/alternative; boundary=\\\"------------060506070600060108040700\\\""
          |                                        }
          |                                    ],
          |                                    "size": 398,
@@ -3719,11 +3718,11 @@ trait EmailGetMethodContract {
          |                                            "headers": [
          |                                                {
          |                                                    "name": "Content-Type",
-         |                                                    "value": "text/plain; charset=ISO-8859-1; format=flowed"
+         |                                                    "value": " text/plain; charset=ISO-8859-1; format=flowed"
          |                                                },
          |                                                {
          |                                                    "name": "Content-Transfer-Encoding",
-         |                                                    "value": "8bit"
+         |                                                    "value": " 8bit"
          |                                                }
          |                                            ],
          |                                            "size": 20,
@@ -3736,11 +3735,11 @@ trait EmailGetMethodContract {
          |                                            "headers": [
          |                                                {
          |                                                    "name": "Content-Type",
-         |                                                    "value": "text/html; charset=ISO-8859-1"
+         |                                                    "value": " text/html; charset=ISO-8859-1"
          |                                                },
          |                                                {
          |                                                    "name": "Content-Transfer-Encoding",
-         |                                                    "value": "7bit"
+         |                                                    "value": " 7bit"
          |                                                }
          |                                            ],
          |                                            "size": 30,
@@ -3755,19 +3754,19 @@ trait EmailGetMethodContract {
          |                                    "headers": [
          |                                        {
          |                                            "name": "Content-ID",
-         |                                            "value": "<14672787885774e5c4d4cee471352039@linagora.com>"
+         |                                            "value": " <14672787885774e5c4d4cee471352039@linagora.com>"
          |                                        },
          |                                        {
          |                                            "name": "Content-Type",
-         |                                            "value": "text/plain; charset=\\\"iso-8859-1\\\"; name=\\\"avertissement.txt\\\""
+         |                                            "value": " text/plain; charset=\\\"iso-8859-1\\\"; name=\\\"avertissement.txt\\\""
          |                                        },
          |                                        {
          |                                            "name": "Content-Disposition",
-         |                                            "value": "inline; filename=\\\"avertissement.txt\\\""
+         |                                            "value": " inline; filename=\\\"avertissement.txt\\\""
          |                                        },
          |                                        {
          |                                            "name": "Content-Transfer-Encoding",
-         |                                            "value": "binary"
+         |                                            "value": " binary"
          |                                        }
          |                                    ],
          |                                    "size": 19,
@@ -5606,5 +5605,128 @@ trait EmailGetMethodContract {
            |    "keywords": {}
            |  }
       """.stripMargin)
+  }
+
+  @Test
+  def emailGetShouldReturnSpecificHeadersAsRaw(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setSubject("World domination \r\n" +
+        " and this is also part of the header")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |     "Email/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["${messageId.serialize}"],
+               |       "properties": ["header:Subject:asRaw"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |    "id": "${messageId.serialize}",
+         |    "header:Subject:asRaw": " =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?="
+         |}""".stripMargin)
+  }
+
+  @Test
+  def asRawShouldSupportSeveralHeaders(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .addField(new RawField("To",
+        "\"user1\" user1@domain.tld"))
+      .addField(new RawField("Cc",
+        "\"user2\" user2@domain.tld"))
+      .addField(new RawField("Bcc",
+        "\"user3\" user3@domain.tld"))
+      .addField(new RawField("ReplyTo",
+        "\"user1\" user1@domain.tld"))
+      .setSubject("World domination \r\n" +
+        " and this is also part of the header")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |     "Email/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["${messageId.serialize}"],
+               |       "properties": ["header:Subject:asRaw", "header:Sender:asRaw", "header:From:asRaw", "header:To:asRaw", "header:Cc:asRaw", "header:Bcc:asRaw",
+               |       "header:ReplyTo:asRaw", "header:InReplyTo:asRaw", "header:References:asRaw", "header:MessageId:asRaw", "header:sentAt:asRaw"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "1",
+           |    "header:Bcc:asRaw": " \\"user3\\" user3@domain.tld",
+           |    "header:MessageId:asRaw": null,
+           |    "header:ReplyTo:asRaw": " \\"user1\\" user1@domain.tld",
+           |    "header:From:asRaw": " andre@domain.tld",
+           |    "header:Cc:asRaw": " \\"user2\\" user2@domain.tld",
+           |    "header:Subject:asRaw": " =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?=",
+           |    "header:InReplyTo:asRaw": null,
+           |    "header:sentAt:asRaw": null,
+           |    "header:To:asRaw": " \\"user1\\" user1@domain.tld",
+           |    "header:References:asRaw": null,
+           |    "header:Sender:asRaw": " andre@domain.tld"
+           |}""".stripMargin)
   }
 }

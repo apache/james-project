@@ -20,8 +20,7 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.api.model.Preview
-import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.mail.{Address, BlobId, Charset, Disposition, EmailAddress, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, HasAttachment, HeaderMessageId, IsEncodingProblem, IsTruncated, Language, Location, MailboxIds, Name, PartId, Subject, ThreadId, Type}
+import org.apache.james.jmap.mail.{Address, BlobId, Charset, Disposition, EmailAddress, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, HasAttachment, HeaderMessageId, IsEncodingProblem, IsTruncated, Language, Location, MailboxIds, Name, PartId, RawHeaderValue, Subject, ThreadId, Type}
 import org.apache.james.jmap.model._
 import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
@@ -55,7 +54,10 @@ object EmailGetSerializer {
   private implicit val previewWrites: Writes[Preview] = preview => JsString(preview.getValue)
   private implicit val hasAttachmentWrites: Writes[HasAttachment] = Json.valueWrites[HasAttachment]
   private implicit val headerNameWrites: Writes[EmailHeaderName] = Json.valueWrites[EmailHeaderName]
-  private implicit val headerValueWrites: Writes[EmailHeaderValue] = Json.valueWrites[EmailHeaderValue]
+  private implicit val rawHeaderWrites: Writes[RawHeaderValue] = Json.valueWrites[RawHeaderValue]
+  private implicit val emailHeaderWrites: Writes[EmailHeaderValue] = {
+    case headerValue: RawHeaderValue => Json.toJson[RawHeaderValue](headerValue)
+  }
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
   private implicit val bodyValueWrites: Writes[EmailBodyValue] = Json.writes[EmailBodyValue]
   private implicit val emailIdsReads: Reads[EmailIds] = Json.valueReads[EmailIds]
