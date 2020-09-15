@@ -34,7 +34,6 @@ import org.apache.http.HttpStatus.SC_NOT_FOUND
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
-import org.apache.james.jmap.json.Serializer
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, PartId}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
@@ -61,8 +60,18 @@ object DownloadRoutes {
   val BUFFER_SIZE: Int = 16 * 1024
 }
 
+sealed trait BlobResolutionResult {
+  def asOption: Option[SMono[Blob]]
+}
+case class NonApplicable() extends BlobResolutionResult {
+  override def asOption: Option[SMono[Blob]] = None
+}
+case class Applicable(blob: SMono[Blob]) extends BlobResolutionResult {
+  override def asOption: Option[SMono[Blob]] = Some(blob)
+}
+
 trait BlobResolver {
-  def resolve(blobId: BlobId, mailboxSession: MailboxSession): Option[SMono[Blob]]
+  def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult
 }
 
 trait Blob {
@@ -100,10 +109,10 @@ case class EmailBodyPartBlob(blobId: BlobId, part: EmailBodyPart) extends Blob {
 
 class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
                                     val messageIdManager: MessageIdManager) extends BlobResolver {
-  override def resolve(blobId: BlobId, mailboxSession: MailboxSession): Option[SMono[Blob]] = {
+  override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult = {
     Try(messageIdFactory.fromString(blobId.value.value)) match {
-      case Failure(_) => None
-      case Success(messageId) => Some(SMono.fromPublisher(
+      case Failure(_) => NonApplicable()
+      case Success(messageId) => Applicable(SMono.fromPublisher(
         messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
         .map[Blob](MessageBlob(blobId, _))
         .switchIfEmpty(SMono.raiseError(BlobNotFoundException(blobId))))
@@ -125,11 +134,11 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
     }
   }
 
-  override def resolve(blobId: BlobId, mailboxSession: MailboxSession): Option[SMono[Blob]] = {
+  override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult = {
     asMessageAndPartId(blobId) match {
-      case Failure(_) => None
+      case Failure(_) => NonApplicable()
       case Success((messageId, partId)) =>
-        Some(SMono.fromPublisher(
+        Applicable(SMono.fromPublisher(
           messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
           .flatMap(message => SMono.fromTry(EmailBodyPart.of(messageId, message)))
           .flatMap(bodyStructure => SMono.fromTry(bodyStructure.flatten
@@ -146,20 +155,20 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
 class BlobResolvers @Inject()(val messageBlobResolver: MessageBlobResolver,
                     val messagePartBlobResolver: MessagePartBlobResolver) {
   def resolve(blobId: BlobId, mailboxSession: MailboxSession): SMono[Blob] =
-    messageBlobResolver.resolve(blobId, mailboxSession)
-      .orElse(messagePartBlobResolver.resolve(blobId, mailboxSession))
+    messageBlobResolver
+      .resolve(blobId, mailboxSession).asOption
+      .orElse(messagePartBlobResolver.resolve(blobId, mailboxSession).asOption)
       .getOrElse(SMono.raiseError(BlobNotFoundException(blobId)))
 }
 
 class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
-                     val serializer: Serializer,
-                     val blobResolvers: BlobResolvers) extends JMAPRoutes {
+                               val blobResolvers: BlobResolvers) extends JMAPRoutes {
 
-  val accountIdParam: String = "accountId"
-  val blobIdParam: String = "blobId"
-  val nameParam: String = "name"
-  val contentTypeParam: String = "contentType"
-  val downloadUri = s"/download/{$accountIdParam}/{$blobIdParam}"
+  private val accountIdParam: String = "accountId"
+  private val blobIdParam: String = "blobId"
+  private val nameParam: String = "name"
+  private val contentTypeParam: String = "contentType"
+  private val downloadUri = s"/download/{$accountIdParam}/{$blobIdParam}"
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
     JMAPRoute.builder
