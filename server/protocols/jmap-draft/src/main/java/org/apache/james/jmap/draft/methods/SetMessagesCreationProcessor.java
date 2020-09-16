@@ -74,6 +74,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+
 
 public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
@@ -335,7 +337,9 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private Optional<MessageManager> getMailboxWithRole(MailboxSession mailboxSession, Role role) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(role, mailboxSession.getUser()).findFirst();
+        return Flux.from(systemMailboxesProvider.getMailboxByRole(role, mailboxSession.getUser()))
+            .toStream()
+            .findFirst();
     }
 
     private SetError buildSetErrorFromValidationResult(List<ValidationResult> validationErrors) {

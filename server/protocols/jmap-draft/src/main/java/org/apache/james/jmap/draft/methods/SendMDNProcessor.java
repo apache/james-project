@@ -55,6 +55,8 @@ import org.apache.james.server.core.Envelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Flux;
+
 public class SendMDNProcessor implements SetMessagesProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SendMDNProcessor.class);
@@ -165,7 +167,8 @@ public class SendMDNProcessor implements SetMessagesProcessor {
     }
 
     private MessageManager getOutbox(MailboxSession mailboxSession) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession.getUser())
+        return Flux.from(systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession.getUser()))
+            .toStream()
             .findAny()
             .orElseThrow(() -> new IllegalStateException("User don't have an Outbox"));
     }

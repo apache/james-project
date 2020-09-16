@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import java.net.UnknownHostException;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import javax.mail.internet.AddressException;
 
@@ -82,6 +81,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Flux;
+
 public class SetMessagesUpdateProcessorTest {
 
 
@@ -104,13 +105,13 @@ public class SetMessagesUpdateProcessorTest {
         }
 
         @Override
-        public Stream<MessageManager> getMailboxByRole(Role aRole, Username username) {
+        public Flux<MessageManager> getMailboxByRole(Role aRole, Username username) {
             if (aRole.equals(Role.OUTBOX)) {
-                return outboxSupplier.get().stream();
+                return Flux.fromStream(outboxSupplier.get().stream());
             } else if (aRole.equals(Role.DRAFTS)) {
-                return draftsSupplier.get().stream();
+                return Flux.fromStream(draftsSupplier.get().stream());
             }
-            return Stream.empty();
+            return Flux.empty();
         }
     }
 

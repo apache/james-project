@@ -19,17 +19,20 @@
 
 package org.apache.james.mailbox;
 
-import java.util.stream.Stream;
-
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxRoleNotFoundException;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
 
 public interface SystemMailboxesProvider {
-    Stream<MessageManager> getMailboxByRole(Role aRole, Username username) throws MailboxException;
+    Publisher<MessageManager> getMailboxByRole(Role aRole, Username username) throws MailboxException;
 
     default MessageManager findMailbox(Role role, Username username) throws MailboxException {
-        return getMailboxByRole(role, username).findAny()
+        return Flux.from(getMailboxByRole(role, username))
+            .next()
+            .blockOptional()
             .orElseThrow(() -> new MailboxRoleNotFoundException(role));
     }
 }

@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.store;
 
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -29,7 +27,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -39,6 +36,9 @@ import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.annotations.VisibleForTesting;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
 
@@ -51,14 +51,14 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
     }
 
     @Override
-    public Stream<MessageManager> getMailboxByRole(Role aRole, Username username) throws MailboxException {
+    public Flux<MessageManager> getMailboxByRole(Role aRole, Username username) {
         MailboxSession session = mailboxManager.createSystemSession(username);
         MailboxPath mailboxPath = MailboxPath.forUser(username, aRole.getDefaultMailbox());
-        try {
-            return Stream.of(mailboxManager.getMailbox(mailboxPath, session));
-        } catch (MailboxNotFoundException e) {
-            return searchMessageManagerByMailboxRole(aRole, username);
-        }
+
+        return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxPath, session))
+            .flux()
+            .onErrorResume(MailboxNotFoundException.class, e -> searchMessageManagerByMailboxRole(aRole, username));
+
     }
 
     private boolean hasRole(Role aRole, MailboxPath mailBoxPath) {
@@ -67,14 +67,13 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
             .orElse(false);
     }
 
-    private Stream<MessageManager> searchMessageManagerByMailboxRole(Role aRole, Username username) throws MailboxException {
+    private Flux<MessageManager> searchMessageManagerByMailboxRole(Role aRole, Username username) {
         MailboxSession session = mailboxManager.createSystemSession(username);
         ThrowingFunction<MailboxPath, MessageManager> loadMailbox = path -> mailboxManager.getMailbox(path, session);
         MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
             .expression(new PrefixedWildcard(aRole.getDefaultMailbox()))
             .build();
         return mailboxManager.search(mailboxQuery, session)
-            .toStream()
             .map(MailboxMetaData::getPath)
             .filter(path -> hasRole(aRole, path))
             .map(Throwing.function(loadMailbox).sneakyThrow());

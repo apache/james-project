@@ -32,7 +32,6 @@ import static org.mockito.Mockito.when;
 import java.net.UnknownHostException;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.Domain;
@@ -93,6 +92,8 @@ import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import reactor.core.publisher.Flux;
 
 public class SetMessagesCreationProcessorTest {
     private static final Username USER = Username.of("user@example.com");
@@ -496,13 +497,13 @@ public class SetMessagesCreationProcessorTest {
         }
 
         @Override
-        public Stream<MessageManager> getMailboxByRole(Role aRole, Username username) {
+        public Flux<MessageManager> getMailboxByRole(Role aRole, Username username) {
             if (aRole.equals(Role.OUTBOX)) {
-                return outboxSupplier.get().stream();
+                return Flux.fromStream(outboxSupplier.get().stream());
             } else if (aRole.equals(Role.DRAFTS)) {
-                return draftsSupplier.get().stream();
+                return Flux.fromStream(draftsSupplier.get().stream());
             }
-            return Stream.empty();
+            return Flux.empty();
         }
     }
 }
