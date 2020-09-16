@@ -20,6 +20,8 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.time.ZonedDateTime
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 import com.google.common.hash.Hashing
@@ -39,7 +41,6 @@ import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
-import play.api.libs.json.Json
 
 trait EmailQueryMethodContract {
 
@@ -73,10 +74,12 @@ trait EmailQueryMethodContract {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder().withInternalDate(requestDate).build(message))
       .getMessageId
-    Thread.sleep(1000) // To enforce receivedAt ordering
+
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
@@ -198,18 +201,22 @@ trait EmailQueryMethodContract {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
-    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+    val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
       .getMessageId
-    Thread.sleep(1000) // To enforce receivedAt ordering
+    val requestDateMessage2 = Date.from(ZonedDateTime.now().minusDays(1).plusHours(1).toInstant)
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
       .getMessageId
-    Thread.sleep(1000) // To enforce receivedAt ordering
+    val requestDateMessage3 = Date.from(ZonedDateTime.now().minusDays(1).plusHours(2).toInstant)
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
       .getMessageId
-    Thread.sleep(1000) // To enforce receivedAt ordering
+
     val request =
       s"""{
          |  "using": [
@@ -480,10 +487,11 @@ trait EmailQueryMethodContract {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
       .getMessageId
-    Thread.sleep(1000)
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
