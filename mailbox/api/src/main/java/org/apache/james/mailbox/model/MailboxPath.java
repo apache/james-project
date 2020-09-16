@@ -62,7 +62,7 @@ public class MailboxPath {
         return new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxName);
     }
 
-    private static final String INVALID_CHARS = "%*&#";
+    private static final String INVALID_CHARS = "%*#";
     private static final CharMatcher INVALID_CHARS_MATCHER = CharMatcher.anyOf(INVALID_CHARS);
     // This is the size that all mailbox backend should support
     public  static final int MAX_MAILBOX_NAME_LENGTH = 200;

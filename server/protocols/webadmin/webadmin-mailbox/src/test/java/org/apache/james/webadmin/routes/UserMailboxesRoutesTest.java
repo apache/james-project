@@ -321,7 +321,7 @@ class UserMailboxesRoutesTest {
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox")
-                .containsEntry("details", "#private:username:myMailboxName# contains one of the forbidden characters %*&#");
+                .containsEntry("details", "#private:username:myMailboxName# contains one of the forbidden characters %*#");
         }
 
         @Test
@@ -361,7 +361,7 @@ class UserMailboxesRoutesTest {
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to test existence of an invalid mailbox")
-                .containsEntry("details", "#private:username:myMailboxName* contains one of the forbidden characters %*&#");
+                .containsEntry("details", "#private:username:myMailboxName* contains one of the forbidden characters %*#");
         }
 
         @Test
@@ -416,7 +416,7 @@ class UserMailboxesRoutesTest {
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to test existence of an invalid mailbox")
-                .containsEntry("details", "#private:username:myMailboxName% contains one of the forbidden characters %*&#");
+                .containsEntry("details", "#private:username:myMailboxName% contains one of the forbidden characters %*#");
         }
 
         @Test
@@ -471,7 +471,7 @@ class UserMailboxesRoutesTest {
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to test existence of an invalid mailbox")
-                .containsEntry("details", "#private:username:myMailboxName# contains one of the forbidden characters %*&#");
+                .containsEntry("details", "#private:username:myMailboxName# contains one of the forbidden characters %*#");
         }
 
         @Test
@@ -511,58 +511,28 @@ class UserMailboxesRoutesTest {
         }
 
         @Test
-        void getShouldReturnUserErrorWithInvalidAndMailboxName() throws Exception {
-            Map<String, Object> errors = when()
+        void getShouldReturnNotFoundWithAndMailboxName() throws Exception {
+            when()
                 .get(MAILBOX_NAME + "&")
             .then()
-                .statusCode(BAD_REQUEST_400)
-                .contentType(JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getMap(".");
-
-            assertThat(errors)
-                .containsEntry("statusCode", BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Attempt to test existence of an invalid mailbox")
-                .containsEntry("details", "#private:username:myMailboxName& contains one of the forbidden characters %*&#");
+                .statusCode(NOT_FOUND_404);
         }
 
         @Test
-        void putShouldReturnUserErrorWithInvalidAndMailboxName() throws Exception {
-            Map<String, Object> errors = when()
+        void putShouldReturnSuccessWithAndMailboxName() throws Exception {
+            when()
                 .put(MAILBOX_NAME + "&")
             .then()
-                .statusCode(BAD_REQUEST_400)
-                .contentType(JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getMap(".");
-
-            assertThat(errors)
-                .containsEntry("statusCode", BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Attempt to create an invalid mailbox");
+                .statusCode(NO_CONTENT_204);
         }
 
         @Test
-        void deleteShouldReturnUserErrorWithInvalidAndMailboxName() throws Exception {
-            Map<String, Object> errors = when()
+        void deleteShouldReturnSuccessWithAndMailboxName() throws Exception {
+            when()
                 .put(MAILBOX_NAME + "&")
             .then()
-                .statusCode(BAD_REQUEST_400)
-                .contentType(JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getMap(".");
-
-            assertThat(errors)
-                .containsEntry("statusCode", BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Attempt to create an invalid mailbox");
+                .statusCode(NO_CONTENT_204)
+                .contentType(JSON);
         }
 
         @Test

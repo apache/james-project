@@ -250,13 +250,6 @@ class MailboxPathTest {
     }
 
     @Test
-    void assertAcceptableShouldThrowOnAnd() {
-        assertThatThrownBy(() -> MailboxPath.forUser(USER, "a&b")
-                .assertAcceptable('.'))
-            .isInstanceOf(MailboxNameException.class);
-    }
-
-    @Test
     void assertAcceptableShouldThrowOnSharp() {
         assertThatThrownBy(() -> MailboxPath.forUser(USER, "a#b")
                 .assertAcceptable('.'))

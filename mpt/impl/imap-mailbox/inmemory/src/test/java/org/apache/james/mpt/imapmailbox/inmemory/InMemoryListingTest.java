@@ -19,10 +19,14 @@
 
 package org.apache.james.mpt.imapmailbox.inmemory;
 
+import java.util.Locale;
+
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Listing;
 import org.junit.Before;
+import org.junit.Test;
 
 public class InMemoryListingTest extends Listing {
 
@@ -40,5 +44,16 @@ public class InMemoryListingTest extends Listing {
     protected ImapHostSystem createImapHostSystem() {
         return system;
     }
-    
+
+
+    @Test
+    public void listShouldUTF7EscapeSpecialChar() throws Exception {
+        system.createMailbox(MailboxPath.forUser(USER, "projects & abc"));
+        system.createMailbox(MailboxPath.forUser(USER, "évaluations"));
+
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ListSpecialChar");
+    }
+
 }

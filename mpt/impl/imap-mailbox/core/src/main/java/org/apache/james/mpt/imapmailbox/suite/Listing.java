@@ -32,8 +32,8 @@ public abstract class Listing implements ImapTestConstants {
 
     protected abstract ImapHostSystem createImapHostSystem();
     
-    private ImapHostSystem system;
-    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+    protected ImapHostSystem system;
+    protected SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
