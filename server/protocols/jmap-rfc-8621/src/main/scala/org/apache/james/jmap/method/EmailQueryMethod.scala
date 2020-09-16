@@ -31,6 +31,7 @@ import org.apache.james.jmap.model._
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.jmap.utils.search.MailboxFilter
+import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.mailbox.model.SearchQuery.{Conjunction, ConjunctionCriterion, Criterion, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
 import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
@@ -73,24 +74,11 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   }
 
   private def searchQueryFromRequest(request: EmailQueryRequest): MultimailboxesSearchQuery = {
-    val query = queryWithCriterions(request)
+    val query = QueryFilter.buildQuery(request)
     val defaultSort = new SearchQuery.Sort(SortClause.Arrival, SearchQuery.Sort.Order.REVERSE)
     val querySorted = query.sorts(defaultSort)
 
     MailboxFilter.buildQuery(request, querySorted.build())
-  }
-
-  private def queryWithCriterions(request: EmailQueryRequest): SearchQuery.Builder = {
-    request.filter.flatMap(_.before) match {
-      case Some(before) => {
-        val strictlyBefore = new InternalDateCriterion(new DateOperator(DateComparator.BEFORE, Date.from(before.asUTC.toInstant), DateResolution.Second))
-        val sameDate = new InternalDateCriterion(new DateOperator(DateComparator.ON, Date.from(before.asUTC.toInstant), DateResolution.Second))
-        new SearchQuery.Builder()
-          .andCriteria(new ConjunctionCriterion(Conjunction.OR, List[Criterion](strictlyBefore, sameDate).asJava))
-      }
-      case None => new SearchQuery.Builder()
-    }
-
   }
 
   private def asEmailQueryRequest(arguments: Arguments): SMono[EmailQueryRequest] =

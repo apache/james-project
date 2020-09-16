@@ -25,7 +25,8 @@ import org.apache.james.mailbox.model.{MailboxId, MessageId}
 
 case class FilterCondition(inMailbox: Option[MailboxId],
                            inMailboxOtherThan: Option[Seq[MailboxId]],
-                           before: Option[UTCDate])
+                           before: Option[UTCDate],
+                           after: Option[UTCDate])
 
 case class EmailQueryRequest(accountId: AccountId, filter: Option[FilterCondition])
 

@@ -749,6 +749,115 @@ trait EmailQueryMethodContract {
     }
   }
 
+  @Test
+  def shouldListMailsReceivedAfterADate(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val receivedDateMessage1 = ZonedDateTime.now().minusDays(1)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(Date.from(receivedDateMessage1.toInstant)).build(message))
+      .getMessageId
+
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val receivedDateMessage2 = ZonedDateTime.now().minusDays(1).plusHours(2)
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder().withInternalDate(Date.from(receivedDateMessage2.toInstant)).build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "after": "${UTCDate(receivedDateMessage2.minusHours(1)).asUTC.format(UTC_DATE_FORMAT)}"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId2.serialize()}"]""")
+    }
+  }
+
+  @Test
+  def listMailsReceivedAfterADateShouldBeExclusive(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val receivedDateMessage1 = ZonedDateTime.now().minusDays(1)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(Date.from(receivedDateMessage1.toInstant)).build(message))
+      .getMessageId
+
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "after": "${UTCDate(receivedDateMessage1).asUTC.format(UTC_DATE_FORMAT)}"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId2.serialize()}"]""")
+    }
+  }
+
   private def generateQueryState(messages: MessageId*): String = {
     Hashing.murmur3_32()
       .hashUnencodedChars(messages.toList.map(_.serialize()).mkString(" "))
