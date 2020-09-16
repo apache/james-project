@@ -78,7 +78,7 @@ Then we need to build james container :
 To run this container :
 
     $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --link cassandra:cassandra --link rabbitmq:rabbitmq
-   --link elasticsearch:elasticsearch --link tika:tika --link s3:s3 --name james_run -t james_run
+   --link elasticsearch:elasticsearch --link tika:tika --link s3:s3.docker.test --name james_run -t james_run
 
 Where :
 
