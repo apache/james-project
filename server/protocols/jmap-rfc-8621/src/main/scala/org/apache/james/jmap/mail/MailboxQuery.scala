@@ -19,19 +19,17 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.jmap.model.{AccountId, CanCalculateChange, Limit, Position, QueryState, UTCDate}
-import org.apache.james.mailbox.model.{MailboxId, MessageId}
+import org.apache.james.jmap.model.{AccountId, CanCalculateChange, Limit, Position, QueryState}
+import org.apache.james.mailbox.Role
+import org.apache.james.mailbox.model.MailboxId
 
-case class FilterCondition(inMailbox: Option[MailboxId],
-                           inMailboxOtherThan: Option[Seq[MailboxId]],
-                           before: Option[UTCDate],
-                           after: Option[UTCDate])
+case class MailboxQueryRequest(accountId: AccountId, filter: MailboxFilter)
 
-case class EmailQueryRequest(accountId: AccountId, filter: Option[FilterCondition])
+case class MailboxFilter(role: Role)
 
-case class EmailQueryResponse(accountId: AccountId,
+case class MailboxQueryResponse(accountId: AccountId,
                               queryState: QueryState,
                               canCalculateChanges: CanCalculateChange,
-                              ids: Seq[MessageId],
+                              ids: Seq[MailboxId],
                               position: Position,
                               limit: Option[Limit])

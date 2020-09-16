@@ -17,21 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.rfc8621.memory;
 
-import org.apache.james.jmap.model.{AccountId, CanCalculateChange, Limit, Position, QueryState, UTCDate}
-import org.apache.james.mailbox.model.{MailboxId, MessageId}
+import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
-case class FilterCondition(inMailbox: Option[MailboxId],
-                           inMailboxOtherThan: Option[Seq[MailboxId]],
-                           before: Option[UTCDate],
-                           after: Option[UTCDate])
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.rfc8621.contract.MailboxQueryMethodContract;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-case class EmailQueryRequest(accountId: AccountId, filter: Option[FilterCondition])
-
-case class EmailQueryResponse(accountId: AccountId,
-                              queryState: QueryState,
-                              canCalculateChanges: CanCalculateChange,
-                              ids: Seq[MessageId],
-                              position: Position,
-                              limit: Option[Limit])
+public class MemoryMailboxQueryMethodTest implements MailboxQueryMethodContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule()))
+        .build();
+}

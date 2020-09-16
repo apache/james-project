@@ -19,35 +19,36 @@
 
 package org.apache.james.jmap.json
 
-import javax.inject.Inject
-import org.apache.james.jmap.mail.{EmailQueryRequest, EmailQueryResponse, FilterCondition}
+import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryRequest, MailboxQueryResponse}
 import org.apache.james.jmap.model._
-import org.apache.james.mailbox.model.{MailboxId, MessageId}
+import org.apache.james.mailbox.Role
+import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json._
 
+import scala.jdk.OptionConverters._
 import scala.language.implicitConversions
-import scala.util.Try
 
-class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
+object MailboxQuerySerializer {
   private implicit val accountIdWrites: Format[AccountId] = Json.valueFormat[AccountId]
+  private implicit val canCalculateChangeWrites: Writes[CanCalculateChange] = Json.valueWrites[CanCalculateChange]
 
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
-  private implicit val mailboxIdReads: Reads[MailboxId] = {
-    case JsString(serializedMailboxId) => Try(JsSuccess(mailboxIdFactory.fromString(serializedMailboxId))).getOrElse(JsError())
-    case _ => JsError()
-  }
 
-  private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
-  private implicit val emailQueryRequestReads: Reads[EmailQueryRequest] = Json.reads[EmailQueryRequest]
-  private implicit val canCalculateChangeWrites: Writes[CanCalculateChange] = Json.valueWrites[CanCalculateChange]
+
+  private implicit val roleReads: Reads[Role] = {
+    case JsString(value) => Role.from(value).toScala.map(JsSuccess(_))
+      .getOrElse(JsError(s"$value is not a valid role"))
+    case _ => JsError("Expecting a JsString to be representing a role")
+  }
+  private implicit val filterReads: Reads[MailboxFilter] = Json.reads[MailboxFilter]
+  private implicit val emailQueryRequestReads: Reads[MailboxQueryRequest] = Json.reads[MailboxQueryRequest]
   private implicit val queryStateWrites: Writes[QueryState] = Json.valueWrites[QueryState]
   private implicit val positionFormat: Format[Position] = Json.valueFormat[Position]
   private implicit val limitFormat: Format[Limit] = Json.valueFormat[Limit]
-  private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
 
-  private implicit def emailQueryResponseWrites: OWrites[EmailQueryResponse] = Json.writes[EmailQueryResponse]
+  private implicit def mailboxQueryResponseWrites: OWrites[MailboxQueryResponse] = Json.writes[MailboxQueryResponse]
 
-  def serialize(emailQueryResponse: EmailQueryResponse): JsObject = Json.toJsObject(emailQueryResponse)
+  def serialize(mailboxQueryResponse: MailboxQueryResponse): JsObject = Json.toJsObject(mailboxQueryResponse)
 
-  def deserializeEmailQueryRequest(input: JsValue): JsResult[EmailQueryRequest] = Json.fromJson[EmailQueryRequest](input)
+  def deserialize(input: JsValue): JsResult[MailboxQueryRequest] = Json.fromJson[MailboxQueryRequest](input)
 }

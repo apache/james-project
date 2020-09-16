@@ -17,21 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.model
 
-import org.apache.james.jmap.model.{AccountId, CanCalculateChange, Limit, Position, QueryState, UTCDate}
+import com.google.common.hash.Hashing
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 
-case class FilterCondition(inMailbox: Option[MailboxId],
-                           inMailboxOtherThan: Option[Seq[MailboxId]],
-                           before: Option[UTCDate],
-                           after: Option[UTCDate])
+case class Position(value: Int) extends AnyVal
+object Position{
+  val zero: Position = Position(0)
+}
+case class Limit(value: Long) extends AnyVal
+object Limit {
+  val default: Limit = Limit(256L)
+}
 
-case class EmailQueryRequest(accountId: AccountId, filter: Option[FilterCondition])
+case class QueryState(value: String) extends AnyVal
+object QueryState {
+  def forIds(ids: Seq[MessageId]): QueryState =
+    forStrings(ids.map(_.serialize()))
 
-case class EmailQueryResponse(accountId: AccountId,
-                              queryState: QueryState,
-                              canCalculateChanges: CanCalculateChange,
-                              ids: Seq[MessageId],
-                              position: Position,
-                              limit: Option[Limit])
+  def forMailboxIds(ids: Seq[MailboxId]): QueryState =
+    forStrings(ids.map(_.serialize()))
+
+  def forStrings(strings: Seq[String]): QueryState = QueryState(
+    Hashing.murmur3_32()
+      .hashUnencodedChars(strings.mkString(" "))
+      .toString)
+}
+
+case class CanCalculateChange(value: Boolean) extends AnyVal

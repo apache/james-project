@@ -18,72 +18,59 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
-import java.util.Date
-
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{EmailQueryRequest, EmailQueryResponse}
+import org.apache.james.jmap.json.{MailboxQuerySerializer, ResponseSerializer}
+import org.apache.james.jmap.mail.{MailboxQueryRequest, MailboxQueryResponse}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model._
 import org.apache.james.jmap.routes.ProcessingContext
-import org.apache.james.mailbox.exception.MailboxNotFoundException
-import org.apache.james.jmap.utils.search.MailboxFilter
-import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
-import org.apache.james.mailbox.model.SearchQuery.{Conjunction, ConjunctionCriterion, Criterion, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
-import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
-import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
-import org.apache.james.mailbox.{MailboxManager, MailboxSession}
+import org.apache.james.mailbox.{MailboxSession, SystemMailboxesProvider}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scheduler.Schedulers
 
-import scala.collection.JavaConverters.seqAsJavaListConverter
-
-class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
-                                  mailboxManager: MailboxManager,
-                                  metricFactory: MetricFactory) extends Method {
-  override val methodName = MethodName("Email/query")
+class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvider,
+                                   metricFactory: MetricFactory) extends Method {
+  override val methodName = MethodName("Mailbox/query")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] =
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asEmailQueryRequest(invocation.arguments)
+      asMailboxQueryRequest(invocation.arguments)
         .flatMap(processRequest(mailboxSession, invocation, _))
         .onErrorResume {
-          case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
-          case e: MailboxNotFoundException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
+          case e: IllegalArgumentException => SMono.just(
+            Invocation.error(
+              errorCode = ErrorCode.InvalidArguments,
+              description = e.getMessage,
+              methodCallId = invocation.methodCallId))
           case e: Throwable => SMono.raiseError(e)
         }
         .map(invocationResult => (invocationResult, processingContext)))
 
-  private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: EmailQueryRequest): SMono[Invocation] = {
-    val searchQuery = searchQueryFromRequest(request)
-    SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, Limit.default.value))
+  private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: MailboxQueryRequest): SMono[Invocation] = {
+    SFlux.fromPublisher(systemMailboxesProvider.getMailboxByRole(request.filter.role, mailboxSession.getUser))
+      .map(_.getId)
       .collectSeq()
-      .map(ids => EmailQueryResponse(accountId = request.accountId,
-        queryState = QueryState.forIds(ids),
+      .map(ids => MailboxQueryResponse(accountId = request.accountId,
+        queryState = QueryState.forMailboxIds(ids),
         canCalculateChanges = CanCalculateChange(false),
         ids = ids,
         position = Position.zero,
         limit = Some(Limit.default)))
-      .map(response => Invocation(methodName = methodName, arguments = Arguments(serializer.serialize(response)), methodCallId = invocation.methodCallId))
+      .map(response => Invocation(methodName = methodName, arguments = Arguments(MailboxQuerySerializer.serialize(response)), methodCallId = invocation.methodCallId))
+      .subscribeOn(Schedulers.elastic())
   }
 
-  private def searchQueryFromRequest(request: EmailQueryRequest): MultimailboxesSearchQuery = {
-    val query = QueryFilter.buildQuery(request)
-    val defaultSort = new SearchQuery.Sort(SortClause.Arrival, SearchQuery.Sort.Order.REVERSE)
-    val querySorted = query.sorts(defaultSort)
-
-    MailboxFilter.buildQuery(request, querySorted.build())
-  }
-
-  private def asEmailQueryRequest(arguments: Arguments): SMono[EmailQueryRequest] =
-    serializer.deserializeEmailQueryRequest(arguments.value) match {
+  private def asMailboxQueryRequest(arguments: Arguments): SMono[MailboxQueryRequest] =
+    MailboxQuerySerializer.deserialize(arguments.value) match {
       case JsSuccess(emailQueryRequest, _) => SMono.just(emailQueryRequest)
       case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
+
 }
