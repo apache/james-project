@@ -49,9 +49,10 @@ object SpecificHeaderRequest {
     case property if property.startsWith(SPECIFIC_HEADER_PREFIX)  =>
       val headerName = property.substring(SPECIFIC_HEADER_PREFIX.length)
       if (headerName.contains(":")) {
-        val parseOption = headerName.substring(headerName.indexOf(":") + 1)
+        val indexOfFirstColon = headerName.indexOf(":")
+        val parseOption = headerName.substring(indexOfFirstColon + 1)
         if (ParseOptions.validate(parseOption)) {
-          scala.Right(SpecificHeaderRequest(property, headerName.substring(0, headerName.indexOf(":")), ParseOptions.from(parseOption)))
+          scala.Right(SpecificHeaderRequest(property, headerName.substring(0, indexOfFirstColon), ParseOptions.from(parseOption)))
         } else {
           Left(property)
         }
@@ -84,9 +85,6 @@ case class SpecificHeaderRequest(headerName: NonEmptyString, property: String, p
   def retrieveHeader(message: Message): (String, Option[EmailHeaderValue]) = {
     val field: Option[Field] = Option(message.getHeader.getField(property))
 
-    parseOption.getOrElse(AsRaw) match {
-      case AsRaw => (headerName, field.map(RawHeaderValue.from))
-      case _ => (headerName, field.map(RawHeaderValue.from))
-    }
+    (headerName, field.flatMap(parseOption.getOrElse(AsRaw).extractHeaderValue(_)))
   }
 }

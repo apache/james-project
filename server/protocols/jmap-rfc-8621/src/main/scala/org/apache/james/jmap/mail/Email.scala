@@ -39,7 +39,7 @@ import org.apache.james.jmap.method.ZoneIdProvider
 import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.{Keywords, Properties, UTCDate}
 import org.apache.james.mailbox.model.FetchGroup.{FULL_CONTENT, HEADERS, MINIMAL}
-import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageId, MessageResult}
+import org.apache.james.mailbox.model.{FetchGroup, MessageResult}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.DecodeMonitor
 import org.apache.james.mime4j.dom.field.{AddressListField, DateTimeField, MailboxField, MailboxListField}
@@ -47,6 +47,8 @@ import org.apache.james.mime4j.dom.{Header, Message}
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.{Field, MimeConfig}
 import org.apache.james.mime4j.util.MimeUtil
+import org.apache.james.mailbox.model.{MailboxId, MessageId}
+import org.apache.james.mime4j.stream.Field
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
@@ -159,23 +161,29 @@ object HeaderMessageId {
 
 
 object ParseOptions {
-  val allowedParseOption: Properties = Properties("asRaw", "asText", "asAddresses", "asGroupedAddresses", "asMessageIds", "asDate", "asURLs")
+  val allowedParseOption: Set[String] = Set("asRaw", "asText", "asAddresses", "asGroupedAddresses", "asMessageIds", "asDate", "asURLs")
 
-  def validate(value: String): Boolean = {
-    from(value).isDefined
-  }
+  def validate(parseOption: String): Boolean = from(parseOption).isDefined
 
   def from(value: String): Option[ParseOption] = {
-    allowedParseOption.value
-      .find(_.value.equals(value))
-      .map({parseOption => parseOption.value match {
+    allowedParseOption
+      .find(_.equals(value))
+      .map({
         case "asRaw" => AsRaw
-      }})
+        case "asText" => AsText
+      })
   }
 }
 
-sealed trait ParseOption
-case object AsRaw extends ParseOption
+sealed trait ParseOption {
+  def extractHeaderValue(field: Field): Option[EmailHeaderValue]
+}
+case object AsRaw extends ParseOption {
+  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(RawHeaderValue.from(field))
+}
+case object AsText extends ParseOption {
+  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(TextHeaderValue.from(field))
+}
 
 case class HeaderMessageId(value: String) extends AnyVal
 

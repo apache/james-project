@@ -21,7 +21,9 @@ package org.apache.james.jmap.mail
 
 import java.nio.charset.StandardCharsets.US_ASCII
 
+import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.stream.Field
+import org.apache.james.mime4j.util.MimeUtil
 
 object EmailHeader {
   def apply(field: Field): EmailHeader = EmailHeader(EmailHeaderName(field.getName), RawHeaderValue.from(field))
@@ -31,9 +33,14 @@ object RawHeaderValue extends EmailHeaderValue {
   def from(field: Field): RawHeaderValue = RawHeaderValue(new String(field.getRaw.toByteArray, US_ASCII).substring(field.getName.length + 1))
 }
 
+object TextHeaderValue extends EmailHeaderValue {
+  def from(field: Field): TextHeaderValue = TextHeaderValue(MimeUtil.unfold(DecoderUtil.decodeEncodedWords(field.getBody, DecodeMonitor.SILENT)).stripLeading())
+}
+
 case class EmailHeaderName(value: String) extends AnyVal
 
 sealed trait EmailHeaderValue
 case class RawHeaderValue(value: String) extends EmailHeaderValue
+case class TextHeaderValue(value: String) extends EmailHeaderValue
 
 case class EmailHeader(name: EmailHeaderName, value: EmailHeaderValue)

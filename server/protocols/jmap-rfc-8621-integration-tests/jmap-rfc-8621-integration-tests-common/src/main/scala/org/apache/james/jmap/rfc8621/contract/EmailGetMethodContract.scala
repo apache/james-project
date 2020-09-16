@@ -5729,4 +5729,109 @@ trait EmailGetMethodContract {
            |    "header:Sender:asRaw": " andre@domain.tld"
            |}""".stripMargin)
   }
+
+  @Test
+  def emailGetShouldReturnSpecificHeadersAsText(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setSubject("   World domination\r\n" +
+        " and this is also part of the header\r\n")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |     "Email/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["${messageId.serialize}"],
+               |       "properties": ["header:Subject:asText"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "${messageId.serialize}",
+           |    "header:Subject:asText": "World domination and this is also part of the header"
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailGetShouldSupportDifferentSpecificHeadersTypeOnSameMessage(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setSubject("   World domination\r\n" +
+        " and this is also part of the header\r\n")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |     "Email/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["${messageId.serialize}"],
+               |       "properties": ["header:Subject:asText", "header:Subject:asRaw"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "${messageId.serialize}",
+           |    "header:Subject:asRaw": " =?US-ASCII?Q?___World_domination=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header=0D=0A?=",
+           |    "header:Subject:asText": "World domination and this is also part of the header"
+           |}""".stripMargin)
+  }
 }
