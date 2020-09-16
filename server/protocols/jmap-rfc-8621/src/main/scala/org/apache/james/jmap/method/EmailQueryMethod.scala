@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
+import java.util.Date
+
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
@@ -27,8 +29,9 @@ import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CA
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model._
 import org.apache.james.jmap.routes.ProcessingContext
-import org.apache.james.mailbox.exception.{MailboxNotFoundException}
+import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.jmap.utils.search.MailboxFilter
+import org.apache.james.mailbox.model.SearchQuery.{Conjunction, ConjunctionCriterion, Criterion, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
 import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
@@ -36,6 +39,8 @@ import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
+
+import scala.collection.JavaConverters.seqAsJavaListConverter
 
 class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   mailboxManager: MailboxManager,
@@ -68,11 +73,24 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   }
 
   private def searchQueryFromRequest(request: EmailQueryRequest): MultimailboxesSearchQuery = {
-    val query = new SearchQuery.Builder()
+    val query = queryWithCriterions(request)
     val defaultSort = new SearchQuery.Sort(SortClause.Arrival, SearchQuery.Sort.Order.REVERSE)
     val querySorted = query.sorts(defaultSort)
 
     MailboxFilter.buildQuery(request, querySorted.build())
+  }
+
+  private def queryWithCriterions(request: EmailQueryRequest): SearchQuery.Builder = {
+    request.filter.flatMap(_.before) match {
+      case Some(before) => {
+        val strictlyBefore = new InternalDateCriterion(new DateOperator(DateComparator.BEFORE, Date.from(before.asUTC.toInstant), DateResolution.Second))
+        val sameDate = new InternalDateCriterion(new DateOperator(DateComparator.ON, Date.from(before.asUTC.toInstant), DateResolution.Second))
+        new SearchQuery.Builder()
+          .andCriteria(new ConjunctionCriterion(Conjunction.OR, List[Criterion](strictlyBefore, sameDate).asJava))
+      }
+      case None => new SearchQuery.Builder()
+    }
+
   }
 
   private def asEmailQueryRequest(arguments: Arguments): SMono[EmailQueryRequest] =

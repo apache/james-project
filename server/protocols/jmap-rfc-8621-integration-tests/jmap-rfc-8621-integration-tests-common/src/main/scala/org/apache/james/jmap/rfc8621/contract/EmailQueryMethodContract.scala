@@ -21,6 +21,7 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -32,6 +33,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
+import org.apache.james.jmap.model.UTCDate
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.{MailboxPath, MessageId}
@@ -50,6 +52,8 @@ trait EmailQueryMethodContract {
     .and.`with`.pollDelay(slowPacedPollInterval)
     .await
   private lazy val awaitAtMostTenSeconds = calmlyAwait.atMost(10, TimeUnit.SECONDS)
+
+  private lazy val UTC_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
@@ -634,6 +638,114 @@ trait EmailQueryMethodContract {
       assertThatJson(response)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo("[]")
+    }
+  }
+
+  @Test
+  def shouldListMailsReceivedBeforeADate(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val requestDate = ZonedDateTime.now().minusDays(1)
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(Date.from(requestDate.toInstant)).build(message))
+      .getMessageId
+
+
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "before": "${UTCDate(requestDate.plusHours(1)).asUTC.format(UTC_DATE_FORMAT)}"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId1.serialize()}"]""")
+    }
+  }
+  @Test
+  def shouldListMailsReceivedBeforeADateInclusively(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val requestDate = ZonedDateTime.now().minusDays(1)
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(Date.from(requestDate.toInstant)).build(message))
+      .getMessageId
+
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "before": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId1.serialize()}"]""")
     }
   }
 

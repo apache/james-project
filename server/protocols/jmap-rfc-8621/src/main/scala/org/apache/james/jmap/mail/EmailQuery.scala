@@ -20,10 +20,12 @@
 package org.apache.james.jmap.mail
 
 import com.google.common.hash.Hashing
-import org.apache.james.jmap.model.AccountId
+import org.apache.james.jmap.model.{AccountId, UTCDate}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 
-case class FilterCondition(inMailbox: Option[MailboxId], inMailboxOtherThan: Option[Seq[MailboxId]])
+case class FilterCondition(inMailbox: Option[MailboxId],
+                           inMailboxOtherThan: Option[Seq[MailboxId]],
+                           before: Option[UTCDate])
 
 case class EmailQueryRequest(accountId: AccountId, filter: Option[FilterCondition])
 
