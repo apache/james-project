@@ -122,6 +122,15 @@ Since counts frequently change but other properties are generally only changed r
 
 ## Mailbox/query
 
+  <aside class="warning">
+    Partially implemented. `sortAsTree` and `filterAsTree` options are unsupported.
+
+    `FilterCondition` only accepts a `role` property. `filter` property needs to be a `FilterCondition`,
+    `FilterOperator` are not supported.
+
+    `position`, `anchor`, `anchorOffset`, `limit`, `sort`, `calculateTotal` properties are not supported for this `/query` call.
+  </aside>
+
 This is a standard "/query" method as described in [@!RFC8620], Section 5.5, but with the following additional request argument:
 
 - **sortAsTree**: `Boolean` (default: false)
