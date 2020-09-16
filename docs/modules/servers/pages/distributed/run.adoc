@@ -61,7 +61,7 @@ running. You can either install the servers or launch them via docker:
 $ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.3
 $ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2
 $ docker run -d -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.8.1-management
-$ docker run -d -p 8080:8000 --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 zenko/cloudserver:8.2.6
+$ docker run -d --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 zenko/cloudserver:8.2.6
 ----
 
 Once everything is set up, you just have to run the jar with:

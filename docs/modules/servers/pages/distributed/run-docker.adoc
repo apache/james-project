@@ -53,7 +53,7 @@ You need a running *rabbitmq* in docker. To achieve this run:
 
 You need a running *Zenko Cloudserver* objectstorage in docker. To achieve this run:
 
-    $ docker run -d -p 8080:8000 --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 zenko/cloudserver:8.2.6
+    $ docker run -d --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 zenko/cloudserver:8.2.6
 
 You need a running *ElasticSearch* in docker. To achieve this run:
 
