@@ -28,6 +28,9 @@ import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import net.javacrumbs.jsonunit.core.Option
+import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
+import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
@@ -2233,6 +2236,7 @@ trait EmailGetMethodContract {
       .asString
 
     assertThatJson(response)
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
       .isEqualTo(
       s"""{
          |    "sessionState": "75128aab4b1b",
@@ -2991,7 +2995,7 @@ trait EmailGetMethodContract {
       s"""{
          |    "id": "${messageId.serialize}",
          |    "mailboxIds": {
-         |        "${mailboxId}": true
+         |        "${mailboxId.serialize}": true
          |    }
          |}""".stripMargin)
   }
@@ -3499,7 +3503,7 @@ trait EmailGetMethodContract {
          |                                    "value": "$contentType"
          |                                }
          |                            ],
-         |                            "size": 2280,
+         |                            "size": 2287,
          |                            "type": "multipart/mixed",
          |                            "charset": "us-ascii",
          |                            "subParts": [
@@ -3516,7 +3520,7 @@ trait EmailGetMethodContract {
          |                                            "value": "7bit"
          |                                        }
          |                                    ],
-         |                                    "size": 6,
+         |                                    "size": 8,
          |                                    "type": "text/plain",
          |                                    "charset": "utf-8"
          |                                },
@@ -3693,7 +3697,7 @@ trait EmailGetMethodContract {
          |                                    "value": "multipart/mixed; boundary=\\"----------=_1483455916-7086-3\\""
          |                                }
          |                            ],
-         |                            "size": 887,
+         |                            "size": 891,
          |                            "type": "multipart/mixed",
          |                            "charset": "us-ascii",
          |                            "subParts": [
@@ -3705,7 +3709,7 @@ trait EmailGetMethodContract {
          |                                            "value": "multipart/alternative; boundary=\\\"------------060506070600060108040700\\\""
          |                                        }
          |                                    ],
-         |                                    "size": 395,
+         |                                    "size": 398,
          |                                    "type": "multipart/alternative",
          |                                    "charset": "us-ascii",
          |                                    "subParts": [
@@ -3722,7 +3726,7 @@ trait EmailGetMethodContract {
          |                                                    "value": "8bit"
          |                                                }
          |                                            ],
-         |                                            "size": 18,
+         |                                            "size": 20,
          |                                            "type": "text/plain",
          |                                            "charset": "ISO-8859-1"
          |                                        },
@@ -3739,7 +3743,7 @@ trait EmailGetMethodContract {
          |                                                    "value": "7bit"
          |                                                }
          |                                            ],
-         |                                            "size": 28,
+         |                                            "size": 30,
          |                                            "type": "text/html",
          |                                            "charset": "ISO-8859-1"
          |                                        }
@@ -3766,7 +3770,7 @@ trait EmailGetMethodContract {
          |                                            "value": "binary"
          |                                        }
          |                                    ],
-         |                                    "size": 18,
+         |                                    "size": 19,
          |                                    "name": "avertissement.txt",
          |                                    "type": "text/plain",
          |                                    "charset": "iso-8859-1",
@@ -3835,7 +3839,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "2",
          |                                "blobId": "${messageId.serialize}_2",
-         |                                "size": 6,
+         |                                "size": 8,
          |                                "type": "text/plain",
          |                                "charset": "utf-8"
          |                            }
@@ -3899,7 +3903,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "3",
          |                                "blobId": "${messageId.serialize}_3",
-         |                                "size": 18,
+         |                                "size": 20,
          |                                "type": "text/plain",
          |                                "charset": "ISO-8859-1"
          |                            }
@@ -3963,7 +3967,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "4",
          |                                "blobId": "${messageId.serialize}_4",
-         |                                "size": 28,
+         |                                "size": 30,
          |                                "type": "text/html",
          |                                "charset": "ISO-8859-1"
          |                            }
@@ -4026,7 +4030,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "2": {
-         |                                "value": "Send\\n\\n",
+         |                                "value": "Send\\r\\n\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
@@ -4089,7 +4093,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "3": {
-         |                                "value": "/blabla/\\n*bloblo*\\n",
+         |                                "value": "/blabla/\\r\\n*bloblo*\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
@@ -4152,7 +4156,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "4": {
-         |                                "value": "<i>blabla</i>\\n<b>bloblo</b>\\n",
+         |                                "value": "<i>blabla</i>\\r\\n<b>bloblo</b>\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
@@ -4217,12 +4221,12 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "3": {
-         |                                "value": "/blabla/\\n*bloblo*\\n",
+         |                                "value": "/blabla/\\r\\n*bloblo*\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            },
          |                            "4": {
-         |                                "value": "<i>blabla</i>\\n<b>bloblo</b>\\n",
+         |                                "value": "<i>blabla</i>\\r\\n<b>bloblo</b>\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
@@ -4287,7 +4291,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "2": {
-         |                                "value": "Send\\n\\n",
+         |                                "value": "Send\\r\\n\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
@@ -4351,7 +4355,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "2": {
-         |                                "value": "Send\\n\\n",
+         |                                "value": "Send\\r\\n\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            },
@@ -4426,7 +4430,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "2": {
-         |                                "value": "Send\\n\\n",
+         |                                "value": "Send\\r\\n\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            },
@@ -4499,17 +4503,17 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "3": {
-         |                                "value": "/blabla/\\n*bloblo*\\n",
+         |                                "value": "/blabla/\\r\\n*bloblo*\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            },
          |                            "4": {
-         |                                "value": "<i>blabla</i>\\n<b>bloblo</b>\\n",
+         |                                "value": "<i>blabla</i>\\r\\n<b>bloblo</b>\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            },
          |                            "5": {
-         |                                "value": "inline attachment\\n",
+         |                                "value": "inline attachment\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
@@ -4714,7 +4718,7 @@ trait EmailGetMethodContract {
          |                            {
          |                                "partId": "5",
          |                                "blobId": "${messageId.serialize}_5",
-         |                                "size": 18,
+         |                                "size": 19,
          |                                "name": "avertissement.txt",
          |                                "type": "text/plain",
          |                                "charset": "iso-8859-1",
@@ -4772,7 +4776,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
         s"""{
-           |     "id": "1",
+           |     "id": "${messageId.serialize}",
            |     "preview": "testmail"
            |}""".stripMargin)
   }
@@ -4818,7 +4822,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
         s"""{
-           |     "id": "1",
+           |     "id": "${messageId.serialize}",
            |     "preview": "${"0123456789".repeat(25)}012345"
            |}""".stripMargin)
   }
@@ -4864,7 +4868,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |     "id": "1",
+         |     "id": "${messageId.serialize}",
          |     "preview": ""
          |}""".stripMargin)
   }
@@ -4910,7 +4914,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
         s"""{
-           |     "id": "1",
+           |     "id": "${messageId.serialize}",
            |     "preview": "A HTML body..."
            |}""".stripMargin)
   }
@@ -4955,7 +4959,7 @@ trait EmailGetMethodContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(s"""{
-         |    "id": "1",
+         |    "id": "${messageId.serialize}",
          |    "hasAttachment": false
          |}""".stripMargin)
   }
@@ -4998,7 +5002,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
         s"""{
-           |    "id": "1",
+           |    "id": "${messageId.serialize}",
            |    "hasAttachment": true
            |}""".stripMargin)
   }
@@ -5046,7 +5050,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
         s"""{
-           |    "id": "1",
+           |    "id": "${messageId.serialize}",
            |    "hasAttachment": false
            |}""".stripMargin)
   }
