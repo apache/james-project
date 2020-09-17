@@ -21,10 +21,10 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.model.Invocation.{MethodCallId, MethodName}
-import org.apache.james.jmap.routes.{BackReference, JsonPath}
+import org.apache.james.jmap.routes.{ArrayElementPart, BackReference, JsonPath, PlainPart}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsError, JsSuccess, Json}
+import play.api.libs.json.{JsError, JsString, JsSuccess, Json}
 
 
 class BackReferenceTest extends AnyWordSpec with Matchers {
@@ -45,6 +45,30 @@ class BackReferenceTest extends AnyWordSpec with Matchers {
     }
   }
 
+  "Array element parsing" should {
+    "succeed when poositive" in {
+      ArrayElementPart.parse("[1]") should equal(Some(ArrayElementPart(1)))
+    }
+    "succeed when zero" in {
+      ArrayElementPart.parse("[0]") should equal(Some(ArrayElementPart(0)))
+    }
+    "fail when negative" in {
+      ArrayElementPart.parse("[-1]") should equal(None)
+    }
+    "fail when not an int" in {
+      ArrayElementPart.parse("[invalid]") should equal(None)
+    }
+    "fail when not closed" in {
+      ArrayElementPart.parse("[0") should equal(None)
+    }
+    "fail when not open" in {
+      ArrayElementPart.parse("0]") should equal(None)
+    }
+    "fail when no bracket" in {
+      ArrayElementPart.parse("0") should equal(None)
+    }
+  }
+
   "JsonPath evaluation" should {
     "noop when empty" in {
       val jsonPath = JsonPath.parse("")
@@ -59,6 +83,41 @@ class BackReferenceTest extends AnyWordSpec with Matchers {
       val expected = Json.parse("""["array"]""")
 
       jsonPath.evaluate(json) should equal(JsSuccess(expected))
+    }
+    "succeed when array element is present and root" in {
+      val jsonPath = JsonPath.parse("[1]")
+      val json = Json.parse("""["1", "2", "3"]""")
+      val expected = JsString("2")
+
+      jsonPath.evaluate(json) should equal(JsSuccess(expected))
+    }
+    "succeed when first array element is present" in {
+      val jsonPath = JsonPath.parse("path[0]")
+      val json = Json.parse("""{"path" : ["1", "2", "3"]}""")
+      val expected = JsString("1")
+
+      jsonPath.evaluate(json) should equal(JsSuccess(expected))
+    }
+    "fail when overflow" in {
+      val jsonPath = JsonPath.parse("path[3]")
+      val json = Json.parse("""{"path" : ["1", "2", "3"]}""")
+
+      jsonPath.evaluate(json) shouldBe a[JsError]
+    }
+    "parse should default to plain part when negative" in {
+      JsonPath.parse("path[-1]") should equal(JsonPath(List(PlainPart("path[-1]"))))
+    }
+    "parse should default to plain part when not an int" in {
+      JsonPath.parse("path[invalid]") should equal(JsonPath(List(PlainPart("path[invalid]"))))
+    }
+    "parse should default to plain part when empty" in {
+      JsonPath.parse("path[]") should equal(JsonPath(List(PlainPart("path[]"))))
+    }
+    "parse should default to plain part when not closed" in {
+      JsonPath.parse("path[36") should equal(JsonPath(List(PlainPart("path[36"))))
+    }
+    "parse should default to plain part when not closed and root" in {
+      JsonPath.parse("[36") should equal(JsonPath(List(PlainPart("[36"))))
     }
     "succeed when array part is present" in {
       val jsonPath = JsonPath.parse("path/*")

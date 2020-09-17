@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.routes
 
+import eu.timepit.refined.numeric.NonNegative
+import eu.timepit.refined.refineV
+import eu.timepit.refined.types.numeric.NonNegInt
 import org.apache.james.jmap.json.BackReferenceDeserializer
 import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
@@ -28,9 +31,11 @@ import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId}
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json.{JsArray, JsError, JsObject, JsResult, JsSuccess, JsValue, Reads}
 
+import scala.util.Try
+
 sealed trait JsonPathPart
 
-case class WildcardPart() extends JsonPathPart
+case object WildcardPart extends JsonPathPart
 
 case class PlainPart(name: String) extends JsonPathPart {
   def read(jsValue: JsValue): JsResult[JsValue] = jsValue match {
@@ -39,13 +44,63 @@ case class PlainPart(name: String) extends JsonPathPart {
   }
 }
 
+object ArrayElementPart {
+  def parse(string: String): Option[ArrayElementPart] = {
+    if (string.startsWith("[") && string.endsWith("]")) {
+      val positionPart: String = string.substring(1, string.length - 1)
+      Try(positionPart.toInt)
+        .fold(_ => None, fromInt)
+    } else {
+      None
+    }
+  }
+
+  private def fromInt(position: Int): Option[ArrayElementPart] =
+    refineV[NonNegative](position)
+      .fold(_ => None,
+        ref => Some(ArrayElementPart(ref)))
+}
+
+case class ArrayElementPart(position: NonNegInt) extends JsonPathPart {
+  def read(jsValue: JsValue): JsResult[JsValue] = jsValue match {
+    case JsArray(values) => values.lift(position.value)
+      .map(JsSuccess(_))
+      .getOrElse(JsError(s"Supplied array have no $position element"))
+    case _ => JsError("Expecting a JsArray but got a different structure")
+  }
+}
+
 object JsonPath {
   def parse(string: String): JsonPath = JsonPath(string.split('/').toList
     .flatMap {
-      case "" => None
-      case "*" => Some(WildcardPart())
-      case part => Some(PlainPart(part))
+      case "" => Nil
+      case "*" => List(WildcardPart)
+      case string if ArrayElementPart.parse(string).isDefined => ArrayElementPart.parse(string)
+      case part: String =>
+        val arrayElementPartPosition = part.indexOf('[')
+        if (arrayElementPartPosition < 0) {
+          asPlainPart(part)
+        } else if (arrayElementPartPosition == 0) {
+          asArrayElementPart(string)
+        } else {
+          asArrayElementInAnObject(string, part, arrayElementPartPosition)
+        }
     })
+
+  private def asPlainPart(part: String): List[JsonPathPart] = {
+    List(PlainPart(part))
+  }
+
+  private def asArrayElementInAnObject(string: String, part: String, arrayElementPartPosition: Int): List[JsonPathPart] = {
+    ArrayElementPart.parse(string.substring(arrayElementPartPosition))
+      .map(List(PlainPart(part.substring(0, arrayElementPartPosition)), _))
+      .getOrElse(List(PlainPart(part)))
+  }
+
+  private def asArrayElementPart(string: String): List[JsonPathPart] = {
+    List(ArrayElementPart.parse(string)
+      .getOrElse(PlainPart(string)))
+  }
 }
 
 case class JsonPath(parts: List[JsonPathPart]) {
@@ -55,7 +110,8 @@ case class JsonPath(parts: List[JsonPathPart]) {
       val tailAsJsonPath = JsonPath(tail)
       head match {
         case part: PlainPart => part.read(jsValue).flatMap(subPart => tailAsJsonPath.evaluate(subPart))
-        case _: WildcardPart => tailAsJsonPath.readWildcard(jsValue)
+        case part: ArrayElementPart => part.read(jsValue).flatMap(subPart => tailAsJsonPath.evaluate(subPart))
+        case WildcardPart => tailAsJsonPath.readWildcard(jsValue)
       }
   }
 
