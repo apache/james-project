@@ -35,7 +35,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.model.{Keyword, UTCDate}
+import org.apache.james.jmap.model.UTCDate
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.{MailboxPath, MessageId}
@@ -926,6 +926,240 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def hasKeywordShouldRejectEmpty(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "hasKeyword": ""
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].description")
+      .isEqualTo("""{
+                    |    "sessionState": "75128aab4b1b",
+                    |    "methodResponses": [
+                    |        [
+                    |            "error",
+                    |            {
+                    |                "type": "invalidArguments"
+                    |            },
+                    |            "c1"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
+  }
+
+  @Test
+  def hasKeywordShouldRejectTooLong(): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "hasKeyword": "${"a".repeat(257)}"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].description")
+      .isEqualTo("""{
+                   |    "sessionState": "75128aab4b1b",
+                   |    "methodResponses": [
+                   |        [
+                   |            "error",
+                   |            {
+                   |                "type": "invalidArguments"
+                   |            },
+                   |            "c1"
+                   |        ]
+                   |    ]
+                   |}""".stripMargin)
+  }
+
+  @Test
+  def hasKeywordShouldNotAcceptIMAPDeletedKeyword(): Unit = {
+    val request =
+      """{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "hasKeyword": "$Deleted"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].description")
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |        [
+           |            "error",
+           |            {
+           |                "type": "invalidArguments"
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def hasKeywordShouldNotAcceptIMAPRecentKeyword(): Unit = {
+    val request =
+      """{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "hasKeyword": "$Recent"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].description")
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |        [
+           |            "error",
+           |            {
+           |                "type": "invalidArguments"
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def hasKeywordShouldRejectInvalid(): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "hasKeyword": "custom&invalid"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].description")
+      .isEqualTo("""{
+                   |    "sessionState": "75128aab4b1b",
+                   |    "methodResponses": [
+                   |        [
+                   |            "error",
+                   |            {
+                   |                "type": "invalidArguments"
+                   |            },
+                   |            "c1"
+                   |        ]
+                   |    ]
+                   |}""".stripMargin)
+  }
+
+  @Test
   def listMailsByCustomKeywordShouldReturnOnlyMailsWithThisCustomKeyword(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
@@ -972,6 +1206,107 @@ trait EmailQueryMethodContract {
       assertThatJson(response)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId.serialize()}"]""")
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource(value = Array("jmapSystemKeywords"))
+  def listMailsNotBySystemKeywordShouldReturnOnlyMailsWithoutThisSystemKeyword(keywordFlag: Flags, keywordName: String, server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(keywordFlag).build(message))
+      .getMessageId
+    val messageWithoudFlagId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "notKeyword": "$keywordName"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+        .when
+        .post
+        .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageWithoudFlagId.serialize()}"]""")
+    }
+  }
+
+  @Test
+  def listMailsNotByCustomKeywordShouldReturnOnlyMailsWithoutThisCustomKeyword(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .getMessageId
+    val messageWithoudFlagId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "notKeyword": "custom"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+        .when
+        .post
+        .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageWithoudFlagId.serialize()}"]""")
     }
   }
 

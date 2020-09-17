@@ -61,7 +61,7 @@ object MailboxFilter {
 
   object QueryFilter {
     def buildQuery(request: EmailQueryRequest): SearchQuery.Builder = {
-      List(ReceivedBefore, ReceivedAfter, HasKeyWord).foldLeft(new SearchQuery.Builder())((builder, filter) => filter.toQuery(builder, request))
+      List(ReceivedBefore, ReceivedAfter, HasKeyWord, NotKeyWord).foldLeft(new SearchQuery.Builder())((builder, filter) => filter.toQuery(builder, request))
     }
   }
 
@@ -70,7 +70,7 @@ object MailboxFilter {
       case Some(before) =>
         val strictlyBefore = new InternalDateCriterion(new DateOperator(DateComparator.BEFORE, Date.from(before.asUTC.toInstant), DateResolution.Second))
         val sameDate = new InternalDateCriterion(new DateOperator(DateComparator.ON, Date.from(before.asUTC.toInstant), DateResolution.Second))
-        new SearchQuery.Builder()
+        builder
           .andCriteria(new ConjunctionCriterion(Conjunction.OR, List[Criterion](strictlyBefore, sameDate).asJava))
       case None => builder
     }
@@ -79,7 +79,7 @@ object MailboxFilter {
     override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): SearchQuery.Builder =  request.filter.flatMap(_.after) match {
       case Some(after) => {
         val strictlyAfter = new InternalDateCriterion(new DateOperator(DateComparator.AFTER, Date.from(after.asUTC.toInstant), DateResolution.Second))
-        new SearchQuery.Builder()
+        builder
           .andCriteria(strictlyAfter)
       }
       case None => builder
@@ -92,6 +92,16 @@ object MailboxFilter {
         keyword.asSystemFlag match {
           case Some(systemFlag) => builder.andCriteria(SearchQuery.flagIsSet(systemFlag))
           case None => builder.andCriteria(SearchQuery.flagIsSet(keyword.flagName))
+        }
+      case None => builder
+    }
+  }
+  case object NotKeyWord extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): SearchQuery.Builder =  request.filter.flatMap(_.notKeyword) match {
+      case Some(keyword) =>
+        keyword.asSystemFlag match {
+          case Some(systemFlag) => builder.andCriteria(SearchQuery.flagIsUnSet(systemFlag))
+          case None => builder.andCriteria(SearchQuery.flagIsUnSet(keyword.flagName))
         }
       case None => builder
     }

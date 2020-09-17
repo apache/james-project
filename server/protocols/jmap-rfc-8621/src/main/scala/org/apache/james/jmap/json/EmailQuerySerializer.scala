@@ -37,7 +37,17 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case _ => JsError()
   }
 
-  private implicit val keywordReads: Reads[Keyword] = Json.valueReads[Keyword]
+  private implicit val keywordReads: Reads[Keyword] = {
+    case JsString(keywordValue) =>
+      Keyword.parse(keywordValue)
+        .flatMap(keyword => if (keyword.isForbiddenImapKeyword) {
+          Left(s"Search based on IMAP unexposed keywords is not supported for $keywordValue")
+        } else {
+          Right(keyword)
+        })
+      .fold(JsError(_), JsSuccess(_))
+    case _ => JsError("Expecting keywords to be represented by a JsString")
+  }
   private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
   private implicit val emailQueryRequestReads: Reads[EmailQueryRequest] = Json.reads[EmailQueryRequest]
   private implicit val canCalculateChangeWrites: Writes[CanCalculateChange] = Json.valueWrites[CanCalculateChange]
