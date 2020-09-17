@@ -37,6 +37,7 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case _ => JsError()
   }
 
+  private implicit val keywordReads: Reads[Keyword] = Json.valueReads[Keyword]
   private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
   private implicit val emailQueryRequestReads: Reads[EmailQueryRequest] = Json.reads[EmailQueryRequest]
   private implicit val canCalculateChangeWrites: Writes[CanCalculateChange] = Json.valueWrites[CanCalculateChange]

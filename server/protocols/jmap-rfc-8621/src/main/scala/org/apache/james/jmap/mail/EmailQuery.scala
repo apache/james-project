@@ -19,13 +19,14 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.jmap.model.{AccountId, CanCalculateChange, Limit, Position, QueryState, UTCDate}
+import org.apache.james.jmap.model.{AccountId, CanCalculateChange, Keyword, Limit, Position, QueryState, UTCDate}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 
 case class FilterCondition(inMailbox: Option[MailboxId],
                            inMailboxOtherThan: Option[Seq[MailboxId]],
                            before: Option[UTCDate],
-                           after: Option[UTCDate])
+                           after: Option[UTCDate],
+                           hasKeyword: Option[Keyword])
 
 case class EmailQueryRequest(accountId: AccountId, filter: Option[FilterCondition])
 

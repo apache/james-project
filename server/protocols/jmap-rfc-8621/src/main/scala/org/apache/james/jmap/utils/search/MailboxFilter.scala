@@ -20,8 +20,9 @@ package org.apache.james.jmap.utils.search
 
 import java.util.Date
 
+import javax.mail.Flags
 import org.apache.james.jmap.mail.EmailQueryRequest
-import org.apache.james.mailbox.model.SearchQuery.{Conjunction, ConjunctionCriterion, Criterion, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
+import org.apache.james.mailbox.model.SearchQuery.{Conjunction, ConjunctionCriterion, Criterion, DateComparator, DateOperator, DateResolution, FlagCriterion, InternalDateCriterion}
 import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
 
 import scala.jdk.CollectionConverters._
@@ -60,7 +61,7 @@ object MailboxFilter {
 
   object QueryFilter {
     def buildQuery(request: EmailQueryRequest): SearchQuery.Builder = {
-      List(ReceivedBefore, ReceivedAfter).foldLeft(new SearchQuery.Builder())((builder, filter) => filter.toQuery(builder, request))
+      List(ReceivedBefore, ReceivedAfter, HasKeyWord).foldLeft(new SearchQuery.Builder())((builder, filter) => filter.toQuery(builder, request))
     }
   }
 
@@ -81,6 +82,17 @@ object MailboxFilter {
         new SearchQuery.Builder()
           .andCriteria(strictlyAfter)
       }
+      case None => builder
+    }
+  }
+
+  case object HasKeyWord extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): SearchQuery.Builder =  request.filter.flatMap(_.hasKeyword) match {
+      case Some(keyword) =>
+        keyword.asSystemFlag match {
+          case Some(systemFlag) => builder.andCriteria(SearchQuery.flagIsSet(systemFlag))
+          case None => builder.andCriteria(SearchQuery.flagIsSet(keyword.flagName))
+        }
       case None => builder
     }
   }
