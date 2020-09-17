@@ -310,7 +310,7 @@ public class CriterionConverter {
         case BEFORE:
             return rangeQuery(field).lte(upDateString);
         case AFTER:
-            return rangeQuery(field).gte(lowDateString);
+            return rangeQuery(field).gt(lowDateString);
         case ON:
             return rangeQuery(field).lte(upDateString).gte(lowDateString);
         }
