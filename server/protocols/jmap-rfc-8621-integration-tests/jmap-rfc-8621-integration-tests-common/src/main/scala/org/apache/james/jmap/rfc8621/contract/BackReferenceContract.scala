@@ -18,13 +18,21 @@
  ****************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import net.javacrumbs.jsonunit.core.Option
+import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
+import org.apache.james.mailbox.MessageManager.AppendCommand
+import org.apache.james.mailbox.model.{MailboxId, MailboxPath, MessageId}
+import org.apache.james.mime4j.dom.Message
+import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
@@ -396,6 +404,124 @@ trait BackReferenceContract {
          |                "description": "Failed resolving back-reference: List((,List(JsonValidationError(List(Back reference could not be resolved),ArraySeq()))))"
          |            },
          |            "c2"
+         |        ]
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def loadingAccountWithBackReferences(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: MailboxId = mailboxProbe
+      .createMailbox(MailboxPath.inbox(BOB))
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(Message.Builder
+        .of.setSubject("message 1")
+        .setBody("testmail", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(Message.Builder
+        .of.setSubject("message 2")
+        .setBody("testmail", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(Message.Builder
+        .of.setSubject("message 3")
+        .setBody("testmail", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |    "Mailbox/query",
+           |    {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "filter": {"role":"Inbox"}
+           |    },
+           |    "c1"],[
+           |    "Email/query",
+           |    {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "filter": {
+           |        "#inMailbox": {
+           |         "resultOf":"c1",
+           |         "name":"Mailbox/query",
+           |         "path":"ids[0]"
+           |       }
+           |      }
+           |    },
+           |    "c2"], [
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "properties": ["id", "subject"],
+           |       "#ids": {
+           |         "resultOf":"c2",
+           |         "name":"Email/query",
+           |         "path":"ids/*"
+           |       }
+           |     },
+           |     "c3"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .body()
+      .asString()
+
+    assertThatJson(response)
+      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [
+         |        [
+         |            "Mailbox/query",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "queryState": "33cc79f8",
+         |                "canCalculateChanges": false,
+         |                "ids": ["${mailboxId.serialize}"],
+         |                "position": 0,
+         |                "limit": 256
+         |            },
+         |            "c1"
+         |        ],
+         |        [
+         |            "Email/query",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "queryState": "a6904f19",
+         |                "canCalculateChanges": false,
+         |                "ids": ["${messageId1.serialize}", "${messageId2.serialize}", "${messageId3.serialize}"],
+         |                "position": 0,
+         |                "limit": 256
+         |            },
+         |            "c2"
+         |        ],
+         |        [
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "state": "000001",
+         |                "list": [
+         |                    {"id": "${messageId3.serialize}", "subject": "message 3"},
+         |                    {"id": "${messageId2.serialize}", "subject": "message 2"},
+         |                    {"id": "${messageId1.serialize}", "subject": "message 1"}
+         |                ],
+         |                "notFound": []
+         |            },
+         |            "c3"
          |        ]
          |    ]
          |}""".stripMargin)
