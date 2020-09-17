@@ -30,6 +30,7 @@ import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.stream.Field
+import scala.jdk.CollectionConverters._
 
 case class EmailIds(value: List[UnparsedEmailId])
 
@@ -83,7 +84,9 @@ case class EmailGetResponse(accountId: AccountId,
 
 case class SpecificHeaderRequest(headerName: NonEmptyString, property: String, parseOption: Option[ParseOption]) {
   def retrieveHeader(message: Message): (String, Option[EmailHeaderValue]) = {
-    val field: Option[Field] = Option(message.getHeader.getField(property))
+    val field: Option[Field] = Option(message.getHeader.getFields(property))
+      .map(_.asScala)
+      .flatMap(fields => fields.reverse.headOption)
 
     (headerName, field.flatMap(parseOption.getOrElse(AsRaw).extractHeaderValue(_)))
   }

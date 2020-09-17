@@ -23,22 +23,29 @@ import org.apache.james.mime4j.dom.address.{AddressList, MailboxList, Mailbox =>
 
 import scala.jdk.CollectionConverters._
 
+object EmailerName {
+  def from(value: String): EmailerName = EmailerName(value.strip())
+}
+
 case class EmailerName(value: String) extends AnyVal
+
 case class Address(value: String) extends AnyVal
 
 object EmailAddress {
-  def from(addressList: AddressList): List[EmailAddress] =
-    from(addressList.flatten())
+  def from(addressList: AddressList): List[EmailAddress] = Option(addressList)
+    .map(addressList => from(addressList.flatten()))
+    .getOrElse(List())
 
   def from(addressList: MailboxList): List[EmailAddress] =
     addressList.asScala
       .toList
       .map(from)
 
-  def from(mailbox: Mime4jMailbox): EmailAddress =
+  def from(mailbox: Mime4jMailbox): EmailAddress = {
     EmailAddress(
-      name = Option(mailbox.getName).map(EmailerName),
+      name = Option(mailbox.getName).map(EmailerName.from),
       email = Address(mailbox.getAddress))
+  }
 }
 
 case class EmailAddress(name: Option[EmailerName], email: Address)
