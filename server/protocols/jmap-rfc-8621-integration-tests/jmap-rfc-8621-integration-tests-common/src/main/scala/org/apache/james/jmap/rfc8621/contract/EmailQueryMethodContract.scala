@@ -20,8 +20,8 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZonedDateTime}
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
@@ -47,6 +47,7 @@ import org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource}
+import org.threeten.extra.Seconds
 
 object EmailQueryMethodContract {
   def jmapSystemKeywords : Stream[Arguments] = {
@@ -58,6 +59,7 @@ object EmailQueryMethodContract {
       Arguments.of(new Flags("$Forwarded"), "$Forwarded"))
   }
 }
+
 
 trait EmailQueryMethodContract {
 
@@ -328,6 +330,230 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def listMailsShouldBeSortedInAscendingOrderByDefault(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val now: Instant = Instant.now()
+    val requestDateMessage1: Date = Date.from(now)
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
+      .getMessageId
+    val requestDateMessage2: Date = Date.from(now.plus(Seconds.of(3)))
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
+      .getMessageId
+    val requestDateMessage3: Date = Date.from(now.plus(Seconds.of(6)))
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
+      .getMessageId
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "comparator": [{
+         |        "property":"receivedAt"
+         |      }]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+    assertThatJson(response)
+      .inPath("$.methodResponses[0][1].ids")
+      .isEqualTo(s"""["${messageId1.serialize()}", "${messageId2.serialize()}", "${messageId3.serialize()}"]""")
+    }
+  }
+
+  @Test
+  def listMailsShouldBeSortedInAscendingOrder(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val now: Instant = Instant.now()
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val requestDateMessage1: Date = Date.from(now)
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
+      .getMessageId
+    val requestDateMessage2: Date = Date.from(now.plus(Seconds.of(3)))
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
+      .getMessageId
+    val requestDateMessage3: Date = Date.from(now.plus(Seconds.of(6)))
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
+      .getMessageId
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "comparator": [{
+         |        "property":"receivedAt",
+         |        "isAscending": true
+         |      }]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+    assertThatJson(response)
+      .inPath("$.methodResponses[0][1].ids")
+      .isEqualTo(s"""["${messageId1.serialize()}", "${messageId2.serialize()}", "${messageId3.serialize()}"]""")
+    }
+  }
+
+  @Test
+  def listMailsShouldBeSortedInDescendingOrder(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val now: Instant = Instant.now()
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val requestDateMessage1: Date = Date.from(now)
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
+      .getMessageId
+    val requestDateMessage2: Date = Date.from(now.plus(Seconds.of(3)))
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
+      .getMessageId
+    val requestDateMessage3: Date = Date.from(now.plus(Seconds.of(6)))
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
+      .getMessageId
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "comparator": [{
+         |        "property":"receivedAt",
+         |        "isAscending": false
+         |      }]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+    assertThatJson(response)
+      .inPath("$.methodResponses[0][1].ids")
+      .isEqualTo(s"""["${messageId3.serialize()}", "${messageId2.serialize()}", "${messageId1.serialize()}"]""")
+    }
+  }
+
+  @Test
+  def listMailsShouldReturnErrorWhenPropertyFieldInComparatorIsOmitted(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "inMailbox": "${otherMailboxId.serialize()}"
+         |        },
+         |      "comparator": [{
+         |        "isAscending":true
+         |      }]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1]")
+        .isEqualTo("""
+         {
+            "type": "invalidArguments",
+            "description": "{\"errors\":[{\"path\":\"obj.comparator[0].property\",\"messages\":[\"error.path.missing\"]}]}"
+          }
+         """)
+    }
+  }
+
+  @Test
   def shouldListMailsInASpecificUserMailboxes(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
@@ -376,6 +602,55 @@ trait EmailQueryMethodContract {
       assertThatJson(response)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId2.serialize()}"]""")
+    }
+  }
+
+  @Test
+  def listMailsShouldReturnErrorWhenPropertyFieldInComparatorIsInvalid(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "inMailbox": "${otherMailboxId.serialize()}"
+         |        },
+         |      "comparator": [{
+         |        "property":"unsupported",
+         |        "isAscending":true
+         |      }]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1]")
+        .isEqualTo("""
+         {
+            "type": "invalidArguments",
+            "description": "{\"errors\":[{\"path\":\"obj.comparator[0].property\",\"messages\":[\"'unsupported' is not a supported sort property\"]}]}"
+          }
+         """)
     }
   }
 
