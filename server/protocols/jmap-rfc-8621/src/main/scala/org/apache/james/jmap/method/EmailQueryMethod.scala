@@ -21,11 +21,12 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{CanCalculateChanges, Comparator, EmailQueryRequest, EmailQueryResponse, Limit, Position, QueryState}
+import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.model.{Capabilities, ErrorCode, Invocation}
+import org.apache.james.jmap.model.{CanCalculateChanges, Capabilities, ErrorCode, Invocation, Limit, Position, QueryState}
+import org.apache.james.jmap.model.Limit.Limit
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.jmap.utils.search.MailboxFilter
@@ -58,16 +59,21 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
 
   private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: EmailQueryRequest): SMono[Invocation] = {
     val searchQuery: MultimailboxesSearchQuery = searchQueryFromRequest(request)
+    for {
+      limitToUse <- Limit.validateRequestLimit(request.limit)
+      response <- executeQuery(mailboxSession, request, searchQuery, limitToUse)
+    } yield Invocation(methodName = methodName, arguments = Arguments(serializer.serialize(response)), methodCallId = invocation.methodCallId)
+  }
 
-    SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, Limit.default.value))
+  private def executeQuery(mailboxSession: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, limitToUse: Limit): SMono[EmailQueryResponse] = {
+    SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, limitToUse))
       .collectSeq()
       .map(ids => EmailQueryResponse(accountId = request.accountId,
         queryState = QueryState.forIds(ids),
-        canCalculateChanges = CanCalculateChanges.CANT,
+        canCalculateChanges = CanCalculateChanges.CANNOT,
         ids = ids,
         position = Position.zero,
-        limit = Some(Limit.default)))
-      .map(response => Invocation(methodName = methodName, arguments = Arguments(serializer.serialize(response)), methodCallId = invocation.methodCallId))
+        limit = Some(limitToUse).filterNot(used => request.limit.map(_.value).contains(used.value))))
   }
 
   private def searchQueryFromRequest(request: EmailQueryRequest): MultimailboxesSearchQuery = {

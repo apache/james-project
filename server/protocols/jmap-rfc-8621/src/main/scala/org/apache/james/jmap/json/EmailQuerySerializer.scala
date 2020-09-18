@@ -20,8 +20,8 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{CanCalculateChanges, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, IsAscending, Limit, Position, QueryState, ReceivedAtSortProperty, SortProperty}
-import org.apache.james.jmap.model.{AccountId, Keyword}
+import org.apache.james.jmap.mail.{Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, IsAscending, ReceivedAtSortProperty, SortProperty}
+import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, Position, QueryState}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
 
@@ -49,11 +49,11 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case _ => JsError("Expecting keywords to be represented by a JsString")
   }
   private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
+  private implicit val limitUnparsedReads: Reads[LimitUnparsed] = Json.valueReads[LimitUnparsed]
   private implicit val CanCalculateChangesFormat: Format[CanCalculateChanges] = Json.valueFormat[CanCalculateChanges]
 
   private implicit val queryStateWrites: Writes[QueryState] = Json.valueWrites[QueryState]
   private implicit val positionFormat: Format[Position] = Json.valueFormat[Position]
-  private implicit val limitFormat: Format[Limit] = Json.valueFormat[Limit]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
 
   private implicit val sortPropertyReads: Reads[SortProperty] = {

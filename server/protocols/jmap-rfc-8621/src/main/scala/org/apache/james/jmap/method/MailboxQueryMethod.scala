@@ -59,7 +59,7 @@ class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvi
       .collectSeq()
       .map(ids => MailboxQueryResponse(accountId = request.accountId,
         queryState = QueryState.forMailboxIds(ids),
-        canCalculateChanges = CanCalculateChange(false),
+        canCalculateChanges = CanCalculateChanges(false),
         ids = ids,
         position = Position.zero,
         limit = Some(Limit.default)))

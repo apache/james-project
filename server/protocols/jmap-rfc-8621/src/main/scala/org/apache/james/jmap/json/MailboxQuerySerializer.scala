@@ -30,7 +30,7 @@ import scala.language.implicitConversions
 
 object MailboxQuerySerializer {
   private implicit val accountIdWrites: Format[AccountId] = Json.valueFormat[AccountId]
-  private implicit val canCalculateChangeWrites: Writes[CanCalculateChange] = Json.valueWrites[CanCalculateChange]
+  private implicit val canCalculateChangeWrites: Writes[CanCalculateChanges] = Json.valueWrites[CanCalculateChanges]
 
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
 
@@ -44,7 +44,6 @@ object MailboxQuerySerializer {
   private implicit val emailQueryRequestReads: Reads[MailboxQueryRequest] = Json.reads[MailboxQueryRequest]
   private implicit val queryStateWrites: Writes[QueryState] = Json.valueWrites[QueryState]
   private implicit val positionFormat: Format[Position] = Json.valueFormat[Position]
-  private implicit val limitFormat: Format[Limit] = Json.valueFormat[Limit]
 
   private implicit def mailboxQueryResponseWrites: OWrites[MailboxQueryResponse] = Json.writes[MailboxQueryResponse]
 
