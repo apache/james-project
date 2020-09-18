@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, IsAscending, ReceivedAtSortProperty, SortProperty}
+import org.apache.james.jmap.mail.{Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, HasAttachment, IsAscending, ReceivedAtSortProperty, SortProperty}
 import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, Position, QueryState}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
@@ -48,6 +48,7 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
       .fold(JsError(_), JsSuccess(_))
     case _ => JsError("Expecting keywords to be represented by a JsString")
   }
+  private implicit val hasAttachmentReads: Reads[HasAttachment] = Json.valueReads[HasAttachment]
   private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
   private implicit val limitUnparsedReads: Reads[LimitUnparsed] = Json.valueReads[LimitUnparsed]
   private implicit val CanCalculateChangesFormat: Format[CanCalculateChanges] = Json.valueFormat[CanCalculateChanges]

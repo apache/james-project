@@ -33,7 +33,8 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            hasKeyword: Option[Keyword],
                            notKeyword: Option[Keyword],
                            minSize: Option[Size],
-                           maxSize: Option[Size])
+                           maxSize: Option[Size],
+                           hasAttachment: Option[HasAttachment])
 
 case class EmailQueryRequest(accountId: AccountId, limit: Option[LimitUnparsed], filter: Option[FilterCondition], comparator: Option[Set[Comparator]])
 

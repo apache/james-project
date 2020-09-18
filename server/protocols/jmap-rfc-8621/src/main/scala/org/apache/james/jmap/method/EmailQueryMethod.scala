@@ -28,8 +28,8 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{CanCalculateChanges, Capabilities, ErrorCode, Invocation, Limit, Position, QueryState}
 import org.apache.james.jmap.model.Limit.Limit
 import org.apache.james.jmap.routes.ProcessingContext
-import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.jmap.utils.search.MailboxFilter
+import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
