@@ -48,15 +48,14 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource}
 
-object EmailQueryMethodContract{
+object EmailQueryMethodContract {
   def jmapSystemKeywords : Stream[Arguments] = {
     Stream.of(
       Arguments.of(new Flags(Flags.Flag.SEEN), "$Seen"),
       Arguments.of(new Flags(Flags.Flag.ANSWERED), "$Answered"),
       Arguments.of(new Flags(Flags.Flag.FLAGGED), "$Flagged"),
       Arguments.of(new Flags(Flags.Flag.DRAFT), "$Draft"),
-      Arguments.of(new Flags("$Forwarded"), "$Forwarded")
-    )
+      Arguments.of(new Flags("$Forwarded"), "$Forwarded"))
   }
 }
 
@@ -910,9 +909,9 @@ trait EmailQueryMethodContract {
       val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
-        .when
+      .when
         .post
-        .`then`
+      .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
         .extract
@@ -1194,9 +1193,9 @@ trait EmailQueryMethodContract {
       val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
-        .when
+      .when
         .post
-        .`then`
+      .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
         .extract
@@ -1245,9 +1244,9 @@ trait EmailQueryMethodContract {
       val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
-        .when
+      .when
         .post
-        .`then`
+      .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
         .extract
@@ -1295,9 +1294,9 @@ trait EmailQueryMethodContract {
       val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
-        .when
+      .when
         .post
-        .`then`
+      .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
         .extract
