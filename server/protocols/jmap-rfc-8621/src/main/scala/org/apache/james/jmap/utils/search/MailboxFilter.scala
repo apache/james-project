@@ -20,9 +20,8 @@ package org.apache.james.jmap.utils.search
 
 import java.util.Date
 
-import javax.mail.Flags
 import org.apache.james.jmap.mail.EmailQueryRequest
-import org.apache.james.mailbox.model.SearchQuery.{Conjunction, ConjunctionCriterion, Criterion, DateComparator, DateOperator, DateResolution, FlagCriterion, InternalDateCriterion}
+import org.apache.james.mailbox.model.SearchQuery.{Conjunction, ConjunctionCriterion, Criterion, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
 import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
 
 import scala.jdk.CollectionConverters._
@@ -61,7 +60,8 @@ object MailboxFilter {
 
   object QueryFilter {
     def buildQuery(request: EmailQueryRequest): SearchQuery.Builder = {
-      List(ReceivedBefore, ReceivedAfter, HasKeyWord, NotKeyWord).foldLeft(new SearchQuery.Builder())((builder, filter) => filter.toQuery(builder, request))
+      List(ReceivedBefore, ReceivedAfter, HasKeyWord, NotKeyWord, MinSize, MaxSize)
+        .foldLeft(SearchQuery.builder())((builder, filter) => filter.toQuery(builder, request))
     }
   }
 
@@ -77,11 +77,30 @@ object MailboxFilter {
   }
   case object ReceivedAfter extends QueryFilter {
     override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): SearchQuery.Builder =  request.filter.flatMap(_.after) match {
-      case Some(after) => {
+      case Some(after) =>
         val strictlyAfter = new InternalDateCriterion(new DateOperator(DateComparator.AFTER, Date.from(after.asUTC.toInstant), DateResolution.Second))
         builder
           .andCriteria(strictlyAfter)
-      }
+      case None => builder
+    }
+  }
+
+  case object MinSize extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): SearchQuery.Builder =  request.filter.flatMap(_.minSize) match {
+      case Some(minSize) =>
+        builder
+          .andCriteria(SearchQuery.or(
+            SearchQuery.sizeGreaterThan(minSize.value),
+            SearchQuery.sizeEquals(minSize.value)))
+      case None => builder
+    }
+  }
+
+  case object MaxSize extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): SearchQuery.Builder =  request.filter.flatMap(_.maxSize) match {
+      case Some(maxSize) =>
+        builder
+          .andCriteria(SearchQuery.sizeLessThan(maxSize.value))
       case None => builder
     }
   }

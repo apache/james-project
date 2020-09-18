@@ -18,9 +18,10 @@
  ****************************************************************/
 
 package org.apache.james.jmap.mail
-import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, Position, QueryState, UTCDate}
+import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.IsAscending.{ASCENDING, DESCENDING}
 import org.apache.james.jmap.model.Limit.Limit
+import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, Position, QueryState, UTCDate}
 import org.apache.james.mailbox.model.SearchQuery.Sort.Order.{NATURAL, REVERSE}
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
 import org.apache.james.mailbox.model.{MailboxId, MessageId, SearchQuery}
@@ -30,7 +31,9 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            before: Option[UTCDate],
                            after: Option[UTCDate],
                            hasKeyword: Option[Keyword],
-                           notKeyword: Option[Keyword])
+                           notKeyword: Option[Keyword],
+                           minSize: Option[Size],
+                           maxSize: Option[Size])
 
 case class EmailQueryRequest(accountId: AccountId, limit: Option[LimitUnparsed], filter: Option[FilterCondition], comparator: Option[Set[Comparator]])
 
