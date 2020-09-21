@@ -40,8 +40,6 @@ There is many other ways one can help us: packaging, communication, etc ...
 = How to...
 
  * link:#how-to-try-james[How to try James]
- * link:#how-to-build-and-publish-the-website[How to build and publish the website]
- * link:#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
  * link:#how-to-check-the-compilation[How to check the compilation]
  * link:#how-to-run-james-in-docker[How to run James in Docker]
  ** link:#run-james-with-%2Dguice-%2Dcassandra-%2Drabbitmq-%2Ds3-%2Delasticsearch[Run James with Guice + Cassandra + RabbitMQ + S3 + ElasticSearch]
@@ -58,6 +56,9 @@ There is many other ways one can help us: packaging, communication, etc ...
  ** link:#how-to-check-the-merge-of-a-commit[How to check the merge of a commit]
  * link:#generating-a-package-for-james[Generating a package for James]
  * link:#know-more-about-james-design[Know more about James design]
+ * link:#articles-for-james-community[Articles for James community]
+ ** link:#how-to-build-and-publish-the-website[How to build and publish the website]
+ ** link:#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
 
 == How to try James
 
@@ -85,74 +86,6 @@ A default domain, james.local, has been created. You can see this by running:
 James will respond to IMAP port 143 and SMTP port 25.
 You have to create users before playing with james. You may also want to create other domains.
 Follow the 'Useful commands' section for more information about James CLI.
-
-
-== How to build and publish the website
-
- 1. Install Apache Maven 3.0.2+ and make its binary 'mvn' available on your PATH.
-    See http://maven.apache.org/download.html#Installation.
- 2. run "mvn clean site"
- 3. Test the built site in your browser from the {path}/target/site folder
- 4. If everything looks OK, deploy the site using "mvn clean site-deploy".
- 5. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as
-    a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html)
-
-To deploy the technical reports use the "-Psite-reports" profile.
-
-For wagon-ssh-external configuration see
-http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external.html
-
-You can alternatively use a docker container to build the website :
-
-You need to build the homepage by:
-
-    $ docker build -t james/homepage dockerfiles/site/homepage
-    $ docker run -v $PWD:/origin -v $PWD/site:/destination james/homepage master
-
-In order to test the homepage, you can use this command:
-
-    $ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/minimal:3.8.3 jekyll serve
-
-the site will be available at http://localhost:4000/
-
-Then you build the other pages by:
-
-    $ docker build -t james/site dockerfiles/site/website
-    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
-
-If you need to update the current site, checkout the branch asf-site from Apache git:
-
-    $ git clone https://git-wip-us.apache.org/repos/asf/james-site.git
-    $ cd james-site
-    $ git checkout origin/asf-site -b asf-site
-
-And replace in the previous commands `$PWD/site` by `<james-site-clone-directory>/content`, for example:
-
-    $ docker run -v $PWD:/origin -v $PWD/../james-site/content:/destination james/homepage master
-    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD/../james-site/content:/origin -v $PWD/site:/destination james/site master
-
-Then just push the new site:
-
-    $ cd ../james-site
-    $ git push origin asf-site
-
-== How to release via maven release plugin
-
-See details on http://www.apache.org/dev/publishing-maven-artifacts.html
-
-In short, just follow the 'standard' process:
-
-* Prepare pom for release
-* publish snapshot
-* prepare release
-* stage the release for a vote (don't forget to close the staging repository)
-* vote
-* release
-
-Don't forget to add your key to https://downloads.apache.org/james/KEYS
-
-    $ ssh people.apache.org
-    $ cd /www/www.apache.org/dist/james
 
 
 == How to check the compilation
@@ -576,3 +509,76 @@ By default James is configured without LDAP support.
 == Know more about James design
 
 James comes with a https://james.apache.org/documentation.html[Documentation] and https://github.com/linagora/james-project/tree/master/src/adr[Architectural Decision Records].
+
+== Articles for James community
+
+=== How to build and publish the website
+
+The source code of website https://james.apache.org[james.apache.org] is located in src/homepage.
+Here are the instructions how to publish new changes to the website.
+
+1. Install Apache Maven 3.0.2+ and make its binary 'mvn' available on your PATH.
+See http://maven.apache.org/download.html#Installation.
+2. run "mvn clean site"
+3. Test the built site in your browser from the {path}/target/site folder
+4. If everything looks OK, deploy the site using "mvn clean site-deploy".
+5. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as
+a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html)
+
+To deploy the technical reports use the "-Psite-reports" profile.
+
+For wagon-ssh-external configuration see
+http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external.html
+
+You can alternatively use a docker container to build the website :
+
+You need to build the homepage by:
+
+    $ docker build -t james/homepage dockerfiles/site/homepage
+    $ docker run -v $PWD:/origin -v $PWD/site:/destination james/homepage master
+
+In order to test the homepage, you can use this command:
+
+    $ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/minimal:3.8.3 jekyll serve
+
+the site will be available at http://localhost:4000/
+
+Then you build the other pages by:
+
+    $ docker build -t james/site dockerfiles/site/website
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
+
+If you need to update the current site, checkout the branch asf-site from Apache git:
+
+    $ git clone https://git-wip-us.apache.org/repos/asf/james-site.git
+    $ cd james-site
+    $ git checkout origin/asf-site -b asf-site
+
+And replace in the previous commands `$PWD/site` by `<james-site-clone-directory>/content`, for example:
+
+    $ docker run -v $PWD:/origin -v $PWD/../james-site/content:/destination james/homepage master
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD/../james-site/content:/origin -v $PWD/site:/destination james/site master
+
+Then just push the new site:
+
+    $ cd ../james-site
+    $ git push origin asf-site
+
+=== How to release via maven release plugin
+
+See details on http://www.apache.org/dev/publishing-maven-artifacts.html
+
+In short, just follow the 'standard' process:
+
+* Prepare pom for release
+* publish snapshot
+* prepare release
+* stage the release for a vote (don't forget to close the staging repository)
+* vote
+* release
+
+Don't forget to add your key to https://downloads.apache.org/james/KEYS
+
+    $ ssh people.apache.org
+    $ cd /www/www.apache.org/dist/james
+
