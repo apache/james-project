@@ -36,7 +36,7 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            maxSize: Option[Size],
                            hasAttachment: Option[HasAttachment])
 
-case class EmailQueryRequest(accountId: AccountId, limit: Option[LimitUnparsed], filter: Option[FilterCondition], comparator: Option[Set[Comparator]])
+case class EmailQueryRequest(accountId: AccountId, position: Option[Position], limit: Option[LimitUnparsed], filter: Option[FilterCondition], comparator: Option[Set[Comparator]])
 
 sealed trait SortProperty {
   def toSortClause: SortClause
