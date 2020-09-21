@@ -43,7 +43,6 @@ object MailboxQuerySerializer {
   private implicit val filterReads: Reads[MailboxFilter] = Json.reads[MailboxFilter]
   private implicit val emailQueryRequestReads: Reads[MailboxQueryRequest] = Json.reads[MailboxQueryRequest]
   private implicit val queryStateWrites: Writes[QueryState] = Json.valueWrites[QueryState]
-  private implicit val positionFormat: Format[Position] = Json.valueFormat[Position]
 
   private implicit def mailboxQueryResponseWrites: OWrites[MailboxQueryResponse] = Json.writes[MailboxQueryResponse]
 

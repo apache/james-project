@@ -22,14 +22,25 @@ package org.apache.james.jmap.model
 import com.google.common.hash.Hashing
 import eu.timepit.refined.auto._
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.numeric.{NonNegative, Positive}
 import eu.timepit.refined.refineV
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import reactor.core.scala.publisher.SMono
 
-case class Position(value: Int) extends AnyVal
+case class PositionUnparsed(value: Int) extends AnyVal
 object Position{
-  val zero: Position = Position(0)
+  type Position = Int Refined NonNegative
+  val zero: Position = 0
+
+  def validateRequestPosition(requestPosition: Option[PositionUnparsed]): SMono[Position] = {
+    val refinedPosition : Option[Either[String, Position]] =  requestPosition.map(position => refineV[NonNegative](position.value))
+
+    refinedPosition match {
+      case Some(Left(_))  =>  SMono.raiseError(new IllegalArgumentException(s"Negative position are not supported yet. ${requestPosition.map(_.value).getOrElse("")} was provided."))
+      case Some(Right(position)) => SMono.just(position)
+      case None => SMono.just(Position.zero)
+    }
+  }
 }
 
 case class LimitUnparsed(value: Long) extends AnyVal

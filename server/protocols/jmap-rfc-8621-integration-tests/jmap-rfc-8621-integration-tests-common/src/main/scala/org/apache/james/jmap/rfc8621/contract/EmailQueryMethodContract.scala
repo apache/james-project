@@ -1986,6 +1986,68 @@ trait EmailQueryMethodContract {
     }
   }
 
+  @Test
+  def shouldReturnAnIllegalArgumentExceptionIfThePositionIsNegative(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
+
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "position": -1
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+        .when
+        .post
+        .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |        [
+           |            "error",
+           |            {
+           |                "type": "invalidArguments",
+           |                "description": "Negative position are not supported yet. -1 was provided."
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    }
+  }
+
   @ParameterizedTest
   @MethodSource(value = Array("jmapSystemKeywords"))
   def listMailsBySystemKeywordShouldReturnOnlyMailsWithThisSystemKeyword(keywordFlag: Flags, keywordName: String, server: GuiceJamesServer): Unit = {

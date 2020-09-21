@@ -21,7 +21,8 @@ package org.apache.james.jmap.mail
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.IsAscending.{ASCENDING, DESCENDING}
 import org.apache.james.jmap.model.Limit.Limit
-import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, Position, QueryState, UTCDate}
+import org.apache.james.jmap.model.Position.Position
+import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState, UTCDate}
 import org.apache.james.mailbox.model.SearchQuery.Sort.Order.{NATURAL, REVERSE}
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
 import org.apache.james.mailbox.model.{MailboxId, MessageId, SearchQuery}
@@ -36,7 +37,7 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            maxSize: Option[Size],
                            hasAttachment: Option[HasAttachment])
 
-case class EmailQueryRequest(accountId: AccountId, position: Option[Position], limit: Option[LimitUnparsed], filter: Option[FilterCondition], comparator: Option[Set[Comparator]])
+case class EmailQueryRequest(accountId: AccountId, position: Option[PositionUnparsed], limit: Option[LimitUnparsed], filter: Option[FilterCondition], comparator: Option[Set[Comparator]])
 
 sealed trait SortProperty {
   def toSortClause: SortClause

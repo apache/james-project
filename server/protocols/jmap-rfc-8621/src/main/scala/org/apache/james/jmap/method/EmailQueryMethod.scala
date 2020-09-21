@@ -27,6 +27,7 @@ import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CA
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.{CanCalculateChanges, Capabilities, ErrorCode, Invocation, Limit, Position, QueryState}
 import org.apache.james.jmap.model.Limit.Limit
+import org.apache.james.jmap.model.Position.Position
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.utils.search.MailboxFilter
 import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
@@ -60,13 +61,13 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: EmailQueryRequest): SMono[Invocation] = {
     val searchQuery: MultimailboxesSearchQuery = searchQueryFromRequest(request)
     for {
+      positionToUse <- Position.validateRequestPosition(request.position)
       limitToUse <- Limit.validateRequestLimit(request.limit)
-      response <- executeQuery(mailboxSession, request, searchQuery, limitToUse)
+      response <- executeQuery(mailboxSession, request, searchQuery, positionToUse, limitToUse)
     } yield Invocation(methodName = methodName, arguments = Arguments(serializer.serialize(response)), methodCallId = invocation.methodCallId)
   }
 
-  private def executeQuery(mailboxSession: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, limitToUse: Limit): SMono[EmailQueryResponse] = {
-    val position = request.position.getOrElse(Position.zero)
+  private def executeQuery(mailboxSession: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, position: Position, limitToUse: Limit): SMono[EmailQueryResponse] = {
     SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, limitToUse))
       .drop(position.value)
       .collectSeq()
