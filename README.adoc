@@ -42,7 +42,7 @@ There is many other ways one can help us: packaging, communication, etc ...
  * link:#how-to-try-james[How to try James]
  * link:#how-to-check-the-compilation[How to check the compilation]
  * link:#how-to-run-james-in-docker[How to run James in Docker]
- ** link:#run-james-with-%2Dguice-%2Dcassandra-%2Drabbitmq-%2Ds3-%2Delasticsearch[Run James with Guice + Cassandra + RabbitMQ + S3 + ElasticSearch]
+ ** link:#run-james-with-guice-%2Dcassandra-%2Drabbitmq-%2Ds3-%2Delasticsearch[Run James with Guice + Cassandra + RabbitMQ + S3 + ElasticSearch]
  ** link:#run-james-with-guice-%2Dcassandra-%2Delasticsearch[Run James with Guice + Cassandra + ElasticSearch]
  ** link:#run-james-with-guice-%2Djpa-%2Dlucene[Run James with Guice + JPA + Lucene]
  ** link:#run-james-with-spring-%2Djpa[Run James with Spring + JPA]
