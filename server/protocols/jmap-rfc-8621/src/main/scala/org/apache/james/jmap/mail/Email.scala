@@ -166,6 +166,7 @@ object ParseOptions {
       case "asRaw" => Some(AsRaw)
       case "asText" => Some(AsText)
       case "asAddresses" => Some(AsAddresses)
+      case "asGroupedAddresses" => Some(AsGroupedAddresses)
       case _ => None
   }
 }
@@ -181,6 +182,9 @@ case object AsText extends ParseOption {
 }
 case object AsAddresses extends ParseOption {
   override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(AddressesHeaderValue.from(field))
+}
+case object AsGroupedAddresses extends ParseOption {
+  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(GroupedAddressesHeaderValue.from(field))
 }
 
 case class HeaderMessageId(value: String) extends AnyVal
