@@ -20,8 +20,9 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, IsAscending, ReceivedAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
-import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState}
+import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, Bcc, Body, Cc, CollapseThreads, From, FromSortProperty, HasKeywordSortProperty, Header, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty, HasAttachment, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, IsAscending, ReceivedAtSortProperty, SentAtSortProperty, SortProperty}
+import org.apache.james.jmap.model.{CanCalculateChanges, LimitUnparsed, PositionUnparsed, QueryState}
+import org.apache.james.jmap.model.{AccountId, Keyword}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
 
@@ -74,6 +75,7 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case JsString("to") => JsSuccess(ToSortProperty)
     case JsString("subject") => JsSuccess(SubjectSortProperty)
     case JsString("hasKeyword") => JsSuccess(HasKeywordSortProperty)
+    case JsString("sentAt") => JsSuccess(SentAtSortProperty)
     case JsString(others) => JsError(s"'$others' is not a supported sort property")
     case _ => JsError(s"Expecting a JsString to represent a sort property")
   }
