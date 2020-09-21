@@ -131,10 +131,10 @@ If you are using a a fresh installation of Docker, your DOCKER_HOST should be un
 
 This feature is available for three configurations :
 
- * Guice + Cassandra + RabbitMQ + S3 + ElasticSearch
- * Guice + Cassandra + ElasticSearch
- * Guice + JPA + Lucene
- * Spring + JPA
+ * link:#run-james-with-guice-%2Dcassandra-%2Drabbitmq-%2Ds3-%2Delasticsearch[Guice + Cassandra + RabbitMQ + S3 + ElasticSearch]
+ * link:#run-james-with-guice-%2Dcassandra-%2Delasticsearch[Guice + Cassandra + ElasticSearch]
+ * link:#run-james-with-guice-%2Djpa-%2Dlucene[Guice + JPA + Lucene]
+ * link:#run-james-with-spring-%2Djpa[Spring + JPA]
 
 
 === Run James with Guice + Cassandra + RabbitMQ + S3 + ElasticSearch
