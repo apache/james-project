@@ -6415,4 +6415,111 @@ trait EmailGetMethodContract {
            |    ]
            }""".stripMargin)
   }
+
+  @Test
+  def emailGetShouldReturnSpecificHeaderAsDate(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .addField(new RawField("Date",
+        "Wed, 9 Sep 2020 07:00:26 +0200"))
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["header:Date:asDate"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "${messageId.serialize}",
+           |    "header:Date:asDate": "2020-09-09T05:00:26Z"
+           }""".stripMargin)
+  }
+
+  @Test
+  def emailGetShouldReturnNullWhenInvalidSpecificHeaderAsDate(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .addField(new RawField("Date", "Invalid"))
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["header:Date:asDate"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "${messageId.serialize}",
+           |    "header:Date:asDate": null
+           }""".stripMargin)
+  }
 }

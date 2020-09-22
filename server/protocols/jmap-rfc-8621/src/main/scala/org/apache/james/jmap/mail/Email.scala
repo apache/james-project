@@ -168,6 +168,7 @@ object ParseOptions {
       case "asAddresses" => Some(AsAddresses)
       case "asGroupedAddresses" => Some(AsGroupedAddresses)
       case "asMessageIds" => Some(AsMessageIds)
+      case "asDate" => Some(AsDate)
       case _ => None
   }
 }
@@ -190,7 +191,11 @@ case object AsGroupedAddresses extends ParseOption {
 case object AsMessageIds extends ParseOption {
   override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(MessageIdsHeaderValue.from(field))
 }
+case object AsDate extends ParseOption {
+  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(DateHeaderValue.from(field, ZoneId.systemDefault()))
 
+  def extractHeaderValue(field: Field, zoneId: ZoneId): Option[EmailHeaderValue] = Some(DateHeaderValue.from(field, zoneId))
+}
 case class HeaderMessageId(value: String) extends AnyVal
 
 case class Subject(value: String) extends AnyVal
@@ -228,10 +233,10 @@ object EmailHeaders {
       sentAt = extractDate(mime4JMessage, "Date").map(date => UTCDate.from(date, zoneId)))
   }
 
-  def extractSpecificHeaders(properties: Option[Properties])(mime4JMessage: Message) = {
+  def extractSpecificHeaders(properties: Option[Properties])(zoneId: ZoneId, mime4JMessage: Message) = {
     properties.getOrElse(Properties.empty()).value
       .flatMap(property => SpecificHeaderRequest.from(property).toOption)
-      .map(_.retrieveHeader(mime4JMessage))
+      .map(_.retrieveHeader(zoneId, mime4JMessage))
       .toMap
   }
 
@@ -272,7 +277,7 @@ object EmailHeaders {
   private def extractDate(mime4JMessage: Message, fieldName: String): Option[Date] =
     extractLastField(mime4JMessage, fieldName)
       .flatMap {
-        case f: DateTimeField => Some(f.getDate)
+        case f: DateTimeField => Option(f.getDate)
         case _ => None
       }
 
@@ -424,10 +429,9 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
           size = sanitizeSize(firstMessage.getSize),
           keywords = keywords),
         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(mime4JMessage))
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
     }
   }
-
 }
 
 private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, previewFactory: Preview.Factory) extends EmailViewFactory[EmailFullView] {
@@ -468,7 +472,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
           htmlBody = bodyStructure.htmlBody,
           attachments = bodyStructure.attachments,
           bodyValues = bodyValues),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(mime4JMessage))
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
     }
   }
 
@@ -612,7 +616,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
           hasAttachment = HasAttachment(fastView.hasAttachment),
           preview = fastView.getPreview),
         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(mime4JMessage))
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
     }
   }
 }
