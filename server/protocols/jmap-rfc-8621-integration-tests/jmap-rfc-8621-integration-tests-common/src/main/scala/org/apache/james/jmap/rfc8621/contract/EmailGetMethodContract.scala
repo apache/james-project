@@ -2105,7 +2105,8 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize}"
+         |    "id": "${messageId.serialize}",
+         |    "messageId":null
          |}""".stripMargin)
   }
 
@@ -2148,7 +2149,8 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize}"
+         |    "id": "${messageId.serialize}",
+         |    "inReplyTo":null
          |}""".stripMargin)
   }
 
@@ -2191,7 +2193,8 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
       s"""{
-         |    "id": "${messageId.serialize}"
+         |    "id": "${messageId.serialize}",
+         |    "references":null
          |}""".stripMargin)
   }
 
@@ -6195,6 +6198,221 @@ trait EmailGetMethodContract {
         s"""{
            |    "id": "${messageId.serialize}",
            |    "header:To:asGroupedAddresses": []
+           }""".stripMargin)
+  }
+
+  @Test
+  def emailGetShouldReturnSpecificHeaderAsMessageIds(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setMessageId("<1234@local.machine.example>")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["header:Message-Id:asMessageIds"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "${messageId.serialize}",
+           |    "header:Message-Id:asMessageIds": [
+           |      "1234@local.machine.example"
+           |    ]
+           }""".stripMargin)
+  }
+
+  @Test
+  def emailGetSpecificHeaderAsMessageIdsShouldSupportMultipleIds(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .addField(new RawField("References", "<1234@local.machine.example> \r\n <3456@example.net>"))
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["header:References:asMessageIds"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "${messageId.serialize}",
+           |    "header:References:asMessageIds": [
+           |      "1234@local.machine.example",
+           |      "3456@example.net"
+           |    ]
+           }""".stripMargin)
+  }
+
+  @Test
+  def emailGetAsMessageIdsHeaderShouldReturnNullWhenInvalidMessageIds(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setMessageId("invalid")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["header:Message-Id:asMessageIds"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "${messageId.serialize}",
+           |    "header:Message-Id:asMessageIds": null
+           }""".stripMargin)
+  }
+
+  @Test
+  def emailGetShouldReturnSpecificHeaderWhenPartialInvalidMessageIds(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .addField(new RawField("References", "invalid   bloblah \r\n <3456@example.net>"))
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": [
+           |    "urn:ietf:params:jmap:core",
+           |    "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.serialize}"],
+           |       "properties": ["header:References:asMessageIds"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "${messageId.serialize}",
+           |    "header:References:asMessageIds": [
+           |      "3456@example.net"
+           |    ]
            }""".stripMargin)
   }
 }

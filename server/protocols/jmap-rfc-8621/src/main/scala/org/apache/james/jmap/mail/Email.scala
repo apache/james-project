@@ -167,6 +167,7 @@ object ParseOptions {
       case "asText" => Some(AsText)
       case "asAddresses" => Some(AsAddresses)
       case "asGroupedAddresses" => Some(AsGroupedAddresses)
+      case "asMessageIds" => Some(AsMessageIds)
       case _ => None
   }
 }
@@ -185,6 +186,9 @@ case object AsAddresses extends ParseOption {
 }
 case object AsGroupedAddresses extends ParseOption {
   override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(GroupedAddressesHeaderValue.from(field))
+}
+case object AsMessageIds extends ParseOption {
+  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(MessageIdsHeaderValue.from(field))
 }
 
 case class HeaderMessageId(value: String) extends AnyVal
@@ -246,13 +250,14 @@ object EmailHeaders {
       .map(MimeUtil.unscrambleHeaderValue)
       .map(Subject)
 
-  private def extractMessageId(mime4JMessage: Message, fieldName: String): Option[List[HeaderMessageId]] =
-    Option(mime4JMessage.getHeader.getFields(fieldName))
-      .map(_.asScala
-        .map(_.getBody)
-        .map(HeaderMessageId.from)
-        .toList)
-      .filter(_.nonEmpty)
+  private def extractMessageId(mime4JMessage: Message, fieldName: String): MessageIdsHeaderValue =
+    MessageIdsHeaderValue(
+      Option(mime4JMessage.getHeader.getFields(fieldName))
+        .map(_.asScala
+          .map(_.getBody)
+          .map(HeaderMessageId.from)
+          .toList)
+        .filter(_.nonEmpty))
 
   private def extractAddresses(mime4JMessage: Message, fieldName: String): Option[AddressesHeaderValue] =
     extractLastField(mime4JMessage, fieldName)
@@ -279,9 +284,9 @@ object EmailHeaders {
 }
 
 case class EmailHeaders(headers: List[EmailHeader],
-                        messageId: Option[List[HeaderMessageId]],
-                        inReplyTo: Option[List[HeaderMessageId]],
-                        references: Option[List[HeaderMessageId]],
+                        messageId: MessageIdsHeaderValue,
+                        inReplyTo: MessageIdsHeaderValue,
+                        references: MessageIdsHeaderValue,
                         to: Option[AddressesHeaderValue],
                         cc: Option[AddressesHeaderValue],
                         bcc: Option[AddressesHeaderValue],

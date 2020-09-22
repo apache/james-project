@@ -20,10 +20,12 @@
 package org.apache.james.jmap.mail
 
 import java.nio.charset.StandardCharsets.US_ASCII
+import java.util.Date
 
+import org.apache.commons.lang3.StringUtils
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.address.{AddressList, Group, Address => Mime4jAddress, Mailbox => Mime4jMailbox}
-import org.apache.james.mime4j.field.AddressListFieldImpl
+import org.apache.james.mime4j.field.{AddressListFieldImpl, DateTimeFieldImpl}
 import org.apache.james.mime4j.stream.Field
 import org.apache.james.mime4j.util.MimeUtil
 
@@ -75,6 +77,23 @@ object GroupedAddressesHeaderValue extends EmailHeaderValue {
   }
 }
 
+object MessageIdsHeaderValue {
+  def from(field: Field): MessageIdsHeaderValue = {
+    val messageIds: List[HeaderMessageId] = MimeUtil.unfold(StringUtils.normalizeSpace(field.getBody))
+      .split(' ')
+      .flatMap(body => {
+        if(body.startsWith("<") && body.endsWith(">") && body.contains("@")) {
+          scala.Right(HeaderMessageId.from(body))
+        } else {
+          Left()
+        }
+      }.toOption)
+      .toList
+
+      MessageIdsHeaderValue(Option(messageIds).filter(_.nonEmpty))
+  }
+}
+
 case class EmailHeaderName(value: String) extends AnyVal
 
 sealed trait EmailHeaderValue
@@ -82,5 +101,6 @@ case class RawHeaderValue(value: String) extends EmailHeaderValue
 case class TextHeaderValue(value: String) extends EmailHeaderValue
 case class AddressesHeaderValue(value: List[EmailAddress]) extends EmailHeaderValue
 case class GroupedAddressesHeaderValue(value: List[EmailAddressGroup]) extends EmailHeaderValue
+case class MessageIdsHeaderValue(value: Option[List[HeaderMessageId]]) extends EmailHeaderValue
 
 case class EmailHeader(name: EmailHeaderName, value: EmailHeaderValue)
