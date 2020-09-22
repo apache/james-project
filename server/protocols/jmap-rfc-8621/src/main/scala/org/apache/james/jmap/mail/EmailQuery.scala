@@ -39,7 +39,12 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            maxSize: Option[Size],
                            hasAttachment: Option[HasAttachment])
 
-case class EmailQueryRequest(accountId: AccountId, position: Option[PositionUnparsed], limit: Option[LimitUnparsed], filter: Option[FilterCondition], comparator: Option[Set[Comparator]])
+case class EmailQueryRequest(accountId: AccountId,
+                             position: Option[PositionUnparsed],
+                             limit: Option[LimitUnparsed],
+                             filter: Option[FilterCondition],
+                             comparator: Option[Set[Comparator]],
+                             collapseThreads: Option[CollapseThreads])
 
 sealed trait SortProperty {
   def toSortClause: Either[UnsupportedSortException, SortClause]
@@ -82,6 +87,8 @@ case class Comparator(property: SortProperty,
       sortClause <- property.toSortClause
     } yield new SearchQuery.Sort(sortClause, isAscending.getOrElse(ASCENDING).toSortOrder)
 }
+
+case class CollapseThreads(value: Boolean) extends AnyVal
 
 case class EmailQueryResponse(accountId: AccountId,
                               queryState: QueryState,

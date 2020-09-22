@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, HasAttachment, IsAscending, ReceivedAtSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty}
+import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, HasAttachment, IsAscending, ReceivedAtSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty}
 import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
@@ -71,6 +71,7 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val isAscendingFormat: Format[IsAscending] = Json.valueFormat[IsAscending]
   private implicit val collationFormat: Format[Collation] = Json.valueFormat[Collation]
   private implicit val comparatorFormat: Format[Comparator] = Json.format[Comparator]
+  private implicit val collapseThreadsReads: Reads[CollapseThreads] = Json.valueReads[CollapseThreads]
 
   private implicit val emailQueryRequestReads: Reads[EmailQueryRequest] = Json.reads[EmailQueryRequest]
 
