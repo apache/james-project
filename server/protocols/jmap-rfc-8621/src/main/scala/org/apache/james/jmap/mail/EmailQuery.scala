@@ -28,6 +28,7 @@ import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
 import org.apache.james.mailbox.model.{MailboxId, MessageId, SearchQuery}
 
 case class UnsupportedSortException(unsupportedSort: String) extends UnsupportedOperationException
+case class UnsupportedFilterException(unsupportedFilter: String) extends UnsupportedOperationException
 
 case class FilterCondition(inMailbox: Option[MailboxId],
                            inMailboxOtherThan: Option[Seq[MailboxId]],
@@ -37,7 +38,10 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            notKeyword: Option[Keyword],
                            minSize: Option[Size],
                            maxSize: Option[Size],
-                           hasAttachment: Option[HasAttachment])
+                           hasAttachment: Option[HasAttachment],
+                           allInThreadHaveKeyword: Option[Keyword],
+                           someInThreadHaveKeyword: Option[Keyword],
+                           noneInThreadHaveKeyword: Option[Keyword])
 
 case class EmailQueryRequest(accountId: AccountId,
                              position: Option[PositionUnparsed],

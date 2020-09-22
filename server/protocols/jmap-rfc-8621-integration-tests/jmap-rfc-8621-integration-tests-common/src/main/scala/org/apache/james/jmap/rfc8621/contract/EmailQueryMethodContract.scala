@@ -913,6 +913,51 @@ trait EmailQueryMethodContract {
 
   @ParameterizedTest
   @ValueSource(strings = Array(
+    "allInThreadHaveKeyword",
+    "someInThreadHaveKeyword",
+    "noneInThreadHaveKeyword"
+  ))
+  def listMailsShouldReturnUnsupportedFilterWhenValidButUnsupported(unsupportedFilter: String): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "$unsupportedFilter": "abc"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("$.methodResponses[0][1]")
+      .isEqualTo(s"""
+       {
+          "type": "unsupportedFilter",
+          "description": "The filter $unsupportedFilter is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search."
+       }
+       """)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array(
     "true",
     "false"
   ))

@@ -73,4 +73,8 @@ object ErrorCode {
   case object UnsupportedSort extends ErrorCode {
     override def code: String = "unsupportedSort"
   }
+
+  case object UnsupportedFilter extends ErrorCode {
+    override def code: String = "unsupportedFilter"
+  }
 }

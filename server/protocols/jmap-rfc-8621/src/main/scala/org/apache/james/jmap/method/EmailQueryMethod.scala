@@ -22,7 +22,7 @@ import cats.implicits._
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse, UnsupportedSortException}
+import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse, UnsupportedFilterException, UnsupportedSortException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
@@ -57,6 +57,10 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
             ErrorCode.UnsupportedSort,
             s"The sort ${e.unsupportedSort} is syntactically valid, but it includes a property the server does not support sorting on or a collation method it does not recognise.",
             invocation.methodCallId))
+          case e: UnsupportedFilterException => SMono.just(Invocation.error(
+            ErrorCode.UnsupportedFilter,
+            s"The filter ${e.unsupportedFilter} is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search.",
+            invocation.methodCallId))
           case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
           case e: MailboxNotFoundException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
           case e: Throwable => SMono.raiseError(e)
@@ -86,12 +90,14 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
         limit = Some(limitToUse).filterNot(used => request.limit.map(_.value).contains(used.value))))
   }
 
-  private def searchQueryFromRequest(request: EmailQueryRequest): Either[UnsupportedSortException, MultimailboxesSearchQuery] = {
+  private def searchQueryFromRequest(request: EmailQueryRequest): Either[UnsupportedOperationException, MultimailboxesSearchQuery] = {
     val comparators: List[Comparator] = request.comparator.getOrElse(Set(Comparator.default)).toList
 
     comparators.map(_.toSort)
       .sequence
-      .map(sorts => QueryFilter.buildQuery(request)
+      .flatMap(sorts => for {
+        queryFilter <- QueryFilter.buildQuery(request)
+      } yield queryFilter
         .sorts(sorts.asJava)
         .build())
       .map(MailboxFilter.buildQuery(request, _))
