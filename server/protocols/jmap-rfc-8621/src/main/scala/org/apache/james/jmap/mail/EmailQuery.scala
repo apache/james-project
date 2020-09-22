@@ -27,6 +27,8 @@ import org.apache.james.mailbox.model.SearchQuery.Sort.Order.{NATURAL, REVERSE}
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
 import org.apache.james.mailbox.model.{MailboxId, MessageId, SearchQuery}
 
+case class UnsupportedSortException(unsupportedSort: String) extends UnsupportedOperationException
+
 case class FilterCondition(inMailbox: Option[MailboxId],
                            inMailboxOtherThan: Option[Seq[MailboxId]],
                            before: Option[UTCDate],
@@ -40,10 +42,18 @@ case class FilterCondition(inMailbox: Option[MailboxId],
 case class EmailQueryRequest(accountId: AccountId, position: Option[PositionUnparsed], limit: Option[LimitUnparsed], filter: Option[FilterCondition], comparator: Option[Set[Comparator]])
 
 sealed trait SortProperty {
-  def toSortClause: SortClause
+  def toSortClause: Either[UnsupportedSortException, SortClause]
 }
 case object ReceivedAtSortProperty extends SortProperty {
-  override def toSortClause: SortClause = SortClause.Arrival
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = scala.Right(SortClause.Arrival)
+}
+
+case object AllInThreadHaveKeywordSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("allInThreadHaveKeyword"))
+}
+
+case object SomeInThreadHaveKeywordSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("someInThreadHaveKeyword"))
 }
 
 object IsAscending {
@@ -67,7 +77,10 @@ case class Collation(value: String) extends AnyVal
 case class Comparator(property: SortProperty,
                       isAscending: Option[IsAscending],
                       collation: Option[Collation]) {
-  def toSort: SearchQuery.Sort = new SearchQuery.Sort(property.toSortClause, isAscending.getOrElse(ASCENDING).toSortOrder)
+  def toSort: Either[UnsupportedSortException, SearchQuery.Sort] =
+    for {
+      sortClause <- property.toSortClause
+    } yield new SearchQuery.Sort(sortClause, isAscending.getOrElse(ASCENDING).toSortOrder)
 }
 
 case class EmailQueryResponse(accountId: AccountId,

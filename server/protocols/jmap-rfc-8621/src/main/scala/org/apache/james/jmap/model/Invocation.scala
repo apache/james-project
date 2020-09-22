@@ -69,4 +69,8 @@ object ErrorCode {
   case object InvalidResultReference extends ErrorCode {
     override def code: String = "invalidResultReference"
   }
+
+  case object UnsupportedSort extends ErrorCode {
+    override def code: String = "unsupportedSort"
+  }
 }

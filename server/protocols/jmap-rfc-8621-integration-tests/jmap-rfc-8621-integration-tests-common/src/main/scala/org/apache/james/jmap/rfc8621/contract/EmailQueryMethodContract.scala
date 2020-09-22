@@ -51,7 +51,7 @@ import org.awaitility.Awaitility
 import org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.{Arguments, MethodSource}
+import org.junit.jupiter.params.provider.{Arguments, MethodSource, ValueSource}
 import org.threeten.extra.Seconds
 
 object EmailQueryMethodContract {
@@ -865,6 +865,50 @@ trait EmailQueryMethodContract {
           }
          """)
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array(
+    "allInThreadHaveKeyword",
+    "someInThreadHaveKeyword"
+  ))
+  def listMailsShouldReturnUnsupportedSortWhenPropertyFieldInComparatorIsValidButUnsupported(unsupported: String): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "comparator": [{
+         |        "property":"$unsupported"
+         |      }]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("$.methodResponses[0][1]")
+      .isEqualTo(s"""
+       {
+          "type": "unsupportedSort",
+          "description": "The sort $unsupported is syntactically valid, but it includes a property the server does not support sorting on or a collation method it does not recognise."
+       }
+       """)
   }
 
   @Test
