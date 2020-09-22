@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
 
@@ -31,16 +32,18 @@ import reactor.rabbitmq.Sender;
 class GroupRegistrationHandler {
     private final Map<Group, GroupRegistration> groupRegistrations;
     private final EventSerializer eventSerializer;
+    private final ReactorRabbitMQChannelPool channelPool;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
     private final RetryBackoffConfiguration retryBackoff;
     private final EventDeadLetters eventDeadLetters;
     private final MailboxListenerExecutor mailboxListenerExecutor;
 
-    GroupRegistrationHandler(EventSerializer eventSerializer, Sender sender, ReceiverProvider receiverProvider,
+    GroupRegistrationHandler(EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
                              RetryBackoffConfiguration retryBackoff,
                              EventDeadLetters eventDeadLetters, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventSerializer = eventSerializer;
+        this.channelPool = channelPool;
         this.sender = sender;
         this.receiverProvider = receiverProvider;
         this.retryBackoff = retryBackoff;
@@ -71,7 +74,7 @@ class GroupRegistrationHandler {
 
     private GroupRegistration newGroupRegistration(MailboxListener.ReactiveMailboxListener listener, Group group) {
         return new GroupRegistration(
-            sender,
+            channelPool, sender,
             receiverProvider,
             eventSerializer,
             listener,

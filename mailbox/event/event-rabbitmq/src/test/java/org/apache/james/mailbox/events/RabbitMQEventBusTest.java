@@ -154,7 +154,10 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     private RabbitMQEventBus newEventBus(Sender sender, ReceiverProvider receiverProvider) {
-        return new RabbitMQEventBus(sender, receiverProvider, eventSerializer, EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, routingKeyConverter, memoryEventDeadLetters, new RecordingMetricFactory());
+        return new RabbitMQEventBus(sender, receiverProvider, eventSerializer,
+            EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
+            memoryEventDeadLetters, new RecordingMetricFactory(),
+            rabbitMQExtension.getRabbitChannelPool());
     }
 
     @Override

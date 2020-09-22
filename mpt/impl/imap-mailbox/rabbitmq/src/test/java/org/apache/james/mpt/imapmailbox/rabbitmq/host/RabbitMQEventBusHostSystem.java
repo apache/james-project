@@ -112,7 +112,8 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         RoutingKeyConverter routingKeyConverter = new RoutingKeyConverter(ImmutableSet.of(new MailboxIdRegistrationKey.Factory(mailboxIdFactory)));
         return new RabbitMQEventBus(reactorRabbitMQChannelPool.getSender(), reactorRabbitMQChannelPool::createReceiver,
             eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, new MemoryEventDeadLetters(),
-            new RecordingMetricFactory());
+            new RecordingMetricFactory(),
+            reactorRabbitMQChannelPool);
     }
 
     @Override

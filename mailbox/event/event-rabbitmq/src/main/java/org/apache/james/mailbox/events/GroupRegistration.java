@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.util.MDCBuilder;
@@ -43,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import reactor.core.Disposable;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
@@ -78,6 +78,7 @@ class GroupRegistration implements Registration {
     static final String RETRY_COUNT = "retry-count";
     static final int DEFAULT_RETRY_COUNT = 0;
 
+    private final ReactorRabbitMQChannelPool channelPool;
     private final MailboxListener.ReactiveMailboxListener mailboxListener;
     private final WorkQueueName queueName;
     private final Receiver receiver;
@@ -91,10 +92,11 @@ class GroupRegistration implements Registration {
     private final MailboxListenerExecutor mailboxListenerExecutor;
     private Optional<Disposable> receiverSubscriber;
 
-    GroupRegistration(Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
+    GroupRegistration(ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
                       MailboxListener.ReactiveMailboxListener mailboxListener, Group group, RetryBackoffConfiguration retryBackoff,
                       EventDeadLetters eventDeadLetters,
                       Runnable unregisterGroup, MailboxListenerExecutor mailboxListenerExecutor) {
+        this.channelPool = channelPool;
         this.eventSerializer = eventSerializer;
         this.mailboxListener = mailboxListener;
         this.queueName = WorkQueueName.of(group);
@@ -120,17 +122,16 @@ class GroupRegistration implements Registration {
     }
 
     private Mono<Void> createGroupWorkQueue() {
-        return Flux.concat(
-            sender.declareQueue(QueueSpecification.queue(queueName.asString())
+        return channelPool.createWorkQueue(
+            QueueSpecification.queue(queueName.asString())
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(deadLetterQueue(MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME))),
-            sender.bind(BindingSpecification.binding()
+                .arguments(deadLetterQueue(MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME)),
+            BindingSpecification.binding()
                 .exchange(MAILBOX_EVENT_EXCHANGE_NAME)
                 .queue(queueName.asString())
-                .routingKey(EMPTY_ROUTING_KEY)))
-            .then();
+                .routingKey(EMPTY_ROUTING_KEY));
     }
 
     private Disposable consumeWorkQueue() {

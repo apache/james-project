@@ -24,6 +24,7 @@ import java.util.Set;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.lifecycle.api.Startable;
@@ -53,6 +54,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private final MailboxListenerExecutor mailboxListenerExecutor;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
+    private final ReactorRabbitMQChannelPool channelPool;
 
     private volatile boolean isRunning;
     private volatile boolean isStopping;
@@ -64,10 +66,11 @@ public class RabbitMQEventBus implements EventBus, Startable {
     public RabbitMQEventBus(Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
                             RetryBackoffConfiguration retryBackoff,
                             RoutingKeyConverter routingKeyConverter,
-                            EventDeadLetters eventDeadLetters, MetricFactory metricFactory) {
+                            EventDeadLetters eventDeadLetters, MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool) {
         this.sender = sender;
         this.receiverProvider = receiverProvider;
         this.mailboxListenerExecutor = new MailboxListenerExecutor(metricFactory);
+        this.channelPool = channelPool;
         this.eventBusId = EventBusId.random();
         this.eventSerializer = eventSerializer;
         this.routingKeyConverter = routingKeyConverter;
@@ -82,7 +85,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor, retryBackoff);
-            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, receiverProvider, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
+            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
             eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, sender, localListenerRegistry, mailboxListenerExecutor, eventDeadLetters);
 
             eventDispatcher.start();
@@ -97,7 +100,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor, retryBackoff);
-            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, receiverProvider, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
+            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
             eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, sender, localListenerRegistry, mailboxListenerExecutor, eventDeadLetters);
 
             keyRegistrationHandler.declareQueue();

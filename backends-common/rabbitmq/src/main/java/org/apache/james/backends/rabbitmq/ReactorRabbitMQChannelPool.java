@@ -37,13 +37,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ShutdownSignalException;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
+import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ChannelPool;
+import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.ReceiverOptions;
@@ -234,6 +239,29 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
            .channelPool(this)
            .resourceManagementChannelMono(
                connectionMono.map(Throwing.function(Connection::createChannel)).cache()));
+    }
+
+    public Mono<Void> createWorkQueue(QueueSpecification queueSpecification, BindingSpecification bindingSpecification) {
+        Preconditions.checkArgument(queueSpecification.getName() != null, "WorkQueue pattern do not make sense for unnamed queues");
+        Preconditions.checkArgument(queueSpecification.getName().equals(bindingSpecification.getQueue()),
+            "Binding needs to be targetting the created queue %s instead of %s",
+            queueSpecification.getName(), bindingSpecification.getQueue());
+
+        return Flux.concat(
+            Mono.using(this::createSender,
+                managementSender -> managementSender.declareQueue(queueSpecification),
+                Sender::close)
+                .onErrorResume(
+                    e -> e instanceof ShutdownSignalException
+                        && e.getMessage().contains("reply-code=406, reply-text=PRECONDITION_FAILED - inequivalent arg 'x-dead-letter-exchange' for queue"),
+                    e -> {
+                        LOGGER.warn("{} already exists without dead-letter setup. Dead lettered messages to it will be lost. " +
+                            "To solve this, re-create the queue with the x-dead-letter-exchange argument set up.",
+                            queueSpecification.getName());
+                        return Mono.empty();
+                    }),
+            sender.bind(bindingSpecification))
+            .then();
     }
 
     private void invalidateObject(Channel channel) {
