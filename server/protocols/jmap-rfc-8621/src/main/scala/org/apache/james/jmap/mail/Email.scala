@@ -34,6 +34,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
+import org.apache.james.jmap.mail.BracketHeader.sanitize
 import org.apache.james.jmap.mail.Email.{Size, sanitizeSize}
 import org.apache.james.jmap.method.ZoneIdProvider
 import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
@@ -149,8 +150,14 @@ case object FullReadLevel extends ReadLevel
 
 object HeaderMessageId {
   def from(string: String): HeaderMessageId = HeaderMessageId(sanitize(string))
+}
 
-  private def sanitize(string: String): String = string match {
+object HeaderURL {
+  def from(string: String): HeaderURL = HeaderURL(sanitize(string))
+}
+
+object BracketHeader {
+  def sanitize(string: String): String = string match {
     case s if s.startsWith("<") => sanitize(s.substring(1))
     case s if s.endsWith(">") => sanitize(s.substring(0, s.length - 1))
     case s => s
@@ -169,6 +176,7 @@ object ParseOptions {
       case "asGroupedAddresses" => Some(AsGroupedAddresses)
       case "asMessageIds" => Some(AsMessageIds)
       case "asDate" => Some(AsDate)
+      case "asURLs" => Some(AsURLs)
       case _ => None
   }
 }
@@ -196,6 +204,10 @@ case object AsDate extends ParseOption {
 
   def extractHeaderValue(field: Field, zoneId: ZoneId): Option[EmailHeaderValue] = Some(DateHeaderValue.from(field, zoneId))
 }
+case object AsURLs extends ParseOption {
+  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(URLsHeaderValue.from(field))
+}
+
 case class HeaderMessageId(value: String) extends AnyVal
 
 case class Subject(value: String) extends AnyVal
@@ -205,6 +217,8 @@ case class MailboxIds(value: List[MailboxId])
 case class ThreadId(value: String) extends AnyVal
 
 case class HasAttachment(value: Boolean) extends AnyVal
+
+case class HeaderURL(value: String) extends AnyVal
 
 case class EmailMetadata(id: MessageId,
                          blobId: BlobId,

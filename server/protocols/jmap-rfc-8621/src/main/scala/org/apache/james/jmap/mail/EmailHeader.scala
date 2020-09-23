@@ -26,7 +26,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.james.jmap.model.UTCDate
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.address.{AddressList, Group, Address => Mime4jAddress, Mailbox => Mime4jMailbox}
-import org.apache.james.mime4j.field.{AddressListFieldImpl, DateTimeFieldImpl}
+import org.apache.james.mime4j.field.{AddressListFieldImpl, ContentLocationFieldImpl, DateTimeFieldImpl}
 import org.apache.james.mime4j.stream.Field
 import org.apache.james.mime4j.util.MimeUtil
 
@@ -102,6 +102,23 @@ object DateHeaderValue extends EmailHeaderValue {
       .getOrElse(DateHeaderValue(None))
 }
 
+object URLsHeaderValue extends EmailHeaderValue {
+  def from(field: Field): URLsHeaderValue = {
+    val url: Option[List[HeaderURL]] = Option(ContentLocationFieldImpl.PARSER.parse(field, DecodeMonitor.SILENT).getLocation)
+      .map(urls => urls.split(',')
+        .toList
+        .flatMap(url => {
+          if(url.startsWith("<") && url.endsWith(">")) {
+            scala.Right(HeaderURL.from(url))
+          } else {
+            Left()
+          }
+        }.toOption))
+
+      URLsHeaderValue(url.filter(_.nonEmpty))
+  }
+}
+
 case class EmailHeaderName(value: String) extends AnyVal
 
 sealed trait EmailHeaderValue
@@ -111,5 +128,6 @@ case class AddressesHeaderValue(value: List[EmailAddress]) extends EmailHeaderVa
 case class GroupedAddressesHeaderValue(value: List[EmailAddressGroup]) extends EmailHeaderValue
 case class MessageIdsHeaderValue(value: Option[List[HeaderMessageId]]) extends EmailHeaderValue
 case class DateHeaderValue(value: Option[UTCDate]) extends EmailHeaderValue
+case class URLsHeaderValue(value: Option[List[HeaderURL]]) extends EmailHeaderValue
 
 case class EmailHeader(name: EmailHeaderName, value: EmailHeaderValue)
