@@ -31,6 +31,14 @@ case class UnsupportedSortException(unsupportedSort: String) extends Unsupported
 case class UnsupportedFilterException(unsupportedFilter: String) extends UnsupportedOperationException
 case class UnsupportedRequestParameterException(unsupportedParam: String) extends UnsupportedOperationException
 
+case class Text(value: String) extends AnyVal
+case class From(value: String) extends AnyVal
+case class To(value: String) extends AnyVal
+case class Cc(value: String) extends AnyVal
+case class Bcc(value: String) extends AnyVal
+case class Body(value: String) extends AnyVal
+case class Header(value: String) extends AnyVal
+
 case class FilterCondition(inMailbox: Option[MailboxId],
                            inMailboxOtherThan: Option[Seq[MailboxId]],
                            before: Option[UTCDate],
@@ -42,7 +50,15 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            hasAttachment: Option[HasAttachment],
                            allInThreadHaveKeyword: Option[Keyword],
                            someInThreadHaveKeyword: Option[Keyword],
-                           noneInThreadHaveKeyword: Option[Keyword])
+                           noneInThreadHaveKeyword: Option[Keyword],
+                           text: Option[Text],
+                           from: Option[From],
+                           to: Option[To],
+                           cc: Option[Cc],
+                           bcc: Option[Bcc],
+                           subject: Option[Subject],
+                           header: Option[Set[Header]],
+                           body: Option[Body])
 
 case class EmailQueryRequest(accountId: AccountId,
                              position: Option[PositionUnparsed],

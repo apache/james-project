@@ -920,7 +920,14 @@ trait EmailQueryMethodContract {
   @ValueSource(strings = Array(
     "allInThreadHaveKeyword",
     "someInThreadHaveKeyword",
-    "noneInThreadHaveKeyword"
+    "noneInThreadHaveKeyword",
+    "text",
+    "from",
+    "to",
+    "cc",
+    "bcc",
+    "subject",
+    "body"
   ))
   def listMailsShouldReturnUnsupportedFilterWhenValidButUnsupported(unsupportedFilter: String): Unit = {
     val request =
@@ -957,6 +964,46 @@ trait EmailQueryMethodContract {
        {
           "type": "unsupportedFilter",
           "description": "The filter $unsupportedFilter is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search."
+       }
+       """)
+  }
+
+  @Test
+  def listMailsShouldReturnUnsupportedFilterWhenHeaderFilter(): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "header": ["header1", "header2"]
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("$.methodResponses[0][1]")
+      .isEqualTo(s"""
+       {
+          "type": "unsupportedFilter",
+          "description": "The filter header is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search."
        }
        """)
   }

@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, FromSortProperty, HasAttachment, HasKeywordSortProperty, IsAscending, ReceivedAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, SubjectSortProperty, ToSortProperty}
+import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, IsAscending, ReceivedAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
 import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
@@ -49,6 +49,14 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case _ => JsError("Expecting keywords to be represented by a JsString")
   }
   private implicit val hasAttachmentReads: Reads[HasAttachment] = Json.valueReads[HasAttachment]
+  private implicit val textReads: Reads[Text] = Json.valueReads[Text]
+  private implicit val fromReads: Reads[From] = Json.valueReads[From]
+  private implicit val toReads: Reads[To] = Json.valueReads[To]
+  private implicit val ccReads: Reads[Cc] = Json.valueReads[Cc]
+  private implicit val bccReads: Reads[Bcc] = Json.valueReads[Bcc]
+  private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]
+  private implicit val headerReads: Reads[Header] = Json.valueReads[Header]
+  private implicit val bodyReads: Reads[Body] = Json.valueReads[Body]
   private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
   private implicit val limitUnparsedReads: Reads[LimitUnparsed] = Json.valueReads[LimitUnparsed]
   private implicit val CanCalculateChangesFormat: Format[CanCalculateChanges] = Json.valueFormat[CanCalculateChanges]

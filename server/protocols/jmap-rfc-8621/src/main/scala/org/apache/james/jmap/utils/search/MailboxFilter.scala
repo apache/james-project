@@ -61,7 +61,8 @@ object MailboxFilter {
   object QueryFilter {
     def buildQuery(request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] = {
       List(ReceivedBefore, ReceivedAfter, HasAttachment, HasKeyWord, NotKeyWord, MinSize, MaxSize,
-           AllInThreadHaveKeyword, NoneInThreadHaveKeyword, SomeInThreadHaveKeyword)
+           AllInThreadHaveKeyword, NoneInThreadHaveKeyword, SomeInThreadHaveKeyword, Text, From,
+           To, Cc, Bcc, Subject, Header, Body)
         .foldLeftM(new SearchQuery.Builder())((builder, filter) => filter.toQuery(builder, request))
     }
   }
@@ -160,6 +161,62 @@ object MailboxFilter {
     override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
       request.filter.flatMap(_.someInThreadHaveKeyword) match {
         case Some(_) => Left(UnsupportedFilterException("someInThreadHaveKeyword"))
+        case None => Right(builder)
+      }
+  }
+  case object Text extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
+      request.filter.flatMap(_.text) match {
+        case Some(_) => Left(UnsupportedFilterException("text"))
+        case None => Right(builder)
+      }
+  }
+  case object From extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
+      request.filter.flatMap(_.from) match {
+        case Some(_) => Left(UnsupportedFilterException("from"))
+        case None => Right(builder)
+      }
+  }
+  case object To extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
+      request.filter.flatMap(_.to) match {
+        case Some(_) => Left(UnsupportedFilterException("to"))
+        case None => Right(builder)
+      }
+  }
+  case object Cc extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
+      request.filter.flatMap(_.cc) match {
+        case Some(_) => Left(UnsupportedFilterException("cc"))
+        case None => Right(builder)
+      }
+  }
+  case object Bcc extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
+      request.filter.flatMap(_.bcc) match {
+        case Some(_) => Left(UnsupportedFilterException("bcc"))
+        case None => Right(builder)
+      }
+  }
+  case object Subject extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
+      request.filter.flatMap(_.subject) match {
+        case Some(_) => Left(UnsupportedFilterException("subject"))
+        case None => Right(builder)
+      }
+  }
+  case object Header extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
+      request.filter.flatMap(_.header) match {
+        case Some(_) => Left(UnsupportedFilterException("header"))
+        case None => Right(builder)
+      }
+  }
+  case object Body extends QueryFilter {
+    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
+      request.filter.flatMap(_.body) match {
+        case Some(_) => Left(UnsupportedFilterException("body"))
         case None => Right(builder)
       }
   }
