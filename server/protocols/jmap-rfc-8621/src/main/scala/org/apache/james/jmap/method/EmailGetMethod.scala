@@ -37,7 +37,6 @@ import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
-import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -83,20 +82,19 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
                                 messageIdFactory: MessageId.Factory,
                                 zoneIdProvider: ZoneIdProvider,
                                 previewFactory: Preview.Factory,
-                                metricFactory: MetricFactory,
-                                sessionSupplier: SessionSupplier) extends Method {
+                                val metricFactory: MetricFactory,
+                                val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailGetRequest] {
   override val methodName = MethodName("Email/get")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext, sessionSupplier: SessionSupplier): Publisher[(Invocation, ProcessingContext)] =
-    metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asEmailGetRequest(invocation.arguments)
-        .flatMap(computeResponseInvocation(_, invocation, mailboxSession))
-        .onErrorResume({
-          case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
-          case e: Throwable => SMono.raiseError(e)
-        })
-        .map(invocationResult => (invocationResult, processingContext)))
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext, request: EmailGetRequest): SMono[(Invocation, ProcessingContext)] = {
+    computeResponseInvocation(request, invocation, mailboxSession).onErrorResume({
+      case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
+      case e: Throwable => SMono.raiseError(e)
+    }).map(invocationResult => (invocationResult, processingContext))
+  }
+
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailGetRequest] = asEmailGetRequest(invocation.arguments)
 
   private def computeResponseInvocation(request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     validateProperties(request)

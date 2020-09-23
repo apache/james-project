@@ -28,6 +28,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.EmailHeaders.SPECIFIC_HEADER_PREFIX
+import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mime4j.dom.Message
@@ -74,7 +75,7 @@ case class EmailGetRequest(accountId: AccountId,
                            fetchHTMLBodyValues: Option[FetchHTMLBodyValues],
                            maxBodyValueBytes: Option[MaxBodyValueBytes],
                            properties: Option[Properties],
-                           bodyProperties: Option[Properties])
+                           bodyProperties: Option[Properties]) extends WithAccountId
 
 case class EmailNotFound(value: Set[UnparsedEmailId]) {
   def merge(other: EmailNotFound): EmailNotFound = EmailNotFound(this.value ++ other.value)
