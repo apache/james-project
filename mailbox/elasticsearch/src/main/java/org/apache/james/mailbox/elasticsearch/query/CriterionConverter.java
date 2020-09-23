@@ -251,9 +251,9 @@ public class CriterionConverter {
         case EQUALS:
             return boolQuery().filter(rangeQuery(fieldName).gte(operator.getValue()).lte(operator.getValue()));
         case GREATER_THAN:
-            return boolQuery().filter(rangeQuery(fieldName).gte(operator.getValue()));
+            return boolQuery().filter(rangeQuery(fieldName).gt(operator.getValue()));
         case LESS_THAN:
-            return boolQuery().filter(rangeQuery(fieldName).lte(operator.getValue()));
+            return boolQuery().filter(rangeQuery(fieldName).lt(operator.getValue()));
         default:
             throw new RuntimeException("A non existing numeric operator was triggered");
         }
