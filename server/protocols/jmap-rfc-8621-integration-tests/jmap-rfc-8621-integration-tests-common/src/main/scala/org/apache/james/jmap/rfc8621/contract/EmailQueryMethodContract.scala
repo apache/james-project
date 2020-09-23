@@ -870,7 +870,12 @@ trait EmailQueryMethodContract {
   @ParameterizedTest
   @ValueSource(strings = Array(
     "allInThreadHaveKeyword",
-    "someInThreadHaveKeyword"
+    "someInThreadHaveKeyword",
+    "size",
+    "from",
+    "to",
+    "subject",
+    "hasKeyword"
   ))
   def listMailsShouldReturnUnsupportedSortWhenPropertyFieldInComparatorIsValidButUnsupported(unsupported: String): Unit = {
     val request =

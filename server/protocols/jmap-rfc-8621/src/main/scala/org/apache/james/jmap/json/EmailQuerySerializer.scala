@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, HasAttachment, IsAscending, ReceivedAtSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty}
+import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, FromSortProperty, HasAttachment, HasKeywordSortProperty, IsAscending, ReceivedAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, SubjectSortProperty, ToSortProperty}
 import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
@@ -61,6 +61,11 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case JsString("receivedAt") => JsSuccess(ReceivedAtSortProperty)
     case JsString("allInThreadHaveKeyword") => JsSuccess(AllInThreadHaveKeywordSortProperty)
     case JsString("someInThreadHaveKeyword") => JsSuccess(SomeInThreadHaveKeywordSortProperty)
+    case JsString("size") => JsSuccess(SizeSortProperty)
+    case JsString("from") => JsSuccess(FromSortProperty)
+    case JsString("to") => JsSuccess(ToSortProperty)
+    case JsString("subject") => JsSuccess(SubjectSortProperty)
+    case JsString("hasKeyword") => JsSuccess(HasKeywordSortProperty)
     case JsString(others) => JsError(s"'$others' is not a supported sort property")
     case _ => JsError(s"Expecting a JsString to represent a sort property")
   }

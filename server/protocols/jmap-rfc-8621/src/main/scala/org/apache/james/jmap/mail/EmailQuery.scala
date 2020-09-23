@@ -63,9 +63,23 @@ case object ReceivedAtSortProperty extends SortProperty {
 case object AllInThreadHaveKeywordSortProperty extends SortProperty {
   override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("allInThreadHaveKeyword"))
 }
-
 case object SomeInThreadHaveKeywordSortProperty extends SortProperty {
   override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("someInThreadHaveKeyword"))
+}
+case object SizeSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("size"))
+}
+case object FromSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("from"))
+}
+case object ToSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("to"))
+}
+case object SubjectSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("subject"))
+}
+case object HasKeywordSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("hasKeyword"))
 }
 
 object IsAscending {
