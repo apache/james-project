@@ -29,6 +29,7 @@ import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.model.{CapabilityIdentifier, Properties}
 import org.apache.james.mailbox.Role
+import org.apache.james.mailbox.exception.MailboxNameException
 import org.apache.james.mailbox.model.MailboxId
 
 case class MayReadItems(value: Boolean) extends AnyVal
@@ -120,9 +121,9 @@ object MailboxName {
   type MailboxNameConstraint = NonEmpty
   type MailboxName = String Refined MailboxNameConstraint
 
-  def validate(value: String): Either[IllegalArgumentException, MailboxName] =
+  def validate(value: String): Either[MailboxNameException, MailboxName] =
     refined.refineV[MailboxNameConstraint](value) match {
-      case Left(error) => Left(new IllegalArgumentException(error))
+      case Left(error) => Left(new MailboxNameException(error))
       case scala.Right(value) => scala.Right(value)
     }
 }
