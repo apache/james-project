@@ -738,9 +738,9 @@ trait MailboxSetMethodContract {
       `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
-        .when
+      .when
         .post
-        .`then`
+      .`then`
         .log().ifValidationFails()
         .statusCode(SC_OK)
         .contentType(JSON)
@@ -794,9 +794,9 @@ trait MailboxSetMethodContract {
       `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
-        .when
+      .when
         .post
-        .`then`
+      .`then`
         .log().ifValidationFails()
         .statusCode(SC_OK)
         .contentType(JSON)

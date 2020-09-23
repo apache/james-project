@@ -215,6 +215,36 @@ public abstract class SetMailboxesMethodTest {
     }
 
     @Test
+    public void setMailboxesCreateShouldFailWhenBlankName() {
+        String creationId = "create-id01";
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"" + creationId + "\" : {" +
+                "          \"name\" : \"        \"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".notCreated", hasKey(creationId))
+            .body(ARGUMENTS + ".notCreated." + creationId + ".type", is("invalidArguments"))
+            .body(ARGUMENTS + ".notCreated." + creationId + ".description", is("'#private:username@domain.tld:        ' has an empty part within its mailbox name considering . as a delimiter"));
+    }
+
+    @Test
     public void setMailboxesUpdateShouldFailWhenOverLimitName() throws Exception {
         String overLimitName = StringUtils.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH + 1);
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), "myBox");
@@ -244,6 +274,37 @@ public abstract class SetMailboxesMethodTest {
             .body(ARGUMENTS + ".notUpdated." + mailboxId.serialize() + ".description", is("The mailbox name length is too long"));
 
         assertThat(mailboxProbe.listSubscriptions(username.asString())).doesNotContain(overLimitName);
+    }
+
+    @Test
+    public void setMailboxesUpdateShouldFailWhenBlankName() throws Exception {
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), "myBox");
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailboxId.serialize() + "\" : {" +
+                "          \"name\" : \"    \"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+        given()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".notUpdated", hasKey(mailboxId.serialize()))
+            .body(ARGUMENTS + ".notUpdated." + mailboxId.serialize() + ".type", is("invalidArguments"))
+            .body(ARGUMENTS + ".notUpdated." + mailboxId.serialize() + ".description", is("'#private:username@domain.tld:    ' has an empty part within its mailbox name considering . as a delimiter"));
+
+        assertThat(mailboxProbe.listSubscriptions(username.asString())).doesNotContain("    ");
     }
 
     @Category(BasicFeature.class)
