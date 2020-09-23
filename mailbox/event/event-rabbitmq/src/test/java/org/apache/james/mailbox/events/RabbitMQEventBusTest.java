@@ -460,24 +460,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 }
 
                 @Test
-                void dispatchShouldWorkAfterNetworkIssuesForOldRegistration() {
-                    rabbitMQEventBusWithNetWorkIssue.start();
-                    MailboxListener listener = newListener();
-                    rabbitMQEventBusWithNetWorkIssue.register(listener, GROUP_A);
-
-                    rabbitMQNetWorkIssueExtension.getRabbitMQ().pause();
-
-                    assertThatThrownBy(() -> rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block())
-                        .isInstanceOf(IllegalStateException.class)
-                        .hasMessageContaining("Retries exhausted");
-
-                    rabbitMQNetWorkIssueExtension.getRabbitMQ().unpause();
-
-                    rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block();
-                    assertThatListenerReceiveOneEvent(listener);
-                }
-
-                @Test
                 void dispatchShouldWorkAfterNetworkIssuesForOldRegistrationAndKey() {
                     rabbitMQEventBusWithNetWorkIssue.start();
                     MailboxListener listener = newListener();
