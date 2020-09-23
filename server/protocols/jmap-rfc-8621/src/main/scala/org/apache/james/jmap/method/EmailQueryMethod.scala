@@ -21,6 +21,7 @@ package org.apache.james.jmap.method
 import cats.implicits._
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse, UnsupportedFilterException, UnsupportedRequestParameterException, UnsupportedSortException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
@@ -44,7 +45,8 @@ import scala.jdk.CollectionConverters._
 
 class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   mailboxManager: MailboxManager,
-                                  metricFactory: MetricFactory) extends Method {
+                                  metricFactory: MetricFactory,
+                                  sessionSupplier: SessionSupplier) extends Method {
   override val methodName: MethodName = MethodName("Email/query")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 

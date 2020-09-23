@@ -20,6 +20,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{MailboxQuerySerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{MailboxQueryRequest, MailboxQueryResponse}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
@@ -35,7 +36,8 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
 class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvider,
-                                   metricFactory: MetricFactory) extends Method {
+                                   metricFactory: MetricFactory,
+                                   val sessionSupplier: SessionSupplier) extends Method {
   override val methodName = MethodName("Mailbox/query")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 

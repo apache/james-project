@@ -24,6 +24,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
+import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest}
@@ -82,11 +83,12 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
                                 messageIdFactory: MessageId.Factory,
                                 zoneIdProvider: ZoneIdProvider,
                                 previewFactory: Preview.Factory,
-                                metricFactory: MetricFactory) extends Method {
+                                metricFactory: MetricFactory,
+                                sessionSupplier: SessionSupplier) extends Method {
   override val methodName = MethodName("Email/get")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] =
+  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext, sessionSupplier: SessionSupplier): Publisher[(Invocation, ProcessingContext)] =
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asEmailGetRequest(invocation.arguments)
         .flatMap(computeResponseInvocation(_, invocation, mailboxSession))

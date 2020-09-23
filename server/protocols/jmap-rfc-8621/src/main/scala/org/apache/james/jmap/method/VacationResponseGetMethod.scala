@@ -22,6 +22,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.vacation.{VacationRepository, AccountId => JavaAccountId}
+import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
 import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}

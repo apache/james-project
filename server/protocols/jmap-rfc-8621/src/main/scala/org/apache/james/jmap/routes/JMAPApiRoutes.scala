@@ -33,7 +33,7 @@ import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
-import org.apache.james.jmap.http.{Authenticator, MailboxesProvisioner, UserProvisioning}
+import org.apache.james.jmap.http.{Authenticator, MailboxesProvisioner, SessionSupplier, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.method.Method
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
@@ -58,7 +58,8 @@ object JMAPApiRoutes {
 class JMAPApiRoutes (val authenticator: Authenticator,
                      userProvisioner: UserProvisioning,
                      mailboxesProvisioner: MailboxesProvisioner,
-                     methods: Set[Method]) extends JMAPRoutes {
+                     methods: Set[Method],
+                     sessionSupplier: SessionSupplier) extends JMAPRoutes {
 
   private val methodsByName: Map[MethodName, Method] = methods.map(method => method.methodName -> method).toMap
 
@@ -66,8 +67,9 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   def this(@Named(InjectionKeys.RFC_8621) authenticator: Authenticator,
            userProvisioner: UserProvisioning,
            mailboxesProvisioner: MailboxesProvisioner,
-           javaMethods: java.util.Set[Method]) {
-    this(authenticator, userProvisioner, mailboxesProvisioner, javaMethods.asScala.toSet)
+           javaMethods: java.util.Set[Method],
+           sessionSupplier: SessionSupplier) {
+    this(authenticator, userProvisioner, mailboxesProvisioner, javaMethods.asScala.toSet, sessionSupplier)
   }
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(

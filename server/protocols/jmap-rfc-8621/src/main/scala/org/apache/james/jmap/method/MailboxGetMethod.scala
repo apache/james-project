@@ -21,6 +21,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.mail._
@@ -49,7 +50,8 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   quotaFactory : QuotaLoaderWithPreloadedDefaultFactory,
                                   mailboxIdFactory: MailboxId.Factory,
                                   mailboxFactory: MailboxFactory,
-                                  metricFactory: MetricFactory) extends Method {
+                                  metricFactory: MetricFactory,
+                                  val sessionSupplier: SessionSupplier) extends Method {
   override val methodName: MethodName = MethodName("Mailbox/get")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 

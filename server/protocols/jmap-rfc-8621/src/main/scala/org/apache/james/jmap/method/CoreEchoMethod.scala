@@ -20,6 +20,7 @@ package org.apache.james.jmap.method
 
 
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.CORE_CAPABILITY
 import org.apache.james.jmap.model.Invocation.MethodName

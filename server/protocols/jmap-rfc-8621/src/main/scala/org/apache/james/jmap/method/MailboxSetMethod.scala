@@ -21,6 +21,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId}
 import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, RemoveEmailsOnDestroy, ServerSetPropertyException, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
@@ -147,21 +148,18 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                                  subscriptionManager: SubscriptionManager,
                                  mailboxIdFactory: MailboxId.Factory,
                                  quotaFactory : QuotaLoaderWithPreloadedDefaultFactory,
-                                 metricFactory: MetricFactory) extends Method {
+                                 val metricFactory: MetricFactory,
+                                 val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxSetRequest] {
   override val methodName: MethodName = MethodName("Mailbox/set")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = {
-    metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asMailboxSetRequest(invocation.arguments)
-        .flatMap(mailboxSetRequest => {
-          for {
-            creationResultsWithUpdatedProcessingContext <- createMailboxes(mailboxSession, mailboxSetRequest, processingContext)
-            deletionResults <- deleteMailboxes(mailboxSession, mailboxSetRequest, processingContext)
-            updateResults <- updateMailboxes(mailboxSession, mailboxSetRequest, processingContext, capabilities)
-          } yield (createResponse(capabilities, invocation, mailboxSetRequest, creationResultsWithUpdatedProcessingContext._1, deletionResults, updateResults), creationResultsWithUpdatedProcessingContext._2)
-        }))
-  }
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext, request: MailboxSetRequest): SMono[(Invocation, ProcessingContext)] = for {
+    creationResultsWithUpdatedProcessingContext <- createMailboxes(mailboxSession, request, processingContext)
+    deletionResults <- deleteMailboxes(mailboxSession, request, processingContext)
+    updateResults <- updateMailboxes(mailboxSession, request, processingContext, capabilities)
+  } yield (createResponse(capabilities, invocation, request, creationResultsWithUpdatedProcessingContext._1, deletionResults, updateResults), creationResultsWithUpdatedProcessingContext._2)
+
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[MailboxSetRequest] = asMailboxSetRequest(invocation.arguments)
 
   private def updateMailboxes(mailboxSession: MailboxSession,
                               mailboxSetRequest: MailboxSetRequest,
