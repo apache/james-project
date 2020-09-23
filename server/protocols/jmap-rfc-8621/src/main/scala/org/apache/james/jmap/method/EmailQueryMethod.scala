@@ -22,7 +22,7 @@ import cats.implicits._
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse, UnsupportedFilterException, UnsupportedSortException}
+import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse, UnsupportedFilterException, UnsupportedRequestParameterException, UnsupportedSortException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
@@ -53,6 +53,10 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       asEmailQueryRequest(invocation.arguments)
         .flatMap(processRequest(mailboxSession, invocation, _))
         .onErrorResume {
+          case e: UnsupportedRequestParameterException => SMono.just(Invocation.error(
+            ErrorCode.InvalidArguments,
+            s"The following parameter ${e.unsupportedParam} is syntactically valid, but is not supported by the server.",
+            invocation.methodCallId))
           case e: UnsupportedSortException => SMono.just(Invocation.error(
             ErrorCode.UnsupportedSort,
             s"The sort ${e.unsupportedSort} is syntactically valid, but it includes a property the server does not support sorting on or a collation method it does not recognise.",
@@ -105,7 +109,14 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
 
   private def asEmailQueryRequest(arguments: Arguments): SMono[EmailQueryRequest] =
     serializer.deserializeEmailQueryRequest(arguments.value) match {
-      case JsSuccess(emailQueryRequest, _) => SMono.just(emailQueryRequest)
+      case JsSuccess(emailQueryRequest, _) => validateRequestParameters(emailQueryRequest)
       case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
+    }
+
+  private def validateRequestParameters(request: EmailQueryRequest): SMono[EmailQueryRequest] =
+    (request.anchor, request.anchorOffset) match {
+      case (Some(anchor), _) => SMono.raiseError(UnsupportedRequestParameterException("anchor"))
+      case (_, Some(anchorOffset)) => SMono.raiseError(UnsupportedRequestParameterException("anchorOffset"))
+      case _ => SMono.just(request)
     }
 }

@@ -1014,6 +1014,82 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def listMailsShouldReturnInvalidArgumentsWhenAnchorParameterIsPresent(): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "anchor": "123"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("$.methodResponses[0][1]")
+      .isEqualTo(s"""
+       {
+          "type": "invalidArguments",
+          "description": "The following parameter anchor is syntactically valid, but is not supported by the server."
+       }
+       """)
+  }
+
+  @Test
+  def listMailsShouldReturnInvalidArgumentsWhenAnchorOffsetParameterIsPresent(): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "anchorOffset": 0
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("$.methodResponses[0][1]")
+      .isEqualTo(s"""
+       {
+          "type": "invalidArguments",
+          "description": "The following parameter anchorOffset is syntactically valid, but is not supported by the server."
+       }
+       """)
+  }
+
+  @Test
   def shouldReturnIllegalArgumentErrorForAnUnknownSpecificUserMailboxes(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of

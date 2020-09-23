@@ -29,6 +29,7 @@ import org.apache.james.mailbox.model.{MailboxId, MessageId, SearchQuery}
 
 case class UnsupportedSortException(unsupportedSort: String) extends UnsupportedOperationException
 case class UnsupportedFilterException(unsupportedFilter: String) extends UnsupportedOperationException
+case class UnsupportedRequestParameterException(unsupportedParam: String) extends UnsupportedOperationException
 
 case class FilterCondition(inMailbox: Option[MailboxId],
                            inMailboxOtherThan: Option[Seq[MailboxId]],
@@ -48,7 +49,9 @@ case class EmailQueryRequest(accountId: AccountId,
                              limit: Option[LimitUnparsed],
                              filter: Option[FilterCondition],
                              comparator: Option[Set[Comparator]],
-                             collapseThreads: Option[CollapseThreads])
+                             collapseThreads: Option[CollapseThreads],
+                             anchor: Option[Anchor],
+                             anchorOffset: Option[AnchorOffset])
 
 sealed trait SortProperty {
   def toSortClause: Either[UnsupportedSortException, SortClause]
@@ -93,6 +96,8 @@ case class Comparator(property: SortProperty,
 }
 
 case class CollapseThreads(value: Boolean) extends AnyVal
+case class Anchor(value: String) extends AnyVal
+case class AnchorOffset(value: Int) extends AnyVal
 
 case class EmailQueryResponse(accountId: AccountId,
                               queryState: QueryState,
