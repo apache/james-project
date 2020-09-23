@@ -45,13 +45,13 @@ import scala.jdk.CollectionConverters._
 class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   mailboxManager: MailboxManager,
                                   metricFactory: MetricFactory) extends Method {
-  override val methodName = MethodName("Email/query")
+  override val methodName: MethodName = MethodName("Email/query")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] =
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
       asEmailQueryRequest(invocation.arguments)
-        .flatMap(processRequest(mailboxSession, invocation, _))
+        .flatMap(processRequest(mailboxSession, invocation, _, capabilities))
         .onErrorResume {
           case e: UnsupportedRequestParameterException => SMono.just(Invocation.error(
             ErrorCode.InvalidArguments,
@@ -71,10 +71,10 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
         }
         .map(invocationResult => (invocationResult, processingContext)))
 
-  private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: EmailQueryRequest): SMono[Invocation] = {
-    searchQueryFromRequest(request) match {
+  private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: EmailQueryRequest, capabilities: Set[CapabilityIdentifier]): SMono[Invocation] = {
+    searchQueryFromRequest(request, capabilities, mailboxSession) match {
       case Left(error) => SMono.raiseError(error)
-      case Right(searchQuery) => for {
+      case Right(searchQuery) =>  for {
         positionToUse <- Position.validateRequestPosition(request.position)
         limitToUse <- Limit.validateRequestLimit(request.limit)
         response <- executeQuery(mailboxSession, request, searchQuery, positionToUse, limitToUse)
@@ -94,7 +94,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
         limit = Some(limitToUse).filterNot(used => request.limit.map(_.value).contains(used.value))))
   }
 
-  private def searchQueryFromRequest(request: EmailQueryRequest): Either[UnsupportedOperationException, MultimailboxesSearchQuery] = {
+  private def searchQueryFromRequest(request: EmailQueryRequest, capabilities: Set[CapabilityIdentifier], session: MailboxSession): Either[UnsupportedOperationException, MultimailboxesSearchQuery] = {
     val comparators: List[Comparator] = request.comparator.getOrElse(Set(Comparator.default)).toList
 
     comparators.map(_.toSort)
@@ -104,7 +104,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       } yield queryFilter
         .sorts(sorts.asJava)
         .build())
-      .map(MailboxFilter.buildQuery(request, _))
+      .map(MailboxFilter.buildQuery(request, _, capabilities, session))
   }
 
   private def asEmailQueryRequest(arguments: Arguments): SMono[EmailQueryRequest] =
