@@ -66,7 +66,6 @@ object EmailQueryMethodContract {
   }
 }
 
-
 trait EmailQueryMethodContract {
 
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
@@ -92,17 +91,63 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def emailQueryShouldFailWhenWrongAccountId(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "unknownAccountId"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [[
+           |            "error",
+           |            {
+           |                "type": "accountNotFound"
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+    }
+  }
+
+  private def buildTestMessage = {
+    Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+  }
+
+  @Test
   def hasAttachmentShouldKeepMessageWithAttachmentWhenTrue(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
     val messageId1: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
         AppendCommand.from(
-          Message.Builder
-            .of
-            .setSubject("test")
-            .setBody("testmail", StandardCharsets.UTF_8)
-            .build))
+          buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
@@ -552,11 +597,7 @@ trait EmailQueryMethodContract {
     val messageId1: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
         AppendCommand.from(
-          Message.Builder
-            .of
-            .setSubject("test")
-            .setBody("testmail", StandardCharsets.UTF_8)
-            .build))
+          buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
@@ -621,11 +662,7 @@ trait EmailQueryMethodContract {
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
         AppendCommand.builder()
           .withInternalDate(beforeRequestDate)
-          .build(Message.Builder
-            .of
-            .setSubject("test")
-            .setBody("testmail", StandardCharsets.UTF_8)
-            .build))
+          .build(buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
@@ -638,11 +675,7 @@ trait EmailQueryMethodContract {
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
         AppendCommand.builder()
           .withInternalDate(afterRequestDate)
-          .build(Message.Builder
-            .of
-            .setSubject("test")
-            .setBody("testmail", StandardCharsets.UTF_8)
-            .build))
+          .build(buildTestMessage))
       .getMessageId
 
     val messageId4: MessageId = mailboxProbe
@@ -702,11 +735,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldListMailsInAllUserMailboxes(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -764,11 +793,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldNotListMailsFromOtherUserMailboxes(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(ANDRE, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -826,11 +851,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedByDescendingOrderOfArrivalByDefault(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -1165,11 +1186,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeIdempotent(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -1224,11 +1241,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedInAscendingOrderByDefault(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -1282,11 +1295,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedInAscendingOrder(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     val now: Instant = Instant.now()
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
@@ -1341,11 +1350,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedInDescendingOrder(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     val now: Instant = Instant.now()
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
@@ -1448,11 +1453,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldListMailsInASpecificUserMailboxes(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -1823,11 +1824,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldReturnIllegalArgumentErrorForAnUnknownSpecificUserMailboxes(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -2114,11 +2111,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldListMailsNotInASpecificUserMailboxes(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -2166,11 +2159,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldListMailsNotInZeroMailboxes(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -2217,11 +2206,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsInAFirstMailboxAndNotSomeOtherMailboxShouldReturnMailsInFirstMailbox(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     val inbox = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -2270,11 +2255,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsInAFirstMailboxAndNotInTheSameMailboxShouldReturnEmptyResult(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     val inbox = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -2323,11 +2304,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldListMailsReceivedBeforeADate(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val requestDate = ZonedDateTime.now().minusDays(1)
     val messageId1 = sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
@@ -2375,11 +2352,7 @@ trait EmailQueryMethodContract {
   }
   @Test
   def shouldListMailsReceivedBeforeADateInclusively(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val requestDate = ZonedDateTime.now().minusDays(1)
     val messageId1 = sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
@@ -2427,11 +2400,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldListMailsReceivedAfterADate(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val receivedDateMessage1 = ZonedDateTime.now().minusDays(1)
     sendMessageToBobInbox(server, message, Date.from(receivedDateMessage1.toInstant))
@@ -2480,11 +2449,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsReceivedAfterADateShouldBeExclusive(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val receivedDateMessage1 = ZonedDateTime.now().minusDays(1)
     sendMessageToBobInbox(server, message, Date.from(receivedDateMessage1.toInstant))
@@ -2532,11 +2497,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldLimitResultByTheLimitProvidedByTheClient(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
@@ -2640,11 +2601,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def theLimitshouldBeEnforcedByTheServerIfNoLimitProvidedByTheClient(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
 
     val allMessages = (0 to 300).toList.foldLeft(List[MessageId](), ZonedDateTime.now().minusYears(1))((acc, _) => {
@@ -2694,11 +2651,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def theLimitshouldBeEnforcedByTheServerIfAGreaterLimitProvidedByTheClient(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
 
     val allMessages = (0 to 300).toList.foldLeft(List[MessageId](), ZonedDateTime.now().minusYears(1))((acc, _) => {
@@ -2749,11 +2702,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def resultsShouldStartAtThePositionProvidedByTheClient(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
         .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
@@ -2814,11 +2763,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def zeroPositionQueryShouldReturnItemsFromTheStart(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
         .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
@@ -2879,11 +2824,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def resultsShouldBeEmptyWithoutErrorWhenThePositionProvidedByTheClientIsGreaterThanTheNumberOfResults(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
@@ -2942,11 +2883,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldReturnAnIllegalArgumentExceptionIfThePositionIsNegative(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
@@ -3005,11 +2942,7 @@ trait EmailQueryMethodContract {
   @ParameterizedTest
   @MethodSource(value = Array("jmapSystemKeywords"))
   def listMailsBySystemKeywordShouldReturnOnlyMailsWithThisSystemKeyword(keywordFlag: Flags, keywordName: String, server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(keywordFlag).build(message))
@@ -3289,11 +3222,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsByCustomKeywordShouldReturnOnlyMailsWithThisCustomKeyword(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
@@ -3340,11 +3269,7 @@ trait EmailQueryMethodContract {
   @ParameterizedTest
   @MethodSource(value = Array("jmapSystemKeywords"))
   def listMailsNotBySystemKeywordShouldReturnOnlyMailsWithoutThisSystemKeyword(keywordFlag: Flags, keywordName: String, server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(keywordFlag).build(message))
@@ -3390,11 +3315,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsNotByCustomKeywordShouldReturnOnlyMailsWithoutThisCustomKeyword(server: GuiceJamesServer): Unit = {
-    val message: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))

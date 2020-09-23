@@ -37,7 +37,6 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
-import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -45,35 +44,38 @@ import scala.jdk.CollectionConverters._
 
 class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   mailboxManager: MailboxManager,
-                                  metricFactory: MetricFactory,
-                                  sessionSupplier: SessionSupplier) extends Method {
+                                  val metricFactory: MetricFactory,
+                                  val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailQueryRequest] {
   override val methodName: MethodName = MethodName("Email/query")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] =
-    metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asEmailQueryRequest(invocation.arguments)
-        .flatMap(processRequest(mailboxSession, invocation, _, capabilities))
-        .onErrorResume {
-          case e: UnsupportedRequestParameterException => SMono.just(Invocation.error(
-            ErrorCode.InvalidArguments,
-            s"The following parameter ${e.unsupportedParam} is syntactically valid, but is not supported by the server.",
-            invocation.methodCallId))
-          case e: UnsupportedSortException => SMono.just(Invocation.error(
-            ErrorCode.UnsupportedSort,
-            s"The sort ${e.unsupportedSort} is syntactically valid, but it includes a property the server does not support sorting on or a collation method it does not recognise.",
-            invocation.methodCallId))
-          case e: UnsupportedFilterException => SMono.just(Invocation.error(
-            ErrorCode.UnsupportedFilter,
-            s"The filter ${e.unsupportedFilter} is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search.",
-            invocation.methodCallId))
-          case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
-          case e: MailboxNotFoundException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
-          case e: Throwable => SMono.raiseError(e)
-        }
-        .map(invocationResult => (invocationResult, processingContext)))
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext, request: EmailQueryRequest): SMono[(Invocation, ProcessingContext)] = {
+    processRequest(mailboxSession, invocation, request, capabilities)
+      .onErrorResume {
+        case e: UnsupportedRequestParameterException => SMono.just(Invocation.error(
+          ErrorCode.InvalidArguments,
+          s"The following parameter ${e.unsupportedParam} is syntactically valid, but is not supported by the server.",
+          invocation.methodCallId))
+        case e: UnsupportedSortException => SMono.just(Invocation.error(
+          ErrorCode.UnsupportedSort,
+          s"The sort ${e.unsupportedSort} is syntactically valid, but it includes a property the server does not support sorting on or a collation method it does not recognise.",
+          invocation.methodCallId))
+        case e: UnsupportedFilterException => SMono.just(Invocation.error(
+          ErrorCode.UnsupportedFilter,
+          s"The filter ${e.unsupportedFilter} is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search.",
+          invocation.methodCallId))
+        case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
+        case e: MailboxNotFoundException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
+        case e: Throwable => SMono.raiseError(e)
+      }
+      .map(invocationResult => (invocationResult, processingContext))
+  }
 
-  private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: EmailQueryRequest, capabilities: Set[CapabilityIdentifier]): SMono[Invocation] = {
+
+  private def processRequest(mailboxSession: MailboxSession,
+                             invocation: Invocation,
+                             request: EmailQueryRequest,
+                             capabilities: Set[CapabilityIdentifier]): SMono[Invocation] = {
     searchQueryFromRequest(request, capabilities, mailboxSession) match {
       case Left(error) => SMono.raiseError(error)
       case Right(searchQuery) =>  for {
@@ -83,6 +85,8 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       } yield Invocation(methodName = methodName, arguments = Arguments(serializer.serialize(response)), methodCallId = invocation.methodCallId)
     }
   }
+
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailQueryRequest] = asEmailQueryRequest(invocation.arguments)
 
   private def executeQuery(mailboxSession: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, position: Position, limitToUse: Limit): SMono[EmailQueryResponse] = {
     SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, limitToUse))

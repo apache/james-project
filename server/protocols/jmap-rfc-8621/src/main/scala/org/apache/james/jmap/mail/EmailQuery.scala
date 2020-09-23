@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.IsAscending.{ASCENDING, DESCENDING}
+import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.Limit.Limit
 import org.apache.james.jmap.model.Position.Position
 import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState, UTCDate}
@@ -67,7 +68,7 @@ case class EmailQueryRequest(accountId: AccountId,
                              comparator: Option[Set[Comparator]],
                              collapseThreads: Option[CollapseThreads],
                              anchor: Option[Anchor],
-                             anchorOffset: Option[AnchorOffset])
+                             anchorOffset: Option[AnchorOffset]) extends WithAccountId
 
 sealed trait SortProperty {
   def toSortClause: Either[UnsupportedSortException, SortClause]
