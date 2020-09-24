@@ -940,7 +940,7 @@ curl -XPUT http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxNameToBeCre
 ```
 
 Resource name `usernameToBeUsed` should be an existing user
-Resource name `mailboxNameToBeCreated` should not be empty, nor contain # & % * characters.
+Resource name `mailboxNameToBeCreated` should not be empty, nor contain # % * characters.
 
 Response codes:
 

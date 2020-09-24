@@ -39,7 +39,7 @@ object DefaultCapabilities {
       MaxMailboxDepth(None),
       MaxSizeMailboxName(200L),
       MaxSizeAttachmentsPerEmail(20_000_000L),
-      emailQuerySortOptions = List("receivedAt", "cc", "from", "to", "subject", "size", "sentAt", "hasKeyword", "uid", "Id"),
+      emailQuerySortOptions = List("receivedAt", "sentAt"),
       MayCreateTopLevelMailbox(true)
     )
   )

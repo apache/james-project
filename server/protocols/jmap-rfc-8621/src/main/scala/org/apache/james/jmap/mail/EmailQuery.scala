@@ -18,39 +18,84 @@
  ****************************************************************/
 
 package org.apache.james.jmap.mail
-
-import org.apache.james.jmap.model.{Keyword, UTCDate}
-import com.google.common.hash.Hashing
+import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.IsAscending.{ASCENDING, DESCENDING}
-import org.apache.james.jmap.model.AccountId
+import org.apache.james.jmap.model.Limit.Limit
+import org.apache.james.jmap.model.Position.Position
+import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState, UTCDate}
 import org.apache.james.mailbox.model.SearchQuery.Sort.Order.{NATURAL, REVERSE}
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
 import org.apache.james.mailbox.model.{MailboxId, MessageId, SearchQuery}
+
+case class UnsupportedSortException(unsupportedSort: String) extends UnsupportedOperationException
+case class UnsupportedFilterException(unsupportedFilter: String) extends UnsupportedOperationException
+case class UnsupportedRequestParameterException(unsupportedParam: String) extends UnsupportedOperationException
+
+case class Text(value: String) extends AnyVal
+case class From(value: String) extends AnyVal
+case class To(value: String) extends AnyVal
+case class Cc(value: String) extends AnyVal
+case class Bcc(value: String) extends AnyVal
+case class Body(value: String) extends AnyVal
+case class Header(value: String) extends AnyVal
 
 case class FilterCondition(inMailbox: Option[MailboxId],
                            inMailboxOtherThan: Option[Seq[MailboxId]],
                            before: Option[UTCDate],
                            after: Option[UTCDate],
                            hasKeyword: Option[Keyword],
-                           notKeyword: Option[Keyword])
+                           notKeyword: Option[Keyword],
+                           minSize: Option[Size],
+                           maxSize: Option[Size],
+                           hasAttachment: Option[HasAttachment],
+                           allInThreadHaveKeyword: Option[Keyword],
+                           someInThreadHaveKeyword: Option[Keyword],
+                           noneInThreadHaveKeyword: Option[Keyword],
+                           text: Option[Text],
+                           from: Option[From],
+                           to: Option[To],
+                           cc: Option[Cc],
+                           bcc: Option[Bcc],
+                           subject: Option[Subject],
+                           header: Option[Set[Header]],
+                           body: Option[Body])
 
-case class EmailQueryRequest(accountId: AccountId, filter: Option[FilterCondition], comparator: Option[Set[Comparator]])
-
-case class Position(value: Int) extends AnyVal
-object Position{
-  val zero: Position = Position(0)
-}
-case class Limit(value: Long) extends AnyVal
-object Limit {
-  val default: Limit = Limit(256L)
-}
-case class QueryState(value: String) extends AnyVal
+case class EmailQueryRequest(accountId: AccountId,
+                             position: Option[PositionUnparsed],
+                             limit: Option[LimitUnparsed],
+                             filter: Option[FilterCondition],
+                             comparator: Option[Set[Comparator]],
+                             collapseThreads: Option[CollapseThreads],
+                             anchor: Option[Anchor],
+                             anchorOffset: Option[AnchorOffset])
 
 sealed trait SortProperty {
-  def toSortClause: SortClause
+  def toSortClause: Either[UnsupportedSortException, SortClause]
 }
 case object ReceivedAtSortProperty extends SortProperty {
-  override def toSortClause: SortClause = SortClause.Arrival
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = scala.Right(SortClause.Arrival)
+}
+
+case object AllInThreadHaveKeywordSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("allInThreadHaveKeyword"))
+}
+case object SomeInThreadHaveKeywordSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("someInThreadHaveKeyword"))
+}
+case object SizeSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("size"))
+}
+case object FromSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("from"))
+}
+case object ToSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("to"))
+}
+case object SubjectSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("subject"))
+}
+case object HasKeywordSortProperty extends SortProperty {
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("hasKeyword"))
 }
 
 object IsAscending {
@@ -74,21 +119,15 @@ case class Collation(value: String) extends AnyVal
 case class Comparator(property: SortProperty,
                       isAscending: Option[IsAscending],
                       collation: Option[Collation]) {
-  def toSort: SearchQuery.Sort = new SearchQuery.Sort(property.toSortClause, isAscending.getOrElse(ASCENDING).toSortOrder)
+  def toSort: Either[UnsupportedSortException, SearchQuery.Sort] =
+    for {
+      sortClause <- property.toSortClause
+    } yield new SearchQuery.Sort(sortClause, isAscending.getOrElse(ASCENDING).toSortOrder)
 }
 
-object QueryState {
-  def forIds(ids: Seq[MessageId]): QueryState = QueryState(
-    Hashing.murmur3_32()
-      .hashUnencodedChars(ids.map(_.serialize()).mkString(" "))
-      .toString)
-}
-
-object CanCalculateChanges {
-  val CANT: CanCalculateChanges = CanCalculateChanges(false)
-}
-
-case class CanCalculateChanges(value: Boolean) extends AnyVal
+case class CollapseThreads(value: Boolean) extends AnyVal
+case class Anchor(value: String) extends AnyVal
+case class AnchorOffset(value: Int) extends AnyVal
 
 case class EmailQueryResponse(accountId: AccountId,
                               queryState: QueryState,

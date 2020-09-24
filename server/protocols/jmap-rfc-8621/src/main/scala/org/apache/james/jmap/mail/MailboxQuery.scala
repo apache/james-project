@@ -19,7 +19,9 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.jmap.model.{AccountId, CanCalculateChange, Limit, Position, QueryState}
+import org.apache.james.jmap.model.Limit.Limit
+import org.apache.james.jmap.model.Position.Position
+import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Position, QueryState}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 
@@ -29,7 +31,7 @@ case class MailboxFilter(role: Role)
 
 case class MailboxQueryResponse(accountId: AccountId,
                               queryState: QueryState,
-                              canCalculateChanges: CanCalculateChange,
+                              canCalculateChanges: CanCalculateChanges,
                               ids: Seq[MailboxId],
                               position: Position,
                               limit: Option[Limit])

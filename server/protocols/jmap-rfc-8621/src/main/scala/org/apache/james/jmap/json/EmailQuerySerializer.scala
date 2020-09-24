@@ -20,8 +20,8 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{CanCalculateChanges, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, IsAscending, Limit, Position, QueryState, ReceivedAtSortProperty, SortProperty}
-import org.apache.james.jmap.model.{AccountId, Keyword}
+import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, IsAscending, ReceivedAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
+import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
 
@@ -48,16 +48,32 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
       .fold(JsError(_), JsSuccess(_))
     case _ => JsError("Expecting keywords to be represented by a JsString")
   }
+  private implicit val hasAttachmentReads: Reads[HasAttachment] = Json.valueReads[HasAttachment]
+  private implicit val textReads: Reads[Text] = Json.valueReads[Text]
+  private implicit val fromReads: Reads[From] = Json.valueReads[From]
+  private implicit val toReads: Reads[To] = Json.valueReads[To]
+  private implicit val ccReads: Reads[Cc] = Json.valueReads[Cc]
+  private implicit val bccReads: Reads[Bcc] = Json.valueReads[Bcc]
+  private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]
+  private implicit val headerReads: Reads[Header] = Json.valueReads[Header]
+  private implicit val bodyReads: Reads[Body] = Json.valueReads[Body]
   private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
+  private implicit val limitUnparsedReads: Reads[LimitUnparsed] = Json.valueReads[LimitUnparsed]
   private implicit val CanCalculateChangesFormat: Format[CanCalculateChanges] = Json.valueFormat[CanCalculateChanges]
 
   private implicit val queryStateWrites: Writes[QueryState] = Json.valueWrites[QueryState]
-  private implicit val positionFormat: Format[Position] = Json.valueFormat[Position]
-  private implicit val limitFormat: Format[Limit] = Json.valueFormat[Limit]
+  private implicit val positionUnparsedReads: Reads[PositionUnparsed] = Json.valueReads[PositionUnparsed]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
 
   private implicit val sortPropertyReads: Reads[SortProperty] = {
     case JsString("receivedAt") => JsSuccess(ReceivedAtSortProperty)
+    case JsString("allInThreadHaveKeyword") => JsSuccess(AllInThreadHaveKeywordSortProperty)
+    case JsString("someInThreadHaveKeyword") => JsSuccess(SomeInThreadHaveKeywordSortProperty)
+    case JsString("size") => JsSuccess(SizeSortProperty)
+    case JsString("from") => JsSuccess(FromSortProperty)
+    case JsString("to") => JsSuccess(ToSortProperty)
+    case JsString("subject") => JsSuccess(SubjectSortProperty)
+    case JsString("hasKeyword") => JsSuccess(HasKeywordSortProperty)
     case JsString(others) => JsError(s"'$others' is not a supported sort property")
     case _ => JsError(s"Expecting a JsString to represent a sort property")
   }
@@ -68,6 +84,9 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val isAscendingFormat: Format[IsAscending] = Json.valueFormat[IsAscending]
   private implicit val collationFormat: Format[Collation] = Json.valueFormat[Collation]
   private implicit val comparatorFormat: Format[Comparator] = Json.format[Comparator]
+  private implicit val collapseThreadsReads: Reads[CollapseThreads] = Json.valueReads[CollapseThreads]
+  private implicit val anchorReads: Reads[Anchor] = Json.valueReads[Anchor]
+  private implicit val anchorOffsetReads: Reads[AnchorOffset] = Json.valueReads[AnchorOffset]
 
   private implicit val emailQueryRequestReads: Reads[EmailQueryRequest] = Json.reads[EmailQueryRequest]
 

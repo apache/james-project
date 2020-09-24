@@ -56,7 +56,7 @@ object SessionRoutesContract {
                          |      "maxMailboxDepth" : null,
                          |      "maxSizeMailboxName" : 200,
                          |      "maxSizeAttachmentsPerEmail" : 20000000,
-                         |      "emailQuerySortOptions" : [ "receivedAt", "cc", "from", "to", "subject", "size", "sentAt", "hasKeyword", "uid", "Id" ],
+                         |      "emailQuerySortOptions" : ["receivedAt", "sentAt"],
                          |      "mayCreateTopLevelMailbox" : true
                          |    },
                          |    "urn:apache:james:params:jmap:mail:quota": {},
@@ -84,7 +84,7 @@ object SessionRoutesContract {
                          |          "maxMailboxDepth" : null,
                          |          "maxSizeMailboxName" : 200,
                          |          "maxSizeAttachmentsPerEmail" : 20000000,
-                         |          "emailQuerySortOptions" : [ "receivedAt", "cc", "from", "to", "subject", "size", "sentAt", "hasKeyword", "uid", "Id" ],
+                         |          "emailQuerySortOptions" : ["receivedAt", "sentAt"],
                          |          "mayCreateTopLevelMailbox" : true
                          |        },
                          |        "urn:apache:james:params:jmap:mail:quota": {},
