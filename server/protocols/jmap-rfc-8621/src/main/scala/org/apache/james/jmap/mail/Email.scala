@@ -182,30 +182,30 @@ object ParseOptions {
 }
 
 sealed trait ParseOption {
-  def extractHeaderValue(field: Field): Option[EmailHeaderValue]
+  def extractHeaderValue(field: Field): EmailHeaderValue
 }
 case object AsRaw extends ParseOption {
-  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(RawHeaderValue.from(field))
+  override def extractHeaderValue(field: Field): EmailHeaderValue = RawHeaderValue.from(field)
 }
 case object AsText extends ParseOption {
-  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(TextHeaderValue.from(field))
+  override def extractHeaderValue(field: Field): EmailHeaderValue = TextHeaderValue.from(field)
 }
 case object AsAddresses extends ParseOption {
-  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(AddressesHeaderValue.from(field))
+  override def extractHeaderValue(field: Field): EmailHeaderValue = AddressesHeaderValue.from(field)
 }
 case object AsGroupedAddresses extends ParseOption {
-  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(GroupedAddressesHeaderValue.from(field))
+  override def extractHeaderValue(field: Field): EmailHeaderValue = GroupedAddressesHeaderValue.from(field)
 }
 case object AsMessageIds extends ParseOption {
-  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(MessageIdsHeaderValue.from(field))
+  override def extractHeaderValue(field: Field): EmailHeaderValue = MessageIdsHeaderValue.from(field)
 }
 case object AsDate extends ParseOption {
-  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(DateHeaderValue.from(field, ZoneId.systemDefault()))
+  override def extractHeaderValue(field: Field): EmailHeaderValue = DateHeaderValue.from(field, ZoneId.systemDefault())
 
-  def extractHeaderValue(field: Field, zoneId: ZoneId): Option[EmailHeaderValue] = Some(DateHeaderValue.from(field, zoneId))
+  def extractHeaderValue(field: Field, zoneId: ZoneId): EmailHeaderValue = DateHeaderValue.from(field, zoneId)
 }
 case object AsURLs extends ParseOption {
-  override def extractHeaderValue(field: Field): Option[EmailHeaderValue] = Some(URLsHeaderValue.from(field))
+  override def extractHeaderValue(field: Field): EmailHeaderValue = URLsHeaderValue.from(field)
 }
 
 case class HeaderMessageId(value: String) extends AnyVal

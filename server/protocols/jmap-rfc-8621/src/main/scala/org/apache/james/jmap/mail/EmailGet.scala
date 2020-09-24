@@ -91,7 +91,7 @@ case class SpecificHeaderRequest(headerName: NonEmptyString, property: String, p
       .map(_.asScala)
       .flatMap(fields => fields.reverse.headOption)
 
-    (headerName, field.flatMap({
+    (headerName, field.map({
       val option = parseOption.getOrElse(AsRaw)
         option match {
           case AsDate => AsDate.extractHeaderValue(_, zoneId)

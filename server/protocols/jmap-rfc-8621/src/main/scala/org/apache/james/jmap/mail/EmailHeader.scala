@@ -56,23 +56,23 @@ object GroupedAddressesHeaderValue extends EmailHeaderValue {
       .asScala
       .toList
 
-    val groups: List[EmailAddressGroup] = addresses
-      .flatMap({
-        case group: Group => Some(group)
-        case _ => None
-      })
-      .map(group => EmailAddressGroup(Some(GroupName(group.getName)), EmailAddress.from(group.getMailboxes)))
-
-    val addressesWithoutGroup: List[EmailAddress] = addresses
-      .flatMap({
-        case mailbox: Mime4jMailbox => Some(mailbox)
-        case _ => None
-      })
-      .map(EmailAddress.from(_))
-
     if (addresses.isEmpty) {
       GroupedAddressesHeaderValue(List())
     } else {
+      val groups: List[EmailAddressGroup] = addresses
+        .flatMap({
+          case group: Group => Some(group)
+          case _ => None
+        })
+        .map(group => EmailAddressGroup(Some(GroupName(group.getName)), EmailAddress.from(group.getMailboxes)))
+
+      val addressesWithoutGroup: List[EmailAddress] = addresses
+        .flatMap({
+          case mailbox: Mime4jMailbox => Some(mailbox)
+          case _ => None
+        })
+        .map(EmailAddress.from(_))
+
       GroupedAddressesHeaderValue(List(EmailAddressGroup(None, addressesWithoutGroup)) ++ groups)
     }
   }
