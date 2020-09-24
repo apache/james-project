@@ -1,0 +1,17 @@
+= How to create an official Apache James release
+
+Read details about http://www.apache.org/dev/publishing-maven-artifacts.html[Publishing Maven releases to Maven Central Repository]
+
+In short, just follow the 'standard' process:
+
+* prepare pom for release
+* publish snapshot
+* prepare release
+* stage the release for a vote (don't forget to close the staging repository)
+* vote
+* release
+
+Don't forget to add your key to https://downloads.apache.org/james/KEYS
+
+    $ ssh people.apache.org
+    $ cd /www/www.apache.org/dist/james
