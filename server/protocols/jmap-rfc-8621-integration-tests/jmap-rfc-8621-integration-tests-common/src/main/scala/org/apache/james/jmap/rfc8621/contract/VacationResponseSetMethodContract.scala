@@ -45,6 +45,56 @@ trait VacationResponseSetMethodContract {
   }
 
   @Test
+  def vacationResponseSetShouldFailWhenWrongAccountId(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""
+         |{
+         |  "using": [ "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail",
+         |    "urn:ietf:params:jmap:vacationresponse" ],
+         |  "methodCalls": [
+         |    ["VacationResponse/set", {
+         |      "accountId": "unknownAccountId",
+         |      "update": {
+         |        "singleton": {
+         |          "isEnabled": true,
+         |          "fromDate": "2014-10-30T14:12:00Z",
+         |          "toDate": "2014-11-30T14:12:00Z",
+         |          "subject": "I am in vacation",
+         |          "textBody": "I'm currently enjoying life. Please disturb me later",
+         |          "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}
+         |""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      """{
+        |  "sessionState": "75128aab4b1b",
+        |  "methodResponses": [
+        |    ["error", {
+        |      "type": "accountNotFound"
+        |    }, "c1"]
+        |  ]
+        |}""".stripMargin)
+  }
+
+  @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldSucceed(): Unit = {
     val request =

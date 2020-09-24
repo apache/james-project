@@ -24,6 +24,7 @@ import java.time.format.DateTimeFormatter
 
 import org.apache.james.jmap.api.vacation.Vacation.ID
 import org.apache.james.jmap.api.vacation.VacationPatch
+import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.AccountId
 import org.apache.james.jmap.model.SetError.{SetErrorDescription, SetErrorType, invalidArgumentValue, serverFailValue}
 import org.apache.james.jmap.model.State.State
@@ -35,7 +36,7 @@ import scala.util.{Failure, Success, Try}
 case class VacationResponseSetRequest(accountId: AccountId,
                                       update: Option[Map[String, VacationResponsePatchObject]],
                                       create: Option[Map[String, JsObject]],
-                                      destroy: Option[Seq[String]]) {
+                                      destroy: Option[Seq[String]]) extends WithAccountId{
   def parsePatch(): Map[String, Either[IllegalArgumentException, VacationResponsePatchObject]] =
     update.getOrElse(Map())
     .map({
