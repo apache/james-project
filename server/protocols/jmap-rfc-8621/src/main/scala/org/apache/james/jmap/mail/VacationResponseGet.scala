@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 
 import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
+import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties}
 
@@ -27,7 +28,7 @@ case class VacationResponseIds(value: List[UnparsedVacationResponseId])
 
 case class VacationResponseGetRequest(accountId: AccountId,
                                       ids: Option[VacationResponseIds],
-                                      properties: Option[Properties])
+                                      properties: Option[Properties]) extends WithAccountId
 
 case class VacationResponseNotFound(value: Set[UnparsedVacationResponseId]) {
   def merge(other: VacationResponseNotFound): VacationResponseNotFound = VacationResponseNotFound(this.value ++ other.value)
