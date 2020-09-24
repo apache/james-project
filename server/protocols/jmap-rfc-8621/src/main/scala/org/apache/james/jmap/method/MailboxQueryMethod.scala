@@ -41,19 +41,19 @@ class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvi
   override val methodName = MethodName("Mailbox/query")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] =
+  override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] =
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asMailboxQueryRequest(invocation.arguments)
-        .flatMap(processRequest(mailboxSession, invocation, _))
+      asMailboxQueryRequest(invocation.invocation.arguments)
+        .flatMap(processRequest(mailboxSession, invocation.invocation, _))
         .onErrorResume {
           case e: IllegalArgumentException => SMono.just(
             Invocation.error(
               errorCode = ErrorCode.InvalidArguments,
               description = e.getMessage,
-              methodCallId = invocation.methodCallId))
+              methodCallId = invocation.invocation.methodCallId))
           case e: Throwable => SMono.raiseError(e)
         }
-        .map(invocationResult => (invocationResult, processingContext)))
+        .map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext)))
 
   private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: MailboxQueryRequest): SMono[Invocation] = {
     SFlux.fromPublisher(systemMailboxesProvider.getMailboxByRole(request.filter.role, mailboxSession.getUser))

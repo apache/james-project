@@ -18,10 +18,9 @@
  * ***************************************************************/
 package org.apache.james.jmap.method
 
-import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.Fixture.{invocation1, invocation2}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.{CapabilityIdentifier, Invocation, JmapRfc8621Configuration}
+import org.apache.james.jmap.model.{CapabilityIdentifier, Invocation}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.mockito.Mockito.mock
@@ -37,15 +36,15 @@ class CoreEchoMethodTest extends AnyWordSpec with Matchers {
   "CoreEcho" should {
     "Process" should {
       "success and return the same with parameters as the invocation request" in {
-        val expectedResponse: (Invocation, ProcessingContext) = (invocation1, ProcessingContext(Map.empty, Map.empty))
-        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession, ProcessingContext(Map.empty, Map.empty))).block()
+        val expectedResponse: InvocationWithContext = InvocationWithContext(invocation1, ProcessingContext(Map.empty, Map.empty))
+        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, InvocationWithContext(invocation1,ProcessingContext(Map.empty, Map.empty)), mockedSession)).block()
 
         dataResponse shouldBe expectedResponse
       }
 
       "success and not return anything else different than the original invocation" in {
-        val wrongExpected: (Invocation, ProcessingContext) = (invocation2, ProcessingContext(Map.empty, Map.empty))
-        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, invocation1, mockedSession, ProcessingContext(Map.empty, Map.empty))).block()
+        val wrongExpected: InvocationWithContext = InvocationWithContext(invocation2, ProcessingContext(Map.empty, Map.empty))
+        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, InvocationWithContext(invocation1, ProcessingContext(Map.empty, Map.empty)), mockedSession)).block()
         
         dataResponse should not be(wrongExpected)
       }

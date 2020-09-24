@@ -33,7 +33,6 @@ import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CA
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
 import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, Properties}
-import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
@@ -87,11 +86,11 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
   override val methodName = MethodName("Email/get")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
-  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext, request: EmailGetRequest): SMono[(Invocation, ProcessingContext)] = {
-    computeResponseInvocation(request, invocation, mailboxSession).onErrorResume({
-      case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailGetRequest): SMono[InvocationWithContext] = {
+    computeResponseInvocation(request, invocation.invocation, mailboxSession).onErrorResume({
+      case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId))
       case e: Throwable => SMono.raiseError(e)
-    }).map(invocationResult => (invocationResult, processingContext))
+    }).map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailGetRequest] = asEmailGetRequest(invocation.arguments)

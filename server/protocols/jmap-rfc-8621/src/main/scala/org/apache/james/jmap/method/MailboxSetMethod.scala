@@ -153,11 +153,11 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
   override val methodName: MethodName = MethodName("Mailbox/set")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
-  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext, request: MailboxSetRequest): SMono[(Invocation, ProcessingContext)] = for {
-    creationResultsWithUpdatedProcessingContext <- createMailboxes(mailboxSession, request, processingContext)
-    deletionResults <- deleteMailboxes(mailboxSession, request, processingContext)
-    updateResults <- updateMailboxes(mailboxSession, request, processingContext, capabilities)
-  } yield (createResponse(capabilities, invocation, request, creationResultsWithUpdatedProcessingContext._1, deletionResults, updateResults), creationResultsWithUpdatedProcessingContext._2)
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
+    creationResultsWithUpdatedProcessingContext <- createMailboxes(mailboxSession, request, invocation.processingContext)
+    deletionResults <- deleteMailboxes(mailboxSession, request, invocation.processingContext)
+    updateResults <- updateMailboxes(mailboxSession, request, invocation.processingContext, capabilities)
+  } yield InvocationWithContext(createResponse(capabilities, invocation.invocation, request, creationResultsWithUpdatedProcessingContext._1, deletionResults, updateResults), creationResultsWithUpdatedProcessingContext._2)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[MailboxSetRequest] = asMailboxSetRequest(invocation.arguments)
 

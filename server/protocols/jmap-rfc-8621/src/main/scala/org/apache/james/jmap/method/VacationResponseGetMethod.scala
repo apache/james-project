@@ -64,29 +64,28 @@ class VacationResponseGetMethod @Inject() (vacationRepository: VacationRepositor
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY)
 
   override def process(capabilities: Set[CapabilityIdentifier],
-                       invocation: Invocation,
-                       mailboxSession: MailboxSession,
-                       processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = {
+                       invocation: InvocationWithContext,
+                       mailboxSession: MailboxSession): Publisher[InvocationWithContext] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asVacationResponseGetRequest(invocation.arguments)
-        .fold(e => handleRequestValidationErrors(e, invocation.methodCallId),
+      asVacationResponseGetRequest(invocation.invocation.arguments)
+        .fold(e => handleRequestValidationErrors(e, invocation.invocation.methodCallId),
           vacationResponseGetRequest => {
             val requestedProperties: Properties = vacationResponseGetRequest.properties.getOrElse(VacationResponse.allProperties)
             requestedProperties -- VacationResponse.allProperties match {
-              case invalidProperties if invalidProperties.isEmpty() => getVacationResponse(vacationResponseGetRequest, processingContext, mailboxSession)
+              case invalidProperties if invalidProperties.isEmpty() => getVacationResponse(vacationResponseGetRequest, invocation.processingContext, mailboxSession)
                 .reduce(VacationResponseGetResult.empty, VacationResponseGetResult.merge)
                 .map(vacationResult => vacationResult.asResponse(vacationResponseGetRequest.accountId))
                 .map(vacationResponseGetResponse => Invocation(
                   methodName = methodName,
                   arguments = Arguments(VacationSerializer.serialize(vacationResponseGetResponse, requestedProperties).as[JsObject]),
-                  methodCallId = invocation.methodCallId))
+                  methodCallId = invocation.invocation.methodCallId))
               case invalidProperties: Properties =>
                 SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
                   description = s"The following properties [${invalidProperties.format}] do not exist.",
-                  methodCallId = invocation.methodCallId))
+                  methodCallId = invocation.invocation.methodCallId))
             }
           })
-          .map((_, processingContext)))
+          .map(InvocationWithContext(_, invocation.processingContext)))
   }
 
   private def asVacationResponseGetRequest(arguments: Arguments): Either[IllegalArgumentException, VacationResponseGetRequest] =

@@ -80,14 +80,13 @@ class VacationResponseSetMethod @Inject() (vacationRepository: VacationRepositor
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY)
 
   override def process(capabilities: Set[CapabilityIdentifier],
-                       invocation: Invocation,
-                       mailboxSession: MailboxSession,
-                       processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = {
+                       invocation: InvocationWithContext,
+                       mailboxSession: MailboxSession): Publisher[InvocationWithContext] = {
       metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-        asVacationResponseSetRequest(invocation.arguments)
+        asVacationResponseSetRequest(invocation.invocation.arguments)
           .flatMap(vacationResponseSetRequest => update(mailboxSession, vacationResponseSetRequest)
-            .map(updateResult => createResponse(invocation, vacationResponseSetRequest, updateResult)))
-          .map((_, processingContext)))
+            .map(updateResult => createResponse(invocation.invocation, vacationResponseSetRequest, updateResult)))
+          .map(InvocationWithContext(_, invocation.processingContext)))
   }
 
   private def update(mailboxSession: MailboxSession, vacationResponseSetRequest: VacationResponseSetRequest): SMono[VacationResponseUpdateResults] = {

@@ -74,28 +74,27 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
   }
 
   override def process(capabilities: Set[CapabilityIdentifier],
-                       invocation: Invocation,
-                       mailboxSession: MailboxSession,
-                       processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = {
+                       invocation: InvocationWithContext,
+                       mailboxSession: MailboxSession): Publisher[InvocationWithContext] = {
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asMailboxGetRequest(invocation.arguments)
+      asMailboxGetRequest(invocation.invocation.arguments)
         .flatMap(mailboxGetRequest => {
           val requestedProperties: Properties = mailboxGetRequest.properties.getOrElse(Mailbox.allProperties)
           requestedProperties -- Mailbox.allProperties match {
-            case invalidProperties if invalidProperties.isEmpty() => getMailboxes(capabilities, mailboxGetRequest, processingContext, mailboxSession)
+            case invalidProperties if invalidProperties.isEmpty() => getMailboxes(capabilities, mailboxGetRequest, invocation.processingContext, mailboxSession)
               .reduce(MailboxGetResults.empty(), MailboxGetResults.merge)
               .map(mailboxes => mailboxes.asResponse(mailboxGetRequest.accountId))
               .map(mailboxGetResponse => Invocation(
                 methodName = methodName,
                 arguments = Arguments(serializer.serialize(mailboxGetResponse, requestedProperties, capabilities).as[JsObject]),
-                methodCallId = invocation.methodCallId))
+                methodCallId = invocation.invocation.methodCallId))
             case invalidProperties: Properties =>
               SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
                 description = s"The following properties [${invalidProperties.format()}] do not exist.",
-                methodCallId = invocation.methodCallId))
+                methodCallId = invocation.invocation.methodCallId))
           }
         })
-        .map((_, processingContext)))
+        .map(InvocationWithContext(_, invocation.processingContext)))
   }
 
   private def asMailboxGetRequest(arguments: Arguments): SMono[MailboxGetRequest] = {
