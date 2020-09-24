@@ -2554,6 +2554,147 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def shouldLimitResultByLimitAndPosition(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
+
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .getMessageId
+
+    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "limit": 2,
+         |      "position": 2
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted {() =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState(messageId3, messageId2)}",
+           |                "canCalculateChanges": false,
+           |                "position": 2,
+           |                "ids": [
+           |                  "${messageId3.serialize()}",
+           |                  "${messageId2.serialize()}"
+           |                ]
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+    }
+  }
+
+  @Test
+  def shouldReturnEmptyWhenPositionIsOutOfBoundAndWithLimit(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
+
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "limit": 2,
+         |      "position": 2
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted {() =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState()}",
+           |                "canCalculateChanges": false,
+           |                "position": 2,
+           |                "ids": []
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+    }
+  }
+
+  @Test
   def shouldReturnAnIllegalArgumentExceptionIfTheLimitIsNegative(server: GuiceJamesServer): Unit = {
     val request =
       s"""{
@@ -2828,7 +2969,7 @@ trait EmailQueryMethodContract {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
-    val messageId1: MessageId =  sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
+    sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])

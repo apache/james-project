@@ -69,7 +69,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailQueryRequest] = asEmailQueryRequest(invocation.arguments)
 
   private def executeQuery(mailboxSession: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, position: Position, limitToUse: Limit): SMono[EmailQueryResponse] = {
-    SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, limitToUse))
+    SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, position.value + limitToUse))
       .drop(position.value)
       .collectSeq()
       .map(ids => EmailQueryResponse(accountId = request.accountId,
