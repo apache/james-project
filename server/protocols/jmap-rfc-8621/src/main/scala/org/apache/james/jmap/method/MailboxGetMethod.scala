@@ -37,7 +37,6 @@ import org.apache.james.mailbox.model.search.MailboxQuery
 import org.apache.james.mailbox.model.{MailboxId, MailboxMetaData}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
-import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
@@ -50,8 +49,8 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   quotaFactory : QuotaLoaderWithPreloadedDefaultFactory,
                                   mailboxIdFactory: MailboxId.Factory,
                                   mailboxFactory: MailboxFactory,
-                                  metricFactory: MetricFactory,
-                                  val sessionSupplier: SessionSupplier) extends Method {
+                                  val metricFactory: MetricFactory,
+                                  val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxGetRequest] {
   override val methodName: MethodName = MethodName("Mailbox/get")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
@@ -73,29 +72,25 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
       notFound = notFound)
   }
 
-  override def process(capabilities: Set[CapabilityIdentifier],
-                       invocation: InvocationWithContext,
-                       mailboxSession: MailboxSession): Publisher[InvocationWithContext] = {
-    metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asMailboxGetRequest(invocation.invocation.arguments)
-        .flatMap(mailboxGetRequest => {
-          val requestedProperties: Properties = mailboxGetRequest.properties.getOrElse(Mailbox.allProperties)
-          requestedProperties -- Mailbox.allProperties match {
-            case invalidProperties if invalidProperties.isEmpty() => getMailboxes(capabilities, mailboxGetRequest, invocation.processingContext, mailboxSession)
-              .reduce(MailboxGetResults.empty(), MailboxGetResults.merge)
-              .map(mailboxes => mailboxes.asResponse(mailboxGetRequest.accountId))
-              .map(mailboxGetResponse => Invocation(
-                methodName = methodName,
-                arguments = Arguments(serializer.serialize(mailboxGetResponse, requestedProperties, capabilities).as[JsObject]),
-                methodCallId = invocation.invocation.methodCallId))
-            case invalidProperties: Properties =>
-              SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
-                description = s"The following properties [${invalidProperties.format()}] do not exist.",
-                methodCallId = invocation.invocation.methodCallId))
-          }
-        })
-        .map(InvocationWithContext(_, invocation.processingContext)))
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxGetRequest): SMono[InvocationWithContext] = {
+    val requestedProperties: Properties = request.properties.getOrElse(Mailbox.allProperties)
+    (requestedProperties -- Mailbox.allProperties match {
+      case invalidProperties if invalidProperties.isEmpty() => getMailboxes(capabilities, request, invocation.processingContext, mailboxSession)
+        .reduce(MailboxGetResults.empty(), MailboxGetResults.merge)
+        .map(mailboxes => mailboxes.asResponse(request.accountId))
+        .map(mailboxGetResponse => Invocation(
+          methodName = methodName,
+          arguments = Arguments(serializer.serialize(mailboxGetResponse, requestedProperties, capabilities).as[JsObject]),
+          methodCallId = invocation.invocation.methodCallId))
+      case invalidProperties: Properties =>
+        SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
+          description = s"The following properties [${invalidProperties.format()}] do not exist.",
+          methodCallId = invocation.invocation.methodCallId))
+    }).map(InvocationWithContext(_, invocation.processingContext))
+
   }
+
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[MailboxGetRequest] = asMailboxGetRequest(invocation.arguments)
 
   private def asMailboxGetRequest(arguments: Arguments): SMono[MailboxGetRequest] = {
     serializer.deserializeMailboxGetRequest(arguments.value) match {
