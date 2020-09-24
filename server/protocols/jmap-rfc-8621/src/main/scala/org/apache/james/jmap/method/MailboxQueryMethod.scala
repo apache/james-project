@@ -27,33 +27,32 @@ import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model._
-import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.{MailboxSession, SystemMailboxesProvider}
 import org.apache.james.metrics.api.MetricFactory
-import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
 class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvider,
-                                   metricFactory: MetricFactory,
-                                   val sessionSupplier: SessionSupplier) extends Method {
+                                   val metricFactory: MetricFactory,
+                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxQueryRequest] {
   override val methodName = MethodName("Mailbox/query")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] =
-    metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asMailboxQueryRequest(invocation.invocation.arguments)
-        .flatMap(processRequest(mailboxSession, invocation.invocation, _))
-        .onErrorResume {
-          case e: IllegalArgumentException => SMono.just(
-            Invocation.error(
-              errorCode = ErrorCode.InvalidArguments,
-              description = e.getMessage,
-              methodCallId = invocation.invocation.methodCallId))
-          case e: Throwable => SMono.raiseError(e)
-        }
-        .map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext)))
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxQueryRequest): SMono[InvocationWithContext] = {
+    processRequest(mailboxSession, invocation.invocation, request)
+      .onErrorResume {
+      case e: IllegalArgumentException => SMono.just(
+        Invocation.error(
+          errorCode = ErrorCode.InvalidArguments,
+          description = e.getMessage,
+          methodCallId = invocation.invocation.methodCallId))
+      case e: Throwable => SMono.raiseError(e)
+    }
+      .map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
+  }
+
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[MailboxQueryRequest] = asMailboxQueryRequest(invocation.arguments)
 
   private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: MailboxQueryRequest): SMono[Invocation] = {
     SFlux.fromPublisher(systemMailboxesProvider.getMailboxByRole(request.filter.role, mailboxSession.getUser))

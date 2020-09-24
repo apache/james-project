@@ -19,13 +19,14 @@
 
 package org.apache.james.jmap.mail
 
+import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.Limit.Limit
 import org.apache.james.jmap.model.Position.Position
 import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Position, QueryState}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 
-case class MailboxQueryRequest(accountId: AccountId, filter: MailboxFilter)
+case class MailboxQueryRequest(accountId: AccountId, filter: MailboxFilter) extends WithAccountId
 
 case class MailboxFilter(role: Role)
 
