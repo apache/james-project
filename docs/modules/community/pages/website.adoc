@@ -1,0 +1,51 @@
+= Building and publishing the website
+
+The source code of website https://james.apache.org[james.apache.org] is located in src/homepage.
+Here are the instructions how to publish new changes to the website.
+
+1. Install Apache Maven 3.0.2+ and make its binary 'mvn' available on your PATH.
+See http://maven.apache.org/download.html#Installation.
+2. run "mvn clean site"
+3. Test the built site in your browser from the {path}/target/site folder
+4. If everything looks OK, deploy the site using "mvn clean site-deploy".
+5. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as
+a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html)
+
+To deploy the technical reports use the "-Psite-reports" profile.
+
+For wagon-ssh-external configuration see
+http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external.html
+
+You can alternatively use a docker container to build the website :
+
+You need to build the homepage by:
+
+    $ docker build -t james/homepage dockerfiles/site/homepage
+    $ docker run -v $PWD:/origin -v $PWD/site:/destination james/homepage master
+
+In order to test the homepage, you can use this command:
+
+    $ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/minimal:3.8.3 jekyll serve
+
+the site will be available at http://localhost:4000/
+
+Then you build the other pages by:
+
+    $ docker build -t james/site dockerfiles/site/website
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
+
+If you need to update the current site, checkout the branch asf-site from Apache git:
+
+    $ git clone https://git-wip-us.apache.org/repos/asf/james-site.git
+    $ cd james-site
+    $ git checkout origin/asf-site -b asf-site
+
+And replace in the previous commands `$PWD/site` by `<james-site-clone-directory>/content`, for example:
+
+    $ docker run -v $PWD:/origin -v $PWD/../james-site/content:/destination james/homepage master
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD/../james-site/content:/origin -v $PWD/site:/destination james/site master
+
+Then just push the new site:
+
+    $ cd ../james-site
+    $ git push origin asf-site
