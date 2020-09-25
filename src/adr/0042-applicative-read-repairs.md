@@ -51,7 +51,7 @@ seen as a complement to it.
 
 Another classical mechanism in eventual consistent system is called hinted-handoff. It consist at retries
 (during a given period) when "replicating" data to other replica. We also already have a similar mechanism
-in James as we retry several time failures when writing data to denormalization table. Hard shut-down however
+in James as we retry several times failures when writing data to denormalization table. Hard shut-down however
 defeats this strategy that is otherwise efficient to limit inconsistencies across denormalization tables.
 
 ## References
