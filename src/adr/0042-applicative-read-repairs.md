@@ -24,7 +24,7 @@ Monitoring is required to detect when to run them and is time consuming for the 
 
 Another classic eventual consistency mechanism, that enables auto-healing and completes
 
-In order to achieve denormalization auto-healing, we thus needs to implement "applicative read repairs".
+In order to achieve denormalization auto-healing, we thus need to implement "applicative read repairs".
 
 ## Decision
 
