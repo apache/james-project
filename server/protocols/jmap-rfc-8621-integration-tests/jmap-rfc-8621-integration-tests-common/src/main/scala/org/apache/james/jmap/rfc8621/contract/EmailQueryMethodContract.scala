@@ -2621,8 +2621,8 @@ trait EmailQueryMethodContract {
            |                "canCalculateChanges": false,
            |                "position": 2,
            |                "ids": [
-           |                  "${messageId3.serialize()}",
-           |                  "${messageId2.serialize()}"
+           |                  "${messageId3.serialize}",
+           |                  "${messageId2.serialize}"
            |                ]
            |            },
            |            "c1"
