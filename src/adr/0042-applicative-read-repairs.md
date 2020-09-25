@@ -15,7 +15,7 @@ Cassandra eventual consistency is all about "replication", but "denormalization"
 to be handled at the applicative layer (due to the lack of transactions in a NoSQL database).
 
 In the past we did set up "Solve inconsistency" tasks that can be assimilated to Cassandra repairs. Such
-tasks, after being scheduled, ensures the according entity denormalization is correctly denormalized.
+tasks, after being scheduled, ensure that the according entity denormalization is correctly denormalized.
 
 However, the inconsistencies persist between runs. We experienced inconsistencies in some production platform
 for both the mailbox entity, and the mailbox counter entity (whose table structure is exposed in
