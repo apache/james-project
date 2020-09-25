@@ -49,7 +49,7 @@ A configuration for James Distributed server will be added to control read repai
 We already propose several tasks to solve denormalization inconsistencies. "Applicative read repairs" should be
 seen as a complement to it.
 
-Another classical mechanism in eventual consistent system is called hinted-handoff. It consist at retries
+Another classical mechanism in eventual consistent system is called hinted-handoff. It consists at retries
 (during a given period) when "replicating" data to other replica. We also already have a similar mechanism
 in James as we retry several times failures when writing data to denormalization table. Hard shut-down however
 defeats this strategy that is otherwise efficient to limit inconsistencies across denormalization tables.
