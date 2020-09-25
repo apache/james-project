@@ -39,7 +39,7 @@ Provide a comprehensive documentation page regarding "Distributed James consiste
 
 ## Consequences
 
-The expect **auto-healing** inconsistencies on existing deployments (at a limited configuration cost).
+The expected **auto-healing** inconsistencies on existing deployments (at a limited configuration cost).
 This should ease operation of the Distributed James server.
 
 A configuration for James Distributed server will be added to control read repairs, per entity.
