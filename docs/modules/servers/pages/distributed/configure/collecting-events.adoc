@@ -61,3 +61,9 @@ A sample message looks like:
 	"recurrence-id": null
 }
 ....
+
+The following pipeline positions the X-MEETING-UID in the Header in order for mail user agent to correlate events with this mail.
+The sample look like:
+```
+X-MEETING-UID: f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc
+```
