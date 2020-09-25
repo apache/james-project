@@ -21,6 +21,7 @@ However, the inconsistencies persist between runs. We experienced inconsistencie
 for both the mailbox entity, and the mailbox counter entity (whose table structure is exposed in
 [these](0020-cassandra-mailbox-object-consistency.md), [ADRs](0023-cassandra-mailbox-counters-inconsistencies.md)).
 Monitoring is required to detect when to run them and is time consuming for the platform administrator.
+Given a large dataset, it could even be impossible to run such tasks in a timely fashion.
 
 Another classic eventual consistency mechanism, that enables auto-healing and completes
 
@@ -46,6 +47,15 @@ A configuration for James Distributed server will be added to control read repai
 
 ## Alternatives
 
+Cassandra provides some alternative by itself:
+
+ - Secondary indexes avoids the deormalization in the first place. However they are not efficient in
+ a distributed environment as each nodes needs to be queried, which limits ability to scale.
+ - Materialized view enables Cassandra to maintain a projection on the behalf of the application,
+ come with an expensive write cost, requiring synchronisation, don't fit for complex denormalization
+ (like the message one: the primary key of the originating table needs to appear in the materialized
+ view primary key).
+
 We already propose several tasks to solve denormalization inconsistencies. "Applicative read repairs" should be
 seen as a complement to it.
 
@@ -60,3 +70,24 @@ defeats this strategy that is otherwise efficient to limit inconsistencies acros
  - [20. Cassandra Mailbox object consistency](0020-cassandra-mailbox-object-consistency.md)
  - [23. Cassandra Mailbox Counters inconsistencies](0023-cassandra-mailbox-counters-inconsistencies.md)
  - [Hinted handoff](https://cassandra.apache.org/doc/latest/operating/hints.html)
+
+ - [This link documents materialized views limitations]()
+
+Especially:
+
+```
+Materialized View Limitations:
+
+    All updates to the view happen asynchronously unless corresponding view replica is the same node.
+    We must do this to ensure availability is not compromised.  It's easy to imagine a worst case
+    scenario of 10 Materialized Views for which each update to the base table requires writing to 10
+    separate nodes. Under normal operation views will see the data quickly and there are new metrics to
+    track it (ViewWriteMetricss).
+
+    There is no read repair between the views and the base table.  Meaning a read repair on the view will
+    only correct that view's data not the base table's data.  If you are reading from the base table though,
+    read repair will send updates to the base and the view.
+
+    Mutations on a base table partition must happen sequentially per replica if the mutation touches
+    a column in a view (this will improve after ticket CASSANDRA-10307)
+```
