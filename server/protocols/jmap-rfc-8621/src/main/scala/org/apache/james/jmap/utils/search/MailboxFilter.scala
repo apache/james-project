@@ -21,7 +21,7 @@ package org.apache.james.jmap.utils.search
 import java.util.Date
 
 import cats.implicits._
-import org.apache.james.jmap.mail.{EmailQueryRequest, UnsupportedFilterException}
+import org.apache.james.jmap.mail.{EmailQueryRequest, HeaderContains, HeaderExist, UnsupportedFilterException}
 import org.apache.james.jmap.model.CapabilityIdentifier
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.mailbox.MailboxSession
@@ -220,7 +220,8 @@ object MailboxFilter {
   case object Header extends QueryFilter {
     override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
       request.filter.flatMap(_.header) match {
-        case Some(_) => Left(UnsupportedFilterException("header"))
+        case Some(HeaderExist(name)) => Right(builder.andCriteria(SearchQuery.headerExists(name)))
+        case Some(HeaderContains(name, value)) => Right(builder.andCriteria(SearchQuery.headerContains(name, value)))
         case None => Right(builder)
       }
   }

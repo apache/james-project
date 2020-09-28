@@ -38,7 +38,9 @@ case class To(value: String) extends AnyVal
 case class Cc(value: String) extends AnyVal
 case class Bcc(value: String) extends AnyVal
 case class Body(value: String) extends AnyVal
-case class Header(value: String) extends AnyVal
+sealed trait Header
+case class HeaderExist(name: String) extends Header
+case class HeaderContains(name: String, value: String) extends Header
 
 case class FilterCondition(inMailbox: Option[MailboxId],
                            inMailboxOtherThan: Option[Seq[MailboxId]],
@@ -58,7 +60,7 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            cc: Option[Cc],
                            bcc: Option[Bcc],
                            subject: Option[Subject],
-                           header: Option[Set[Header]],
+                           header: Option[Header],
                            body: Option[Body])
 
 case class EmailQueryRequest(accountId: AccountId,

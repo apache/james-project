@@ -20,9 +20,8 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, Bcc, Body, Cc, CollapseThreads, From, FromSortProperty, HasKeywordSortProperty, Header, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty, HasAttachment, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, IsAscending, ReceivedAtSortProperty, SentAtSortProperty, SortProperty}
-import org.apache.james.jmap.model.{CanCalculateChanges, LimitUnparsed, PositionUnparsed, QueryState}
-import org.apache.james.jmap.model.{AccountId, Keyword}
+import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, HeaderContains, HeaderExist, IsAscending, ReceivedAtSortProperty, SentAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
+import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
 
@@ -56,7 +55,23 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val ccReads: Reads[Cc] = Json.valueReads[Cc]
   private implicit val bccReads: Reads[Bcc] = Json.valueReads[Bcc]
   private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]
-  private implicit val headerReads: Reads[Header] = Json.valueReads[Header]
+  private implicit val headerReads: Reads[Header] = {
+    case array: JsArray if array.value.length == 1 =>
+      extractString(array.value.head)
+          .fold[JsResult[Header]](e => e, name => JsSuccess(HeaderExist(name)))
+    case array: JsArray if array.value.length == 2 =>
+      extractString(array.value.head)
+          .flatMap(name => extractString(array.value.last)
+            .map(value => (name, value)))
+          .fold(e => e, {
+            case (name, value) => JsSuccess(HeaderContains(name, value))
+          })
+    case _ => JsError("header filter needs to be an array of one or two strings")
+  }
+  private def extractString(jsValue: JsValue): Either[JsResult[Header], String] = jsValue match {
+    case JsString(value) => Right(value)
+    case _ => Left(JsError("header filter needs to be an array of one or two strings"))
+  }
   private implicit val bodyReads: Reads[Body] = Json.valueReads[Body]
   private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
   private implicit val limitUnparsedReads: Reads[LimitUnparsed] = Json.valueReads[LimitUnparsed]
