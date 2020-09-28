@@ -17,7 +17,7 @@ You can browse the mailing list archives online using the https://lists.apache.o
 *Low traffic*
 mailto:server-user-subscribe@james.apache.org[Subscribe]
 mailto:server-user-unsubscribe@james.apache.org[Unsubscribe]
-https://lists.apache.org/list.html?server-user@james.apache.org[Archive]
+link:++https://lists.apache.org/list.html?server-user@james.apache.org++[Archive]
 
 This is the list where users of the Apache James (Server) meet and discuss issues. Developers are also expected to be
 subscribed to this list to offer support to users of Apache James (Server).
@@ -27,7 +27,7 @@ subscribed to this list to offer support to users of Apache James (Server).
 *Medium traffic*
 mailto:server-dev-subscribe@james.apache.org[Subscribe]
 mailto:server-dev-unsubscribe@james.apache.org[Unsubscribe]
-https://lists.apache.org/list.html?server-dev@james.apache.org[Archive]
+link:++https://lists.apache.org/list.html?server-dev@james.apache.org++[Archive]
 
 This is the list where participating developers of the Apache James Project meet and discuss issues, code changes/additions,
 etc. Do not send mail to this list with usage questions or configuration problems -- that's what server-user@james is for.
@@ -37,7 +37,7 @@ etc. Do not send mail to this list with usage questions or configuration problem
 *Medium traffic*
 mailto:mime4j-dev-subscribe@james.apache.org[Subscribe]
 mailto:mime4j-dev-unsubscribe@james.apache.org[Unsubscribe]
-https://lists.apache.org/list.html?mime4j-dev@james.apache.org[Archive]
+link:++https://lists.apache.org/list.html?mime4j-dev@james.apache.org++[Archive]
 
 Discussions on the http://james.apache.org/mime4j[Mime4j] parser library.
 
@@ -46,7 +46,7 @@ Discussions on the http://james.apache.org/mime4j[Mime4j] parser library.
 *Low traffic*
 mailto:general-subscribe@james.apache.org[Subscribe]
 mailto:general-unsubscribe@james.apache.org[Unsubscribe]
-https://lists.apache.org/list.html?general@james.apache.org[Archive]
+link:++https://lists.apache.org/list.html?general@james.apache.org++[Archive]
 
 This is the list for general discussions related to the running of the project, it is the public list of the
 James project management committee (PMC) and is a public list opened to all. Do not send mail to this list with James
@@ -57,7 +57,7 @@ software problems -- that's what server-user@james is for.
 *High traffic*
 mailto:notifications-subscribe@james.apache.org[Subscribe]
 mailto:notifications-unsubscribe@james.apache.org[Unsubscribe]
-https://lists.apache.org/list.html?notifications@james.apache.org[Archive]
+link:++https://lists.apache.org/list.html?notifications@james.apache.org++[Archive]
 
 Subscribers to this list get notices of each and every code change, build results, testing notices, etc. This list is
 not for asking help, raising issues or starting discussions on the james product -- other mailing lists are specifically
