@@ -82,7 +82,7 @@ Materialized View Limitations:
     We must do this to ensure availability is not compromised.  It's easy to imagine a worst case
     scenario of 10 Materialized Views for which each update to the base table requires writing to 10
     separate nodes. Under normal operation views will see the data quickly and there are new metrics to
-    track it (ViewWriteMetricss).
+    track it (ViewWriteMetrics).
 
     There is no read repair between the views and the base table.  Meaning a read repair on the view will
     only correct that view's data not the base table's data.  If you are reading from the base table though,
