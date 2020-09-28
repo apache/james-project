@@ -1604,7 +1604,6 @@ trait EmailQueryMethodContract {
     "someInThreadHaveKeyword",
     "noneInThreadHaveKeyword",
     "text",
-    "bcc",
     "subject",
     "body"
   ))
@@ -3831,6 +3830,157 @@ trait EmailQueryMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "filter" : {
          |        "cc": "Display"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId2.serialize}", "${messageId3.serialize}"]""")
+    }
+  }
+
+  @Test
+  def bccShouldFilterResultsWhenAddress(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    def messageBuilder = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("user@domain.tld"))
+          .build))
+      .getMessageId
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("other@domain.tld"))
+          .build))
+      .getMessageId
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("yet@other.tld"))
+          .build))
+      .getMessageId
+    val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("yet@other.tld"),
+            DefaultAddressParser.DEFAULT.parseMailbox("user@domain.tld"))
+          .build))
+      .getMessageId
+    val messageId5 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder.build))
+      .getMessageId
+    val messageId6 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("\"User\" <user@domain.tld>"))
+          .build))
+      .getMessageId
+    val messageId7 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("\"user@domain.tld\" <other@domain.tld>"))
+          .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "bcc": "user@domain.tld"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId7.serialize}", "${messageId6.serialize}", "${messageId4.serialize}", "${messageId1.serialize}"]""")
+    }
+  }
+
+  @Test
+  def bccShouldFilterResultsWhenNotAnAddress(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    def messageBuilder = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("user@domain.tld"))
+          .build))
+      .getMessageId
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("\"Display\" <other@domain.tld>"))
+          .build))
+      .getMessageId
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("display@other.tld"))
+          .build))
+      .getMessageId
+    val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder.build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "bcc": "Display"
          |      }
          |    },
          |    "c1"]]
