@@ -199,7 +199,7 @@ object MailboxFilter {
   case object Cc extends QueryFilter {
     override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
       request.filter.flatMap(_.cc) match {
-        case Some(_) => Left(UnsupportedFilterException("cc"))
+        case Some(cc) => Right(builder.andCriteria(SearchQuery.address(AddressType.Cc, cc.value)))
         case None => Right(builder)
       }
   }
