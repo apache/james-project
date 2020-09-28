@@ -19,6 +19,10 @@
 
 package org.apache.james.queue.rabbitmq;
 
+import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
+import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -38,7 +42,10 @@ import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueBrowser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.rabbitmq.QueueSpecification;
 
 class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQMailQueue> {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
@@ -85,6 +92,21 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
     @Override
     public MailQueueFactory<RabbitMQMailQueue> getMailQueueFactory() {
         return mailQueueFactory;
+    }
+
+    @Test
+    void getQueueShouldNotFailWhenTheQueueExistsWithoutDeadLetterSetUp() {
+        rabbitMQExtension.getSender()
+            .declareQueue(QueueSpecification.queue("JamesMailQueue-workqueue-" + NAME_1.asString())
+                .durable(DURABLE)
+                .exclusive(!EXCLUSIVE)
+                .autoDelete(!AUTO_DELETE))
+            .block();
+
+        mailQueueFactory.createQueue(NAME_1);
+
+        assertThatCode(() -> mailQueueFactory.getQueue(NAME_1))
+            .doesNotThrowAnyException();
     }
 
 }

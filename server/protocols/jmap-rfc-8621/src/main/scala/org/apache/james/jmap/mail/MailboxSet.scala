@@ -30,7 +30,7 @@ import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId, UnparsedMailboxIdConstraint}
-import org.apache.james.jmap.method.MailboxCreationParseException
+import org.apache.james.jmap.method.{MailboxCreationParseException, WithAccountId}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.model.State.State
@@ -45,7 +45,7 @@ case class MailboxSetRequest(accountId: AccountId,
                              create: Option[Map[MailboxCreationId, JsObject]],
                              update: Option[Map[UnparsedMailboxId, MailboxPatchObject]],
                              destroy: Option[Seq[UnparsedMailboxId]],
-                             onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy])
+                             onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy]) extends WithAccountId
 
 object MailboxSetRequest {
   type UnparsedMailboxIdConstraint = NonEmpty

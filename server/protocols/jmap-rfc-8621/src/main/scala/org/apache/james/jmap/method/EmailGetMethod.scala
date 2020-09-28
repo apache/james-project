@@ -24,6 +24,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
+import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest}
@@ -32,11 +33,9 @@ import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CA
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
 import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, Properties}
-import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
-import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -82,19 +81,19 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
                                 messageIdFactory: MessageId.Factory,
                                 zoneIdProvider: ZoneIdProvider,
                                 previewFactory: Preview.Factory,
-                                metricFactory: MetricFactory) extends Method {
+                                val metricFactory: MetricFactory,
+                                val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailGetRequest] {
   override val methodName = MethodName("Email/get")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: Invocation, mailboxSession: MailboxSession, processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] =
-    metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-      asEmailGetRequest(invocation.arguments)
-        .flatMap(computeResponseInvocation(_, invocation, mailboxSession))
-        .onErrorResume({
-          case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.methodCallId))
-          case e: Throwable => SMono.raiseError(e)
-        })
-        .map(invocationResult => (invocationResult, processingContext)))
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailGetRequest): SMono[InvocationWithContext] = {
+    computeResponseInvocation(request, invocation.invocation, mailboxSession).onErrorResume({
+      case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId))
+      case e: Throwable => SMono.raiseError(e)
+    }).map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
+  }
+
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailGetRequest] = asEmailGetRequest(invocation.arguments)
 
   private def computeResponseInvocation(request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     validateProperties(request)

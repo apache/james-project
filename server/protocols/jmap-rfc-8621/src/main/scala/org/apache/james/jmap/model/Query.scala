@@ -20,15 +20,15 @@
 package org.apache.james.jmap.model
 
 import com.google.common.hash.Hashing
-import eu.timepit.refined.auto._
 import eu.timepit.refined.api.Refined
+import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.{NonNegative, Positive}
 import eu.timepit.refined.refineV
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import reactor.core.scala.publisher.SMono
 
 case class PositionUnparsed(value: Int) extends AnyVal
-object Position{
+object Position {
   type Position = Int Refined NonNegative
   val zero: Position = 0
 

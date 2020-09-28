@@ -787,7 +787,7 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.modSeqGreaterThan(7L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsOnly(m7.getUid(), m8.getUid(), m9.getUid());
+            .containsOnly(m8.getUid(), m9.getUid());
     }
 
     @Test
@@ -795,7 +795,7 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.modSeqLessThan(3L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsOnly(m1.getUid(), m2.getUid(), m3.getUid());
+            .containsOnly(m1.getUid(), m2.getUid());
     }
 
     @Test
@@ -999,7 +999,7 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.headerExists("Precedence"), SearchQuery.modSeqGreaterThan(6L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsOnly(m6.getUid(), m8.getUid(), m9.getUid());
+            .containsOnly(m8.getUid(), m9.getUid());
     }
 
     @Test
@@ -1009,7 +1009,7 @@ public abstract class AbstractMessageSearchIndexTest {
             SearchQuery.modSeqGreaterThan(6L)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsOnly(m6.getUid(), m8.getUid(), m9.getUid());
+            .containsOnly(m8.getUid(), m9.getUid());
     }
 
     @Test
@@ -1020,7 +1020,7 @@ public abstract class AbstractMessageSearchIndexTest {
             SearchQuery.modSeqGreaterThan(6L)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsOnly(m2.getUid(), m3.getUid(), m4.getUid(), m6.getUid(), m7.getUid(), m8.getUid(), m9.getUid());
+            .containsOnly(m2.getUid(), m3.getUid(), m4.getUid(), m7.getUid(), m8.getUid(), m9.getUid());
     }
 
     @Test

@@ -147,11 +147,6 @@ class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnSentDateShouldWork() {
-    }
-
-    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
-    @Override
     public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecified() {
     }
 

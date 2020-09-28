@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 
 import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
+import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties}
 
@@ -27,7 +28,7 @@ case class Ids(value: List[UnparsedMailboxId])
 
 case class MailboxGetRequest(accountId: AccountId,
                              ids: Option[Ids],
-                             properties: Option[Properties])
+                             properties: Option[Properties]) extends WithAccountId
 
 case class NotFound(value: Set[UnparsedMailboxId]) {
   def merge(other: NotFound): NotFound = NotFound(this.value ++ other.value)

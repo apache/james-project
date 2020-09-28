@@ -18,14 +18,19 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search.comparator;
 
+import static org.apache.james.mime4j.codec.DecodeMonitor.SILENT;
+
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
+import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,15 +77,15 @@ public class SentDateComparator extends AbstractHeaderComparator {
 
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
-        Instant date1 = getSentDate(o1);
-        Instant date2 = getSentDate(o2);
-        return date1.compareTo(date2);
+        return parseSentDate(o1).compareTo(parseSentDate(o2));
     }
-    
-    private Instant getSentDate(MailboxMessage message) {
-        final String value = getHeaderValue("Date", message);
-        return toISODate(value)
-            .map(ZonedDateTime::toInstant)
+
+    private Instant parseSentDate(MailboxMessage message) {
+        String value = getHeaderValue("Date", message);
+        RawField field = new RawField("Date", value);
+        return Optional.ofNullable(DateTimeFieldLenientImpl.PARSER.parse(field, SILENT)
+                .getDate())
+            .map(Date::toInstant)
             .orElse(message.getInternalDate().toInstant());
     }
 }

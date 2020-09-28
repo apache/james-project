@@ -24,6 +24,7 @@ import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.utils.quotas.QuotaLoader
 import org.apache.james.mailbox._
+import org.apache.james.mailbox.exception.MailboxNameException
 import org.apache.james.mailbox.model.MailboxACL.EntryKey
 import org.apache.james.mailbox.model.{MailboxCounters, MailboxId, MailboxMetaData, MailboxPath, MailboxACL => JavaMailboxACL}
 import reactor.core.scala.publisher.SMono
@@ -32,12 +33,12 @@ import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
 object MailboxValidation {
-  private def retrieveMailboxName(mailboxPath: MailboxPath, pathDelimiter: Char): Either[IllegalArgumentException, MailboxName] =
+  private def retrieveMailboxName(mailboxPath: MailboxPath, pathDelimiter: Char): Either[MailboxNameException, MailboxName] =
     mailboxPath.getName
       .split(pathDelimiter)
       .lastOption match {
         case Some(name) => MailboxName.validate(name)
-        case None => Left(new IllegalArgumentException("No name for the mailbox found"))
+        case None => Left(new MailboxNameException("No name for the mailbox found"))
       }
 
   def validate(mailboxPath: MailboxPath,

@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store.search;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -54,9 +53,10 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
+import org.apache.james.util.streams.Iterators;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
@@ -70,41 +70,6 @@ import reactor.core.scheduler.Schedulers;
  *
  */
 public class SimpleMessageSearchIndex implements MessageSearchIndex {
-
-    private static class SearchComparator implements Comparator<MailboxMessage> {
-        public static final int REVERSE = -1;
-        public static final int EQUALS = 0;
-        private final List<SearchQuery.Sort> sorts;
-
-        public SearchComparator(SearchQuery query) {
-            sorts = query.getSorts();
-        }
-
-        @Override
-        public int compare(MailboxMessage message, MailboxMessage other) {
-            return sorts.stream()
-                .mapToInt(sort -> {
-                    SearchQuery.Sort.SortClause sortClause = sort.getSortClause();
-                    int sortResult = compareWithSortClause(message, other, sortClause);
-                    if (sort.isReverse()) {
-                        return sortResult * REVERSE;
-                    }
-                    return sortResult;
-                })
-                .filter(i -> i != 0)
-                .findFirst()
-                .orElse(EQUALS);
-        }
-
-        private int compareWithSortClause(MailboxMessage message, MailboxMessage other, SearchQuery.Sort.SortClause sortClause) {
-            switch (sortClause) {
-                case Arrival:
-                    return message.metaData().getInternalDate().compareTo(other.getInternalDate());
-                default:
-                    return message.compareTo(other);
-            }
-        }
-    }
 
     private final MessageMapperFactory messageMapperFactory;
     private final MailboxMapperFactory mailboxMapperFactory;
@@ -196,9 +161,8 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
 
     private Flux<? extends SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
         return mailboxes.concatMap(mailbox -> Flux.fromStream(getSearchResultStream(session, query, mailbox)))
-            .collectSortedList(new SearchComparator(query))
-            .map(list ->  ImmutableList.copyOf(new MessageSearches(list.iterator(), query, textExtractor, attachmentContentLoader, session).iterator()))
-            .flatMapIterable(list -> list)
+            .collectSortedList(CombinedComparator.create(query.getSorts()))
+            .flatMapMany(list -> Iterators.toFlux(new MessageSearches(list.iterator(), query, textExtractor, attachmentContentLoader, session).iterator()))
             .subscribeOn(Schedulers.elastic());
     }
 

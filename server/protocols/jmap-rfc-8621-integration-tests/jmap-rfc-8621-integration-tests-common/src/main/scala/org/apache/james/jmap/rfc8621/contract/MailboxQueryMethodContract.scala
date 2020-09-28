@@ -48,6 +48,46 @@ trait MailboxQueryMethodContract {
   }
 
   @Test
+  def mailboxQueryShouldFailWhenWrongAccountId(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Mailbox/query",
+         |    {
+         |      "accountId": "unknownAccountId",
+         |      "filter": {"role":"Inbox"}
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      """{
+        |  "sessionState": "75128aab4b1b",
+        |  "methodResponses": [
+        |    ["error", {
+        |      "type": "accountNotFound"
+        |    }, "c1"]
+        |  ]
+        |}""".stripMargin)
+  }
+
+  @Test
   def roleShouldAllowToRetrieveTheInbox(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "INBOX"))

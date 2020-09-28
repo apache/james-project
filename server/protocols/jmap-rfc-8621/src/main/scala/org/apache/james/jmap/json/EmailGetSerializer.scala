@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.api.model.Preview
-import org.apache.james.jmap.mail.{Address, AddressesHeaderValue, BlobId, Charset, Disposition, EmailAddress, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, HasAttachment, HeaderMessageId, IsEncodingProblem, IsTruncated, Language, Location, MailboxIds, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type}
+import org.apache.james.jmap.mail.{Address, AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Language, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue}
 import org.apache.james.jmap.model._
 import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
@@ -57,10 +57,24 @@ object EmailGetSerializer {
   private implicit val rawHeaderWrites: Writes[RawHeaderValue] = Json.valueWrites[RawHeaderValue]
   private implicit val textHeaderWrites: Writes[TextHeaderValue] = Json.valueWrites[TextHeaderValue]
   private implicit val addressesHeaderWrites: Writes[AddressesHeaderValue] = Json.valueWrites[AddressesHeaderValue]
+  private implicit val GroupNameWrites: Writes[GroupName] = Json.valueWrites[GroupName]
+  private implicit val emailAddressGroupWrites: Writes[EmailAddressGroup] = (o: EmailAddressGroup) =>
+    Json.obj(
+      "name" -> Json.toJson(o.name),
+      "addresses" -> Json.toJson(o.addresses))
+  private implicit val groupedAddressesHeaderWrites: Writes[GroupedAddressesHeaderValue] = Json.valueWrites[GroupedAddressesHeaderValue]
+  private implicit val messageIdsHeaderWrites: Writes[MessageIdsHeaderValue] = Json.valueWrites[MessageIdsHeaderValue]
+  private implicit val dateHeaderWrites: Writes[DateHeaderValue] = Json.valueWrites[DateHeaderValue]
+  private implicit val headerURLWrites: Writes[HeaderURL] = Json.valueWrites[HeaderURL]
+  private implicit val urlsHeaderWrites: Writes[URLsHeaderValue] = Json.valueWrites[URLsHeaderValue]
   private implicit val emailHeaderWrites: Writes[EmailHeaderValue] = {
     case headerValue: RawHeaderValue => Json.toJson[RawHeaderValue](headerValue)
     case headerValue: TextHeaderValue => Json.toJson[TextHeaderValue](headerValue)
     case headerValue: AddressesHeaderValue => Json.toJson[AddressesHeaderValue](headerValue)
+    case headerValue: GroupedAddressesHeaderValue => Json.toJson[GroupedAddressesHeaderValue](headerValue)
+    case headerValue: MessageIdsHeaderValue => Json.toJson[MessageIdsHeaderValue](headerValue)
+    case headerValue: DateHeaderValue => Json.toJson[DateHeaderValue](headerValue)
+    case headerValue: URLsHeaderValue => Json.toJson[URLsHeaderValue](headerValue)
   }
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
   private implicit val bodyValueWrites: Writes[EmailBodyValue] = Json.writes[EmailBodyValue]

@@ -696,32 +696,32 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public Flux<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException {
-        return getInMailboxes(expression.getInMailboxes(), session)
-            .filter(id -> !expression.getNotInMailboxes().contains(id))
+        return getInMailboxes(expression, session)
+            .filter(id -> !expression.getNotInMailboxes().contains(id.getMailboxId()))
+            .filter(mailbox -> expression.getNamespace().keepAccessible(mailbox))
+            .map(Mailbox::getMailboxId)
             .collect(Guavate.toImmutableSet())
             .flatMapMany(Throwing.function(ids -> index.search(session, ids, expression.getSearchQuery(), limit)));
     }
 
 
-    private Flux<MailboxId> getInMailboxes(ImmutableSet<MailboxId> inMailboxes, MailboxSession session) throws MailboxException {
-        if (inMailboxes.isEmpty()) {
-            return getAllReadableMailbox(session);
+    private Flux<Mailbox> getInMailboxes(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
+        if (expression.getInMailboxes().isEmpty()) {
+            return searchMailboxes(expression.getNamespace().associatedMailboxSearchQuery(), session, Right.Read);
         } else {
-            return filterReadable(inMailboxes, session);
+            return filterReadable(expression.getInMailboxes(), session);
         }
     }
 
-    private Flux<MailboxId> getAllReadableMailbox(MailboxSession session) throws MailboxException {
-        return searchMailboxes(MailboxQuery.builder().matchesAllMailboxNames().build(), session, Right.Read)
-            .map(Mailbox::getMailboxId);
+    private Flux<Mailbox> getAllReadableMailbox(MailboxQuery mailboxQuery, MailboxSession session) throws MailboxException {
+        return searchMailboxes(mailboxQuery, session, Right.Read);
     }
 
-    private Flux<MailboxId> filterReadable(ImmutableSet<MailboxId> inMailboxes, MailboxSession session) throws MailboxException {
+    private Flux<Mailbox> filterReadable(ImmutableSet<MailboxId> inMailboxes, MailboxSession session) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         return Flux.fromIterable(inMailboxes)
             .concatMap(mailboxMapper::findMailboxById)
-            .filter(Throwing.<Mailbox>predicate(mailbox -> storeRightManager.hasRight(mailbox, Right.Read, session)).sneakyThrow())
-            .map(Mailbox::getMailboxId);
+            .filter(Throwing.<Mailbox>predicate(mailbox -> storeRightManager.hasRight(mailbox, Right.Read, session)).sneakyThrow());
     }
 
     @Override

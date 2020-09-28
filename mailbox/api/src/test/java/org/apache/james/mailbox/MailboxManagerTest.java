@@ -76,6 +76,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery.AccessibleNamespace;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery.PersonalNamespace;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -1256,6 +1258,39 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void searchForMessageShouldReturnMessagesFromMyDelegatedMailboxesWhenAccessibleNamespace() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxSession sessionFromDelegater = mailboxManager.createSystemSession(USER_2);
+            MailboxPath delegatedMailboxPath = MailboxPath.forUser(USER_2, "SHARED");
+            MailboxId delegatedMailboxId = mailboxManager.createMailbox(delegatedMailboxPath, sessionFromDelegater).get();
+            MessageManager delegatedMessageManager = mailboxManager.getMailbox(delegatedMailboxId, sessionFromDelegater);
+
+            MessageId messageId = delegatedMessageManager
+                .appendMessage(AppendCommand.from(message), sessionFromDelegater)
+                .getId().getMessageId();
+
+            mailboxManager.setRights(delegatedMailboxPath,
+                MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_1)
+                    .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
+                    .asAddition()),
+                sessionFromDelegater);
+
+            MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+                .from(SearchQuery.matchAll())
+                .inNamespace(new AccessibleNamespace())
+                .build();
+
+            assertThat(
+                Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                    .collectList()
+                    .block())
+                .containsOnly(messageId);
+        }
+
+        @Test
         void searchForMessageShouldNotReturnMessagesFromMyDelegatedMailboxesICanNotRead() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
@@ -1366,6 +1401,39 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
                 .collectList().block())
+                .isEmpty();
+        }
+
+        @Test
+        void searchShouldRestrictResultsToTheSuppliedUserNamespace() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxSession sessionFromDelegater = mailboxManager.createSystemSession(USER_2);
+            MailboxPath delegatedMailboxPath = MailboxPath.forUser(USER_2, "SHARED");
+            MailboxId delegatedMailboxId = mailboxManager.createMailbox(delegatedMailboxPath, sessionFromDelegater).get();
+            MessageManager delegatedMessageManager = mailboxManager.getMailbox(delegatedMailboxId, sessionFromDelegater);
+
+            MessageId messageId = delegatedMessageManager
+                .appendMessage(AppendCommand.from(message), sessionFromDelegater)
+                .getId().getMessageId();
+
+            mailboxManager.setRights(delegatedMailboxPath,
+                MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_1)
+                    .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
+                    .asAddition()),
+                sessionFromDelegater);
+
+            MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+                .from(SearchQuery.matchAll())
+                .inNamespace(new PersonalNamespace(session))
+                .build();
+
+            assertThat(
+                Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                    .collectList()
+                    .block())
                 .isEmpty();
         }
 

@@ -22,6 +22,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.vacation.{AccountId, VacationPatch, VacationRepository}
+import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
@@ -29,12 +30,9 @@ import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CA
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{Capabilities, Invocation, State}
-import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.jmap.vacation.{VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
-import org.apache.james.util.date.ZonedDateTimeProvider
-import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -72,22 +70,19 @@ object VacationResponseSetMethod {
   val VACATION_RESPONSE_PATCH_OBJECT_KEY = "singleton"
 }
 
-class VacationResponseSetMethod @Inject() (vacationRepository: VacationRepository,
-                                           zonedDateTimeProvider: ZonedDateTimeProvider,
-                                           metricFactory: MetricFactory) extends Method {
+class VacationResponseSetMethod @Inject()(vacationRepository: VacationRepository,
+                                          val metricFactory: MetricFactory,
+                                          val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[VacationResponseSetRequest] {
   override val methodName: MethodName = MethodName("VacationResponse/set")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY)
 
-  override def process(capabilities: Set[CapabilityIdentifier],
-                       invocation: Invocation,
-                       mailboxSession: MailboxSession,
-                       processingContext: ProcessingContext): Publisher[(Invocation, ProcessingContext)] = {
-      metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value,
-        asVacationResponseSetRequest(invocation.arguments)
-          .flatMap(vacationResponseSetRequest => update(mailboxSession, vacationResponseSetRequest)
-            .map(updateResult => createResponse(invocation, vacationResponseSetRequest, updateResult)))
-          .map((_, processingContext)))
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: VacationResponseSetRequest): SMono[InvocationWithContext] = {
+    update(mailboxSession, request)
+      .map(updateResult => createResponse(invocation.invocation, request, updateResult))
+      .map(InvocationWithContext(_, invocation.processingContext))
   }
+
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[VacationResponseSetRequest] = asVacationResponseSetRequest(invocation.arguments)
 
   private def update(mailboxSession: MailboxSession, vacationResponseSetRequest: VacationResponseSetRequest): SMono[VacationResponseUpdateResults] = {
     SFlux.fromIterable(vacationResponseSetRequest.parsePatch()

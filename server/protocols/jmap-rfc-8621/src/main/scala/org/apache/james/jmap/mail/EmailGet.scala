@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.mail
 
+import java.time.ZoneId
+
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
@@ -26,10 +28,12 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.EmailHeaders.SPECIFIC_HEADER_PREFIX
+import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.stream.Field
+
 import scala.jdk.CollectionConverters._
 
 case class EmailIds(value: List[UnparsedEmailId])
@@ -71,7 +75,7 @@ case class EmailGetRequest(accountId: AccountId,
                            fetchHTMLBodyValues: Option[FetchHTMLBodyValues],
                            maxBodyValueBytes: Option[MaxBodyValueBytes],
                            properties: Option[Properties],
-                           bodyProperties: Option[Properties])
+                           bodyProperties: Option[Properties]) extends WithAccountId
 
 case class EmailNotFound(value: Set[UnparsedEmailId]) {
   def merge(other: EmailNotFound): EmailNotFound = EmailNotFound(this.value ++ other.value)
@@ -83,11 +87,17 @@ case class EmailGetResponse(accountId: AccountId,
                             notFound: EmailNotFound)
 
 case class SpecificHeaderRequest(headerName: NonEmptyString, property: String, parseOption: Option[ParseOption]) {
-  def retrieveHeader(message: Message): (String, Option[EmailHeaderValue]) = {
+  def retrieveHeader(zoneId: ZoneId, message: Message): (String, Option[EmailHeaderValue]) = {
     val field: Option[Field] = Option(message.getHeader.getFields(property))
       .map(_.asScala)
       .flatMap(fields => fields.reverse.headOption)
 
-    (headerName, field.flatMap(parseOption.getOrElse(AsRaw).extractHeaderValue(_)))
+    (headerName, field.map({
+      val option = parseOption.getOrElse(AsRaw)
+        option match {
+          case AsDate => AsDate.extractHeaderValue(_, zoneId)
+          case _ => option.extractHeaderValue
+        }
+    }))
   }
 }

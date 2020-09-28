@@ -74,6 +74,47 @@ trait MailboxGetMethodContract {
   }
 
   @Test
+  def mailboxGetShouldFailWhenWrongAccountId(): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail",
+         |    "urn:ietf:params:jmap:vacationresponse"],
+         |  "methodCalls": [[
+         |    "Mailbox/get",
+         |    {
+         |      "accountId": "unknownAccountId",
+         |      "ids": null
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      """{
+        |  "sessionState": "75128aab4b1b",
+        |  "methodResponses": [
+        |    ["error", {
+        |      "type": "accountNotFound"
+        |    }, "c1"]
+        |  ]
+        |}""".stripMargin)
+  }
+
+  @Test
   def getMailboxesShouldIncludeRightsAndNamespaceIfSharesCapabilityIsUsed(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "custom"))

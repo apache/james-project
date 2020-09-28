@@ -22,6 +22,10 @@ import java.util.Date
 
 import cats.implicits._
 import org.apache.james.jmap.mail.{EmailQueryRequest, UnsupportedFilterException}
+import org.apache.james.jmap.model.CapabilityIdentifier
+import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery.{AccessibleNamespace, Namespace, PersonalNamespace}
 import org.apache.james.mailbox.model.SearchQuery.DateResolution.Second
 import org.apache.james.mailbox.model.SearchQuery.{DateComparator, DateOperator, DateResolution, InternalDateCriterion}
 import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
@@ -47,11 +51,18 @@ case object NotInMailboxFilter extends MailboxFilter {
 }
 
 object MailboxFilter {
-  def buildQuery(request: EmailQueryRequest, searchQuery: SearchQuery) = {
+  def buildQuery(request: EmailQueryRequest, searchQuery: SearchQuery, capabilities: Set[CapabilityIdentifier], session: MailboxSession) = {
     val multiMailboxQueryBuilder = MultimailboxesSearchQuery.from(searchQuery)
+        .inNamespace(queryNamespace(capabilities, session))
 
     List(InMailboxFilter, NotInMailboxFilter).foldLeft(multiMailboxQueryBuilder)((builder, filter) => filter.toQuery(builder, request))
       .build()
+  }
+
+  private def queryNamespace(capabilities: Set[CapabilityIdentifier], session: MailboxSession): Namespace = if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
+    new AccessibleNamespace()
+  } else {
+    new PersonalNamespace(session)
   }
 
   sealed trait QueryFilter {

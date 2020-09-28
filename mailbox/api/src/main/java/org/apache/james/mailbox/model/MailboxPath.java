@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
@@ -35,7 +36,6 @@ import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -114,7 +114,7 @@ public class MailboxPath {
     }
 
     public MailboxPath child(String childName, char delimiter) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(childName), "'childName' should not be null or empty");
+        Preconditions.checkArgument(!StringUtils.isBlank(childName), "'childName' should not be null or empty");
         Preconditions.checkArgument(!childName.contains(String.valueOf(delimiter)), "'childName' should not contain delimiter");
 
         return new MailboxPath(namespace, user, name + delimiter + childName);
@@ -194,10 +194,11 @@ public class MailboxPath {
 
     boolean hasEmptyNameInHierarchy(char pathDelimiter) {
         String delimiterString = String.valueOf(pathDelimiter);
-        return this.name.isEmpty()
-            || this.name.contains(delimiterString + delimiterString)
-            || this.name.startsWith(delimiterString)
-            || this.name.endsWith(delimiterString);
+        String nameWithoutSpaces = name.replaceAll("\\s", "");
+        return StringUtils.isBlank(nameWithoutSpaces)
+            || nameWithoutSpaces.contains(delimiterString + delimiterString)
+            || nameWithoutSpaces.startsWith(delimiterString)
+            || nameWithoutSpaces.endsWith(delimiterString);
     }
 
     public String asString() {

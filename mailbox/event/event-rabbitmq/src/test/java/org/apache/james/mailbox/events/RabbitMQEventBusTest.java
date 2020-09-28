@@ -154,7 +154,10 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     private RabbitMQEventBus newEventBus(Sender sender, ReceiverProvider receiverProvider) {
-        return new RabbitMQEventBus(sender, receiverProvider, eventSerializer, EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, routingKeyConverter, memoryEventDeadLetters, new RecordingMetricFactory());
+        return new RabbitMQEventBus(sender, receiverProvider, eventSerializer,
+            EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
+            memoryEventDeadLetters, new RecordingMetricFactory(),
+            rabbitMQExtension.getRabbitChannelPool());
     }
 
     @Override
@@ -454,24 +457,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 @BeforeEach
                 void beforeEach() {
                     rabbitMQEventBusWithNetWorkIssue = newEventBus(rabbitMQNetWorkIssueExtension.getSender(), rabbitMQNetWorkIssueExtension.getReceiverProvider());
-                }
-
-                @Test
-                void dispatchShouldWorkAfterNetworkIssuesForOldRegistration() {
-                    rabbitMQEventBusWithNetWorkIssue.start();
-                    MailboxListener listener = newListener();
-                    rabbitMQEventBusWithNetWorkIssue.register(listener, GROUP_A);
-
-                    rabbitMQNetWorkIssueExtension.getRabbitMQ().pause();
-
-                    assertThatThrownBy(() -> rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block())
-                        .isInstanceOf(IllegalStateException.class)
-                        .hasMessageContaining("Retries exhausted");
-
-                    rabbitMQNetWorkIssueExtension.getRabbitMQ().unpause();
-
-                    rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block();
-                    assertThatListenerReceiveOneEvent(listener);
                 }
 
                 @Test
