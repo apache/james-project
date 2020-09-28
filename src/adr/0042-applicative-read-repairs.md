@@ -50,7 +50,7 @@ A configuration for James Distributed server will be added to control read repai
 Cassandra provides some alternative by itself:
 
  - Secondary indexes avoids the denormalization in the first place. However they are not efficient in
- a distributed environment as each nodes needs to be queried, which limits ability to scale.
+ a distributed environment as each node needs to be queried, which limits ability to scale.
  - Materialized view enables Cassandra to maintain a projection on the behalf of the application,
  come with an expensive write cost, requiring synchronisation, don't fit for complex denormalization
  (like the message one: the primary key of the originating table needs to appear in the materialized
