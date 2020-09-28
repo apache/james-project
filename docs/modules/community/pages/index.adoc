@@ -27,6 +27,11 @@ and bug reports. We more than welcome non-coding contributions.
 
 You can find more information on how to contribute to the James project on the xref:contributing.adoc[contributing] section.
 
+== Articles for contributors
+
+** xref:website.adoc[]
+** xref:release.adoc[]
+
 == The Apache Software Foundation
 
 James is a project belonging to the https://www.apache.org/[Apache Software Foundation [ASF\]]. Thus, the Apache Jame project
