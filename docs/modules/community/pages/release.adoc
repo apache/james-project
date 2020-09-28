@@ -1,4 +1,4 @@
-= How to create an official Apache James release
+= Creating an official Apache James release
 
 Read details about http://www.apache.org/dev/publishing-maven-artifacts.html[Publishing Maven releases to Maven Central Repository]
 
