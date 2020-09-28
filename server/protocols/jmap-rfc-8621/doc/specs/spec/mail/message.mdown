@@ -740,11 +740,6 @@ These properties are not supported yet for filtering:
 - someInThreadHaveKeyword
 - noneInThreadHaveKeyword
 - text
-- from
-- to
-- cc
-- bcc
-- subject
 - body
 - header
 </aside>
