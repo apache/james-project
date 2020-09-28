@@ -27,7 +27,7 @@ import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery.{AccessibleNamespace, Namespace, PersonalNamespace}
 import org.apache.james.mailbox.model.SearchQuery.DateResolution.Second
-import org.apache.james.mailbox.model.SearchQuery.{DateComparator, DateOperator, DateResolution, InternalDateCriterion}
+import org.apache.james.mailbox.model.SearchQuery.{AddressType, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
 import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
 
 import scala.jdk.CollectionConverters._
@@ -185,7 +185,7 @@ object MailboxFilter {
   case object From extends QueryFilter {
     override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
       request.filter.flatMap(_.from) match {
-        case Some(_) => Left(UnsupportedFilterException("from"))
+        case Some(from) => Right(builder.andCriteria(SearchQuery.address(AddressType.From, from.value)))
         case None => Right(builder)
       }
   }
