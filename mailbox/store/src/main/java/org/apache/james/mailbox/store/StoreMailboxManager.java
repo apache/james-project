@@ -23,6 +23,7 @@ import static org.apache.james.mailbox.store.MailboxReactorUtils.block;
 import static org.apache.james.mailbox.store.MailboxReactorUtils.blockOptional;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -98,6 +99,8 @@ import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+import reactor.util.retry.RetryBackoffSpec;
 
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
@@ -110,6 +113,9 @@ public class StoreMailboxManager implements MailboxManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManager.class);
     public static final char SQL_WILDCARD_CHAR = '%';
     public static final EnumSet<MessageCapabilities> DEFAULT_NO_MESSAGE_CAPABILITIES = EnumSet.noneOf(MessageCapabilities.class);
+    public static final int MAX_ATTEMPTS = 3;
+    public static final Duration MIN_BACKOFF = Duration.ofMillis(100);
+    public static final RetryBackoffSpec RETRY_BACKOFF_SPEC = Retry.backoff(MAX_ATTEMPTS, MIN_BACKOFF);
 
     private final StoreRightManager storeRightManager;
     private final EventBus eventBus;
@@ -410,8 +416,7 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         mailboxMapper.execute(() -> block(mailboxMapper.findMailboxByPath(mailboxPath)
-            .flatMap(Throwing.<Mailbox, Mono<Mailbox>>function(mailbox ->
-                doDeleteMailbox(mailboxMapper, mailbox, session)).sneakyThrow())
+            .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))));
     }
 
@@ -425,17 +430,16 @@ public class StoreMailboxManager implements MailboxManager {
                 assertIsOwner(session, mailbox.generateAssociatedPath());
                 return mailbox;
             }).sneakyThrow())
-            .flatMap(Throwing.<Mailbox, Mono<Mailbox>>function(mailbox ->
-                doDeleteMailbox(mailboxMapper, mailbox, session)).sneakyThrow())));
+            .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))));
     }
 
-    private Mono<Mailbox> doDeleteMailbox(MailboxMapper mailboxMapper, Mailbox mailbox, MailboxSession session) throws MailboxException {
+    private Mono<Mailbox> doDeleteMailbox(MailboxMapper mailboxMapper, Mailbox mailbox, MailboxSession session) {
         MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
 
-        QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailbox.generateAssociatedPath());
-        long messageCount = messageMapper.countMessagesInMailbox(mailbox);
+        Mono<QuotaRoot> quotaRootPublisher = Mono.fromCallable(() -> quotaRootResolver.getQuotaRoot(mailbox.generateAssociatedPath()));
+        Mono<Long> messageCountPublisher = Mono.fromCallable(() -> messageMapper.countMessagesInMailbox(mailbox));
 
-        return messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED)
+        return quotaRootPublisher.zipWith(messageCountPublisher).flatMap(quotaRootWithMessageCount -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED)
             .map(message -> MetadataWithMailboxId.from(message.metaData(), message.getMailboxId()))
             .collect(Guavate.toImmutableList())
             .flatMap(metadata -> {
@@ -450,15 +454,16 @@ public class StoreMailboxManager implements MailboxManager {
                             .randomEventId()
                             .mailboxSession(session)
                             .mailbox(mailbox)
-                            .quotaRoot(quotaRoot)
-                            .quotaCount(QuotaCountUsage.count(messageCount))
+                            .quotaRoot(quotaRootWithMessageCount.getT1())
+                            .quotaCount(QuotaCountUsage.count(quotaRootWithMessageCount.getT2()))
                             .quotaSize(QuotaSizeUsage.size(totalSize))
                             .build(),
                         new MailboxIdRegistrationKey(mailbox.getMailboxId())));
             })
+            .retryWhen(RETRY_BACKOFF_SPEC)
             // We need to create a copy of the mailbox as maybe we can not refer to the real
             // mailbox once we remove it
-            .thenReturn(new Mailbox(mailbox));
+            .thenReturn(new Mailbox(mailbox)));
     }
 
     @Override
