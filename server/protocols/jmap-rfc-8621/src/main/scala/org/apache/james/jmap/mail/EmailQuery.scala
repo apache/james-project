@@ -18,6 +18,7 @@
  ****************************************************************/
 
 package org.apache.james.jmap.mail
+
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.IsAscending.ASCENDING
 import org.apache.james.jmap.method.WithAccountId
@@ -31,6 +32,14 @@ import org.apache.james.mailbox.model.{MailboxId, MessageId, SearchQuery}
 case class UnsupportedSortException(unsupportedSort: String) extends UnsupportedOperationException
 case class UnsupportedFilterException(unsupportedFilter: String) extends UnsupportedOperationException
 case class UnsupportedRequestParameterException(unsupportedParam: String) extends UnsupportedOperationException
+
+sealed trait FilterQuery
+
+sealed trait Operator
+case object And extends Operator
+
+case class FilterOperator(operator: Operator,
+                          conditions: Seq[FilterQuery]) extends FilterQuery
 
 case class Text(value: String) extends AnyVal
 case class From(value: String) extends AnyVal
@@ -61,12 +70,12 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            bcc: Option[Bcc],
                            subject: Option[Subject],
                            header: Option[Header],
-                           body: Option[Body])
+                           body: Option[Body]) extends FilterQuery
 
 case class EmailQueryRequest(accountId: AccountId,
                              position: Option[PositionUnparsed],
                              limit: Option[LimitUnparsed],
-                             filter: Option[FilterCondition],
+                             filter: Option[FilterQuery],
                              comparator: Option[Set[Comparator]],
                              collapseThreads: Option[CollapseThreads],
                              anchor: Option[Anchor],

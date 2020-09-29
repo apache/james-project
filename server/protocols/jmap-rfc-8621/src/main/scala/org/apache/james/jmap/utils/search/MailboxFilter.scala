@@ -21,13 +21,13 @@ package org.apache.james.jmap.utils.search
 import java.util.Date
 
 import cats.implicits._
-import org.apache.james.jmap.mail.{EmailQueryRequest, HeaderContains, HeaderExist, UnsupportedFilterException}
+import org.apache.james.jmap.mail.{And, EmailQueryRequest, FilterCondition, FilterOperator, FilterQuery, HeaderContains, HeaderExist, UnsupportedFilterException}
 import org.apache.james.jmap.model.CapabilityIdentifier
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery.{AccessibleNamespace, Namespace, PersonalNamespace}
 import org.apache.james.mailbox.model.SearchQuery.DateResolution.Second
-import org.apache.james.mailbox.model.SearchQuery.{Criterion, AddressType, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
+import org.apache.james.mailbox.model.SearchQuery.{AddressType, Criterion, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
 import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
 
 import scala.jdk.CollectionConverters._
@@ -37,16 +37,24 @@ sealed trait MailboxFilter {
 }
 
 case object InMailboxFilter extends MailboxFilter {
-  override def toQuery(builder: MultimailboxesSearchQuery.Builder, request: EmailQueryRequest): MultimailboxesSearchQuery.Builder = request.filter.flatMap(_.inMailbox) match {
-    case Some(mailboxId) => builder.inMailboxes(mailboxId)
-    case None => builder
-  }
+  override def toQuery(builder: MultimailboxesSearchQuery.Builder, request: EmailQueryRequest): MultimailboxesSearchQuery.Builder =
+    request.filter.flatMap {
+      case filterCondition: FilterCondition => Some(filterCondition)
+      case _ => None
+    }.flatMap(_.inMailbox) match {
+      case Some(mailboxId) => builder.inMailboxes(mailboxId)
+      case None => builder
+    }
 }
 
 case object NotInMailboxFilter extends MailboxFilter {
-  override def toQuery(builder: MultimailboxesSearchQuery.Builder, request: EmailQueryRequest): MultimailboxesSearchQuery.Builder = request.filter.flatMap(_.inMailboxOtherThan) match {
-    case Some(mailboxIds) => builder.notInMailboxes(mailboxIds.asJava)
-    case None => builder
+  override def toQuery(builder: MultimailboxesSearchQuery.Builder, request: EmailQueryRequest): MultimailboxesSearchQuery.Builder =
+    request.filter.flatMap {
+      case filterCondition: FilterCondition => Some(filterCondition)
+      case _ => None
+    }.flatMap(_.inMailboxOtherThan) match {
+      case Some(mailboxIds) => builder.notInMailboxes(mailboxIds.asJava)
+      case None => builder
   }
 }
 
@@ -66,185 +74,209 @@ object MailboxFilter {
   }
 
   sealed trait QueryFilter {
-    def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder]
+    def toQuery(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]]
   }
 
-  object QueryFilter {
-    def buildQuery(request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] = {
-      List(ReceivedBefore, ReceivedAfter, HasAttachment, HasKeyWord, NotKeyWord, MinSize, MaxSize,
-           AllInThreadHaveKeyword, NoneInThreadHaveKeyword, SomeInThreadHaveKeyword, Text, From,
-           To, Cc, Bcc, Subject, Header, Body)
-        .foldLeftM(new SearchQuery.Builder())((builder, filter) => filter.toQuery(builder, request))
+  sealed trait ConditionFilter extends QueryFilter {
+    def toQuery(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] = filterQuery match {
+      case filterCondition: FilterCondition => toQuery(filterCondition)
+      case _ => Right(Nil)
+    }
+
+    def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]]
+  }
+
+  case object AndFilter extends QueryFilter {
+    override def toQuery(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] = filterQuery match {
+      case filterOperator: FilterOperator if filterOperator.operator.equals(And) =>
+        filterOperator.conditions
+          .map(QueryFilter.toCriterion)
+          .toList
+          .sequence
+          .map(_.flatten)
+          .map(criteria => List(SearchQuery.and(criteria.asJava)))
+      case _ => Right(Nil)
     }
   }
 
-  case object ReceivedBefore extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.before) match {
+  object QueryFilter {
+    def buildQuery(request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
+      request.filter.map(toCriterion)
+        .getOrElse(Right(Nil))
+        .map(criteria => new SearchQuery.Builder().andCriteria(criteria.asJava))
+
+    def toCriterion(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] =
+      List(ReceivedBefore, ReceivedAfter, HasAttachment, HasKeyWord, NotKeyWord, MinSize, MaxSize,
+           AllInThreadHaveKeyword, NoneInThreadHaveKeyword, SomeInThreadHaveKeyword, Text, From,
+           To, Cc, Bcc, Subject, Header, Body, AndFilter)
+        .map(filter => filter.toQuery(filterQuery))
+        .sequence
+        .map(list => list.flatten)
+  }
+
+  case object ReceivedBefore extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.before match {
         case Some(before) =>
           val strictlyBefore = SearchQuery.internalDateBefore(Date.from(before.asUTC.toInstant), Second)
           val sameDate = SearchQuery.internalDateOn(Date.from(before.asUTC.toInstant), Second)
-          Right(builder
-            .andCriteria(SearchQuery.or(strictlyBefore, sameDate)))
-        case None => Right(builder)
+          Right(List(SearchQuery.or(strictlyBefore, sameDate)))
+        case None => Right(List())
       }
   }
 
-  case object ReceivedAfter extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.after) match {
+  case object ReceivedAfter extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.after match {
         case Some(after) =>
           val strictlyAfter = new InternalDateCriterion(new DateOperator(DateComparator.AFTER, Date.from(after.asUTC.toInstant), DateResolution.Second))
-          Right(builder
-            .andCriteria(strictlyAfter))
-        case None => Right(builder)
+          Right(List(strictlyAfter))
+        case None => Right(List())
       }
   }
 
-  case object HasAttachment extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.hasAttachment) match {
-        case Some(hasAttachment) => Right(builder
-          .andCriteria(SearchQuery.hasAttachment(hasAttachment.value)))
-        case None => Right(builder)
+  case object HasAttachment extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.hasAttachment match {
+        case Some(hasAttachment) => Right(List(SearchQuery.hasAttachment(hasAttachment.value)))
+        case None => Right(List())
       }
   }
 
-  case object MinSize extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.minSize) match {
+  case object MinSize extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.minSize match {
         case Some(minSize) =>
-          Right(builder
-            .andCriteria(SearchQuery.or(
+          Right(List(SearchQuery.or(
               SearchQuery.sizeGreaterThan(minSize.value),
               SearchQuery.sizeEquals(minSize.value))))
-        case None => Right(builder)
+        case None => Right(List())
       }
   }
 
-  case object MaxSize extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.maxSize) match {
+  case object MaxSize extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.maxSize match {
         case Some(maxSize) =>
-          Right(builder
-            .andCriteria(SearchQuery.sizeLessThan(maxSize.value)))
-        case None => Right(builder)
+          Right(List(SearchQuery.sizeLessThan(maxSize.value)))
+        case None => Right(List())
       }
   }
 
-  case object HasKeyWord extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.hasKeyword) match {
+  case object HasKeyWord extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.hasKeyword match {
         case Some(keyword) =>
           keyword.asSystemFlag match {
-            case Some(systemFlag) => Right(builder.andCriteria(SearchQuery.flagIsSet(systemFlag)))
-            case None => Right(builder.andCriteria(SearchQuery.flagIsSet(keyword.flagName)))
+            case Some(systemFlag) => Right(List(SearchQuery.flagIsSet(systemFlag)))
+            case None => Right(List(SearchQuery.flagIsSet(keyword.flagName)))
           }
-        case None => Right(builder)
+        case None => Right(List())
       }
   }
-  case object NotKeyWord extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.notKeyword) match {
+  case object NotKeyWord extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.notKeyword match {
         case Some(keyword) =>
           keyword.asSystemFlag match {
-            case Some(systemFlag) => Right(builder.andCriteria(SearchQuery.flagIsUnSet(systemFlag)))
-            case None => Right(builder.andCriteria(SearchQuery.flagIsUnSet(keyword.flagName)))
+            case Some(systemFlag) => Right(List(SearchQuery.flagIsUnSet(systemFlag)))
+            case None => Right(List(SearchQuery.flagIsUnSet(keyword.flagName)))
           }
-        case None => Right(builder)
+        case None => Right(List())
       }
   }
-  case object AllInThreadHaveKeyword extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.allInThreadHaveKeyword) match {
+  case object AllInThreadHaveKeyword extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.allInThreadHaveKeyword match {
         case Some(_) => Left(UnsupportedFilterException("allInThreadHaveKeyword"))
-        case None => Right(builder)
+        case None => Right(List())
       }
   }
-  case object NoneInThreadHaveKeyword extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.noneInThreadHaveKeyword) match {
+  case object NoneInThreadHaveKeyword extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.noneInThreadHaveKeyword match {
         case Some(_) => Left(UnsupportedFilterException("noneInThreadHaveKeyword"))
-        case None => Right(builder)
+        case None => Right(List())
       }
   }
-  case object SomeInThreadHaveKeyword extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.someInThreadHaveKeyword) match {
+  case object SomeInThreadHaveKeyword extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.someInThreadHaveKeyword match {
         case Some(_) => Left(UnsupportedFilterException("someInThreadHaveKeyword"))
-        case None => Right(builder)
+        case None => Right(List())
       }
   }
-  case object Text extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.text) match {
-        case Some(text) =>
-          val textFilterOrCondition: List[SearchQuery.Criterion] = List(SearchQuery.headerContains("From", text.value),
-            SearchQuery.headerContains("To", text.value),
-            SearchQuery.headerContains("Cc", text.value),
-            SearchQuery.headerContains("Bcc", text.value),
-            SearchQuery.headerContains("Subject", text.value),
-            SearchQuery.bodyContains(text.value))
 
-          Right(builder.andCriteria(SearchQuery.or(textFilterOrCondition.asJava))
-            .andCriteria(SearchQuery.not(SearchQuery.attachmentContains(text.value))))
-        case None => Right(builder)
-      }
-  }
-  case object From extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.from) match {
-        case Some(from) => Right(builder.andCriteria(SearchQuery.address(AddressType.From, from.value)))
-        case None => Right(builder)
-      }
-  }
-  case object To extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.to) match {
-        case Some(to) => Right(builder.andCriteria(SearchQuery.address(AddressType.To, to.value)))
-        case None => Right(builder)
-      }
-  }
-  case object Cc extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.cc) match {
-        case Some(cc) => Right(builder.andCriteria(SearchQuery.address(AddressType.Cc, cc.value)))
-        case None => Right(builder)
-      }
-  }
-  case object Bcc extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.bcc) match {
-        case Some(bcc) => Right(builder.andCriteria(SearchQuery.address(AddressType.Bcc, bcc.value)))
-        case None => Right(builder)
-      }
-  }
-  case object Subject extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.subject) match {
-        case Some(subject) => Right(builder.andCriteria(SearchQuery.headerContains("Subject", subject.value)))
-        case None => Right(builder)
-      }
-  }
-  case object Header extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.header) match {
-        case Some(HeaderExist(name)) => Right(builder.andCriteria(SearchQuery.headerExists(name)))
-        case Some(HeaderContains(name, value)) => Right(builder.andCriteria(SearchQuery.headerContains(name, value)))
-        case None => Right(builder)
-      }
-  }
-  case object Body extends QueryFilter {
-    override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.flatMap(_.body) match {
+  case object Text extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.text match {
         case Some(text) =>
-           val bodyFilterOr: List[Criterion] = List(
+          Right(List(SearchQuery.or(
+            List(SearchQuery.headerContains("From", text.value),
+              SearchQuery.headerContains("To", text.value),
+              SearchQuery.headerContains("Cc", text.value),
+              SearchQuery.headerContains("Bcc", text.value),
+              SearchQuery.headerContains("Subject", text.value),
+              SearchQuery.bodyContains(text.value))
+            .asJava)))
+        case None => Right(Nil)
+      }
+  }
+
+  case object From extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.from match {
+        case Some(from) => Right(List(SearchQuery.address(AddressType.From, from.value)))
+        case None => Right(List())
+      }
+  }
+  case object To extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.to match {
+        case Some(to) => Right(List(SearchQuery.address(AddressType.To, to.value)))
+        case None => Right(List())
+      }
+  }
+  case object Cc extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.cc match {
+        case Some(cc) => Right(List(SearchQuery.address(AddressType.Cc, cc.value)))
+        case None => Right(List())
+      }
+  }
+  case object Bcc extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.bcc match {
+        case Some(bcc) => Right(List(SearchQuery.address(AddressType.Bcc, bcc.value)))
+        case None => Right(List())
+      }
+  }
+  case object Subject extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.subject match {
+        case Some(subject) => Right(List(SearchQuery.headerContains("Subject", subject.value)))
+        case None => Right(List())
+      }
+  }
+  case object Header extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.header match {
+        case Some(HeaderExist(name)) => Right(List(SearchQuery.headerExists(name)))
+        case Some(HeaderContains(name, value)) => Right(List(SearchQuery.headerContains(name, value)))
+        case None => Right(List())
+      }
+  }
+
+  case object Body extends ConditionFilter {
+    override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
+      filterCondition.body match {
+        case Some(text) => Right(List(SearchQuery.or(
+          List(
             SearchQuery.attachmentContains(text.value),
             SearchQuery.bodyContains(text.value),
             SearchQuery.attachmentFileName(text.value))
-
-          Right(builder.andCriteria(SearchQuery.or(bodyFilterOr.asJava)))
-        case None => Right(builder)
+          .asJava)))
+        case None => Right(Nil)
       }
   }
 }

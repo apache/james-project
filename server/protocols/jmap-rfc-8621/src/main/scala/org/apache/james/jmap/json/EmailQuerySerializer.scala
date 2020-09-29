@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, HeaderContains, HeaderExist, IsAscending, ReceivedAtSortProperty, SentAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
+import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, And, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, FilterOperator, FilterQuery, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, HeaderContains, HeaderExist, IsAscending, Operator, ReceivedAtSortProperty, SentAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
 import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
@@ -73,6 +73,12 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case _ => Left(JsError("header filter needs to be an array of one or two strings"))
   }
   private implicit val bodyReads: Reads[Body] = Json.valueReads[Body]
+
+  private implicit val operatorReads: Reads[Operator] = {
+    case JsString("AND") => JsSuccess(And)
+    case _ => JsError(s"Expecting a JsString to represent a known operator")
+  }
+
   private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
   private implicit val limitUnparsedReads: Reads[LimitUnparsed] = Json.valueReads[LimitUnparsed]
   private implicit val CanCalculateChangesFormat: Format[CanCalculateChanges] = Json.valueFormat[CanCalculateChanges]
@@ -80,6 +86,13 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val queryStateWrites: Writes[QueryState] = Json.valueWrites[QueryState]
   private implicit val positionUnparsedReads: Reads[PositionUnparsed] = Json.valueReads[PositionUnparsed]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
+
+  private implicit val filterOperatorReads: Reads[FilterOperator] = Json.reads[FilterOperator]
+
+  private implicit def filterQueryReads: Reads[FilterQuery] = {
+    case jsValue@JsObject(underlying) if underlying.contains("operator") => filterOperatorReads.reads(jsValue)
+    case jsValue => filterConditionReads.reads(jsValue)
+  }
 
   private implicit val sortPropertyReads: Reads[SortProperty] = {
     case JsString("receivedAt") => JsSuccess(ReceivedAtSortProperty)
