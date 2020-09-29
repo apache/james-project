@@ -40,7 +40,6 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.reactivestreams.Publisher;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -125,11 +124,11 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
             .findReactive(ImmutableList.of(deletedMessageMailboxContext.getMessageId()), MessageMapper.FetchType.Full)
             .next()
             .switchIfEmpty(Mono.error(new RuntimeException("Cannot find " + deletedMessageMailboxContext.getMessageId())))
-            .map(Throwing.function(mailboxMessage -> Pair.of(mailboxMessage,
+            .flatMap(mailboxMessage -> Mono.fromCallable(() -> Pair.of(mailboxMessage,
                 deletedMessageConverter.convert(deletedMessageMailboxContext, mailboxMessage,
                     ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC)))))
-            .flatMap(Throwing.function(pairs -> Mono.from(deletedMessageVault
-                .append(pairs.getRight(), pairs.getLeft().getFullContent()))));
+            .flatMap(pairs -> Mono.fromCallable(() -> pairs.getLeft().getFullContent())
+                .flatMap(fullContent -> Mono.from(deletedMessageVault.append(pairs.getRight(), fullContent))));
     }
 
     private Flux<DeletedMessageMailboxContext> groupMetadataByOwnerAndMessageId(DeleteOperation deleteOperation) {
