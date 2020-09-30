@@ -20,14 +20,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.apache.james</groupId>
-        <artifactId>james-project</artifactId>
-        <version>3.6.0-SNAPSHOT</version>
-    </parent>
+    <groupId>org.apache.examples.james</groupId>
+    <version>3.6.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
-    <artifactId>examples</artifactId>
+    <artifactId>james-examples</artifactId>
 
     <name>Apache James :: Examples</name>
 
@@ -35,5 +32,15 @@
         <module>custom-listeners</module>
         <module>custom-mailets</module>
     </modules>
+
+    <properties>
+        <james.groupId>org.apache.james</james.groupId>
+        <james.baseVersion>3.6.0-SNAPSHOT</james.baseVersion>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <maven.compiler.target>1.11</maven.compiler.target>
+        <maven.compiler.source>1.11</maven.compiler.source>
+    </properties>
 
 </project>

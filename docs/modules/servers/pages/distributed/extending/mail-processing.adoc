@@ -140,8 +140,8 @@ Then, we will write the *mailetcontainer.xml* file expressing the logic we want:
 <processors>
   <processor state="root" enableJmx="true">
   <mailet match="All" class="PostmasterAlias"/>
-  <mailet match="org.apache.james.examples.custom.mailets.IsDelayedForMoreThan=1 day"
-    class="org.apache.james.examples.custom.mailets.SendPromotionCode">
+  <mailet match="org.apache.examples.james.custom.mailets.IsDelayedForMoreThan=1 day"
+    class="org.apache.examples.james.custom.mailets.SendPromotionCode">
     <reason>Your email had been delayed for a long time. Because we are sorry about it, please find the
       following promotion code.</reason>
     <promotionCode>1542-2563-5469</promotionCode>
