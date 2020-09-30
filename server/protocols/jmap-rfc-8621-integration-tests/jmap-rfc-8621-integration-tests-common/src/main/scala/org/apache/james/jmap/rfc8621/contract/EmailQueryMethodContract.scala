@@ -5397,6 +5397,77 @@ trait EmailQueryMethodContract {
     }
   }
 
+  @Test
+  def priorityOfNestedOperatorsShouldBePreserved(server: GuiceJamesServer): Unit = {
+    val message: Message = buildTestMessage
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder()
+          .withFlags(new FlagsBuilder().add("custom_1", "custom_2").build())
+          .build(message))
+      .getMessageId
+
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder()
+          .withFlags(new FlagsBuilder().add("custom_1", "custom_3").build())
+          .build(message))
+      .getMessageId
+
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder()
+          .withFlags(new FlagsBuilder().add("custom_2", "custom_3").build())
+          .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "operator": "AND",
+         |        "conditions": [
+         |          {
+         |            "operator": "OR",
+         |            "conditions": [
+         |              { "hasKeyword": "custom_1" }, { "hasKeyword": "custom_2" }
+         |            ]
+         |          },
+         |          { "hasKeyword": "custom_3" }
+         |        ]
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId2.serialize}", "${messageId3.serialize}"]""")
+    }
+  }
+
   private def sendMessageToBobInbox(server: GuiceJamesServer, message: Message, requestDate: Date): MessageId = {
     server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
