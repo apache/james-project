@@ -5104,6 +5104,71 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def emailQueryShouldSupportNotOperator(server: GuiceJamesServer): Unit = {
+    val message: Message = buildTestMessage
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .withFlags(new Flags("custom"))
+        .build(message))
+      .getMessageId
+
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .withFlags(new Flags("another_custom"))
+        .build(message))
+      .getMessageId
+
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .withFlags(new FlagsBuilder().add("custom", "another_custom").build())
+        .build(message))
+      .getMessageId
+
+    val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "operator": "NOT",
+         |        "conditions": [
+         |          { "hasKeyword": "custom" }, { "hasKeyword": "another_custom" }
+         |        ]
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId4.serialize}"]""")
+    }
+  }
+
+  @Test
   def inMailboxShouldBeRejectedWhenInOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))

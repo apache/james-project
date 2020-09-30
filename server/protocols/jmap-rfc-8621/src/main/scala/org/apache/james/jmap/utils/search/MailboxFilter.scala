@@ -21,7 +21,7 @@ package org.apache.james.jmap.utils.search
 import java.util.Date
 
 import cats.implicits._
-import org.apache.james.jmap.mail.{And, EmailQueryRequest, FilterCondition, FilterOperator, FilterQuery, HeaderContains, HeaderExist, Operator, Or, UnsupportedFilterException}
+import org.apache.james.jmap.mail.{And, EmailQueryRequest, FilterCondition, FilterOperator, FilterQuery, HeaderContains, HeaderExist, Not, Operator, Or, UnsupportedFilterException}
 import org.apache.james.jmap.model.CapabilityIdentifier
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.mailbox.MailboxSession
@@ -112,6 +112,11 @@ object MailboxFilter {
       OperatorQueryFilter.toQuery(filterQuery, criteria => SearchQuery.or(criteria.asJava), Or)
   }
 
+  case object NotFilter extends QueryFilter {
+    override def toQuery(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] =
+      OperatorQueryFilter.toQuery(filterQuery, criteria => SearchQuery.not(criteria.asJava), Not)
+  }
+
   object QueryFilter {
     def buildQuery(request: EmailQueryRequest): Either[UnsupportedOperationException, SearchQuery.Builder] =
       request.validatedFilter.flatMap(
@@ -122,7 +127,7 @@ object MailboxFilter {
     def toCriterion(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] =
       List(ReceivedBefore, ReceivedAfter, HasAttachment, HasKeyWord, NotKeyWord, MinSize, MaxSize,
            AllInThreadHaveKeyword, NoneInThreadHaveKeyword, SomeInThreadHaveKeyword, Text, From,
-           To, Cc, Bcc, Subject, Header, Body, AndFilter, OrFilter)
+           To, Cc, Bcc, Subject, Header, Body, AndFilter, OrFilter, NotFilter)
         .map(filter => filter.toQuery(filterQuery))
         .sequence
         .map(list => list.flatten)
