@@ -178,7 +178,7 @@ object MailboxFilter {
   case object Text extends QueryFilter {
     override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
       request.filter.flatMap(_.text) match {
-        case Some(_) => Left(UnsupportedFilterException("text"))
+        case Some(text) => Right(builder.andCriteria(SearchQuery.textContains(text.value)))
         case None => Right(builder)
       }
   }
