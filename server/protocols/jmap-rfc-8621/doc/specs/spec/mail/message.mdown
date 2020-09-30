@@ -741,6 +741,9 @@ These properties are not supported yet for filtering:
 - noneInThreadHaveKeyword
 - text
 - body
+
+Also please note that inMailbox and inMailboxOtherThan filters are rejected
+when nested in operator. They need to be specified in a filter condition.
 </aside>
 
 The exact semantics for matching `String` fields is **deliberately not defined** to allow for flexibility in indexing implementation, subject to the following:

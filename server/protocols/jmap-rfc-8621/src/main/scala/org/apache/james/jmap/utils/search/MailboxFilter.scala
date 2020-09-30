@@ -100,9 +100,10 @@ object MailboxFilter {
   }
 
   object QueryFilter {
-    def buildQuery(request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
-      request.filter.map(toCriterion)
-        .getOrElse(Right(Nil))
+    def buildQuery(request: EmailQueryRequest): Either[UnsupportedOperationException, SearchQuery.Builder] =
+      request.validatedFilter.flatMap(
+        _.map(toCriterion)
+          .getOrElse(Right(Nil)))
         .map(criteria => new SearchQuery.Builder().andCriteria(criteria.asJava))
 
     def toCriterion(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] =
@@ -121,7 +122,7 @@ object MailboxFilter {
           val strictlyBefore = SearchQuery.internalDateBefore(Date.from(before.asUTC.toInstant), Second)
           val sameDate = SearchQuery.internalDateOn(Date.from(before.asUTC.toInstant), Second)
           Right(List(SearchQuery.or(strictlyBefore, sameDate)))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
 
@@ -131,7 +132,7 @@ object MailboxFilter {
         case Some(after) =>
           val strictlyAfter = new InternalDateCriterion(new DateOperator(DateComparator.AFTER, Date.from(after.asUTC.toInstant), DateResolution.Second))
           Right(List(strictlyAfter))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
 
@@ -139,7 +140,7 @@ object MailboxFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.hasAttachment match {
         case Some(hasAttachment) => Right(List(SearchQuery.hasAttachment(hasAttachment.value)))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
 
@@ -150,7 +151,7 @@ object MailboxFilter {
           Right(List(SearchQuery.or(
               SearchQuery.sizeGreaterThan(minSize.value),
               SearchQuery.sizeEquals(minSize.value))))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
 
@@ -159,7 +160,7 @@ object MailboxFilter {
       filterCondition.maxSize match {
         case Some(maxSize) =>
           Right(List(SearchQuery.sizeLessThan(maxSize.value)))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
 
@@ -171,7 +172,7 @@ object MailboxFilter {
             case Some(systemFlag) => Right(List(SearchQuery.flagIsSet(systemFlag)))
             case None => Right(List(SearchQuery.flagIsSet(keyword.flagName)))
           }
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
   case object NotKeyWord extends ConditionFilter {
@@ -182,28 +183,28 @@ object MailboxFilter {
             case Some(systemFlag) => Right(List(SearchQuery.flagIsUnSet(systemFlag)))
             case None => Right(List(SearchQuery.flagIsUnSet(keyword.flagName)))
           }
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
   case object AllInThreadHaveKeyword extends ConditionFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.allInThreadHaveKeyword match {
         case Some(_) => Left(UnsupportedFilterException("allInThreadHaveKeyword"))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
   case object NoneInThreadHaveKeyword extends ConditionFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.noneInThreadHaveKeyword match {
         case Some(_) => Left(UnsupportedFilterException("noneInThreadHaveKeyword"))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
   case object SomeInThreadHaveKeyword extends ConditionFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.someInThreadHaveKeyword match {
         case Some(_) => Left(UnsupportedFilterException("someInThreadHaveKeyword"))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
 
@@ -227,35 +228,35 @@ object MailboxFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.from match {
         case Some(from) => Right(List(SearchQuery.address(AddressType.From, from.value)))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
   case object To extends ConditionFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.to match {
         case Some(to) => Right(List(SearchQuery.address(AddressType.To, to.value)))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
   case object Cc extends ConditionFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.cc match {
         case Some(cc) => Right(List(SearchQuery.address(AddressType.Cc, cc.value)))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
   case object Bcc extends ConditionFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.bcc match {
         case Some(bcc) => Right(List(SearchQuery.address(AddressType.Bcc, bcc.value)))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
   case object Subject extends ConditionFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.subject match {
         case Some(subject) => Right(List(SearchQuery.headerContains("Subject", subject.value)))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
   case object Header extends ConditionFilter {
@@ -263,7 +264,7 @@ object MailboxFilter {
       filterCondition.header match {
         case Some(HeaderExist(name)) => Right(List(SearchQuery.headerExists(name)))
         case Some(HeaderContains(name, value)) => Right(List(SearchQuery.headerContains(name, value)))
-        case None => Right(List())
+        case None => Right(Nil)
       }
   }
 

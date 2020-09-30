@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.mail
 
+import cats.implicits._
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.IsAscending.ASCENDING
 import org.apache.james.jmap.method.WithAccountId
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.model.{MailboxId, MessageId, SearchQuery}
 
 case class UnsupportedSortException(unsupportedSort: String) extends UnsupportedOperationException
 case class UnsupportedFilterException(unsupportedFilter: String) extends UnsupportedOperationException
+case class UnsupportedNestingException(message: String) extends UnsupportedOperationException
 case class UnsupportedRequestParameterException(unsupportedParam: String) extends UnsupportedOperationException
 
 sealed trait FilterQuery
@@ -79,7 +81,31 @@ case class EmailQueryRequest(accountId: AccountId,
                              comparator: Option[Set[Comparator]],
                              collapseThreads: Option[CollapseThreads],
                              anchor: Option[Anchor],
-                             anchorOffset: Option[AnchorOffset]) extends WithAccountId
+                             anchorOffset: Option[AnchorOffset]) extends WithAccountId {
+  val validatedFilter: Either[UnsupportedNestingException, Option[FilterQuery]] =
+    filter.map(validateFilter)
+      .sequence
+      .map(_.flatten)
+
+  private def validateFilter(filter: FilterQuery): Either[UnsupportedNestingException, Option[FilterQuery]] = filter match {
+    case filterCondition: FilterCondition => scala.Right(Some(filterCondition))
+    case filterOperator: FilterOperator => rejectMailboxFilters(filterOperator)
+  }
+
+  private def rejectMailboxFilters(filter: FilterQuery): Either[UnsupportedNestingException, Option[FilterQuery]] =
+    filter match {
+      case filterCondition: FilterCondition if filterCondition.inMailbox.isDefined =>
+        scala.Left(UnsupportedNestingException("Nested inMailbox filters are not supported"))
+      case filterCondition: FilterCondition if filterCondition.inMailboxOtherThan.isDefined =>
+        scala.Left(UnsupportedNestingException("Nested inMailboxOtherThan filter are not supported"))
+      case filterCondition: FilterCondition => scala.Right(Some(filterCondition))
+      case filterOperator: FilterOperator => filterOperator.conditions
+        .toList
+        .map(rejectMailboxFilters)
+        .sequence
+        .map(_ => Some(filterOperator))
+    }
+}
 
 sealed trait SortProperty {
   def toSortClause: Either[UnsupportedSortException, SortClause]

@@ -20,7 +20,7 @@ package org.apache.james.jmap.method
 
 
 import org.apache.james.jmap.http.SessionSupplier
-import org.apache.james.jmap.mail.{UnsupportedFilterException, UnsupportedRequestParameterException, UnsupportedSortException}
+import org.apache.james.jmap.mail.{UnsupportedFilterException, UnsupportedNestingException, UnsupportedRequestParameterException, UnsupportedSortException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.MethodName
 import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, Session}
@@ -70,6 +70,10 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
         case e: UnsupportedFilterException => SMono.just(InvocationWithContext(Invocation.error(
           ErrorCode.UnsupportedFilter,
           s"The filter ${e.unsupportedFilter} is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search.",
+          invocation.invocation.methodCallId), invocation.processingContext))
+        case e: UnsupportedNestingException => SMono.just(InvocationWithContext(Invocation.error(
+          ErrorCode.UnsupportedFilter,
+          description = e.message,
           invocation.invocation.methodCallId), invocation.processingContext))
         case e: IllegalArgumentException => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
         case e: MailboxNotFoundException => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
