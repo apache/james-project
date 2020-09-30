@@ -81,15 +81,22 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   }
 
   private def searchQueryFromRequest(request: EmailQueryRequest, capabilities: Set[CapabilityIdentifier], session: MailboxSession): Either[UnsupportedOperationException, MultimailboxesSearchQuery] = {
-    val comparators: List[Comparator] = request.comparator.getOrElse(Set(Comparator.default)).toList
+    val comparators: List[Comparator] = request.comparator.getOrElse(Set()).toList
 
     comparators.map(_.toSort)
       .sequence
       .flatMap(sorts => for {
         queryFilter <- QueryFilter.buildQuery(request)
-      } yield queryFilter
-        .sorts(sorts.asJava)
-        .build())
+      } yield {
+        if (sorts.isEmpty) {
+          queryFilter
+            .build()
+        } else {
+          queryFilter
+            .sorts(sorts.asJava)
+            .build()
+        }
+      })
       .map(MailboxFilter.buildQuery(request, _, capabilities, session))
   }
 

@@ -456,7 +456,11 @@ trait BackReferenceContract {
            |         "name":"Mailbox/query",
            |         "path":"ids[0]"
            |       }
-           |      }
+           |      },
+           |      "comparator": [{
+           |        "property":"receivedAt",
+           |        "isAscending": false
+           |      }]
            |    },
            |    "c2"], [
            |     "Email/get",

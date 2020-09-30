@@ -1296,22 +1296,11 @@ trait EmailQueryMethodContract {
         .body
         .asString
 
-      assertThatJson(response).isEqualTo(
-        s"""{
-           |    "sessionState": "75128aab4b1b",
-           |    "methodResponses": [[
-           |            "Email/query",
-           |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |                "queryState": "${generateQueryState(messageId2, messageId1)}",
-           |                "canCalculateChanges": false,
-           |                "position": 0,
-           |                "limit": 256,
-           |                "ids": ["${messageId2.serialize}", "${messageId1.serialize}"]
-           |            },
-           |            "c1"
-           |        ]]
-           |}""".stripMargin)
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+        s"""["${messageId2.serialize}", "${messageId1.serialize}"]""".stripMargin)
     }
   }
 
@@ -1370,51 +1359,6 @@ trait EmailQueryMethodContract {
            |            "c1"
            |        ]]
            |}""".stripMargin)
-    }
-  }
-
-  @Test
-  def listMailsShouldBeSortedByDescendingOrderOfArrivalByDefault(server: GuiceJamesServer): Unit = {
-    val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
-    val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
-    val messageId1: MessageId = sendMessageToBobInbox(server, message, requestDateMessage1)
-    val requestDateMessage2 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
-    val messageId2 = sendMessageToBobInbox(server, message, requestDateMessage2)
-    val requestDateMessage3 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
-    val messageId3 = sendMessageToBobInbox(server, message, requestDateMessage3)
-
-    val request =
-      s"""{
-         |  "using": [
-         |    "urn:ietf:params:jmap:core",
-         |    "urn:ietf:params:jmap:mail"],
-         |  "methodCalls": [[
-         |    "Email/query",
-         |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
-         |    },
-         |    "c1"]]
-         |}""".stripMargin
-
-    awaitAtMostTenSeconds.untilAsserted { () =>
-      val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
-
-    assertThatJson(response)
-      .inPath("$.methodResponses[0][1].ids")
-      .isEqualTo(s"""["${messageId1.serialize}", "${messageId2.serialize}", "${messageId3.serialize}"]""")
     }
   }
 
@@ -2676,6 +2620,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId2.serialize}", "${messageId1.serialize}"]""")
     }
@@ -2994,7 +2939,11 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "limit": 1
+         |      "limit": 1,
+         |      "comparator": [{
+         |        "property":"receivedAt",
+         |        "isAscending": false
+         |      }]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -3069,7 +3018,11 @@ trait EmailQueryMethodContract {
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "limit": 2,
-         |      "position": 2
+         |      "position": 2,
+         |      "comparator": [{
+         |        "property":"receivedAt",
+         |        "isAscending": false
+         |      }]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -3239,7 +3192,11 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "comparator": [{
+         |        "property":"receivedAt",
+         |        "isAscending": false
+         |      }]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -3290,7 +3247,11 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "limit": 2000
+         |      "limit": 2000,
+         |      "comparator": [{
+         |        "property":"receivedAt",
+         |        "isAscending": false
+         |      }]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -3342,7 +3303,11 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "position": 1
+         |      "position": 1,
+         |      "comparator": [{
+         |        "property":"receivedAt",
+         |        "isAscending": false
+         |      }]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -3403,7 +3368,11 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "position": 0
+         |      "position": 0,
+         |      "comparator": [{
+         |        "property":"receivedAt",
+         |        "isAscending": false
+         |      }]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -4734,6 +4703,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(
           s"""[

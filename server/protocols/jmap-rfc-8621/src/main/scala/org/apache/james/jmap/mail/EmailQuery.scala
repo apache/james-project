@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.mail
 import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.mail.IsAscending.{ASCENDING, DESCENDING}
+import org.apache.james.jmap.mail.IsAscending.ASCENDING
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.Limit.Limit
 import org.apache.james.jmap.model.Position.Position
@@ -115,10 +115,6 @@ case class IsAscending(sortByASC: Boolean) extends AnyVal {
   } else {
     REVERSE
   }
-}
-
-object Comparator {
-  val default: Comparator = Comparator(ReceivedAtSortProperty, Some(DESCENDING), None)
 }
 
 case class Collation(value: String) extends AnyVal
