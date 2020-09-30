@@ -23,7 +23,8 @@ for both the mailbox entity, and the mailbox counter entity (whose table structu
 Monitoring is required to detect when to run them and is time consuming for the platform administrator.
 Given a large dataset, it could even be impossible to run such tasks in a timely fashion.
 
-Another classic eventual consistency mechanism, that enables auto-healing and completes
+Another classic eventual consistency mechanism, that enables auto-healing is read-repair. Randomly piggy back upon reads
+synchronous or asynchronous consistency checks. If missed a repair is performed.
 
 In order to achieve denormalization auto-healing, we thus need to implement "applicative read repairs".
 
@@ -54,7 +55,13 @@ Cassandra provides some alternative by itself:
  - Materialized view enables Cassandra to maintain a projection on the behalf of the application,
  coming with an expensive write cost, requiring synchronisation, not fit for complex denormalization
  (like the message one: the primary key of the originating table needs to appear in the materialized
- view primary key).
+ view primary key). Most of all, the updates are performed asynchronously. This mechanism is considered experimental.
+ - Cassandra BATCH suffers from the following downsides:
+   - A batch containing conditional updates can only operate within a single partition
+   - It is unadvised to update many partition in a single batch, and keep the cardinality low for performance reasons
+
+BATCH could be a good option to keep to tables synchronized, but do not apply to mailboxes (conditional update) nor
+counters.
 
 We already propose several tasks to solve denormalization inconsistencies. "Applicative read repairs" should be
 seen as a complement to it.
@@ -70,8 +77,9 @@ defeats this strategy that is otherwise efficient to limit inconsistencies acros
  - [20. Cassandra Mailbox object consistency](0020-cassandra-mailbox-object-consistency.md)
  - [23. Cassandra Mailbox Counters inconsistencies](0023-cassandra-mailbox-counters-inconsistencies.md)
  - [Hinted handoff](https://cassandra.apache.org/doc/latest/operating/hints.html)
-
- - [This link documents materialized views limitations]()
+ - [This link documents materialized views limitations](https://docs.datastax.com/en/dse/6.0/cql/cql/cql_using/knownLimitationsMV.html)
+ - [Materialized views considered experimental](https://www.mail-archive.com/user@cassandra.apache.org/msg54073.html)
+ - [CQL Batch](https://docs.datastax.com/en/cql-oss/3.x/cql/cql_reference/cqlBatch.html)
 
 Especially:
 
