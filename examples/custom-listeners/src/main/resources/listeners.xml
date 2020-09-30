@@ -20,6 +20,6 @@
 
 <listeners>
   <listener>
-    <class>org.apache.james.examples.custom.listeners.SetCustomFlagOnBigMessages</class>
+    <class>org.apache.examples.james.custom.listeners.SetCustomFlagOnBigMessages</class>
   </listener>
 </listeners>

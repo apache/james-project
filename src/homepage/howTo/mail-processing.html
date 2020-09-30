@@ -183,8 +183,8 @@ public void init() throws MessagingException {
 &lt;processors&gt;
     &lt;processor state="root" enableJmx="true"&gt;
         &lt;mailet match="All" class="PostmasterAlias"/&gt;
-        &lt;mailet match="org.apache.james.examples.custom.mailets.IsDelayedForMoreThan=1 day"
-                class="org.apache.james.examples.custom.mailets.SendPromotionCode"&gt;
+        &lt;mailet match="org.apache.examples.james.custom.mailets.IsDelayedForMoreThan=1 day"
+                class="org.apache.examples.james.custom.mailets.SendPromotionCode"&gt;
             &lt;reason&gt;Your email had been delayed for a long time. Because we are sorry about it, please find the
             following promotion code.&lt;/reason&gt;
             &lt;promotionCode&gt;1542-2563-5469&lt;/promotionCode&gt;
