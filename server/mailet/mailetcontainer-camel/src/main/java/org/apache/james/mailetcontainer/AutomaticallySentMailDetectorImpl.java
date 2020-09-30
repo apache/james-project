@@ -85,9 +85,15 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
         String[] headers = mail.getMessage().getHeader(AUTO_SUBMITTED_HEADER);
         if (headers != null) {
             return Arrays.stream(headers)
-                .anyMatch(header -> header.equalsIgnoreCase(AUTO_REPLIED_VALUE));
+                .anyMatch(this::isAutoSubmitted);
         }
         return false;
+    }
+
+    private boolean isAutoSubmitted(String header) {
+        return header.equalsIgnoreCase(AUTO_REPLIED_VALUE)
+            || header.equalsIgnoreCase(AUTO_GENERATED_VALUE)
+            || header.equalsIgnoreCase(AUTO_NOTIFIED_VALUE);
     }
 
     @Override

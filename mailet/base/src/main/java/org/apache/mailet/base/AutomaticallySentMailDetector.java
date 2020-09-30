@@ -27,6 +27,8 @@ public interface AutomaticallySentMailDetector {
 
     String AUTO_SUBMITTED_HEADER = "Auto-Submitted";
     String AUTO_REPLIED_VALUE = "auto-replied";
+    String AUTO_GENERATED_VALUE = "auto-generated";
+    String AUTO_NOTIFIED_VALUE = "auto-notified";
 
     boolean isAutomaticallySent(Mail mail) throws MessagingException;
 
