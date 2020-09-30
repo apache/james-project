@@ -52,7 +52,7 @@ import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS
-import org.junit.jupiter.api.{BeforeEach, Disabled, Test}
+import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource, ValueSource}
 import org.threeten.extra.Seconds
@@ -4804,6 +4804,94 @@ trait EmailQueryMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "filter": {
          |        "text": "test"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[]""".stripMargin)
+    }
+  }
+
+  @Test
+  def emailQueryFilterByTextShouldIgnoreAttachmentName(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "text2"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[]""".stripMargin)
+    }
+  }
+
+  @Test
+  def emailQueryFilterByTextShouldIgnoreAttachmentContent(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "RSA PRIVATE"
          |      }
          |    },
          |    "c1"]]

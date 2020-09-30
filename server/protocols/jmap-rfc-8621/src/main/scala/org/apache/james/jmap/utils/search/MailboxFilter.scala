@@ -178,7 +178,16 @@ object MailboxFilter {
   case object Text extends QueryFilter {
     override def toQuery(builder: SearchQuery.Builder, request: EmailQueryRequest): Either[UnsupportedFilterException, SearchQuery.Builder] =
       request.filter.flatMap(_.text) match {
-        case Some(text) => Right(builder.andCriteria(SearchQuery.textContains(text.value)))
+        case Some(text) =>
+          val textFilterOrCondition: List[SearchQuery.Criterion] = List(SearchQuery.headerContains("From", text.value),
+            SearchQuery.headerContains("To", text.value),
+            SearchQuery.headerContains("Cc", text.value),
+            SearchQuery.headerContains("Bcc", text.value),
+            SearchQuery.headerContains("Subject", text.value),
+            SearchQuery.bodyContains(text.value))
+
+          Right(builder.andCriteria(SearchQuery.or(textFilterOrCondition.asJava))
+            .andCriteria(SearchQuery.not(SearchQuery.attachmentContains(text.value))))
         case None => Right(builder)
       }
   }
