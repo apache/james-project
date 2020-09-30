@@ -21,7 +21,7 @@ package org.apache.james.jmap.utils.search
 import java.util.Date
 
 import cats.implicits._
-import org.apache.james.jmap.mail.{And, EmailQueryRequest, FilterCondition, FilterOperator, FilterQuery, HeaderContains, HeaderExist, UnsupportedFilterException}
+import org.apache.james.jmap.mail.{And, EmailQueryRequest, FilterCondition, FilterOperator, FilterQuery, HeaderContains, HeaderExist, Operator, Or, UnsupportedFilterException}
 import org.apache.james.jmap.model.CapabilityIdentifier
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.mailbox.MailboxSession
@@ -86,17 +86,30 @@ object MailboxFilter {
     def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]]
   }
 
+  object OperatorQueryFilter {
+    def toQuery(filterQuery: FilterQuery,
+                converter: List[Criterion] => Criterion,
+                operator: Operator): Either[UnsupportedFilterException, List[Criterion]] =
+      filterQuery match {
+        case filterOperator: FilterOperator if filterOperator.operator.equals(operator) =>
+          filterOperator.conditions
+            .map(QueryFilter.toCriterion)
+            .toList
+            .sequence
+            .map(_.flatten)
+            .map(criteria => List(converter.apply(criteria)))
+        case _ => Right(Nil)
+      }
+  }
+
   case object AndFilter extends QueryFilter {
-    override def toQuery(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] = filterQuery match {
-      case filterOperator: FilterOperator if filterOperator.operator.equals(And) =>
-        filterOperator.conditions
-          .map(QueryFilter.toCriterion)
-          .toList
-          .sequence
-          .map(_.flatten)
-          .map(criteria => List(SearchQuery.and(criteria.asJava)))
-      case _ => Right(Nil)
-    }
+    override def toQuery(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] =
+      OperatorQueryFilter.toQuery(filterQuery, criteria => SearchQuery.and(criteria.asJava), And)
+  }
+
+  case object OrFilter extends QueryFilter {
+    override def toQuery(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] =
+      OperatorQueryFilter.toQuery(filterQuery, criteria => SearchQuery.or(criteria.asJava), Or)
   }
 
   object QueryFilter {
@@ -109,7 +122,7 @@ object MailboxFilter {
     def toCriterion(filterQuery: FilterQuery): Either[UnsupportedFilterException, List[Criterion]] =
       List(ReceivedBefore, ReceivedAfter, HasAttachment, HasKeyWord, NotKeyWord, MinSize, MaxSize,
            AllInThreadHaveKeyword, NoneInThreadHaveKeyword, SomeInThreadHaveKeyword, Text, From,
-           To, Cc, Bcc, Subject, Header, Body, AndFilter)
+           To, Cc, Bcc, Subject, Header, Body, AndFilter, OrFilter)
         .map(filter => filter.toQuery(filterQuery))
         .sequence
         .map(list => list.flatten)
