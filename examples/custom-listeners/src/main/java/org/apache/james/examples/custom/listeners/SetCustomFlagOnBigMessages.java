@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.examples.james.custom.listeners;
+package org.apache.james.examples.custom.listeners;
 
 import javax.inject.Inject;
 import javax.mail.Flags;

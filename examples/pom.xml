@@ -20,11 +20,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.apache.examples.james</groupId>
-    <version>3.6.0-SNAPSHOT</version>
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>23</version>
+        <relativePath></relativePath>
+    </parent>
 
     <packaging>pom</packaging>
-    <artifactId>james-examples</artifactId>
+    <groupId>org.apache.james.examples</groupId>
+    <artifactId>examples</artifactId>
+    <version>3.6.0-SNAPSHOT</version>
 
     <name>Apache James :: Examples</name>
 
@@ -35,9 +41,7 @@
 
     <properties>
         <james.groupId>org.apache.james</james.groupId>
-        <james.baseVersion>3.6.0-SNAPSHOT</james.baseVersion>
-
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <james.baseVersion>${project.version}</james.baseVersion>
 
         <maven.compiler.target>1.11</maven.compiler.target>
         <maven.compiler.source>1.11</maven.compiler.source>
