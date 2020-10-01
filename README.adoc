@@ -401,7 +401,8 @@ Beware : you will have concurrency issues if multiple containers are running on 
 
 == Develop on James
 
-James requires at least JDK 11 and maven 3.6.0 to build.
+James requires at least JDK 11 and Maven 3.6.0 to build.
+Some parts of James are written in Scala so one might need to enable Scala plugin in IDE.
 
 === How to run deployment Tests
 

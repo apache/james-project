@@ -17,55 +17,55 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.examples.james.custom.mailets;
+package org.apache.james.examples.custom.mailets;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.Date;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.util.DurationParser;
 import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.GenericMatcher;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
-public class SendPromotionCode extends GenericMailet {
+public class IsDelayedForMoreThan extends GenericMatcher {
 
-    public static final boolean REPLY_TO_SENDER_ONLY = false;
+    public static final ChronoUnit DEFAULT_UNIT = ChronoUnit.HOURS;
+    private final Clock clock;
+    private Duration maxDelay;
 
-    private String reason;
-    private String promotionCode;
+    public IsDelayedForMoreThan(Clock clock) {
+        this.clock = clock;
+    }
 
-    @Override
-    public void service(Mail mail) throws MessagingException {
-        MimeMessage response = (MimeMessage) mail.getMessage()
-            .reply(REPLY_TO_SENDER_ONLY);
-
-        response.setText(reason + "\n\n" +
-            "Here is the following promotion code that you can use on your next order: " + promotionCode);
-
-        MailAddress sender = getMailetContext().getPostmaster();
-        ImmutableList<MailAddress> recipients = mail.getMaybeSender().asList();
-
-        getMailetContext()
-            .sendMail(sender, recipients, response);
+    public IsDelayedForMoreThan() {
+        this(Clock.systemDefaultZone());
     }
 
     @Override
-    public void init() throws MessagingException {
-        reason = getInitParameter("reason");
-        promotionCode = getInitParameter("promotionCode");
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        Date sentDate = mail.getMessage().getSentDate();
 
-        if (Strings.isNullOrEmpty(reason)) {
-            throw new MessagingException("'reason' is compulsory");
+        if (clock.instant().isAfter(sentDate.toInstant().plusMillis(maxDelay.toMillis()))) {
+            return ImmutableList.copyOf(mail.getRecipients());
         }
-        if (Strings.isNullOrEmpty(promotionCode)) {
-            throw new MessagingException("'promotionCode' is compulsory");
-        }
+        return ImmutableList.of();
     }
 
     @Override
-    public String getMailetName() {
-        return "SendPromotionCode";
+    public void init() {
+        String condition = getCondition();
+        maxDelay = DurationParser.parse(condition, DEFAULT_UNIT);
+    }
+
+    @Override
+    public String getMatcherName() {
+        return "IsDelayedForMoreThan";
     }
 }

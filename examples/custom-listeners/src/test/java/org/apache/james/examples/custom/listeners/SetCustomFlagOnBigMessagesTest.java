@@ -17,10 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.examples.james.custom.listeners;
+package org.apache.james.examples.custom.listeners;
 
-import static org.apache.examples.james.custom.listeners.SetCustomFlagOnBigMessages.BIG_MESSAGE;
-import static org.apache.examples.james.custom.listeners.SetCustomFlagOnBigMessages.ONE_MB;
+import static org.apache.james.examples.custom.listeners.SetCustomFlagOnBigMessages.BIG_MESSAGE;
+import static org.apache.james.examples.custom.listeners.SetCustomFlagOnBigMessages.ONE_MB;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
