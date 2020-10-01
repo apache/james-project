@@ -60,7 +60,7 @@ Cassandra provides some alternative by itself:
    - A batch containing conditional updates can only operate within a single partition
    - It is unadvised to update many partitions in a single batch, and keep the cardinality low for performance reasons
 
-BATCH could be a good option to keep to tables synchronized, but do not apply to mailboxes (conditional update) nor
+BATCH could be a good option to keep tables synchronized, but does not apply to mailboxes (conditional update) nor
 counters.
 
 We already propose several tasks to solve denormalization inconsistencies. "Applicative read repairs" should be
