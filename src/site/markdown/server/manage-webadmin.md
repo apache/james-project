@@ -274,6 +274,8 @@ Response codes:
  - 400: `source, domain` and `destination domain` are the same
  - 404: `source.domain.tld` are not part of handled domains.
 
+Be aware that no checks to find possible loops that would result of this creation will be performed.
+
 ### Delete an alias for a domain
 
 
@@ -2031,6 +2033,7 @@ Response codes:
  - 400: Group structure or member is not valid
  - 400: Domain in the source is not managed by the DomainList
  - 409: Requested group address is already used for another purpose
+ - 409: The addition of the group member would lead to a loop and thus cannot be performed
 
 ### Removing a group member
 
@@ -2118,6 +2121,7 @@ Response codes:
  - 400: Forward structure or member is not valid
  - 400: Domain in the source is not managed by the DomainList
  - 404: Requested forward address does not match an existing user
+ - 409: The creation of the forward would lead to a loop and thus cannot be performed
 
 ### Removing a destination of a forward
 
@@ -2202,6 +2206,7 @@ Response codes:
  - 400: The alias source exists as an user already
  - 400: Source and destination can't be the same!
  - 400: Domain in the destination or source is not managed by the DomainList
+ - 409: The creation of the alias would lead to a loop and thus cannot be performed
 
 ### Removing an alias of an user
 
@@ -2293,6 +2298,8 @@ Response codes:
  - 400: The `fromDomain` resource name is invalid
  - 400: The destination domain specified in the body is invalid
 
+Be aware that no checks to find possible loops that would result of this creation will be performed.
+
 ### Removing a domain mapping
 
 ```
@@ -2353,6 +2360,8 @@ Response codes:
  - 204: Mapping added successfully.
  - 400: Invalid `mappingSource` path parameter.
  - 400: Invalid `regex` path parameter.
+
+Be aware that no checks to find possible loops that would result of this creation will be performed.
 
 ### Removing a regex mapping
 
@@ -2465,6 +2474,7 @@ Response codes:
 
 - 204: Action successfully performed
 - 400: Invalid parameters
+- 409: The creation of the address mapping would lead to a loop and thus cannot be performed
 
 ### Remove an address mapping
 
