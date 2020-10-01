@@ -41,6 +41,7 @@ import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -87,6 +88,7 @@ class DomainMappingsRoutesTest {
     @BeforeEach
     void setUp() throws Exception {
         recipientRewriteTable = spy(new MemoryRecipientRewriteTable());
+        recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         domainList = mock(DomainList.class);
         recipientRewriteTable.setDomainList(domainList);
         Mockito.when(domainList.containsDomain(any())).thenReturn(true);

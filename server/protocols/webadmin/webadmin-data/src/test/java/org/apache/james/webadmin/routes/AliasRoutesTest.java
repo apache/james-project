@@ -41,6 +41,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
@@ -81,8 +82,8 @@ class AliasRoutesTest {
 
     private WebAdminServer webAdminServer;
 
-    private void createServer(AliasRoutes aliasRoutes) {
-        webAdminServer = WebAdminUtils.createWebAdminServer(aliasRoutes)
+    private void createServer(AliasRoutes aliasRoutes, AddressMappingRoutes addressMappingRoutes) {
+        webAdminServer = WebAdminUtils.createWebAdminServer(aliasRoutes, addressMappingRoutes)
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
@@ -114,6 +115,7 @@ class AliasRoutesTest {
             domainList.addDomain(DOMAIN_MAPPING);
             MappingSourceModule module = new MappingSourceModule();
             memoryRecipientRewriteTable.setDomainList(domainList);
+            memoryRecipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
 
             usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
@@ -121,7 +123,8 @@ class AliasRoutesTest {
             usersRepository.addUser(Username.of(BOB_WITH_SLASH), BOB_WITH_SLASH_PASSWORD);
             usersRepository.addUser(Username.of(ALICE), ALICE_PASSWORD);
 
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository, domainList, new JsonTransformer(module)));
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository, domainList, new JsonTransformer(module)),
+                new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
         @Test
@@ -153,6 +156,27 @@ class AliasRoutesTest {
                     .jsonPath()
                     .getList(".");
             assertThat(addresses).containsExactly(ALICE, BOB);
+        }
+
+        @Test
+        void putShouldDetectConflicts() {
+            with().basePath(AddressMappingRoutes.BASE_PATH)
+                .post(ALICE + "/targets/" + ALICE_ALIAS);
+
+            Map<String, Object> errors = when()
+                    .put(ALICE + SEPARATOR + "sources" + SEPARATOR + ALICE_ALIAS)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.CONFLICT_409)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.CONFLICT_409)
+                .containsEntry("type", "WrongState")
+                .containsEntry("message", "Creation of redirection of alice-alias@b.com to alias:alice@b.com would lead to a loop, operation not performed");
         }
 
         @Test
@@ -423,7 +447,8 @@ class AliasRoutesTest {
             domainList = mock(DomainList.class);
             memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, userRepository, domainList, new JsonTransformer()));
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, userRepository, domainList, new JsonTransformer()),
+                new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
         @Test

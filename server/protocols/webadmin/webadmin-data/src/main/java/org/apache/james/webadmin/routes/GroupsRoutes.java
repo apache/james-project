@@ -35,7 +35,7 @@ import javax.ws.rs.Produces;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
-import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.rrt.api.LoopDetectedException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -143,7 +143,7 @@ public class GroupsRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public HaltException addToGroup(Request request, Response response) throws RecipientRewriteTableException, UsersRepositoryException, DomainListException {
+    public HaltException addToGroup(Request request, Response response) throws UsersRepositoryException {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
         Domain domain = groupAddress.getDomain();
         ensureNotShadowingAnotherAddress(groupAddress);
@@ -153,7 +153,7 @@ public class GroupsRoutes implements Routes {
         return halt(HttpStatus.NO_CONTENT_204);
     }
 
-    private void addGroupMember(MappingSource source, MailAddress userAddress) throws RecipientRewriteTableException {
+    private void addGroupMember(MappingSource source, MailAddress userAddress) {
         try {
             recipientRewriteTable.addGroupMapping(source, userAddress.asString());
         } catch (MappingAlreadyExistsException e) {
@@ -162,6 +162,18 @@ public class GroupsRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(e.getMessage())
+                .haltError();
+        } catch (LoopDetectedException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .type(ErrorResponder.ErrorType.WRONG_STATE)
+                .message(e.getMessage())
+                .haltError();
+        } catch (RecipientRewriteTableException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .type(ErrorType.SERVER_ERROR)
                 .message(e.getMessage())
                 .haltError();
         }

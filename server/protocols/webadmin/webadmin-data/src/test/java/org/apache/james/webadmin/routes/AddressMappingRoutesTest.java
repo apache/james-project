@@ -20,8 +20,11 @@
 package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.when;
+import static io.restassured.RestAssured.with;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+
+import java.util.Map;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -29,6 +32,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
@@ -41,6 +45,7 @@ import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
 import io.restassured.filter.log.LogDetail;
+import io.restassured.http.ContentType;
 
 class AddressMappingRoutesTest {
     private static String MAPPING_SOURCE = "source@domain.tld";
@@ -58,6 +63,7 @@ class AddressMappingRoutesTest {
         domainList.addDomain(Domain.of("domain.tld"));
 
         recipientRewriteTable.setDomainList(domainList);
+        recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new AddressMappingRoutes(recipientRewriteTable))
@@ -81,6 +87,27 @@ class AddressMappingRoutesTest {
 
         assertThat(recipientRewriteTable.getStoredMappings(MappingSource.parse(MAPPING_SOURCE)))
             .containsAnyOf(Mapping.of(ALICE_ADDRESS));
+    }
+
+    @Test
+    void postShouldDetectLoops() {
+        with()
+            .post(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS);
+
+        Map<String, Object> errors = when()
+            .post(ALICE_ADDRESS + "/targets/" + MAPPING_SOURCE)
+        .then()
+            .contentType(ContentType.JSON)
+            .statusCode(HttpStatus.CONFLICT_409)
+            .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", HttpStatus.CONFLICT_409)
+            .containsEntry("type", "WrongState")
+            .containsEntry("message", "Creation of redirection of alice@domain.tld to source@domain.tld would lead to a loop, operation not performed");
     }
 
     @Test

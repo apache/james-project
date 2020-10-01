@@ -33,6 +33,7 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.rrt.api.LoopDetectedException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -167,6 +168,12 @@ public class ForwardRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(e.getMessage())
+                .haltError();
+        } catch (LoopDetectedException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .type(ErrorResponder.ErrorType.WRONG_STATE)
                 .message(e.getMessage())
                 .haltError();
         }

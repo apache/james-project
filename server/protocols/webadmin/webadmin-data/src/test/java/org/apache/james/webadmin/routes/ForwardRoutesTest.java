@@ -42,6 +42,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -112,6 +113,7 @@ class ForwardRoutesTest {
             domainList.addDomain(ALIAS_DOMAIN);
             domainList.addDomain(DOMAIN_MAPPING);
             memoryRecipientRewriteTable.setDomainList(domainList);
+            memoryRecipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
 
             usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
@@ -236,6 +238,27 @@ class ForwardRoutesTest {
                 .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void putShouldDetectLoops() {
+            with()
+                .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB);
+
+            Map<String, Object> errors = when()
+                .put(BOB + SEPARATOR + "targets" + SEPARATOR + ALICE)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.CONFLICT_409)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.CONFLICT_409)
+                .containsEntry("type", "WrongState")
+                .containsEntry("message", "Creation of redirection of bob@b.com to forward:alice@b.com would lead to a loop, operation not performed");
         }
 
         @Test

@@ -40,6 +40,7 @@ import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -78,8 +79,8 @@ class GroupsRoutesTest {
 
     private WebAdminServer webAdminServer;
 
-    private void createServer(GroupsRoutes groupsRoutes) {
-        webAdminServer = WebAdminUtils.createWebAdminServer(groupsRoutes)
+    private void createServer(GroupsRoutes groupsRoutes, AddressMappingRoutes addressMappingRoutes) {
+        webAdminServer = WebAdminUtils.createWebAdminServer(groupsRoutes, addressMappingRoutes)
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
@@ -109,9 +110,11 @@ class GroupsRoutesTest {
             domainList.addDomain(ALIAS_DOMAIN);
             domainList.addDomain(DOMAIN_MAPPING);
             memoryRecipientRewriteTable.setDomainList(domainList);
+            memoryRecipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
             usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(mappingSourceModule)));
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(mappingSourceModule)),
+                new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
         @Test
@@ -295,6 +298,27 @@ class GroupsRoutesTest {
         }
 
         @Test
+        void putShouldDetectLoops() {
+            with().basePath(AddressMappingRoutes.BASE_PATH)
+                .post(USER_A + "/targets/" + GROUP1);
+
+            Map<String, Object> errors = when()
+                .put(GROUP1 + SEPARATOR + USER_A)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.CONFLICT_409)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.CONFLICT_409)
+                .containsEntry("type", "WrongState")
+                .containsEntry("message", "Creation of redirection of group1@b.com to group:a@b.com would lead to a loop, operation not performed");
+        }
+
+        @Test
         void putUserInGroupWithEncodedSlashShouldCreateGroup() {
             when()
                 .put(GROUP_WITH_ENCODED_SLASH + SEPARATOR + USER_A);
@@ -448,7 +472,8 @@ class GroupsRoutesTest {
             domainList = mock(DomainList.class);
             memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, new JsonTransformer()));
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, new JsonTransformer()),
+                new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
         @Test

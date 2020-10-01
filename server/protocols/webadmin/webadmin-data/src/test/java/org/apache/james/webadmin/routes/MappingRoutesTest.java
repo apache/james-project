@@ -31,6 +31,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
@@ -73,6 +74,7 @@ class MappingRoutesTest {
         domainList.addDomain(Domain.of("abc"));
         domainList.addDomain(Domain.of("xyz"));
 
+        recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         recipientRewriteTable.setDomainList(domainList);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(new MappingRoutes(jsonTransformer, recipientRewriteTable))
