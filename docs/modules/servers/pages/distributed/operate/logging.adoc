@@ -14,7 +14,7 @@ Cassandra timeouts). In such case we advise you to conduct a close
 review of performances at the tier level.
 
 Leveraging filters in Kibana discover view can help filtering out
-``already known'' frequently occurring logs.
+''already known'' frequently occurring logs.
 
 When reporting ERROR or WARNING logs, consider adding the full logs, and
 related data (eg the raw content of a mail triggering an issue) to the
@@ -22,13 +22,15 @@ bug report in order to ease resolution.
 
 == Logging configuration
 
-Distributed James uses link:http://logback.qos.ch/[logback] as a logging library.
+Distributed James uses link:http://logback.qos.ch/[logback] as a logging library
+and link:https://docs.fluentbit.io/[FluentBit] as centralize logging.
 
 Information about logback configuration can be found
 link:http://logback.qos.ch/manual/configuration.html[here].
 
 == Structured logging
 
+=== Pushing logs to ElasticSearch
 Distributed Server leverage the use of MDC in order to achieve structured logging,
 and better add context to the logged information. We furthermore ship
 link:https://github.com/linagora/logback-elasticsearch-appender[Logback Elasticsearch Appender]
@@ -38,8 +40,11 @@ link:https://www.elastic.co/elasticsearch[ElasticSearch].
 Here is a sample `conf/logback.xml` configuration file for logback with the following
 pre-requisites:
 
-* Logging both in an unstructured fashion on the console and in a structure fashion in
-ElasticSearch
+* Logging both in an unstructured fashion on the console and in a structured fashion in ElasticSearch
+* Logging ElasticSearch Log appender logs in the console
+
+Configuration for pushing log direct to ElasticSearch
+
 * Logging ElasticSearch Log appender logs in the console
 
 ....
@@ -106,4 +111,185 @@ ElasticSearch
         <logger name="org.apache.james" level="INFO" />
 
 </configuration>
+....
+
+=== Using FluentBit as a log forwarder
+
+Distributed Server leverages the use of MDC in order to achieve structured logging, and better add context to the logged information. We furthermore ship json logs to file with RollingFileAppender on the classpath to easily allow FluentBit to directly tail the log file.
+Here is a sample conf/logback.xml configuration file for logback with the following pre-requisites:
+
+Logging in a structured json fashion and write to file for centralizing logging.
+Centralize logging third party like FluentBit can tail from logging’s file then filter/process and put in to ElastichSearch
+
+....
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+        <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+                <resetJUL>true</resetJUL>
+        </contextListener>
+
+        <appender name="LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                        <fileNamePattern>logs/james.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                        <maxHistory>1</maxHistory>
+                        <totalSizeCap>200MB</totalSizeCap>
+                        <maxFileSize>100MB</maxFileSize>
+                </rollingPolicy>
+
+                <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                    <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+                        <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampFormat>
+                        <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
+
+                        <!-- Importance for handling multiple lines log -->
+                        <appendLineSeparator>true</appendLineSeparator>
+
+                        <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+                            <prettyPrint>false</prettyPrint>
+                        </jsonFormatter>
+                    </layout>
+                </encoder>
+        </appender>
+
+        <root level="INFO"><appender-ref ref="LOG_FILE" />
+        </root>
+
+        <root level="DEBUG"><appender-ref ref="LOG_FILE" />
+        </root>
+
+        <root level="WARN">
+                <appender-ref ref="LOG_FILE" />
+        </root>
+
+        <logger name="org.apache.james" level="INFO" />
+        <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
+
+</configuration>
+....
+
+First you need to create a `logs` folder, then mount it to James container and to FluentBit.
+
+docker-compose:
+....
+version: "3"
+
+services:
+  james:
+    depends_on:
+      - elasticsearch
+      - cassandra
+      - rabbitmq
+      - s3
+    entrypoint: bash -c "java -cp 'james-server.jar:extension-jars/*:james-server-memory-guice.lib/*' -Dworking.directory=/root/ -Dlogback.configurationFile=/root/conf/logback.xml org.apache.james.CassandraRabbitMQJamesServerMain"
+    image: linagora/james-rabbitmq-project:branch-master
+    container_name: james
+    hostname: james.local
+    volumes:
+      - ./extension-jars:/root/extension-jars
+      - ./conf/logback.xml:/root/conf/logback.xml
+      - ./logs:/root/logs
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8080:8000"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+
+  cassandra:
+    image: cassandra:3.11.3
+    ports:
+      - "9042:9042"
+
+  rabbitmq:
+    image: rabbitmq:3.8.1-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  s3:
+    image: zenko/cloudserver:8.2.6
+    container_name: s3.docker.test
+    environment:
+      - SCALITY_ACCESS_KEY_ID=accessKey1
+      - SCALITY_SECRET_ACCESS_KEY=secretKey1
+      - S3BACKEND=mem
+      - LOG_LEVEL=trace
+      - REMOTE_MANAGEMENT_DISABLE=1
+
+  fluent-bit:
+    image: fluent/fluent-bit:1.5.7
+    volumes:
+      - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./fluentbit/parsers.conf:/fluent-bit/etc/parsers.conf
+      - ./logs:/fluent-bit/log
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.3.2
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+....
+
+FluentBit config as:
+the `Host elasticsearch` pointing to `elasticsearch` service in docker-compose file.
+....
+[SERVICE]
+    Parsers_File    /fluent-bit/etc/parsers.conf
+
+[INPUT]
+    name                    tail
+    path                    /fluent-bit/log/*.log
+    Parser                  docker
+    docker_mode             on
+    buffer_chunk_size       1MB
+    buffer_max_size         1MB
+    mem_buf_limit           64MB
+    Refresh_Interval        30
+
+[OUTPUT]
+    Name  stdout
+    Match *
+
+
+[OUTPUT]
+    Name  es
+    Match *
+    Host elasticsearch
+    Port 9200
+    Index fluentbit
+    Logstash_Format On
+    Logstash_Prefix fluentbit-james
+    Type docker
+....
+
+FluentBit Parser config:
+....
+[PARSER]
+  Name         docker
+  Format       json
+  Time_Key     timestamp
+  Time_Format  %Y-%m-%dT%H:%M:%S.%LZ
+  Time_Keep    On
+  Decode_Field_As   escaped_utf8    log    do_next
+  Decode_Field_As   escaped         log    do_next
+  Decode_Field_As   json            log
 ....
