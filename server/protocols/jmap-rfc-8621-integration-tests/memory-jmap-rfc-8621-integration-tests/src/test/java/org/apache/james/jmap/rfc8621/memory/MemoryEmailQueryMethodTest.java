@@ -26,6 +26,8 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class MemoryEmailQueryMethodTest implements EmailQueryMethodContract {
@@ -36,4 +38,8 @@ public class MemoryEmailQueryMethodTest implements EmailQueryMethodContract {
             .overrideWith(new TestJMAPServerModule()))
         .build();
 
+    @Test
+    @Override
+    @Disabled("JAMES-3377 Not supported for in-memory test")
+    public void emailQueryFilterByTextShouldIgnoreMarkupsInHtmlBody(GuiceJamesServer server) {}
 }

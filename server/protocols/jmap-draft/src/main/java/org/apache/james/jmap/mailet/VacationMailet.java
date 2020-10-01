@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mailet;
 
 import java.time.ZonedDateTime;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -93,14 +94,24 @@ public class VacationMailet extends GenericMailet {
     }
 
     private void sendNotificationIfRequired(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate, Vacation vacation, Boolean alreadySent) {
-        if (shouldSendNotification(vacation, processingDate, alreadySent)) {
+        if (shouldSendNotification(processedMail, vacation, processingDate, alreadySent)) {
             sendNotification(recipient, processedMail, vacation);
         }
     }
 
-    private boolean shouldSendNotification(Vacation vacation, ZonedDateTime processingDate, boolean alreadySent) {
+    private boolean shouldSendNotification(Mail processedMail, Vacation vacation, ZonedDateTime processingDate, boolean alreadySent) {
         return vacation.isActiveAtDate(processingDate)
-            && ! alreadySent;
+            && !alreadySent
+            && !isNoReplySender(processedMail);
+    }
+
+    private Boolean isNoReplySender(Mail processedMail) {
+        return processedMail.getMaybeSender()
+            .asOptional()
+            .map(address -> address.getLocalPart()
+                .toLowerCase(Locale.US)
+                .endsWith("-noreply"))
+            .orElse(true);
     }
 
     private void sendNotification(MailAddress recipient, Mail processedMail, Vacation vacation) {

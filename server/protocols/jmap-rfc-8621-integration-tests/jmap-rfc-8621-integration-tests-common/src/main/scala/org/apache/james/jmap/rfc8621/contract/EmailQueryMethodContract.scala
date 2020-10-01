@@ -46,7 +46,7 @@ import org.apache.james.mailbox.model.MailboxPath.inbox
 import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.field.address.DefaultAddressParser
-import org.apache.james.mime4j.message.DefaultMessageWriter
+import org.apache.james.mime4j.message.{DefaultMessageWriter, MultipartBuilder}
 import org.apache.james.mime4j.stream.RawField
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
@@ -589,6 +589,147 @@ trait EmailQueryMethodContract {
            |            "c1"
            |        ]]
            |}""".stripMargin)
+    }
+  }
+
+  def bodyFilterShouldMatchTextPlainOnBody(server: GuiceJamesServer): Unit = {
+    val message: Message = simpleMessage("this message body are uniqueeee")
+    val mailboxPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(mailboxPath)
+    val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    val messageId1: MessageId = sendMessageToBobInbox(server, message, requestDate)
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, mailboxPath, AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "body":"this message"
+         |       }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId1.serialize}"]}""")
+    }
+  }
+
+  @Test
+  def bodyFilterShouldMatchTextPlainOnAttachmentsContent(server: GuiceJamesServer): Unit = {
+    val message: Message = simpleMessage("this message body are uniqueeee")
+    val mailboxPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(mailboxPath)
+    val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    sendMessageToBobInbox(server, message, requestDate)
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "body":"RSA PRIVATE"
+         |       }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId2.serialize}"]}""")
+    }
+  }
+
+  @Test
+  def bodyFilterShouldMatchTextPlainOnAttachmentsFileName(server: GuiceJamesServer): Unit = {
+    val message: Message = simpleMessage("this message body are uniqueeee")
+    val mailboxPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(mailboxPath)
+    val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    sendMessageToBobInbox(server, message, requestDate)
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "body":"text2"
+         |       }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+        s"""["${messageId2.serialize}"]""")
     }
   }
 
@@ -1984,9 +2125,7 @@ trait EmailQueryMethodContract {
   @ValueSource(strings = Array(
     "allInThreadHaveKeyword",
     "someInThreadHaveKeyword",
-    "noneInThreadHaveKeyword",
-    "text",
-    "body"
+    "noneInThreadHaveKeyword"
   ))
   def listMailsShouldReturnUnsupportedFilterWhenValidButUnsupported(unsupportedFilter: String): Unit = {
     val request =
@@ -4502,6 +4641,419 @@ trait EmailQueryMethodContract {
       assertThatJson(response)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageWithoudFlagId.serialize}"]""")
+    }
+  }
+
+  @Test
+  def emailQueryShouldSupportTextFilterForHeaders(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+
+    mailboxProbe.createMailbox(inbox(BOB))
+
+    val messageId1: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("a mail")
+        .setFrom("bloblah@domain.tld")
+        .setFrom("test@domain.tld")
+        .setBody("lorem ipsum", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val messageId2: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("another mail")
+        .setTo("bloblah@domain.tld")
+        .setTo("test@gmail.com")
+        .setBody("lorem ipsum", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val messageId3: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("another mail")
+        .addField(new RawField("Cc", "<bloblah@domain.tld>, <test@gmail.com>"))
+        .setBody("lorem ipsum", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val messageId4: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("another mail")
+        .addField(new RawField("Bcc", "<bloblah@domain.tld>, <test@gmail.com>"))
+        .setBody("lorem ipsum", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val messageId5: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("Subject with test word")
+        .setBody("lorem ipsum", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    mailboxProbe
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("should not be found mail")
+        .setBody("lorem ipsum", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "test"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[
+             |  "${messageId5.serialize}",
+             |  "${messageId4.serialize}",
+             |  "${messageId3.serialize}",
+             |  "${messageId2.serialize}",
+             |  "${messageId1.serialize}"
+             |]""".stripMargin)
+    }
+  }
+
+  @Test
+  def emailQueryShouldSupportTextFilterForTextBody(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("a mail")
+        .setBody("This is a test body", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("should not be found mail")
+        .setBody("lorem ipsum", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "test"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[
+             |  "${messageId1.serialize}"
+             |]""".stripMargin)
+    }
+  }
+
+  @Test
+  def emailQueryShouldSupportTextFilterForHtmlBody(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("a mail")
+        .setBody("<body>This is a test body</body>", "html", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("should not be found mail")
+        .setBody("<body>This is another body</body>", "html", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "test"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[
+             |  "${messageId1.serialize}"
+             |]""".stripMargin)
+    }
+  }
+
+  @Test
+  def emailQueryShouldSupportTextFilterForMultipartMessage(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("a mail")
+        .setBody(MultipartBuilder.create()
+          .addTextPart("This is a test body", StandardCharsets.UTF_8)
+          .build())
+        .build))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("should not be found mail")
+        .setBody(MultipartBuilder.create()
+          .addTextPart("This is another body", StandardCharsets.UTF_8)
+          .build())
+        .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "test"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[
+             |  "${messageId1.serialize}"
+             |]""".stripMargin)
+    }
+  }
+
+  @Test
+  def emailQueryFilterByTextShouldIgnoreMarkupsInHtmlBody(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("A mail")
+        .setBody("<body><test>This is a html body<test></body>", "html", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "test"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[]""".stripMargin)
+    }
+  }
+
+  @Test
+  def emailQueryFilterByTextShouldIgnoreAttachmentName(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "text2"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[]""".stripMargin)
+    }
+  }
+
+  @Test
+  def emailQueryFilterByTextShouldIgnoreAttachmentContent(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "RSA PRIVATE"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[]""".stripMargin)
     }
   }
 
