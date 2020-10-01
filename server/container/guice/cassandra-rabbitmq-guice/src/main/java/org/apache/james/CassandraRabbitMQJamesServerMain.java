@@ -38,7 +38,10 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
     protected static final Module MODULES =
         Modules
             .override(Modules.combine(REQUIRE_TASK_MANAGER_MODULE, new DistributedTaskManagerModule()))
-            .with(new RabbitMQModule(), new RabbitMailQueueRoutesModule(), new RabbitMQEventBusModule(), new DistributedTaskSerializationModule());
+            .with(new RabbitMQModule(),
+                new RabbitMailQueueRoutesModule(),
+                new RabbitMQEventBusModule(),
+                new DistributedTaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
         CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()

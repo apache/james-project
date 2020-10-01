@@ -17,26 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james.modules.objectstorage;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
-import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
-import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.Provides;
 
-public class CassandraBlobStoreDependenciesModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(CassandraDefaultBucketDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraBlobStoreFactory.class).in(Scopes.SINGLETON);
-        bind(CassandraBlobStoreDAO.class).in(Scopes.SINGLETON);
+public class DefaultBucketModule extends AbstractModule {
+    @Provides
+    @Singleton
+    private BucketName defaultBucket(S3BlobStoreConfiguration s3BlobStoreConfiguration) {
+        return s3BlobStoreConfiguration.getNamespace().orElse(BucketName.DEFAULT);
+    }
 
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
+    @Provides
+    @Named("defaultBucket")
+    @Singleton
+    private BucketName annotatedDefaultBucket(BucketName defaultBucket) {
+        return defaultBucket;
     }
 }

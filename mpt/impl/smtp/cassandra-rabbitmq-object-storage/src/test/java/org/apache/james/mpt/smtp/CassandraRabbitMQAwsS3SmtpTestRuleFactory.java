@@ -32,6 +32,7 @@ import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.mailbox.KeyspacesConfiguration;
+import org.apache.james.modules.objectstorage.DefaultBucketModule;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
@@ -72,6 +73,7 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
 
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_CORE_MODULE,
+                new DefaultBucketModule(),
                 SmtpTestRule.SMTP_PROTOCOL_MODULE,
                 binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)

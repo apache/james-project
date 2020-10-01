@@ -25,7 +25,6 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
@@ -56,12 +55,6 @@ public class S3BlobStoreModule extends AbstractModule {
     @Singleton
     private AwsS3AuthConfiguration awsS3AuthConfiguration(S3BlobStoreConfiguration s3BlobStoreConfiguration) {
         return s3BlobStoreConfiguration.getSpecificAuthConfiguration();
-    }
-
-    @Provides
-    @Singleton
-    private BucketName defaultBucket(S3BlobStoreConfiguration s3BlobStoreConfiguration) {
-        return s3BlobStoreConfiguration.getNamespace().orElse(BucketName.DEFAULT);
     }
 
     @Provides

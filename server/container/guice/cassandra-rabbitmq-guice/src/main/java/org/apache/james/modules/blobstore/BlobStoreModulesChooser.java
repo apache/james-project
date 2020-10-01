@@ -33,6 +33,8 @@ import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.modules.blobstore.validation.EventsourcingStorageStrategy;
 import org.apache.james.modules.blobstore.validation.StorageStrategyModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
+import org.apache.james.modules.mailbox.CassandraBucketModule;
+import org.apache.james.modules.objectstorage.DefaultBucketModule;
 import org.apache.james.modules.objectstorage.S3BlobStoreModule;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
@@ -52,6 +54,7 @@ public class BlobStoreModulesChooser {
         @Override
         protected void configure() {
             install(new CassandraBlobStoreDependenciesModule());
+            install(new CassandraBucketModule());
 
             bind(BlobStoreDAO.class).to(CassandraBlobStoreDAO.class);
         }
@@ -61,6 +64,7 @@ public class BlobStoreModulesChooser {
         @Override
         protected void configure() {
             install(new S3BlobStoreModule());
+            install(new DefaultBucketModule());
 
             bind(BlobStoreDAO.class).to(S3BlobStoreDAO.class);
         }
