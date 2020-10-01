@@ -54,6 +54,7 @@ public class ValidRcptHandlerTest {
     private static final String PASSWORD = "xxx";
     private static final boolean RELAYING_ALLOWED = true;
     private static final MaybeSender MAYBE_SENDER = MaybeSender.of(SENDER);
+    public static final Domain DOMAIN_1 = Domain.of("domain.tld");
 
     private ValidRcptHandler handler;
     private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
@@ -70,6 +71,7 @@ public class ValidRcptHandlerTest {
         UsersRepository users = MemoryUsersRepository.withoutVirtualHosting(memoryDomainList);
         users.addUser(VALID_USER, PASSWORD);
 
+        memoryDomainList.addDomain(DOMAIN_1);
         memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
         memoryRecipientRewriteTable.setDomainList(memoryDomainList);
         memoryRecipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
@@ -194,8 +196,10 @@ public class ValidRcptHandlerTest {
 
     @Test
     public void doRcptShouldDenyWhenHasMappingLoop() throws Exception {
-        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), USER2 + "@localhost");
-        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER2, Domain.LOCALHOST), USER1 + "@localhost");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), USER2 + "@domain.tld");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER2, DOMAIN_1), USER1 + "@domain.tld");
+        // The loop needs to be created by a domain mapping
+        memoryRecipientRewriteTable.addDomainMapping(MappingSource.fromDomain(DOMAIN_1), Domain.LOCALHOST);
 
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 

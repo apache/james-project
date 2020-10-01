@@ -258,13 +258,6 @@ Feature: Rewrite Tables tests
     And store "user4@domain4" address mapping for user "user3" at domain "domain3"
     Then mappings for user "user1" at domain "domain1" should contain only "user4@domain4"
 
-  Scenario: recursive mapping should throw exception when a loop exists
-    Given recursive mapping is enable
-    And store "user2@domain2" address mapping for user "user1" at domain "domain1"
-    And store "user3@domain3" address mapping for user "user2" at domain "domain2"
-    And store "user1@domain1" address mapping for user "user3" at domain "domain3"
-    Then retrieving mappings for user "user1" at domain "domain1" should raise an ErrorMappingException with message "554 Too many mappings to process"
-
   Scenario: recursive mapping should work when a level is removed
     Given recursive mapping is enable
     And store "user2@domain2" address mapping for user "user1" at domain "domain1"

@@ -26,8 +26,10 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.rrt.api.LoopDetectedException;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -47,6 +49,7 @@ public interface RecipientRewriteTableContract {
     String ADDRESS = "test@localhost2";
     String ADDRESS_2 = "test@james";
     Domain SUPPORTED_DOMAIN = Domain.LOCALHOST;
+    Domain DOMAIN_2 = Domain.of("adomain.tld");
     MappingSource SOURCE = MappingSource.fromUser(USER, SUPPORTED_DOMAIN);
     Domain NOT_SUPPORTED_DOMAIN = Domain.of("notAManagedDomain");
     MappingSource SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST = MappingSource.fromUser(USER, NOT_SUPPORTED_DOMAIN);
@@ -73,6 +76,7 @@ public interface RecipientRewriteTableContract {
 
         SimpleDomainList domainList = new SimpleDomainList();
         domainList.addDomain(SUPPORTED_DOMAIN);
+        domainList.addDomain(DOMAIN_2);
         virtualUserTable().setDomainList(domainList);
     }
 
@@ -632,5 +636,92 @@ public interface RecipientRewriteTableContract {
     default void addAliasMappingShouldThrowWhenDomainIsNotInDomainList() {
         assertThatThrownBy(() -> virtualUserTable().addAliasMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, ADDRESS))
             .isInstanceOf(SourceDomainIsNotInDomainListException.class);
+    }
+
+    @Test
+    default void addAliasMappingShouldDetectLoops() throws Exception {
+        String address1 = "alice@localhost";
+
+        virtualUserTable().addAliasMapping(SOURCE, address1);
+
+        assertThatThrownBy(() -> virtualUserTable().addAliasMapping(
+            MappingSource.fromMailAddress(new MailAddress(address1)),
+            SOURCE.asString()))
+            .isInstanceOf(LoopDetectedException.class);
+    }
+
+    @Test
+    default void addAddressMappingShouldDetectLoops() throws Exception {
+        String address1 = "alice@localhost";
+
+        virtualUserTable().addAddressMapping(SOURCE, address1);
+
+        assertThatThrownBy(() -> virtualUserTable().addAddressMapping(
+            MappingSource.fromMailAddress(new MailAddress(address1)),
+            SOURCE.asString()))
+            .isInstanceOf(LoopDetectedException.class);
+    }
+
+    @Test
+    default void addGroupMappingShouldDetectLoops() throws Exception {
+        String address1 = "alice@localhost";
+
+        virtualUserTable().addGroupMapping(SOURCE, address1);
+
+        assertThatThrownBy(() -> virtualUserTable().addGroupMapping(
+            MappingSource.fromMailAddress(new MailAddress(address1)),
+            SOURCE.asString()))
+            .isInstanceOf(LoopDetectedException.class);
+    }
+
+    @Test
+    default void addForwardMappingShouldDetectLoops() throws Exception {
+        String address1 = "alice@localhost";
+
+        virtualUserTable().addForwardMapping(SOURCE, address1);
+
+        assertThatThrownBy(() -> virtualUserTable().addForwardMapping(
+            MappingSource.fromMailAddress(new MailAddress(address1)),
+            SOURCE.asString()))
+            .isInstanceOf(LoopDetectedException.class);
+    }
+
+    @Test
+    default void heterogeneousLoopsShouldBeDetected() throws Exception {
+        String address1 = "alice@localhost";
+
+        virtualUserTable().addForwardMapping(SOURCE, address1);
+
+        assertThatThrownBy(() -> virtualUserTable().addGroupMapping(
+            MappingSource.fromMailAddress(new MailAddress(address1)),
+            SOURCE.asString()))
+            .isInstanceOf(LoopDetectedException.class);
+    }
+
+    @Test
+    default void longLoopsShouldBeDetected() throws Exception {
+        String address1 = "alice@localhost";
+        String address2 = "bob@localhost";
+
+        virtualUserTable().addForwardMapping(SOURCE, address1);
+        virtualUserTable().addForwardMapping(MappingSource.parse(address1), address2);
+
+        assertThatThrownBy(() -> virtualUserTable().addGroupMapping(
+            MappingSource.fromMailAddress(new MailAddress(address2)),
+            SOURCE.asString()))
+            .isInstanceOf(LoopDetectedException.class);
+    }
+
+    @Test
+    default void domainMappingShouldBeHandledAsPartOfLoopDetection() throws Exception {
+        String address1 = "alice@localhost";
+
+        virtualUserTable().addForwardMapping(SOURCE, address1);
+        virtualUserTable().addDomainMapping(MappingSource.fromDomain(Domain.LOCALHOST), DOMAIN_2);
+
+        assertThatThrownBy(() -> virtualUserTable().addGroupMapping(
+            MappingSource.fromMailAddress(new MailAddress("alice@adomain.tld")),
+            SOURCE.asString()))
+            .isInstanceOf(LoopDetectedException.class);
     }
 }

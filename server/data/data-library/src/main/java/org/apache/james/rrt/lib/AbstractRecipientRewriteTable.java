@@ -33,11 +33,13 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.rrt.api.InvalidRegexException;
+import org.apache.james.rrt.api.LoopDetectedException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
@@ -197,6 +199,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         checkNotSameSourceAndDestination(source, address);
 
         LOGGER.info("Add address mapping => {} for source: {}", mapping.asString(), source.asString());
+        assertNoLoop(source, mapping);
         addMapping(source, mapping);
     }
 
@@ -279,6 +282,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         checkDomainMappingSourceIsManaged(source);
 
         LOGGER.info("Add forward mapping => {} for source: {}", mapping.asString(), source.asString());
+        assertNoLoop(source, mapping);
         addMapping(source, mapping);
     }
 
@@ -301,6 +305,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         checkDomainMappingSourceIsManaged(source);
 
         LOGGER.info("Add group mapping => {} for source: {}", mapping.asString(), source.asString());
+        assertNoLoop(source, mapping);
         addMapping(source, mapping);
     }
 
@@ -324,6 +329,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         checkDomainMappingSourceIsManaged(source);
 
         LOGGER.info("Add alias source => {} for destination mapping: {}", source.asString(), mapping.asString());
+        assertNoLoop(source, mapping);
         addMapping(source, mapping);
     }
 
@@ -377,6 +383,23 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     private void checkNotSameSourceAndDestination(MappingSource source, String address) throws RecipientRewriteTableException {
         if (source.asMailAddress().map(mailAddress -> mailAddress.asString().equals(address)).orElse(false)) {
             throw new SameSourceAndDestinationException("Source and destination can't be the same!");
+        }
+    }
+
+    private void assertNoLoop(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
+        if (configuration.isRecursive()) {
+            boolean leadsToALoop = mapping.asMailAddress()
+                .map(Throwing.<MailAddress, Mappings>function(
+                    mailAddress -> getResolvedMappings(mailAddress.getLocalPart(), mailAddress.getDomain()))
+                    .sneakyThrow())
+                .map(mappings -> mappings.asStream()
+                    .flatMap(aMapping -> aMapping.asMailAddress().stream())
+                    .anyMatch(address -> source.asMailAddress().map(address::equals).orElse(false)))
+                .orElse(false);
+
+            if (leadsToALoop) {
+                throw new LoopDetectedException(source, mapping);
+            }
         }
     }
 }

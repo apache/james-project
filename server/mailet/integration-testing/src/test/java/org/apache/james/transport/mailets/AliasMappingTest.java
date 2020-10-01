@@ -58,6 +58,7 @@ import io.restassured.specification.RequestSpecification;
 
 public class AliasMappingTest {
     private static final String DOMAIN = "domain.tld";
+    private static final String DOMAIN_2 = "domain2.tld";
 
     private static final String BOB_USER = "bob";
     private static final String ALICE_USER = "alice";
@@ -104,6 +105,7 @@ public class AliasMappingTest {
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);
+        dataProbe.addDomain(DOMAIN_2);
 
         dataProbe.addUser(BOB_ADDRESS, PASSWORD);
         dataProbe.addUser(ALICE_ADDRESS, PASSWORD);
@@ -379,20 +381,17 @@ public class AliasMappingTest {
 
     @Test
     public void messageShouldBeStoredInRepositoryWhenAliasLoopMapping() throws Exception {
-        String bobAlias3 = BOB_USER + "-alias3@" + DOMAIN;
+        String bobAlias2 = BOB_USER + "@" + DOMAIN_2;
 
-        webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ALIAS_2 + "/sources/" + BOB_ALIAS);
-
-        webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + bobAlias3 + "/sources/" + BOB_ALIAS_2);
-
-        webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ALIAS + "/sources/" + bobAlias3);
+        webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + bobAlias2);
+        webAdminApi.put("/domains/" + DOMAIN_2 + "/aliases/" + DOMAIN);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
-                .recipient(BOB_ALIAS));
+                .recipient(BOB_ADDRESS));
 
         awaitAtMostOneMinute.until(
             () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)

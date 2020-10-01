@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collection;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -39,6 +40,7 @@ import org.junit.Test;
 
 public class IsSenderInRRTLoopTest {
 
+    public static final Domain DOMAIN = Domain.of("domain.tld");
     private RecipientRewriteTable recipientRewriteTable;
     private IsSenderInRRTLoop testee;
 
@@ -46,6 +48,7 @@ public class IsSenderInRRTLoopTest {
     public void setUp() throws Exception {
         recipientRewriteTable = new MemoryRecipientRewriteTable();
         SimpleDomainList domainList = new SimpleDomainList();
+        domainList.addDomain(DOMAIN);
         domainList.addDomain(JAMES_LOCAL_DOMAIN);
         ((MemoryRecipientRewriteTable) recipientRewriteTable).setDomainList(domainList);
         ((MemoryRecipientRewriteTable) recipientRewriteTable).setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
@@ -88,8 +91,10 @@ public class IsSenderInRRTLoopTest {
 
     @Test
     public void matchShouldReturnRecipientsWhenLoop() throws Exception {
-        recipientRewriteTable.addAddressMapping(MappingSource.fromUser(SENDER.getLocalPart(), SENDER.getDomain()), RECIPIENT1.asString());
+        recipientRewriteTable.addAddressMapping(MappingSource.fromUser(SENDER.getLocalPart(), SENDER.getDomain()),"recipient1@domain.tld");
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(RECIPIENT1.getLocalPart(), RECIPIENT1.getDomain()), SENDER.asString());
+        // required overwise the loop is detected upon insertion
+        recipientRewriteTable.addDomainMapping(MappingSource.fromDomain(Domain.of("domain.tld")), Domain.LOCALHOST);
 
         Collection<MailAddress> result = testee.match(FakeMail.builder()
             .name("name")
@@ -102,8 +107,10 @@ public class IsSenderInRRTLoopTest {
 
     @Test
     public void matchShouldReturnEmptyWhenLoopButNoRecipient() throws Exception {
-        recipientRewriteTable.addAddressMapping(MappingSource.fromUser(SENDER.getLocalPart(), SENDER.getDomain()), RECIPIENT1.asString());
+        recipientRewriteTable.addAddressMapping(MappingSource.fromUser(SENDER.getLocalPart(), SENDER.getDomain()),"recipient1@domain.tld");
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(RECIPIENT1.getLocalPart(), RECIPIENT1.getDomain()), SENDER.asString());
+        // required overwise the loop is detected upon insertion
+        recipientRewriteTable.addDomainMapping(MappingSource.fromDomain(DOMAIN), Domain.LOCALHOST);
 
         Collection<MailAddress> result = testee.match(FakeMail.builder()
             .name("name")

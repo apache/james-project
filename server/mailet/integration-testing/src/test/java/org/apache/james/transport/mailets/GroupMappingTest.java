@@ -303,8 +303,7 @@ public class GroupMappingTest {
     @Test
     public void senderShouldReceiveABounceUponRRTFailure() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
-
-        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + GROUP_ON_DOMAIN1);
+        jamesServer.getProbe(DataProbeImpl.class).addDomainAliasMapping(DOMAIN2, DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
@@ -321,15 +320,14 @@ public class GroupMappingTest {
 
     @Test
     public void senderShouldNotReceiveABounceUponRRTFailureWhenPartOfTheLoop() throws Exception {
-        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + SENDER);
-
-        jamesServer.getProbe(DataProbeImpl.class).addAddressMapping(SENDER_LOCAL_PART, DOMAIN1, GROUP_ON_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
+        jamesServer.getProbe(DataProbeImpl.class).addDomainAliasMapping(DOMAIN2, DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
-                .sender(SENDER)
+                .sender(GROUP_ON_DOMAIN1)
                 .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN2));
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -340,15 +338,14 @@ public class GroupMappingTest {
 
     @Test
     public void avoidInfiniteBouncingLoopWhenSenderIsPartOfRRTLoop() throws Exception {
-        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + SENDER);
-
-        jamesServer.getProbe(DataProbeImpl.class).addAddressMapping(SENDER_LOCAL_PART, DOMAIN1, GROUP_ON_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
+        jamesServer.getProbe(DataProbeImpl.class).addDomainAliasMapping(DOMAIN2, DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
-                .sender(SENDER)
+                .sender(GROUP_ON_DOMAIN1)
                 .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN2));
 
         awaitAtMostOneMinute.until(

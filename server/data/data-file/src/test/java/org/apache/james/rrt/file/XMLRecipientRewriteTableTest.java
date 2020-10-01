@@ -242,6 +242,41 @@ class XMLRecipientRewriteTableTest implements RecipientRewriteTableContract {
 
     @Test
     @Disabled("XMLRecipientRewriteTable is read only")
+    public void addAddressMappingShouldDetectLoops() {
+    }
+
+    @Test
+    @Disabled("XMLRecipientRewriteTable is read only")
+    public void addAliasMappingShouldDetectLoops() {
+    }
+
+    @Test
+    @Disabled("XMLRecipientRewriteTable is read only")
+    public void addForwardMappingShouldDetectLoops() {
+    }
+
+    @Test
+    @Disabled("XMLRecipientRewriteTable is read only")
+    public void addGroupMappingShouldDetectLoops() {
+    }
+
+    @Test
+    @Disabled("XMLRecipientRewriteTable is read only")
+    public void domainMappingShouldBeHandledAsPartOfLoopDetection() {
+    }
+
+    @Test
+    @Disabled("XMLRecipientRewriteTable is read only")
+    public void heterogeneousLoopsShouldBeDetected() {
+    }
+
+    @Test
+    @Disabled("XMLRecipientRewriteTable is read only")
+    public void longLoopsShouldBeDetected() {
+    }
+
+    @Test
+    @Disabled("XMLRecipientRewriteTable is read only")
     public void getMappingsForTypeShouldReturnSortedStream() {
     }
 }

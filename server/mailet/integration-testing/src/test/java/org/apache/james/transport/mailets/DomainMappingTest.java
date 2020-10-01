@@ -166,8 +166,8 @@ public class DomainMappingTest {
     public void mailShouldGoToRRTErrorMailRepositoryUponLoopCombiningDomainAndAlias() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class).addUser(BOB_DOMAIN2, PASSWORD);
 
-        webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
         webAdminApi.put("/address/aliases/" + BOB_DOMAIN2 + "/sources/" + BOB_DOMAIN1);
+        webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
