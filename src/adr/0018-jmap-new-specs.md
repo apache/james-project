@@ -47,7 +47,7 @@ We should ensure no changes is done to `jmap-draft` while implementing the new `
 Regarding the versioning in the accept headers:
 
 * `Accept: application/json;jmapVersion=draft` would redirect to `jmap-draft`
-* `Accept: application/json;jmapVersion=rfc-8620` would redirect to `jmap`
+* `Accept: application/json;jmapVersion=rfc-8621` would redirect to `jmap`
 * When the `jmapVersion` is omitted, we will redirect first towards `jmap-draft`, then to `jmap`
 when `jmap-draft` becomes deprecated
 
