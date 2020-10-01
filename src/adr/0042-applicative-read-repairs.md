@@ -58,7 +58,7 @@ Cassandra provides some alternative by itself:
  view primary key). Most of all, the updates are performed asynchronously. This mechanism is considered experimental.
  - Cassandra BATCH suffers from the following downsides:
    - A batch containing conditional updates can only operate within a single partition
-   - It is unadvised to update many partition in a single batch, and keep the cardinality low for performance reasons
+   - It is unadvised to update many partitions in a single batch, and keep the cardinality low for performance reasons
 
 BATCH could be a good option to keep to tables synchronized, but do not apply to mailboxes (conditional update) nor
 counters.
