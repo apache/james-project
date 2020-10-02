@@ -7313,4 +7313,57 @@ trait MailboxSetMethodContract {
          |    "c1"]]
          |}""".stripMargin)
   }
+
+  @Test
+  def updateShouldHandleNotFoundClientId(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+               |  "methodCalls": [
+               |    [
+               |     "Mailbox/set",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "update": {
+               |         "#invalid": {
+               |           "name": "newName"
+               |         }
+               |       }
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [
+         |        [
+         |            "Mailbox/set",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "newState": "000001",
+         |                "notUpdated": {
+         |                    "#invalid": {
+         |                        "type": "invalidArguments",
+         |                        "description": "ClientId(#invalid) was not used in previously defined creationIds"
+         |                    }
+         |                }
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}""".stripMargin)
+  }
 }

@@ -37,7 +37,6 @@ import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxE
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MailboxPath, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
-import org.reactivestreams.Publisher
 import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, Json, JsonValidationError}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
@@ -128,6 +127,7 @@ case class UpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable, pat
     case e: LoopInMailboxGraphException => SetError.invalidArguments(SetErrorDescription("A mailbox parentId property can not be set to itself or one of its child"), Some(Properties("parentId")))
     case e: InsufficientRightsException => SetError.invalidArguments(SetErrorDescription("Invalid change to a delegated mailbox"))
     case e: MailboxHasChildException => SetError.invalidArguments(SetErrorDescription(s"${e.mailboxId.serialize()} parentId property cannot be updated as this mailbox has child mailboxes"), Some(Properties("parentId")))
+    case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
     case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
   }
 }
