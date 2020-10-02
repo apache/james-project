@@ -42,4 +42,10 @@ public class MemoryEmailQueryMethodTest implements EmailQueryMethodContract {
     @Override
     @Disabled("JAMES-3377 Not supported for in-memory test")
     public void emailQueryFilterByTextShouldIgnoreMarkupsInHtmlBody(GuiceJamesServer server) {}
+
+    @Test
+    @Override
+    @Disabled("JAMES-3377 Not supported for in-memory test" +
+        "In memory do not attempt message parsing a performs a full match on the raw message content")
+    public void emailQueryFilterByTextShouldIgnoreAttachmentContent(GuiceJamesServer server) {}
 }
