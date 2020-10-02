@@ -231,10 +231,10 @@ object MailboxFilter {
       filterCondition.text match {
         case Some(text) =>
           Right(List(SearchQuery.or(
-            List(SearchQuery.headerContains("From", text.value),
-              SearchQuery.headerContains("To", text.value),
-              SearchQuery.headerContains("Cc", text.value),
-              SearchQuery.headerContains("Bcc", text.value),
+            List(SearchQuery.address(AddressType.To, text.value),
+              SearchQuery.address(AddressType.Cc, text.value),
+              SearchQuery.address(AddressType.Bcc, text.value),
+              SearchQuery.address(AddressType.From, text.value),
               SearchQuery.headerContains("Subject", text.value),
               SearchQuery.bodyContains(text.value))
             .asJava)))

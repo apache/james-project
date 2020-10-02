@@ -4775,6 +4775,64 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def textShouldMatchFromField(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .addField(new RawField("From", "toto@domain.tld"))
+        .setSubject("a mail")
+        .setBody("This is a test body", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+        .of
+        .setSubject("should not be found mail")
+        .setBody("lorem ipsum", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "text": "toto@domain.tld"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(
+          s"""[
+             |  "${messageId1.serialize}"
+             |]""".stripMargin)
+    }
+  }
+
+  @Test
   def emailQueryShouldSupportTextFilterForHtmlBody(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
