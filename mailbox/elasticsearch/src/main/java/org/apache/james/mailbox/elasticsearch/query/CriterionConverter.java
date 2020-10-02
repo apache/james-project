@@ -155,11 +155,6 @@ public class CriterionConverter {
                     .should(matchQuery(JsonMessageConstants.HTML_BODY + "." + SPLIT_EMAIL,
                         textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()));
-        case TEXT:
-            return boolQuery()
-                    .should(matchQuery(JsonMessageConstants.TEXT, textCriterion.getOperator().getValue()))
-                    .should(matchQuery(JsonMessageConstants.TEXT + "." + SPLIT_EMAIL,
-                        textCriterion.getOperator().getValue()));
         case FULL:
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))

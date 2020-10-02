@@ -68,7 +68,6 @@
   "size":25,
   "subject":["Test message"],
   "subtype":"text",
-  "text":"Benoit Tellier btellier@linagora.com btellier@linagora.com btellier@linagora.com Test message This mail have a non textual attachment !\r\n",
   "to":[{"name":"btellier@linagora.com","address":"btellier@linagora.com"}],
   "uid":25,
   "userFlags":[],

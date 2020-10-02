@@ -21,7 +21,6 @@ package org.apache.james.mailbox.elasticsearch;
 
 import static org.apache.james.backends.es.IndexCreationFactory.CASE_INSENSITIVE;
 import static org.apache.james.backends.es.IndexCreationFactory.KEEP_MAIL_AND_URL;
-import static org.apache.james.backends.es.IndexCreationFactory.SNOWBALL_KEEP_MAIL_AND_URL;
 import static org.apache.james.backends.es.NodeMappingFactory.ANALYZER;
 import static org.apache.james.backends.es.NodeMappingFactory.BOOLEAN;
 import static org.apache.james.backends.es.NodeMappingFactory.FIELDS;
@@ -35,7 +34,6 @@ import static org.apache.james.backends.es.NodeMappingFactory.RAW;
 import static org.apache.james.backends.es.NodeMappingFactory.REQUIRED;
 import static org.apache.james.backends.es.NodeMappingFactory.ROUTING;
 import static org.apache.james.backends.es.NodeMappingFactory.SEARCH_ANALYZER;
-import static org.apache.james.backends.es.NodeMappingFactory.SNOWBALL;
 import static org.apache.james.backends.es.NodeMappingFactory.SPLIT_EMAIL;
 import static org.apache.james.backends.es.NodeMappingFactory.TYPE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.ATTACHMENTS;
@@ -327,18 +325,6 @@ public class MailboxMappingFactory {
 
                         .startObject(HAS_ATTACHMENT)
                             .field(TYPE, BOOLEAN)
-                        .endObject()
-
-                        .startObject(TEXT)
-                            .field(TYPE, TEXT)
-                            .field(ANALYZER, SNOWBALL_KEEP_MAIL_AND_URL)
-                            .startObject(FIELDS)
-                                .startObject(SPLIT_EMAIL)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, SNOWBALL)
-                                    .field(SEARCH_ANALYZER, SNOWBALL_KEEP_MAIL_AND_URL)
-                                .endObject()
-                            .endObject()
                         .endObject()
 
                         .startObject(ATTACHMENTS)

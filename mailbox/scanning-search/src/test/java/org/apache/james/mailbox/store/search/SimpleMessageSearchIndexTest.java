@@ -210,26 +210,6 @@ class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
     public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInTwoMailboxes() {
     }
 
-    @Disabled("JAMES-1804: failing jmap text search test on memory (intended for ES)")
-    @Override
-    public void searchWithTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() {
-    }
-
-    @Disabled("JAMES-1804: failing jmap text search test on memory (intended for ES)")
-    @Override
-    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() {
-    }
-
-    @Disabled("JAMES-1804: failing jmap text search test on memory (intended for ES)")
-    @Override
-    public void searchWithTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() {
-    }
-
-    @Disabled("JAMES-1804: failing jmap text search test on memory (intended for ES)")
-    @Override
-    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() {
-    }
-
     @Disabled("JAMES-2241: memory does not handle header with dots indexation (intended for ES)")
     @Override
     public void headerWithDotsShouldBeIndexed() {

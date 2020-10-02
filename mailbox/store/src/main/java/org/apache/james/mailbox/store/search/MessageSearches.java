@@ -23,7 +23,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.SequenceInputStream;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -203,8 +202,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             switch (criterion.getType()) {
             case BODY:
                 return bodyContains(value, message);
-            case TEXT:
-                return textContains(value, message);
             case FULL:
                 return messageContains(value, message);
             case ATTACHMENTS:
@@ -236,11 +233,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private boolean messageContains(String value, MailboxMessage message) throws IOException, MimeException {
         final InputStream input = message.getFullContent();
         return isInMessage(value, input, true);
-    }
-
-    private boolean textContains(String value, MailboxMessage message) throws IOException, MimeException, MailboxException {
-        InputStream bodyContent = message.getBodyContent();
-        return isInMessage(value, new SequenceInputStream(textHeaders(message), bodyContent), true);
     }
 
     private boolean attachmentsContain(String value, MailboxMessage message) throws IOException, MimeException {

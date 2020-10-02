@@ -170,6 +170,5 @@
  "isDeleted": true,
  "isRecent": false,
  "hasAttachment": false,
- "isUnread": false,
- "text": "Murari murari.ksr@gmail.com General Discussion about Arch Linux arch-general@archlinux.org [arch-general] Inkscape fails to open svg files Hi all,\n\nAn update between the 17th of May and the 1st of June seems to have broken\nInkscape's ability to open existing svg files on my computer. Any svg I\nopen (including stock files off the internet) cause Inkscape to crash with\n\"Inkscape encountered an internal error and will close now\". I even created\na new, test svg consisting only of a few shapes and text, but I can't open\nit again after saving. Has anyone else seen anything like this?\n\nThanks!\n"
+ "isUnread": false
 }

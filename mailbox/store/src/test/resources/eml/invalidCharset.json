@@ -25,7 +25,6 @@
   "size":25,
   "subject":["Inline attachment"],
   "subtype":"text",
-  "text":"Antoine DUPRAT xyz@linagora.com Antoine DUPRAT xyz@linagora.com Inline attachment This is an inline attachment: Cheers!",
   "to":[{"name":"Antoine DUPRAT","address":"xyz@linagora.com"}],
   "uid":25,
   "userFlags":[],

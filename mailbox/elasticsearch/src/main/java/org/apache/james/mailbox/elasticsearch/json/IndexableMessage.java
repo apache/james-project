@@ -171,7 +171,6 @@ public class IndexableMessage {
                     size,
                     subjects,
                     subType,
-                    text,
                     to,
                     uid,
                     userFlags,
@@ -215,7 +214,6 @@ public class IndexableMessage {
     private final long size;
     private final Subjects subjects;
     private final String subType;
-    private final String text;
     private final EMailers to;
     private final long uid;
     private final String[] userFlags;
@@ -242,7 +240,7 @@ public class IndexableMessage {
                              String sentDate,
                              long size,
                              Subjects subjects,
-                             String subType, String text,
+                             String subType,
                              EMailers to,
                              long uid,
                              String[] userFlags,
@@ -270,7 +268,6 @@ public class IndexableMessage {
         this.size = size;
         this.subjects = subjects;
         this.subType = subType;
-        this.text = text;
         this.to = to;
         this.uid = uid;
         this.userFlags = userFlags;
@@ -360,11 +357,6 @@ public class IndexableMessage {
     @JsonProperty(JsonMessageConstants.SUBTYPE)
     public String getSubType() {
         return subType;
-    }
-
-    @JsonProperty(JsonMessageConstants.TEXT)
-    public String getText() {
-        return text;
     }
 
     @JsonProperty(JsonMessageConstants.TO)
