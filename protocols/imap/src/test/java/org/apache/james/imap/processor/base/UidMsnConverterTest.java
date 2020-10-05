@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
@@ -59,6 +61,17 @@ public class UidMsnConverterTest {
     public void getUidShouldReturnEmptyIfZero() {
         assertThat(testee.getUid(0))
             .isEmpty();
+    }
+
+    @Test
+    public void loopingGetMSNShouldSucceedForAMillionItems() {
+        int count = 1000;
+        testee.addAll(IntStream.range(0, count)
+            .mapToObj(i -> MessageUid.of(i + 1))
+            .collect(Collectors.toList()));
+
+        IntStream.range(0, 1000000)
+            .forEach(i -> testee.getMsn(MessageUid.of(i + 1)));
     }
 
     @Test
