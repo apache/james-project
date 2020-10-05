@@ -55,6 +55,13 @@ sealed trait Header
 case class HeaderExist(name: String) extends Header
 case class HeaderContains(name: String, value: String) extends Header
 
+object FilterCondition {
+  val SUPPORTED: Set[String] = Set("inMailbox", "inMailboxOtherThan", "before", "after",
+                                  "hasKeyword", "notKeyword", "minSize", "maxSize",
+                                  "hasAttachment", "allInThreadHaveKeyword", "someInThreadHaveKeyword",
+                                  "noneInThreadHaveKeyword", "text", "from", "to",
+                                  "cc", "bcc", "subject", "header", "body")
+}
 case class FilterCondition(inMailbox: Option[MailboxId],
                            inMailboxOtherThan: Option[Seq[MailboxId]],
                            before: Option[UTCDate],

@@ -81,7 +81,18 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case _ => JsError(s"Expecting a JsString to represent a known operator")
   }
 
-  private implicit val filterConditionReads: Reads[FilterCondition] = Json.reads[FilterCondition]
+  private implicit val filterConditionReads: Reads[FilterCondition] = {
+    case JsObject(underlying) => {
+      val unsupported: collection.Set[String] = underlying.keySet.diff(FilterCondition.SUPPORTED)
+      if (unsupported.nonEmpty) {
+        JsError(s"These '${unsupported.mkString("[", ", ", "]")}' was unsupported filter options")
+      } else {
+        Json.reads[FilterCondition].reads(JsObject(underlying))
+      }
+    }
+    case jsValue => Json.reads[FilterCondition].reads(jsValue)
+  }
+
   private implicit val limitUnparsedReads: Reads[LimitUnparsed] = Json.valueReads[LimitUnparsed]
   private implicit val CanCalculateChangesFormat: Format[CanCalculateChanges] = Json.valueFormat[CanCalculateChanges]
 

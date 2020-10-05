@@ -468,12 +468,21 @@ trait MailboxQueryMethodContract {
         .body
         .asString
 
-      assertThatJson(response)
-        .inPath("methodResponses[0][1]")
-        .isEqualTo(
+    assertThatJson(response)
+      .isEqualTo(
         """{
-         |     "type":"invalidArguments","description":"{\"errors\":[{\"path\":\"obj.filter\",\"messages\":[\"Unsupported filter\"]}]}"}
-        """.stripMargin)
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |        [
+           |            "error",
+           |            {
+           |                "type": "invalidArguments",
+           |                "description": "{\"errors\":[{\"path\":\"obj.filter\",\"messages\":[\"These '[unsupported_option]' was unsupported filter options\"]}]}"
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
   }
 
   @Test

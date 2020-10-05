@@ -28,6 +28,9 @@ import org.apache.james.mailbox.model.MailboxId
 
 case class MailboxQueryRequest(accountId: AccountId, filter: MailboxFilter) extends WithAccountId
 
+object MailboxFilter{
+  val SUPPORTED: Set[String] = Set("role")
+}
 case class MailboxFilter(role: Role)
 
 case class MailboxQueryResponse(accountId: AccountId,
