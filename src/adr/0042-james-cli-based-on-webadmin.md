@@ -43,7 +43,7 @@ We decided to write a new CLI client, running on top of the JVM, communicating w
 * We decided to adopt a more modern, modular CLI syntax:
 
 ```   
-$ java -jar james_cli.jar [OPTION] ENTITY ACTION {ARGUMENT}
+$ james-cli [OPTION] ENTITY ACTION {ARGUMENT}
 ```
 where
 
@@ -59,7 +59,7 @@ where
 
 Add a domain to the domain list.
 ```
-$ java -jar james_cli.jar --url http://127.0.0.1 --port 9999 domain create domainNameToBeCreated
+$ james-cli --url http://127.0.0.1 --port 9999 domain create domainNameToBeCreated
 ```
 
 In above command-line 
@@ -81,3 +81,4 @@ It aims at providing a more modern and more secure CLI, also bringing compatibil
 * [NVD-CVE-2017-12628 Detail](https://nvd.nist.gov/vuln/detail/CVE-2017-12628)
 * [Picocli 2.0: Do More With Less](https://dzone.com/articles/whats-new-in-picocli-20)
 * [Picocli Homepage](https://picocli.info/)
+* [Native Image Maven Plugin](https://www.graalvm.org/reference-manual/native-image/NativeImageMavenPlugin/)
