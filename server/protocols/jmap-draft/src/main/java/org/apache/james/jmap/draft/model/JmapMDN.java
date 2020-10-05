@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft.model;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -152,6 +153,7 @@ public class JmapMDN {
             .setTo(getSenderAddress(originalMessage))
             .setFrom(username.asString())
             .setSubject(subject)
+            .setDate(new Date())
             .setMessageId(MimeUtil.createUniqueMessageId(username.getDomainPart().map(Domain::name).orElse(null)))
             .build();
     }
