@@ -22,6 +22,7 @@ package org.apache.james.blob.objectstorage.aws;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.junit.jupiter.api.AfterAll;
@@ -30,8 +31,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-class S3DeDuplicationBlobStoreTest implements BlobStoreContract {
-
+class S3NamespaceTest implements BlobStoreContract {
     private static BlobStore testee;
     private static S3BlobStoreDAO s3BlobStoreDAO;
 
@@ -46,6 +46,7 @@ class S3DeDuplicationBlobStoreTest implements BlobStoreContract {
         S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
             .authConfiguration(authConfiguration)
             .region(dockerAwsS3.dockerAwsS3().region())
+            .defaultBucketName(BucketName.of("namespace"))
             .build();
 
         s3BlobStoreDAO = new S3BlobStoreDAO(s3Configuration);
@@ -53,8 +54,8 @@ class S3DeDuplicationBlobStoreTest implements BlobStoreContract {
         testee = BlobStoreFactory.builder()
             .blobStoreDAO(s3BlobStoreDAO)
             .blobIdFactory(new HashBlobId.Factory())
-            .defaultBucketName()
-            .deduplication();
+            .bucket(BucketName.of("namespace"))
+            .passthrough();
     }
 
     @AfterEach
@@ -76,5 +77,4 @@ class S3DeDuplicationBlobStoreTest implements BlobStoreContract {
     public BlobId.Factory blobIdFactory() {
         return new HashBlobId.Factory();
     }
-
 }

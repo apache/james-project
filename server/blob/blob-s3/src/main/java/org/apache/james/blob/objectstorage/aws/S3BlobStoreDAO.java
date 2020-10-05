@@ -87,21 +87,24 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     private static final int MAX_RETRIES = 5;
 
     private final InstrumentedPool<S3AsyncClient> clientPool;
+    private final BucketNameResolver bucketNameResolver;
 
     @Inject
-    S3BlobStoreDAO(AwsS3AuthConfiguration configuration, Region region) {
+    S3BlobStoreDAO(S3BlobStoreConfiguration configuration) {
+        AwsS3AuthConfiguration authConfiguration = configuration.getSpecificAuthConfiguration();
+
         S3Configuration pathStyleAccess = S3Configuration.builder()
             .pathStyleAccessEnabled(true)
             .build();
 
         Callable<S3AsyncClient> clientCreator = () -> S3AsyncClient.builder()
             .credentialsProvider(StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(configuration.getAccessKeyId(), configuration.getSecretKey())))
+                AwsBasicCredentials.create(authConfiguration.getAccessKeyId(), authConfiguration.getSecretKey())))
             .httpClientBuilder(NettyNioAsyncHttpClient.builder()
                 .maxConcurrency(100)
                 .maxPendingConnectionAcquires(10_000))
-            .endpointOverride(configuration.getEndpoint())
-            .region(region.asAws())
+            .endpointOverride(authConfiguration.getEndpoint())
+            .region(configuration.getRegion().asAws())
             .serviceConfiguration(pathStyleAccess)
             .build();
 
@@ -111,6 +114,11 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .maxPendingAcquireUnbounded()
             .sizeUnbounded()
             .fifo();
+
+        bucketNameResolver = BucketNameResolver.builder()
+            .prefix(configuration.getBucketPrefix())
+            .namespace(configuration.getNamespace())
+            .build();
     }
 
     public void start() {
@@ -125,10 +133,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return getObject(bucketName, blobId)
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
+        return getObject(resolvedBucketName, blobId)
             .map(response -> ReactorUtils.toInputStream(response.flux))
-            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + bucketName, e))
-            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + bucketName, e))
+            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
             .block();
     }
 
@@ -174,24 +184,28 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
         return clientPool.withPoolable(client -> Mono.fromFuture(() ->
                 client.getObject(
-                    builder -> builder.bucket(bucketName.asString()).key(blobId.asString()),
+                    builder -> builder.bucket(resolvedBucketName.asString()).key(blobId.asString()),
                     AsyncResponseTransformer.toBytes())))
             .next()
-            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + bucketName, e))
-            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + bucketName, e))
+            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
             .map(BytesWrapper::asByteArray);
     }
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
         return clientPool.withPoolable(client -> Mono.fromFuture(() ->
                 client.putObject(
-                    builder -> builder.bucket(bucketName.asString()).key(blobId.asString()).contentLength((long) data.length),
+                    builder -> builder.bucket(resolvedBucketName.asString()).key(blobId.asString()).contentLength((long) data.length),
                     AsyncRequestBody.fromBytes(data))))
             .next()
-            .retryWhen(createBucketOnRetry(bucketName))
+            .retryWhen(createBucketOnRetry(resolvedBucketName))
             .then();
     }
 
@@ -215,18 +229,20 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
         return Mono.using(content::openStream,
             stream ->
                 clientPool.withPoolable(client -> Mono.fromFuture(() ->
                     client.putObject(
                         Throwing.<PutObjectRequest.Builder>consumer(
-                            builder -> builder.bucket(bucketName.asString()).contentLength(content.size()).key(blobId.asString()))
+                            builder -> builder.bucket(resolvedBucketName.asString()).contentLength(content.size()).key(blobId.asString()))
                         .sneakyThrow(),
                         AsyncRequestBody.fromPublisher(
                             DataChunker.chunkStream(stream, CHUNK_SIZE))))).next(),
             Throwing.consumer(InputStream::close),
             LAZY)
-            .retryWhen(createBucketOnRetry(bucketName))
+            .retryWhen(createBucketOnRetry(resolvedBucketName))
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
             .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
             .then();
@@ -244,8 +260,10 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
         return clientPool.withPoolable(client -> Mono.fromFuture(() ->
-                client.deleteObject(delete -> delete.bucket(bucketName.asString()).key(blobId.asString()))))
+                client.deleteObject(delete -> delete.bucket(resolvedBucketName.asString()).key(blobId.asString()))))
             .next()
             .then()
             .onErrorResume(NoSuchBucketException.class, e -> Mono.empty());
@@ -253,6 +271,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
+        return deleteResolvedBucket(resolvedBucketName);
+    }
+
+    private Mono<Void> deleteResolvedBucket(BucketName bucketName) {
         return emptyBucket(bucketName)
             .onErrorResume(t -> Mono.just(bucketName))
             .flatMap(ignore -> clientPool.withPoolable(client -> Mono.fromFuture(() ->
@@ -287,7 +311,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     public Mono<Void> deleteAllBuckets() {
         return clientPool.withPoolable(client -> Mono.fromFuture(client::listBuckets)
                 .flatMapIterable(ListBucketsResponse::buckets)
-                     .flatMap(bucket -> deleteBucket(BucketName.of(bucket.name()))))
+                     .flatMap(bucket -> deleteResolvedBucket(BucketName.of(bucket.name()))))
             .then();
     }
 }

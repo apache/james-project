@@ -30,8 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-class S3DeDuplicationBlobStoreTest implements BlobStoreContract {
-
+class S3PrefixTest implements BlobStoreContract {
     private static BlobStore testee;
     private static S3BlobStoreDAO s3BlobStoreDAO;
 
@@ -46,6 +45,7 @@ class S3DeDuplicationBlobStoreTest implements BlobStoreContract {
         S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
             .authConfiguration(authConfiguration)
             .region(dockerAwsS3.dockerAwsS3().region())
+            .bucketPrefix("prefix")
             .build();
 
         s3BlobStoreDAO = new S3BlobStoreDAO(s3Configuration);
@@ -54,7 +54,7 @@ class S3DeDuplicationBlobStoreTest implements BlobStoreContract {
             .blobStoreDAO(s3BlobStoreDAO)
             .blobIdFactory(new HashBlobId.Factory())
             .defaultBucketName()
-            .deduplication();
+            .passthrough();
     }
 
     @AfterEach
@@ -76,5 +76,4 @@ class S3DeDuplicationBlobStoreTest implements BlobStoreContract {
     public BlobId.Factory blobIdFactory() {
         return new HashBlobId.Factory();
     }
-
 }
