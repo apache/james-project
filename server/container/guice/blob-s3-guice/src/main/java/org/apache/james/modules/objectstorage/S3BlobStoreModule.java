@@ -25,8 +25,6 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
-import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
@@ -49,18 +47,6 @@ public class S3BlobStoreModule extends AbstractModule {
         } catch (FileNotFoundException e) {
             throw new ConfigurationException(ConfigurationComponent.NAME + " configuration was not found");
         }
-    }
-
-    @Provides
-    @Singleton
-    private AwsS3AuthConfiguration awsS3AuthConfiguration(S3BlobStoreConfiguration s3BlobStoreConfiguration) {
-        return s3BlobStoreConfiguration.getSpecificAuthConfiguration();
-    }
-
-    @Provides
-    @Singleton
-    private Region region(S3BlobStoreConfiguration s3BlobStoreConfiguration) {
-        return s3BlobStoreConfiguration.getRegion();
     }
 
     @ProvidesIntoSet
