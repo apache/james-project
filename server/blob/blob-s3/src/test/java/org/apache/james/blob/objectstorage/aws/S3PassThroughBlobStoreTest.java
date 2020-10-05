@@ -48,7 +48,7 @@ class S3PassThroughBlobStoreTest implements BlobStoreContract {
             .blobStoreDAO(s3BlobStoreDAO)
             .blobIdFactory(new HashBlobId.Factory())
             .defaultBucketName()
-            .deduplication();
+            .passthrough();
     }
 
     @AfterEach

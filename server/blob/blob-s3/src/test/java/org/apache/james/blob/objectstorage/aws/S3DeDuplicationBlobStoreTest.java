@@ -48,7 +48,7 @@ class S3DeDuplicationBlobStoreTest implements BlobStoreContract {
             .blobStoreDAO(s3BlobStoreDAO)
             .blobIdFactory(new HashBlobId.Factory())
             .defaultBucketName()
-            .passthrough();
+            .deduplication();
     }
 
     @AfterEach
