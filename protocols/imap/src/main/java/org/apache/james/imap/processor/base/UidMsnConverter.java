@@ -19,70 +19,97 @@
 
 package org.apache.james.imap.processor.base;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.TreeSet;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import io.vavr.collection.TreeSet;
+import com.google.common.collect.Lists;
 
 public class UidMsnConverter {
 
-    @VisibleForTesting TreeSet<MessageUid> uids;
+    public static final int FIRST_MSN = 1;
+
+    @VisibleForTesting final ArrayList<MessageUid> uids;
 
     public UidMsnConverter() {
-        this.uids = TreeSet.empty();
+        this.uids = Lists.newArrayList();
     }
 
-    public synchronized void addAll(java.util.List<MessageUid> addedUids) {
-        uids = uids.addAll(addedUids);
+    public synchronized void addAll(List<MessageUid> addedUids) {
+        TreeSet<MessageUid> tmp = new TreeSet<>();
+        tmp.addAll(uids);
+        tmp.addAll(addedUids);
+        uids.clear();
+        uids.addAll(tmp);
     }
 
-    public NullableMessageSequenceNumber getMsn(MessageUid uid) {
-        return uids
-            .zipWithIndex()
-            .toMap(Function.identity())
-            .get(uid)
-            .map(position -> NullableMessageSequenceNumber.of(position + 1))
-            .getOrElse(NullableMessageSequenceNumber.noMessage());
+    public synchronized NullableMessageSequenceNumber getMsn(MessageUid uid) {
+        int position = Collections.binarySearch(uids, uid);
+        if (position < 0) {
+            return NullableMessageSequenceNumber.noMessage();
+        }
+        return NullableMessageSequenceNumber.of(position + 1);
     }
 
-    public Optional<MessageUid> getUid(int msn) {
-        return uids
-            .drop(msn - 1)
-            .headOption()
-            .toJavaOptional();
+    public synchronized Optional<MessageUid> getUid(int msn) {
+        if (msn <= uids.size() && msn > 0) {
+            return Optional.of(uids.get(msn - 1));
+        }
+        return Optional.empty();
     }
 
-    public Optional<MessageUid> getLastUid() {
-        return uids.lastOption().toJavaOptional();
+    public synchronized Optional<MessageUid> getLastUid() {
+        if (uids.isEmpty()) {
+            return Optional.empty();
+        }
+        return getUid(getLastMsn());
     }
 
-    public Optional<MessageUid> getFirstUid() {
-        return uids.headOption().toJavaOptional();
+    public synchronized Optional<MessageUid> getFirstUid() {
+        return getUid(FIRST_MSN);
     }
 
-    public int getNumMessage() {
+    public synchronized int getNumMessage() {
         return uids.size();
     }
 
     public synchronized void remove(MessageUid uid) {
-        uids = uids.remove(uid);
+        uids.remove(uid);
     }
 
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return uids.isEmpty();
     }
 
     public synchronized void clear() {
-        uids = TreeSet.empty();
+        uids.clear();
     }
 
     public synchronized void addUid(MessageUid uid) {
-        uids = uids.add(uid);
+        if (uids.contains(uid)) {
+            return;
+        }
+        if (isLastUid(uid)) {
+            uids.add(uid);
+        } else {
+            uids.add(uid);
+            Collections.sort(uids);
+        }
     }
 
+    private boolean isLastUid(MessageUid uid) {
+        Optional<MessageUid> lastUid = getLastUid();
+        return !lastUid.isPresent() ||
+            lastUid.get().compareTo(uid) < 0;
+    }
+
+    private int getLastMsn() {
+        return getNumMessage();
+    }
 }
