@@ -3176,32 +3176,42 @@ trait EmailQueryMethodContract {
 
   @Test
   def shouldLimitResultByLimitAndPosition(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+
     val message: Message = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
-    val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
-    sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
-
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
-    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
-      .getMessageId
-
-    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
-      .getMessageId
-
+    mailboxProbe.createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(4).toInstant))
+        .build(message))
       .getMessageId
 
-    server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+    val messageId2: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(3).toInstant))
+        .build(message))
       .getMessageId
+
+    val messageId3: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
+        .build(message))
+      .getMessageId
+
+    mailboxProbe
+      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(1).toInstant))
+        .build(message))
+      .getMessageId
+
+    sendMessageToBobInbox(server, message, Date.from(Date.from(ZonedDateTime.now().toInstant).toInstant))
 
     val request =
       s"""{
