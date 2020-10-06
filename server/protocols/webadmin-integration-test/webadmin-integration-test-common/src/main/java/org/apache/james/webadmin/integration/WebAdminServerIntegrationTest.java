@@ -99,6 +99,19 @@ public abstract class WebAdminServerIntegrationTest {
     }
 
     @Test
+    void metricsRoutesShouldBeExposed() {
+        String body = when()
+                .get("/metrics").prettyPeek()
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .extract()
+                .body()
+                .asString();
+
+        assertThat(body).contains("outgoingMails_total 0.0");
+    }
+
+    @Test
     void healthCheckShouldReturn200WhenCalledRepeatedly() {
         given().get(HealthCheckRoutes.HEALTHCHECK);
         given().get(HealthCheckRoutes.HEALTHCHECK);

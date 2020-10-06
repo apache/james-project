@@ -17,53 +17,57 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.integration;
+package org.apache.james.webadmin.dropwizard;
 
 import static io.restassured.RestAssured.when;
-import static org.hamcrest.core.IsNot.not;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.GuiceJamesServer;
-import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.routes.HealthCheckRoutes;
-import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.codahale.metrics.MetricRegistry;
+
 import io.restassured.RestAssured;
 
-public abstract class AuthorizedEndpointsTest {
+class MetricsRoutesTest {
+    WebAdminServer webAdminServer;
+    MetricRegistry registry;
 
     @BeforeEach
-    void setUp(GuiceJamesServer guiceJamesServer) {
-        WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
+    void setUp() {
+        registry = new MetricRegistry();
+        webAdminServer = WebAdminUtils.createWebAdminServer(new MetricsRoutes(registry))
+            .start();
 
-        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
+        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .build();
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
     @Test
-    void getHealthchecksShouldNotNeedAuthentication() {
-        when()
-            .get(HealthCheckRoutes.HEALTHCHECK)
-        .then()
-            .statusCode(not(HttpStatus.UNAUTHORIZED_401));
-    }
+    void getShouldReturnSeveralMetric() {
+        registry.counter("easy").inc();
+        registry.counter("hard").inc();
+        registry.counter("hard").inc();
 
-    @Test
-    void getMetricsShouldNotNeedAuthentication() {
-        when()
+        String body = when()
             .get("/metrics")
         .then()
-            .statusCode(not(HttpStatus.UNAUTHORIZED_401));
-    }
+            .statusCode(HttpStatus.OK_200)
+            .extract()
+            .body()
+            .asString();
 
-    @Test
-    void getSwaggerShouldNotNeedAuthentication() {
-        when()
-            .get(SwaggerRoutes.SWAGGER_ENDPOINT)
-        .then()
-            .statusCode(not(HttpStatus.UNAUTHORIZED_401));
+        assertThat(body)
+            .contains(
+                    "# HELP hard Generated from Dropwizard metric import (metric=hard, type=com.codahale.metrics.Counter)\n" +
+                    "# TYPE hard gauge\n" +
+                    "hard 2.0\n" +
+                    "# HELP easy Generated from Dropwizard metric import (metric=easy, type=com.codahale.metrics.Counter)\n" +
+                    "# TYPE easy gauge\n" +
+                    "easy 1.0");
     }
 }

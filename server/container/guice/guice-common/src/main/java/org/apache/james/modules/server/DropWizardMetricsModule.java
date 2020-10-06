@@ -37,12 +37,12 @@ public class DropWizardMetricsModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new LoggingMetricsModule());
-        bind(MetricRegistry.class).in(Scopes.SINGLETON);
         bind(DropWizardMetricFactory.class).in(Scopes.SINGLETON);
         bind(DropWizardGaugeRegistry.class).in(Scopes.SINGLETON);
         bind(DropWizardJVMMetrics.class).in(Scopes.SINGLETON);
         bind(MetricFactory.class).to(DropWizardMetricFactory.class);
 
+        bind(MetricRegistry.class).toInstance(new MetricRegistry());
         bind(GaugeRegistry.class).to(DropWizardGaugeRegistry.class);
     }
 

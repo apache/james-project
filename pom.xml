@@ -1847,6 +1847,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-webadmin-dropwizard-metrics</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-webadmin-integration-test-common</artifactId>
                 <version>${project.version}</version>
             </dependency>

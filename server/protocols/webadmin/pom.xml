@@ -36,6 +36,7 @@
         <module>webadmin-cassandra</module>
         <module>webadmin-cassandra-data</module>
         <module>webadmin-core</module>
+        <module>webadmin-dropwizard-metrics</module>
         <module>webadmin-data</module>
         <module>webadmin-jmap</module>
         <module>webadmin-mailbox</module>

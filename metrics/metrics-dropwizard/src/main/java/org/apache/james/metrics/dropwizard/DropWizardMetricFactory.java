@@ -81,5 +81,6 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
     @PreDestroy
     public void stop() {
         jmxReporter.stop();
+        metricRegistry.removeMatching((name, metric) -> true);
     }
 }
