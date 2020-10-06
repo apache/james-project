@@ -18,13 +18,15 @@ image::storage.png[Storage responsibilities for the Distributed Server]
  * *Tika* (optional) enables text extraction from attachments, thus improving full text search results.
  * *SpamAssassin* (optional) can be used for Spam detection and user feedback is supported.
 
+xref:distributed/architecture/consistency-model.adoc[This page] further details Distributed James consistency model.
+
 == Protocols
 
 The following protocols are supported and can be used to interact with the Distributed Server:
 
 * *SMTP*
 * *IMAP*
-* xref:distributed/operate/webadmin.adoc[WebAdmin]] REST Administration API
+* xref:distributed/operate/webadmin.adoc[WebAdmin] REST Administration API
 * *LMTP*
 
 The following protocols should be considered experimental

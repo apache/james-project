@@ -1,0 +1,4 @@
+= Distributed James Server &mdash; Consistency Model
+:navtitle: Consistency Model
+
+TODO
