@@ -1,4 +1,56 @@
 = Distributed James Server &mdash; Consistency Model
 :navtitle: Consistency Model
 
+TODO introduction
+
+== Data Replication
+
+TODO
+
+=== Cassandra consistency model
+
+TODO
+
+==== About multi data-center setups
+
+TODO
+
+=== ElasticSearch consistency model
+
+TODO
+
+=== RabbitMQ consistency model
+
+TODO
+
+== Denormalization
+
+TODO
+
+=== Solve Inconsistency tasks
+
+TODO
+
+=== Read repairs
+
+TODO
+
+== Consistency across data stores
+
+TODO
+
+=== Write path organisation
+
+TODO
+
+=== Cassandra <=> ElasticSearch
+
+TODO
+
+==== Asynchronous writes to other data stores
+
+TODO
+
+=== ReIndexing
+
 TODO
