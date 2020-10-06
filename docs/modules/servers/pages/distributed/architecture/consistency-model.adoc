@@ -1,19 +1,55 @@
 = Distributed James Server &mdash; Consistency Model
 :navtitle: Consistency Model
 
-TODO introduction
+This page presents the consistency model used by the Distributed Server and
+points to the tools built around it.
 
 == Data Replication
 
-TODO
+The Distributed Server relies on different storage technologies, all having their own
+consistency models.
+
+These data stores replicates data in order to enforce some level of availability. We call
+this process replication. By consistency, we mean the ability for all replica to hold the
+same data. By availability, we mean the ability for a replica to answer a request.
+
+In distributed systems, link:https://en.wikipedia.org/wiki/CAP_theorem[according to the CAP theorem],
+as we will necessarily encounter network partitions, then tradeoffs needs to be made between
+consistency and availability.
+
+This section details this tradeoff for data stores used by the Distributed Server.
 
 === Cassandra consistency model
 
-TODO
+link:https://cassandra.apache.org/[Cassandra] is an
+link:https://en.wikipedia.org/wiki/Eventual_consistency[eventually consistent] data store.
+This means that replica can hold diverging data, but are guaranteed to converge over time.
+
+Several mechanisms are built in Cassandra to enforce this convergence, and needs to be
+leveraged by *Distributed Server Administrator*. Namely
+link:https://docs.datastax.com/en/dse/5.1/dse-admin/datastax_enterprise/tools/nodetool/toolsRepair.html[nodetool repair],
+link:https://cassandra.apache.org/doc/latest/operating/hints.html[Hinted hand-off] and
+link:https://cassandra.apache.org/doc/latest/operating/read_repair.html[Read repair].
+
+The Distributed Server tries to mitigate inconsistencies by relying on
+link:https://docs.datastax.com/en/archived/cassandra/3.0/cassandra/dml/dmlConfigConsistency.html[QUORUM] read and write levels.
+This means that a majority of replica are needed for read and write operations to be performed.
+
+Critical business operations, like UID allocation, relies on strong consistency mechanism brought by
+link:https://www.datastax.com/blog/2013/07/lightweight-transactions-cassandra-20[lightweight transaction].
 
 ==== About multi data-center setups
 
-TODO
+As strong consistency is required for some operations, and as lightweight transactions are
+slow across data centers, running James with a
+link:https://docs.datastax.com/en/ddac/doc/datastax_enterprise/production/DDACmultiDCperWorkloadType.html[multi data-center]
+Cassandra setup is discouraged.
+
+However xref:distributed/configure/cassandra.adoc[this page] enables setting alternative read level,
+which could be acceptable regarding limited requirements.
+
+Running the Distributed Server in a multi datacenter setup will likely result either in data loss,
+or very slow operations.
 
 === ElasticSearch consistency model
 
