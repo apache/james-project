@@ -24,7 +24,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.json.MailboxGetSerializationTest._
 import org.apache.james.jmap.json.MailboxSerializationTest.MAILBOX
-import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
+import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mailbox.model.{MailboxId, TestId}
@@ -47,22 +47,6 @@ object MailboxGetSerializationTest {
 
 class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
   "Deserialize MailboxGetRequest" should {
-    "succeed on invalid mailboxId" in {
-      // as they are unparsed
-      val expectedRequestObject = MailboxGetRequest(
-        accountId = ACCOUNT_ID,
-        ids = Some(Ids(List("ab#?"))),
-        properties = None)
-
-      SERIALIZER.deserializeMailboxGetRequest(
-        """
-          |{
-          |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
-          |  "ids": ["ab#?"]
-          |}
-          |""".stripMargin) should equal(JsSuccess(expectedRequestObject))
-    }
-
     "succeed when properties are missing" in {
       val expectedRequestObject = MailboxGetRequest(
         accountId = ACCOUNT_ID,

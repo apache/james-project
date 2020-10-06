@@ -24,14 +24,13 @@ import javax.inject.Inject
 import org.apache.james.jmap.api.vacation.{VacationRepository, AccountId => JavaAccountId}
 import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
-import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
+import org.apache.james.jmap.mail.VacationResponse.{UNPARSED_SINGLETON, UnparsedVacationResponseId}
 import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
 import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, MissingCapabilityException, Properties}
-import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
@@ -67,7 +66,7 @@ class VacationResponseGetMethod @Inject()(vacationRepository: VacationRepository
     {
       val requestedProperties: Properties = request.properties.getOrElse(VacationResponse.allProperties)
       (requestedProperties -- VacationResponse.allProperties match {
-        case invalidProperties if invalidProperties.isEmpty() => getVacationResponse(request, invocation.processingContext, mailboxSession)
+        case invalidProperties if invalidProperties.isEmpty() => getVacationResponse(request, mailboxSession)
           .reduce(VacationResponseGetResult.empty, VacationResponseGetResult.merge)
           .map(vacationResult => vacationResult.asResponse(request.accountId))
           .map(vacationResponseGetResponse => Invocation(
@@ -97,16 +96,16 @@ class VacationResponseGetMethod @Inject()(vacationRepository: VacationRepository
   }
 
   private def getVacationResponse(vacationResponseGetRequest: VacationResponseGetRequest,
-                                  processingContext: ProcessingContext,
                                   mailboxSession: MailboxSession): SFlux[VacationResponseGetResult] =
     vacationResponseGetRequest.ids match {
       case None => getVacationSingleton(mailboxSession)
         .map(VacationResponseGetResult.found)
         .flux()
       case Some(ids) => SFlux.fromIterable(ids.value)
-        .flatMap(id => processingContext.resolveVacationResponseId(id)
-          .fold(_ => SMono.just(VacationResponseGetResult.notFound(id)),
-            _ => getVacationSingleton(mailboxSession).map(VacationResponseGetResult.found)))
+        .flatMap(id => id match {
+          case UNPARSED_SINGLETON => getVacationSingleton(mailboxSession).map(VacationResponseGetResult.found)
+          case _ => SMono.just(VacationResponseGetResult.notFound(id))
+        })
     }
 
   private def getVacationSingleton(mailboxSession: MailboxSession): SMono[VacationResponse] = {

@@ -23,13 +23,9 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.numeric.NonNegInt
 import org.apache.james.jmap.json.BackReferenceDeserializer
-import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
-import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
-import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId}
-import org.apache.james.mailbox.model.MailboxId
-import play.api.libs.json.{JsArray, JsError, JsObject, JsResult, JsSuccess, JsValue, Reads}
+import play.api.libs.json.{JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Reads}
 
 import scala.util.Try
 
@@ -115,7 +111,7 @@ case class JsonPath(parts: List[JsonPathPart]) {
       }
   }
 
-  private def readWildcard(jsValue: JsValue) = jsValue match {
+  private def readWildcard(jsValue: JsValue): JsResult[JsValue] = jsValue match {
     case JsArray(arrayItems) =>
       val evaluationResults: List[JsResult[JsValue]] = arrayItems.toList.map(evaluate)
 
@@ -146,8 +142,7 @@ case class InvalidResultReferenceException(message: String) extends IllegalArgum
 
 case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], private val invocations: Map[MethodCallId, Invocation]) {
 
- def recordCreatedId(clientId: ClientId, serverId: ServerId): ProcessingContext = ProcessingContext(creationIds + (clientId -> serverId), invocations)
- private def retrieveServerId(clientId: ClientId): Option[ServerId] = creationIds.get(clientId)
+  def recordCreatedId(clientId: ClientId, serverId: ServerId): ProcessingContext = ProcessingContext(creationIds + (clientId -> serverId), invocations)
 
   def recordInvocation(invocation: Invocation): ProcessingContext = ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation))
 
@@ -163,6 +158,9 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
   private def backReferenceResolver(): Reads[JsValue] = {
     case JsArray(value) => resolveBackReferences(value)
     case JsObject(underlying) => resolveBackReference(underlying)
+    case JsString(value) if value.startsWith("#") => resolveCreationId(value)
+        .fold(_ => JsSuccess(JsString(value)),
+          serverId => JsSuccess(JsString(serverId.value.value)))
     case others: JsValue => JsSuccess(others)
   }
 
@@ -174,7 +172,7 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
   }
 
   private def resolveBackReference(underlying: collection.Map[String, JsValue]): JsResult[JsObject] = {
-    val resolutions = underlying.map(resolveBackReference)
+    val resolutions = underlying.map(resolveBackReference(_))
 
     val firstError = resolutions.flatMap({
       case Left(jsError) => Some(jsError)
@@ -196,7 +194,12 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
       BackReferenceDeserializer.deserializeBackReference(entry._2) match {
         case JsSuccess(backReference, _) => resolveBackReference(newEntry, backReference)
         // If the JSON object is not a back-reference continue parsing (it could be a creationId)
-        case JsError(_) => propagateBackReferenceResolution(entry)
+        case JsError(_) =>
+          backReferenceResolver().reads(entry._2)
+            .fold(e => Left(JsError(e)),
+              json => resolveCreationId(entry._1)
+                .fold(_ => Right((entry._1, json)),
+                  serverId => Right((serverId.value.value, json))))
       }
     } else {
       propagateBackReferenceResolution(entry)
@@ -225,17 +228,9 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
     .map(backReference.resolve)
     .getOrElse(JsError("Back reference could not be resolved"))
 
- def resolveMailboxId(unparsedMailboxId: UnparsedMailboxId, mailboxIdFactory: MailboxId.Factory): Either[IllegalArgumentException, MailboxId] =
-  Id.validate(unparsedMailboxId.value)
-   .flatMap(id => resolveServerId(ClientId(id)))
-   .flatMap(serverId => parseMailboxId(mailboxIdFactory, serverId))
-
- private def parseMailboxId(mailboxIdFactory: MailboxId.Factory, serverId: ServerId) =
-  try {
-   Right(mailboxIdFactory.fromString(serverId.value.value))
-  } catch {
-   case e: IllegalArgumentException => Left(e)
-  }
+  private def resolveCreationId(creationId: String): Either[IllegalArgumentException, ServerId] =
+    Id.validate(creationId)
+      .flatMap(id => resolveServerId(ClientId(id)))
 
  private def resolveServerId(id: ClientId): Either[IllegalArgumentException, ServerId] =
   id.retrieveOriginalClientId
@@ -244,10 +239,6 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
       .getOrElse(Left[IllegalArgumentException, ServerId](new IllegalArgumentException(s"$id was not used in previously defined creationIds")))))
     .getOrElse(Right(ServerId(id.value)))
 
- def resolveVacationResponseId(unparsedVacationId: UnparsedVacationResponseId): Either[IllegalArgumentException, Id] =
-  if (unparsedVacationId.equals(VACATION_RESPONSE_ID)) {
-   Right(VACATION_RESPONSE_ID)
-  } else {
-   Left(new IllegalArgumentException(s"$unparsedVacationId is not a valid VacationResponse ID"))
-  }
+  private def retrieveServerId(clientId: ClientId): Option[ServerId] = creationIds.get(clientId)
+
 }

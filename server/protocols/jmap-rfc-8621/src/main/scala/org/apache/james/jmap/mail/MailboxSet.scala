@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.mail
 
-import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
@@ -27,15 +26,15 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.Username
 import org.apache.james.jmap.json.MailboxSerializer
+import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
-import org.apache.james.jmap.mail.MailboxSetRequest.{MailboxCreationId, UnparsedMailboxId, UnparsedMailboxIdConstraint}
+import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
 import org.apache.james.jmap.method.{MailboxCreationParseException, WithAccountId}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, Properties, SetError}
-import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.{MailboxSession, Role}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
@@ -48,14 +47,7 @@ case class MailboxSetRequest(accountId: AccountId,
                              onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy]) extends WithAccountId
 
 object MailboxSetRequest {
-  type UnparsedMailboxIdConstraint = NonEmpty
   type MailboxCreationId = String Refined NonEmpty
-  type UnparsedMailboxId = String Refined UnparsedMailboxIdConstraint
-
-  def asUnparsed(mailboxId: MailboxId): UnparsedMailboxId = refined.refineV[UnparsedMailboxIdConstraint](mailboxId.serialize()) match {
-    case Left(e) => throw new IllegalArgumentException(e)
-    case scala.Right(value) => value
-  }
 }
 
 case class RemoveEmailsOnDestroy(value: Boolean) extends AnyVal
@@ -114,12 +106,11 @@ object MailboxPatchObject {
 }
 
 case class MailboxPatchObject(value: Map[String, JsValue]) {
-  def validate(processingContext: ProcessingContext,
-               mailboxIdFactory: MailboxId.Factory,
+  def validate(mailboxIdFactory: MailboxId.Factory,
                serializer: MailboxSerializer,
                capabilities: Set[CapabilityIdentifier],
                mailboxSession: MailboxSession): Either[PatchUpdateValidationException, ValidatedMailboxPatchObject] = {
-    val asUpdatedIterable = updates(serializer, capabilities, processingContext, mailboxIdFactory, mailboxSession)
+    val asUpdatedIterable = updates(serializer, capabilities, mailboxIdFactory, mailboxSession)
 
     val maybeParseException: Option[PatchUpdateValidationException] = asUpdatedIterable
       .flatMap(x => x match {
@@ -174,12 +165,11 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
 
   def updates(serializer: MailboxSerializer,
               capabilities: Set[CapabilityIdentifier],
-              processingContext: ProcessingContext,
               mailboxIdFactory: MailboxId.Factory,
               mailboxSession: MailboxSession): Iterable[Either[PatchUpdateValidationException, Update]] = value.map({
     case (property, newValue) => property match {
       case "name" => NameUpdate.parse(newValue, mailboxSession)
-      case "parentId" => ParentIdUpdate.parse(newValue, processingContext, mailboxIdFactory)
+      case "parentId" => ParentIdUpdate.parse(newValue, mailboxIdFactory)
       case "sharedWith" => SharedWithResetUpdate.parse(serializer, capabilities)(newValue)
       case "role" => Left(ServerSetPropertyException(MailboxPatchObject.roleProperty))
       case "sortOrder" => Left(ServerSetPropertyException(MailboxPatchObject.sortOrderProperty))
@@ -331,15 +321,13 @@ object SharedWithPartialUpdate {
 }
 
 object ParentIdUpdate {
-  def parse(newValue: JsValue, processingContext: ProcessingContext, mailboxIdFactory: MailboxId.Factory):
+  def parse(newValue: JsValue, mailboxIdFactory: MailboxId.Factory):
     Either[PatchUpdateValidationException, Update] =
       (newValue match {
         case JsString(id) =>
-          for {
-            unparsedMailboxId <- refineV[UnparsedMailboxIdConstraint](id)
-            mailboxId <- processingContext.resolveMailboxId(unparsedMailboxId, mailboxIdFactory).left.map(_.getMessage)
-          } yield changeParentTo(mailboxId)
-
+          MailboxGet.parseString(mailboxIdFactory)(id)
+            .fold(e => Left(e.getMessage),
+              mailboxId => scala.Right(changeParentTo(mailboxId)))
         case JsNull => scala.Right(removeParent())
 
         case _ => Left("Expecting a JSON string or null as an argument")

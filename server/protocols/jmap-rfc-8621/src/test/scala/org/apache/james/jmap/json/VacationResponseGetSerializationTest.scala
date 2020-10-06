@@ -27,14 +27,11 @@ import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RES
 import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
 import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
 import org.apache.james.jmap.model.{AccountId, Properties}
-import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsSuccess, Json}
 
 object VacationResponseGetSerializationTest {
-  private val FACTORY: MailboxId.Factory = new TestId.Factory
-
   private val ACCOUNT_ID: AccountId = AccountId(id)
 
   private val SINGLETON_ID: UnparsedVacationResponseId = "singleton"

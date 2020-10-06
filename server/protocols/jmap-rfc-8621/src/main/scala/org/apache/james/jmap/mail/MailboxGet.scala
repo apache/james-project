@@ -19,10 +19,36 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
+import eu.timepit.refined
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.collection.NonEmpty
+import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Properties}
+import org.apache.james.mailbox.model.MailboxId
+
+import scala.util.{Failure, Try}
+
+object MailboxGet {
+  type UnparsedMailboxIdConstraint = NonEmpty
+  type UnparsedMailboxId = String Refined UnparsedMailboxIdConstraint
+
+  def asUnparsed(mailboxId: MailboxId): UnparsedMailboxId = refined.refineV[UnparsedMailboxIdConstraint](mailboxId.serialize()) match {
+    case Left(e) => throw new IllegalArgumentException(e)
+    case scala.Right(value) => value
+  }
+
+  def parse(mailboxIdFactory: MailboxId.Factory)(unparsed: UnparsedMailboxId): Try[MailboxId] =
+    parseString(mailboxIdFactory)(unparsed.value)
+
+  def parseString(mailboxIdFactory: MailboxId.Factory)(unparsed: String): Try[MailboxId] =
+    unparsed match {
+      case a if a.startsWith("#") =>
+        Failure(new IllegalArgumentException(s"$unparsed was not used in previously defined creationIds"))
+      case _ => Try(mailboxIdFactory.fromString(unparsed))
+    }
+}
 
 case class Ids(value: List[UnparsedMailboxId])
 

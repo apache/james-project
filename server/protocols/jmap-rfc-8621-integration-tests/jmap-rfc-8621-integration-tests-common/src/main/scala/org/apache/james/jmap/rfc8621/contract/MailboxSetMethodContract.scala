@@ -2807,7 +2807,7 @@ trait MailboxSetMethodContract {
          |      "notDestroyed": {
          |        "#C42": {
          |          "type": "invalidArguments",
-         |          "description": "#C42 is not a mailboxId: ClientId(#C42) was not used in previously defined creationIds"
+         |          "description": "#C42 is not a mailboxId: #C42 was not used in previously defined creationIds"
          |        }
          |      }
          |    }, "c2"],
@@ -2881,7 +2881,7 @@ trait MailboxSetMethodContract {
          |      "notDestroyed": {
          |        "#C42": {
          |          "type": "invalidArguments",
-         |          "description": "#C42 is not a mailboxId: ClientId(#C42) was not used in previously defined creationIds"
+         |          "description": "#C42 is not a mailboxId: #C42 was not used in previously defined creationIds"
          |        }
          |      }
          |    }, "c2"]
@@ -2919,7 +2919,7 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-    val message = "# is not a mailboxId: Left predicate of ((!(0 < 1) && !(0 > 255)) && \\\"\\\".matches(\\\"^[#a-zA-Z0-9-_]*$\\\")) failed: Predicate taking size() = 0 failed: Left predicate of (!(0 < 1) && !(0 > 255)) failed: Predicate (0 < 1) did not fail."
+    val message = "# is not a mailboxId: # was not used in previously defined creationIds"
     assertThatJson(response).isEqualTo(
       s"""{
          |  "sessionState": "75128aab4b1b",
@@ -6728,7 +6728,7 @@ trait MailboxSetMethodContract {
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "ClientId(#C42) was not used in previously defined creationIds",
+         |          "description": "#C42 was not used in previously defined creationIds",
          |          "properties": ["parentId"]
          |        }
          |      }
@@ -7357,7 +7357,7 @@ trait MailboxSetMethodContract {
          |                "notUpdated": {
          |                    "#invalid": {
          |                        "type": "invalidArguments",
-         |                        "description": "ClientId(#invalid) was not used in previously defined creationIds"
+         |                        "description": "#invalid was not used in previously defined creationIds"
          |                    }
          |                }
          |            },

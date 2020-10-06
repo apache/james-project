@@ -38,6 +38,7 @@ case class HtmlBody(value: String)
 
 object VacationResponse {
   val VACATION_RESPONSE_ID: Id = "singleton"
+  val UNPARSED_SINGLETON: UnparsedVacationResponseId = "singleton"
 
   type UnparsedVacationResponseId = String Refined NonEmpty
 

@@ -21,9 +21,8 @@ package org.apache.james.jmap.json
 
 import java.time.format.DateTimeFormatter
 
-import org.apache.james.jmap.mail.MailboxSetRequest.UnparsedMailboxId
 import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
-import org.apache.james.jmap.mail.{FromDate, HtmlBody, IsEnabled, NotFound, Subject, TextBody, ToDate, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound}
+import org.apache.james.jmap.mail.{FromDate, HtmlBody, IsEnabled, Subject, TextBody, ToDate, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound}
 import org.apache.james.jmap.model._
 import org.apache.james.jmap.vacation.{VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import play.api.libs.json._
@@ -38,9 +37,6 @@ object VacationSerializer {
   }
   private implicit val vacationResponseSetRequestReads: Reads[VacationResponseSetRequest] = Json.reads[VacationResponseSetRequest]
 
-  private implicit def notFoundWrites(implicit mailboxIdWrites: Writes[UnparsedMailboxId]): Writes[NotFound] =
-    notFound => JsArray(notFound.value.toList.map(mailboxIdWrites.writes))
-
   private implicit val vacationResponseSetUpdateResponseWrites: Writes[VacationResponseUpdateResponse] = Json.valueWrites[VacationResponseUpdateResponse]
 
   private implicit val vacationResponseSetErrorWrites: Writes[VacationResponseSetError] = Json.writes[VacationResponseSetError]
@@ -51,6 +47,11 @@ object VacationSerializer {
     utcDate => JsString(utcDate.asUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")))
 
   private implicit val vacationResponseIdWrites: Writes[VacationResponseId] = _ => JsString(VACATION_RESPONSE_ID.value)
+  private implicit val vacationResponseIdReads: Reads[VacationResponseId] = {
+    case JsString("singleton") => JsSuccess(VacationResponseId())
+    case JsString(_) => JsError("Only singleton is supported as a VacationResponseId")
+    case _ => JsError("Expecting JsString(singleton) to represent a VacationResponseId")
+  }
   private implicit val isEnabledWrites: Writes[IsEnabled] = Json.valueWrites[IsEnabled]
   private implicit val fromDateWrites: Writes[FromDate] = Json.valueWrites[FromDate]
   private implicit val toDateWrites: Writes[ToDate] = Json.valueWrites[ToDate]
@@ -61,7 +62,8 @@ object VacationSerializer {
   implicit def vacationResponseWrites(properties: Properties): Writes[VacationResponse] = Json.writes[VacationResponse]
     .transform(properties.filter(_))
 
-  private implicit val vacationResponseIdReads: Reads[VacationResponseIds] = Json.valueReads[VacationResponseIds]
+  private implicit val vacationResponseIdsReads: Reads[VacationResponseIds] = Json.valueReads[VacationResponseIds]
+
   private implicit val vacationResponseGetRequest: Reads[VacationResponseGetRequest] = Json.reads[VacationResponseGetRequest]
 
   private implicit def vacationResponseNotFoundWrites(implicit idWrites: Writes[UnparsedVacationResponseId]): Writes[VacationResponseNotFound] =
