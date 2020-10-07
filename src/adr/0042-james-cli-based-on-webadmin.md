@@ -34,6 +34,12 @@ We decided to write a new CLI client, running on top of the JVM, communicating w
 
   * server/protocols/webadmin-cli
 
+* Distribute this CLI as a GraalVM native image.
+
+* Write a man page.
+
+  * Picocli generates beautiful documentation for our CLI (HTML, PDF and Unix man pages).
+
 * We decided to adopt a more modern, modular CLI syntax:
 
 ```   
