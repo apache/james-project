@@ -57,7 +57,8 @@ TODO
 
 === RabbitMQ consistency model
 
-TODO
+The Distributed Server relies out of the box on a single RabbitMQ server, thus consistency concerns
+are not (yet) applicable. Availability concerns are applicable.
 
 == Denormalization
 
