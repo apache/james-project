@@ -1,10 +1,12 @@
 # 42. James CLI based on webadmin API
+
 Date: 2020-10-05
 
 ## Status
+
 Accepted (lazy consensus).
 
- ## Context
+## Context
 
 James servers offer a command-line interface in order to interact with the server. However, it relies on the JMX protocol, which is known to be insecure. The JMX server embedded in Apache James, also used by the command line client is exposed to a java de-serialization issue according to [NVD-CVE-2017-12628 Detail](https://nvd.nist.gov/vuln/detail/CVE-2017-12628), and thus can be used to execute arbitrary commands. 
 
@@ -22,7 +24,7 @@ We decided to write a new CLI client, running on top of the JVM, communicating w
 
   * http client: ***Feign library***. We used it as an http client in other parts of James so we continue to use it.
 
-  * CLI: ***Picocli library***. Picocli is a one-file command line parsing framework writed by Java that allows we to create command line applications with almost no code. It allows mixing Options with positional Parameters (Eg: don't have to follow order Options then Parameters), [automatic type conversion](https://picocli.info/#_strongly_typed_everything) of command line arguments to the type of the annotated field, provide Automatic Help and better Subcommand Support, easily handle Exceptions.
+  * CLI: ***Picocli library***. Picocli is a one-file command line parsing framework written in Java that allows us to create command line applications with almost no code. It allows mixing Options with positional Parameters (Eg: no need to the follow order Options then Parameters), [automatic type conversion](https://picocli.info/#_strongly_typed_everything) of command line arguments to the type of the annotated field, provide Automatic Help and better Subcommand Support, easily handle Exceptions.
 
 * How will we limit breaking changes this new CLI will cause?
 
