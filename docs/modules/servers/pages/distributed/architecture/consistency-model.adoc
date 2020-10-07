@@ -53,7 +53,12 @@ or very slow operations.
 
 === ElasticSearch consistency model
 
-TODO
+ElasticSearch relies on link:https://www.elastic.co/blog/a-new-era-for-cluster-coordination-in-elasticsearch[strong consistency]
+with home grown algorithm.
+
+The 6.x release line, that the distributed server is using is known to be slow to recover from failures.
+
+Be aware that data is asynchronously indexed in ElasticSearch, changes will be eventually visible.
 
 === RabbitMQ consistency model
 
