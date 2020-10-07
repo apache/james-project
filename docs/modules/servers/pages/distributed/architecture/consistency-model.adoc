@@ -9,15 +9,15 @@ points to the tools built around it.
 The Distributed Server relies on different storage technologies, all having their own
 consistency models.
 
-These data stores replicates data in order to enforce some level of availability. We call
+These data stores replicate data in order to enforce some level of availability. We call
 this process replication. By consistency, we mean the ability for all replica to hold the
 same data. By availability, we mean the ability for a replica to answer a request.
 
 In distributed systems, link:https://en.wikipedia.org/wiki/CAP_theorem[according to the CAP theorem],
-as we will necessarily encounter network partitions, then tradeoffs needs to be made between
+as we will necessarily encounter network partitions, then trade-offs need to be made between
 consistency and availability.
 
-This section details this tradeoff for data stores used by the Distributed Server.
+This section details this trade-off for data stores used by the Distributed Server.
 
 === Cassandra consistency model
 
@@ -25,7 +25,7 @@ link:https://cassandra.apache.org/[Cassandra] is an
 link:https://en.wikipedia.org/wiki/Eventual_consistency[eventually consistent] data store.
 This means that replica can hold diverging data, but are guaranteed to converge over time.
 
-Several mechanisms are built in Cassandra to enforce this convergence, and needs to be
+Several mechanisms are built in Cassandra to enforce this convergence, and need to be
 leveraged by *Distributed Server Administrator*. Namely
 link:https://docs.datastax.com/en/dse/5.1/dse-admin/datastax_enterprise/tools/nodetool/toolsRepair.html[nodetool repair],
 link:https://cassandra.apache.org/doc/latest/operating/hints.html[Hinted hand-off] and
@@ -35,7 +35,7 @@ The Distributed Server tries to mitigate inconsistencies by relying on
 link:https://docs.datastax.com/en/archived/cassandra/3.0/cassandra/dml/dmlConfigConsistency.html[QUORUM] read and write levels.
 This means that a majority of replica are needed for read and write operations to be performed.
 
-Critical business operations, like UID allocation, relies on strong consistency mechanism brought by
+Critical business operations, like UID allocation, rely on strong consistency mechanisms brought by
 link:https://www.datastax.com/blog/2013/07/lightweight-transactions-cassandra-20[lightweight transaction].
 
 ==== About multi data-center setups
@@ -71,7 +71,7 @@ level across denormalization tables.
 
 We write to a "table of truth" first, then duplicate the data to denormalization tables.
 
-The Distributed server offers several mechanism to mitigate these inconsistencies:
+The Distributed server offers several mechanisms to mitigate these inconsistencies:
 
  - Writes to denormalization tables are retried.
  - Some xref:distributed/operate/guide.adoc#_solving_cassandra_inconsistencies[SolveInconsistencies tasks] are exposed and are able to heal a given denormalization table.
@@ -82,20 +82,32 @@ when implemented for a given denormalization, enables auto-healing. When an inco
 
 == Consistency across data stores
 
-TODO
+The Distributed Server leverages several data stores:
+
+ - Cassandra is used for metadata storage
+ - ElasticSearch for search
+ - Object Storage for large object storage
+
+Thus the Distributed Server also offers mechanisms to enforce consistency across data stores.
 
 === Write path organisation
 
-TODO
+The primary data stores are composed of Cassandra for metadata and Object storage for binary data.
+
+To ensure the data referenced in Cassandra is pointing to a valid object in the object store, we write
+the object store payload first, then write the corresponding metadata in Cassandra.
+
+Such a procedure avoids metadata pointing to unexisting blobs, however might lead to some unreferenced
+blobs.
 
 === Cassandra <=> ElasticSearch
 
-TODO
+After being written to the primary stores (namely Cassandra & Object Storage), email content is
+asynchronously indexed into ElasticSearch.
 
-==== Asynchronous writes to other data stores
+This process, called the EventBus, which retries temporary errors, and stores transient errors for
+later admin-triggered retries is described further xref:distributed/operate/guide.adoc#_mailbox_event_bus[here].
+His role is to spread load and limit inconsistencies.
 
-TODO
-
-=== ReIndexing
-
-TODO
+Furthermore, some xref:distributed/operate/guide.adoc#_usual_troubleshooting_procedures[re-indexing tasks]
+enables to re-synchronise ElasticSearch content with the primary data stores
