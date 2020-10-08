@@ -168,7 +168,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
 
     @Override
     public MailboxMapper createMailboxMapper(MailboxSession mailboxSession) {
-        return new CassandraMailboxMapper(mailboxDAO, mailboxPathDAO, mailboxPathV2DAO, mailboxPathV3DAO, userMailboxRightsDAO, aclMapper, versionManager);
+        return new CassandraMailboxMapper(mailboxDAO, mailboxPathDAO, mailboxPathV2DAO, mailboxPathV3DAO, userMailboxRightsDAO, aclMapper, versionManager, cassandraConfiguration);
     }
 
     @Override

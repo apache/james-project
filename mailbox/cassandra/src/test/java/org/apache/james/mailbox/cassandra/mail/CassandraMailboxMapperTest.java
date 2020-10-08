@@ -119,7 +119,8 @@ class CassandraMailboxMapperTest {
             mailboxPathV3DAO,
             userMailboxRightsDAO,
             aclMapper,
-            new CassandraSchemaVersionManager(versionDAO));
+            new CassandraSchemaVersionManager(versionDAO),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Nested

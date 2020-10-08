@@ -25,6 +25,7 @@ import java.time.Duration;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
@@ -60,7 +61,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
     private static final Duration MAX_RETRY_BACKOFF = Duration.ofMillis(1000);
     private static final SchemaVersion MAILBOX_PATH_V_3_MIGRATION_PERFORMED_VERSION = new SchemaVersion(8);
-    private static final float READ_REPAIR_CHANCE = 0.1f;
 
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraMailboxPathDAOImpl mailboxPathDAO;
@@ -69,6 +69,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private final CassandraACLMapper cassandraACLMapper;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
     private final CassandraSchemaVersionManager versionManager;
+    private final CassandraConfiguration cassandraConfiguration;
     private final SecureRandom secureRandom;
 
     @Inject
@@ -78,7 +79,8 @@ public class CassandraMailboxMapper implements MailboxMapper {
                                   CassandraMailboxPathV3DAO mailboxPathV3DAO,
                                   CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                   CassandraACLMapper aclMapper,
-                                  CassandraSchemaVersionManager versionManager) {
+                                  CassandraSchemaVersionManager versionManager,
+                                  CassandraConfiguration cassandraConfiguration) {
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
         this.mailboxPathV2DAO = mailboxPathV2DAO;
@@ -86,6 +88,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         this.userMailboxRightsDAO = userMailboxRightsDAO;
         this.cassandraACLMapper = aclMapper;
         this.versionManager = versionManager;
+        this.cassandraConfiguration = cassandraConfiguration;
         this.secureRandom = new SecureRandom();
     }
 
@@ -134,7 +137,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private boolean shouldReadRepair() {
-        return secureRandom.nextFloat() < READ_REPAIR_CHANCE;
+        return secureRandom.nextFloat() < cassandraConfiguration.getMailboxReadRepair();
     }
 
 

@@ -103,7 +103,8 @@ class MailboxPathV2MigrationTest {
                 userMailboxRightsDAO,
                 CassandraConfiguration.DEFAULT_CONFIGURATION,
                 cassandraCluster.getCassandraConsistenciesConfiguration()),
-            new CassandraSchemaVersionManager(new CassandraSchemaVersionDAO(cassandra.getConf())));
+            new CassandraSchemaVersionManager(new CassandraSchemaVersionDAO(cassandra.getConf())),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Test

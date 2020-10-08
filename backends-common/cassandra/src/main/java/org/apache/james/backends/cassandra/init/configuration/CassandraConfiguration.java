@@ -39,6 +39,7 @@ public class CassandraConfiguration {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CassandraConfiguration.class);
 
     public static final int DEFAULT_MESSAGE_CHUNK_SIZE_ON_READ = 100;
+    public static final float DEFAULT_MAILBOX_READ_REPAIR = 0.1f;
     public static final int DEFAULT_EXPUNGE_BATCH_SIZE = 50;
     public static final int DEFAULT_UPDATE_FLAGS_BATCH_SIZE = 20;
     public static final int DEFAULT_FLAGS_UPDATE_MESSAGE_MAX_RETRY = 1000;
@@ -55,6 +56,7 @@ public class CassandraConfiguration {
     public static final List<String> VALID_CONSISTENCY_LEVEL_REGULAR = ImmutableList.of("QUORUM", "LOCAL_QUORUM", "EACH_QUORUM");
     public static final List<String> VALID_CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION = ImmutableList.of("SERIAL", "LOCAL_SERIAL");
 
+    private static final String MAILBOX_READ_REPAIR = "mailbox.read.repair.chance";
     private static final String MAILBOX_MAX_RETRY_ACL = "mailbox.max.retry.acl";
     private static final String MAILBOX_MAX_RETRY_MODSEQ = "mailbox.max.retry.modseq";
     private static final String MAILBOX_MAX_RETRY_UID = "mailbox.max.retry.uid";
@@ -85,6 +87,7 @@ public class CassandraConfiguration {
         private Optional<Integer> messageAttachmentIdsReadTimeout = Optional.empty();
         private Optional<String> consistencyLevelRegular = Optional.empty();
         private Optional<String> consistencyLevelLightweightTransaction = Optional.empty();
+        private Optional<Float> mailboxReadRepair = Optional.empty();
 
         public Builder messageReadChunkSize(int value) {
             Preconditions.checkArgument(value > 0, "messageReadChunkSize needs to be strictly positive");
@@ -152,6 +155,13 @@ public class CassandraConfiguration {
             return this;
         }
 
+        public Builder mailboxReadRepair(float value) {
+            Preconditions.checkArgument(value >= 0, "mailboxReadRepair needs to be positive");
+            Preconditions.checkArgument(value <= 1, "mailboxReadRepair needs to be less or equal to 1");
+            this.mailboxReadRepair = Optional.of(value);
+            return this;
+        }
+
         public Builder messageReadChunkSize(Optional<Integer> value) {
             value.ifPresent(this::messageReadChunkSize);
             return this;
@@ -207,6 +217,11 @@ public class CassandraConfiguration {
             return this;
         }
 
+        public Builder mailboxReadRepair(Optional<Float> value) {
+            value.ifPresent(this::mailboxReadRepair);
+            return this;
+        }
+
         public Builder consistencyLevelRegular(String value) {
             Preconditions.checkArgument(VALID_CONSISTENCY_LEVEL_REGULAR.contains(value),
                 "consistencyLevelRegular needs to be one of the following: " + String.join(", ", VALID_CONSISTENCY_LEVEL_REGULAR));
@@ -252,7 +267,8 @@ public class CassandraConfiguration {
                 attachmentV2MigrationReadTimeout.orElse(DEFAULT_ATTACHMENT_V2_MIGRATION_READ_TIMEOUT),
                 messageAttachmentIdsReadTimeout.orElse(DEFAULT_MESSAGE_ATTACHMENT_ID_MIGRATION_READ_TIMEOUT),
                 consistencyLevelRegular,
-                consistencyLevelLightweightTransaction);
+                consistencyLevelLightweightTransaction,
+                mailboxReadRepair.orElse(DEFAULT_MAILBOX_READ_REPAIR));
         }
     }
 
@@ -288,6 +304,8 @@ public class CassandraConfiguration {
                     propertiesConfiguration.getString(CONSISTENCY_LEVEL_REGULAR)))
             .consistencyLevelLightweightTransaction(Optional.ofNullable(
                     propertiesConfiguration.getString(CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION)))
+            .mailboxReadRepair(Optional.ofNullable(
+                propertiesConfiguration.getFloat(MAILBOX_READ_REPAIR, null)))
             .build();
     }
 
@@ -304,13 +322,14 @@ public class CassandraConfiguration {
     private final int messageAttachmentIdsReadTimeout;
     private final String consistencyLevelRegular;
     private final String consistencyLevelLightweightTransaction;
+    private final float mailboxReadRepair;
 
     @VisibleForTesting
     CassandraConfiguration(int aclMaxRetry, int messageReadChunkSize, int expungeChunkSize,
                            int flagsUpdateMessageIdMaxRetry, int flagsUpdateMessageMaxRetry,
                            int modSeqMaxRetry, int uidMaxRetry, int fetchNextPageInAdvanceRow,
                            int blobPartSize, final int attachmentV2MigrationReadTimeout, int messageAttachmentIdsReadTimeout,
-                           String consistencyLevelRegular, String consistencyLevelLightweightTransaction) {
+                           String consistencyLevelRegular, String consistencyLevelLightweightTransaction, float mailboxReadRepair) {
         this.aclMaxRetry = aclMaxRetry;
         this.messageReadChunkSize = messageReadChunkSize;
         this.expungeChunkSize = expungeChunkSize;
@@ -324,6 +343,11 @@ public class CassandraConfiguration {
         this.messageAttachmentIdsReadTimeout = messageAttachmentIdsReadTimeout;
         this.consistencyLevelRegular = consistencyLevelRegular;
         this.consistencyLevelLightweightTransaction = consistencyLevelLightweightTransaction;
+        this.mailboxReadRepair = mailboxReadRepair;
+    }
+
+    public float getMailboxReadRepair() {
+        return mailboxReadRepair;
     }
 
     public int getBlobPartSize() {
@@ -390,6 +414,7 @@ public class CassandraConfiguration {
                 && Objects.equals(this.flagsUpdateMessageMaxRetry, that.flagsUpdateMessageMaxRetry)
                 && Objects.equals(this.modSeqMaxRetry, that.modSeqMaxRetry)
                 && Objects.equals(this.uidMaxRetry, that.uidMaxRetry)
+                && Objects.equals(this.mailboxReadRepair, that.mailboxReadRepair)
                 && Objects.equals(this.fetchNextPageInAdvanceRow, that.fetchNextPageInAdvanceRow)
                 && Objects.equals(this.blobPartSize, that.blobPartSize)
                 && Objects.equals(this.attachmentV2MigrationReadTimeout, that.attachmentV2MigrationReadTimeout)
@@ -405,7 +430,7 @@ public class CassandraConfiguration {
         return Objects.hash(aclMaxRetry, messageReadChunkSize, expungeChunkSize, flagsUpdateMessageIdMaxRetry,
             flagsUpdateMessageMaxRetry, modSeqMaxRetry, uidMaxRetry, fetchNextPageInAdvanceRow,
             blobPartSize, attachmentV2MigrationReadTimeout, messageAttachmentIdsReadTimeout,
-            consistencyLevelRegular, consistencyLevelLightweightTransaction);
+            consistencyLevelRegular, consistencyLevelLightweightTransaction, mailboxReadRepair);
     }
 
     @Override
@@ -418,6 +443,7 @@ public class CassandraConfiguration {
             .add("flagsUpdateMessageMaxRetry", flagsUpdateMessageMaxRetry)
             .add("modSeqMaxRetry", modSeqMaxRetry)
             .add("fetchNextPageInAdvanceRow", fetchNextPageInAdvanceRow)
+            .add("mailboxReadRepair", mailboxReadRepair)
             .add("uidMaxRetry", uidMaxRetry)
             .add("blobPartSize", blobPartSize)
             .add("attachmentV2MigrationReadTimeout", attachmentV2MigrationReadTimeout)
