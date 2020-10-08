@@ -78,7 +78,6 @@ public class WebAdminServerModule extends AbstractModule {
     protected void configure() {
         install(new TaskRoutesModule());
         install(new HealthCheckRoutesModule());
-        install(new MetricsRoutesModule());
 
         bind(JsonTransformer.class).in(Scopes.SINGLETON);
         bind(WebAdminServer.class).in(Scopes.SINGLETON);
