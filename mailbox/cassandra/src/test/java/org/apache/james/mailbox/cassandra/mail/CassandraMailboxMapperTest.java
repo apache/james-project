@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -50,6 +51,7 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.ExactName;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
+import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -59,6 +61,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
+
+import reactor.core.publisher.Mono;
 
 class CassandraMailboxMapperTest {
     private static final UidValidity UID_VALIDITY = UidValidity.of(52);
@@ -186,8 +190,8 @@ class CassandraMailboxMapperTest {
 
                 cassandra.getConf()
                     .registerScenario(fail()
-                    .times(1)
-                    .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
+                        .times(1)
+                        .whenQueryStartsWith("INSERT INTO mailbox (id,name,uidvalidity,mailboxbase) VALUES (:id,:name,:uidvalidity,:mailboxbase);"));
 
                 testee.rename(inboxRenamed).block();
 
@@ -236,8 +240,8 @@ class CassandraMailboxMapperTest {
 
                 cassandra.getConf()
                     .registerScenario(fail()
-                    .times(1)
-                    .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
+                        .times(1)
+                        .whenQueryStartsWith("DELETE FROM mailbox WHERE id=:id;"));
 
                 testee.delete(inbox).block();
 
@@ -248,6 +252,85 @@ class CassandraMailboxMapperTest {
                         .isEmpty();
                     softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery)
                         .collectList().block())
+                        .isEmpty();
+                }));
+            }
+        }
+
+        @Nested
+        class ReadRepairs {
+            @Test
+            void findMailboxByIdShouldEventuallyFixInconsistencyWhenMailboxIsNotInPath() {
+                mailboxDAO.save(MAILBOX)
+                    .block();
+
+                IntStream.range(0, 100).forEach(i ->
+                    testee.findMailboxById(MAILBOX_ID)
+                        .onErrorResume(e -> Mono.empty())
+                        .block());
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly(softly)
+                        .assertThat(testee.findMailboxById(MAILBOX_ID).block())
+                        .isEqualTo(MAILBOX);
+                    softly(softly)
+                        .assertThat(testee.findMailboxByPath(MAILBOX_PATH).block())
+                        .isEqualTo(MAILBOX);
+                }));
+            }
+
+            @Test
+            void orphanMailboxIdEntriesCanNotBeReadRepaired() {
+                mailboxDAO.save(MAILBOX)
+                    .block();
+
+                IntStream.range(0, 100).forEach(i ->
+                    testee.findMailboxByPath(MAILBOX_PATH)
+                        .onErrorResume(e -> Mono.empty())
+                        .block());
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly(softly)
+                        .assertThat(testee.findMailboxById(MAILBOX_ID).block())
+                        .isEqualTo(MAILBOX);
+                    softly.assertThat(MailboxReactorUtils.blockOptional(testee.findMailboxByPath(MAILBOX_PATH)))
+                        .isEmpty();
+                }));
+            }
+
+            @Test
+            void orphanPathEntriesCanNotBeRepairedByIdReads() {
+                mailboxPathV3DAO.save(MAILBOX)
+                    .block();
+
+                IntStream.range(0, 100).forEach(i ->
+                    testee.findMailboxById(MAILBOX_ID)
+                        .onErrorResume(e -> Mono.empty())
+                        .block());
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThatThrownBy(() -> MailboxReactorUtils.blockOptional(testee.findMailboxById(MAILBOX_ID)))
+                        .isInstanceOf(MailboxNotFoundException.class);
+                    softly(softly)
+                        .assertThat(testee.findMailboxByPath(MAILBOX_PATH).block())
+                        .isEqualTo(MAILBOX);
+                }));
+            }
+
+            @Test
+            void findMailboxByPathShouldFixInconsistencyWhenMailboxIsNotReferencedById() {
+                mailboxPathV3DAO.save(MAILBOX)
+                    .block();
+
+                IntStream.range(0, 100).forEach(i ->
+                    testee.findMailboxByPath(MAILBOX_PATH)
+                        .onErrorResume(e -> Mono.empty())
+                        .block());
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThatThrownBy(() -> MailboxReactorUtils.blockOptional(testee.findMailboxById(MAILBOX_ID)))
+                        .isInstanceOf(MailboxNotFoundException.class);
+                    softly.assertThat(MailboxReactorUtils.blockOptional(testee.findMailboxByPath(MAILBOX_PATH)))
                         .isEmpty();
                 }));
             }

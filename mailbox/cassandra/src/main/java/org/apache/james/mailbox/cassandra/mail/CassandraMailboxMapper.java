@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 
 import javax.inject.Inject;
@@ -29,6 +30,7 @@ import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -58,6 +60,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
     private static final Duration MAX_RETRY_BACKOFF = Duration.ofMillis(1000);
     private static final SchemaVersion MAILBOX_PATH_V_3_MIGRATION_PERFORMED_VERSION = new SchemaVersion(8);
+    private static final float READ_REPAIR_CHANCE = 0.1f;
 
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraMailboxPathDAOImpl mailboxPathDAO;
@@ -66,6 +69,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private final CassandraACLMapper cassandraACLMapper;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
     private final CassandraSchemaVersionManager versionManager;
+    private final SecureRandom secureRandom;
 
     @Inject
     public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO,
@@ -82,11 +86,57 @@ public class CassandraMailboxMapper implements MailboxMapper {
         this.userMailboxRightsDAO = userMailboxRightsDAO;
         this.cassandraACLMapper = aclMapper;
         this.versionManager = versionManager;
+        this.secureRandom = new SecureRandom();
     }
 
     private Mono<Boolean> needMailboxPathPreviousVersionsSupport() {
         return versionManager.isBefore(MAILBOX_PATH_V_3_MIGRATION_PERFORMED_VERSION);
     }
+
+    private Mono<Mailbox> performReadRepair(CassandraId id) {
+        if (shouldReadRepair()) {
+            return mailboxDAO.retrieveMailbox(id)
+                .flatMap(mailboxEntry -> SolveMailboxInconsistenciesService.Inconsistency
+                    .detectMailboxDaoInconsistency(mailboxEntry,
+                        mailboxPathV3DAO.retrieve(mailboxEntry.generateAssociatedPath()))
+                    .flatMap(inconsistency ->
+                        inconsistency.fix(new SolveMailboxInconsistenciesService.Context(), mailboxDAO, mailboxPathV3DAO)
+                            .then(Mono.just(mailboxEntry))));
+        }
+        return mailboxDAO.retrieveMailbox(id);
+    }
+
+    private Mono<Mailbox> performReadRepair(MailboxPath path) {
+        if (shouldReadRepair()) {
+            return mailboxPathV3DAO.retrieve(path)
+                .flatMap(this::performPathReadRepair);
+        }
+        return mailboxPathV3DAO.retrieve(path);
+
+    }
+
+    private Flux<Mailbox> performReadRepair(Flux<Mailbox> pathEntries) {
+        return pathEntries.flatMap(mailboxPathEntry -> {
+            if (shouldReadRepair()) {
+                return performPathReadRepair(mailboxPathEntry);
+            }
+            return Mono.just(mailboxPathEntry);
+        });
+    }
+
+    private Mono<Mailbox> performPathReadRepair(Mailbox mailboxPathEntry) {
+        return SolveMailboxInconsistenciesService.Inconsistency
+            .detectMailboxPathDaoInconsistency(mailboxPathEntry,
+                mailboxDAO.retrieveMailbox((CassandraId) mailboxPathEntry.getMailboxId()))
+            .flatMap(inconsistency ->
+                inconsistency.fix(new SolveMailboxInconsistenciesService.Context(), mailboxDAO, mailboxPathV3DAO)
+                    .then(Mono.just(mailboxPathEntry)));
+    }
+
+    private boolean shouldReadRepair() {
+        return secureRandom.nextFloat() < READ_REPAIR_CHANCE;
+    }
+
 
     @Override
     public Mono<Void> delete(Mailbox mailbox) {
@@ -111,7 +161,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public Mono<Mailbox> findMailboxByPath(MailboxPath path) {
-        return mailboxPathV3DAO.retrieve(path)
+        return performReadRepair(path)
             .switchIfEmpty(fromPreviousTable(path))
             .flatMap(this::addAcl);
     }
@@ -127,9 +177,9 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public Mono<Boolean> pathExists(MailboxPath mailboxName) {
-        return mailboxPathV3DAO.retrieve(mailboxName)
-            .switchIfEmpty(fromPreviousTable(mailboxName))
+    public Mono<Boolean> pathExists(MailboxPath path) {
+        return performReadRepair(path)
+            .switchIfEmpty(fromPreviousTable(path))
             .hasElement();
     }
 
@@ -166,7 +216,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     private Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         Mono<MailboxACL> acl = retrieveAcl(mailboxId);
-        Mono<Mailbox> simpleMailbox = mailboxDAO.retrieveMailbox(mailboxId);
+        Mono<Mailbox> simpleMailbox = performReadRepair(mailboxId);
 
         return acl.zipWith(simpleMailbox, this::addAcl);
     }
@@ -186,7 +236,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         String fixedNamespace = query.getFixedNamespace();
         Username fixedUser = query.getFixedUser();
 
-        return listMailboxes(fixedNamespace, fixedUser)
+        return performReadRepair(listMailboxes(fixedNamespace, fixedUser))
             .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
             .distinct(Mailbox::generateAssociatedPath)
             .flatMap(this::addAcl);
@@ -259,7 +309,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter) {
-        return listMailboxes(mailbox.getNamespace(), mailbox.getUser())
+        return performReadRepair(listMailboxes(mailbox.getNamespace(), mailbox.getUser()))
             .filter(idAndPath -> isPathChildOfMailbox(idAndPath, mailbox, delimiter))
             .hasElements();
     }
@@ -270,7 +320,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public Flux<Mailbox> list() {
-        return mailboxDAO.retrieveAllMailboxes()
+        return performReadRepair(mailboxDAO.retrieveAllMailboxes())
             .flatMap(this::toMailboxWithAcl);
     }
 
@@ -307,9 +357,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
-        return userMailboxRightsDAO.listRightsForUser(userName)
-            .filter(mailboxId -> mailboxId.getRight().contains(right))
-            .map(Pair::getLeft)
-            .flatMap(this::retrieveMailbox);
+        return performReadRepair(
+            userMailboxRightsDAO.listRightsForUser(userName)
+                .filter(mailboxId -> mailboxId.getRight().contains(right))
+                .map(Pair::getLeft)
+                .flatMap(this::retrieveMailbox));
     }
 }
