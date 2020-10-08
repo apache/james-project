@@ -36,7 +36,7 @@
   MD5, SHA-256, SHA-512, NONE
 -->
 <usersrepository name="LocalUsers" class="org.apache.james.user.jpa.JPAUsersRepository">
-    <algorithm>MD5</algorithm>
+    <algorithm>SHA-512</algorithm>
     <enableVirtualHosting>true</enableVirtualHosting>
 
     <!-- User's name. Allow an user to access to the <a href="https://tools.ietf.org/html/rfc4616#section-2">impersonation command</a>, acting on the behalf of any user. -->

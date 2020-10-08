@@ -56,7 +56,7 @@ public class JPAUsersDAO implements UsersDAO, Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) {
-        algo = config.getString("algorithm", "MD5");
+        algo = config.getString("algorithm", "SHA-512");
     }
 
     /**

@@ -19,7 +19,7 @@
  -->
 
 <usersrepository name="LocalUsers" class="org.apache.james.user.jpa.JPAUsersRepository">
-    <algorithm>MD5</algorithm>
+    <algorithm>SHA-512</algorithm>
     <enableVirtualHosting>true</enableVirtualHosting>    
 </usersrepository>
 

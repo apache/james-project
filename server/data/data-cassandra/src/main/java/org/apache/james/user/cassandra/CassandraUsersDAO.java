@@ -51,7 +51,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
 public class CassandraUsersDAO implements UsersDAO {
-    private static final String DEFAULT_ALGO_VALUE = "SHA1";
+    private static final String DEFAULT_ALGO_VALUE = "SHA-512";
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement getUserStatement;

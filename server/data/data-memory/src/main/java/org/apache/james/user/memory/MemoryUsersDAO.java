@@ -39,12 +39,12 @@ public class MemoryUsersDAO implements UsersDAO, Configurable {
 
     MemoryUsersDAO() {
         this.userByName = new HashMap<>();
-        this.algo = "MD5";
+        this.algo = "SHA-512";
     }
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) {
-        algo = config.getString("algorithm", "MD5");
+        algo = config.getString("algorithm", "SHA-512");
     }
 
     public void clear() {
