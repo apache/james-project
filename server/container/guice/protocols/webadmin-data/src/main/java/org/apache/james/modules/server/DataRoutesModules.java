@@ -21,6 +21,7 @@ package org.apache.james.modules.server;
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.MappingSourceModule;
+import org.apache.james.webadmin.mdc.RequestLogger;
 import org.apache.james.webadmin.routes.AddressMappingRoutes;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.DomainMappingsRoutes;
@@ -29,6 +30,7 @@ import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.apache.james.webadmin.routes.GroupsRoutes;
 import org.apache.james.webadmin.routes.MappingRoutes;
 import org.apache.james.webadmin.routes.RegexMappingRoutes;
+import org.apache.james.webadmin.routes.UserCreationRequestLogger;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 
@@ -52,5 +54,7 @@ public class DataRoutesModules extends AbstractModule {
 
         Multibinder<JsonTransformerModule> jsonTransformerModuleMultibinder = Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
         jsonTransformerModuleMultibinder.addBinding().to(MappingSourceModule.class);
+
+        Multibinder.newSetBinder(binder(), RequestLogger.class).addBinding().to(UserCreationRequestLogger.class);
     }
 }

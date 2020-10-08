@@ -37,6 +37,7 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.mdc.LoggingRequestFilter;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.apache.james.webadmin.routes.ForwardRoutes;
@@ -51,7 +52,11 @@ import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import io.restassured.RestAssured;
 
 public abstract class WebAdminServerIntegrationTest {
@@ -172,6 +177,19 @@ public abstract class WebAdminServerIntegrationTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(dataProbe.listUsers()).contains(USERNAME);
+    }
+
+    @Test
+    void putShouldNotLogThePassword() {
+        ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(LoggingRequestFilter.class);
+
+        with()
+            .body("{\"password\":\"password\"}")
+            .put(SPECIFIC_USER);
+
+        assertThat(loggingEvents.list)
+                .hasSize(1)
+                .allSatisfy(loggingEvent -> assertThat(loggingEvent.getMDCPropertyMap()).doesNotContainKey("request-body"));
     }
 
     @Test
@@ -365,5 +383,17 @@ public abstract class WebAdminServerIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("type", is("MailboxesExportTask"));
+    }
+
+
+    public static ListAppender<ILoggingEvent> getListAppenderForClass(Class clazz) {
+        Logger logger = (Logger) LoggerFactory.getLogger(clazz);
+
+        ListAppender<ILoggingEvent> loggingEventListAppender = new ListAppender<>();
+        loggingEventListAppender.start();
+
+        logger.addAppender(loggingEventListAppender);
+
+        return loggingEventListAppender;
     }
 }

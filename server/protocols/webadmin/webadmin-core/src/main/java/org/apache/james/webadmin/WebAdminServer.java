@@ -63,17 +63,20 @@ public class WebAdminServer implements Startable {
     private final Service service;
     private final AuthenticationFilter authenticationFilter;
     private final MetricFactory metricFactory;
+    private final LoggingRequestFilter loggingRequestFilter;
 
     @Inject
     protected WebAdminServer(WebAdminConfiguration configuration,
-                          @Named("webAdminRoutes") List<Routes> routesList,
-                          AuthenticationFilter authenticationFilter,
-                          MetricFactory metricFactory) {
+                             @Named("webAdminRoutes") List<Routes> routesList,
+                             AuthenticationFilter authenticationFilter,
+                             MetricFactory metricFactory,
+                             LoggingRequestFilter loggingRequestFilter) {
         this.configuration = configuration;
         this.privateRoutes = privateRoutes(routesList);
         this.publicRoutes = publicRoutes(routesList);
         this.authenticationFilter = authenticationFilter;
         this.metricFactory = metricFactory;
+        this.loggingRequestFilter = loggingRequestFilter;
         this.service = Service.ignite();
     }
 
@@ -116,7 +119,7 @@ public class WebAdminServer implements Startable {
 
     private void configureMDC() {
         service.before(new MDCFilter());
-        service.before(new LoggingRequestFilter());
+        service.before(loggingRequestFilter);
         service.after(new LoggingResponseFilter());
         service.after(new MDCCleanupFilter());
     }

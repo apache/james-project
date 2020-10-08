@@ -32,6 +32,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
+import org.apache.james.webadmin.mdc.LoggingRequestFilter;
 
 import com.google.common.collect.ImmutableList;
 
@@ -45,7 +46,7 @@ import reactor.util.retry.Retry;
 public class WebAdminUtils {
     private static class ConcurrentSafeWebAdminServer extends WebAdminServer {
         ConcurrentSafeWebAdminServer(WebAdminConfiguration configuration, List<Routes> routesList, AuthenticationFilter authenticationFilter, MetricFactory metricFactory) {
-            super(configuration, routesList, authenticationFilter, metricFactory);
+            super(configuration, routesList, authenticationFilter, metricFactory, LoggingRequestFilter.create());
         }
 
         /**

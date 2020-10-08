@@ -21,6 +21,10 @@ package org.apache.james.webadmin.mdc;
 
 import static org.apache.james.webadmin.authentication.AuthenticationFilter.LOGIN;
 
+import java.util.Set;
+
+import javax.inject.Inject;
+
 import org.apache.james.util.MDCStructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,13 +36,46 @@ import spark.Request;
 import spark.Response;
 
 public class LoggingRequestFilter implements Filter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoggingRequestFilter.class);
-    static final String REQUEST_BODY = "request-body";
-    static final String METHOD = "method";
-    static final String ENDPOINT = "endpoint";
-    static final String QUERY_PARAMETERS = "queryParameters";
-    static final String IP = "ip";
-    static final String REQUEST_ID = "requestId";
+    private static class DefaultRequestLogger implements RequestLogger {
+        private static final DefaultRequestLogger INSTANCE = new DefaultRequestLogger();
+
+        @Override
+        public boolean applies(Request request) {
+            return true;
+        }
+
+        @Override
+        public void log(Request request, RequestId requestId) {
+            MDCStructuredLogger.forLogger(LOGGER)
+                    .addField(REQUEST_ID, requestId.asString())
+                    .addField(IP, request.ip())
+                    .addField(ENDPOINT, request.url())
+                    .addField(METHOD, request.requestMethod())
+                    .addField(LOGIN, request.attribute(LOGIN))
+                    .addField(QUERY_PARAMETERS, ImmutableSet.copyOf(request.queryParams()))
+                    .addField(REQUEST_BODY, request.body())
+                    .log(logger -> logger.info("WebAdmin request received"));
+        }
+    }
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(LoggingRequestFilter.class);
+    public static final String REQUEST_BODY = "request-body";
+    public static final String METHOD = "method";
+    public static final String ENDPOINT = "endpoint";
+    public static final String QUERY_PARAMETERS = "queryParameters";
+    public static final String IP = "ip";
+    public static final String REQUEST_ID = "requestId";
+
+    public static LoggingRequestFilter create() {
+        return new LoggingRequestFilter(ImmutableSet.of());
+    }
+
+    private final Set<RequestLogger> requestLoggers;
+
+    @Inject
+    public LoggingRequestFilter(Set<RequestLogger> requestLoggers) {
+        this.requestLoggers = requestLoggers;
+    }
 
     @Override
     public void handle(Request request, Response response) {
@@ -46,14 +83,10 @@ public class LoggingRequestFilter implements Filter {
 
         request.attribute(REQUEST_ID, requestId);
 
-        MDCStructuredLogger.forLogger(LOGGER)
-            .addField(REQUEST_ID, requestId.asString())
-            .addField(IP, request.ip())
-            .addField(ENDPOINT, request.url())
-            .addField(METHOD, request.requestMethod())
-            .addField(LOGIN, request.attribute(LOGIN))
-            .addField(QUERY_PARAMETERS, ImmutableSet.copyOf(request.queryParams()))
-            .addField(REQUEST_BODY, request.body())
-            .log(logger -> logger.info("WebAdmin request received"));
+        requestLoggers.stream()
+                .filter(requestLogger -> requestLogger.applies(request))
+                .findFirst()
+                .orElse(DefaultRequestLogger.INSTANCE)
+                .log(request, requestId);
     }
 }
