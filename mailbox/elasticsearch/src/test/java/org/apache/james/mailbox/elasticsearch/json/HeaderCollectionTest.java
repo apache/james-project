@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getToAddressSet())
-            .containsOnly(new EMailer("ben.tellier@linagora.com", "ben.tellier@linagora.com"));
+            .containsOnly(new EMailer(Optional.empty(), "ben.tellier@linagora.com"));
     }
 
     @Test
@@ -66,8 +67,8 @@ class HeaderCollectionTest {
 
         assertThat(headerCollection.getToAddressSet())
             .containsOnly(
-                new EMailer("ben.tellier@linagora.com", "ben.tellier@linagora.com"),
-                new EMailer("btellier@minet.net", "btellier@minet.net"));
+                new EMailer(Optional.empty(), "ben.tellier@linagora.com"),
+                new EMailer(Optional.empty(), "btellier@minet.net"));
     }
 
     @Test
@@ -79,8 +80,8 @@ class HeaderCollectionTest {
 
         assertThat(headerCollection.getToAddressSet())
             .containsOnly(
-                new EMailer("ben.tellier@linagora.com", "ben.tellier@linagora.com"),
-                new EMailer("btellier@minet.net", "btellier@minet.net"));
+                new EMailer(Optional.empty(), "ben.tellier@linagora.com"),
+                new EMailer(Optional.empty(), "btellier@minet.net"));
     }
 
     @Test
@@ -90,7 +91,7 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getToAddressSet())
-            .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"));
+            .containsOnly(new EMailer(Optional.of("Christophe Hamerling"), "chri.hamerling@linagora.com"));
     }
 
     @ParameterizedTest
@@ -102,7 +103,7 @@ class HeaderCollectionTest {
 
         assertThat(headerCollection.getFromAddressSet())
             .extracting(EMailer::getName)
-            .contains(nameOfFromAddress);
+            .contains(Optional.ofNullable(nameOfFromAddress));
     }
 
     @Test
@@ -133,8 +134,8 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getFromAddressSet())
-            .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"),
-                new EMailer("Graham CROSMARIE", "grah.crosmarie@linagora.com"));
+            .containsOnly(new EMailer(Optional.of("Christophe Hamerling"), "chri.hamerling@linagora.com"),
+                new EMailer(Optional.of("Graham CROSMARIE"), "grah.crosmarie@linagora.com"));
     }
 
     @Test
@@ -145,8 +146,8 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getFromAddressSet())
-            .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"),
-                new EMailer("Graham CROSMARIE", "grah.crosmarie@linagora.com"));
+            .containsOnly(new EMailer(Optional.of("Christophe Hamerling"), "chri.hamerling@linagora.com"),
+                new EMailer(Optional.of("Graham CROSMARIE"), "grah.crosmarie@linagora.com"));
     }
 
     @Test
@@ -169,8 +170,8 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getToAddressSet())
-            .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"),
-                new EMailer("grah.crosmarie@linagora.com", "grah.crosmarie@linagora.com"));
+            .containsOnly(new EMailer(Optional.of("Christophe Hamerling"), "chri.hamerling@linagora.com"),
+                new EMailer(Optional.empty(), "grah.crosmarie@linagora.com"));
     }
 
     @Test
@@ -180,7 +181,7 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getCcAddressSet())
-            .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"));
+            .containsOnly(new EMailer(Optional.of("Christophe Hamerling"), "chri.hamerling@linagora.com"));
     }
 
     @Test
@@ -190,7 +191,7 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getReplyToAddressSet())
-            .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"));
+            .containsOnly(new EMailer(Optional.of("Christophe Hamerling"), "chri.hamerling@linagora.com"));
     }
 
     @Test
@@ -200,17 +201,7 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getBccAddressSet())
-            .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"));
-    }
-
-    @Test
-    void headerContaingNoAddressShouldBeConsideredBothAsNameAndAddress() {
-        HeaderCollection headerCollection = HeaderCollection.builder()
-            .add(new FieldImpl("Bcc", "Not an address"))
-            .build();
-
-        assertThat(headerCollection.getBccAddressSet())
-            .containsOnly(new EMailer("Not an address", "Not an address"));
+            .containsOnly(new EMailer(Optional.of("Christophe Hamerling"), "chri.hamerling@linagora.com"));
     }
 
     @Test
@@ -220,7 +211,7 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getBccAddressSet())
-            .containsOnly(new EMailer("Mickey", "tricky@mouse.com"));
+            .containsOnly(new EMailer(Optional.of("Mickey"), "tricky@mouse.com"));
     }
 
     @Test
@@ -230,8 +221,8 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getBccAddressSet())
-            .containsOnly(new EMailer("Mickey", "tricky@mouse.com"),
-                new EMailer("Miny", "hello@polo.com"));
+            .containsOnly(new EMailer(Optional.of("Mickey"), "tricky@mouse.com"),
+                new EMailer(Optional.of("Miny"), "hello@polo.com"));
     }
 
     @Test
@@ -241,8 +232,8 @@ class HeaderCollectionTest {
             .build();
 
         assertThat(headerCollection.getBccAddressSet())
-            .containsOnly(new EMailer("Mickey", "tricky@mouse.com"),
-                new EMailer("Miny", "hello@polo.com"));
+            .containsOnly(new EMailer(Optional.of("Mickey"), "tricky@mouse.com"),
+                new EMailer(Optional.of("Miny"), "hello@polo.com"));
     }
 
     @Test

@@ -22,6 +22,8 @@ package org.apache.james.mailbox.elasticsearch.json;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Joiner;
@@ -45,7 +47,7 @@ class EMailersTest {
 
     @Test
     void serializeShouldNotJoinWhenOneElement() {
-        EMailer emailer = new EMailer("name", "address");
+        EMailer emailer = new EMailer(Optional.of("name"), "address");
         EMailers eMailers = EMailers.from(ImmutableSet.of(emailer));
 
         assertThat(eMailers.serialize()).isEqualTo(emailer.serialize());
@@ -53,9 +55,9 @@ class EMailersTest {
 
     @Test
     void serializeShouldJoinWhenMultipleElements() {
-        EMailer emailer = new EMailer("name", "address");
-        EMailer emailer2 = new EMailer("name2", "address2");
-        EMailer emailer3 = new EMailer("name3", "address3");
+        EMailer emailer = new EMailer(Optional.of("name"), "address");
+        EMailer emailer2 = new EMailer(Optional.of("name2"), "address2");
+        EMailer emailer3 = new EMailer(Optional.of("name3"), "address3");
 
         String expected = Joiner.on(" ").join(emailer.serialize(), emailer2.serialize(), emailer3.serialize());
 

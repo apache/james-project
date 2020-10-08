@@ -4829,7 +4829,7 @@ trait EmailQueryMethodContract {
         .of
         .setSubject("a mail")
         .setFrom("bloblah@domain.tld")
-        .setFrom("test@domain.tld")
+        .setFrom("test@other.tld")
         .setBody("lorem ipsum", StandardCharsets.UTF_8)
         .build))
       .getMessageId
@@ -4839,7 +4839,7 @@ trait EmailQueryMethodContract {
         .of
         .setSubject("another mail")
         .setTo("bloblah@domain.tld")
-        .setTo("test@gmail.com")
+        .setTo("test@other.tld")
         .setBody("lorem ipsum", StandardCharsets.UTF_8)
         .build))
       .getMessageId
@@ -4848,7 +4848,7 @@ trait EmailQueryMethodContract {
       .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
         .of
         .setSubject("another mail")
-        .addField(new RawField("Cc", "<bloblah@domain.tld>, <test@gmail.com>"))
+        .addField(new RawField("Cc", "<bloblah@domain.tld>, <test@other.tld>"))
         .setBody("lorem ipsum", StandardCharsets.UTF_8)
         .build))
       .getMessageId
@@ -4857,15 +4857,7 @@ trait EmailQueryMethodContract {
       .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
         .of
         .setSubject("another mail")
-        .addField(new RawField("Bcc", "<bloblah@domain.tld>, <test@gmail.com>"))
-        .setBody("lorem ipsum", StandardCharsets.UTF_8)
-        .build))
-      .getMessageId
-
-    val messageId5: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
-        .of
-        .setSubject("Subject with test word")
+        .addField(new RawField("Bcc", "<bloblah@domain.tld>, <test@other.tld>"))
         .setBody("lorem ipsum", StandardCharsets.UTF_8)
         .build))
       .getMessageId
@@ -4888,7 +4880,7 @@ trait EmailQueryMethodContract {
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "filter": {
-         |        "text": "test"
+         |        "text": "test@other.tld"
          |      }
          |    },
          |    "c1"]]
@@ -4912,7 +4904,6 @@ trait EmailQueryMethodContract {
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(
           s"""[
-             |  "${messageId5.serialize}",
              |  "${messageId4.serialize}",
              |  "${messageId3.serialize}",
              |  "${messageId2.serialize}",
@@ -4951,64 +4942,6 @@ trait EmailQueryMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "filter": {
          |        "text": "test"
-         |      }
-         |    },
-         |    "c1"]]
-         |}""".stripMargin
-
-    awaitAtMostTenSeconds.untilAsserted { () =>
-      val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
-
-      assertThatJson(response)
-        .inPath("$.methodResponses[0][1].ids")
-        .isEqualTo(
-          s"""[
-             |  "${messageId1.serialize}"
-             |]""".stripMargin)
-    }
-  }
-
-  @Test
-  def textShouldMatchFromField(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
-    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
-        .of
-        .addField(new RawField("From", "toto@domain.tld"))
-        .setSubject("a mail")
-        .setBody("This is a test body", StandardCharsets.UTF_8)
-        .build))
-      .getMessageId
-
-    server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
-        .of
-        .setSubject("should not be found mail")
-        .setBody("lorem ipsum", StandardCharsets.UTF_8)
-        .build))
-      .getMessageId
-
-    val request =
-      s"""{
-         |  "using": [
-         |    "urn:ietf:params:jmap:core",
-         |    "urn:ietf:params:jmap:mail"],
-         |  "methodCalls": [[
-         |    "Email/query",
-         |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "filter": {
-         |        "text": "toto@domain.tld"
          |      }
          |    },
          |    "c1"]]

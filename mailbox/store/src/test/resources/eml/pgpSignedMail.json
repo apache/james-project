@@ -150,7 +150,7 @@
   ],
   "to": [
 	{
-	  "name": "debian-security-announce@lists.debian.org",
+	  "name": null,
 	  "address": "debian-security-announce@lists.debian.org"
 	}
   ],

@@ -49,6 +49,7 @@ import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.stream.RawField;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -258,5 +259,37 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         assertThat(messageManager.search(SearchQuery.of(SearchQuery.all()), session))
             .contains(customStringHeaderMessageId.getUid());
+    }
+
+    @Test
+    void addressMatchesShouldBeExact() throws Exception {
+        // results should not include the domain part nor the local part but the full email address
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        Message.Builder messageBuilder = Message.Builder
+            .of()
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "alice@domain.tld"))
+                    .build()),
+            session).getId();
+
+        ComposedMessageId messageId2 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "bob@other.tld"))
+                    .build()),
+            session).getId();
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "bob@other.tld")), session))
+            .containsOnly(messageId2.getUid());
     }
 }

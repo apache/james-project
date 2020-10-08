@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
@@ -27,16 +28,16 @@ import com.google.common.base.MoreObjects;
 
 public class EMailer implements SerializableMessage {
 
-    private final String name;
+    private final Optional<String> name;
     private final String address;
 
-    public EMailer(String name, String address) {
+    public EMailer(Optional<String> name, String address) {
         this.name = name;
         this.address = address;
     }
 
     @JsonProperty(JsonMessageConstants.EMailer.NAME)
-    public String getName() {
+    public Optional<String> getName() {
         return name;
     }
 

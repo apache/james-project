@@ -34,6 +34,7 @@ Use BlobStore cache instead.
 ### Fixed
 - JAMES-3305 Avoid crashes upon deserialization issues when consuming RabbitMQ messages, leverage dead-letter feature
 - JAMES-3212 JMAP Handle subcrible/unsubcrible child's folder when update mailbox
+- JAMES-3416 Fix ElasticSearch email address search
 
 ### Removed
  - HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be

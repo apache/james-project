@@ -27,7 +27,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mailbox.store.search.comparator.SentDateComparator;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.Group;
@@ -155,7 +154,7 @@ public class HeaderCollection {
                 .parseAddressList(rawHeaderValue)
                 .stream()
                 .flatMap(this::convertAddressToMailboxStream)
-                .map((mailbox) -> new EMailer(SearchUtil.getDisplayAddress(mailbox), mailbox.getAddress()))
+                .map((mailbox) -> new EMailer(Optional.ofNullable(mailbox.getName()), mailbox.getAddress()))
                 .forEach(addressSet::add);
         }
 

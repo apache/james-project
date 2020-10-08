@@ -68,7 +68,7 @@
   "size":25,
   "subject":["Test message"],
   "subtype":"text",
-  "to":[{"name":"btellier@linagora.com","address":"btellier@linagora.com"}],
+  "to":[{"name":null,"address":"btellier@linagora.com"}],
   "uid":25,
   "userFlags":[],
   "mimeMessageID":"<5582A0CE.4020801@linagora.com>",
