@@ -118,6 +118,8 @@
         <dd>Optional. Defaults to 256.<br/>
           If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#acquisition-queue">maximum size of the connection pool queue</a>.</dd>
 
+        <dt><strong>mailbox.read.repair.chance</strong></dt>
+        <dd>Optional. Defaults to 0.1 (10% chance).<br/> Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox read.</dd>
         <dt><strong>mailbox.max.retry.acl</strong></dt>
         <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra ACL updates.</dd>
         <dt><strong>mailbox.max.retry.modseq</strong></dt>

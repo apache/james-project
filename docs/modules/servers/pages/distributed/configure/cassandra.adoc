@@ -135,6 +135,10 @@ If you want more explanation about Cassandra configuration, you should visit the
 |===
 | Property name | explanation
 
+| mailbox.read.repair.chance
+| Optional. Defaults to 0.1 (10% chance).
+Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox read.
+
 | mailbox.max.retry.acl
 | Optional. Defaults to 1000.
 Controls the number of retries upon Cassandra ACL updates.

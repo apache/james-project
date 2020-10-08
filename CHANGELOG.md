@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-3266 Offer an option to disable ElasticSearch in Distributed James product
 - JAMES-3202 Reindex only outdated documents with the Mode option set to CORRECT in reindexing tasks
 - JAMES-3405 Expose metrics of Guice servers over HTTP - enables easy Prometheus metrics collection
+- JAMES-3407 Distributed server: Read-repairs for the mailbox entity
 
 ### Changed
 - Switch to Java 11 for build and run
