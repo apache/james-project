@@ -20,21 +20,30 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
+import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
 import org.apache.james.jmap.mail.{DestroyIds, EmailSetRequest, EmailSetResponse}
+import org.apache.james.jmap.model.SetError
 import org.apache.james.mailbox.model.MessageId
-import play.api.libs.json.{Format, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OFormat, Reads, Writes}
+import play.api.libs.json.{Format, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
+
+import scala.util.Try
 
 class EmailSetSerializer @Inject() (messageIdFactory: MessageId.Factory) {
 
   private implicit val messageIdWrites: Writes[MessageId] = messageId => JsString(messageId.serialize)
   private implicit val messageIdReads: Reads[MessageId] = {
-    case JsString(serializedMessageId) => JsSuccess(messageIdFactory.fromString(serializedMessageId))
-    case _ => JsError("Invalid messageId")
+    case JsString(serializedMessageId) => Try(JsSuccess(messageIdFactory.fromString(serializedMessageId)))
+      .fold(_ => JsError("Invalid messageId"), messageId => messageId)
+    case _ => JsError("Expecting messageId to be represented by a JsString")
   }
 
-  private implicit val destroyIdsFormat: Format[DestroyIds] = Json.valueFormat[DestroyIds]
+  private implicit val notDestroyedWrites: Writes[Map[UnparsedMessageId, SetError]] = mapWrites[UnparsedMessageId, SetError](_.value, setErrorWrites)
+  private implicit val destroyIdsReads: Reads[DestroyIds] = {
+    Json.valueFormat[DestroyIds]
+  }
+  private implicit val destroyIdsWrites: Writes[DestroyIds] = Json.valueWrites[DestroyIds]
   private implicit val emailRequestSetFormat: Format[EmailSetRequest] = Json.format[EmailSetRequest]
-  private implicit val emailResponseSetFormat: OFormat[EmailSetResponse] = Json.format[EmailSetResponse]
+  private implicit val emailResponseSetWrites: OWrites[EmailSetResponse] = Json.writes[EmailSetResponse]
 
   def deserialize(input: JsValue): JsResult[EmailSetRequest] = Json.fromJson[EmailSetRequest](input)
 

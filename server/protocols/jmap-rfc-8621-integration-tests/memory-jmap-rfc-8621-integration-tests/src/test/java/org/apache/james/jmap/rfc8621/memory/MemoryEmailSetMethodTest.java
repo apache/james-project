@@ -21,10 +21,14 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.rfc8621.contract.EmailSetMethodContract;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -36,4 +40,9 @@ public class MemoryEmailSetMethodTest implements EmailSetMethodContract {
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule()))
         .build();
+
+    @Override
+    public MessageId randomMessageId() {
+        return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
+    }
 }
