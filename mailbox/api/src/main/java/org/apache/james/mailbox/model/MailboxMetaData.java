@@ -60,15 +60,6 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
         HAS_NO_CHILDREN
     }
 
-    public static MailboxMetaData unselectableMailbox(MailboxPath path, MailboxId mailboxId, char delimiter) {
-        return new MailboxMetaData(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE, new MailboxACL(),
-            MailboxCounters.builder()
-                .mailboxId(mailboxId)
-                .count(0)
-                .unseen(0)
-                .build());
-    }
-
     public static  final Comparator<MailboxMetaData> COMPARATOR = Comparator
         .<MailboxMetaData, Boolean>comparing(metadata -> metadata.getPath().isInbox()).reversed()
         .thenComparing(metadata -> metadata.getPath().getName());
