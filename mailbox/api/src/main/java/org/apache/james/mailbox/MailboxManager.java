@@ -289,6 +289,11 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      */
     List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;
 
+    enum MailboxSearchFetchType {
+        Minimal,
+        Counters
+    }
+
     /**
      * Searches for mailboxes matching the given query.
      * 
@@ -297,7 +302,11 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param session
      *            the context for this call, not null
      */
-    Flux<MailboxMetaData> search(MailboxQuery expression, MailboxSession session);
+    default Flux<MailboxMetaData> search(MailboxQuery expression, MailboxSession session) {
+        return search(expression, MailboxSearchFetchType.Counters, session);
+    }
+
+    Flux<MailboxMetaData> search(MailboxQuery expression, MailboxSearchFetchType fetchType, MailboxSession session);
 
     /**
      * Searches for messages matching the given query.

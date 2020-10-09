@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.adapter.mailbox;
 
+import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
+
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -205,6 +207,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             MailboxQuery.privateMailboxesBuilder(session)
                 .matchesAllMailboxNames()
                 .build(),
+            Minimal,
             session)
             .collect(Guavate.toImmutableList())
             .block();

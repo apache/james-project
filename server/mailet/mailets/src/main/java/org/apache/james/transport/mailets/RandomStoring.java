@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
+
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
@@ -116,7 +118,7 @@ public class RandomStoring extends GenericMailet {
         try {
             MailboxSession session = mailboxManager.createSystemSession(username);
             return mailboxManager
-                .search(MailboxQuery.privateMailboxesBuilder(session).build(), session)
+                .search(MailboxQuery.privateMailboxesBuilder(session).build(), Minimal, session)
                 .toStream()
                 .map(metaData -> new ReroutingInfos(metaData.getPath().getName(), username));
         } catch (Exception e) {

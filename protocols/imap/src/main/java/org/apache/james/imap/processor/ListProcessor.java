@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
+
 import java.io.Closeable;
 
 import org.apache.james.imap.api.ImapMessage;
@@ -137,7 +139,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                         basePath.getName(),
                         ModifiedUtf7.decodeModifiedUTF7(mailboxName),
                         mailboxSession.getPathDelimiter()))
-                    .build(), mailboxSession)
+                    .build(), Minimal, mailboxSession)
             .doOnNext(metaData -> processResult(responder, isRelative, metaData, getMailboxType(session, metaData.getPath())))
             .then()
             .block();

@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
@@ -225,7 +227,7 @@ public class MessageFastViewProjectionCorrector {
     }
 
     private Flux<MailboxMetaData> listUsersMailboxes(MailboxSession session) {
-        return mailboxManager.search(MailboxQuery.privateMailboxesBuilder(session).build(), session);
+        return mailboxManager.search(MailboxQuery.privateMailboxesBuilder(session).build(), Minimal, session);
     }
 
     private Mono<MessageManager> retrieveMailbox(MailboxSession session, MailboxMetaData mailboxMetadata) {

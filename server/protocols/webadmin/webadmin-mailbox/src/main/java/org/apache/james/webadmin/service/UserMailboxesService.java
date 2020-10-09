@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
+
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -127,7 +129,7 @@ public class UserMailboxesService {
     private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) throws MailboxException {
         return mailboxManager.search(
             MailboxQuery.privateMailboxesBuilder(mailboxSession).build(),
-            mailboxSession)
+            Minimal, mailboxSession)
             .toStream();
     }
 

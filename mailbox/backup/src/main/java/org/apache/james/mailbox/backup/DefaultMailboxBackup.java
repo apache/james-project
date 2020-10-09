@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.backup;
 
+import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -145,7 +147,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
             .privateNamespace()
             .user(session.getUser())
             .build();
-        Stream<MailboxPath> paths = mailboxManager.search(queryUser, session)
+        Stream<MailboxPath> paths = mailboxManager.search(queryUser, Minimal, session)
             .toStream()
             .map(MailboxMetaData::getPath);
         List<MailAccountContent> mailboxes = paths

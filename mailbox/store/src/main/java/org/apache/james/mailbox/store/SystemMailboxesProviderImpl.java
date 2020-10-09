@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -73,7 +75,7 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
         MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
             .expression(new PrefixedWildcard(aRole.getDefaultMailbox()))
             .build();
-        return mailboxManager.search(mailboxQuery, session)
+        return mailboxManager.search(mailboxQuery, Minimal, session)
             .map(MailboxMetaData::getPath)
             .filter(path -> hasRole(aRole, path))
             .map(Throwing.function(loadMailbox).sneakyThrow());

@@ -58,7 +58,7 @@ class SystemMailboxesProviderImplTest {
     void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() throws Exception {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
         when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
-        when(mailboxManager.search(any(), any())).thenReturn(Flux.empty());
+        when(mailboxManager.search(any(), any(), any())).thenReturn(Flux.empty());
 
         assertThat(Flux.from(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser())).toStream())
             .isEmpty();

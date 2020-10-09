@@ -952,7 +952,7 @@ class UserMailboxesRoutesTest {
             MailboxMetaData metaData = mock(MailboxMetaData.class);
             when(metaData.getPath()).thenReturn(MailboxPath.forUser(USERNAME, MAILBOX_NAME));
             doReturn(Flux.just(metaData))
-                .when(mailboxManager).search(any(MailboxQuery.class), any(MailboxSession.class));
+                .when(mailboxManager).search(any(MailboxQuery.class), any(), any(MailboxSession.class));
             doThrow(new MailboxNotFoundException(MAILBOX_NAME)).when(mailboxManager).deleteMailbox(any(MailboxPath.class), any());
 
             when()
@@ -1000,7 +1000,7 @@ class UserMailboxesRoutesTest {
         @Test
         void deleteShouldReturnOkOnMailboxNotFoundExceptionWhenRemovingMailboxes() throws Exception {
             MailboxId mailboxId = InMemoryId.of(12);
-            when(mailboxManager.search(any(MailboxQuery.class), any()))
+            when(mailboxManager.search(any(MailboxQuery.class), any(), any()))
                 .thenReturn(
                         Flux.just(MailboxMetaData.unselectableMailbox(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
             doThrow(new MailboxNotFoundException("any")).when(mailboxManager).deleteMailbox(any(MailboxPath.class), any());

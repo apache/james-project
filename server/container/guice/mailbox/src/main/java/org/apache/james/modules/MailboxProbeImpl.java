@@ -19,6 +19,7 @@
 
 package org.apache.james.modules;
 
+import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 import static org.apache.james.mailbox.store.MailboxReactorUtils.block;
 
 import java.io.InputStream;
@@ -121,6 +122,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             MailboxQuery.privateMailboxesBuilder(session)
                 .expression(Wildcard.INSTANCE)
                 .build(),
+            Minimal,
             session);
     }
 
