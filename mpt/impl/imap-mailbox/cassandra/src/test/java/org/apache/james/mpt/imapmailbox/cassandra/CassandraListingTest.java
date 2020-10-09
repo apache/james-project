@@ -19,11 +19,18 @@
 
 package org.apache.james.mpt.imapmailbox.cassandra;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Locale;
+
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.Listing;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.RuleChain;
 
 public class CassandraListingTest extends Listing {
@@ -36,5 +43,22 @@ public class CassandraListingTest extends Listing {
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return cassandraHostSystemRule.getImapHostSystem();
+    }
+
+    @Test
+    public void listShouldNotReadCounters() throws Exception {
+        CassandraHostSystem cassandraHostSystem = (CassandraHostSystem) this.system;
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandraHostSystem.getCassandra()
+            .getConf()
+            .recordStatements(statementRecorder);
+
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("ListOnly");
+
+        assertThat(statementRecorder.listExecutedStatements(StatementRecorder.Selector.preparedStatement(
+                "SELECT unseen,count FROM mailboxCounters WHERE mailboxId=:mailboxId;")))
+            .isEmpty();
     }
 }

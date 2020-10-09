@@ -85,6 +85,10 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         this.cassandraHost = cassandraHost;
     }
 
+    public CassandraCluster getCassandra() {
+        return cassandra;
+    }
+
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
