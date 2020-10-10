@@ -21,6 +21,8 @@ package org.apache.james.mailbox.store.search.comparator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.ZonedDateTime;
+
 import org.junit.jupiter.api.Test;
 
 class SentDateComparatorTest {
@@ -58,5 +60,11 @@ class SentDateComparatorTest {
     void sanitizeDateStringHeaderValueShouldNotChangeEmptyString() {
         assertThat(SentDateComparator.sanitizeDateStringHeaderValue(""))
             .isEqualTo("");
+    }
+
+    @Test
+    void toISODateShouldParseRFC5322InvalidHeader() {
+        assertThat(SentDateComparator.toISODate("Fri,  5 Jun 2020 10:41:00 +0000 (UTC)"))
+            .contains(ZonedDateTime.parse("2020-06-05T10:41Z[UTC]"));
     }
 }

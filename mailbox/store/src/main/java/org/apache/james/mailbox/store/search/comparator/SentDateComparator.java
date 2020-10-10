@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.search.comparator;
 import static org.apache.james.mime4j.codec.DecodeMonitor.SILENT;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.Date;
@@ -31,6 +32,7 @@ import java.util.regex.Pattern;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
 import org.apache.james.mime4j.stream.RawField;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +60,14 @@ public class SentDateComparator extends AbstractHeaderComparator {
                 sanitizeDateStringHeaderValue(value),
                 ImapDateTimeFormatter.rfc5322()));
         } catch (Exception e) {
-            LOGGER.info("Can not parse receive date {}", value);
-            return Optional.empty();
+            // Fallback if possible to mime4j parsing - zoneId information is lost
+            return OptionalUtils.executeIfEmpty(
+                Optional.ofNullable(DateTimeFieldLenientImpl.PARSER
+                    .parse(new RawField("Date", value), SILENT))
+                    .flatMap(field -> Optional.ofNullable(field.getDate()))
+                    .map(Date::toInstant)
+                    .map(instant -> ZonedDateTime.ofInstant(instant, ZoneId.of("UTC"))),
+                () -> LOGGER.info("Can not parse receive date {}", value));
         }
     }
 
