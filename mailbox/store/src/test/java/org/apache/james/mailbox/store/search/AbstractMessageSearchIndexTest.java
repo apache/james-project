@@ -175,10 +175,10 @@ public abstract class AbstractMessageSearchIndexTest {
             RECENT,
             new Flags(Flags.Flag.SEEN)).getId();
         // sentDate: Thu, 04 Jun 2015 07:36:08 +0000
-        // Internal date : 2014/07/02 00:00:00.000
+        // Internal date : 2014/07/02 00:00:01.000
         m7 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/htmlMail.eml"),
-            new Date(1404252000000L),
+            new Date(1404252001000L),
             session,
             NOT_RECENT,
             new Flags()).getId();
