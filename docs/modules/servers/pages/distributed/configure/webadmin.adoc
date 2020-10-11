@@ -64,3 +64,25 @@ needs to be on the classpath or in the ./extensions-jars folder. Read mode about
 xref:distributed/extending/webadmin-routes.adoc[creating you own webadmin routes].
 
 |===
+
+== Generating a JWT key pair
+
+The Distributed server enforces the use of RSA-SHA-256.
+
+One can use OpenSSL to generate a JWT key pair :
+
+    # private key
+    openssl genrsa -out rs256-4096-private.rsa 4096
+    # public key
+    openssl rsa -in rs256-4096-private.rsa -pubout > rs256-4096-public.pem
+
+The private key can be used to generate JWT tokens, for instance
+using link:https://github.com/vandium-io/jwtgen[jwtgen]:
+
+    jwtgen -a RS256 -p rs256-4096-private.rsa 4096 -c "sub=bob@domain.tld" -e 3600 -V
+
+This token can then be passed as `Bearer` of the `Authorization` header :
+
+    curl -H "Authorization: Bearer $token" -XGET http://127.0.0.1:8000/domains
+
+The public key can be referenced as `jwt.publickeypem.url` of the `jmap.properties` configuration file.
