@@ -20,18 +20,12 @@ package org.apache.james.jwt;
 
 import java.security.PublicKey;
 
-import javax.inject.Inject;
-
-import com.google.common.annotations.VisibleForTesting;
-
 public class PublicKeyProvider {
 
     private final JwtConfiguration jwtConfiguration;
     private final PublicKeyReader reader;
 
-    @Inject
-    @VisibleForTesting
-    PublicKeyProvider(JwtConfiguration jwtConfiguration, PublicKeyReader reader) {
+    public PublicKeyProvider(JwtConfiguration jwtConfiguration, PublicKeyReader reader) {
         this.jwtConfiguration = jwtConfiguration;
         this.reader = reader;
     }

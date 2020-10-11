@@ -58,6 +58,17 @@ public class WebAdminConfiguration {
         private Optional<String> urlCORSOrigin = Optional.empty();
         private Optional<String> host = Optional.empty();
         private ImmutableList.Builder<String> additionalRoutes = ImmutableList.builder();
+        private Optional<String> jwtPublicKey = Optional.empty();
+
+        public Builder jwtPublicKeyPEM(String jwtPublicKeyPEM) {
+            this.jwtPublicKey = Optional.of(jwtPublicKeyPEM);
+            return this;
+        }
+
+        public Builder jwtPublicKeyPEM(Optional<String> jwtPublicKeyPEM) {
+            jwtPublicKeyPEM.ifPresent(this::jwtPublicKeyPEM);
+            return this;
+        }
 
         public Builder tls(TlsConfiguration tlsConfiguration) {
             this.tlsConfiguration = Optional.of(tlsConfiguration);
@@ -130,7 +141,8 @@ public class WebAdminConfiguration {
                 enableCORS.orElse(DEFAULT_CORS_DISABLED),
                 urlCORSOrigin.orElse(CORS_ALL_ORIGINS),
                 host.orElse(DEFAULT_HOST),
-                additionalRoutes.build());
+                additionalRoutes.build(),
+                jwtPublicKey);
         }
     }
 
@@ -141,10 +153,11 @@ public class WebAdminConfiguration {
     private final String urlCORSOrigin;
     private final String host;
     private final List<String> additionalRoutes;
+    private final Optional<String> jwtPublicKey;
 
     @VisibleForTesting
     WebAdminConfiguration(boolean enabled, Optional<PortSupplier> port, Optional<TlsConfiguration> tlsConfiguration,
-                          boolean enableCORS, String urlCORSOrigin, String host, List<String> additionalRoutes) {
+                          boolean enableCORS, String urlCORSOrigin, String host, List<String> additionalRoutes, Optional<String> jwtPublicKey) {
         this.enabled = enabled;
         this.port = port;
         this.tlsConfiguration = tlsConfiguration;
@@ -152,6 +165,11 @@ public class WebAdminConfiguration {
         this.urlCORSOrigin = urlCORSOrigin;
         this.host = host;
         this.additionalRoutes = additionalRoutes;
+        this.jwtPublicKey = jwtPublicKey;
+    }
+
+    public Optional<String> getJwtPublicKey() {
+        return jwtPublicKey;
     }
 
     public List<String> getAdditionalRoutes() {
@@ -195,6 +213,7 @@ public class WebAdminConfiguration {
                 && Objects.equals(this.port, that.port)
                 && Objects.equals(this.tlsConfiguration, that.tlsConfiguration)
                 && Objects.equals(this.enableCORS, that.enableCORS)
+                && Objects.equals(this.jwtPublicKey, that.jwtPublicKey)
                 && Objects.equals(this.urlCORSOrigin, that.urlCORSOrigin)
                 && Objects.equals(this.host, that.host)
                 && Objects.equals(this.additionalRoutes, that.additionalRoutes);
@@ -204,6 +223,6 @@ public class WebAdminConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, urlCORSOrigin, host, additionalRoutes);
+        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, jwtPublicKey, urlCORSOrigin, host, additionalRoutes);
     }
 }

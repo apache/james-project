@@ -48,6 +48,7 @@ import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MailboxesExportRoutesModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
+import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
@@ -86,7 +87,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
 
     public static final Module WEBADMIN_TESTING = Modules.override(WEBADMIN)
-        .with(WEBADMIN_NO_AUTH_MODULE);
+        .with(WEBADMIN_NO_AUTH_MODULE, new NoJwtModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),

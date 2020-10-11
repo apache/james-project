@@ -22,6 +22,7 @@ package org.apache.james.modules.server;
 import static org.apache.james.webadmin.WebAdminConfiguration.DISABLED_CONFIGURATION;
 
 import java.io.FileNotFoundException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -29,6 +30,9 @@ import java.util.Set;
 import javax.inject.Named;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.io.FileUtils;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceGenericLoader;
@@ -56,6 +60,7 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
@@ -108,7 +113,7 @@ public class WebAdminServerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public WebAdminConfiguration provideWebAdminConfiguration(PropertiesProvider propertiesProvider) throws Exception {
+    public WebAdminConfiguration provideWebAdminConfiguration(FileSystem fileSystem, PropertiesProvider propertiesProvider) throws Exception {
         try {
             Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
 
@@ -124,6 +129,8 @@ public class WebAdminServerModule extends AbstractModule {
                 .urlCORSOrigin(configurationFile.getString("cors.origin", DEFAULT_NO_CORS_ORIGIN))
                 .host(configurationFile.getString("host", WebAdminConfiguration.DEFAULT_HOST))
                 .additionalRoutes(additionalRoutes)
+                .jwtPublicKeyPEM(loadPublicKey(fileSystem,
+                    Optional.ofNullable(configurationFile.getString("jwt.publickeypem.url", null))))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
@@ -131,10 +138,14 @@ public class WebAdminServerModule extends AbstractModule {
         }
     }
 
+    private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
+        return jwtPublickeyPemUrl.map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url), StandardCharsets.US_ASCII)));
+    }
+
     @Provides
     @Singleton
     public AuthenticationFilter providesAuthenticationFilter(PropertiesProvider propertiesProvider,
-                                                             JwtTokenVerifier jwtTokenVerifier) throws Exception {
+                                                             @Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifier) throws Exception {
         try {
             Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
             if (configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED)) {
@@ -144,6 +155,17 @@ public class WebAdminServerModule extends AbstractModule {
         } catch (FileNotFoundException e) {
             return new NoAuthenticationFilter();
         }
+    }
+
+    @Provides
+    @Singleton
+    @Named("webadmin")
+    JwtTokenVerifier.Factory providesJwtTokenVerifier(WebAdminConfiguration webAdminConfiguration,
+                                              @Named("jmap") Provider<JwtTokenVerifier> jmapTokenVerifier) {
+        return () -> webAdminConfiguration.getJwtPublicKey()
+            .map(keyPath -> new JwtConfiguration(Optional.of(keyPath)))
+            .map(JwtTokenVerifier::create)
+            .orElseGet(jmapTokenVerifier::get);
     }
 
     private Optional<TlsConfiguration> readHttpsConfiguration(Configuration configurationFile) {

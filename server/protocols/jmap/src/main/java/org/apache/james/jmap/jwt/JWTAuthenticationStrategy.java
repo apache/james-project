@@ -19,6 +19,7 @@
 package org.apache.james.jmap.jwt;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
@@ -44,7 +45,9 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
 
     @Inject
     @VisibleForTesting
-    public JWTAuthenticationStrategy(JwtTokenVerifier tokenManager, MailboxManager mailboxManager, UsersRepository usersRepository) {
+    public JWTAuthenticationStrategy(@Named("jmap") JwtTokenVerifier tokenManager,
+                                     MailboxManager mailboxManager,
+                                     UsersRepository usersRepository) {
         this.tokenManager = tokenManager;
         this.mailboxManager = mailboxManager;
         this.usersRepository = usersRepository;

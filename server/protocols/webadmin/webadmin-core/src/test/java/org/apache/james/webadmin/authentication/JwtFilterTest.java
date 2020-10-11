@@ -66,7 +66,7 @@ public class JwtFilterTest {
     @Before
     public void setUp() {
         jwtTokenVerifier = mock(JwtTokenVerifier.class);
-        jwtFilter = new JwtFilter(jwtTokenVerifier);
+        jwtFilter = new JwtFilter(() -> jwtTokenVerifier);
     }
 
     @Test

@@ -26,7 +26,7 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
-import org.apache.james.jwt.JwtConfiguration;
+import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
@@ -35,6 +35,8 @@ import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.integration.JwtFilterIntegrationTest;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.inject.name.Names;
 
 class RabbitMQJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
     @RegisterExtension
@@ -54,7 +56,9 @@ class RabbitMQJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
         .extension(new RabbitMQExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
-            .overrideWith(binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration()))
+            .overrideWith(binder -> binder.bind(JwtTokenVerifier.Factory.class)
+                .annotatedWith(Names.named("webadmin"))
+                .toInstance(() -> JwtTokenVerifier.create(jwtConfiguration())))
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 }

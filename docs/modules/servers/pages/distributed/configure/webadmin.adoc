@@ -53,6 +53,11 @@ to get some examples and hints.
 | https.trust.password
 | Specify the truststore password (default: null)
 
+| jwt.publickeypem.url
+| Optional. JWT tokens allow request to bypass authentication. Path to the JWT public key.
+Defaults to the `jwt.publickeypem.url` value of `jmap.properties` file if unspecified
+(legacy behaviour)
+
 | extensions.routes
 | List of Routes specified as fully qualified class name that should be loaded in addition to your product routes list. Routes
 needs to be on the classpath or in the ./extensions-jars folder. Read mode about

@@ -19,16 +19,19 @@
 
 package org.apache.james.modules.server;
 
-import java.util.Optional;
+import javax.inject.Named;
 
-import org.apache.james.jwt.JwtConfiguration;
+import org.apache.james.jwt.JwtTokenVerifier;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 public class NoJwtModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(JwtConfiguration.class).toInstance(new JwtConfiguration(Optional.empty()));
+    @Provides
+    @Singleton
+    @Named("jmap")
+    JwtTokenVerifier failWhenFallbackToJMAPConfiguration() {
+        throw new RuntimeException("JMAP is not enabled thus we can not fallback to its JWT configuration");
     }
 }

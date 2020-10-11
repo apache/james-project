@@ -22,12 +22,14 @@ package org.apache.james.webadmin.integration.memory;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jwt.JwtConfiguration;
+import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.integration.JwtFilterIntegrationTest;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.inject.name.Names;
 
 class MemoryJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
 
@@ -36,6 +38,8 @@ class MemoryJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
-            .overrideWith(binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration())))
+            .overrideWith(binder -> binder.bind(JwtTokenVerifier.Factory.class)
+                .annotatedWith(Names.named("webadmin"))
+                .toInstance(() -> JwtTokenVerifier.create(jwtConfiguration()))))
         .build();
 }

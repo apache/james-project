@@ -25,6 +25,8 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import javax.inject.Named;
+
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
@@ -40,6 +42,7 @@ import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
 import org.apache.james.jwt.JwtConfiguration;
+import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
@@ -152,8 +155,10 @@ public class JMAPModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JwtConfiguration providesJwtConfiguration(JMAPDraftConfiguration jmapConfiguration) {
-        return new JwtConfiguration(jmapConfiguration.getJwtPublicKeyPem());
+    @Named("jmap")
+    JwtTokenVerifier providesJwtTokenVerifier(JMAPDraftConfiguration jmapConfiguration) {
+        JwtConfiguration jwtConfiguration = new JwtConfiguration(jmapConfiguration.getJwtPublicKeyPem());
+        return JwtTokenVerifier.create(jwtConfiguration);
     }
 
     private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {

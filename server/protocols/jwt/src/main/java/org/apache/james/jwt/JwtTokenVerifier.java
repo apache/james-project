@@ -18,12 +18,9 @@
  ****************************************************************/
 package org.apache.james.jwt;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 import io.jsonwebtoken.Claims;
@@ -34,12 +31,19 @@ import io.jsonwebtoken.MalformedJwtException;
 
 public class JwtTokenVerifier {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(JwtTokenVerifier.class);
+    public interface Factory {
+        JwtTokenVerifier create();
+    }
+
+    public static JwtTokenVerifier create(JwtConfiguration jwtConfiguration) {
+        PublicKeyProvider publicKeyProvider = new PublicKeyProvider(jwtConfiguration, new PublicKeyReader());
+        return new JwtTokenVerifier(publicKeyProvider);
+    }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenVerifier.class);
     private final PublicKeyProvider pubKeyProvider;
 
-    @Inject
-    @VisibleForTesting
-    JwtTokenVerifier(PublicKeyProvider pubKeyProvider) {
+    public JwtTokenVerifier(PublicKeyProvider pubKeyProvider) {
         this.pubKeyProvider = pubKeyProvider;
     }
 
