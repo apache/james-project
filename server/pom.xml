@@ -96,6 +96,7 @@
         <module>protocols/protocols-pop3</module>
         <module>protocols/protocols-smtp</module>
         <module>protocols/webadmin</module>
+        <module>protocols/webadmin-cli</module>
         <module>protocols/webadmin-integration-test</module>
 
         <module>queue/queue-activemq</module>
@@ -111,6 +112,7 @@
         <module>task/task-memory</module>
 
         <module>testing</module>
+
     </modules>
 
     <properties>
