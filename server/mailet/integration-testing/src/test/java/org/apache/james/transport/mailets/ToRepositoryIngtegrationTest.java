@@ -51,7 +51,7 @@ import org.junit.rules.TemporaryFolder;
 
 import io.restassured.specification.RequestSpecification;
 
-public class ToRepositoryTest {
+public class ToRepositoryIngtegrationTest {
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
     public static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/custom/");
 

@@ -41,7 +41,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class ToSenderDomainRepositoryTest {
+public class ToSenderDomainRepositoryIntegrationTest {
 
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
     private static final String CUSTOM_REPOSITORY_PREFIX = "memory://var/mail/custom/";
