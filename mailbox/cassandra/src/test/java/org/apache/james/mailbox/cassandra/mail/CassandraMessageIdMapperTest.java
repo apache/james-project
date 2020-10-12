@@ -85,6 +85,32 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             .containsOnly(message1, message2, message3, message4);
     }
 
+    @Test
+    void setFlagsShouldMinimizeMessageReads(CassandraCluster cassandra) throws Exception {
+        CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
+        CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
+            cassandraCluster.getCassandraCluster(),
+            messageIdFactory,
+            CassandraConfiguration.builder()
+                .messageReadChunkSize(3)
+                .build());
+
+        saveMessages();
+
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandra.getConf().recordStatements(statementRecorder);
+
+        mapperFactory.getMessageIdMapper(MAILBOX_SESSION).setFlags(message1.getMessageId(),
+            ImmutableList.of(message1.getMailboxId()),
+            new Flags(Flags.Flag.DELETED),
+            MessageManager.FlagsUpdateMode.REPLACE);
+
+        assertThat(statementRecorder.listExecutedStatements(
+            StatementRecorder.Selector.preparedStatementStartingWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted," +
+                "flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM imapUidTable")))
+            .hasSize(1);
+    }
+
     @Nested
     class FailureTest {
         @Test
