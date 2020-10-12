@@ -26,12 +26,14 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.Multimap;
 
@@ -41,6 +43,8 @@ import reactor.core.publisher.Mono;
 public interface MessageIdMapper {
 
     List<MailboxMessage> find(Collection<MessageId> messageIds, FetchType fetchType);
+
+    Publisher<ComposedMessageIdWithMetaData> findMetadata(MessageId messageId);
 
     default Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, FetchType fetchType) {
         return Flux.fromIterable(find(messageIds, fetchType));

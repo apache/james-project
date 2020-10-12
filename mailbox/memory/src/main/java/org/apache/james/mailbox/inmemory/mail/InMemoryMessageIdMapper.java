@@ -30,6 +30,8 @@ import javax.mail.Flags;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -41,6 +43,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -63,6 +66,19 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
         return findReactive(messageIds, fetchType)
             .collect(Guavate.toImmutableList())
             .block();
+    }
+
+    @Override
+    public Publisher<ComposedMessageIdWithMetaData> findMetadata(MessageId messageId) {
+        return mailboxMapper.list()
+            .flatMap(mailbox -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Full, UNLIMITED))
+            .map(message -> new ComposedMessageIdWithMetaData(
+                new ComposedMessageId(
+                    message.getMailboxId(),
+                    message.getMessageId(),
+                    message.getUid()),
+                message.createFlags(),
+                message.getModSeq()));
     }
 
     @Override

@@ -43,6 +43,7 @@ import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.DeleteResult;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
@@ -69,6 +70,7 @@ import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.util.FunctionalUtils;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,6 +158,17 @@ public class StoreMessageIdManager implements MessageIdManager {
             .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()))
             .flatMap(Function.identity())
             .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow());
+    }
+
+    @Override
+    public Publisher<ComposedMessageIdWithMetaData> messagesMetadata(Collection<MessageId> ids, MailboxSession session) {
+        MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(session);
+        int concurrency = 4;
+        return Flux.fromIterable(ids)
+            .flatMap(id -> Flux.from(messageIdMapper.findMetadata(id)), concurrency)
+            .groupBy(metaData -> metaData.getComposedMessageId().getMailboxId())
+            .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(session, Right.Read).apply(groupedFlux.key()))
+            .flatMap(Function.identity());
     }
 
     private ImmutableSet<MailboxId> getAllowedMailboxIds(MailboxSession mailboxSession, List<MailboxMessage> messageList, Right... rights) throws MailboxException {
@@ -430,10 +443,6 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private Predicate<MailboxMessage> inMailboxes(Collection<MailboxId> mailboxIds) {
         return mailboxMessage -> mailboxIds.contains(mailboxMessage.getMailboxId());
-    }
-
-    private Function<MailboxMessage, Mono<Boolean>> hasRightsOn(MailboxSession session, Right... rights) {
-        return hasRightsOnMailboxReactive(session, rights).compose(MailboxMessage::getMailboxId);
     }
 
     private Function<MailboxId, Mono<Boolean>> hasRightsOnMailboxReactive(MailboxSession session, Right... rights) {

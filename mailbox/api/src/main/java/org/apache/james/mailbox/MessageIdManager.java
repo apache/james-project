@@ -27,6 +27,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.DeleteResult;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
@@ -39,6 +40,11 @@ import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Flux;
 
 public interface MessageIdManager {
+    default Publisher<ComposedMessageIdWithMetaData> messageMetadata(MessageId id, MailboxSession session) {
+        return messagesMetadata(ImmutableList.of(id), session);
+    }
+
+    Publisher<ComposedMessageIdWithMetaData> messagesMetadata(Collection<MessageId> id, MailboxSession session);
 
     Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, final MailboxSession mailboxSession) throws MailboxException;
 

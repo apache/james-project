@@ -24,6 +24,7 @@ import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -54,6 +55,7 @@ import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
@@ -72,6 +74,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 
 import io.vavr.control.Try;
 import reactor.core.publisher.Flux;
@@ -135,9 +138,15 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private void prepareResponse(SetMessagesRequest request, MailboxSession mailboxSession, SetMessagesResponse.Builder responseBuilder, Set<MailboxId> outboxes) {
-        request.buildUpdatePatches(updatePatchConverter).forEach((id, patch) -> {
+        Map<MessageId, UpdateMessagePatch> patches = request.buildUpdatePatches(updatePatchConverter);
+
+        Multimap<MessageId, ComposedMessageIdWithMetaData> messages = Flux.from(messageIdManager.messagesMetadata(patches.keySet(), mailboxSession))
+            .collect(Guavate.toImmutableListMultimap(metaData -> metaData.getComposedMessageId().getMessageId()))
+            .block();
+
+        patches.forEach((id, patch) -> {
                 if (patch.isValid()) {
-                    update(outboxes, id, patch, mailboxSession, responseBuilder);
+                    update(outboxes, id, patch, mailboxSession, responseBuilder, messages);
                 } else {
                     handleInvalidRequest(responseBuilder, id, patch.getValidationErrors(), patch);
                 }
@@ -146,9 +155,11 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private void update(Set<MailboxId> outboxes, MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession,
-                        SetMessagesResponse.Builder builder) {
+                        SetMessagesResponse.Builder builder, Multimap<MessageId, ComposedMessageIdWithMetaData> metadata) {
         try {
-            List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, mailboxSession);
+            List<ComposedMessageIdWithMetaData> messages = Optional.ofNullable(metadata.get(messageId))
+                .map(ImmutableList::copyOf)
+                .orElse(ImmutableList.of());
             assertValidUpdate(messages, updateMessagePatch, outboxes);
 
             if (messages.isEmpty()) {
@@ -223,16 +234,16 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void assertValidUpdate(List<MessageResult> messagesToBeUpdated,
+    private void assertValidUpdate(List<ComposedMessageIdWithMetaData> messagesToBeUpdated,
                                    UpdateMessagePatch updateMessagePatch,
                                    Set<MailboxId> outboxMailboxes) {
         ImmutableList<MailboxId> previousMailboxes = messagesToBeUpdated.stream()
-            .map(MessageResult::getMailboxId)
+            .map(metaData -> metaData.getComposedMessageId().getMailboxId())
             .collect(Guavate.toImmutableList());
         List<MailboxId> targetMailboxes = getTargetedMailboxes(previousMailboxes, updateMessagePatch);
 
         boolean isDraft = messagesToBeUpdated.stream()
-            .map(MessageResult::getFlags)
+            .map(ComposedMessageIdWithMetaData::getFlags)
             .map(Keywords.lenientFactory()::fromFlags)
             .reduce(new KeywordsCombiner())
             .orElse(Keywords.DEFAULT_VALUE)
@@ -294,12 +305,12 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             .collect(Guavate.toImmutableSet());
     }
 
-    private Stream<MailboxException> updateFlags(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, MessageResult messageResult) {
+    private Stream<MailboxException> updateFlags(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, ComposedMessageIdWithMetaData message) {
         try {
             if (!updateMessagePatch.isFlagsIdentity()) {
                 messageIdManager.setFlags(
-                    updateMessagePatch.applyToState(messageResult.getFlags()),
-                    FlagsUpdateMode.REPLACE, messageId, ImmutableList.of(messageResult.getMailboxId()), mailboxSession);
+                    updateMessagePatch.applyToState(message.getFlags()),
+                    FlagsUpdateMode.REPLACE, messageId, ImmutableList.of(message.getComposedMessageId().getMailboxId()), mailboxSession);
             }
             return Stream.of();
         } catch (MailboxException e) {
