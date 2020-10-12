@@ -149,7 +149,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                         SetMessagesResponse.Builder builder) {
         try {
             List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, mailboxSession);
-            assertValidUpdate(messages, updateMessagePatch, mailboxSession);
+            assertValidUpdate(messages, updateMessagePatch, outboxes);
 
             if (messages.isEmpty()) {
                 addMessageIdNotFoundToResponse(messageId, builder);
@@ -223,9 +223,9 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void assertValidUpdate(List<MessageResult> messagesToBeUpdated, UpdateMessagePatch updateMessagePatch, MailboxSession session) throws MailboxException {
-        List<MailboxId> outboxMailboxes = mailboxIdFor(Role.OUTBOX, session);
-
+    private void assertValidUpdate(List<MessageResult> messagesToBeUpdated,
+                                   UpdateMessagePatch updateMessagePatch,
+                                   Set<MailboxId> outboxMailboxes) {
         ImmutableList<MailboxId> previousMailboxes = messagesToBeUpdated.stream()
             .map(MessageResult::getMailboxId)
             .collect(Guavate.toImmutableList());
@@ -266,13 +266,6 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         return updateMessagePatch.getMailboxIds()
             .map(ids -> ids.stream().map(mailboxIdFactory::fromString).collect(Guavate.toImmutableList()))
             .orElse(previousMailboxes);
-    }
-
-    private List<MailboxId> mailboxIdFor(Role role, MailboxSession session) throws MailboxException {
-        return Flux.from(systemMailboxesProvider.getMailboxByRole(role, session.getUser()))
-            .toStream()
-            .map(MessageManager::getId)
-            .collect(Guavate.toImmutableList());
     }
 
     private MailImpl buildMailFromMessage(MessageResult message) throws MessagingException, IOException, MailboxException {
