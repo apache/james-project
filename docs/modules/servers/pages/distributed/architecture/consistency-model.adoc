@@ -46,10 +46,12 @@ link:https://docs.datastax.com/en/ddac/doc/datastax_enterprise/production/DDACmu
 Cassandra setup is discouraged.
 
 However xref:distributed/configure/cassandra.adoc[this page] enables setting alternative read level,
-which could be acceptable regarding limited requirements.
+which could be acceptable regarding limited requirements. `LOCAL_QUORUM` coupled with `LOCAL_SERIAL`
+is likely the only scalable setup.
 
-Running the Distributed Server in a multi datacenter setup will likely result either in data loss,
-or very slow operations.
+Running the Distributed Server IMAP server in a multi datacenter setup will likely result either in data loss,
+or very slow operations - as we rely on monotic UID generation, without strong consistency, UIDs could be allocated
+several times. Other protocols, like JMAP, suffer less from such limitations.
 
 === ElasticSearch consistency model
 
