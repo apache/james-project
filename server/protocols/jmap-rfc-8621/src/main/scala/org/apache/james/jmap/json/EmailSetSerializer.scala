@@ -23,7 +23,7 @@ import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.jmap.mail.EmailSet.{UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.{DestroyIds, EmailSetRequest, EmailSetResponse, EmailSetUpdate, MailboxIds}
-import org.apache.james.jmap.model.SetError
+import org.apache.james.jmap.model.{Keyword, Keywords, SetError}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -46,6 +46,12 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
           }.headOption
             .map(_.ids)
 
+          val keywordsReset: Option[Keywords] = entries.flatMap {
+            case update: KeywordsReset => Some(update)
+            case _ => None
+          }.headOption
+            .map(_.keywords)
+
           val mailboxesToAdd: Option[MailboxIds] = Some(entries
             .flatMap {
               case update: MailboxAddition => Some(update)
@@ -62,7 +68,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
             .filter(_.nonEmpty)
             .map(MailboxIds)
 
-          JsSuccess(EmailSetUpdate(mailboxIds = mailboxReset,
+          JsSuccess(EmailSetUpdate(keywords = keywordsReset,
+            mailboxIds = mailboxReset,
             mailboxIdsToAdd = mailboxesToAdd,
             mailboxIdsToRemove = mailboxesToRemove))
         })
@@ -75,6 +82,10 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
           .fold(
             e => InvalidPatchEntryValue(property, e.toString()),
             MailboxReset)
+        case "keywords" => keywordsReads.reads(value)
+          .fold(
+            e => InvalidPatchEntryValue(property, e.toString()),
+            KeywordsReset)
         case name if name.startsWith(mailboxIdPrefix) => Try(mailboxIdFactory.fromString(name.substring(mailboxIdPrefix.length)))
           .fold(e => InvalidPatchEntryNameWithDetails(property, e.getMessage),
             id => value match {
@@ -108,6 +119,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
 
     private case class MailboxReset(ids: MailboxIds) extends EntryValidation
 
+    private case class KeywordsReset(keywords: Keywords) extends EntryValidation
+
   }
 
   private implicit val messageIdWrites: Writes[MessageId] = messageId => JsString(messageId.serialize)
@@ -139,6 +152,23 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
         case o: JsObject => JsSuccess(o)
         case _ => JsError("Expecting a JsObject as an update entry")
       })
+
+  private implicit val keywordReads: Reads[Keyword] = {
+    case jsString: JsString => Keyword.parse(jsString.value)
+      .fold(JsError(_),
+        JsSuccess(_))
+    case _ => JsError("Expecting a string as a keyword")
+  }
+
+  private implicit val keywordsMapReads: Reads[Map[Keyword, Boolean]] =
+    readMapEntry[Keyword, Boolean](s => Keyword.parse(s),
+      {
+        case JsBoolean(true) => JsSuccess(true)
+        case JsBoolean(false) => JsError("keyword value can only be true")
+        case _ => JsError("Expecting keyword value to be a boolean")
+      })
+  private implicit val keywordsReads: Reads[Keywords] = jsValue => keywordsMapReads.reads(jsValue).map(
+    keywordsMap => Keywords(keywordsMap.keys.toSet))
 
   private implicit val unitWrites: Writes[Unit] = _ => JsNull
   private implicit val updatedWrites: Writes[Map[MessageId, Unit]] = mapWrites[MessageId, Unit](_.serialize, unitWrites)

@@ -18,8 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
+import com.google.common.collect.ImmutableList
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import javax.mail.Flags
 import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
@@ -29,6 +31,7 @@ import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CA
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{Capabilities, Invocation, SetError, State}
+import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, DeleteResult, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
@@ -195,7 +198,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
         .collectMultimap(metaData => metaData.getComposedMessageId.getMessageId)
         .flatMap(metaData => {
           SFlux.fromIterable(validUpdates)
-            .flatMap[UpdateResult]({
+            .concatMap[UpdateResult]({
               case (messageId, updatePatch) =>
                 doUpdate(messageId, updatePatch, metaData.get(messageId).toList.flatten, session)
             })
@@ -208,6 +211,11 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
 
   private def doUpdate(messageId: MessageId, update: EmailSetUpdate, storedMetaData: List[ComposedMessageIdWithMetaData], session: MailboxSession): SMono[UpdateResult] = {
     val mailboxIds: MailboxIds = MailboxIds(storedMetaData.map(metaData => metaData.getComposedMessageId.getMailboxId))
+    val originFlags: Flags = storedMetaData
+      .foldLeft[Flags](new Flags())((flags: Flags, m: ComposedMessageIdWithMetaData) => {
+        flags.add(m.getFlags)
+        flags
+      })
 
     if (mailboxIds.value.isEmpty) {
       SMono.just[UpdateResult](UpdateFailure(EmailSet.asUnparsed(messageId), MessageNotFoundExeception(messageId)))
@@ -215,9 +223,14 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
       update.validate
         .fold(
           e => SMono.just(UpdateFailure(EmailSet.asUnparsed(messageId), e)),
-          validatedUpdate => updateMailboxIds(messageId, validatedUpdate, mailboxIds, session)
-            .onErrorResume(e => SMono.just[UpdateResult](UpdateFailure(EmailSet.asUnparsed(messageId), e)))
-            .switchIfEmpty(SMono.just[UpdateResult](UpdateSuccess(messageId))))
+          validatedUpdate =>
+            resetFlags(messageId, validatedUpdate, mailboxIds, originFlags, session)
+              .flatMap {
+                case failure: UpdateFailure => SMono.just[UpdateResult](failure)
+                case _: UpdateSuccess => updateMailboxIds(messageId, validatedUpdate, mailboxIds, session)
+              }
+              .onErrorResume(e => SMono.just[UpdateResult](UpdateFailure(EmailSet.asUnparsed(messageId), e)))
+              .switchIfEmpty(SMono.just[UpdateResult](UpdateSuccess(messageId))))
     }
   }
 
@@ -233,6 +246,15 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
         .switchIfEmpty(SMono.just[UpdateResult](UpdateSuccess(messageId)))
     }
   }
+
+  private def resetFlags(messageId: MessageId, update: ValidatedEmailSetUpdate, mailboxIds: MailboxIds, originalFlags: Flags, session: MailboxSession): SMono[UpdateResult] =
+    update.keywords
+      .map(keywords => keywords.asFlagsWithRecentAndDeletedFrom(originalFlags))
+      .map(flags => SMono.fromCallable(() =>
+        messageIdManager.setFlags(flags, FlagsUpdateMode.REPLACE, messageId, ImmutableList.copyOf(mailboxIds.value.asJavaCollection), session))
+        .subscribeOn(Schedulers.elastic())
+        .`then`(SMono.just[UpdateResult](UpdateSuccess(messageId))))
+      .getOrElse(SMono.just[UpdateResult](UpdateSuccess(messageId)))
 
   private def deleteMessage(destroyId: UnparsedMessageId, mailboxSession: MailboxSession): SMono[DestroyResult] =
     EmailSet.parse(messageIdFactory)(destroyId)

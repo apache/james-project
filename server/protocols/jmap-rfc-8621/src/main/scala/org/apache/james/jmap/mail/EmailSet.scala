@@ -23,12 +23,13 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
 import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.model.KeywordsFactory.STRICT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, SetError}
+import org.apache.james.jmap.model.{AccountId, Keywords, SetError}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.JsObject
 
-import scala.util.Try
+import scala.util.{Failure, Right, Success, Try}
 
 object EmailSet {
   type UnparsedMessageIdConstraint = NonEmpty
@@ -56,7 +57,8 @@ case class EmailSetResponse(accountId: AccountId,
                             destroyed: Option[DestroyIds],
                             notDestroyed: Option[Map[UnparsedMessageId, SetError]])
 
-case class EmailSetUpdate(mailboxIds: Option[MailboxIds],
+case class EmailSetUpdate(keywords: Option[Keywords],
+                          mailboxIds: Option[MailboxIds],
                           mailboxIdsToAdd: Option[MailboxIds],
                           mailboxIdsToRemove: Option[MailboxIds]) {
   def validate: Either[IllegalArgumentException, ValidatedEmailSetUpdate] = if (mailboxIds.isDefined && (mailboxIdsToAdd.isDefined || mailboxIdsToRemove.isDefined)) {
@@ -75,15 +77,26 @@ case class EmailSetUpdate(mailboxIds: Option[MailboxIds],
     val mailboxIdsTransformation: Function[MailboxIds, MailboxIds] = mailboxIdsAddition
       .compose(mailboxIdsRemoval)
       .compose(mailboxIdsReset)
-    scala.Right(ValidatedEmailSetUpdate(mailboxIdsTransformation))
+    Right(mailboxIdsTransformation)
+      .flatMap(mailboxIdsTransformation => validateKeywords
+        .map(validatedKeywords => ValidatedEmailSetUpdate(validatedKeywords, mailboxIdsTransformation)))
+  }
+
+  private def validateKeywords: Either[IllegalArgumentException, Option[Keywords]] = {
+    keywords.map(_.getKeywords)
+      .map(STRICT_KEYWORDS_FACTORY.fromSet)
+      .map {
+        case Success(validatedKeywords: Keywords) => Right(Some(validatedKeywords))
+        case Failure(throwable: IllegalArgumentException) => Left(throwable)
+      }
+      .getOrElse(Right(None))
   }
 }
 
-case class ValidatedEmailSetUpdate private (mailboxIdsTransformation: Function[MailboxIds, MailboxIds])
+case class ValidatedEmailSetUpdate private (keywords: Option[Keywords],
+                                            mailboxIdsTransformation: Function[MailboxIds, MailboxIds])
 
 class EmailUpdateValidationException() extends IllegalArgumentException
 case class InvalidEmailPropertyException(property: String, cause: String) extends EmailUpdateValidationException
 case class InvalidEmailUpdateException(property: String, cause: String) extends EmailUpdateValidationException
-
-
 

@@ -18,25 +18,34 @@
  ****************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
+import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
+import java.util.Date
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
+import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.draft.{JmapGuiceProbe, MessageIdProbe}
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.mailbox.FlagsBuilder
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
-import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageId}
+import org.apache.james.mailbox.model.{ComposedMessageId, MailboxACL, MailboxConstants, MailboxId, MailboxPath, MessageId}
+import org.apache.james.mailbox.probe.MailboxProbe
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
+
+import scala.jdk.CollectionConverters._
 
 trait EmailSetMethodContract {
   @BeforeEach
@@ -53,6 +62,543 @@ trait EmailSetMethodContract {
   }
 
   def randomMessageId: MessageId
+
+  @Test
+  def shouldResetKeywords(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords": {
+         |             "music": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["${messageId.serialize}"],
+         |       "properties": ["keywords"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0]")
+      .isEqualTo(String.format(
+        """{
+          |   "id":"%s",
+          |   "keywords": {
+          |     "music": true
+          |   }
+          |}
+      """.stripMargin, messageId.serialize))
+  }
+
+  @Test
+  def shouldNotResetKeywordWhenFalseValue(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords": {
+         |             "music": true,
+         |             "movie": false
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[0][1].notUpdated.${messageId.serialize}")
+      .isEqualTo(
+        """|{
+          |   "type":"invalidPatch",
+          |   "description": "Message 1 update is invalid: List((,List(JsonValidationError(List(Value associated with keywords is invalid: List((,List(JsonValidationError(List(keyword value can only be true),ArraySeq()))))),ArraySeq()))))"
+          |}""".stripMargin)
+  }
+
+  @Test
+  def shouldNotResetKeywordWhenInvalidKeyword(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords": {
+         |             "mus*c": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[0][1].notUpdated.${messageId.serialize}")
+      .isEqualTo(
+        """|{
+           |   "type":"invalidPatch",
+           |   "description": "Message 1 update is invalid: List((,List(JsonValidationError(List(Value associated with keywords is invalid: List((,List(JsonValidationError(List(FlagName must not be null or empty, must have length form 1-255,must not contain characters with hex from '\\u0000' to '\\u00019' or {'(' ')' '{' ']' '%' '*' '\"' '\\'} ),ArraySeq()))))),ArraySeq()))))"
+           |}""".stripMargin)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array(
+    "$Recent",
+    "$Deleted"
+  ))
+  def shouldNotResetNonExposedKeyword(unexposedKeyword: String, server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request = String.format(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords": {
+         |             "music": true,
+         |             "$unexposedKeyword": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin)
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(
+        s"""{
+           |  "${messageId.serialize}":{
+           |      "type":"invalidPatch",
+           |      "description":"Message 1 update is invalid: Does not allow to update 'Deleted' or 'Recent' flag"}
+           |  }
+           |}"""
+          .stripMargin)
+  }
+
+  @Test
+  def shouldKeepUnexposedKeywordWhenResetKeywords(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString(), "mailbox");
+
+    val bobPath = MailboxPath.forUser(BOB, "mailbox")
+    val message: ComposedMessageId = mailboxProbe.appendMessage(BOB.asString, bobPath,
+      new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)),
+      new Date, false, new Flags(Flags.Flag.DELETED))
+
+    val messageId: String = message.getMessageId.serialize
+
+    val request = String.format(s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "$messageId":{
+         |          "keywords": {
+         |             "music": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin)
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+
+    val flags: List[Flags] = server.getProbe(classOf[MessageIdProbe]).getMessages(message.getMessageId, BOB).asScala.map(m => m.getFlags).toList
+    val expectedFlags: Flags  = FlagsBuilder.builder.add("music").add(Flags.Flag.DELETED).build
+
+    assertThat(flags.asJava)
+      .containsExactly(expectedFlags)
+  }
+
+  @Test
+  def shouldResetKeywordsWhenNotDefault(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords": {
+         |             "music": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["${messageId.serialize}"],
+         |       "properties": ["keywords"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0]")
+      .isEqualTo(String.format(
+        """{
+          |   "id":"%s",
+          |   "keywords": {
+          |             "music": true
+          |    }
+          |}
+      """.stripMargin, messageId.serialize))
+  }
+
+  @Test
+  def shouldNotResetKeywordWhenInvalidMessageId(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "invalid":{
+         |          "keywords": {
+         |             "music": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+     .inPath("methodResponses[0][1].notUpdated")
+     .isEqualTo("""{
+        | "invalid": {
+        |     "type":"invalidPatch",
+        |     "description":"Message invalid update is invalid: For input string: \"invalid\""
+        | }
+        |}""".stripMargin)
+  }
+
+  @Test
+  def shouldNotResetKeywordWhenMessageIdNonExisted(server: GuiceJamesServer): Unit = {
+    val invalidMessageId: MessageId = randomMessageId
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request = s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${invalidMessageId.serialize}":{
+         |          "keywords": {
+         |             "music": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(s"""{
+        | "${invalidMessageId.serialize}": {
+        |     "type":"notFound",
+        |     "description":"Cannot find message with messageId: ${invalidMessageId.serialize}"
+        | }
+        |}""".stripMargin)
+  }
+
+  @Test
+  def shouldNotUpdateInDelegatedMailboxesWhenReadOnly(server: GuiceJamesServer): Unit = {
+    val andreMailbox: String = "andrecustom"
+    val andrePath = MailboxPath.forUser(ANDRE, andreMailbox)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+    val message: Message = Message.Builder
+      .of
+      .setSender(BOB.asString())
+      .setFrom(ANDRE.asString())
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(ANDRE.asString, andrePath, AppendCommand.from(message))
+      .getMessageId
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andrePath, BOB.asString, MailboxACL.Rfc4314Rights.of(Set(Right.Read, Right.Lookup).asJava))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |  ["Email/set",
+         |    {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords": {
+         |             "music": true
+         |          }
+         |        }
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(
+        s"""{
+           |  "${messageId.serialize}":{
+           |     "type": "notFound",
+           |     "description": "Mailbox not found"
+           |  }
+           |}""".stripMargin)
+  }
+
+  @Test
+  def shouldResetFlagsInDelegatedMailboxesWhenHadAtLeastWriteRight(server: GuiceJamesServer): Unit = {
+    val andreMailbox: String = "andrecustom"
+    val andrePath = MailboxPath.forUser(ANDRE, andreMailbox)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+    val message: Message = Message.Builder
+      .of
+      .setSender(BOB.asString())
+      .setFrom(ANDRE.asString())
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(ANDRE.asString, andrePath, AppendCommand.from(message))
+      .getMessageId
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andrePath, BOB.asString, MailboxACL.Rfc4314Rights.of(Set(Right.Write, Right.Read).asJava))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |  ["Email/set",
+         |    {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "ids": ["${messageId.serialize}"],
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords": {
+         |             "music": true
+         |          }
+         |        }
+         |      }
+         |    },
+         |    "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["${messageId.serialize}"],
+         |       "properties": ["keywords"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0]")
+      .isEqualTo(String.format(
+        """{
+          |   "id":"%s",
+          |   "keywords": {
+          |     "music":true
+          |   }
+          |}
+      """.stripMargin, messageId.serialize))
+  }
 
   @Test
   def emailSetShouldDestroyEmail(server: GuiceJamesServer): Unit = {
