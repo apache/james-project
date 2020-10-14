@@ -120,6 +120,16 @@
 
         <dt><strong>mailbox.read.repair.chance</strong></dt>
         <dd>Optional. Defaults to 0.1 (10% chance).<br/> Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox read.</dd>
+        <dt><strong>mailbox.counters.read.repair.chance.max</strong></dt>
+        <dd>Optional. Defaults to 0.1 (10% chance).<br/>
+            Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox counters read.<br/>
+            Formula: read_repair_chance = min(mailbox.counters.read.repair.chance.max, (100/unseens)*mailbox.counters.read.repair.chance.one.hundred)
+        </dd>
+        <dt><strong>mailbox.counters.read.repair.chance.one.hundred</strong></dt>
+        <dd>Optional. Defaults to 0.01 (1% chance).<br/>
+            Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox counters read.<br/>
+            Formula: read_repair_chance = min(mailbox.counters.read.repair.chance.max, (100/unseens)*mailbox.counters.read.repair.chance.one.hundred)
+        </dd>
         <dt><strong>mailbox.max.retry.acl</strong></dt>
         <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra ACL updates.</dd>
         <dt><strong>mailbox.max.retry.modseq</strong></dt>
