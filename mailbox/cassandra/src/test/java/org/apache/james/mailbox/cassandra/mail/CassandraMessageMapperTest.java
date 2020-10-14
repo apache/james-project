@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,6 +44,8 @@ import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
 import org.apache.james.util.streams.Limit;
 import org.assertj.core.api.SoftAssertions;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -351,6 +354,65 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                 .toIterable()
                 .hasSize(1);
+        }
+    }
+
+    @Nested
+    class ReadRepairsTesting {
+        @Test
+        void readingShouldEventuallyFixCountersInconsistencies(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+            FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.REPLACE);
+            messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
+            // Expected count of unseen is 4 see MessageMapperTest::mailboxUnSeenCountShouldBeDecrementedAfterAMessageIsMarkedSeen
+
+            // Create an inconsistency
+            new CassandraMailboxCounterDAO(cassandra.getConf())
+                .incrementUnseenAndCount((CassandraId) benwaInboxMailbox.getMailboxId())
+                .block();
+
+            // 100 poll with a 0.1 probability to trigger read repair
+            Awaitility.await()
+                .pollInterval(new Duration(10, MILLISECONDS))
+                .atMost(Duration.ONE_SECOND)
+                .untilAsserted(() ->
+                    assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4));
+        }
+
+        @Test
+        void readingShouldEventuallyFixMissingCountersInconsistencies(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+            FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.REPLACE);
+            messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
+            // Expected count of unseen is 4 see MessageMapperTest::mailboxUnSeenCountShouldBeDecrementedAfterAMessageIsMarkedSeen
+
+            // Create an inconsistency
+            new CassandraMailboxCounterDAO(cassandra.getConf())
+                .delete((CassandraId) benwaInboxMailbox.getMailboxId())
+                .block();
+
+            // 100 poll with a 0.1 probability to trigger read repair
+            Awaitility.await()
+                .pollInterval(new Duration(10, MILLISECONDS))
+                .atMost(Duration.ONE_SECOND)
+                .untilAsserted(() ->
+                    assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4));
+        }
+
+        @Test
+        void readingShouldFixInvalidCounters(CassandraCluster cassandra) throws MailboxException {
+            saveMessages();
+            FlagsUpdateCalculator newFlags = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.REPLACE);
+            messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), newFlags);
+            // Expected count of unseen is 4 see MessageMapperTest::mailboxUnSeenCountShouldBeDecrementedAfterAMessageIsMarkedSeen
+
+            // Create an inconsistency
+            new CassandraMailboxCounterDAO(cassandra.getConf())
+                .incrementUnseen((CassandraId) benwaInboxMailbox.getMailboxId())
+                .repeat(5)
+                .blockLast();
+
+            assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4);
         }
     }
 }

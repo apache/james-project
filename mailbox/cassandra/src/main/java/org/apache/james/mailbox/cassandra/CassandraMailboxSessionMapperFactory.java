@@ -51,6 +51,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
+import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.user.CassandraSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
@@ -94,6 +95,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
     private final CassandraSchemaVersionManager versionManager;
     private final CassandraUtils cassandraUtils;
+    private final RecomputeMailboxCountersService recomputeMailboxCountersService;
     private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
@@ -107,6 +109,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                                 CassandraAttachmentOwnerDAO ownerDAO, CassandraACLMapper aclMapper,
                                                 CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                                 CassandraSchemaVersionManager versionManager,
+                                                RecomputeMailboxCountersService recomputeMailboxCountersService,
                                                 CassandraUtils cassandraUtils, CassandraConfiguration cassandraConfiguration) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
@@ -131,6 +134,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         this.versionManager = versionManager;
         this.cassandraUtils = cassandraUtils;
         this.ownerDAO = ownerDAO;
+        this.recomputeMailboxCountersService = recomputeMailboxCountersService;
         this.cassandraConfiguration = cassandraConfiguration;
         this.indexTableHandler = new CassandraIndexTableHandler(
             mailboxRecentsDAO,
@@ -155,7 +159,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                           indexTableHandler,
                                           firstUnseenDAO,
                                           deletedMessageDAO,
-                                          cassandraConfiguration);
+                                          cassandraConfiguration, recomputeMailboxCountersService);
     }
 
     @Override

@@ -113,7 +113,7 @@ public class MailboxCounters {
         return Sanitized.of(mailboxId, sanitizedCount, sanitizedUnseen);
     }
 
-    private boolean isValid() {
+    public boolean isValid() {
         return count >= 0
             && unseen >= 0
             && count >= unseen;

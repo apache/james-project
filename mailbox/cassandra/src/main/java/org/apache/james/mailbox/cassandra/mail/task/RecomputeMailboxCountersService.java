@@ -122,7 +122,7 @@ public class RecomputeMailboxCountersService {
         }
     }
 
-    static class Context {
+    public static class Context {
         static class Snapshot {
             private final long processedMailboxCount;
             private final ImmutableList<CassandraId> failedMailboxes;
@@ -168,7 +168,7 @@ public class RecomputeMailboxCountersService {
         private final AtomicLong processedMailboxCount;
         private final ConcurrentLinkedDeque<CassandraId> failedMailboxes;
 
-        Context() {
+        public Context() {
             processedMailboxCount = new AtomicLong();
             failedMailboxes = new ConcurrentLinkedDeque<>();
         }
@@ -213,7 +213,7 @@ public class RecomputeMailboxCountersService {
             });
     }
 
-    private Mono<Result> recomputeMailboxCounter(Context context, Mailbox mailbox, Options options) {
+    public Mono<Result> recomputeMailboxCounter(Context context, Mailbox mailbox, Options options) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         Counter counter = new Counter(mailboxId);
 

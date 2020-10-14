@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -39,6 +40,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.mail.utils.FlagsUpdateStageResult;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -52,6 +54,7 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.task.Task;
 import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
@@ -85,6 +88,8 @@ public class CassandraMessageMapper implements MessageMapper {
     private final AttachmentLoader attachmentLoader;
     private final CassandraDeletedMessageDAO deletedMessageDAO;
     private final CassandraConfiguration cassandraConfiguration;
+    private final RecomputeMailboxCountersService recomputeMailboxCountersService;
+    private final SecureRandom secureRandom;
 
     public CassandraMessageMapper(CassandraUidProvider uidProvider, CassandraModSeqProvider modSeqProvider,
                                   CassandraAttachmentMapper attachmentMapper,
@@ -92,7 +97,8 @@ public class CassandraMessageMapper implements MessageMapper {
                                   CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMailboxCounterDAO mailboxCounterDAO,
                                   CassandraMailboxRecentsDAO mailboxRecentDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                   CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO,
-                                  CassandraDeletedMessageDAO deletedMessageDAO, CassandraConfiguration cassandraConfiguration) {
+                                  CassandraDeletedMessageDAO deletedMessageDAO, CassandraConfiguration cassandraConfiguration,
+                                  RecomputeMailboxCountersService recomputeMailboxCountersService) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.messageDAO = messageDAO;
@@ -106,6 +112,8 @@ public class CassandraMessageMapper implements MessageMapper {
         this.applicableFlagDAO = applicableFlagDAO;
         this.deletedMessageDAO = deletedMessageDAO;
         this.cassandraConfiguration = cassandraConfiguration;
+        this.recomputeMailboxCountersService = recomputeMailboxCountersService;
+        this.secureRandom = new SecureRandom();
     }
 
     @Override
@@ -128,12 +136,45 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public Mono<MailboxCounters> getMailboxCountersReactive(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+        return readMailboxCounters(mailboxId)
+            .flatMap(counters -> {
+                if (!counters.isValid()) {
+                    return fixCounters(mailbox)
+                        .then(readMailboxCounters(mailboxId));
+                }
+                return Mono.just(counters);
+            })
+            .doOnNext(counters -> readRepair(mailbox, counters));
+    }
+
+    public Mono<MailboxCounters> readMailboxCounters(CassandraId mailboxId) {
         return mailboxCounterDAO.retrieveMailboxCounters(mailboxId)
             .defaultIfEmpty(MailboxCounters.builder()
                 .mailboxId(mailboxId)
                 .count(0)
                 .unseen(0)
                 .build());
+    }
+
+    private void readRepair(Mailbox mailbox, MailboxCounters counters) {
+        if (shouldReadRepair(counters)) {
+            fixCounters(mailbox)
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
+        }
+    }
+
+    private Mono<Task.Result> fixCounters(Mailbox mailbox) {
+        return recomputeMailboxCountersService.recomputeMailboxCounter(
+                new RecomputeMailboxCountersService.Context(),
+                mailbox,
+                RecomputeMailboxCountersService.Options.trustMessageProjection());
+    }
+
+    private boolean shouldReadRepair(MailboxCounters counters) {
+        double readRepairChance = 0.1;
+        double ponderatedReadRepairChance = readRepairChance * (10.0 / counters.getUnseen());
+        return secureRandom.nextFloat() < Math.min(readRepairChance, ponderatedReadRepairChance);
     }
 
     @Override

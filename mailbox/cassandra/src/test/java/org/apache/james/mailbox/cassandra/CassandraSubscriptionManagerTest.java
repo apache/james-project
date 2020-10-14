@@ -45,6 +45,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
+import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,6 +89,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraUidProvider uidProvider = null;
         CassandraModSeqProvider modSeqProvider = null;
         CassandraSchemaVersionManager versionManager = null;
+        RecomputeMailboxCountersService recomputeMailboxCountersService = null;
 
         subscriptionManager = new StoreSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
@@ -113,6 +115,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
                 aclMapper,
                 userMailboxRightsDAO,
                 versionManager,
+                recomputeMailboxCountersService,
                 CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CassandraConfiguration.DEFAULT_CONFIGURATION));
     }
