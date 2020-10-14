@@ -172,9 +172,9 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private boolean shouldReadRepair(MailboxCounters counters) {
-        double readRepairChance = 0.1;
-        double ponderatedReadRepairChance = readRepairChance * (10.0 / counters.getUnseen());
-        return secureRandom.nextFloat() < Math.min(readRepairChance, ponderatedReadRepairChance);
+        double ponderedReadRepairChance = cassandraConfiguration.getMailboxCountersReadRepairChanceOneHundred() * (100.0 / counters.getUnseen());
+        return secureRandom.nextFloat() < Math.min(
+            cassandraConfiguration.getMailboxCountersReadRepairChanceMax(), ponderedReadRepairChance);
     }
 
     @Override
