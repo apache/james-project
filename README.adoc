@@ -53,6 +53,7 @@ There is many other ways one can help us: packaging, communication, etc ...
  ** link:#how-to-manage-sieve-scripts[How to manage SIEVE scripts?]
  ** link:#how-to-retrieve-users-and-password-from-my-previous-container[How to retrieve users and password from my previous container?]
  * link:#develop-on-james[Develop on James]
+ ** link:#how-to-build-james[How to build James]
  ** link:#how-to-run-deployment-tests[How to run deployment Tests]
  ** link:#how-to-check-the-merge-of-a-commit[How to check the merge of a commit]
  * link:#generating-a-package-for-james[Generating a package for James]
@@ -75,15 +76,15 @@ Then, you just have to start the services:
 
     $ docker-compose up
 
-Wait a few seconds in order to have all those services start up.You will see the following log when James is available:
-james | Started : true
+Wait a few seconds in order to have all those services start up. You will see the following log when James is available:
+james           | Started : true
 
-A default domain, james.local, has been created.You can see this by running:
+A default domain, james.local, has been created. You can see this by running:
 
     $ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 listdomains
 
 James will respond to IMAP port 143 and SMTP port 25.
-You have to create users before playing with james.You may also want to create other domains.
+You have to create users before playing with james. You may also want to create other domains.
 Follow the 'Useful commands' section for more information about James CLI.
 
 
@@ -403,6 +404,7 @@ Beware : you will have concurrency issues if multiple containers are running on 
 === How to build James
 
 James requires JDK 11 (or newer).
+
 The encouraged method for building and running tests is to use Maven wrapper from
 root directory by running:
 
@@ -411,9 +413,7 @@ root directory by running:
 
 mvnw (or mvnw.bat) is a small script that downloads the correct Maven distribution into .mvn/wrapper directory
 on first run and uses that.
-It is also possible to use locally installed Maven (3.6+) instead of Maven wrapper:
-
-`mvn install`
+It is also possible to use locally installed Maven (3.6+) instead of Maven wrapper by running: `mvn install`
 
 Some parts of James are written in Scala so one might need to enable Scala plugin in IDE.
 
