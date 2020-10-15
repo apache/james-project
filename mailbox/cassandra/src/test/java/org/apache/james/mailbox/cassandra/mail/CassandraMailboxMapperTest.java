@@ -291,11 +291,11 @@ class CassandraMailboxMapperTest {
                         .block());
 
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(MailboxReactorUtils.blockOptional(testee.findMailboxByPath(MAILBOX_PATH)))
+                        .isEmpty();
                     softly(softly)
                         .assertThat(testee.findMailboxById(MAILBOX_ID).block())
                         .isEqualTo(MAILBOX);
-                    softly.assertThat(MailboxReactorUtils.blockOptional(testee.findMailboxByPath(MAILBOX_PATH)))
-                        .isEmpty();
                 }));
             }
 
