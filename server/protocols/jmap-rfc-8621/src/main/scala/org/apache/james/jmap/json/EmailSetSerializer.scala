@@ -30,7 +30,6 @@ import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsResult, JsStr
 import scala.util.Try
 
 class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxIdFactory: MailboxId.Factory) {
-
   object EmailSetUpdateReads {
     def reads(jsObject: JsObject): JsResult[EmailSetUpdate] =
       asEmailSetUpdate(jsObject.value.map {
@@ -63,16 +62,26 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
             .filter(_.nonEmpty)
             .map(MailboxIds)
 
-          JsSuccess(EmailSetUpdate(mailboxIds = mailboxReset))
+          JsSuccess(EmailSetUpdate(mailboxIds = mailboxReset,
+            mailboxIdsToAdd = mailboxesToAdd,
+            mailboxIdsToRemove = mailboxesToRemove))
         })
 
     object EntryValidation {
+      private val mailboxIdPrefix: String = "mailboxIds/"
+
       def from(property: String, value: JsValue): EntryValidation = property match {
         case "mailboxIds" => mailboxIdsReads.reads(value)
           .fold(
             e => InvalidPatchEntryValue(property, e.toString()),
             MailboxReset)
-        case _ => InvalidPatchEntryName(property)
+        case name if name.startsWith(mailboxIdPrefix) => Try(mailboxIdFactory.fromString(name.substring(mailboxIdPrefix.length)))
+          .fold(e => InvalidPatchEntryNameWithDetails(property, e.getMessage),
+            id => value match {
+              case JsBoolean(true) => MailboxAddition(id)
+              case JsNull => MailboxRemoval(id)
+              case _ => InvalidPatchEntryValue(property, "MailboxId partial updates requires a JsBoolean(true) (set) or a JsNull (unset)")
+            })
       }
     }
 

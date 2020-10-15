@@ -56,14 +56,28 @@ case class EmailSetResponse(accountId: AccountId,
                             destroyed: Option[DestroyIds],
                             notDestroyed: Option[Map[UnparsedMessageId, SetError]])
 
-case class EmailSetUpdate(mailboxIds: Option[MailboxIds]) {
+case class EmailSetUpdate(mailboxIds: Option[MailboxIds],
+                          mailboxIdsToAdd: Option[MailboxIds],
+                          mailboxIdsToRemove: Option[MailboxIds]) {
   def validate: Either[IllegalArgumentException, ValidatedEmailSetUpdate] = {
-    val identity: Function[MailboxIds, MailboxIds] = ids => ids
-    val mailboxIdsReset: Function[MailboxIds, MailboxIds] = mailboxIds
-      .map(toReset => (_: MailboxIds) => toReset)
-      .getOrElse(identity)
-    val mailboxIdsTransformation: Function[MailboxIds, MailboxIds] = mailboxIdsReset
-    scala.Right(ValidatedEmailSetUpdate(mailboxIdsTransformation))
+    if (mailboxIds.isDefined && (mailboxIdsToAdd.isDefined || mailboxIdsToRemove.isDefined)) {
+      Left(new IllegalArgumentException("Partial update for mailboxIds"))
+    } else {
+      val identity: Function[MailboxIds, MailboxIds] = ids => ids
+      val mailboxIdsAddition: Function[MailboxIds, MailboxIds] = mailboxIdsToAdd
+        .map(toBeAdded => (ids: MailboxIds) => ids ++ toBeAdded)
+        .getOrElse(identity)
+      val mailboxIdsRemoval: Function[MailboxIds, MailboxIds] = mailboxIdsToRemove
+        .map(toBeRemoved => (ids: MailboxIds) => ids -- toBeRemoved)
+        .getOrElse(identity)
+      val mailboxIdsReset: Function[MailboxIds, MailboxIds] = mailboxIds
+        .map(toReset => (_: MailboxIds) => toReset)
+        .getOrElse(identity)
+      val mailboxIdsTransformation: Function[MailboxIds, MailboxIds] = mailboxIdsAddition
+        .compose(mailboxIdsRemoval)
+        .compose(mailboxIdsReset)
+      scala.Right(ValidatedEmailSetUpdate(mailboxIdsTransformation))
+    }
   }
 }
 

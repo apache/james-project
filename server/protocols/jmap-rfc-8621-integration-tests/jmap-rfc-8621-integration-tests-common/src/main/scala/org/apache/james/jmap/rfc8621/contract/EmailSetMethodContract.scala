@@ -448,6 +448,72 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def mailboxIdsShouldSupportPartialUpdates(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "other"))
+    val mailboxId3: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "yet-another"))
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId1.serialize}": true,
+         |            "${mailboxId2.serialize}": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |           "mailboxIds/${mailboxId1.serialize}": null,
+         |           "mailboxIds/${mailboxId3.serialize}": true
+         |         }
+         |      }
+         |    }, "c2"],
+         |     ["Email/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties": ["mailboxIds"]
+         |    }, "c3"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[2][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |  "id": "${messageId.serialize}",
+         |  "mailboxIds": {"${mailboxId2.serialize}":true, "${mailboxId3.serialize}":true}
+         |}""".stripMargin)
+  }
+
+  @Test
   def emailSetDestroySuccessAndFailureCanBeMixed(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
