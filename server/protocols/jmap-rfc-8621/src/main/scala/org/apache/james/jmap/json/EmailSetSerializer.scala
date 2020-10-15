@@ -82,6 +82,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
               case JsNull => MailboxRemoval(id)
               case _ => InvalidPatchEntryValue(property, "MailboxId partial updates requires a JsBoolean(true) (set) or a JsNull (unset)")
             })
+        case _ => InvalidPatchEntryName(property)
       }
     }
 

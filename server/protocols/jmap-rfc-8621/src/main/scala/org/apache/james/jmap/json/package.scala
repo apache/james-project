@@ -52,8 +52,8 @@ package object json {
                 refinedKey match {
                   case Left(error) => Left(JsError(error))
                   case scala.util.Right(unparsedK) =>
-                    val transformValue: JsResult[V] = valueReads.reads(keyValue._2)
-                    transformValue.fold(
+                    val transformedValue: JsResult[V] = valueReads.reads(keyValue._2)
+                    transformedValue.fold(
                       error => Left(JsError(error)),
                       v => scala.util.Right(validatedAcc + (unparsedK -> v)))
                 }
