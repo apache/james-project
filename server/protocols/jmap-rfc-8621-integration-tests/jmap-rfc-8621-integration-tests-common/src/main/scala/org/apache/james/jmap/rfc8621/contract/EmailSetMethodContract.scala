@@ -24,11 +24,9 @@ import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import net.javacrumbs.jsonunit.core.Option
-import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
-import org.apache.james.jmap.draft.JmapGuiceProbe
+import org.apache.james.jmap.draft.{JmapGuiceProbe, MessageIdProbe}
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -37,6 +35,7 @@ import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, Messa
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
 
 trait EmailSetMethodContract {
@@ -507,7 +506,7 @@ trait EmailSetMethodContract {
   }
 
   @Test
-  def emailSetShouldUpdateMailboxIds(server: GuiceJamesServer): Unit = {
+  def emailSetMailboxIdResetShouldSucceed(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
     val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "other"))
@@ -586,7 +585,7 @@ trait EmailSetMethodContract {
   }
 
   @Test
-  def emailSetShouldUpdateMailboxIdsForMultipleMessages(server: GuiceJamesServer): Unit = {
+  def emailSetMailboxIdResetShouldSucceedForMultipleMessages(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
     val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "other"))
@@ -645,7 +644,6 @@ trait EmailSetMethodContract {
       .asString
 
     assertThatJson(response)
-      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
       .isEqualTo(
       s"""{
          |    "sessionState": "75128aab4b1b",
@@ -679,6 +677,738 @@ trait EmailSetMethodContract {
          |        },"c2"]
          |    ]
          |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetShouldFailWhenNoRightsOnSourceMailbox(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
+    val path = MailboxPath.forUser(ANDRE, "other")
+    mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString, path,
+        AppendCommand.from(buildTestMessage))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId1.serialize}": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |        ["Email/set", {
+           |          "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |          "newState": "000001",
+           |          "notUpdated": {
+           |            "1": {
+           |              "type": "notFound",
+           |              "description": "Cannot find message with messageId: 1"
+           |            }
+           |          }
+           |        }, "c1"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetShouldFailWhenForbidden(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    val path = MailboxPath.forUser(ANDRE, "other")
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId2.serialize}": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties":["mailboxIds"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |      ["Email/set", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "newState": "000001",
+           |        "notUpdated": {
+           |          "${messageId.serialize}": {
+           |            "type": "notFound",
+           |            "description": "Mailbox not found"
+           |          }
+           |        }
+           |      }, "c1"],
+           |      ["Email/get", {
+           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "state":"000001",
+           |        "list":[
+           |          {
+           |            "id":"${messageId.serialize}",
+           |            "mailboxIds": {
+           |              "${mailboxId1.serialize}": true
+           |            }
+           |          }
+           |        ],
+           |        "notFound":[]
+           |        },"c2"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetShouldFailWhenRemovingMessageFromSourceMailbox(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
+    val path = MailboxPath.forUser(ANDRE, "other")
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString, path,
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId1.serialize}": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties":["mailboxIds"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |      ["Email/set", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "newState": "000001",
+           |        "notUpdated": {
+           |          "1": {
+           |            "type": "notFound",
+           |            "description": "Mailbox not found"
+           |          }
+           |        }
+           |      }, "c1"],
+           |      ["Email/get", {
+           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "state":"000001",
+           |        "list":[
+           |          {
+           |            "id":"${messageId.serialize}",
+           |            "mailboxIds": {
+           |              "${mailboxId2.serialize}": true
+           |            }
+           |          }
+           |        ],
+           |        "notFound":[]
+           |        },"c2"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetShouldSucceedWhenCopyMessage(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
+    val path = MailboxPath.forUser(ANDRE, "other")
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString, path,
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId1.serialize}": true,
+         |            "${mailboxId2.serialize}": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties":["mailboxIds"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |      ["Email/set", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "newState": "000001",
+           |        "updated": {
+           |          "${messageId.serialize}": null
+           |        }
+           |      }, "c1"],
+           |      ["Email/get", {
+           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "state":"000001",
+           |        "list":[
+           |          {
+           |            "id":"${messageId.serialize}",
+           |            "mailboxIds": {
+           |              "${mailboxId1.serialize}": true,
+           |              "${mailboxId2.serialize}": true
+           |            }
+           |          }
+           |        ],
+           |        "notFound":[]
+           |        },"c2"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetShouldSucceedWhenShareeHasRightOnTargetMailbox(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
+    val path = MailboxPath.forUser(ANDRE, "other")
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Insert))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId2.serialize}": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties":["mailboxIds"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |      ["Email/set", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "newState": "000001",
+           |        "updated": {
+           |          "${messageId.serialize}": null
+           |        }
+           |      }, "c1"],
+           |      ["Email/get", {
+           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "state":"000001",
+           |        "list":[
+           |          {
+           |            "id":"${messageId.serialize}",
+           |            "mailboxIds": {
+           |              "${mailboxId2.serialize}": true
+           |            }
+           |          }
+           |        ],
+           |        "notFound":[]
+           |        },"c2"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetShouldNotAffectMailboxIdFilter(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val path = MailboxPath.forUser(ANDRE, "other")
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString, path,
+        AppendCommand.from(buildTestMessage))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId1.serialize}": true,
+         |            "${mailboxId2.serialize}": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |      ["Email/set", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "newState": "000001",
+           |        "updated": {
+           |          "${messageId.serialize}": null
+           |        }
+           |      }, "c1"]
+           |    ]
+           |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, ANDRE)
+        .stream()
+        .map(message => message.getMailboxId))
+      .containsExactly(mailboxId2)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetShouldFailWhenInvalidKey(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "invalid": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |      ["Email/set", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "newState": "000001",
+           |        "notUpdated": {
+           |          "${messageId.serialize}": {
+           |            "type": "invalidPatch",
+           |            "description": "Message ${messageId.serialize} update is invalid: List((,List(JsonValidationError(List(Value associated with mailboxIds is invalid: List((,List(JsonValidationError(List(For input string: \\"invalid\\"),ArraySeq()))))),ArraySeq()))))"
+           |          }
+           |        }
+           |      }, "c1"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetShouldFailWhenInvalidValue(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId.serialize}": "invalid"
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |      ["Email/set", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "newState": "000001",
+           |        "notUpdated": {
+           |          "${messageId.serialize}": {
+           |            "type": "invalidPatch",
+           |            "description": "Message ${messageId.serialize} update is invalid: List((,List(JsonValidationError(List(Value associated with mailboxIds is invalid: List((,List(JsonValidationError(List(Expecting mailboxId value to be a boolean),ArraySeq()))))),ArraySeq()))))"
+           |          }
+           |        }
+           |      }, "c1"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetShouldFailWhenValueIsFalse(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId.serialize}": "false"
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |      ["Email/set", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "newState": "000001",
+           |        "notUpdated": {
+           |          "${messageId.serialize}": {
+           |            "type": "invalidPatch",
+           |            "description": "Message ${messageId.serialize} update is invalid: List((,List(JsonValidationError(List(Value associated with mailboxIds is invalid: List((,List(JsonValidationError(List(Expecting mailboxId value to be a boolean),ArraySeq()))))),ArraySeq()))))"
+           |          }
+           |        }
+           |      }, "c1"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetMailboxIdsResetSuccessAndFailureCanBeMixed(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+
+    val path = MailboxPath.forUser(ANDRE, "other")
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
+
+    val messageId1: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    val messageId2: MessageId = mailboxProbe
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Insert))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "update": {
+         |        "${messageId1.serialize}": {
+         |          "mailboxIds": {
+         |            "${mailboxId2.serialize}": true
+         |          }
+         |        },
+         |        "${messageId2.serialize}": {
+         |          "mailboxIds": {
+         |            "invalid": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |      ["Email/set", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "newState": "000001",
+           |        "updated": {
+           |          "${messageId1.serialize}": null
+           |        },
+           |        "notUpdated": {
+           |          "${messageId2.serialize}": {
+           |            "type": "invalidPatch",
+           |            "description": "Message ${messageId2.serialize} update is invalid: List((,List(JsonValidationError(List(Value associated with mailboxIds is invalid: List((,List(JsonValidationError(List(For input string: \\"invalid\\"),ArraySeq()))))),ArraySeq()))))"
+           |          }
+           |        }
+           |      }, "c1"]
+           |    ]
+           |}""".stripMargin)
   }
 
   private def buildTestMessage = {

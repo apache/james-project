@@ -26,6 +26,7 @@ import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, SetError}
 import org.apache.james.mailbox.model.MessageId
+import play.api.libs.json.JsObject
 
 import scala.util.Try
 
@@ -45,15 +46,32 @@ object EmailSet {
 case class DestroyIds(value: Seq[UnparsedMessageId])
 
 case class EmailSetRequest(accountId: AccountId,
-                           update: Option[Map[UnparsedMessageId, EmailSetUpdate]],
+                           update: Option[Map[UnparsedMessageId, JsObject]],
                            destroy: Option[DestroyIds]) extends WithAccountId
 
 case class EmailSetResponse(accountId: AccountId,
                             newState: State,
                             updated: Option[Map[MessageId, Unit]],
+                            notUpdated: Option[Map[UnparsedMessageId, SetError]],
                             destroyed: Option[DestroyIds],
                             notDestroyed: Option[Map[UnparsedMessageId, SetError]])
 
-case class EmailSetUpdate(mailboxIds: Option[MailboxIds])
+case class EmailSetUpdate(mailboxIds: Option[MailboxIds]) {
+  def validate: Either[IllegalArgumentException, ValidatedEmailSetUpdate] = {
+    val identity: Function[MailboxIds, MailboxIds] = ids => ids
+    val mailboxIdsReset: Function[MailboxIds, MailboxIds] = mailboxIds
+      .map(toReset => (_: MailboxIds) => toReset)
+      .getOrElse(identity)
+    val mailboxIdsTransformation: Function[MailboxIds, MailboxIds] = mailboxIdsReset
+    scala.Right(ValidatedEmailSetUpdate(mailboxIdsTransformation))
+  }
+}
+
+case class ValidatedEmailSetUpdate private (mailboxIdsTransformation: Function[MailboxIds, MailboxIds])
+
+class EmailUpdateValidationException() extends IllegalArgumentException
+case class InvalidEmailPropertyException(property: String, cause: String) extends EmailUpdateValidationException
+case class InvalidEmailUpdateException(property: String, cause: String) extends EmailUpdateValidationException
+
 
 

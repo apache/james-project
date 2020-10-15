@@ -1,4 +1,4 @@
-/** **************************************************************
+/****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -6,16 +6,16 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- * *
- * http://www.apache.org/licenses/LICENSE-2.0                 *
- * *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ************************************************************** */
+ ****************************************************************/
 
 package org.apache.james.jmap.json
 
@@ -30,6 +30,75 @@ import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsResult, JsStr
 import scala.util.Try
 
 class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxIdFactory: MailboxId.Factory) {
+
+  object EmailSetUpdateReads {
+    def reads(jsObject: JsObject): JsResult[EmailSetUpdate] =
+      asEmailSetUpdate(jsObject.value.map {
+        case (property, value) => EntryValidation.from(property, value)
+      }.toSeq)
+
+    private def asEmailSetUpdate(entries: Seq[EntryValidation]): JsResult[EmailSetUpdate] =
+      entries.flatMap(_.asJsError)
+        .headOption
+        .getOrElse({
+          val mailboxReset: Option[MailboxIds] = entries.flatMap {
+            case update: MailboxReset => Some(update)
+            case _ => None
+          }.headOption
+            .map(_.ids)
+
+          val mailboxesToAdd: Option[MailboxIds] = Some(entries
+            .flatMap {
+              case update: MailboxAddition => Some(update)
+              case _ => None
+            }.map(_.id).toList)
+            .filter(_.nonEmpty)
+            .map(MailboxIds)
+
+          val mailboxesToRemove: Option[MailboxIds] = Some(entries
+            .flatMap {
+              case update: MailboxRemoval => Some(update)
+              case _ => None
+            }.map(_.id).toList)
+            .filter(_.nonEmpty)
+            .map(MailboxIds)
+
+          JsSuccess(EmailSetUpdate(mailboxIds = mailboxReset))
+        })
+
+    object EntryValidation {
+      def from(property: String, value: JsValue): EntryValidation = property match {
+        case "mailboxIds" => mailboxIdsReads.reads(value)
+          .fold(
+            e => InvalidPatchEntryValue(property, e.toString()),
+            MailboxReset)
+        case _ => InvalidPatchEntryName(property)
+      }
+    }
+
+    sealed trait EntryValidation {
+      def asJsError: Option[JsError] = None
+    }
+
+    private case class InvalidPatchEntryName(property: String) extends EntryValidation {
+      override def asJsError: Option[JsError] = Some(JsError(s"$property is an invalid entry in an Email/set update patch"))
+    }
+
+    private case class InvalidPatchEntryNameWithDetails(property: String, cause: String) extends EntryValidation {
+      override def asJsError: Option[JsError] = Some(JsError(s"$property is an invalid entry in an Email/set update patch: $cause"))
+    }
+
+    private case class InvalidPatchEntryValue(property: String, cause: String) extends EntryValidation {
+      override def asJsError: Option[JsError] = Some(JsError(s"Value associated with $property is invalid: $cause"))
+    }
+
+    private case class MailboxAddition(id: MailboxId) extends EntryValidation
+
+    private case class MailboxRemoval(id: MailboxId) extends EntryValidation
+
+    private case class MailboxReset(ids: MailboxIds) extends EntryValidation
+
+  }
 
   private implicit val messageIdWrites: Writes[MessageId] = messageId => JsString(messageId.serialize)
   private implicit val messageIdReads: Reads[MessageId] = {
@@ -49,10 +118,17 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val mailboxIdsReads: Reads[MailboxIds] = jsValue => mailboxIdsMapReads.reads(jsValue).map(
     mailboxIdsMap => MailboxIds(mailboxIdsMap.keys.toList))
 
-  private implicit val emailSetUpdateReads: Reads[EmailSetUpdate] = Json.reads[EmailSetUpdate]
+  private implicit val emailSetUpdateReads: Reads[EmailSetUpdate] = {
+    case o: JsObject => EmailSetUpdateReads.reads(o)
+    case _ => JsError("Expecting a JsObject to represent an EmailSetUpdate")
+  }
 
-  private implicit val updatesMapReads: Reads[Map[UnparsedMessageId, EmailSetUpdate]] =
-    readMapEntry[UnparsedMessageId, EmailSetUpdate](s => refineV[UnparsedMessageIdConstraint](s), emailSetUpdateReads)
+  private implicit val updatesMapReads: Reads[Map[UnparsedMessageId, JsObject]] =
+    readMapEntry[UnparsedMessageId, JsObject](s => refineV[UnparsedMessageIdConstraint](s),
+      {
+        case o: JsObject => JsSuccess(o)
+        case _ => JsError("Expecting a JsObject as an update entry")
+      })
 
   private implicit val unitWrites: Writes[Unit] = _ => JsNull
   private implicit val updatedWrites: Writes[Map[MessageId, Unit]] = mapWrites[MessageId, Unit](_.serialize, unitWrites)
@@ -65,6 +141,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val emailResponseSetWrites: OWrites[EmailSetResponse] = Json.writes[EmailSetResponse]
 
   def deserialize(input: JsValue): JsResult[EmailSetRequest] = Json.fromJson[EmailSetRequest](input)
+
+  def deserializeEmailSetUpdate(input: JsValue): JsResult[EmailSetUpdate] = Json.fromJson[EmailSetUpdate](input)
 
   def serialize(response: EmailSetResponse): JsObject = Json.toJsObject(response)
 }

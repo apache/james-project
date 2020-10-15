@@ -212,7 +212,10 @@ case class HeaderMessageId(value: String) extends AnyVal
 
 case class Subject(value: String) extends AnyVal
 
-case class MailboxIds(value: List[MailboxId])
+case class MailboxIds(value: List[MailboxId]) {
+  def ++(ids: MailboxIds) = MailboxIds(value ++ ids.value)
+  def --(ids: MailboxIds) = MailboxIds((value.toSet -- ids.value.toSet).toList)
+}
 
 case class ThreadId(value: String) extends AnyVal
 
