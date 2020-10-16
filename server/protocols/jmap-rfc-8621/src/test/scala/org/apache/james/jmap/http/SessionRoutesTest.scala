@@ -99,6 +99,15 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .statusCode(HttpStatus.SC_OK)
   }
 
+  "get .well-known/jmap" should "redirect" in {
+    RestAssured.`given`()
+      .basePath(".well-known/jmap")
+      .get
+    .`then`
+      .statusCode(308)
+      .header("Location", "/jmap/session")
+  }
+
   "get" should "return correct session" in {
     val sessionJson = RestAssured.`with`()
         .get
