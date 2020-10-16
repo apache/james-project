@@ -11,7 +11,7 @@ Webadmin command-line interface is an upcoming replacement for the outdated, sec
 General syntax to run the command line
 
 ```   
-$ james-cli [OPTION] ENTITY ACTION {ARGUMENT}
+$ java -jar james-cli.jar [OPTION] ENTITY ACTION {ARGUMENT}
 ```
 
 where
@@ -26,12 +26,14 @@ where
 
 Example: 
 ```
-$ james-cli --url http://127.0.0.1 --port 9999 domain list
+$ java -jar james-cli.jar --url http://127.0.0.1 --port 9999 domain list
 ```
 
 The above command lists all domain names available on domain route at address http://127.0.0.1:9999. 
 It does not require any argument to execute. Options --url and --port are optional. Without them, the default value is http://127.0.0.0:8000.
 As for other commands, arguments might be required after the sub-command (ACTION such as list, add and remove).
+
+Note: the command line before ENTITY will be documented as {cli}.
 
 ## Navigation menu
 
@@ -52,7 +54,7 @@ As for other commands, arguments might be required after the sub-command (ACTION
 ### Create a domain
 Add a domain to the domain list.
 ```
-james-cli domain create <domainToBeCreated>
+{cli} domain create <domainToBeCreated>
 ```
 Resource name **domainToBeCreated**:
 
@@ -65,20 +67,20 @@ Resource name **domainToBeCreated**:
 
 Remove a domain from the domain list.
 ```
-james-cli domain delete <domainToBeDeleted>
+{cli} domain delete <domainToBeDeleted>
 ```
 Note: Deletion of an auto-detected domain, default domain or of an auto-detected ip is not supported. We encourage you instead to review your [domain list configuration](https://james.apache.org/server/config-domainlist.html).
 
 ### Check if a domain exists
 Check whether a domain exists on the domain list or not.
 ```
-james-cli domain exist <domainToBeChecked>
+{cli} domain exist <domainToBeChecked>
 ```
 
 ### Get the list of domains
 Show all domains' name on the list.
 ```
-james-cli domain list
+{cli} domain list
 ```
 
 
@@ -89,7 +91,7 @@ james-cli domain list
 
 Add an user to the user list.
 ```
-james-cli user create <username> <password>
+{cli} user create <username> <password>
 ```
 Resource name <username> representing valid users, hence it should match the criteria at [User Repositories documentation](https://james.apache.org/server/config-users.html)
 
@@ -99,7 +101,7 @@ Note: if the user exists already, its password will be updated.
 
 Check whether an user exists on the user list or not.
 ```
-james-cli user exist <username>
+{cli} user exist <username>
 ```
 Resource name <username> representing valid users, hence it should match the criteria at [User Repositories documentation](https://james.apache.org/server/config-users.html)
 
@@ -107,7 +109,7 @@ Resource name <username> representing valid users, hence it should match the cri
 
 Remove an user from the user list.
 ```
-james-cli user delete <username>
+{cli} user delete <username>
 ```
 
 ### Get users list
@@ -115,12 +117,11 @@ james-cli user delete <username>
 Show all users' name on the list.
 
 ```
-james-cli user list
+{cli} user list
 ```
 
 ### Update an user password
 Same as Create, but an user need to exist.
 
 If the user do not exist, then it will be created.
-
 
