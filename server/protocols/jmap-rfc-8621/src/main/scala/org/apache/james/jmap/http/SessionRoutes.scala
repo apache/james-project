@@ -29,7 +29,7 @@ import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8
 import org.apache.james.jmap.JMAPRoutes.CORS_CONTROL
 import org.apache.james.jmap.JMAPUrls.AUTHENTICATION
 import org.apache.james.jmap.exceptions.UnauthorizedException
-import org.apache.james.jmap.http.SessionRoutes.{JMAP_SESSION, LOGGER}
+import org.apache.james.jmap.http.SessionRoutes.{JMAP_SESSION, WELL_KNOWN_JMAP, LOGGER}
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.model.Session
@@ -43,6 +43,7 @@ import reactor.netty.http.server.HttpServerResponse
 
 object SessionRoutes {
   private val JMAP_SESSION: String = "/jmap/session"
+  private val WELL_KNOWN_JMAP: String = "/.well-known/jmap"
   private val LOGGER = LoggerFactory.getLogger(classOf[SessionRoutes])
 }
 
@@ -58,6 +59,8 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
       .subscribeOn(Schedulers.elastic())
       .asJava()
 
+  private val redirectToSession: JMAPRoute.Action = JMAPRoutes.redirectTo(JMAP_SESSION)
+
   override def routes: Stream[JMAPRoute] =
     Stream.of(
       JMAPRoute.builder()
@@ -65,7 +68,15 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
         .action(generateSession)
         .corsHeaders,
       JMAPRoute.builder()
-        .endpoint(new Endpoint(HttpMethod.OPTIONS, AUTHENTICATION))
+        .endpoint(new Endpoint(HttpMethod.OPTIONS, JMAP_SESSION))
+        .action(CORS_CONTROL)
+        .noCorsHeaders,
+      JMAPRoute.builder()
+        .endpoint(new Endpoint(HttpMethod.GET, WELL_KNOWN_JMAP))
+        .action(redirectToSession)
+        .corsHeaders,
+      JMAPRoute.builder()
+        .endpoint(new Endpoint(HttpMethod.OPTIONS, WELL_KNOWN_JMAP))
         .action(CORS_CONTROL)
         .noCorsHeaders)
 
