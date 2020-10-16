@@ -39,24 +39,30 @@ package object json {
       })
     }
 
-  def readMapEntry[K, V](keyValidator: String => Either[String, K], valueTransformer: JsObject => V): Reads[Map[K, V]] = _.validate[Map[String, JsObject]]
-    .flatMap(mapWithStringKey =>{
-      mapWithStringKey
-        .foldLeft[Either[JsError, Map[K, V]]](scala.util.Right[JsError, Map[K, V]](Map.empty))((acc: Either[JsError, Map[K, V]], keyValue) => {
-          acc match {
-            case error@Left(_) => error
-            case scala.util.Right(validatedAcc) =>
-              val refinedKey: Either[String, K] = keyValidator.apply(keyValue._1)
-              refinedKey match {
-                case Left(error) => Left(JsError(error))
-                case scala.util.Right(unparsedK) => scala.util.Right(validatedAcc + (unparsedK -> valueTransformer.apply(keyValue._2)))
-              }
-          }
-        }) match {
-        case Left(jsError) => jsError
-        case scala.util.Right(value) => JsSuccess(value)
-      }
-    })
+  def readMapEntry[K, V](keyValidator: String => Either[String, K], valueReads: Reads[V]): Reads[Map[K, V]] =
+    _.validate[Map[String, JsValue]]
+      .flatMap(mapWithStringKey =>{
+        val firstAcc = scala.util.Right[JsError, Map[K, V]](Map.empty)
+        mapWithStringKey
+          .foldLeft[Either[JsError, Map[K, V]]](firstAcc)((acc: Either[JsError, Map[K, V]], keyValue) => {
+            acc match {
+              case error@Left(_) => error
+              case scala.util.Right(validatedAcc) =>
+                val refinedKey: Either[String, K] = keyValidator.apply(keyValue._1)
+                refinedKey match {
+                  case Left(error) => Left(JsError(error))
+                  case scala.util.Right(unparsedK) =>
+                    val transformValue: JsResult[V] = valueReads.reads(keyValue._2)
+                    transformValue.fold(
+                      error => Left(JsError(error)),
+                      v => scala.util.Right(validatedAcc + (unparsedK -> v)))
+                }
+            }
+          }) match {
+          case Left(jsError) => jsError
+          case scala.util.Right(value) => JsSuccess(value)
+        }
+      })
 
   // code copied from https://github.com/avdv/play-json-refined/blob/master/src/main/scala/de.cbley.refined.play.json/package.scala
   implicit def writeRefined[T, P, F[_, _]](

@@ -23,13 +23,13 @@ import javax.inject.Inject
 import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
-import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, EmailSetResponse}
+import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, EmailSetResponse, EmailSetUpdate}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{Capabilities, Invocation, SetError, State}
-import org.apache.james.mailbox.model.{DeleteResult, MessageId}
+import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, DeleteResult, MailboxId, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsSuccess}
@@ -39,6 +39,13 @@ import reactor.core.scheduler.Schedulers
 import scala.jdk.CollectionConverters._
 
 case class MessageNotFoundExeception(messageId: MessageId) extends Exception
+
+class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
+                               messageIdManager: MessageIdManager,
+                               messageIdFactory: MessageId.Factory,
+                               val metricFactory: MetricFactory,
+                               val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSetRequest] {
+
 
 case class DestroyResults(results: Seq[DestroyResult]) {
   def destroyed: Option[DestroyIds] = {
@@ -86,11 +93,35 @@ case class DestroyFailure(unparsedMessageId: UnparsedMessageId, e: Throwable) ex
   }
 }
 
-class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
-                               messageIdManager: MessageIdManager,
-                               messageIdFactory: MessageId.Factory,
-                               val metricFactory: MetricFactory,
-                               val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSetRequest] {
+trait UpdateResult
+case class UpdateSuccess(messageId: MessageId) extends UpdateResult
+case class UpdateFailure(unparsedMessageId: UnparsedMessageId, e: Throwable) extends UpdateResult {
+  def asMessageSetError: SetError = e match {
+    case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
+  }
+}
+case class UpdateResults(results: Seq[UpdateResult]) {
+  def updated: Option[Map[MessageId, Unit]] = {
+    Option(results.flatMap({
+      result => result match {
+        case result: UpdateSuccess => Some(result.messageId, ())
+        case _ => None
+      }
+    }).toMap).filter(_.nonEmpty)
+  }
+
+  def notUpdated: Option[Map[UnparsedMessageId, SetError]] = {
+    Option(results.flatMap({
+      result => result match {
+        case failure: UpdateFailure => Some(failure)
+        case _ => None
+      }
+    })
+      .map(failure => (failure.unparsedMessageId, failure.asMessageSetError))
+      .toMap)
+      .filter(_.nonEmpty)
+  }
+}
 
   override val methodName: MethodName = MethodName("Email/set")
   override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
@@ -98,12 +129,14 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSetRequest): SMono[InvocationWithContext] = {
     for {
       destroyResults <- destroy(request, mailboxSession)
+      updateResults <- update(request, mailboxSession)
     } yield InvocationWithContext(
         invocation = Invocation(
           methodName = invocation.invocation.methodName,
           arguments = Arguments(serializer.serialize(EmailSetResponse(
             accountId = request.accountId,
             newState = State.INSTANCE,
+            updated = updateResults.updated,
             destroyed = destroyResults.destroyed,
             notDestroyed = destroyResults.notDestroyed))),
           methodCallId = invocation.invocation.methodCallId),
@@ -123,6 +156,61 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
       .flatMap(id => deleteMessage(id, mailboxSession))
       .collectSeq()
       .map(DestroyResults)
+
+  private def update(emailSetRequest: EmailSetRequest, mailboxSession: MailboxSession): SMono[UpdateResults] = {
+    emailSetRequest.update
+      .filter(_.nonEmpty)
+      .map(update(_, mailboxSession))
+      .getOrElse(SMono.just(UpdateResults(Seq())))
+  }
+
+  private def update(updates: Map[UnparsedMessageId, EmailSetUpdate], session: MailboxSession): SMono[UpdateResults] = {
+    val validatedUpdates: List[Either[UpdateFailure, (MessageId, EmailSetUpdate)]] = updates
+      .map({
+        case (unparsedMessageId, updatePatch) => EmailSet.parse(messageIdFactory)(unparsedMessageId)
+          .map((_, updatePatch))
+          .toEither
+          .left.map(e => UpdateFailure(unparsedMessageId, e))
+      })
+      .toList
+    val failures: List[UpdateFailure] = validatedUpdates.flatMap({
+      case Left(e) => Some(e)
+      case _ => None
+    })
+    val validUpdates: List[(MessageId, EmailSetUpdate)] = validatedUpdates.flatMap({
+      case Right(pair) => Some(pair)
+      case _ => None
+    })
+
+    for {
+      updates <- SFlux.fromPublisher(messageIdManager.messagesMetadata(validUpdates.map(_._1).asJavaCollection, session))
+        .collectMultimap(metaData => metaData.getComposedMessageId.getMessageId)
+        .flatMap(metaData => {
+          SFlux.fromIterable(validUpdates)
+            .concatMap[UpdateResult]({
+              case (messageId, updatePatch) =>
+                doUpdate(messageId, updatePatch, metaData.get(messageId).toList.flatten, session)
+            })
+            .collectSeq()
+        })
+    } yield {
+      UpdateResults(updates ++ failures)
+    }
+  }
+
+  private def doUpdate(messageId: MessageId, update: EmailSetUpdate, storedMetaData: List[ComposedMessageIdWithMetaData], session: MailboxSession): SMono[UpdateResult] = {
+    val mailboxIds: List[MailboxId] = storedMetaData.map(metaData => metaData.getComposedMessageId.getMailboxId)
+
+    updateMailboxIds(messageId, update, session)
+      .onErrorResume(e => SMono.just[UpdateResult](UpdateFailure(EmailSet.asUnparsed(messageId), e)))
+      .switchIfEmpty(SMono.just[UpdateResult](UpdateSuccess(messageId)))
+  }
+
+  private def updateMailboxIds(messageId: MessageId, update: EmailSetUpdate, session: MailboxSession): SMono[UpdateResult] =
+    SMono.justOrEmpty(update.mailboxIds)
+      .flatMap(mailboxIds => SMono.fromCallable(() => messageIdManager.setInMailboxes(messageId, mailboxIds.value.asJava, session))
+        .subscribeOn(Schedulers.elastic())
+        .`then`(SMono.just[UpdateResult](UpdateSuccess(messageId))))
 
   private def deleteMessage(destroyId: UnparsedMessageId, mailboxSession: MailboxSession): SMono[DestroyResult] =
     EmailSet.parse(messageIdFactory)(destroyId)

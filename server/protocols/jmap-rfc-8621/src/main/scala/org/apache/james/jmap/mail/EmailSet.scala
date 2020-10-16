@@ -45,11 +45,15 @@ object EmailSet {
 case class DestroyIds(value: Seq[UnparsedMessageId])
 
 case class EmailSetRequest(accountId: AccountId,
+                           update: Option[Map[UnparsedMessageId, EmailSetUpdate]],
                            destroy: Option[DestroyIds]) extends WithAccountId
 
 case class EmailSetResponse(accountId: AccountId,
                             newState: State,
+                            updated: Option[Map[MessageId, Unit]],
                             destroyed: Option[DestroyIds],
                             notDestroyed: Option[Map[UnparsedMessageId, SetError]])
+
+case class EmailSetUpdate(mailboxIds: Option[MailboxIds])
 
 

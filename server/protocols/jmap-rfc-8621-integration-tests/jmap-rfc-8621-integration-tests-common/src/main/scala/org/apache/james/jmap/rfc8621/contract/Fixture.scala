@@ -34,8 +34,21 @@ import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
+import org.apache.james.mime4j.dom.Message
 
 object Fixture {
+  val ACCOUNT_ID: String = "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+
+  def createTestMessage: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setSubject("World domination \r\n" +
+        " and this is also part of the header")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
   def baseRequestSpecBuilder(server: GuiceJamesServer) = new RequestSpecBuilder()
     .setContentType(ContentType.JSON)
     .setAccept(ContentType.JSON)
