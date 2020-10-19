@@ -190,7 +190,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         return mailboxPathV2DAO.retrieveId(path)
             .switchIfEmpty(mailboxPathDAO.retrieveId(path))
             .map(CassandraIdAndPath::getCassandraId)
-            .flatMap(this::retrieveMailbox)
+            .flatMap(mailboxDAO::retrieveMailbox)
             .flatMap(this::migrate);
     }
 
