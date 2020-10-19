@@ -65,7 +65,7 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
         .action(generateSession)
         .corsHeaders,
       JMAPRoute.builder()
-        .endpoint(new Endpoint(HttpMethod.OPTIONS, AUTHENTICATION))
+        .endpoint(new Endpoint(HttpMethod.OPTIONS, JMAP_SESSION))
         .action(CORS_CONTROL)
         .noCorsHeaders)
 

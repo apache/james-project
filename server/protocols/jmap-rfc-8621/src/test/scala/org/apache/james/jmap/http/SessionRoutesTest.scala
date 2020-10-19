@@ -92,6 +92,13 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .contentType(ContentType.JSON)
   }
 
+  "options" should "return OK status" in {
+    RestAssured.when()
+      .options
+    .`then`
+      .statusCode(HttpStatus.SC_OK)
+  }
+
   "get" should "return correct session" in {
     val sessionJson = RestAssured.`with`()
         .get
