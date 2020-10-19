@@ -142,17 +142,20 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
     }
 
     private Mono<Void> handleMailboxDeletion(CassandraId mailboxId) {
-        return messageIdDAO.retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited())
-            .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-            .concatMap(metadata -> handleMessageDeletionAsPartOfMailboxDeletion((CassandraMessageId) metadata.getMessageId(), mailboxId)
-                .then(imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId))
-                .then(messageIdDAO.delete(mailboxId, metadata.getUid())))
-            .then(deleteAcl(mailboxId))
-            .then(applicableFlagDAO.delete(mailboxId))
-            .then(firstUnseenDAO.removeAll(mailboxId))
-            .then(deletedMessageDAO.removeAll(mailboxId))
-            .then(counterDAO.delete(mailboxId))
-            .then(recentsDAO.delete(mailboxId));
+        int prefetch = 1;
+        return Flux.mergeDelayError(prefetch,
+                messageIdDAO.retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited())
+                    .map(ComposedMessageIdWithMetaData::getComposedMessageId)
+                    .concatMap(metadata -> handleMessageDeletionAsPartOfMailboxDeletion((CassandraMessageId) metadata.getMessageId(), mailboxId)
+                        .then(imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId))
+                        .then(messageIdDAO.delete(mailboxId, metadata.getUid()))),
+                deleteAcl(mailboxId),
+                applicableFlagDAO.delete(mailboxId),
+                firstUnseenDAO.removeAll(mailboxId),
+                deletedMessageDAO.removeAll(mailboxId),
+                counterDAO.delete(mailboxId),
+                recentsDAO.delete(mailboxId))
+            .then();
     }
 
     private Mono<Void> handleMessageDeletion(Expunged expunged) {
@@ -166,8 +169,8 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
 
     private Mono<Void> deleteAcl(CassandraId mailboxId) {
         return aclMapper.getACL(mailboxId)
-            .flatMap(acl -> rightsDAO.update(mailboxId, ACLDiff.computeDiff(acl, MailboxACL.EMPTY)))
-            .then(aclMapper.delete(mailboxId));
+            .flatMap(acl -> rightsDAO.update(mailboxId, ACLDiff.computeDiff(acl, MailboxACL.EMPTY))
+                .then(aclMapper.delete(mailboxId)));
     }
 
     private Mono<Void> handleMessageDeletion(CassandraMessageId messageId) {
