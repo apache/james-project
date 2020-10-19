@@ -51,6 +51,7 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.init.ClusterFactory;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.core.Username;
@@ -128,7 +129,13 @@ class FixingGhostMailboxTest {
         .extension(new RabbitMQExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(new WebadminIntegrationTestModule()))
+            .overrideWith(new WebadminIntegrationTestModule())
+            .overrideWith(binder -> binder.bind(CassandraConfiguration.class)
+                .toInstance(CassandraConfiguration.builder()
+                    .mailboxReadRepair(0)
+                    .mailboxCountersReadRepairMax(0)
+                    .mailboxCountersReadRepairChanceOneHundred(0)
+                    .build())))
         .build();
 
     private AccessToken accessToken;
