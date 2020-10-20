@@ -22,6 +22,8 @@ package org.apache.james.mailbox.cassandra.modules;
 import static com.datastax.driver.core.DataType.bigint;
 import static com.datastax.driver.core.DataType.cboolean;
 import static com.datastax.driver.core.DataType.cint;
+import static com.datastax.driver.core.DataType.frozenList;
+import static com.datastax.driver.core.DataType.frozenMap;
 import static com.datastax.driver.core.DataType.set;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timestamp;
@@ -31,6 +33,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIds;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table;
 import org.apache.james.mailbox.cassandra.table.Flag;
 import org.apache.james.mailbox.cassandra.table.MessageIdToImapUid;
 
@@ -94,6 +97,30 @@ public interface CassandraMessageModule {
             .addColumn(CassandraMessageV2Table.HEADER_CONTENT, text())
             .addUDTListColumn(CassandraMessageV2Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV2Table.ATTACHMENTS))
             .addUDTListColumn(CassandraMessageV2Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV2Table.PROPERTIES)))
+        .table(CassandraMessageV3Table.TABLE_NAME)
+        .comment("Holds message metadata, independently of any mailboxes. Content of messages is stored " +
+            "in `blobs` and `blobparts` tables. Optimizes property storage compared to V2.")
+        .statement(statement -> statement
+            .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
+            .addColumn(CassandraMessageV3Table.INTERNAL_DATE, timestamp())
+            .addColumn(CassandraMessageV3Table.BODY_START_OCTET, cint())
+            .addColumn(CassandraMessageV3Table.BODY_OCTECTS, bigint())
+            .addColumn(CassandraMessageV3Table.TEXTUAL_LINE_COUNT, bigint())
+            .addColumn(CassandraMessageV3Table.FULL_CONTENT_OCTETS, bigint())
+            .addColumn(CassandraMessageV3Table.BODY_CONTENT, text())
+            .addColumn(CassandraMessageV3Table.HEADER_CONTENT, text())
+            .addColumn(CassandraMessageV3Table.Properties.CONTENT_DESCRIPTION, text())
+            .addColumn(CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_TYPE, text())
+            .addColumn(CassandraMessageV3Table.Properties.MEDIA_TYPE, text())
+            .addColumn(CassandraMessageV3Table.Properties.SUB_TYPE, text())
+            .addColumn(CassandraMessageV3Table.Properties.CONTENT_ID, text())
+            .addColumn(CassandraMessageV3Table.Properties.CONTENT_MD5, text())
+            .addColumn(CassandraMessageV3Table.Properties.CONTENT_TRANSFER_ENCODING, text())
+            .addColumn(CassandraMessageV3Table.Properties.CONTENT_LOCATION, text())
+            .addColumn(CassandraMessageV3Table.Properties.CONTENT_LANGUAGE, frozenList(text()))
+            .addColumn(CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_PARAMETERS, frozenMap(text(), text()))
+            .addColumn(CassandraMessageV3Table.Properties.CONTENT_TYPE_PARAMETERS, frozenMap(text(), text()))
+            .addUDTListColumn(CassandraMessageV2Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV3Table.ATTACHMENTS)))
         .type(CassandraMessageV2Table.PROPERTIES)
         .statement(statement -> statement
             .addColumn(CassandraMessageV2Table.Properties.NAMESPACE, text())
