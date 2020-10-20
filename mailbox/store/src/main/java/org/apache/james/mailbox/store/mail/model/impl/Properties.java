@@ -41,6 +41,7 @@ import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_SUB_T
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -220,6 +221,22 @@ public class Properties {
 
     public List<Property> toProperties() {
         return new ArrayList<>(properties);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Properties) {
+            Properties that = (Properties) o;
+
+            return Objects.equals(this.textualLineCount, that.textualLineCount)
+                && Objects.equals(this.properties, that.properties);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(textualLineCount, properties);
     }
 
     /**

@@ -35,19 +35,19 @@ public class MessageRepresentation {
     private final MessageId messageId;
     private final Date internalDate;
     private final Long size;
-    private final Integer bodySize;
+    private final Integer bodyStartOctet;
     private final SharedByteArrayInputStream content;
     private final Properties properties;
     private final List<MessageAttachmentRepresentation> attachments;
     private final BlobId headerId;
     private final BlobId bodyId;
 
-    public MessageRepresentation(MessageId messageId, Date internalDate, Long size, Integer bodySize, SharedByteArrayInputStream content,
+    public MessageRepresentation(MessageId messageId, Date internalDate, Long size, Integer bodyStartOctet, SharedByteArrayInputStream content,
                                  Properties properties, List<MessageAttachmentRepresentation> attachments, BlobId headerId, BlobId bodyId) {
         this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
-        this.bodySize = bodySize;
+        this.bodyStartOctet = bodyStartOctet;
         this.content = content;
         this.properties = properties;
         this.attachments = attachments;
@@ -62,13 +62,25 @@ public class MessageRepresentation {
             .uid(metadata.getComposedMessageId().getUid())
             .modseq(metadata.getModSeq())
             .internalDate(internalDate)
-            .bodyStartOctet(bodySize)
+            .bodyStartOctet(bodyStartOctet)
             .size(size)
             .content(content)
             .flags(metadata.getFlags())
             .properties(properties)
             .addAttachments(attachments)
             .build();
+    }
+
+    public Date getInternalDate() {
+        return internalDate;
+    }
+
+    public Long getSize() {
+        return size;
+    }
+
+    public Integer getBodyStartOctet() {
+        return bodyStartOctet;
     }
 
     public MessageId getMessageId() {

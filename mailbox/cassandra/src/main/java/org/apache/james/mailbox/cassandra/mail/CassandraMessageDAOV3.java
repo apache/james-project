@@ -159,6 +159,31 @@ public class CassandraMessageDAOV3 {
             .flatMap(pair -> cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)));
     }
 
+    public Mono<Void> save(MessageRepresentation message) {
+        CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
+        return cassandraAsyncExecutor.executeVoid(insert.bind()
+            .setUUID(MESSAGE_ID, messageId.get())
+            .setTimestamp(INTERNAL_DATE, message.getInternalDate())
+            .setInt(BODY_START_OCTET, message.getBodyStartOctet())
+            .setLong(FULL_CONTENT_OCTETS, message.getSize())
+            .setLong(BODY_OCTECTS, message.getSize() - message.getBodyStartOctet())
+            .setString(BODY_CONTENT, message.getBodyId().asString())
+            .setString(HEADER_CONTENT, message.getHeaderId().asString())
+            .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getProperties().getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
+            .setString(CONTENT_DESCRIPTION, message.getProperties().getContentDescription())
+            .setString(CONTENT_DISPOSITION_TYPE, message.getProperties().getContentDispositionType())
+            .setString(MEDIA_TYPE, message.getProperties().getMediaType())
+            .setString(SUB_TYPE, message.getProperties().getSubType())
+            .setString(CONTENT_ID, message.getProperties().getContentID())
+            .setString(CONTENT_MD5, message.getProperties().getContentMD5())
+            .setString(CONTENT_TRANSFER_ENCODING, message.getProperties().getContentTransferEncoding())
+            .setString(CONTENT_LOCATION, message.getProperties().getContentLocation())
+            .setList(CONTENT_LANGUAGE, message.getProperties().getContentLanguage())
+            .setMap(CONTENT_DISPOSITION_PARAMETERS, message.getProperties().getContentDispositionParameters())
+            .setMap(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters())
+            .setList(ATTACHMENTS, buildAttachmentUdt(message.getAttachments())));
+    }
+
     private Mono<Tuple2<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
         try {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
@@ -204,7 +229,25 @@ public class CassandraMessageDAOV3 {
             .collect(Guavate.toImmutableList());
     }
 
+    private ImmutableList<UDTValue> buildAttachmentUdt(List<MessageAttachmentRepresentation> attachments) {
+        return attachments.stream()
+            .map(this::toUDT)
+            .collect(Guavate.toImmutableList());
+    }
+
     private UDTValue toUDT(MessageAttachmentMetadata messageAttachment) {
+        UDTValue result = typesProvider.getDefinedUserType(ATTACHMENTS)
+            .newValue()
+            .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
+            .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
+        messageAttachment.getName()
+            .ifPresent(name -> result.setString(Attachments.NAME, name));
+        messageAttachment.getCid()
+            .ifPresent(cid -> result.setString(Attachments.CID, cid.getValue()));
+        return result;
+    }
+
+    private UDTValue toUDT(MessageAttachmentRepresentation messageAttachment) {
         UDTValue result = typesProvider.getDefinedUserType(ATTACHMENTS)
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())

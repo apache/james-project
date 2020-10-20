@@ -78,6 +78,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
@@ -92,7 +93,9 @@ public class CassandraMessageDAO {
     private final PreparedStatement insert;
     private final PreparedStatement delete;
     private final PreparedStatement select;
+    private final PreparedStatement selectAll;
     private final Cid.CidParser cidParser;
+    private final CassandraMessageId.Factory messageIdFactory;
     private final ConsistencyLevel consistencyLevel;
 
     @Inject
@@ -100,8 +103,10 @@ public class CassandraMessageDAO {
                                CassandraTypesProvider typesProvider,
                                BlobStore blobStore,
                                BlobId.Factory blobIdFactory,
+                               CassandraMessageId.Factory messageIdFactory,
                                CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
+        this.messageIdFactory = messageIdFactory;
         this.consistencyLevel = consistenciesConfiguration.getRegular();
         this.typesProvider = typesProvider;
         this.blobStore = blobStore;
@@ -110,6 +115,7 @@ public class CassandraMessageDAO {
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
         this.select = prepareSelect(session);
+        this.selectAll = prepareSelectAll(session);
         this.cidParser = Cid.parser().relaxed();
     }
 
@@ -117,6 +123,11 @@ public class CassandraMessageDAO {
         return session.prepare(select()
             .from(TABLE_NAME)
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+    }
+
+    private PreparedStatement prepareSelectAll(Session session) {
+        return session.prepare(select()
+            .from(TABLE_NAME));
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -137,6 +148,11 @@ public class CassandraMessageDAO {
         return session.prepare(QueryBuilder.delete()
             .from(TABLE_NAME)
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+    }
+
+    public Flux<MessageRepresentation> list() {
+        return cassandraAsyncExecutor.executeRows(selectAll.bind())
+            .map(this::message);
     }
 
     public Mono<Void> save(MailboxMessage message) throws MailboxException {
@@ -242,6 +258,23 @@ public class CassandraMessageDAO {
                 getAttachments(row).collect(Guavate.toImmutableList()),
                 headerId,
                 bodyId));
+    }
+
+    private MessageRepresentation message(Row row) {
+        BlobId headerId = retrieveBlobId(HEADER_CONTENT, row);
+        BlobId bodyId = retrieveBlobId(BODY_CONTENT, row);
+        CassandraMessageId messageId = messageIdFactory.of(row.getUUID(MESSAGE_ID));
+
+        return new MessageRepresentation(
+                messageId,
+                row.getTimestamp(INTERNAL_DATE),
+                row.getLong(FULL_CONTENT_OCTETS),
+                row.getInt(BODY_START_OCTET),
+                new SharedByteArrayInputStream(EMPTY_BYTE_ARRAY),
+                getProperties(row),
+                getAttachments(row).collect(Guavate.toImmutableList()),
+                headerId,
+                bodyId);
     }
 
     private org.apache.james.mailbox.store.mail.model.impl.Properties getProperties(Row row) {
