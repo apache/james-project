@@ -61,6 +61,7 @@ import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
@@ -254,13 +255,14 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         setFlags(flags);
         this.contentOctets = contentOctets;
         this.bodyStartOctet = bodyStartOctet;
-        this.textualLineCount = propertyBuilder.getTextualLineCount();
-        this.mediaType = propertyBuilder.getMediaType();
-        this.subType = propertyBuilder.getSubType();
-        final List<Property> properties = propertyBuilder.toProperties();
-        this.properties = new ArrayList<>(properties.size());
+        Properties properties = propertyBuilder.build();
+        this.textualLineCount = properties.getTextualLineCount();
+        this.mediaType = properties.getMediaType();
+        this.subType = properties.getSubType();
+        final List<Property> propertiesAsList = properties.toProperties();
+        this.properties = new ArrayList<>(propertiesAsList.size());
         int order = 0;
-        for (Property property : properties) {
+        for (Property property : propertiesAsList) {
             this.properties.add(new JPAProperty(property, order++));
         }
 
@@ -296,11 +298,10 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         this.bodyStartOctet = (int) (original.getFullContentOctets() - original.getBodyOctets());
         this.internalDate = original.getInternalDate();
 
-        PropertyBuilder pBuilder = new PropertyBuilder(original.getProperties());
         this.textualLineCount = original.getTextualLineCount();
         this.mediaType = original.getMediaType();
         this.subType = original.getSubType();
-        final List<Property> properties = pBuilder.toProperties();
+        final List<Property> properties = original.getProperties().toProperties();
         this.properties = new ArrayList<>(properties.size());
         int order = 0;
         for (Property property : properties) {
@@ -360,10 +361,11 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
      * @return unmodifiable list of meta-data, not null
      */
     @Override
-    public List<Property> getProperties() {
-        return properties.stream()
+    public Properties getProperties() {
+        return new PropertyBuilder(properties.stream()
             .map(JPAProperty::toProperty)
-            .collect(Guavate.toImmutableList());
+            .collect(Guavate.toImmutableList()))
+            .build();
     }
 
     @Override

@@ -114,7 +114,7 @@ class SimpleMailboxMessageTest {
             BODY_START_OCTET,
             CONTENT_STREAM,
             new Flags(),
-            propertyBuilder,
+            propertyBuilder.build(),
             TEST_ID);
 
         SimpleMailboxMessage copy = SimpleMailboxMessage.copy(TestId.of(1337), original);
@@ -135,7 +135,7 @@ class SimpleMailboxMessageTest {
         return new SimpleMailboxMessage(new DefaultMessageId(), Calendar.getInstance().getTime(),
             content.length(), BODY_START_OCTET, new SharedByteArrayInputStream(
                     content.getBytes(MESSAGE_CHARSET)), new Flags(),
-            new PropertyBuilder(), TEST_ID);
+            new PropertyBuilder().build(), TEST_ID);
     }
 
     @Test
@@ -163,7 +163,7 @@ class SimpleMailboxMessageTest {
             .size(SIZE)
             .content(CONTENT_STREAM)
             .flags(new Flags())
-            .propertyBuilder(new PropertyBuilder())
+            .properties(new PropertyBuilder())
             .build();
     }
 
@@ -195,7 +195,7 @@ class SimpleMailboxMessageTest {
             .size(SIZE)
             .content(CONTENT_STREAM)
             .flags(flags)
-            .propertyBuilder(propertyBuilder)
+            .properties(propertyBuilder)
             .addAttachments(ImmutableList.of(messageAttachment))
             .build();
         String messageContent = IOUtils.toString(message.getFullContent(), StandardCharsets.UTF_8);
@@ -208,7 +208,7 @@ class SimpleMailboxMessageTest {
             soft.assertThat(message.getFullContentOctets()).isEqualTo(SIZE);
             soft.assertThat(messageContent).isEqualTo(MESSAGE_CONTENT);
             soft.assertThat(message.createFlags()).isEqualTo(flags);
-            soft.assertThat(message.getProperties()).isEqualTo(propertyBuilder.toProperties());
+            soft.assertThat(message.getProperties().toProperties()).isEqualTo(propertyBuilder.toProperties());
             soft.assertThat(message.getUid()).isEqualTo(uid);
             soft.assertThat(message.getModSeq()).isEqualTo(modseq);
             soft.assertThat(message.getAttachments()).containsOnly(messageAttachment);
@@ -225,7 +225,7 @@ class SimpleMailboxMessageTest {
                 .size(SIZE)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .propertyBuilder(new PropertyBuilder())
+                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -240,7 +240,7 @@ class SimpleMailboxMessageTest {
                 .size(SIZE)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .propertyBuilder(new PropertyBuilder())
+                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -254,7 +254,7 @@ class SimpleMailboxMessageTest {
                 .size(SIZE)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .propertyBuilder(new PropertyBuilder())
+                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -269,7 +269,7 @@ class SimpleMailboxMessageTest {
                 .size(SIZE)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .propertyBuilder(new PropertyBuilder())
+                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -284,7 +284,7 @@ class SimpleMailboxMessageTest {
                 .bodyStartOctet(BODY_START_OCTET)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .propertyBuilder(new PropertyBuilder())
+                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -299,7 +299,7 @@ class SimpleMailboxMessageTest {
                 .bodyStartOctet(BODY_START_OCTET)
                 .size(SIZE)
                 .flags(new Flags())
-                .propertyBuilder(new PropertyBuilder())
+                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -314,7 +314,7 @@ class SimpleMailboxMessageTest {
                 .bodyStartOctet(BODY_START_OCTET)
                 .size(SIZE)
                 .content(CONTENT_STREAM)
-                .propertyBuilder(new PropertyBuilder())
+                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }

@@ -27,6 +27,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.model.impl.Properties;
 
 public abstract class DelegatingMailboxMessage implements MailboxMessage {
 
@@ -77,7 +78,7 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     }
 
     @Override
-    public List<Property> getProperties() {
+    public Properties getProperties() {
         return message.getProperties();
     }
 

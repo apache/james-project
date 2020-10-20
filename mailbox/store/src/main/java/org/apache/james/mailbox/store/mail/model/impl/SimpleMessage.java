@@ -28,25 +28,20 @@ import javax.mail.internet.SharedInputStream;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Message;
-import org.apache.james.mailbox.store.mail.model.Property;
 
 public class SimpleMessage implements Message {
 
     private final MessageId messageId;
-    private final String subType;
-    private final String mediaType;
     private final SharedInputStream content;
     private final int bodyStartOctet;
     private final Date internalDate;
     private final long size;
     private final Long textualLineCount;
-    private final List<Property> properties;
+    private final Properties properties;
     private final List<MessageAttachmentMetadata> attachments;
 
-    public SimpleMessage(MessageId messageId, SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<MessageAttachmentMetadata> attachments) {
+    public SimpleMessage(MessageId messageId, SharedInputStream content, long size, Date internalDate, int bodyStartOctet, Long textualLineCount, Properties properties, List<MessageAttachmentMetadata> attachments) {
         this.messageId = messageId;
-        this.subType = subType;
-        this.mediaType = mediaType;
         this.content = content;
         this.bodyStartOctet = bodyStartOctet;
         this.internalDate = internalDate;
@@ -73,12 +68,12 @@ public class SimpleMessage implements Message {
 
     @Override
     public String getMediaType() {
-        return mediaType;
+        return properties.getMediaType();
     }
 
     @Override
     public String getSubType() {
-        return subType;
+        return properties.getSubType();
     }
 
     @Override
@@ -116,7 +111,7 @@ public class SimpleMessage implements Message {
     }
 
     @Override
-    public List<Property> getProperties() {
+    public Properties getProperties() {
         return properties;
     }
 

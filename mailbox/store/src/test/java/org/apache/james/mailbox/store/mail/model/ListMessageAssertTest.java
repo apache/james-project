@@ -90,7 +90,7 @@ class ListMessageAssertTest {
     private MailboxMessage createMailboxMessage(MailboxId mailboxId, MessageId messageId, MessageUid uid, Date internalDate,
                                                 String content, int bodyStart, PropertyBuilder propertyBuilder) {
         SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, content.length(),
-            bodyStart, new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)), new Flags(), propertyBuilder, mailboxId);
+            bodyStart, new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)), new Flags(), propertyBuilder.build(), mailboxId);
 
         simpleMailboxMessage.setUid(uid);
         simpleMailboxMessage.setModSeq(ModSeq.first());
@@ -103,7 +103,7 @@ class ListMessageAssertTest {
 
     private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
         SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, INTERNAL_DATE, content.length(),
-            bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder, mailbox.getMailboxId());
+            bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
 
         simpleMailboxMessage.setUid(MESSAGE_UID);
         return simpleMailboxMessage;

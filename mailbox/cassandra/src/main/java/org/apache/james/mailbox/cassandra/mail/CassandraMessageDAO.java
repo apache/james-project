@@ -192,7 +192,9 @@ public class CassandraMessageDAO {
     }
 
     private List<UDTValue> buildPropertiesUdt(MailboxMessage message) {
-        return message.getProperties().stream()
+        return message.getProperties()
+            .toProperties()
+            .stream()
             .map(property -> typesProvider.getDefinedUserType(PROPERTIES)
                 .newValue()
                 .setString(Properties.NAMESPACE, property.getNamespace())
@@ -236,19 +238,19 @@ public class CassandraMessageDAO {
                 row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),
                 new SharedByteArrayInputStream(content),
-                getPropertyBuilder(row),
+                getProperties(row),
                 getAttachments(row).collect(Guavate.toImmutableList()),
                 headerId,
                 bodyId));
     }
 
-    private PropertyBuilder getPropertyBuilder(Row row) {
+    private org.apache.james.mailbox.store.mail.model.impl.Properties getProperties(Row row) {
         PropertyBuilder property = new PropertyBuilder(
             row.getList(PROPERTIES, UDTValue.class).stream()
                 .map(this::toProperty)
                 .collect(Collectors.toList()));
         property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
-        return property;
+        return property.build();
     }
 
     private Property toProperty(UDTValue udtValue) {

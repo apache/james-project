@@ -98,7 +98,7 @@ class StoreMailboxMessageResultIteratorTest {
 
         private SimpleMailboxMessage createMessage(MessageUid uid) {
             SimpleMailboxMessage message = new SimpleMailboxMessage(new DefaultMessageId(), null, 0, 0, new SharedByteArrayInputStream(
-                    "".getBytes()), new Flags(), new PropertyBuilder(), TestId.of(1L));
+                    "".getBytes()), new Flags(), new PropertyBuilder().build(), TestId.of(1L));
             message.setUid(uid);
             return message;
         }

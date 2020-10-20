@@ -28,7 +28,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public class MessageRepresentation {
@@ -37,19 +37,19 @@ public class MessageRepresentation {
     private final Long size;
     private final Integer bodySize;
     private final SharedByteArrayInputStream content;
-    private final PropertyBuilder propertyBuilder;
+    private final Properties properties;
     private final List<MessageAttachmentRepresentation> attachments;
     private final BlobId headerId;
     private final BlobId bodyId;
 
     public MessageRepresentation(MessageId messageId, Date internalDate, Long size, Integer bodySize, SharedByteArrayInputStream content,
-                                 PropertyBuilder propertyBuilder, List<MessageAttachmentRepresentation> attachments, BlobId headerId, BlobId bodyId) {
+                                 Properties properties, List<MessageAttachmentRepresentation> attachments, BlobId headerId, BlobId bodyId) {
         this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
         this.bodySize = bodySize;
         this.content = content;
-        this.propertyBuilder = propertyBuilder;
+        this.properties = properties;
         this.attachments = attachments;
         this.headerId = headerId;
         this.bodyId = bodyId;
@@ -66,7 +66,7 @@ public class MessageRepresentation {
             .size(size)
             .content(content)
             .flags(metadata.getFlags())
-            .propertyBuilder(propertyBuilder)
+            .properties(properties)
             .addAttachments(attachments)
             .build();
     }
@@ -79,8 +79,8 @@ public class MessageRepresentation {
         return content;
     }
 
-    public PropertyBuilder getPropertyBuilder() {
-        return propertyBuilder;
+    public Properties getProperties() {
+        return properties;
     }
 
     public List<MessageAttachmentRepresentation> getAttachments() {

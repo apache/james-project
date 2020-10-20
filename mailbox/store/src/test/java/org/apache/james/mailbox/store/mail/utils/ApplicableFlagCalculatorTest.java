@@ -105,7 +105,7 @@ class ApplicableFlagCalculatorTest {
         int bodyStart = 10;
 
         return new SimpleMailboxMessage(new DefaultMessageId(), new Date(), content.length(), bodyStart,
-            new SharedByteArrayInputStream(content.getBytes()), messageFlags, new PropertyBuilder(), TestId.of(1));
+            new SharedByteArrayInputStream(content.getBytes()), messageFlags, new PropertyBuilder().build(), TestId.of(1));
     }
 
     private Flags getDefaultApplicableFlag() {

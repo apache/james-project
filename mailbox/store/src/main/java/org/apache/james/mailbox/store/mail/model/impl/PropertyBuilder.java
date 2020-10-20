@@ -44,12 +44,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import org.apache.james.mailbox.store.mail.model.Property;
-
-import com.github.steveash.guavate.Guavate;
 
 /**
  * Builds properties
@@ -90,35 +86,7 @@ public class PropertyBuilder {
     public void setTextualLineCount(Long textualLineCount) {
         this.textualLineCount = textualLineCount;
     }
-    
-    /**
-     * Gets the first value with the given name.
-     * Used to retrieve values with a single value.
-     * @param namespace not null
-     * @param localName not null
-     * @return value, 
-     * or null when no property has the given name and namespace
-     */
-    public String getFirstValue(String namespace, String localName) {
-        return properties.stream()
-            .filter(property -> property.isNamed(namespace, localName))
-            .findFirst()
-            .map(Property::getValue)
-            .orElse(null);
-    }
-    
-    /**
-     * Lists all values for a property.
-     * @param namespace not null
-     * @param localName not null
-     * @return not null
-     */
-    public List<String> getValues(String namespace, String localName) {
-        return properties.stream()
-            .filter(property -> property.isNamed(namespace, localName))
-            .map(Property::getValue)
-            .collect(Guavate.toImmutableList());
-    }
+
     
     /**
      * Sets a property allowing only a single value.
@@ -126,7 +94,7 @@ public class PropertyBuilder {
      * @param localName not null
      * @param value null to remove property
      */
-    public void setProperty(String namespace, String localName, String value) {
+    private void setProperty(String namespace, String localName, String value) {
         properties.removeIf(property -> property.isNamed(namespace, localName));
         
         if (value != null) {
@@ -140,7 +108,7 @@ public class PropertyBuilder {
      * @param localName not null
      * @param values null to remove property
      */
-    public void setProperty(String namespace, String localName, List<String> values) {
+    private void setProperty(String namespace, String localName, List<String> values) {
         properties.removeIf(property -> property.isNamed(namespace, localName));
         if (values != null) {
             for (String value:values) {
@@ -150,41 +118,17 @@ public class PropertyBuilder {
     }
     
     /**
-     * Maps properties in the given namespace.
-     * @param namespace not null
-     * @return values indexed by local name
-     */
-    public SortedMap<String,String> getProperties(String namespace) {
-        final SortedMap<String, String> parameters = new TreeMap<>();
-        for (Property property : properties) {
-            if (property.isInSpace(namespace)) {
-                parameters.put(property.getLocalName(), property.getValue());
-            }
-        }
-        return parameters;
-    }
-    
-    /**
      * Sets properties in the given namespace from the map.
      * Existing properties in the namespace will be removed.
      * All local names will be converted to lower case.
      * @param namespace not null
      * @param valuesByLocalName not null
      */
-    public void setProperties(String namespace, Map<String,String> valuesByLocalName) {
+    private void setProperties(String namespace, Map<String,String> valuesByLocalName) {
         properties.removeIf(property -> property.isInSpace(namespace));
         for (Map.Entry<String, String> valueByLocalName:valuesByLocalName.entrySet()) {
             properties.add(new Property(namespace, valueByLocalName.getKey().toLowerCase(Locale.US), valueByLocalName.getValue()));
         }
-    }
-    
-    /**
-     * Gets the top level MIME content media type.
-     * 
-     * @return top level MIME content media type, or null if default
-     */
-    public String getMediaType() {
-        return getFirstValue(MIME_MIME_TYPE_SPACE, MIME_MEDIA_TYPE_NAME);
     }
     
     /**
@@ -195,15 +139,6 @@ public class PropertyBuilder {
      */
     public void setMediaType(String value) {
         setProperty(MIME_MIME_TYPE_SPACE, MIME_MEDIA_TYPE_NAME, value);
-    }
-
-    /**
-     * Gets the MIME content subtype.
-     * 
-     * @return the MIME content subtype, or null if default
-     */
-    public String getSubType() {
-        return getFirstValue(MIME_MIME_TYPE_SPACE, MIME_SUB_TYPE_NAME);
     }
     
     /**
@@ -217,15 +152,6 @@ public class PropertyBuilder {
     }
     
     /**
-     * Gets the MIME Content-ID.
-     * 
-     * @return the MIME content subtype, or null if default
-     */
-    public String getContentID() {
-        return getFirstValue(MIME_CONTENT_ID_SPACE, MIME_CONTENT_ID_NAME);
-    }
-    
-    /**
      * Sets MIME Content-ID.
      * 
      * @param value the MIME content subtype, 
@@ -233,16 +159,6 @@ public class PropertyBuilder {
      */
     public void setContentID(String value) {
         setProperty(MIME_CONTENT_ID_SPACE, MIME_CONTENT_ID_NAME, value);
-    }
-    
-    /**
-     * Gets the MIME Content-Description.
-     * 
-     * @return the MIME Content-Description, 
-     * or null if this meta data is not present
-     */
-    public String getContentDescription() {
-        return getFirstValue(MIME_CONTENT_DESCRIPTION_SPACE, MIME_CONTENT_DESCRIPTION_NAME);
     }
     
     /**
@@ -256,16 +172,6 @@ public class PropertyBuilder {
     }
     
     /**
-     * Gets the MIME Content-Transfer-Encoding.
-     * 
-     * @return the MIME Content-Transfer-Encoding, 
-     * or null if this meta data is not present
-     */
-    public String getContentTransferEncoding() {
-        return getFirstValue(MIME_CONTENT_TRANSFER_ENCODING_SPACE, MIME_CONTENT_TRANSFER_ENCODING_NAME);
-    }
-    
-    /**
      * Sets MIME Content-Transfer-Encoding.
      * 
      * @param value the MIME Content-Transfer-Encoding
@@ -273,16 +179,6 @@ public class PropertyBuilder {
      */
     public void setContentTransferEncoding(String value) {
         setProperty(MIME_CONTENT_TRANSFER_ENCODING_SPACE, MIME_CONTENT_TRANSFER_ENCODING_NAME, value);
-    }
-    
-    /**
-     * Gets the RFC2557 Content-Location.
-     * 
-     * @return the RFC2557 Content-Location, 
-     * or null if this meta data is not present
-     */
-    public String getContentLocation() {
-        return getFirstValue(MIME_CONTENT_LOCATION_SPACE, MIME_CONTENT_LOCATION_NAME);
     }
     
     /**
@@ -306,24 +202,6 @@ public class PropertyBuilder {
     }
     
     /**
-     * Gets the RFC2183 Content-Disposition disposition-type.
-     * 
-     * @return the RFC2183 Content-Disposition, 
-     * or null if this meta data is not present
-     */
-    public String getContentDispositionType() {
-        return getFirstValue(MIME_CONTENT_DISPOSITION_SPACE, MIME_CONTENT_DISPOSITION_TYPE_NAME);
-    }
-    
-    /**
-     * Gets RFC2183 Content-Disposition parameters.
-     * @return parameter values indexed by lower case local names 
-     */
-    public Map<String,String> getContentDispositionParameters() {
-        return getProperties(MIME_CONTENT_DISPOSITION_PARAMETER_SPACE);
-    }
-    
-    /**
      * Sets Content-Disposition parameters.
      * Parameter names will be normalised to lower case.
      * @param valuesByParameterName values indexed by parameter name
@@ -333,30 +211,12 @@ public class PropertyBuilder {
     }
     
     /**
-     * Gets RFC2045 Content-Type parameters.
-     * @return parameter values indexed by lower case local names 
-     */
-    public Map<String,String> getContentTypeParameters() {
-        return getProperties(MIME_CONTENT_TYPE_PARAMETER_SPACE);
-    }
-    
-    /**
      * Sets Content-Type parameters.
      * Parameter names will be normalised to lower case.
      * @param valuesByParameterName values indexed by parameter name
      */
     public void setContentTypeParameters(Map<String,String> valuesByParameterName) {
         setProperties(MIME_CONTENT_TYPE_PARAMETER_SPACE, valuesByParameterName);
-    }
-    
-    /**
-     * Gets the RFC1864 Content-MD5.
-     * 
-     * @return the RFC1864 Content-MD5, 
-     * or null if this meta data is not present
-     */
-    public String getContentMD5() {
-        return getFirstValue(MIME_CONTENT_MD5_SPACE, MIME_CONTENT_MD5_NAME);
     }
     
     /**
@@ -370,16 +230,6 @@ public class PropertyBuilder {
     }
     
     /**
-     * Gets the RFC2045 Content-Type "charset" parameter.
-     * 
-     * @return the RFC2045 Content-Type "charset" parameter, 
-     * or null if this meta data is not present
-     */
-    public String getCharset() {
-        return getFirstValue(MIME_CONTENT_TYPE_PARAMETER_SPACE, MIME_CONTENT_TYPE_PARAMETER_CHARSET_NAME);
-    }
-    
-    /**
      * Sets RFC2045 Content-Type "charset" parameter.
      * 
      * @param value the RFC2045 Content-Type "charset" parameter
@@ -390,16 +240,6 @@ public class PropertyBuilder {
     }
     
     /**
-     * Gets the RFC2045 Content-Type "boundary" parameter.
-     * 
-     * @return the RFC2045 Content-Type "boundary" parameter, 
-     * or null if this meta data is not present
-     */
-    public String getBoundary() {
-        return getFirstValue(MIME_CONTENT_TYPE_PARAMETER_SPACE, MIME_CONTENT_TYPE_PARAMETER_BOUNDARY_NAME);
-    }
-    
-    /**
      * Sets RFC2045 Content-Type "boundary" parameter.
      * 
      * @param value the RFC2045 Content-Type "boundary" parameter
@@ -407,16 +247,6 @@ public class PropertyBuilder {
      */
     public void setBoundary(String value) {
         setProperty(MIME_CONTENT_TYPE_PARAMETER_SPACE, MIME_CONTENT_TYPE_PARAMETER_BOUNDARY_NAME, value);
-    }
-    
-    /**
-     * Gets the RFC1766 Content-Language.
-     * 
-     * @return list of parsed langauge tags from the RFC1766 Content-Language, 
-     * possibly empty
-     */
-    public List<String> getContentLanguage() {
-        return getValues(MIME_CONTENT_LANGUAGE_SPACE, MIME_CONTENT_LANGUAGE_NAME);
     }
     
     /**
@@ -435,6 +265,10 @@ public class PropertyBuilder {
      */
     public List<Property> toProperties() {
         return new ArrayList<>(properties);
+    }
+
+    public Properties build() {
+        return new Properties(properties, textualLineCount);
     }
 
     /**

@@ -109,7 +109,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         .internalDate(new Date(1433628000000L))
         .size(SIZE)
         .content(new SharedByteArrayInputStream("message".getBytes(StandardCharsets.UTF_8)))
-        .propertyBuilder(new PropertyBuilder())
+        .properties(new PropertyBuilder())
         .modseq(MOD_SEQ);
 
     static final SimpleMailboxMessage MESSAGE_1 = MESSAGE_BUILDER.messageId(MESSAGE_ID_1)

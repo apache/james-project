@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 
 class ListMessagePropertiesAssertTest {
     static final String OTHER_VALUE = "US-ASCII";
-    static final String OTHER_LOCAL_NAME = StandardNames.MIME_CONTENT_TYPE_PARAMETER_CHARSET_NAME;
+    static final String OTHER_LOCAL_NAME = StandardNames.MIME_CONTENT_MD5_NAME;
     static final String OTHER_NAMESPACE = StandardNames.MIME_CONTENT_TYPE_PARAMETER_SPACE;
     static final String VALUE = "7bit";
     static final String LOCAL_NAME = StandardNames.MIME_CONTENT_TRANSFER_ENCODING_NAME;

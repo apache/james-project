@@ -114,7 +114,7 @@ public class MessageIdManagerTestSystem {
 
     private static MailboxMessage createMessage(MailboxId mailboxId, Flags flags, MessageId messageId, MessageUid uid) {
         MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, new Date(), MESSAGE_CONTENT.length, 1256,
-            new SharedByteArrayInputStream(MESSAGE_CONTENT), flags, new PropertyBuilder(), mailboxId);
+            new SharedByteArrayInputStream(MESSAGE_CONTENT), flags, new PropertyBuilder().build(), mailboxId);
         mailboxMessage.setModSeq(MOD_SEQ);
         mailboxMessage.setUid(uid);
         return mailboxMessage;

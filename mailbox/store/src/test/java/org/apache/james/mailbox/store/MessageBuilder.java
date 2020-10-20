@@ -81,7 +81,7 @@ public class MessageBuilder {
     public MailboxMessage build(MessageId messageId) throws Exception {
         byte[] headerContent = getHeaderContent();
         SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size, headerContent.length,
-            new SharedByteArrayInputStream(Bytes.concat(headerContent, body)), flags, new PropertyBuilder(), mailboxId, NO_ATTACHMENTS);
+            new SharedByteArrayInputStream(Bytes.concat(headerContent, body)), flags, new PropertyBuilder().build(), mailboxId, NO_ATTACHMENTS);
         mailboxMessage.setUid(uid);
         return mailboxMessage;
     }

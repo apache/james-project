@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.model.impl.Properties;
 
 public interface Message {
 
@@ -96,11 +97,11 @@ public interface Message {
     /**
      * Gets a read-only list of meta-data properties.
      * For properties with multiple values, this list will contain
-     * several enteries with the same namespace and local name.
+     * several entries with the same namespace and local name.
      *
      * @return unmodifiable list of meta-data, not null
      */
-    List<Property> getProperties();
+    Properties getProperties();
     
     /**
      * Return the list of attachments

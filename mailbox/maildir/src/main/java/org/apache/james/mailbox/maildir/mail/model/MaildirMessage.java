@@ -37,8 +37,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Message;
-import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
 import org.apache.james.mime4j.MimeException;
@@ -185,13 +185,13 @@ public class MaildirMessage implements Message {
     @Override
     public String getMediaType() {
         parseMessage();
-        return propertyBuilder.getMediaType();
+        return propertyBuilder.build().getMediaType();
     }
 
     @Override
     public String getSubType() {
         parseMessage();
-        return propertyBuilder.getSubType();
+        return propertyBuilder.build().getSubType();
     }
 
     @Override
@@ -221,13 +221,13 @@ public class MaildirMessage implements Message {
     @Override
     public Long getTextualLineCount() {
         parseMessage();
-        return propertyBuilder.getTextualLineCount();
+        return propertyBuilder.build().getTextualLineCount();
     }
 
     @Override
-    public List<Property> getProperties() {
+    public Properties getProperties() {
         parseMessage();
-        return propertyBuilder.toProperties();
+        return propertyBuilder.build();
     }
 
     @Override

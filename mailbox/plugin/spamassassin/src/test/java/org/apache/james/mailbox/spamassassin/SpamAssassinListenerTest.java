@@ -271,7 +271,7 @@ class SpamAssassinListenerTest {
         int bodyStartOctet = 25;
         byte[] content = "Subject: test\r\n\r\nBody\r\n".getBytes(StandardCharsets.UTF_8);
         SimpleMailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID, new Date(),
-            size, bodyStartOctet, new SharedByteArrayInputStream(content), new Flags(), new PropertyBuilder(),
+            size, bodyStartOctet, new SharedByteArrayInputStream(content), new Flags(), new PropertyBuilder().build(),
             mailbox.getMailboxId());
         MessageMetaData messageMetaData = mapperFactory.createMessageMapper(null).add(mailbox, message);
         message.setUid(messageMetaData.getUid());

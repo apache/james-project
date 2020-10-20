@@ -130,7 +130,7 @@ public interface MailboxMessageFixture {
         .internalDate(new Date(DATE_1.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(flags1)
-        .propertyBuilder(new PropertyBuilder())
+        .properties(new PropertyBuilder())
         .mailboxId(MAILBOX_ID_1)
         .build();
 
@@ -142,7 +142,7 @@ public interface MailboxMessageFixture {
         .internalDate(new Date(DATE_1.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(flags1)
-        .propertyBuilder(new PropertyBuilder())
+        .properties(new PropertyBuilder())
         .mailboxId(MAILBOX_ID_11)
         .build();
 
@@ -154,7 +154,7 @@ public interface MailboxMessageFixture {
         .internalDate(new Date(DATE_2.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(new Flags())
-        .propertyBuilder(new PropertyBuilder())
+        .properties(new PropertyBuilder())
         .mailboxId(MAILBOX_ID_1)
         .build();
 }

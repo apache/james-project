@@ -1529,7 +1529,7 @@ class UserMailboxesRoutesTest {
                     .internalDate(new Date(ZonedDateTime.parse("2018-02-15T15:54:02Z").toEpochSecond()))
                     .bodyStartOctet(0)
                     .flags(new Flags("myFlags"))
-                    .propertyBuilder(new PropertyBuilder())
+                    .properties(new PropertyBuilder())
                     .mailboxId(mailboxId)
                     .build();
 

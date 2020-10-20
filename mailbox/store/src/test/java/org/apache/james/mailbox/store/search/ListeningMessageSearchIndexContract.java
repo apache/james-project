@@ -52,7 +52,7 @@ public interface ListeningMessageSearchIndexContract {
         .internalDate(new Date(1433628000000L))
         .size(SIZE)
         .content(new SharedByteArrayInputStream("message".getBytes(StandardCharsets.UTF_8)))
-        .propertyBuilder(new PropertyBuilder())
+        .properties(new PropertyBuilder())
         .modseq(MOD_SEQ);
     
     ListeningMessageSearchIndex testee();

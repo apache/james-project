@@ -112,7 +112,7 @@ class CassandraMessageDAOTest {
         MessageRepresentation attachmentRepresentation =
             toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Metadata));
 
-        assertThat(attachmentRepresentation.getPropertyBuilder().getTextualLineCount())
+        assertThat(attachmentRepresentation.getProperties().getTextualLineCount())
             .isEqualTo(0L);
     }
 
@@ -128,7 +128,7 @@ class CassandraMessageDAOTest {
         MessageRepresentation attachmentRepresentation =
             toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.Metadata));
 
-        assertThat(attachmentRepresentation.getPropertyBuilder().getTextualLineCount()).isEqualTo(textualLineCount);
+        assertThat(attachmentRepresentation.getProperties().getTextualLineCount()).isEqualTo(textualLineCount);
     }
 
     @Test
@@ -183,7 +183,7 @@ class CassandraMessageDAOTest {
             .size(content.length())
             .content(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
             .flags(new Flags())
-            .propertyBuilder(propertyBuilder)
+            .properties(propertyBuilder.build())
             .addAttachments(attachments)
             .build();
     }

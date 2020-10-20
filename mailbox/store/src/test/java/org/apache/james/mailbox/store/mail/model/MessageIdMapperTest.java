@@ -992,7 +992,7 @@ public abstract class MessageIdMapperTest {
                 bodyStart, 
                 new SharedByteArrayInputStream(content.getBytes()), 
                 new Flags(), 
-                propertyBuilder, 
+                propertyBuilder.build(),
                 mailbox.getMailboxId());
     }
 }

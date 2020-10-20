@@ -63,7 +63,7 @@ class MessageUtilsTest {
         MockitoAnnotations.initMocks(this);
         messageUtils = new MessageUtils(uidProvider, modSeqProvider);
         message = new SimpleMailboxMessage(MESSAGE_ID, new Date(), CONTENT.length(), BODY_START,
-            new SharedByteArrayInputStream(CONTENT.getBytes()), new Flags(), new PropertyBuilder(), mailbox.getMailboxId());
+            new SharedByteArrayInputStream(CONTENT.getBytes()), new Flags(), new PropertyBuilder().build(), mailbox.getMailboxId());
     }
     
     @Test

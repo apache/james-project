@@ -100,7 +100,7 @@ class MessageToElasticSearchJsonTest {
                 BODY_START_OCTET,
                 ClassLoaderUtils.getSystemResourceAsSharedStream("eml/spamMail.eml"),
                 new Flags(),
-                propertyBuilder,
+                propertyBuilder.build(),
                 MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -120,7 +120,7 @@ class MessageToElasticSearchJsonTest {
                 BODY_START_OCTET,
                 ClassLoaderUtils.getSystemResourceAsSharedStream("eml/invalidCharset.eml"),
                 new Flags(),
-                propertyBuilder,
+                propertyBuilder.build(),
                 MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -142,7 +142,7 @@ class MessageToElasticSearchJsonTest {
                 BODY_START_OCTET,
                 ClassLoaderUtils.getSystemResourceAsSharedStream("eml/htmlMail.eml"),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("social", "pocket-money").build(),
-                propertyBuilder,
+                propertyBuilder.build(),
                 MAILBOX_ID);
         htmlMail.setModSeq(MOD_SEQ);
         htmlMail.setUid(UID);
@@ -162,7 +162,7 @@ class MessageToElasticSearchJsonTest {
                 BODY_START_OCTET,
                 ClassLoaderUtils.getSystemResourceAsSharedStream("eml/pgpSignedMail.eml"),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder,
+                propertyBuilder.build(),
                 MAILBOX_ID);
         pgpSignedMail.setModSeq(MOD_SEQ);
         pgpSignedMail.setUid(UID);
@@ -182,7 +182,7 @@ class MessageToElasticSearchJsonTest {
                 BODY_START_OCTET,
                 ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mail.eml"),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder,
+                propertyBuilder.build(),
                 MAILBOX_ID);
         mail.setModSeq(MOD_SEQ);
         mail.setUid(UID);
@@ -203,7 +203,7 @@ class MessageToElasticSearchJsonTest {
                 BODY_START_OCTET,
                 ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder,
+                propertyBuilder.build(),
                 MAILBOX_ID);
         recursiveMail.setModSeq(MOD_SEQ);
         recursiveMail.setUid(UID);
@@ -223,7 +223,7 @@ class MessageToElasticSearchJsonTest {
                 BODY_START_OCTET,
                 ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder,
+                propertyBuilder.build(),
                 MAILBOX_ID);
         mailWithNoInternalDate.setModSeq(MOD_SEQ);
         mailWithNoInternalDate.setUid(UID);
@@ -242,7 +242,7 @@ class MessageToElasticSearchJsonTest {
                 BODY_START_OCTET,
                 ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder,
+                propertyBuilder.build(),
                 MAILBOX_ID);
         mailWithNoInternalDate.setModSeq(MOD_SEQ);
         mailWithNoInternalDate.setUid(UID);
@@ -270,7 +270,7 @@ class MessageToElasticSearchJsonTest {
                 BODY_START_OCTET,
                 ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder,
+                propertyBuilder.build(),
                 MAILBOX_ID);
         mailWithNoInternalDate.setModSeq(MOD_SEQ);
         mailWithNoInternalDate.setUid(UID);
@@ -299,7 +299,7 @@ class MessageToElasticSearchJsonTest {
             BODY_START_OCTET,
             ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-            propertyBuilder,
+            propertyBuilder.build(),
             null);
         mailWithNoMailboxId.setModSeq(MOD_SEQ);
         mailWithNoMailboxId.setUid(UID);
@@ -351,7 +351,7 @@ class MessageToElasticSearchJsonTest {
             BODY_START_OCTET,
             ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nonTextual.eml"),
             new Flags(),
-            propertyBuilder,
+            propertyBuilder.build(),
             MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -371,7 +371,7 @@ class MessageToElasticSearchJsonTest {
             BODY_START_OCTET,
             ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithNonIndexableAttachment.eml"),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-            propertyBuilder,
+            propertyBuilder.build(),
             MAILBOX_ID);
         message.setModSeq(MOD_SEQ);
         message.setUid(UID);
@@ -399,7 +399,7 @@ class MessageToElasticSearchJsonTest {
             BODY_START_OCTET,
             ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithNonIndexableAttachment.eml"),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-            propertyBuilder,
+            propertyBuilder.build(),
             MAILBOX_ID);
         message.setModSeq(MOD_SEQ);
         message.setUid(UID);

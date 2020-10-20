@@ -43,7 +43,7 @@ public interface MessageFactory<T extends MailboxMessage> {
         public SimpleMailboxMessage createMessage(MessageId messageId, Mailbox mailbox, Date internalDate, int size,
                                             int bodyStartOctet, SharedInputStream content, Flags flags,
                                             PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
-            return new SimpleMailboxMessage(messageId, internalDate, size, bodyStartOctet, content, flags, propertyBuilder,
+            return new SimpleMailboxMessage(messageId, internalDate, size, bodyStartOctet, content, flags, propertyBuilder.build(),
                 mailbox.getMailboxId(), attachments);
         }
     }
