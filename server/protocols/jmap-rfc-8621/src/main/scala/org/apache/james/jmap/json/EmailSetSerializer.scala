@@ -206,8 +206,9 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
         case JsBoolean(false) => JsError("keyword value can only be true")
         case _ => JsError("Expecting keyword value to be a boolean")
       })
-  private implicit val keywordsReads: Reads[Keywords] = jsValue => keywordsMapReads.reads(jsValue).map(
-    keywordsMap => Keywords(keywordsMap.keys.toSet))
+  private implicit val keywordsReads: Reads[Keywords] = jsValue => keywordsMapReads.reads(jsValue).flatMap(
+    keywordsMap => STRICT_KEYWORDS_FACTORY.fromSet(keywordsMap.keys.toSet)
+      .fold(e => JsError(e.getMessage), keywords => JsSuccess(keywords)))
 
   private implicit val unitWrites: Writes[Unit] = _ => JsNull
   private implicit val updatedWrites: Writes[Map[MessageId, Unit]] = mapWrites[MessageId, Unit](_.serialize, unitWrites)

@@ -276,7 +276,7 @@ trait EmailSetMethodContract {
         s"""{
            |  "${messageId.serialize}":{
            |      "type":"invalidPatch",
-           |      "description":"Message 1 update is invalid: Does not allow to update 'Deleted' or 'Recent' flag"}
+           |      "description":"Message 1 update is invalid: List((,List(JsonValidationError(List(Value associated with keywords is invalid: List((,List(JsonValidationError(List(Does not allow to update 'Deleted' or 'Recent' flag),ArraySeq()))))),ArraySeq()))))"}
            |  }
            |}"""
           .stripMargin)
@@ -667,6 +667,216 @@ trait EmailSetMethodContract {
           |    }
           |}
       """.stripMargin, messageId.serialize))
+  }
+
+  @Test
+  def emailSetShouldRejectPartiallyUpdateAndResetKeywordsAtTheSameTime(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = FlagsBuilder.builder()
+      .add(Flags.Flag.ANSWERED)
+      .add(Flags.Flag.SEEN)
+      .build()
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request = String.format(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords/music": true,
+         |          "keywords/%s": null,
+         |          "keywords": {
+         |             "movie": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin, "$Seen")
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(s"""{
+          |  "${messageId.serialize}": {
+          |     "type": "invalidPatch",
+          |     "description": "Message 1 update is invalid: Partial update and reset specified for keywords"
+          |   }
+          |}
+      """.stripMargin)
+  }
+
+  @Test
+  def emailSetShouldRejectPartiallyUpdateWhenInvalidKeyword(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords/mus*c": true
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[0][1].notUpdated.${messageId.serialize}")
+      .isEqualTo(
+        """|{
+           |   "type":"invalidPatch",
+           |   "description": "Message 1 update is invalid: List((,List(JsonValidationError(List(keywords/mus*c is an invalid entry in an Email/set update patch: FlagName must not be null or empty, must have length form 1-255,must not contain characters with hex from '\\u0000' to '\\u00019' or {'(' ')' '{' ']' '%' '*' '\"' '\\'} ),ArraySeq()))))"}"
+           |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetShouldRejectPartiallyUpdateWhenFalseValue(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |           "keywords/music": true,
+         |           "keywords/movie": false
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[0][1].notUpdated.${messageId.serialize}")
+      .isEqualTo(
+        """|{
+          |   "type":"invalidPatch",
+          |   "description": "Message 1 update is invalid: List((,List(JsonValidationError(List(Value associated with keywords/movie is invalid: Keywords partial updates requires a JsBoolean(true) (set) or a JsNull (unset)),ArraySeq()))))"
+          |}""".stripMargin)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array(
+    "$Recent",
+    "$Deleted"
+  ))
+  def partialUpdateShouldRejectNonExposedKeyword(unexposedKeyword: String, server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request = String.format(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |           "keywords/music": true,
+         |           "keywords/$unexposedKeyword": true
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin)
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(
+        s"""{
+           |  "${messageId.serialize}":{
+           |      "type":"invalidPatch",
+           |      "description":"Message 1 update is invalid: List((,List(JsonValidationError(List(Does not allow to update 'Deleted' or 'Recent' flag),ArraySeq()))))"}
+           |  }
+           |}"""
+          .stripMargin)
   }
 
   @Test
@@ -1322,7 +1532,7 @@ trait EmailSetMethodContract {
       s"""{
          |  "1": {
          |    "type": "invalidPatch",
-         |    "description": "Message 1 update is invalid: Partial update and reset specified"
+         |    "description": "Message 1 update is invalid: Partial update and reset specified for mailboxIds"
          |  }
          |}""".stripMargin)
   }
