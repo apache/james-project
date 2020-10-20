@@ -33,7 +33,6 @@ import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTE
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_MD5_SPACE;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_TRANSFER_ENCODING_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_TRANSFER_ENCODING_SPACE;
-import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_TYPE_PARAMETER_CHARSET_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_TYPE_PARAMETER_SPACE;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MEDIA_TYPE_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MIME_TYPE_SPACE;
@@ -207,16 +206,6 @@ public class Properties {
      */
     public String getContentMD5() {
         return getFirstValue(MIME_CONTENT_MD5_SPACE, MIME_CONTENT_MD5_NAME);
-    }
-    
-    /**
-     * Gets the RFC2045 Content-Type "charset" parameter.
-     * 
-     * @return the RFC2045 Content-Type "charset" parameter, 
-     * or null if this meta data is not present
-     */
-    public String getCharset() {
-        return getFirstValue(MIME_CONTENT_TYPE_PARAMETER_SPACE, MIME_CONTENT_TYPE_PARAMETER_CHARSET_NAME);
     }
     
     /**
